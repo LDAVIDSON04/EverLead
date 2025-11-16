@@ -1,183 +1,157 @@
-// src/app/agent/dashboard/page.tsx
 "use client";
 
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabaseClient } from "@/lib/supabaseClient";
-import { useRequireRole } from "@/lib/hooks/useRequireRole";
 
 type Stats = {
   available: number;
-  mine: number;
+  myLeads: number;
   purchased: number;
 };
 
-export default function AgentDashboard() {
-  const { loading, ok } = useRequireRole("agent");
-  const [stats, setStats] = useState<Stats | null>(null);
-  const [error, setError] = useState<string | null>(null);
+export default function AgentDashboardPage() {
+  const router = useRouter();
+  const [stats, setStats] = useState<Stats>({
+    available: 0,
+    myLeads: 0,
+    purchased: 0,
+  });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!ok) return;
-
     async function loadStats() {
+      setLoading(true);
       try {
-        setError(null);
-
-        // Current user (agent)
         const {
           data: { user },
         } = await supabaseClient.auth.getUser();
 
         if (!user) {
-          setError("No user found.");
+          router.push("/login");
           return;
         }
 
         const agentId = user.id;
 
-        // Available leads (status=new)
-        const { data: available, error: availableError } = await supabaseClient
+        // Available leads = new, not yet assigned
+        const { count: availableCount } = await supabaseClient
           .from("leads")
-          .select("id")
+          .select("id", { count: "exact", head: true })
           .eq("status", "new");
 
-        if (availableError) {
-          console.error(availableError);
-          setError("Failed to load available leads.");
-          return;
-        }
-
-        // My leads (assigned to this agent)
-        const { data: mine, error: mineError } = await supabaseClient
+        // My leads = any lead assigned to this agent
+        const { count: myLeadsCount } = await supabaseClient
           .from("leads")
-          .select("id")
+          .select("id", { count: "exact", head: true })
           .eq("assigned_agent_id", agentId);
 
-        if (mineError) {
-          console.error(mineError);
-          setError("Failed to load your leads.");
-          return;
-        }
-
-        // All purchased_by_agent (for quick overview)
-        const { data: purchased, error: purchasedError } =
-          await supabaseClient
-            .from("leads")
-            .select("id")
-            .eq("status", "purchased_by_agent");
-
-        if (purchasedError) {
-          console.error(purchasedError);
-          setError("Failed to load purchased leads.");
-          return;
-        }
+        // Purchased = leads assigned + marked as purchased
+        const { count: purchasedCount } = await supabaseClient
+          .from("leads")
+          .select("id", { count: "exact", head: true })
+          .eq("assigned_agent_id", agentId)
+          .eq("status", "purchased_by_agent");
 
         setStats({
-          available: available?.length ?? 0,
-          mine: mine?.length ?? 0,
-          purchased: purchased?.length ?? 0,
+          available: availableCount ?? 0,
+          myLeads: myLeadsCount ?? 0,
+          purchased: purchasedCount ?? 0,
         });
       } catch (err) {
-        console.error(err);
-        setError("Something went wrong loading stats.");
+        console.error("Error loading agent dashboard stats:", err);
+      } finally {
+        setLoading(false);
       }
     }
 
     loadStats();
-  }, [ok]);
+  }, [router]);
 
-  if (loading) {
-    return <p>Checking access…</p>;
-  }
-
-  if (!ok) {
-    // useRequireRole will redirect to login / correct dashboard
-    return null;
-  }
-
-  if (error) {
-    return <p style={{ color: "#DC2626" }}>{error}</p>;
-  }
-
-  if (!stats) {
-    return <p>Loading dashboard…</p>;
+  async function handleLogout() {
+    await supabaseClient.auth.signOut();
+    router.push("/login");
   }
 
   return (
-    <div style={{ maxWidth: "640px" }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "12px",
-        }}
-      >
-        <h1
-          style={{ fontSize: "24px", fontWeight: 600, marginBottom: "0px" }}
-        >
-          Agent Dashboard
-        </h1>
-        <button
-          onClick={() => (window.location.href = "/logout")}
-          style={{
-            fontSize: "12px",
-            borderRadius: "999px",
-            padding: "4px 10px",
-            border: "1px solid #E5E7EB",
-            background: "white",
-            cursor: "pointer",
-          }}
-        >
-          Log out
-        </button>
-      </div>
-
-      <div style={{ display: "flex", gap: "16px" }}>
-        <div
-          style={{
-            padding: "16px",
-            border: "1px solid #E5E7EB",
-            borderRadius: "8px",
-            width: "33%",
-          }}
-        >
-          <h3 style={{ fontSize: "14px", color: "#6B7280" }}>
-            Available Leads
-          </h3>
-          <p style={{ fontSize: "20px", fontWeight: 700 }}>
-            {stats.available}
-          </p>
+    <main className="min-h-screen bg-slate-50">
+      <header className="border-b border-slate-200 bg-white">
+        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
+          <h1 className="text-lg font-bold text-slate-900">Agent Dashboard</h1>
+          <button
+            onClick={handleLogout}
+            className="rounded-md border border-slate-300 px-3 py-1 text-xs text-slate-700 hover:border-slate-400"
+          >
+            Log out
+          </button>
         </div>
+      </header>
 
-        <div
-          style={{
-            padding: "16px",
-            border: "1px solid #E5E7EB",
-            borderRadius: "8px",
-            width: "33%",
-          }}
-        >
-          <h3 style={{ fontSize: "14px", color: "#6B7280" }}>My Leads</h3>
-          <p style={{ fontSize: "20px", fontWeight: 700 }}>{stats.mine}</p>
-        </div>
+      <section className="mx-auto max-w-5xl px-4 py-6">
+        {loading ? (
+          <p className="text-sm text-slate-600">Loading your stats…</p>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-3">
+            {/* Available leads card */}
+            <Link
+              href="/agent/leads/available"
+              className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+            >
+              <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Available leads
+              </div>
+              <div className="mt-2 text-2xl font-bold text-slate-900">
+                {stats.available}
+              </div>
+              <p className="mt-1 text-xs text-slate-500">
+                New leads you can buy or bid on.
+              </p>
+              <p className="mt-3 text-xs font-medium text-brand-600">
+                View available leads →
+              </p>
+            </Link>
 
-        <div
-          style={{
-            padding: "16px",
-            border: "1px solid #E5E7EB",
-            borderRadius: "8px",
-            width: "33%",
-          }}
-        >
-          <h3 style={{ fontSize: "14px", color: "#6B7280" }}>
-            Purchased Leads
-          </h3>
-          <p style={{ fontSize: "20px", fontWeight: 700 }}>
-            {stats.purchased}
-          </p>
-        </div>
-      </div>
-    </div>
+            {/* My leads card */}
+            <Link
+              href="/agent/leads/mine"
+              className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+            >
+              <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                My leads
+              </div>
+              <div className="mt-2 text-2xl font-bold text-slate-900">
+                {stats.myLeads}
+              </div>
+              <p className="mt-1 text-xs text-slate-500">
+                All leads currently assigned to you.
+              </p>
+              <p className="mt-3 text-xs font-medium text-brand-600">
+                View my leads →
+              </p>
+            </Link>
+
+            {/* Purchased leads card */}
+            <Link
+              href="/agent/leads/purchased"
+              className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+            >
+              <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Purchased leads
+              </div>
+              <div className="mt-2 text-2xl font-bold text-slate-900">
+                {stats.purchased}
+              </div>
+              <p className="mt-1 text-xs text-slate-500">
+                Leads you've bought through EverLead.
+              </p>
+              <p className="mt-3 text-xs font-medium text-brand-600">
+                View purchased leads →
+              </p>
+            </Link>
+          </div>
+        )}
+      </section>
+    </main>
   );
 }
