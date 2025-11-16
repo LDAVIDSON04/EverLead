@@ -1,6 +1,6 @@
-@import "tailwindcss/base";
-@import "tailwindcss/components";
-@import "tailwindcss/utilities";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 /* Global styles for EverLead */
 /* Use plain CSS here instead of @apply to avoid Tailwind 4 errors */
