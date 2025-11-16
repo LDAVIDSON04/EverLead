@@ -2,21 +2,12 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
-type RouteContext = {
-  params: { leadId: string };
-};
-
-export async function GET(
-  _req: Request,
-  { params }: RouteContext
-): Promise<Response> {
-  const { leadId } = params;
+// NOTE: We keep the types loose here so it works with Next 16's params Promise typing.
+export async function GET(_req: Request, context: any): Promise<Response> {
+  const { leadId } = await context.params;
 
   if (!leadId) {
-    return NextResponse.json(
-      { error: "Missing leadId" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "Missing leadId" }, { status: 400 });
   }
 
   const { data, error } = await supabaseAdmin
@@ -36,17 +27,11 @@ export async function GET(
   return NextResponse.json({ notes: data ?? [] });
 }
 
-export async function POST(
-  req: Request,
-  { params }: RouteContext
-): Promise<Response> {
-  const { leadId } = params;
+export async function POST(req: Request, context: any): Promise<Response> {
+  const { leadId } = await context.params;
 
   if (!leadId) {
-    return NextResponse.json(
-      { error: "Missing leadId" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "Missing leadId" }, { status: 400 });
   }
 
   const body = await req.json().catch(() => null);
@@ -87,4 +72,3 @@ export async function POST(
 
   return NextResponse.json({ note: data }, { status: 201 });
 }
-
