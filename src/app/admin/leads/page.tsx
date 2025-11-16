@@ -13,6 +13,12 @@ type Lead = {
   status: string | null;
   buy_now_price_cents: number | null;
   price_charged_cents: number | null;
+  // Auction fields
+  auction_enabled: boolean;
+  auction_ends_at: string | null;
+  buy_now_price: number | null;
+  current_bid_amount: number | null;
+  current_bid_agent_id: string | null;
 };
 
 export default function AdminLeadsPage() {
@@ -21,12 +27,12 @@ export default function AdminLeadsPage() {
 
   useEffect(() => {
     async function loadLeads() {
-      const { data, error } = await supabaseClient
-        .from("leads")
-        .select(
-          "id, created_at, full_name, city, urgency_level, status, buy_now_price_cents, price_charged_cents"
-        )
-        .order("created_at", { ascending: false });
+        const { data, error } = await supabaseClient
+          .from("leads")
+          .select(
+            "id, created_at, full_name, city, urgency_level, status, buy_now_price_cents, price_charged_cents, auction_enabled, auction_ends_at, buy_now_price, current_bid_amount, current_bid_agent_id"
+          )
+          .order("created_at", { ascending: false });
 
       if (error) {
         console.error(error);
@@ -103,6 +109,9 @@ export default function AdminLeadsPage() {
                   <Th>Status</Th>
                   <Th>Buy Now</Th>
                   <Th>Paid</Th>
+                  <Th>Auction</Th>
+                  <Th>Highest Bid</Th>
+                  <Th>Action</Th>
                 </tr>
               </thead>
               <tbody>
@@ -119,8 +128,31 @@ export default function AdminLeadsPage() {
                     <Td>{lead.city || "-"}</Td>
                     <Td>{lead.urgency_level || "-"}</Td>
                     <Td>{lead.status || "-"}</Td>
-                    <Td>{formatMoney(lead.buy_now_price_cents)}</Td>
+                    <Td>
+                      {formatMoney(lead.buy_now_price_cents) ||
+                        (lead.buy_now_price ? `$${lead.buy_now_price.toFixed(2)}` : "-")}
+                    </Td>
                     <Td>{formatMoney(lead.price_charged_cents)}</Td>
+                    <Td>
+                      {lead.auction_enabled ? (
+                        <span className="text-xs text-green-600">On</span>
+                      ) : (
+                        <span className="text-xs text-[#6b6b6b]">Off</span>
+                      )}
+                    </Td>
+                    <Td>
+                      {lead.current_bid_amount
+                        ? `$${lead.current_bid_amount.toFixed(2)}`
+                        : "-"}
+                    </Td>
+                    <Td>
+                      <a
+                        href={`/admin/leads/${lead.id}`}
+                        className="text-xs font-medium text-[#6b6b6b] hover:text-[#2a2a2a] transition-colors"
+                      >
+                        Edit →
+                      </a>
+                    </Td>
                   </tr>
                 ))}
               </tbody>
