@@ -3,171 +3,75 @@ import Link from "next/link";
 
 export default function HomePage() {
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        justifyContent: "center",
-        padding: "40px 16px",
-        background: "#F9FAFB",
-        fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
-      }}
-    >
-      <div style={{ width: "100%", maxWidth: "880px" }}>
+    <main className="min-h-screen bg-slate-50">
+      <div className="mx-auto flex w-full max-w-5xl flex-col px-4 py-8">
         {/* Top bar */}
-        <header
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "40px",
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-            <span
-              style={{
-                fontWeight: 800,
-                fontSize: "20px",
-                letterSpacing: "-0.03em",
-              }}
-            >
+        <header className="mb-10 flex items-center justify-between">
+          <div className="flex items-baseline gap-2">
+            <span className="text-xl font-extrabold tracking-tight">
               EverLead
             </span>
-            <span style={{ fontSize: "12px", color: "#6B7280" }}>
+            <span className="text-xs text-slate-500">
               Pre-need lead marketplace
             </span>
           </div>
 
-          <nav style={{ display: "flex", gap: "16px", fontSize: "14px" }}>
-            <Link
-              href="/get-started"
-              style={{ color: "#374151", textDecoration: "none" }}
-            >
+          <nav className="flex items-center gap-4 text-sm">
+            <Link href="/get-started" className="text-slate-700 hover:text-brand-600">
               Get started
             </Link>
-            <Link
-              href="/login"
-              style={{ color: "#374151", textDecoration: "none" }}
-            >
+            <Link href="/login" className="text-slate-700 hover:text-brand-600">
               Agent login
             </Link>
           </nav>
         </header>
 
-        {/* Hero */}
-        <section
-          style={{
-            display: "grid",
-            gridTemplateColumns: "minmax(0, 3fr) minmax(0, 2fr)",
-            gap: "32px",
-            alignItems: "center",
-          }}
-        >
+        {/* Hero section */}
+        <section className="grid gap-10 md:grid-cols-[3fr_2fr] md:items-center">
           <div>
-            <h1
-              style={{
-                fontSize: "34px",
-                lineHeight: 1.1,
-                fontWeight: 700,
-                marginBottom: "16px",
-              }}
-            >
+            <h1 className="mb-4 text-3xl font-bold leading-tight text-slate-900 md:text-4xl">
               Zillow-style{" "}
-              <span style={{ color: "#2563EB" }}>pre-need leads</span> for
+              <span className="text-brand-600">pre-need leads</span> for
               funeral professionals.
             </h1>
-            <p
-              style={{
-                fontSize: "15px",
-                color: "#4B5563",
-                marginBottom: "20px",
-              }}
-            >
+            <p className="mb-5 text-sm text-slate-600 md:text-base">
               Families answer a short pre-planning questionnaire. EverLead
-              turns those responses into qualified leads that your sales team
-              can buy instantly or bid on, just like Zillow or eBay — with a{" "}
-              <strong>first lead free</strong>.
+              turns those responses into qualified leads your team can buy
+              instantly or bid on, just like Zillow or eBay — with a{" "}
+              <span className="font-semibold">first lead free</span>.
             </p>
 
-            <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+            <div className="flex flex-wrap gap-3">
               <Link
                 href="/get-started"
-                style={{
-                  padding: "10px 18px",
-                  borderRadius: "999px",
-                  background: "#2563EB",
-                  color: "white",
-                  fontSize: "14px",
-                  fontWeight: 500,
-                  textDecoration: "none",
-                }}
+                className="rounded-full bg-brand-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-brand-700"
               >
-                I'm a family – start my plan
+                I&apos;m a family – start my plan
               </Link>
               <Link
                 href="/login"
-                style={{
-                  padding: "10px 18px",
-                  borderRadius: "999px",
-                  border: "1px solid #D1D5DB",
-                  color: "#111827",
-                  fontSize: "14px",
-                  textDecoration: "none",
-                }}
+                className="rounded-full border border-slate-300 px-4 py-2 text-sm text-slate-800 hover:border-brand-500 hover:text-brand-700"
               >
-                I'm an agent – log in
+                I&apos;m an agent – log in
               </Link>
             </div>
 
-            <p
-              style={{
-                fontSize: "12px",
-                color: "#6B7280",
-                marginTop: "10px",
-              }}
-            >
-              First agent lead is free. After that, pay per lead with Stripe.
+            <p className="mt-2 text-xs text-slate-500">
+              First agent lead is free. After that, pay per lead securely with
+              Stripe.
             </p>
           </div>
 
           {/* Right side "feature card" */}
-          <div
-            style={{
-              borderRadius: "16px",
-              border: "1px solid #E5E7EB",
-              background: "white",
-              padding: "18px 18px 14px",
-              boxShadow: "0 10px 25px rgba(15, 23, 42, 0.08)",
-              fontSize: "13px",
-            }}
-          >
-            <p
-              style={{
-                fontSize: "12px",
-                color: "#6B7280",
-                marginBottom: "8px",
-              }}
-            >
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-lg">
+            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">
               For funeral sales teams
             </p>
-            <h2
-              style={{
-                fontSize: "16px",
-                fontWeight: 600,
-                marginBottom: "10px",
-              }}
-            >
+            <h2 className="mb-3 text-base font-semibold text-slate-900">
               Stop waiting for the phone to ring.
             </h2>
 
-            <ul
-              style={{
-                listStyle: "disc",
-                paddingLeft: "18px",
-                marginBottom: "14px",
-                color: "#374151",
-              }}
-            >
+            <ul className="mb-3 list-disc space-y-1 pl-4 text-xs text-slate-700 md:text-sm">
               <li>Families fill out a guided pre-need questionnaire.</li>
               <li>
                 Leads are tagged HOT / WARM / COLD with contact details and
@@ -175,30 +79,29 @@ export default function HomePage() {
               </li>
               <li>Agents can bid or hit Buy Now to lock in exclusivity.</li>
               <li>
-                Admins see total leads, revenue, and performance in a single
+                Admins see total leads, revenue, and performance from one
                 dashboard.
               </li>
             </ul>
 
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                fontSize: "12px",
-                color: "#6B7280",
-              }}
-            >
+            <div className="mt-2 grid grid-cols-3 gap-3 text-xs text-slate-600">
               <div>
-                <div style={{ fontSize: "11px" }}>Typical commission</div>
-                <div style={{ fontWeight: 600 }}>$300+ per sale</div>
+                <div className="text-[10px] uppercase tracking-wide">
+                  Typical commission
+                </div>
+                <div className="text-sm font-semibold">$300+ per sale</div>
               </div>
               <div>
-                <div style={{ fontSize: "11px" }}>Lead pricing</div>
-                <div style={{ fontWeight: 600 }}>$10–$50 per hot lead</div>
+                <div className="text-[10px] uppercase tracking-wide">
+                  Lead pricing
+                </div>
+                <div className="text-sm font-semibold">$10–$50 per hot lead</div>
               </div>
               <div>
-                <div style={{ fontSize: "11px" }}>Your risk</div>
-                <div style={{ fontWeight: 600 }}>First lead is free</div>
+                <div className="text-[10px] uppercase tracking-wide">
+                  Your risk
+                </div>
+                <div className="text-sm font-semibold">First lead is free</div>
               </div>
             </div>
           </div>
