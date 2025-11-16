@@ -15,7 +15,7 @@ type Lead = {
   created_at: string | null;
 };
 
-export default function MyLeadsPage() {
+export default function PurchasedLeadsPage() {
   useRequireRole("agent");
 
   const router = useRouter();
@@ -39,6 +39,7 @@ export default function MyLeadsPage() {
           .from("leads")
           .select("*")
           .eq("assigned_agent_id", user.id)
+          .eq("status", "purchased_by_agent")
           .order("created_at", { ascending: false });
 
         if (error) {
@@ -82,17 +83,18 @@ export default function MyLeadsPage() {
 
       <section className="mx-auto max-w-5xl px-4 py-6">
         <h1 className="mb-2 text-lg font-semibold text-slate-900">
-          My leads
+          Purchased leads
         </h1>
         <p className="mb-4 text-xs text-slate-500">
-          All leads currently assigned to you, regardless of status.
+          Leads you&apos;ve bought through EverLead, ready to be worked and
+          tracked.
         </p>
 
         {loading ? (
-          <p className="text-sm text-slate-600">Loading your leads…</p>
+          <p className="text-sm text-slate-600">Loading purchased leads…</p>
         ) : leads.length === 0 ? (
           <p className="text-sm text-slate-600">
-            You don&apos;t have any leads yet.
+            You haven&apos;t purchased any leads yet.
           </p>
         ) : (
           <div className="space-y-3">
@@ -118,7 +120,7 @@ export default function MyLeadsPage() {
                       Status
                     </div>
                     <div className="text-xs font-semibold text-slate-900">
-                      {lead.status || "Unknown"}
+                      {lead.status || "purchased_by_agent"}
                     </div>
                   </div>
                 </div>

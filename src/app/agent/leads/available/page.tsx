@@ -4,19 +4,19 @@ import { useEffect, useState } from "react";
 import { supabaseClient } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import { useRequireRole } from "@/lib/hooks/useRequireRole";
+import { AgentNav } from "@/components/AgentNav";
 
 type Lead = {
   id: string;
   created_at: string | null;
   city: string | null;
-  urgency_level: string | null; // "hot" | "warm" | "cold" | null
+  urgency_level: string | null;
   status: string | null;
   service_type: string | null;
   suggested_price_cents: number | null;
 };
 
 export default function AvailableLeadsPage() {
-  // Make sure only agents can be here
   useRequireRole("agent");
 
   const router = useRouter();
@@ -36,7 +36,6 @@ export default function AvailableLeadsPage() {
       setError(null);
 
       try {
-        // 1) Get current user
         const {
           data: { user },
           error: userError,
@@ -57,7 +56,6 @@ export default function AvailableLeadsPage() {
         const currentUserId = user.id;
         setUserId(currentUserId);
 
-        // 2) Check if they already used their free lead
         const { data: profile, error: profileError } = await supabaseClient
           .from("profiles")
           .select("first_free_redeemed")
@@ -71,7 +69,6 @@ export default function AvailableLeadsPage() {
         const alreadyRedeemed = profile?.first_free_redeemed === true;
         setFirstFreeAvailable(!alreadyRedeemed);
 
-        // 3) Load available leads (status = "new")
         const { data: leadsData, error: leadsError } = await supabaseClient
           .from("leads")
           .select("*")
@@ -113,7 +110,6 @@ export default function AvailableLeadsPage() {
 
       if (!res.ok) {
         console.error("Free purchase error:", body);
-        // Backend already enforces only one free lead; surface helpful message
         if (body?.error === "FIRST_LEAD_ALREADY_USED") {
           setError("You have already used your first free lead.");
           setFirstFreeAvailable(false);
@@ -125,10 +121,8 @@ export default function AvailableLeadsPage() {
         return;
       }
 
-      // Success: mark free flag off, remove that lead from the list, and redirect to success page
       setFirstFreeAvailable(false);
       setLeads((prev) => prev.filter((l) => l.id !== leadId));
-      router.push(`/agent/leads/success?leadId=${leadId}&free=1`);
     } catch (err) {
       console.error(err);
       setError("Unexpected error claiming free lead.");
@@ -158,7 +152,6 @@ export default function AvailableLeadsPage() {
         return;
       }
 
-      // Redirect to Stripe Checkout
       window.location.href = body.url;
     } catch (err) {
       console.error(err);
@@ -184,30 +177,46 @@ export default function AvailableLeadsPage() {
   return (
     <main className="min-h-screen bg-slate-50">
       <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
-          <h1 className="text-lg font-bold text-slate-900">Available Leads</h1>
+        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
+          <div className="flex items-baseline gap-2">
+            <span className="text-sm font-semibold text-slate-900">
+              EverLead
+            </span>
+            <span className="text-[11px] uppercase tracking-wide text-slate-500">
+              Agent portal
+            </span>
+          </div>
         </div>
       </header>
 
+      <AgentNav />
+
       <section className="mx-auto max-w-5xl px-4 py-6">
-        {/* One-time free lead banner */}
+        <div className="mb-3 flex items-baseline justify-between">
+          <div>
+            <h1 className="text-lg font-semibold text-slate-900">
+              Available leads
+            </h1>
+            <p className="text-xs text-slate-500">
+              New pre-need inquiries you can buy or use your one-time free
+              lead on.
+            </p>
+          </div>
+        </div>
+
         {firstFreeAvailable && (
           <div className="mb-4 rounded-xl border border-dashed border-amber-300 bg-amber-50 px-4 py-3 text-xs text-amber-900">
-            <p className="font-semibold">
-              First lead free for new agents 🎉
-            </p>
+            <p className="font-semibold">First lead free for new agents 🎉</p>
             <p className="mt-1">
               You can claim <span className="font-semibold">one</span> lead for
-              free. After you use this once, this offer will disappear and all
+              free. After you use this once, this offer disappears and all
               future leads are pay-per-lead.
             </p>
           </div>
         )}
 
         {error && (
-          <p className="mb-3 text-xs text-red-600">
-            {error}
-          </p>
+          <p className="mb-3 text-xs text-red-600">{error}</p>
         )}
 
         {loading ? (
@@ -225,7 +234,7 @@ export default function AvailableLeadsPage() {
               >
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
-                    <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
                       {formatUrgency(lead.urgency_level)} lead
                     </div>
                     <div className="text-sm font-semibold text-slate-900">
@@ -237,7 +246,9 @@ export default function AvailableLeadsPage() {
                   </div>
 
                   <div className="text-right">
-                    <div className="text-xs text-slate-500">Suggested price</div>
+                    <div className="text-[11px] uppercase tracking-wide text-slate-500">
+                      Suggested price
+                    </div>
                     <div className="text-sm font-semibold text-slate-900">
                       {formatPrice(lead.suggested_price_cents)}
                     </div>
@@ -245,7 +256,6 @@ export default function AvailableLeadsPage() {
                 </div>
 
                 <div className="mt-3 flex flex-wrap gap-2">
-                  {/* Buy now always available */}
                   <button
                     onClick={() =>
                       handleBuyNow(lead.id, lead.suggested_price_cents)
@@ -256,7 +266,6 @@ export default function AvailableLeadsPage() {
                     {buyingId === lead.id ? "Starting checkout…" : "Buy now"}
                   </button>
 
-                  {/* Free button only if firstFreeAvailable is true */}
                   {firstFreeAvailable && (
                     <button
                       onClick={() => handleClaimFree(lead.id)}
