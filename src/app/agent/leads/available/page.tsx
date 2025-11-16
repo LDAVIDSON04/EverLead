@@ -17,11 +17,11 @@ type Lead = {
   suggested_price_cents: number | null;
   buy_now_price_cents: number | null;
   // Auction fields
-  auction_enabled: boolean;
-  auction_ends_at: string | null;
-  buy_now_price: number | null;
-  current_bid_amount: number | null;
-  current_bid_agent_id: string | null;
+  auction_enabled?: boolean | null;
+  auction_ends_at?: string | null;
+  buy_now_price?: number | null;
+  current_bid_amount?: number | null;
+  current_bid_agent_id?: string | null;
 };
 
 export default function AvailableLeadsPage() {
@@ -91,6 +91,17 @@ export default function AvailableLeadsPage() {
           setError("Failed to load leads.");
           setLoading(false);
           return;
+        }
+
+        // Debug: log auction fields for first lead
+        if (leadsData && leadsData.length > 0) {
+          console.log("First lead auction fields:", {
+            id: leadsData[0].id,
+            auction_enabled: leadsData[0].auction_enabled,
+            buy_now_price: leadsData[0].buy_now_price,
+            current_bid_amount: leadsData[0].current_bid_amount,
+            auction_ends_at: leadsData[0].auction_ends_at,
+          });
         }
 
         setLeads((leadsData || []) as Lead[]);
@@ -273,9 +284,16 @@ export default function AvailableLeadsPage() {
   }
 
   function canBid(lead: Lead) {
-    if (!lead.auction_enabled) return false;
+    // Explicitly check auction_enabled (handle null/undefined)
+    const isAuctionEnabled = lead.auction_enabled === true;
+    if (!isAuctionEnabled) return false;
+    
+    // Check lead is still available
     if (lead.status !== "new" && lead.status !== "cold_unassigned") return false;
-    if (isAuctionEnded(lead.auction_ends_at)) return false;
+    
+    // Check auction hasn't ended
+    if (lead.auction_ends_at && isAuctionEnded(lead.auction_ends_at)) return false;
+    
     return true;
   }
 
@@ -335,8 +353,10 @@ export default function AvailableLeadsPage() {
         ) : (
           <div className="space-y-3">
             {leads.map((lead) => {
+              // Explicitly check auction_enabled (handle null/undefined)
+              const isAuctionEnabled = lead.auction_enabled === true;
               const isHighestBidder = lead.current_bid_agent_id === userId;
-              const auctionEnded = isAuctionEnded(lead.auction_ends_at);
+              const auctionEnded = lead.auction_ends_at ? isAuctionEnded(lead.auction_ends_at) : false;
               const showBidForm = canBid(lead);
 
               return (
@@ -350,7 +370,7 @@ export default function AvailableLeadsPage() {
                         <div className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
                           {formatUrgency(lead.urgency_level)} lead
                         </div>
-                        {lead.auction_enabled && (
+                        {isAuctionEnabled && (
                           <span className="rounded-full bg-[#f7f4ef] px-2 py-0.5 text-[10px] font-medium text-[#6b6b6b]">
                             Auction
                           </span>
@@ -367,6 +387,10 @@ export default function AvailableLeadsPage() {
                       <div className="text-xs text-[#6b6b6b]">
                         {lead.service_type || "Pre-need planning"}
                       </div>
+                      {/* Auction debug - always show for every lead */}
+                      <p className="mt-2 text-[11px] text-slate-500 font-mono">
+                        Auction debug: enabled={String(lead.auction_enabled ?? "null")} · buy_now_price={String(lead.buy_now_price ?? "null")} · current_bid_amount={String(lead.current_bid_amount ?? "null")} · ends_at={lead.auction_ends_at ? new Date(lead.auction_ends_at).toISOString() : "null"}
+                      </p>
                     </div>
 
                     <div className="text-right">
@@ -380,7 +404,7 @@ export default function AvailableLeadsPage() {
                           </div>
                         </div>
                       )}
-                      {lead.auction_enabled && (
+                      {isAuctionEnabled && (
                         <div>
                           <div className="text-xs uppercase tracking-[0.15em] text-[#6b6b6b]">
                             Current bid
@@ -436,13 +460,26 @@ export default function AvailableLeadsPage() {
                       </Link>
                     </div>
 
-                    {showBidForm && (
-                      <div className="rounded-md border border-[#ded3c2] bg-[#faf8f5] p-3">
-                        <div className="flex flex-wrap items-end gap-2">
-                          <div className="flex-1 min-w-[120px]">
-                            <label className="mb-1 block text-[10px] font-medium text-[#6b6b6b]">
-                              Your bid ($)
-                            </label>
+                    {/* Auction section - show when auction is enabled */}
+                    {isAuctionEnabled && (
+                      <div className="mt-2 rounded-md border border-slate-200 bg-slate-50 p-2">
+                        <p className="text-[11px] font-semibold text-slate-700">
+                          Auction
+                        </p>
+                        <p className="text-[11px] text-slate-600">
+                          {lead.current_bid_amount
+                            ? `Current bid: $${lead.current_bid_amount.toFixed(2)}`
+                            : "No bids yet"}
+                        </p>
+                        {lead.auction_ends_at && (
+                          <p className="text-[11px] text-slate-500">
+                            Ends: {formatDateTime(lead.auction_ends_at)}
+                          </p>
+                        )}
+
+                        {/* Place bid form - only show if auction is active and available */}
+                        {showBidForm && (
+                          <div className="mt-2 flex items-center gap-2">
                             <input
                               type="number"
                               min={1}
@@ -454,24 +491,33 @@ export default function AvailableLeadsPage() {
                                   [lead.id]: e.target.value,
                                 }))
                               }
+                              className="w-24 rounded-md border border-slate-300 bg-white px-2 py-1 text-xs text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
                               placeholder={
                                 lead.current_bid_amount
                                   ? `Min: $${(lead.current_bid_amount + 0.01).toFixed(2)}`
-                                  : "Enter amount"
+                                  : "Bid"
                               }
-                              className="w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-xs text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
                             />
+                            <button
+                              onClick={() => handlePlaceBid(lead.id)}
+                              disabled={biddingId === lead.id}
+                              className="rounded-full bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-70 transition-colors"
+                            >
+                              {biddingId === lead.id ? "Placing bid…" : "Place bid"}
+                            </button>
                           </div>
-                          <button
-                            onClick={() => handlePlaceBid(lead.id)}
-                            disabled={biddingId === lead.id}
-                            className="rounded-full bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-70 transition-colors"
-                          >
-                            {biddingId === lead.id ? "Placing bid…" : "Place bid"}
-                          </button>
-                        </div>
+                        )}
+                        {!showBidForm && isAuctionEnabled && (
+                          <p className="mt-1 text-[10px] text-slate-500">
+                            {lead.status !== "new" && lead.status !== "cold_unassigned"
+                              ? "Lead is no longer available"
+                              : auctionEnded
+                              ? "Auction has ended"
+                              : "Bidding not available"}
+                          </p>
+                        )}
                         {bidErrors[lead.id] && (
-                          <p className="mt-1 text-[10px] text-red-600">
+                          <p className="mt-1 text-[11px] text-red-600">
                             {bidErrors[lead.id]}
                           </p>
                         )}
