@@ -73,9 +73,31 @@ export default function AdminDashboardPage() {
 
   return (
     <div style={{ maxWidth: "720px" }}>
-      <h1 style={{ fontSize: "24px", fontWeight: 600, marginBottom: "16px" }}>
-        Admin Dashboard
-      </h1>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "16px",
+        }}
+      >
+        <h1 style={{ fontSize: "24px", fontWeight: 600, marginBottom: 0 }}>
+          Admin Dashboard
+        </h1>
+        <button
+          onClick={() => (window.location.href = "/logout")}
+          style={{
+            fontSize: "12px",
+            borderRadius: "999px",
+            padding: "4px 10px",
+            border: "1px solid #E5E7EB",
+            background: "white",
+            cursor: "pointer",
+          }}
+        >
+          Log out
+        </button>
+      </div>
 
       <div
         style={{

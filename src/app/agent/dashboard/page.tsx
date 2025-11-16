@@ -36,11 +36,43 @@ export default function AgentDashboard() {
     loadStats();
   }, []);
 
+  if (loading) {
+    return <p>Checking access…</p>;
+  }
+
+  if (!ok) {
+    return null;
+  }
+
   return (
     <div style={{ maxWidth: "640px" }}>
-      <h1 style={{ fontSize: "24px", fontWeight: 600, marginBottom: "16px" }}>
-        Agent Dashboard
-      </h1>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "12px",
+        }}
+      >
+        <h1
+          style={{ fontSize: "24px", fontWeight: 600, marginBottom: "0px" }}
+        >
+          Agent Dashboard
+        </h1>
+        <button
+          onClick={() => (window.location.href = "/logout")}
+          style={{
+            fontSize: "12px",
+            borderRadius: "999px",
+            padding: "4px 10px",
+            border: "1px solid #E5E7EB",
+            background: "white",
+            cursor: "pointer",
+          }}
+        >
+          Log out
+        </button>
+      </div>
 
       <div style={{ display: "flex", gap: "16px" }}>
         <div
@@ -51,8 +83,12 @@ export default function AgentDashboard() {
             width: "33%",
           }}
         >
-          <h3 style={{ fontSize: "14px", color: "#6B7280" }}>Available Leads</h3>
-          <p style={{ fontSize: "20px", fontWeight: 700 }}>{stats.available}</p>
+          <h3 style={{ fontSize: "14px", color: "#6B7280" }}>
+            Available Leads
+          </h3>
+          <p style={{ fontSize: "20px", fontWeight: 700 }}>
+            {stats.available}
+          </p>
         </div>
 
         <div
@@ -75,8 +111,12 @@ export default function AgentDashboard() {
             width: "33%",
           }}
         >
-          <h3 style={{ fontSize: "14px", color: "#6B7280" }}>Purchased Leads</h3>
-          <p style={{ fontSize: "20px", fontWeight: 700 }}>{stats.purchased}</p>
+          <h3 style={{ fontSize: "14px", color: "#6B7280" }}>
+            Purchased Leads
+          </h3>
+          <p style={{ fontSize: "20px", fontWeight: 700 }}>
+            {stats.purchased}
+          </p>
         </div>
       </div>
     </div>
