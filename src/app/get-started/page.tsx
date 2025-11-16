@@ -30,6 +30,9 @@ export default function GetStartedPage() {
     const auction_min_price_cents =
       urgency_level === "hot" ? 50 : urgency_level === "warm" ? 50 : null; // $0.50 for testing
 
+    const ageValue = formData.get("age");
+    const age = ageValue ? parseInt(ageValue as string, 10) : null;
+
     const { error: insertError } = await supabaseClient.from("leads").insert({
       full_name: formData.get("full_name"),
       email: formData.get("email"),
@@ -37,11 +40,12 @@ export default function GetStartedPage() {
       city: formData.get("city"),
       province: formData.get("province"),
       postal_code: formData.get("postal_code"),
-      age_range: formData.get("age_range"),
+      age: age,
+      age_range: null, // Keep for backward compatibility, but send null
       planning_for: formData.get("planning_for"),
       service_type: formData.get("service_type"),
       ceremony_preferences: formData.get("ceremony_preferences"),
-      budget_range: formData.get("budget_range"),
+      budget_range: null, // Removed field, send null
       timeline_intent,
       urgency_level,
       additional_notes: formData.get("additional_notes"),
@@ -195,18 +199,16 @@ export default function GetStartedPage() {
                 <div className="grid gap-4 md:grid-cols-2">
                   <div>
                     <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
-                      Age range
+                      Your Age
                     </label>
-                    <select
-                      name="age_range"
+                    <input
+                      type="number"
+                      name="age"
+                      min={18}
+                      max={120}
+                      required
                       className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
-                    >
-                      <option value="">Select...</option>
-                      <option value="under_40">Under 40</option>
-                      <option value="40_55">40–55</option>
-                      <option value="56_70">56–70</option>
-                      <option value="71_plus">71+</option>
-                    </select>
+                    />
                   </div>
 
                   <div>
@@ -257,22 +259,6 @@ export default function GetStartedPage() {
                   <p className="mt-1 text-[11px] text-slate-500">
                     You can always change this later as you learn more.
                   </p>
-                </div>
-
-                <div>
-                  <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
-                    Budget range (approximate)
-                  </label>
-                  <select
-                    name="budget_range"
-                    className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
-                  >
-                    <option value="">Select...</option>
-                    <option value="0_3000">$0–$3,000</option>
-                    <option value="3000_6000">$3,000–$6,000</option>
-                    <option value="6000_10000">$6,000–$10,000</option>
-                    <option value="10000_plus">$10,000+</option>
-                  </select>
                 </div>
               </div>
             </div>
