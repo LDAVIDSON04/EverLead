@@ -9,16 +9,16 @@ module.exports = {
     extend: {
       colors: {
         brand: {
-          50: "#f2f7ff",
-          100: "#e0ecff",
-          200: "#bed6ff",
-          300: "#8bb6ff",
-          400: "#4f8aff",
-          500: "#2563eb", // primary blue
-          600: "#1d4fd8",
-          700: "#1e40af",
-          800: "#1e3a8a",
-          900: "#172554",
+          50: "#eff6ff",
+          100: "#dbeafe",
+          200: "#bfdbfe",
+          300: "#93c5fd",
+          400: "#60a5fa",
+          500: "#3b82f6", // primary blue
+          600: "#2563eb",
+          700: "#1d4ed8",
+          800: "#1e40af",
+          900: "#1e3a8a",
         },
       },
     },

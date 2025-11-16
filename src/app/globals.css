@@ -3,19 +3,17 @@
 @tailwind utilities;
 
 /* Global styles for EverLead */
-/* Use plain CSS here instead of @apply to avoid Tailwind 4 errors */
 
 body {
-  background-color: #f8fafc; /* slate-50 */
-  color: #020617; /* slate-900 */
+  @apply bg-slate-50 text-slate-900;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
 }
 
 a {
-  color: #2563eb; /* brand-ish blue */
+  @apply text-brand-600;
 }
 
 a:hover {
-  color: #1d4ed8;
+  @apply text-brand-700;
 }
