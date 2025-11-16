@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { supabaseClient } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
@@ -277,6 +278,13 @@ export default function AvailableLeadsPage() {
                         : "Use my one free lead"}
                     </button>
                   )}
+
+                  <Link
+                    href={`/agent/leads/${lead.id}`}
+                    className="text-[11px] font-medium text-slate-500 hover:text-brand-600"
+                  >
+                    View details →
+                  </Link>
                 </div>
               </div>
             ))}

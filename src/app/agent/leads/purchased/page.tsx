@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { supabaseClient } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
@@ -123,6 +124,14 @@ export default function PurchasedLeadsPage() {
                       {lead.status || "purchased_by_agent"}
                     </div>
                   </div>
+                </div>
+                <div className="mt-2">
+                  <Link
+                    href={`/agent/leads/${lead.id}`}
+                    className="text-[11px] font-medium text-brand-600 hover:text-brand-700"
+                  >
+                    View details →
+                  </Link>
                 </div>
               </div>
             ))}
