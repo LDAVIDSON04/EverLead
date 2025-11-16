@@ -61,86 +61,105 @@ export default function AdminDashboardPage() {
   }, []);
 
   if (error) {
-    return <p style={{ color: "#DC2626" }}>{error}</p>;
+    return (
+      <main className="min-h-screen bg-[#f7f4ef]">
+        <div className="mx-auto max-w-6xl px-6 py-8">
+          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+            <p className="text-sm text-red-600">{error}</p>
+          </div>
+        </div>
+      </main>
+    );
   }
 
   if (!stats) {
-    return <p>Loading dashboard...</p>;
+    return (
+      <main className="min-h-screen bg-[#f7f4ef]">
+        <div className="mx-auto max-w-6xl px-6 py-8">
+          <p className="text-sm text-[#6b6b6b]">Loading dashboard...</p>
+        </div>
+      </main>
+    );
   }
 
-  const formatMoney = (cents: number) =>
-    `$${(cents / 100).toFixed(2)}`;
+  const formatMoney = (cents: number) => `$${(cents / 100).toFixed(2)}`;
 
   return (
-    <div style={{ maxWidth: "720px" }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "16px",
-        }}
-      >
-        <h1 style={{ fontSize: "24px", fontWeight: 600, marginBottom: 0 }}>
-          Admin Dashboard
-        </h1>
-        <button
-          onClick={() => (window.location.href = "/logout")}
-          style={{
-            fontSize: "12px",
-            borderRadius: "999px",
-            padding: "4px 10px",
-            border: "1px solid #E5E7EB",
-            background: "white",
-            cursor: "pointer",
-          }}
-        >
-          Log out
-        </button>
-      </div>
+    <main className="min-h-screen bg-[#f7f4ef]">
+      {/* Header */}
+      <header className="border-b border-[#ded3c2] bg-white">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+          <div className="flex items-baseline gap-2">
+            <span className="text-lg font-semibold text-[#2a2a2a]">
+              EverLead
+            </span>
+            <span className="text-[11px] uppercase tracking-[0.18em] text-[#6b6b6b]">
+              Admin
+            </span>
+          </div>
+          <div className="flex items-center gap-4">
+            <span className="text-xs text-[#6b6b6b]">Owner view</span>
+            <button
+              onClick={() => (window.location.href = "/logout")}
+              className="rounded-md border border-[#ded3c2] bg-white px-3 py-1 text-xs font-medium text-[#6b6b6b] hover:bg-[#f7f4ef] transition-colors"
+            >
+              Log out
+            </button>
+          </div>
+        </div>
+      </header>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-          gap: "12px",
-          marginBottom: "24px",
-        }}
-      >
-        <StatCard label="Total Leads" value={stats.totalLeads} />
-        <StatCard label="Hot Leads" value={stats.hotLeads} />
-        <StatCard label="Warm Leads" value={stats.warmLeads} />
-        <StatCard label="Cold Leads" value={stats.coldLeads} />
-        <StatCard label="Purchased Leads" value={stats.purchasedLeads} />
-        <StatCard
-          label="Total Revenue"
-          value={formatMoney(stats.totalRevenueCents)}
-        />
-      </div>
+      {/* Content */}
+      <section className="mx-auto max-w-6xl px-6 py-8">
+        <div className="mb-6">
+          <h1
+            className="mb-2 text-2xl font-normal text-[#2a2a2a]"
+            style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+          >
+            Admin Dashboard
+          </h1>
+          <p className="text-sm text-[#6b6b6b]">
+            Overview of all leads and revenue in the system.
+          </p>
+        </div>
 
-      <p style={{ fontSize: "14px", color: "#4B5563" }}>
-        This view is your owner / house portal. It summarizes every lead that
-        has come through the system and how much revenue you've generated from
-        Buy Now purchases.
-      </p>
-    </div>
+        {/* Summary Cards */}
+        <div className="mb-8 grid gap-4 md:grid-cols-3">
+          <StatCard label="Total Leads" value={stats.totalLeads} />
+          <StatCard label="Purchased Leads" value={stats.purchasedLeads} />
+          <StatCard
+            label="Total Revenue"
+            value={formatMoney(stats.totalRevenueCents)}
+          />
+        </div>
+
+        {/* Urgency Breakdown */}
+        <div className="mb-8">
+          <h2 className="mb-4 text-lg font-normal text-[#2a2a2a]">By Urgency</h2>
+          <div className="grid gap-4 md:grid-cols-3">
+            <StatCard label="Hot Leads" value={stats.hotLeads} />
+            <StatCard label="Warm Leads" value={stats.warmLeads} />
+            <StatCard label="Cold Leads" value={stats.coldLeads} />
+          </div>
+        </div>
+
+        <p className="text-sm text-[#6b6b6b]">
+          This view is your owner / house portal. It summarizes every lead that
+          has come through the system and how much revenue you&apos;ve generated
+          from Buy Now purchases.
+        </p>
+      </section>
+    </main>
   );
 }
 
 function StatCard({ label, value }: { label: string; value: number | string }) {
   return (
-    <div
-      style={{
-        border: "1px solid #E5E7EB",
-        borderRadius: "8px",
-        padding: "12px",
-      }}
-    >
-      <p style={{ fontSize: "12px", color: "#6B7280", marginBottom: "4px" }}>
+    <div className="rounded-lg border border-[#ded3c2] bg-white p-4 shadow-sm">
+      <p className="mb-2 text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
         {label}
       </p>
-      <p style={{ fontSize: "18px", fontWeight: 600 }}>{value}</p>
+      <p className="text-xl font-semibold text-[#2a2a2a]">{value}</p>
     </div>
   );
 }
-

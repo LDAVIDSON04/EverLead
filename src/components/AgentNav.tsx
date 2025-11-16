@@ -15,8 +15,8 @@ export function AgentNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="border-b border-slate-200 bg-white">
-      <div className="mx-auto flex max-w-5xl gap-4 px-4">
+    <nav className="border-b border-[#ded3c2] bg-white">
+      <div className="mx-auto flex max-w-6xl gap-4 px-6">
         {links.map((link) => {
           const active = pathname === link.href;
 
@@ -24,10 +24,10 @@ export function AgentNav() {
             <Link
               key={link.href}
               href={link.href}
-              className={`border-b-2 px-1 py-2 text-xs font-medium ${
+              className={`border-b-2 px-1 py-3 text-xs font-medium transition-colors ${
                 active
-                  ? "border-brand-600 text-brand-700"
-                  : "border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700"
+                  ? "border-[#2a2a2a] text-[#2a2a2a]"
+                  : "border-transparent text-[#6b6b6b] hover:border-[#ded3c2] hover:text-[#2a2a2a]"
               }`}
             >
               {link.label}
@@ -38,4 +38,3 @@ export function AgentNav() {
     </nav>
   );
 }
-

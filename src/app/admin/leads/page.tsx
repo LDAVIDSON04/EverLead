@@ -44,69 +44,97 @@ export default function AdminLeadsPage() {
     cents ? `$${(cents / 100).toFixed(2)}` : "-";
 
   return (
-    <div style={{ maxWidth: "960px" }}>
-      <h1 style={{ fontSize: "24px", fontWeight: 600, marginBottom: "16px" }}>
-        All Leads
-      </h1>
-
-      {error && (
-        <p style={{ color: "#DC2626", marginBottom: "12px" }}>{error}</p>
-      )}
-
-      {leads.length === 0 ? (
-        <p>No leads yet.</p>
-      ) : (
-        <div style={{ overflowX: "auto" }}>
-          <table
-            style={{
-              width: "100%",
-              borderCollapse: "collapse",
-              fontSize: "13px",
-            }}
-          >
-            <thead>
-              <tr>
-                <Th>ID</Th>
-                <Th>Created</Th>
-                <Th>Name</Th>
-                <Th>City</Th>
-                <Th>Urgency</Th>
-                <Th>Status</Th>
-                <Th>Buy Now</Th>
-                <Th>Paid</Th>
-              </tr>
-            </thead>
-            <tbody>
-              {leads.map((lead) => (
-                <tr key={lead.id}>
-                  <Td>{lead.id.slice(0, 8)}…</Td>
-                  <Td>{new Date(lead.created_at).toLocaleString()}</Td>
-                  <Td>{lead.full_name || "-"}</Td>
-                  <Td>{lead.city || "-"}</Td>
-                  <Td>{lead.urgency_level || "-"}</Td>
-                  <Td>{lead.status || "-"}</Td>
-                  <Td>{formatMoney(lead.buy_now_price_cents)}</Td>
-                  <Td>{formatMoney(lead.price_charged_cents)}</Td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+    <main className="min-h-screen bg-[#f7f4ef]">
+      {/* Header */}
+      <header className="border-b border-[#ded3c2] bg-white">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+          <div className="flex items-baseline gap-2">
+            <span className="text-lg font-semibold text-[#2a2a2a]">
+              EverLead
+            </span>
+            <span className="text-[11px] uppercase tracking-[0.18em] text-[#6b6b6b]">
+              Admin
+            </span>
+          </div>
+          <div className="flex items-center gap-4">
+            <span className="text-xs text-[#6b6b6b]">Owner view</span>
+            <button
+              onClick={() => (window.location.href = "/logout")}
+              className="rounded-md border border-[#ded3c2] bg-white px-3 py-1 text-xs font-medium text-[#6b6b6b] hover:bg-[#f7f4ef] transition-colors"
+            >
+              Log out
+            </button>
+          </div>
         </div>
-      )}
-    </div>
+      </header>
+
+      {/* Content */}
+      <section className="mx-auto max-w-6xl px-6 py-8">
+        <div className="mb-6">
+          <h1
+            className="mb-2 text-2xl font-normal text-[#2a2a2a]"
+            style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+          >
+            All Leads
+          </h1>
+          <p className="text-sm text-[#6b6b6b]">
+            Complete list of all leads in the system.
+          </p>
+        </div>
+
+        {error && (
+          <div className="mb-4 rounded-md border border-red-200 bg-red-50 px-4 py-3">
+            <p className="text-sm text-red-600">{error}</p>
+          </div>
+        )}
+
+        {leads.length === 0 ? (
+          <p className="text-sm text-[#6b6b6b]">No leads yet.</p>
+        ) : (
+          <div className="overflow-x-auto rounded-lg border border-[#ded3c2] bg-white shadow-sm">
+            <table className="w-full border-collapse text-sm">
+              <thead>
+                <tr className="border-b border-[#ded3c2] bg-[#faf8f5]">
+                  <Th>ID</Th>
+                  <Th>Created</Th>
+                  <Th>Name</Th>
+                  <Th>City</Th>
+                  <Th>Urgency</Th>
+                  <Th>Status</Th>
+                  <Th>Buy Now</Th>
+                  <Th>Paid</Th>
+                </tr>
+              </thead>
+              <tbody>
+                {leads.map((lead) => (
+                  <tr
+                    key={lead.id}
+                    className="border-b border-[#f3f4f6] hover:bg-[#faf8f5]"
+                  >
+                    <Td>{lead.id.slice(0, 8)}…</Td>
+                    <Td>
+                      {new Date(lead.created_at).toLocaleDateString()}
+                    </Td>
+                    <Td>{lead.full_name || "-"}</Td>
+                    <Td>{lead.city || "-"}</Td>
+                    <Td>{lead.urgency_level || "-"}</Td>
+                    <Td>{lead.status || "-"}</Td>
+                    <Td>{formatMoney(lead.buy_now_price_cents)}</Td>
+                    <Td>{formatMoney(lead.price_charged_cents)}</Td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+    </main>
   );
 }
 
 function Th({ children }: { children: React.ReactNode }) {
   return (
-    <th
-      style={{
-        textAlign: "left",
-        padding: "8px",
-        borderBottom: "1px solid #E5E7EB",
-        background: "#F9FAFB",
-      }}
-    >
+    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
       {children}
     </th>
   );
@@ -114,15 +142,8 @@ function Th({ children }: { children: React.ReactNode }) {
 
 function Td({ children }: { children: React.ReactNode }) {
   return (
-    <td
-      style={{
-        padding: "8px",
-        borderBottom: "1px solid #F3F4F6",
-        whiteSpace: "nowrap",
-      }}
-    >
+    <td className="whitespace-nowrap px-4 py-3 text-sm text-[#4a4a4a]">
       {children}
     </td>
   );
 }
-

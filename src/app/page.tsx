@@ -3,352 +3,313 @@ import Link from "next/link";
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen bg-[#f5f2ec] text-slate-900">
-      {/* Top bar */}
-      <header className="border-b border-[#d4c6a8] bg-[#1f2933] text-[#fdfaf4]">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
+    <main className="min-h-screen bg-[#faf8f5] text-[#2a2a2a]">
+      {/* Header */}
+      <header className="border-b border-[#ded3c2] bg-white">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
           <div className="flex flex-col">
-            <span className="text-xl font-semibold tracking-tight">
+            <span className="text-2xl font-semibold tracking-tight text-[#2a2a2a]">
               EverLead
             </span>
-            <span className="text-[11px] uppercase tracking-[0.18em] text-[#e0d5bf]">
-              Pre-arrangement &amp; planning
+            <span className="text-[11px] uppercase tracking-[0.2em] text-[#6b6b6b] mt-0.5">
+              Funeral pre-planning
             </span>
           </div>
 
-          <nav className="flex items-center gap-5 text-xs font-medium">
+          <nav className="flex items-center gap-6 text-sm">
             <a
-              href="#about"
-              className="hidden text-[#e0d5bf] hover:text-white md:inline"
+              href="#"
+              className="text-[#4a4a4a] hover:text-[#2a2a2a] transition-colors"
             >
-              About
+              Home
             </a>
             <a
-              href="#services"
-              className="hidden text-[#e0d5bf] hover:text-white md:inline"
+              href="#planning-options"
+              className="text-[#4a4a4a] hover:text-[#2a2a2a] transition-colors"
             >
-              Planning options
+              Planning Options
             </a>
             <a
               href="#resources"
-              className="hidden text-[#e0d5bf] hover:text-white md:inline"
+              className="text-[#4a4a4a] hover:text-[#2a2a2a] transition-colors"
             >
               Resources
             </a>
             <Link
               href="/get-started"
-              className="rounded-full border border-[#e5d7b5] bg-[#fdfaf4] px-4 py-2 text-[11px] font-semibold text-[#1f2933] shadow-sm hover:bg-white"
+              className="rounded-md bg-[#2a2a2a] px-5 py-2 text-sm font-medium text-white hover:bg-[#3a3a3a] transition-colors"
             >
-              Start planning
+              Get Started
             </Link>
             <Link
               href="/agent"
-              className="text-[11px] font-medium text-[#e0d5bf] hover:text-white"
+              className="text-sm text-[#6b6b6b] hover:text-[#2a2a2a] transition-colors"
             >
-              For agents
+              Agent Login
             </Link>
           </nav>
         </div>
       </header>
 
-      {/* Hero banner */}
-      <section className="border-b border-[#e0d5bf] bg-[#111827]">
-        <div className="relative mx-auto max-w-6xl px-4 py-10 md:py-16">
-          {/* Fake background image layer (replace with real photo later) */}
-          <div className="absolute inset-0 -mx-4 overflow-hidden opacity-40">
-            <div className="h-full w-full bg-[url('/hero-placeholder.jpg')] bg-cover bg-center" />
-          </div>
+      {/* Hero Section */}
+      <section className="relative min-h-[600px] flex items-center justify-center overflow-hidden">
+        {/* Background Image */}
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{
+            backgroundImage: "url('/hero.jpg')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        />
+        
+        {/* White Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-r from-white via-white/80 to-white/40" />
 
-          {/* Overlay to keep text readable */}
-          <div className="absolute inset-0 -mx-4 bg-gradient-to-r from-[#111827] via-[#111827]/90 to-[#111827]/50" />
-
-          {/* Content */}
-          <div className="relative grid gap-10 md:grid-cols-[1.4fr,1fr]">
-            <div className="text-[#fdfaf4]">
-              <p className="mb-3 inline-flex rounded-full bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#f2e8cf]">
-                For families planning ahead
-              </p>
-
-              <h1
-                className="mb-4 text-3xl font-semibold leading-tight md:text-4xl"
-                style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+        {/* Content */}
+        <div className="relative z-10 mx-auto max-w-6xl px-6 py-20">
+          <div className="max-w-2xl">
+            <h1
+              className="mb-6 text-5xl font-normal leading-tight text-[#2a2a2a] md:text-6xl"
+              style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+            >
+              A gentle way to plan ahead, with care and clarity.
+            </h1>
+            <p className="mb-8 text-lg leading-relaxed text-[#4a4a4a] md:text-xl">
+              EverLead guides you through thoughtful pre-planning conversations,
+              helping you record your wishes and connect with trusted specialists
+              when you&apos;re ready—so your family can focus on what matters most.
+            </p>
+            <div className="flex flex-wrap items-center gap-4">
+              <Link
+                href="/get-started"
+                className="rounded-md bg-[#2a2a2a] px-6 py-3 text-base font-medium text-white hover:bg-[#3a3a3a] transition-colors shadow-sm"
               >
-                A gentle, organised way to record your funeral wishes in
-                advance.
-              </h1>
-
-              <p className="mb-6 max-w-xl text-sm text-[#f3ede0] md:text-base">
-                EverLead helps you note your preferences, gather important
-                details, and connect with a trusted pre-arrangement
-                specialist—so your family isn&apos;t left guessing on the
-                hardest day.
-              </p>
-
-              <div className="flex flex-wrap items-center gap-3">
-                <Link
-                  href="/get-started"
-                  className="rounded-full bg-[#fdfaf4] px-5 py-2.5 text-sm font-semibold text-[#1f2933] shadow-sm hover:bg-white"
-                >
-                  Begin the planning questionnaire
-                </Link>
-                <a
-                  href="#video"
-                  className="inline-flex items-center gap-2 text-xs font-medium text-[#f3ede0] hover:text-white"
-                >
-                  <span className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-[#f3ede0] text-[11px]">
-                    ▶
-                  </span>
-                  Watch a short introduction
-                </a>
-              </div>
-
-              <p className="mt-4 text-[11px] text-[#e0d5bf]">
-                No cost or obligation to use EverLead. You can save your
-                answers and return to them at any time.
-              </p>
-            </div>
-
-            {/* Right-hand "video" + reassurance card */}
-            <div className="space-y-4">
-              <div
-                id="video"
-                className="overflow-hidden rounded-xl border border-[#d4c6a8] bg-[#111827] text-[#fdfaf4] shadow-lg"
+                Begin the Questionnaire
+              </Link>
+              <a
+                href="#video"
+                className="text-base text-[#4a4a4a] hover:text-[#2a2a2a] transition-colors underline underline-offset-4"
               >
-                <div className="border-b border-[#2f3b48] bg-black/40 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#f2e8cf]">
-                  Overview video (placeholder)
-                </div>
-                <div className="flex items-center justify-center bg-black/50 px-4 py-8">
-                  <div className="flex h-20 w-20 items-center justify-center rounded-full border border-[#f2e8cf] text-xs">
-                    ▶
-                  </div>
-                </div>
-                <div className="border-t border-[#2f3b48] px-4 py-3 text-[11px] text-[#e3dcc9]">
-                  In your live site, this area will host a video explaining
-                  pre-arrangements and how EverLead supports your family.
-                </div>
-              </div>
-
-              <div className="rounded-xl border border-[#d4c6a8] bg-[#fdfaf4] p-4 text-xs text-slate-700 shadow-sm">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#8a744c]">
-                  A calm place to plan
-                </p>
-                <p className="mt-1 text-sm font-medium text-slate-900">
-                  We focus on clarity and care—not pressure.
-                </p>
-                <p className="mt-1 text-[11px] text-slate-600">
-                  You&apos;re welcome to use EverLead simply to gather your
-                  thoughts. Connecting with a professional is always your
-                  choice, and always at your pace.
-                </p>
-              </div>
+                Watch Introduction Video
+              </a>
             </div>
           </div>
         </div>
       </section>
 
-      {/* About / reassurance */}
+      {/* What You Can Plan - Three Column Section */}
       <section
-        id="about"
-        className="border-b border-[#e0d5bf] bg-[#f5f2ec] py-10 md:py-14"
+        id="planning-options"
+        className="border-b border-[#ded3c2] bg-white py-16 md:py-20"
       >
-        <div className="mx-auto max-w-6xl px-4">
-          <div className="grid gap-8 md:grid-cols-[1.2fr,1fr]">
-            <div>
-              <h2
-                className="text-xl font-semibold text-slate-900 md:text-2xl"
+        <div className="mx-auto max-w-6xl px-6">
+          <h2
+            className="mb-12 text-center text-3xl font-normal text-[#2a2a2a] md:text-4xl"
+            style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+          >
+            What You Can Plan
+          </h2>
+
+          <div className="grid gap-8 md:grid-cols-3">
+            {/* Service Preferences */}
+            <div className="rounded-lg border border-[#ded3c2] bg-[#faf8f5] p-8 shadow-sm">
+              <div className="mb-4 text-4xl text-[#6b6b6b]">✿</div>
+              <h3
+                className="mb-3 text-xl font-normal text-[#2a2a2a]"
                 style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
               >
-                Planning ahead can be an act of love.
-              </h2>
-              <p className="mt-3 text-sm text-slate-700 md:text-[15px]">
-                Many families tell us they simply don&apos;t know where to
-                start. There are questions about cost, what&apos;s customary
-                or appropriate, and how to balance different wishes within a
-                family.
-              </p>
-              <p className="mt-2 text-sm text-slate-700 md:text-[15px]">
-                EverLead offers a quiet space to think through these decisions
-                in advance. We help you organise the details so that, when the
-                time comes, your family can focus more on each other and less
-                on paperwork.
+                Service Preferences
+              </h3>
+              <p className="text-[#4a4a4a] leading-relaxed">
+                Record your preferences for visitation, ceremony style, music,
+                readings, and other personal touches that reflect your values
+                and traditions.
               </p>
             </div>
 
-            <div className="space-y-3 rounded-xl border border-[#e0d5bf] bg-[#fbf7ee] p-4 text-xs text-slate-700">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#8a744c]">
-                At a glance
+            {/* Burial or Cremation */}
+            <div className="rounded-lg border border-[#ded3c2] bg-[#faf8f5] p-8 shadow-sm">
+              <div className="mb-4 text-4xl text-[#6b6b6b]">◊</div>
+              <h3
+                className="mb-3 text-xl font-normal text-[#2a2a2a]"
+                style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+              >
+                Burial or Cremation
+              </h3>
+              <p className="text-[#4a4a4a] leading-relaxed">
+                Document your choices regarding final resting place, whether
+                that&apos;s burial, cremation, columbarium, or scattering, along
+                with any special wishes or considerations.
               </p>
-              <ul className="space-y-1">
-                <li>• No obligation or payment required to begin planning.</li>
-                <li>• Your answers are stored securely and can be updated.</li>
-                <li>
-                  • When you&apos;re ready, we connect you with a vetted
-                  pre-planning specialist.
+            </div>
+
+            {/* Practical Details */}
+            <div className="rounded-lg border border-[#ded3c2] bg-[#faf8f5] p-8 shadow-sm">
+              <div className="mb-4 text-4xl text-[#6b6b6b]">◈</div>
+              <h3
+                className="mb-3 text-xl font-normal text-[#2a2a2a]"
+                style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+              >
+                Practical Details
+              </h3>
+              <p className="text-[#4a4a4a] leading-relaxed">
+                Organize important contacts, preferences for clergy or
+                celebrants, and other essential information your family will
+                need during a difficult time.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Why Plan Ahead - Two Column Section */}
+      <section className="border-b border-[#ded3c2] bg-[#f7f4ef] py-16 md:py-20">
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="grid gap-12 md:grid-cols-[1.2fr,1fr]">
+            {/* Left Side - Text */}
+            <div>
+              <h2
+                className="mb-6 text-3xl font-normal text-[#2a2a2a] md:text-4xl"
+                style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+              >
+                Why Plan Ahead
+              </h2>
+              <p className="mb-4 text-lg leading-relaxed text-[#4a4a4a]">
+                Planning ahead is an act of love. When you take the time to
+                record your wishes in advance, you give your family the gift of
+                clarity during one of life&apos;s most difficult moments.
+              </p>
+              <p className="text-lg leading-relaxed text-[#4a4a4a]">
+                EverLead provides a calm, organized space to think through
+                these important decisions at your own pace. We help you gather
+                your thoughts, document your preferences, and connect with
+                trusted professionals when you&apos;re ready—not before.
+              </p>
+            </div>
+
+            {/* Right Side - At a Glance Box */}
+            <div className="rounded-lg border border-[#ded3c2] bg-white p-8 shadow-sm">
+              <h3
+                className="mb-4 text-xl font-normal text-[#2a2a2a]"
+                style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+              >
+                At a Glance
+              </h3>
+              <ul className="space-y-3 text-[#4a4a4a]">
+                <li className="flex items-start">
+                  <span className="mr-3 text-[#6b6b6b]">•</span>
+                  <span>No obligation or payment required to begin planning</span>
                 </li>
-                <li>• Designed to complement, not replace, your funeral home.</li>
+                <li className="flex items-start">
+                  <span className="mr-3 text-[#6b6b6b]">•</span>
+                  <span>Your answers are stored securely and can be updated anytime</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="mr-3 text-[#6b6b6b]">•</span>
+                  <span>Connect with vetted pre-planning specialists when ready</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="mr-3 text-[#6b6b6b]">•</span>
+                  <span>Designed to complement, not replace, your funeral home</span>
+                </li>
               </ul>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Planning options */}
-      <section
-        id="services"
-        className="border-b border-[#e0d5bf] bg-[#fbf7ee] py-10 md:py-14"
-      >
-        <div className="mx-auto max-w-6xl px-4">
-          <h2
-            className="mb-4 text-xl font-semibold text-slate-900 md:text-2xl"
-            style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-          >
-            What you can plan with EverLead
-          </h2>
-
-          <div className="grid gap-4 md:grid-cols-3">
-            <div className="rounded-xl border border-[#e3d5b7] bg-white p-5 text-xs text-slate-700 shadow-sm">
-              <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#8a744c]">
-                Service preferences
-              </p>
-              <p className="text-sm font-medium text-slate-900">
-                Type of service &amp; setting
-              </p>
-              <p className="mt-1">
-                Visitation, ceremony, reception, music, readings, and other
-                personal touches that matter to you.
-              </p>
-            </div>
-            <div className="rounded-xl border border-[#e3d5b7] bg-white p-5 text-xs text-slate-700 shadow-sm">
-              <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#8a744c]">
-                Burial or cremation
-              </p>
-              <p className="text-sm font-medium text-slate-900">
-                Final resting place
-              </p>
-              <p className="mt-1">
-                Choices around burial, cremation, columbarium, or scattering,
-                including any special wishes.
-              </p>
-            </div>
-            <div className="rounded-xl border border-[#e3d5b7] bg-white p-5 text-xs text-slate-700 shadow-sm">
-              <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#8a744c]">
-                Practical details
-              </p>
-              <p className="text-sm font-medium text-slate-900">
-                Contacts &amp; important information
-              </p>
-              <p className="mt-1">
-                Key contacts, preferences for clergy or celebrants, and other
-                details your family will need.
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-6">
-            <Link
-              href="/get-started"
-              className="inline-flex items-center rounded-full border border-[#c9b892] bg-[#1f2933] px-5 py-2 text-xs font-semibold text-[#fdfaf4] shadow-sm hover:bg-black"
-            >
-              Begin the confidential questionnaire
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Resources / flyers / FAQ */}
+      {/* Resources Section - Two Column */}
       <section
         id="resources"
-        className="bg-[#f5f2ec] py-10 md:py-14"
+        className="border-b border-[#ded3c2] bg-white py-16 md:py-20"
       >
-        <div className="mx-auto max-w-6xl px-4">
-          <div className="grid gap-8 md:grid-cols-[1.3fr,1fr]">
-            {/* Resource cards */}
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="grid gap-12 md:grid-cols-[1.2fr,1fr]">
+            {/* Left Side - Guides */}
             <div>
               <h2
-                className="mb-3 text-xl font-semibold text-slate-900 md:text-2xl"
+                className="mb-6 text-3xl font-normal text-[#2a2a2a] md:text-4xl"
                 style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
               >
-                Helpful guides for you and your family
+                Guides &amp; Printable Resources
               </h2>
-              <div className="space-y-3 text-xs text-slate-700">
-                <div className="rounded-xl border border-[#e3d5b7] bg-white p-4">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#8a744c]">
-                    Printable flyer (PDF)
+              <div className="space-y-4">
+                {/* Printable Flyer */}
+                <div className="rounded-lg border border-[#ded3c2] bg-[#faf8f5] p-6 shadow-sm">
+                  <p className="mb-2 text-xs uppercase tracking-[0.15em] text-[#6b6b6b]">
+                    Printable Flyer
                   </p>
-                  <p className="mt-1 text-sm font-medium text-slate-900">
-                    "Starting the conversation about funeral wishes."
-                  </p>
-                  <p className="mt-1">
-                    A one-page sheet you can print and share with family
-                    members when you&apos;re ready to talk.
-                  </p>
-                </div>
-                <div className="rounded-xl border border-[#e3d5b7] bg-white p-4">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#8a744c]">
-                    Planning checklist
-                  </p>
-                  <p className="mt-1 text-sm font-medium text-slate-900">
-                    All the key decisions in one place.
-                  </p>
-                  <p className="mt-1">
-                    A checklist that mirrors the EverLead questionnaire so you
-                    can review or complete it offline.
+                  <h3 className="mb-2 text-lg font-medium text-[#2a2a2a]">
+                    Starting the Conversation About Funeral Wishes
+                  </h3>
+                  <p className="text-[#4a4a4a] leading-relaxed">
+                    A one-page guide you can print and share with family members
+                    when you&apos;re ready to discuss your wishes together.
                   </p>
                 </div>
-                <div className="rounded-xl border border-[#e3d5b7] bg-white p-4">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#8a744c]">
-                    Questions for your funeral home
+
+                {/* Planning Checklist */}
+                <div className="rounded-lg border border-[#ded3c2] bg-[#faf8f5] p-6 shadow-sm">
+                  <p className="mb-2 text-xs uppercase tracking-[0.15em] text-[#6b6b6b]">
+                    Planning Checklist
                   </p>
-                  <p className="mt-1 text-sm font-medium text-slate-900">
-                    Feel confident walking into any meeting.
-                  </p>
-                  <p className="mt-1">
-                    A simple list of questions to help you understand your
-                    options and feel comfortable with your choices.
+                  <h3 className="mb-2 text-lg font-medium text-[#2a2a2a]">
+                    All the Key Decisions in One Place
+                  </h3>
+                  <p className="text-[#4a4a4a] leading-relaxed">
+                    A comprehensive checklist that mirrors the EverLead
+                    questionnaire, so you can review or complete it offline at
+                    your own pace.
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* FAQ */}
-            <div className="space-y-3 text-xs text-slate-700">
+            {/* Right Side - FAQ */}
+            <div>
               <h2
-                className="text-xl font-semibold text-slate-900 md:text-2xl"
+                className="mb-6 text-3xl font-normal text-[#2a2a2a] md:text-4xl"
                 style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
               >
-                Common questions
+                Common Questions
               </h2>
+              <div className="space-y-4">
+                {/* FAQ 1 */}
+                <div className="rounded-lg border border-[#ded3c2] bg-[#faf8f5] p-6 shadow-sm">
+                  <h3 className="mb-2 text-base font-medium text-[#2a2a2a]">
+                    Do I have to choose a funeral home now?
+                  </h3>
+                  <p className="text-[#4a4a4a] leading-relaxed">
+                    No. EverLead helps you think through your wishes first.
+                    When you&apos;re ready, we can connect you with a carefully
+                    selected local professional.
+                  </p>
+                </div>
 
-              <div className="rounded-xl border border-[#e3d5b7] bg-white p-4">
-                <p className="text-sm font-semibold text-slate-900">
-                  Do I have to choose a funeral home now?
-                </p>
-                <p className="mt-1">
-                  No. EverLead helps you think through your wishes first. When
-                  you&apos;re ready, we can connect you with a carefully
-                  selected local professional.
-                </p>
-              </div>
+                {/* FAQ 2 */}
+                <div className="rounded-lg border border-[#ded3c2] bg-[#faf8f5] p-6 shadow-sm">
+                  <h3 className="mb-2 text-base font-medium text-[#2a2a2a]">
+                    Will my information be shared widely?
+                  </h3>
+                  <p className="text-[#4a4a4a] leading-relaxed">
+                    Never. Your details are kept completely confidential. If you
+                    choose to be contacted, we only share your information with
+                    selected professionals, not a public list.
+                  </p>
+                </div>
 
-              <div className="rounded-xl border border-[#e3d5b7] bg-white p-4">
-                <p className="text-sm font-semibold text-slate-900">
-                  Will my information be shared widely?
-                </p>
-                <p className="mt-1">
-                  Never. Your details are kept confidential. If you ask to be
-                  contacted, we only share your information with selected
-                  professionals, not a public list.
-                </p>
-              </div>
-
-              <div className="rounded-xl border border-[#e3d5b7] bg-white p-4">
-                <p className="text-sm font-semibold text-slate-900">
-                  What if I change my mind later?
-                </p>
-                <p className="mt-1">
-                  Plans can be updated. Many people revisit their wishes as
-                  life changes; EverLead is designed to support that.
-                </p>
+                {/* FAQ 3 */}
+                <div className="rounded-lg border border-[#ded3c2] bg-[#faf8f5] p-6 shadow-sm">
+                  <h3 className="mb-2 text-base font-medium text-[#2a2a2a]">
+                    What if I change my mind later?
+                  </h3>
+                  <p className="text-[#4a4a4a] leading-relaxed">
+                    Plans can be updated at any time. Many people revisit their
+                    wishes as life changes; EverLead is designed to support that
+                    flexibility.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -356,20 +317,20 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-[#e0d5bf] bg-[#1f2933] text-[#e0d5bf]">
-        <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-6 text-[11px] md:flex-row md:items-center md:justify-between">
+      <footer className="border-t border-[#ded3c2] bg-[#f7f4ef] py-8">
+        <div className="mx-auto flex max-w-6xl flex-col gap-4 px-6 text-xs text-[#6b6b6b] md:flex-row md:items-center md:justify-between">
           <div>
-            © {new Date().getFullYear()} EverLead. Tools to support thoughtful
-            pre-arrangement.
+            © {new Date().getFullYear()} EverLead. Gentle tools for thoughtful
+            pre-planning.
           </div>
-          <div className="flex flex-wrap gap-4">
-            <Link href="/privacy" className="hover:text-white">
+          <div className="flex flex-wrap items-center gap-4">
+            <Link href="/privacy" className="hover:text-[#2a2a2a] transition-colors">
               Privacy
             </Link>
-            <Link href="/terms" className="hover:text-white">
+            <Link href="/terms" className="hover:text-[#2a2a2a] transition-colors">
               Terms
             </Link>
-            <span className="text-[#c7b89a]">
+            <span className="text-[#9b9b9b]">
               EverLead is not a funeral home and does not provide legal or
               financial advice.
             </span>

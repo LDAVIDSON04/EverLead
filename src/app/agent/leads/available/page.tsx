@@ -176,15 +176,15 @@ export default function AvailableLeadsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50">
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
+    <main className="min-h-screen bg-[#f7f4ef]">
+      <header className="border-b border-[#ded3c2] bg-[#1f2933] text-white">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <div className="flex items-baseline gap-2">
-            <span className="text-sm font-semibold text-slate-900">
+            <span className="text-lg font-semibold text-white">
               EverLead
             </span>
-            <span className="text-[11px] uppercase tracking-wide text-slate-500">
-              Agent portal
+            <span className="text-[11px] uppercase tracking-[0.18em] text-[#e0d5bf]">
+              Agent Portal
             </span>
           </div>
         </div>
@@ -192,21 +192,21 @@ export default function AvailableLeadsPage() {
 
       <AgentNav />
 
-      <section className="mx-auto max-w-5xl px-4 py-6">
-        <div className="mb-3 flex items-baseline justify-between">
-          <div>
-            <h1 className="text-lg font-semibold text-slate-900">
-              Available leads
-            </h1>
-            <p className="text-xs text-slate-500">
-              New pre-need inquiries you can buy or use your one-time free
-              lead on.
-            </p>
-          </div>
+      <section className="mx-auto max-w-6xl px-6 py-8">
+        <div className="mb-6">
+          <h1
+            className="mb-2 text-2xl font-normal text-[#2a2a2a]"
+            style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+          >
+            Available leads
+          </h1>
+          <p className="text-sm text-[#6b6b6b]">
+            New pre-need inquiries you can buy or use your one-time free lead on.
+          </p>
         </div>
 
         {firstFreeAvailable && (
-          <div className="mb-4 rounded-xl border border-dashed border-amber-300 bg-amber-50 px-4 py-3 text-xs text-amber-900">
+          <div className="mb-4 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-xs text-amber-900">
             <p className="font-semibold">First lead free for new agents 🎉</p>
             <p className="mt-1">
               You can claim <span className="font-semibold">one</span> lead for
@@ -217,13 +217,15 @@ export default function AvailableLeadsPage() {
         )}
 
         {error && (
-          <p className="mb-3 text-xs text-red-600">{error}</p>
+          <div className="mb-4 rounded-md border border-red-200 bg-red-50 px-4 py-3">
+            <p className="text-xs text-red-600">{error}</p>
+          </div>
         )}
 
         {loading ? (
-          <p className="text-sm text-slate-600">Loading leads…</p>
+          <p className="text-sm text-[#6b6b6b]">Loading leads…</p>
         ) : leads.length === 0 ? (
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-[#6b6b6b]">
             There are no available leads right now. Check back soon.
           </p>
         ) : (
@@ -231,38 +233,38 @@ export default function AvailableLeadsPage() {
             {leads.map((lead) => (
               <div
                 key={lead.id}
-                className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
+                className="rounded-lg border border-[#ded3c2] bg-white p-4 shadow-sm"
               >
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
-                    <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                    <div className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
                       {formatUrgency(lead.urgency_level)} lead
                     </div>
-                    <div className="text-sm font-semibold text-slate-900">
+                    <div className="mt-1 text-sm font-semibold text-[#2a2a2a]">
                       {lead.city || "Unknown location"}
                     </div>
-                    <div className="text-xs text-slate-500">
+                    <div className="text-xs text-[#6b6b6b]">
                       {lead.service_type || "Pre-need planning"}
                     </div>
                   </div>
 
                   <div className="text-right">
-                    <div className="text-[11px] uppercase tracking-wide text-slate-500">
+                    <div className="text-xs uppercase tracking-[0.15em] text-[#6b6b6b]">
                       Suggested price
                     </div>
-                    <div className="text-sm font-semibold text-slate-900">
+                    <div className="mt-1 text-sm font-semibold text-[#2a2a2a]">
                       {formatPrice(lead.suggested_price_cents)}
                     </div>
                   </div>
                 </div>
 
-                <div className="mt-3 flex flex-wrap gap-2">
+                <div className="mt-4 flex flex-wrap items-center gap-2">
                   <button
                     onClick={() =>
                       handleBuyNow(lead.id, lead.suggested_price_cents)
                     }
                     disabled={buyingId === lead.id}
-                    className="rounded-full bg-brand-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-70"
+                    className="rounded-full bg-[#2a2a2a] px-4 py-1.5 text-xs font-semibold text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-70 transition-colors"
                   >
                     {buyingId === lead.id ? "Starting checkout…" : "Buy now"}
                   </button>
@@ -271,7 +273,7 @@ export default function AvailableLeadsPage() {
                     <button
                       onClick={() => handleClaimFree(lead.id)}
                       disabled={claimingId === lead.id}
-                      className="rounded-full border border-amber-400 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-900 hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-70"
+                      className="rounded-md border border-amber-400 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-900 hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-70 transition-colors"
                     >
                       {claimingId === lead.id
                         ? "Claiming free lead…"
@@ -281,7 +283,7 @@ export default function AvailableLeadsPage() {
 
                   <Link
                     href={`/agent/leads/${lead.id}`}
-                    className="text-[11px] font-medium text-slate-500 hover:text-brand-600"
+                    className="ml-auto text-xs font-medium text-[#6b6b6b] hover:text-[#2a2a2a] transition-colors"
                   >
                     View details →
                   </Link>

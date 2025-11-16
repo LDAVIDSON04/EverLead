@@ -73,24 +73,27 @@ export default function AgentDashboardPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50">
+    <main className="min-h-screen bg-[#f7f4ef]">
       {/* Top bar */}
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
+      <header className="border-b border-[#ded3c2] bg-[#1f2933] text-white">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <div className="flex items-baseline gap-2">
-            <span className="text-sm font-semibold text-slate-900">
+            <span className="text-lg font-semibold text-white">
               EverLead
             </span>
-            <span className="text-[11px] uppercase tracking-wide text-slate-500">
-              Agent portal
+            <span className="text-[11px] uppercase tracking-[0.18em] text-[#e0d5bf]">
+              Agent Portal
             </span>
           </div>
-          <button
-            onClick={handleLogout}
-            className="rounded-md border border-slate-300 px-3 py-1 text-[11px] text-slate-700 hover:border-slate-400"
-          >
-            Log out
-          </button>
+          <div className="flex items-center gap-4">
+            <span className="text-xs text-[#e0d5bf]">Agent</span>
+            <button
+              onClick={handleLogout}
+              className="rounded-md border border-[#e5d7b5] bg-transparent px-3 py-1 text-[11px] font-medium text-[#e0d5bf] hover:bg-white/10 transition-colors"
+            >
+              Log out
+            </button>
+          </div>
         </div>
       </header>
 
@@ -98,69 +101,64 @@ export default function AgentDashboardPage() {
       <AgentNav />
 
       {/* Content */}
-      <section className="mx-auto max-w-5xl px-4 py-6">
-        <div className="mb-4 flex items-baseline justify-between">
-          <div>
-            <h1 className="text-lg font-semibold text-slate-900">
-              Overview
-            </h1>
-            <p className="text-xs text-slate-500">
-              Quick snapshot of leads available in your territory.
-            </p>
-          </div>
-          <Link
-            href="/agent/leads/available"
-            className="text-xs font-medium text-brand-600 hover:text-brand-700"
+      <section className="mx-auto max-w-6xl px-6 py-8">
+        <div className="mb-6">
+          <h1
+            className="mb-2 text-2xl font-normal text-[#2a2a2a]"
+            style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
           >
-            View available leads →
-          </Link>
+            Overview
+          </h1>
+          <p className="text-sm text-[#6b6b6b]">
+            Quick snapshot of leads available in your territory.
+          </p>
         </div>
 
         {loading ? (
-          <p className="text-sm text-slate-600">Loading your stats…</p>
+          <p className="text-sm text-[#6b6b6b]">Loading your stats…</p>
         ) : (
           <div className="grid gap-4 md:grid-cols-3">
             <Link
               href="/agent/leads/available"
-              className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+              className="rounded-lg border border-[#ded3c2] bg-white p-6 shadow-sm transition hover:shadow-md"
             >
-              <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+              <div className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
                 Available leads
               </div>
-              <div className="mt-2 text-2xl font-bold text-slate-900">
+              <div className="mt-3 text-3xl font-semibold text-[#2a2a2a]">
                 {stats.available}
               </div>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-2 text-xs text-[#6b6b6b]">
                 New leads you can buy or bid on.
               </p>
             </Link>
 
             <Link
               href="/agent/leads/mine"
-              className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+              className="rounded-lg border border-[#ded3c2] bg-white p-6 shadow-sm transition hover:shadow-md"
             >
-              <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+              <div className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
                 My leads
               </div>
-              <div className="mt-2 text-2xl font-bold text-slate-900">
+              <div className="mt-3 text-3xl font-semibold text-[#2a2a2a]">
                 {stats.myLeads}
               </div>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-2 text-xs text-[#6b6b6b]">
                 Leads currently assigned to you.
               </p>
             </Link>
 
             <Link
               href="/agent/leads/purchased"
-              className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+              className="rounded-lg border border-[#ded3c2] bg-white p-6 shadow-sm transition hover:shadow-md"
             >
-              <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+              <div className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
                 Purchased leads
               </div>
-              <div className="mt-2 text-2xl font-bold text-slate-900">
+              <div className="mt-3 text-3xl font-semibold text-[#2a2a2a]">
                 {stats.purchased}
               </div>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-2 text-xs text-[#6b6b6b]">
                 Leads you&apos;ve bought through EverLead.
               </p>
             </Link>

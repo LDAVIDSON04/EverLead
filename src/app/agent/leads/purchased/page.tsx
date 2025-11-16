@@ -66,15 +66,15 @@ export default function PurchasedLeadsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50">
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
+    <main className="min-h-screen bg-[#f7f4ef]">
+      <header className="border-b border-[#ded3c2] bg-[#1f2933] text-white">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <div className="flex items-baseline gap-2">
-            <span className="text-sm font-semibold text-slate-900">
+            <span className="text-lg font-semibold text-white">
               EverLead
             </span>
-            <span className="text-[11px] uppercase tracking-wide text-slate-500">
-              Agent portal
+            <span className="text-[11px] uppercase tracking-[0.18em] text-[#e0d5bf]">
+              Agent Portal
             </span>
           </div>
         </div>
@@ -82,19 +82,24 @@ export default function PurchasedLeadsPage() {
 
       <AgentNav />
 
-      <section className="mx-auto max-w-5xl px-4 py-6">
-        <h1 className="mb-2 text-lg font-semibold text-slate-900">
-          Purchased leads
-        </h1>
-        <p className="mb-4 text-xs text-slate-500">
-          Leads you&apos;ve bought through EverLead, ready to be worked and
-          tracked.
-        </p>
+      <section className="mx-auto max-w-6xl px-6 py-8">
+        <div className="mb-6">
+          <h1
+            className="mb-2 text-2xl font-normal text-[#2a2a2a]"
+            style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+          >
+            Purchased leads
+          </h1>
+          <p className="text-sm text-[#6b6b6b]">
+            Leads you&apos;ve bought through EverLead, ready to be worked and
+            tracked.
+          </p>
+        </div>
 
         {loading ? (
-          <p className="text-sm text-slate-600">Loading purchased leads…</p>
+          <p className="text-sm text-[#6b6b6b]">Loading purchased leads…</p>
         ) : leads.length === 0 ? (
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-[#6b6b6b]">
             You haven&apos;t purchased any leads yet.
           </p>
         ) : (
@@ -102,33 +107,33 @@ export default function PurchasedLeadsPage() {
             {leads.map((lead) => (
               <div
                 key={lead.id}
-                className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
+                className="rounded-lg border border-[#ded3c2] bg-white p-4 shadow-sm"
               >
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
-                    <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                    <div className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
                       {formatUrgency(lead.urgency_level)} lead
                     </div>
-                    <div className="text-sm font-semibold text-slate-900">
+                    <div className="mt-1 text-sm font-semibold text-[#2a2a2a]">
                       {lead.city || "Unknown location"}
                     </div>
-                    <div className="text-xs text-slate-500">
+                    <div className="text-xs text-[#6b6b6b]">
                       {lead.service_type || "Pre-need planning"}
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-[11px] uppercase tracking-wide text-slate-500">
+                    <div className="text-xs uppercase tracking-[0.15em] text-[#6b6b6b]">
                       Status
                     </div>
-                    <div className="text-xs font-semibold text-slate-900">
+                    <div className="mt-1 text-xs font-semibold text-[#2a2a2a]">
                       {lead.status || "purchased_by_agent"}
                     </div>
                   </div>
                 </div>
-                <div className="mt-2">
+                <div className="mt-3">
                   <Link
                     href={`/agent/leads/${lead.id}`}
-                    className="text-[11px] font-medium text-brand-600 hover:text-brand-700"
+                    className="text-xs font-medium text-[#6b6b6b] hover:text-[#2a2a2a] transition-colors"
                   >
                     View details →
                   </Link>
