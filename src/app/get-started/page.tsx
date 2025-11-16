@@ -33,30 +33,36 @@ export default function GetStartedPage() {
     const ageValue = formData.get("age");
     const age = ageValue ? parseInt(ageValue as string, 10) : null;
 
-    const { error: insertError } = await supabaseClient.from("leads").insert({
-      full_name: formData.get("full_name"),
-      email: formData.get("email"),
-      phone: formData.get("phone"),
-      city: formData.get("city"),
-      province: formData.get("province"),
-      postal_code: formData.get("postal_code"),
+    // Build the insert payload
+    const leadData: any = {
+      full_name: formData.get("full_name") || null,
+      email: formData.get("email") || null,
+      phone: formData.get("phone") || null,
+      city: formData.get("city") || null,
+      province: formData.get("province") || null,
+      postal_code: formData.get("postal_code") || null,
       age: age,
-      age_range: null, // Keep for backward compatibility, but send null
-      planning_for: formData.get("planning_for"),
-      service_type: formData.get("service_type"),
-      ceremony_preferences: formData.get("ceremony_preferences"),
-      budget_range: null, // Removed field, send null
+      planning_for: formData.get("planning_for") || null,
+      service_type: formData.get("service_type") || null,
+      ceremony_preferences: formData.get("ceremony_preferences") || null,
       timeline_intent,
       urgency_level,
-      additional_notes: formData.get("additional_notes"),
+      additional_notes: formData.get("additional_notes") || null,
       status: urgency_level === "cold" ? "cold_unassigned" : "new",
       buy_now_price_cents,
       auction_min_price_cents,
-    });
+    };
+
+    const { error: insertError } = await supabaseClient.from("leads").insert(leadData);
 
     if (insertError) {
-      console.error(insertError);
-      setError("Something went wrong. Please try again.");
+      console.error("Lead submission error", insertError);
+      // Provide more helpful error message
+      if (insertError.message?.includes("column") || insertError.message?.includes("field")) {
+        setError("There was an issue with the form data. Please check all fields and try again.");
+      } else {
+        setError(insertError.message || "Something went wrong. Please try again.");
+      }
       setFormState("error");
       return;
     }
