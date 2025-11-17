@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabaseClient } from "@/lib/supabaseClient";
 import { AgentNav } from "@/components/AgentNav";
+import { maskName } from "@/lib/masking";
+import { agentOwnsLead } from "@/lib/leads";
 
 type Stats = {
   available: number;
@@ -19,10 +21,13 @@ type RecentLead = {
   id: string;
   created_at: string | null;
   full_name: string | null;
+  first_name: string | null;
+  last_name: string | null;
   city: string | null;
   urgency_level: string | null;
   status: string | null;
   agent_status: string | null;
+  assigned_agent_id: string | null;
 };
 
 type TopAgent = {
@@ -45,6 +50,7 @@ type YourBid = {
   lead_urgency: string | null;
   your_highest_bid: number;
   is_highest_bidder: boolean;
+  auction_ends_at: string | null;
 };
 
 export default function AgentDashboardPage() {
@@ -63,6 +69,8 @@ export default function AgentDashboardPage() {
   const [yourBids, setYourBids] = useState<YourBid[]>([]);
   const [loading, setLoading] = useState(true);
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
     async function loadStats() {
@@ -79,6 +87,7 @@ export default function AgentDashboardPage() {
 
         setUserEmail(user.email || null);
         const agentId = user.id;
+        setUserId(agentId);
 
         // Calculate date 30 days ago
         const thirtyDaysAgo = new Date();
@@ -142,7 +151,7 @@ export default function AgentDashboardPage() {
         // Load recent leads (assigned to this agent, limit 10)
         const { data: recentData } = await supabaseClient
           .from("leads")
-          .select("id, created_at, full_name, city, urgency_level, status, agent_status")
+          .select("id, created_at, full_name, first_name, last_name, city, urgency_level, status, agent_status, assigned_agent_id")
           .eq("assigned_agent_id", agentId)
           .order("created_at", { ascending: false })
           .limit(10);
@@ -222,22 +231,31 @@ export default function AgentDashboardPage() {
         const yourBidLeadIds = Object.keys(leadBidMap).slice(0, 10);
 
         if (yourBidLeadIds.length > 0) {
-          // Fetch lead info for these bids
+          // Fetch lead info for these bids (only active auctions)
+          const nowISO = new Date().toISOString();
           const { data: bidLeadsData } = await supabaseClient
             .from("leads")
-            .select("id, city, urgency_level, current_bid_agent_id")
-            .in("id", yourBidLeadIds);
+            .select("id, city, urgency_level, current_bid_agent_id, auction_ends_at, auction_enabled")
+            .in("id", yourBidLeadIds)
+            .eq("auction_enabled", true)
+            .gt("auction_ends_at", nowISO)
+            .neq("status", "purchased_by_agent");
 
-          const yourBidsList: YourBid[] = yourBidLeadIds.map((lid) => {
-            const lead = bidLeadsData?.find((l) => l.id === lid);
-            return {
-              lead_id: lid,
-              lead_city: lead?.city || null,
-              lead_urgency: lead?.urgency_level || null,
-              your_highest_bid: leadBidMap[lid],
-              is_highest_bidder: lead?.current_bid_agent_id === agentId,
-            };
-          });
+          const yourBidsList: YourBid[] = (bidLeadsData || [])
+            .map((lead) => ({
+              lead_id: lead.id,
+              lead_city: lead.city || null,
+              lead_urgency: lead.urgency_level || null,
+              your_highest_bid: leadBidMap[lead.id],
+              is_highest_bidder: lead.current_bid_agent_id === agentId,
+              auction_ends_at: lead.auction_ends_at,
+            }))
+            .sort((a, b) => {
+              // Sort by auction_ends_at (soonest first)
+              if (!a.auction_ends_at) return 1;
+              if (!b.auction_ends_at) return -1;
+              return new Date(a.auction_ends_at).getTime() - new Date(b.auction_ends_at).getTime();
+            });
 
           setYourBids(yourBidsList);
         } else {
@@ -252,6 +270,14 @@ export default function AgentDashboardPage() {
 
     loadStats();
   }, [router]);
+
+  // Countdown timer for Your bids
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setNow(new Date());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   async function handleLogout() {
     await supabaseClient.auth.signOut();
@@ -288,6 +314,39 @@ export default function AgentDashboardPage() {
     if (!status) return "New";
     if (status === "purchased_by_agent") return "Purchased";
     return status;
+  }
+
+  function formatCountdown(endsAt: string | null): string {
+    if (!endsAt) return "";
+    try {
+      const endDate = new Date(endsAt);
+      const remainingMs = endDate.getTime() - now.getTime();
+      
+      if (remainingMs <= 0) {
+        return "Auction ended";
+      }
+
+      const totalSeconds = Math.floor(remainingMs / 1000);
+      const hours = Math.floor(totalSeconds / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = totalSeconds % 60;
+      
+      const pad = (n: number) => n.toString().padStart(2, "0");
+      
+      return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+    } catch {
+      return "";
+    }
+  }
+
+  function getStatusColors(status: string | null): { bg: string; text: string } {
+    const s = (status ?? "new").toLowerCase();
+    if (s === "new") return { bg: "bg-blue-100", text: "text-blue-700" };
+    if (s === "contacted") return { bg: "bg-slate-100", text: "text-slate-700" };
+    if (s.includes("follow")) return { bg: "bg-amber-100", text: "text-amber-700" };
+    if (s.includes("won")) return { bg: "bg-emerald-100", text: "text-emerald-700" };
+    if (s.includes("lost")) return { bg: "bg-rose-100", text: "text-rose-700" };
+    return { bg: "bg-slate-100", text: "text-slate-700" };
   }
 
   return (
@@ -338,160 +397,227 @@ export default function AgentDashboardPage() {
         {loading ? (
           <p className="text-sm text-[#6b6b6b]">Loading your stats…</p>
         ) : (
-          <>
-            {/* Metrics row */}
-            <div className="mb-8 grid gap-4 md:grid-cols-4">
+          <div className="space-y-6">
+            {/* Stat cards row */}
+            <div className="grid gap-4 md:grid-cols-4">
               <Link
                 href="/agent/leads/available"
-                className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition hover:shadow-md"
+                className="rounded-xl border border-slate-200 bg-white/80 px-4 py-3 shadow-sm flex flex-col gap-1 transition hover:shadow-md"
               >
-                <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                <span className="text-xs font-medium uppercase tracking-wide text-slate-500">
                   Available leads
-                </div>
-                <div className="mt-2 text-2xl font-semibold text-slate-900">
+                </span>
+                <span className="text-2xl font-semibold text-slate-900">
                   {stats.available}
-                </div>
-                <p className="mt-1 text-[11px] text-slate-500">
+                </span>
+                <span className="text-[11px] text-slate-500">
                   New leads you can buy or bid on
-                </p>
+                </span>
               </Link>
 
               <Link
                 href="/agent/leads/mine"
-                className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition hover:shadow-md"
+                className="rounded-xl border border-slate-200 bg-white/80 px-4 py-3 shadow-sm flex flex-col gap-1 transition hover:shadow-md"
               >
-                <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                <span className="text-xs font-medium uppercase tracking-wide text-slate-500">
                   My leads
-                </div>
-                <div className="mt-2 text-2xl font-semibold text-slate-900">
+                </span>
+                <span className="text-2xl font-semibold text-slate-900">
                   {stats.myLeads}
-                </div>
-                <p className="mt-1 text-[11px] text-slate-500">
+                </span>
+                <span className="text-[11px] text-slate-500">
                   Leads currently assigned to you
-                </p>
+                </span>
                 {stats.newLeads > 0 && (
-                  <p className="mt-1 text-[11px] text-slate-500">
+                  <span className="text-[11px] text-slate-500">
                     {stats.newLeads} new {stats.newLeads === 1 ? "lead" : "leads"} need attention
-                  </p>
+                  </span>
                 )}
               </Link>
 
               <Link
                 href="/agent/leads/purchased"
-                className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition hover:shadow-md"
+                className="rounded-xl border border-slate-200 bg-white/80 px-4 py-3 shadow-sm flex flex-col gap-1 transition hover:shadow-md"
               >
-                <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                <span className="text-xs font-medium uppercase tracking-wide text-slate-500">
                   Purchased this month
-                </div>
-                <div className="mt-2 text-2xl font-semibold text-slate-900">
+                </span>
+                <span className="text-2xl font-semibold text-slate-900">
                   {stats.purchasedThisMonth}
-                </div>
-                <p className="mt-1 text-[11px] text-slate-500">
+                </span>
+                <span className="text-[11px] text-slate-500">
                   Leads purchased in last 30 days
-                </p>
+                </span>
               </Link>
 
-              <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-                <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+              <div className="rounded-xl border border-slate-200 bg-white/80 px-4 py-3 shadow-sm flex flex-col gap-1">
+                <span className="text-xs font-medium uppercase tracking-wide text-slate-500">
                   Total spent
-                </div>
-                <div className="mt-2 text-2xl font-semibold text-slate-900">
+                </span>
+                <span className="text-2xl font-semibold text-slate-900">
                   ${stats.totalSpent.toFixed(2)}
-                </div>
-                <p className="mt-1 text-[11px] text-slate-500">
+                </span>
+                <span className="text-[11px] text-slate-500">
                   All-time lead purchases
-                </p>
+                </span>
               </div>
             </div>
 
-            {/* Recent activity / recent leads */}
-            <div className="grid gap-6 md:grid-cols-[2fr,1fr]">
-              {/* Recent Leads Table */}
-              <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
-                <div className="border-b border-slate-200 px-6 py-4">
-                  <h2
-                    className="text-lg font-normal text-[#2a2a2a]"
-                    style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-                  >
-                    Recent leads
-                  </h2>
+            {/* Main content grid */}
+            <div className="grid gap-6 lg:grid-cols-3">
+              {/* Left column */}
+              <div className="space-y-6 lg:col-span-2">
+                {/* Recent Leads Card */}
+                <div className="rounded-xl border border-slate-200 bg-white/70 shadow-sm">
+                  <div className="border-b border-slate-200 px-6 py-4">
+                    <h2
+                      className="text-lg font-normal text-[#2a2a2a]"
+                      style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+                    >
+                      Recent leads
+                    </h2>
+                  </div>
+                  <div className="px-6 py-4">
+                    {recentLeads.length === 0 ? (
+                      <div className="py-8 text-center">
+                        <p className="mb-4 text-sm text-[#6b6b6b]">
+                          You don&apos;t have any leads yet. Browse available leads to get started.
+                        </p>
+                        <Link
+                          href="/agent/leads/available"
+                          className="inline-block rounded-full bg-[#2a2a2a] px-4 py-2 text-xs font-semibold text-white hover:bg-black transition-colors"
+                        >
+                          Browse available leads
+                        </Link>
+                      </div>
+                    ) : (
+                      <ul className="divide-y divide-slate-100">
+                        {recentLeads.map((lead) => {
+                          const owns = userId ? agentOwnsLead(lead, userId) : false;
+                          const rawName = lead.full_name || 
+                            (lead.first_name || lead.last_name
+                              ? [lead.first_name, lead.last_name].filter(Boolean).join(" ")
+                              : null);
+                          const displayName = owns && rawName ? rawName : (rawName ? maskName(rawName) : null);
+                          const firstName = displayName ? displayName.split(" ")[0] : null;
+                          const { bg: statusBg, text: statusText } = getStatusColors(lead.agent_status || lead.status);
+                          
+                          return (
+                            <li key={lead.id} className="flex items-center justify-between py-3">
+                              <div className="flex items-center gap-3 flex-1">
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    {firstName && (
+                                      <span className="text-sm font-medium text-[#2a2a2a]">
+                                        {firstName}
+                                      </span>
+                                    )}
+                                    {lead.city && (
+                                      <span className="text-xs text-[#6b6b6b]">
+                                        {lead.city}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <span
+                                      className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${getUrgencyColor(
+                                        lead.urgency_level
+                                      )}`}
+                                    >
+                                      {formatUrgency(lead.urgency_level)}
+                                    </span>
+                                    <span
+                                      className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${statusBg} ${statusText}`}
+                                    >
+                                      {formatStatus(lead.agent_status || lead.status)}
+                                    </span>
+                                  </div>
+                                </div>
+                                <Link
+                                  href={`/agent/leads/${lead.id}`}
+                                  className="text-xs font-medium text-[#6b6b6b] hover:text-[#2a2a2a] transition-colors whitespace-nowrap"
+                                >
+                                  View
+                                </Link>
+                              </div>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+                  </div>
                 </div>
-                <div className="overflow-x-auto">
-                  {recentLeads.length === 0 ? (
-                    <div className="px-6 py-8 text-center text-sm text-[#6b6b6b]">
-                      You don&apos;t have any leads yet. Browse available leads to get started.
-                    </div>
-                  ) : (
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b border-slate-200 bg-[#faf8f5]">
-                          <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
-                            Date
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
-                            City / Region
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
-                            Urgency
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
-                            Status
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
-                            Action
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {recentLeads.map((lead) => (
-                          <tr
-                            key={lead.id}
-                            className="border-b border-slate-100 hover:bg-[#faf8f5]"
-                          >
-                            <td className="px-6 py-3 text-[#4a4a4a]">
-                              {formatDate(lead.created_at)}
-                            </td>
-                            <td className="px-6 py-3 text-[#2a2a2a]">
-                              {lead.city || "-"}
-                            </td>
-                            <td className="px-6 py-3">
-                              <span
-                                className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${getUrgencyColor(
-                                  lead.urgency_level
-                                )}`}
-                              >
-                                {formatUrgency(lead.urgency_level)}
-                              </span>
-                            </td>
-                            <td className="px-6 py-3 text-[#4a4a4a]">
-                              {formatStatus(lead.agent_status || lead.status)}
-                            </td>
-                            <td className="px-6 py-3">
-                              <Link
-                                href={`/agent/leads/${lead.id}`}
-                                className="text-xs font-medium text-[#6b6b6b] hover:text-[#2a2a2a] transition-colors"
-                              >
-                                View →
-                              </Link>
-                            </td>
-                          </tr>
+
+                {/* Your Bids Card */}
+                <div className="rounded-xl border border-slate-200 bg-white/70 shadow-sm">
+                  <div className="border-b border-slate-200 px-6 py-4">
+                    <h2
+                      className="text-lg font-normal text-[#2a2a2a]"
+                      style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+                    >
+                      Your bids
+                    </h2>
+                  </div>
+                  <div className="px-6 py-4">
+                    {yourBids.length === 0 ? (
+                      <p className="py-4 text-sm text-[#6b6b6b]">
+                        You haven&apos;t placed any bids yet.
+                      </p>
+                    ) : (
+                      <ul className="divide-y divide-slate-100">
+                        {yourBids.map((bid) => (
+                          <li key={bid.lead_id} className="flex items-center justify-between py-3">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span
+                                  className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${getUrgencyColor(
+                                    bid.lead_urgency
+                                  )}`}
+                                >
+                                  {formatUrgency(bid.lead_urgency)}
+                                </span>
+                                {bid.lead_city && (
+                                  <span className="text-xs text-[#6b6b6b]">
+                                    {bid.lead_city}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-3 text-xs text-[#4a4a4a]">
+                                <span>Bid: ${bid.your_highest_bid.toFixed(2)}</span>
+                                {bid.auction_ends_at && (
+                                  <span className="font-mono">
+                                    {formatCountdown(bid.auction_ends_at)}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <Link
+                              href={`/agent/leads/${bid.lead_id}`}
+                              className="text-xs font-medium text-[#6b6b6b] hover:text-[#2a2a2a] transition-colors whitespace-nowrap ml-4"
+                            >
+                              View lead
+                            </Link>
+                          </li>
                         ))}
-                      </tbody>
-                    </table>
-                  )}
+                      </ul>
+                    )}
+                  </div>
                 </div>
               </div>
 
-              {/* Quick Links + Tips */}
-              <div className="space-y-4">
-                <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-                  <h2
-                    className="mb-4 text-lg font-normal text-[#2a2a2a]"
-                    style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-                  >
-                    Quick links
-                  </h2>
-                  <div className="space-y-3">
+              {/* Right column */}
+              <div className="space-y-6">
+                {/* Quick Links */}
+                <div className="rounded-xl border border-slate-200 bg-white/70 shadow-sm">
+                  <div className="border-b border-slate-200 px-6 py-4">
+                    <h2
+                      className="text-lg font-normal text-[#2a2a2a]"
+                      style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+                    >
+                      Quick links
+                    </h2>
+                  </div>
+                  <div className="px-6 py-4 space-y-3">
                     <Link
                       href="/agent/leads/available"
                       className="block rounded-md border border-slate-200 bg-[#faf8f5] px-4 py-2 text-sm text-[#2a2a2a] hover:bg-[#f7f4ef] transition-colors"
@@ -513,220 +639,159 @@ export default function AgentDashboardPage() {
                   </div>
                 </div>
 
-                {/* Tips */}
-                <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-                  <h2
-                    className="mb-3 text-base font-normal text-[#2a2a2a]"
-                    style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-                  >
-                    Tips for working EverLead leads
-                  </h2>
-                  <ul className="space-y-2 text-sm text-[#4a4a4a]">
-                    <li className="flex items-start gap-2">
-                      <span className="text-[#6b6b6b]">•</span>
-                      <span>
-                        Contact HOT leads within 24 hours for best conversion rates
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-[#6b6b6b]">•</span>
-                      <span>
-                        Use notes to track every touchpoint and follow-up
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-[#6b6b6b]">•</span>
-                      <span>
-                        Update lead status as you progress through your workflow
-                      </span>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-
-            {/* Marketplace sections: Leaderboard, Pending Auctions, Your Bids */}
-            <div className="mt-8 grid gap-6 md:grid-cols-3">
-              {/* Leaderboard */}
-              <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
-                <div className="border-b border-slate-200 px-6 py-4">
-                  <h2
-                    className="text-base font-normal text-[#2a2a2a]"
-                    style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-                  >
-                    Top agents this month
-                  </h2>
-                </div>
-                <div className="px-6 py-4">
-                  {topAgents.length === 0 ? (
-                    <p className="text-sm text-[#6b6b6b]">No data yet</p>
-                  ) : (
-                    <div className="space-y-3">
-                      {topAgents.map((agent, idx) => {
-                        const email = agent.agent_email || "Unknown";
-                        // Truncate email if too long, but preserve @domain part
-                        let displayEmail = email;
-                        if (email.includes("@") && email.length > 25) {
-                          const [user, domain] = email.split("@");
-                          displayEmail = `${user.slice(0, 15)}…@${domain}`;
-                        } else if (email.length > 25) {
-                          displayEmail = `${email.slice(0, 22)}…`;
-                        }
-                        return (
-                          <div
-                            key={agent.agent_id}
-                            className="flex items-center justify-between"
-                          >
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs font-semibold text-[#6b6b6b]">
-                                {idx + 1}.
-                              </span>
-                              <span className="text-sm text-[#2a2a2a]">
-                                {displayEmail}
-                              </span>
-                            </div>
-                            <span className="text-sm font-semibold text-[#2a2a2a]">
-                              {agent.purchased_count} leads
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Pending Auctions */}
-              <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
-                <div className="border-b border-slate-200 px-6 py-4">
-                  <h2
-                    className="text-base font-normal text-[#2a2a2a]"
-                    style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-                  >
-                    Pending auctions
-                  </h2>
-                </div>
-                <div className="px-6 py-4">
-                  {pendingAuctions.length === 0 ? (
-                    <p className="text-sm text-[#6b6b6b]">
-                      No active auctions right now
-                    </p>
-                  ) : (
-                    <div className="space-y-3">
-                      {pendingAuctions.map((auction) => {
-                        const endDate = auction.auction_ends_at
-                          ? new Date(auction.auction_ends_at)
-                          : null;
-                        const endTimeStr = endDate
-                          ? endDate.toLocaleDateString() +
-                            " " +
-                            endDate.toLocaleTimeString([], {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })
-                          : "Unknown";
-                        return (
-                          <div
-                            key={auction.id}
-                            className="border-b border-slate-100 pb-3 last:border-0 last:pb-0"
-                          >
-                            <div className="mb-2 flex items-center gap-2">
-                              <span
-                                className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${getUrgencyColor(
-                                  auction.urgency_level
-                                )}`}
+                {/* Pending Auctions */}
+                <div className="rounded-xl border border-slate-200 bg-white/70 shadow-sm">
+                  <div className="border-b border-slate-200 px-6 py-4">
+                    <h2
+                      className="text-lg font-normal text-[#2a2a2a]"
+                      style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+                    >
+                      Pending auctions
+                    </h2>
+                  </div>
+                  <div className="px-6 py-4">
+                    {pendingAuctions.length === 0 ? (
+                      <p className="text-sm text-[#6b6b6b]">
+                        No active auctions right now
+                      </p>
+                    ) : (
+                      <div className="space-y-3">
+                        {pendingAuctions.map((auction) => {
+                          const endDate = auction.auction_ends_at
+                            ? new Date(auction.auction_ends_at)
+                            : null;
+                          const endTimeStr = endDate
+                            ? endDate.toLocaleDateString() +
+                              " " +
+                              endDate.toLocaleTimeString([], {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })
+                            : "Unknown";
+                          return (
+                            <div
+                              key={auction.id}
+                              className="border-b border-slate-100 pb-3 last:border-0 last:pb-0"
+                            >
+                              <div className="mb-2 flex items-center gap-2">
+                                <span
+                                  className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${getUrgencyColor(
+                                    auction.urgency_level
+                                  )}`}
+                                >
+                                  {formatUrgency(auction.urgency_level)}
+                                </span>
+                                <span className="text-xs text-[#6b6b6b]">
+                                  {auction.city || "Unknown"}
+                                </span>
+                              </div>
+                              <div className="mb-2 text-xs text-[#4a4a4a]">
+                                Ends: {endTimeStr}
+                              </div>
+                              <div className="mb-2 text-xs text-[#4a4a4a]">
+                                Current bid:{" "}
+                                {auction.current_bid_amount
+                                  ? `$${auction.current_bid_amount.toFixed(2)}`
+                                  : "No bids yet"}
+                              </div>
+                              <Link
+                                href={`/agent/leads/${auction.id}`}
+                                className="text-xs font-medium text-[#6b6b6b] hover:text-[#2a2a2a] transition-colors"
                               >
-                                {formatUrgency(auction.urgency_level)}
-                              </span>
-                              <span className="text-xs text-[#6b6b6b]">
-                                {auction.city || "Unknown"}
-                              </span>
+                                View / Bid →
+                              </Link>
                             </div>
-                            <div className="mb-2 text-xs text-[#4a4a4a]">
-                              Ends: {endTimeStr}
-                            </div>
-                            <div className="mb-2 text-xs text-[#4a4a4a]">
-                              Current bid:{" "}
-                              {auction.current_bid_amount
-                                ? `$${auction.current_bid_amount.toFixed(2)}`
-                                : "No bids yet"}
-                            </div>
-                            <Link
-                              href={`/agent/leads/${auction.id}`}
-                              className="text-xs font-medium text-[#6b6b6b] hover:text-[#2a2a2a] transition-colors"
-                            >
-                              View / Bid →
-                            </Link>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
 
-              {/* Your Bids */}
-              <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
-                <div className="border-b border-slate-200 px-6 py-4">
-                  <h2
-                    className="text-base font-normal text-[#2a2a2a]"
-                    style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-                  >
-                    Your bids
-                  </h2>
-                </div>
-                <div className="px-6 py-4">
-                  {yourBids.length === 0 ? (
-                    <p className="text-sm text-[#6b6b6b]">
-                      You haven&apos;t placed any bids yet
-                    </p>
-                  ) : (
-                    <div className="space-y-3">
-                      {yourBids.map((bid) => (
-                        <div
-                          key={bid.lead_id}
-                          className="border-b border-slate-100 pb-3 last:border-0 last:pb-0"
-                        >
-                          <div className="mb-2 flex items-center gap-2">
-                            <span
-                              className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${getUrgencyColor(
-                                bid.lead_urgency
-                              )}`}
+                {/* Top Agents */}
+                <div className="rounded-xl border border-slate-200 bg-white/70 shadow-sm">
+                  <div className="border-b border-slate-200 px-6 py-4">
+                    <h2
+                      className="text-lg font-normal text-[#2a2a2a]"
+                      style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+                    >
+                      Top agents this month
+                    </h2>
+                  </div>
+                  <div className="px-6 py-4">
+                    {topAgents.length === 0 ? (
+                      <p className="text-sm text-[#6b6b6b]">No data yet</p>
+                    ) : (
+                      <div className="space-y-3">
+                        {topAgents.map((agent, idx) => {
+                          const email = agent.agent_email || "Unknown";
+                          let displayEmail = email;
+                          if (email.includes("@") && email.length > 25) {
+                            const [user, domain] = email.split("@");
+                            displayEmail = `${user.slice(0, 15)}…@${domain}`;
+                          } else if (email.length > 25) {
+                            displayEmail = `${email.slice(0, 22)}…`;
+                          }
+                          return (
+                            <div
+                              key={agent.agent_id}
+                              className="flex items-center justify-between"
                             >
-                              {formatUrgency(bid.lead_urgency)}
-                            </span>
-                            <span className="text-xs text-[#6b6b6b]">
-                              {bid.lead_city || "Unknown"}
-                            </span>
-                          </div>
-                          <div className="mb-2 text-xs text-[#4a4a4a]">
-                            Your bid: ${bid.your_highest_bid.toFixed(2)}
-                          </div>
-                          <div className="mb-2">
-                            {bid.is_highest_bidder ? (
-                              <span className="inline-block rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-900">
-                                Highest bidder
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs font-semibold text-[#6b6b6b]">
+                                  {idx + 1}.
+                                </span>
+                                <span className="text-sm text-[#2a2a2a]">
+                                  {displayEmail}
+                                </span>
+                              </div>
+                              <span className="text-sm font-semibold text-[#2a2a2a]">
+                                {agent.purchased_count} leads
                               </span>
-                            ) : (
-                              <span className="inline-block rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-900">
-                                Outbid
-                              </span>
-                            )}
-                          </div>
-                          <Link
-                            href={`/agent/leads/${bid.lead_id}`}
-                            className="text-xs font-medium text-[#6b6b6b] hover:text-[#2a2a2a] transition-colors"
-                          >
-                            View →
-                          </Link>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Tips */}
+                <div className="rounded-xl border border-slate-200 bg-white/70 shadow-sm">
+                  <div className="border-b border-slate-200 px-6 py-4">
+                    <h2
+                      className="text-lg font-normal text-[#2a2a2a]"
+                      style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+                    >
+                      Tips for working EverLead leads
+                    </h2>
+                  </div>
+                  <div className="px-6 py-4">
+                    <ul className="space-y-2 text-sm text-[#4a4a4a]">
+                      <li className="flex items-start gap-2">
+                        <span className="text-[#6b6b6b]">•</span>
+                        <span>
+                          Contact HOT leads within 24 hours for best conversion rates
+                        </span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-[#6b6b6b]">•</span>
+                        <span>
+                          Use notes to track every touchpoint and follow-up
+                        </span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-[#6b6b6b]">•</span>
+                        <span>
+                          Update lead status as you progress through your workflow
+                        </span>
+                      </li>
+                    </ul>
+                  </div>
                 </div>
               </div>
             </div>
-          </>
+          </div>
         )}
       </section>
     </main>
