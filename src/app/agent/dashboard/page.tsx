@@ -10,6 +10,8 @@ type Stats = {
   available: number;
   myLeads: number;
   purchased: number;
+  purchasedThisMonth: number;
+  totalSpent: number;
 };
 
 type RecentLead = {
@@ -19,6 +21,7 @@ type RecentLead = {
   city: string | null;
   urgency_level: string | null;
   status: string | null;
+  agent_status: string | null;
 };
 
 export default function AgentDashboardPage() {
@@ -27,9 +30,12 @@ export default function AgentDashboardPage() {
     available: 0,
     myLeads: 0,
     purchased: 0,
+    purchasedThisMonth: 0,
+    totalSpent: 0,
   });
   const [recentLeads, setRecentLeads] = useState<RecentLead[]>([]);
   const [loading, setLoading] = useState(true);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadStats() {
@@ -44,7 +50,13 @@ export default function AgentDashboardPage() {
           return;
         }
 
+        setUserEmail(user.email || null);
         const agentId = user.id;
+
+        // Calculate date 30 days ago
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        const thirtyDaysAgoISO = thirtyDaysAgo.toISOString();
 
         // Load stats
         const { count: availableCount } = await supabaseClient
@@ -63,16 +75,39 @@ export default function AgentDashboardPage() {
           .eq("assigned_agent_id", agentId)
           .eq("status", "purchased_by_agent");
 
+        // Purchased this month
+        const { count: purchasedThisMonthCount } = await supabaseClient
+          .from("leads")
+          .select("id", { count: "exact", head: true })
+          .eq("assigned_agent_id", agentId)
+          .eq("status", "purchased_by_agent")
+          .gte("created_at", thirtyDaysAgoISO);
+
+        // Total spent (sum of price_charged_cents for purchased leads)
+        const { data: purchasedLeads } = await supabaseClient
+          .from("leads")
+          .select("price_charged_cents")
+          .eq("assigned_agent_id", agentId)
+          .eq("status", "purchased_by_agent");
+
+        const totalSpentCents =
+          purchasedLeads?.reduce(
+            (sum, lead) => sum + (lead.price_charged_cents || 0),
+            0
+          ) || 0;
+
         setStats({
           available: availableCount ?? 0,
           myLeads: myLeadsCount ?? 0,
           purchased: purchasedCount ?? 0,
+          purchasedThisMonth: purchasedThisMonthCount ?? 0,
+          totalSpent: totalSpentCents / 100, // Convert to dollars
         });
 
         // Load recent leads (assigned to this agent, limit 10)
         const { data: recentData } = await supabaseClient
           .from("leads")
-          .select("id, created_at, full_name, city, urgency_level, status")
+          .select("id, created_at, full_name, city, urgency_level, status, agent_status")
           .eq("assigned_agent_id", agentId)
           .order("created_at", { ascending: false })
           .limit(10);
@@ -102,6 +137,14 @@ export default function AgentDashboardPage() {
     return urgency;
   }
 
+  function getUrgencyColor(urgency: string | null) {
+    if (!urgency) return "bg-slate-100 text-slate-900";
+    const lower = urgency.toLowerCase();
+    if (lower === "hot") return "bg-red-100 text-red-900";
+    if (lower === "warm") return "bg-amber-100 text-amber-900";
+    return "bg-slate-100 text-slate-900";
+  }
+
   function formatDate(dateString: string | null) {
     if (!dateString) return "Unknown";
     try {
@@ -109,6 +152,12 @@ export default function AgentDashboardPage() {
     } catch {
       return dateString;
     }
+  }
+
+  function formatStatus(status: string | null) {
+    if (!status) return "New";
+    if (status === "purchased_by_agent") return "Purchased";
+    return status;
   }
 
   return (
@@ -125,7 +174,9 @@ export default function AgentDashboardPage() {
             </span>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-xs text-[#e0d5bf]">Agent</span>
+            {userEmail && (
+              <span className="text-xs text-[#e0d5bf]">{userEmail}</span>
+            )}
             <button
               onClick={handleLogout}
               className="rounded-md border border-[#e5d7b5] bg-transparent px-3 py-1 text-[11px] font-medium text-[#e0d5bf] hover:bg-white/10 transition-colors"
@@ -140,16 +191,17 @@ export default function AgentDashboardPage() {
       <AgentNav />
 
       {/* Content */}
-      <section className="mx-auto max-w-6xl px-6 py-8">
-        <div className="mb-6">
+      <section className="mx-auto max-w-6xl px-4 py-8">
+        {/* Header */}
+        <div className="mb-8">
           <h1
-            className="mb-2 text-2xl font-normal text-[#2a2a2a]"
+            className="mb-2 text-3xl font-normal text-[#2a2a2a]"
             style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
           >
-            Overview
+            Agent dashboard
           </h1>
           <p className="text-sm text-[#6b6b6b]">
-            Quick snapshot of leads available in your territory.
+            Your pre-need leads and results at a glance.
           </p>
         </div>
 
@@ -157,59 +209,71 @@ export default function AgentDashboardPage() {
           <p className="text-sm text-[#6b6b6b]">Loading your stats…</p>
         ) : (
           <>
-            {/* Stats Cards */}
-            <div className="mb-8 grid gap-4 md:grid-cols-3">
+            {/* Metrics row */}
+            <div className="mb-8 grid gap-4 md:grid-cols-4">
               <Link
                 href="/agent/leads/available"
-                className="rounded-lg border border-[#ded3c2] bg-white p-6 shadow-sm transition hover:shadow-md"
+                className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition hover:shadow-md"
               >
-                <div className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
                   Available leads
                 </div>
-                <div className="mt-3 text-3xl font-semibold text-[#2a2a2a]">
+                <div className="mt-2 text-2xl font-semibold text-slate-900">
                   {stats.available}
                 </div>
-                <p className="mt-2 text-xs text-[#6b6b6b]">
-                  New leads you can buy or bid on.
+                <p className="mt-1 text-[11px] text-slate-500">
+                  New leads you can buy or bid on
                 </p>
               </Link>
 
               <Link
                 href="/agent/leads/mine"
-                className="rounded-lg border border-[#ded3c2] bg-white p-6 shadow-sm transition hover:shadow-md"
+                className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition hover:shadow-md"
               >
-                <div className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
                   My leads
                 </div>
-                <div className="mt-3 text-3xl font-semibold text-[#2a2a2a]">
+                <div className="mt-2 text-2xl font-semibold text-slate-900">
                   {stats.myLeads}
                 </div>
-                <p className="mt-2 text-xs text-[#6b6b6b]">
-                  Leads currently assigned to you.
+                <p className="mt-1 text-[11px] text-slate-500">
+                  Leads currently assigned to you
                 </p>
               </Link>
 
               <Link
                 href="/agent/leads/purchased"
-                className="rounded-lg border border-[#ded3c2] bg-white p-6 shadow-sm transition hover:shadow-md"
+                className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition hover:shadow-md"
               >
-                <div className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
-                  Purchased leads
+                <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                  Purchased this month
                 </div>
-                <div className="mt-3 text-3xl font-semibold text-[#2a2a2a]">
-                  {stats.purchased}
+                <div className="mt-2 text-2xl font-semibold text-slate-900">
+                  {stats.purchasedThisMonth}
                 </div>
-                <p className="mt-2 text-xs text-[#6b6b6b]">
-                  Leads you&apos;ve bought through EverLead.
+                <p className="mt-1 text-[11px] text-slate-500">
+                  Leads purchased in last 30 days
                 </p>
               </Link>
+
+              <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+                <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                  Total spent
+                </div>
+                <div className="mt-2 text-2xl font-semibold text-slate-900">
+                  ${stats.totalSpent.toFixed(2)}
+                </div>
+                <p className="mt-1 text-[11px] text-slate-500">
+                  All-time lead purchases
+                </p>
+              </div>
             </div>
 
-            {/* Recent Leads and Quick Links */}
+            {/* Recent activity / recent leads */}
             <div className="grid gap-6 md:grid-cols-[2fr,1fr]">
               {/* Recent Leads Table */}
-              <div className="rounded-lg border border-[#ded3c2] bg-white shadow-sm">
-                <div className="border-b border-[#ded3c2] px-6 py-4">
+              <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
+                <div className="border-b border-slate-200 px-6 py-4">
                   <h2
                     className="text-lg font-normal text-[#2a2a2a]"
                     style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
@@ -225,15 +289,12 @@ export default function AgentDashboardPage() {
                   ) : (
                     <table className="w-full text-sm">
                       <thead>
-                        <tr className="border-b border-[#ded3c2] bg-[#faf8f5]">
+                        <tr className="border-b border-slate-200 bg-[#faf8f5]">
                           <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
                             Date
                           </th>
                           <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
-                            Name
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
-                            City
+                            City / Region
                           </th>
                           <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
                             Urgency
@@ -250,31 +311,32 @@ export default function AgentDashboardPage() {
                         {recentLeads.map((lead) => (
                           <tr
                             key={lead.id}
-                            className="border-b border-[#f3f4f6] hover:bg-[#faf8f5]"
+                            className="border-b border-slate-100 hover:bg-[#faf8f5]"
                           >
                             <td className="px-6 py-3 text-[#4a4a4a]">
                               {formatDate(lead.created_at)}
                             </td>
                             <td className="px-6 py-3 text-[#2a2a2a]">
-                              {lead.full_name || "Unnamed"}
-                            </td>
-                            <td className="px-6 py-3 text-[#4a4a4a]">
                               {lead.city || "-"}
                             </td>
                             <td className="px-6 py-3">
-                              <span className="text-xs font-medium text-[#4a4a4a]">
+                              <span
+                                className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${getUrgencyColor(
+                                  lead.urgency_level
+                                )}`}
+                              >
                                 {formatUrgency(lead.urgency_level)}
                               </span>
                             </td>
                             <td className="px-6 py-3 text-[#4a4a4a]">
-                              {lead.status || "-"}
+                              {formatStatus(lead.agent_status || lead.status)}
                             </td>
                             <td className="px-6 py-3">
                               <Link
                                 href={`/agent/leads/${lead.id}`}
                                 className="text-xs font-medium text-[#6b6b6b] hover:text-[#2a2a2a] transition-colors"
                               >
-                                View details →
+                                View →
                               </Link>
                             </td>
                           </tr>
@@ -285,33 +347,65 @@ export default function AgentDashboardPage() {
                 </div>
               </div>
 
-              {/* Quick Links */}
-              <div className="rounded-lg border border-[#ded3c2] bg-white p-6 shadow-sm">
-                <h2
-                  className="mb-4 text-lg font-normal text-[#2a2a2a]"
-                  style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-                >
-                  Quick links
-                </h2>
-                <div className="space-y-3">
-                  <Link
-                    href="/agent/leads/available"
-                    className="block rounded-md border border-[#ded3c2] bg-[#faf8f5] px-4 py-2 text-sm text-[#2a2a2a] hover:bg-[#f7f4ef] transition-colors"
+              {/* Quick Links + Tips */}
+              <div className="space-y-4">
+                <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+                  <h2
+                    className="mb-4 text-lg font-normal text-[#2a2a2a]"
+                    style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
                   >
-                    Browse available leads
-                  </Link>
-                  <Link
-                    href="/agent/leads/purchased"
-                    className="block rounded-md border border-[#ded3c2] bg-[#faf8f5] px-4 py-2 text-sm text-[#2a2a2a] hover:bg-[#f7f4ef] transition-colors"
+                    Quick links
+                  </h2>
+                  <div className="space-y-3">
+                    <Link
+                      href="/agent/leads/available"
+                      className="block rounded-md border border-slate-200 bg-[#faf8f5] px-4 py-2 text-sm text-[#2a2a2a] hover:bg-[#f7f4ef] transition-colors"
+                    >
+                      Browse available leads
+                    </Link>
+                    <Link
+                      href="/agent/leads/purchased"
+                      className="block rounded-md border border-slate-200 bg-[#faf8f5] px-4 py-2 text-sm text-[#2a2a2a] hover:bg-[#f7f4ef] transition-colors"
+                    >
+                      View my purchased leads
+                    </Link>
+                    <Link
+                      href="/agent/leads/mine"
+                      className="block rounded-md border border-slate-200 bg-[#faf8f5] px-4 py-2 text-sm text-[#2a2a2a] hover:bg-[#f7f4ef] transition-colors"
+                    >
+                      View all my leads
+                    </Link>
+                  </div>
+                </div>
+
+                {/* Tips */}
+                <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+                  <h2
+                    className="mb-3 text-base font-normal text-[#2a2a2a]"
+                    style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
                   >
-                    View my purchased leads
-                  </Link>
-                  <Link
-                    href="/agent/leads/mine"
-                    className="block rounded-md border border-[#ded3c2] bg-[#faf8f5] px-4 py-2 text-sm text-[#2a2a2a] hover:bg-[#f7f4ef] transition-colors"
-                  >
-                    View all my leads
-                  </Link>
+                    Tips for working EverLead leads
+                  </h2>
+                  <ul className="space-y-2 text-sm text-[#4a4a4a]">
+                    <li className="flex items-start gap-2">
+                      <span className="text-[#6b6b6b]">•</span>
+                      <span>
+                        Contact HOT leads within 24 hours for best conversion rates
+                      </span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-[#6b6b6b]">•</span>
+                      <span>
+                        Use notes to track every touchpoint and follow-up
+                      </span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-[#6b6b6b]">•</span>
+                      <span>
+                        Update lead status as you progress through your workflow
+                      </span>
+                    </li>
+                  </ul>
                 </div>
               </div>
             </div>
