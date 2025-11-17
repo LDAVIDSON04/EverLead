@@ -31,6 +31,14 @@ type AgentDashboardData = {
     is_highest: boolean;
     auction_ends_at: string | null;
   }[];
+  recentBids: {
+    id: string;
+    leadId: string;
+    amount: number;
+    createdAt: string;
+    leadCity: string | null;
+    leadUrgency: string | null;
+  }[];
   pendingAuctions: {
     lead_id: string;
     lead_city: string | null;
@@ -133,7 +141,44 @@ export async function GET(request: NextRequest) {
       .order("created_at", { ascending: false })
       .limit(5);
 
-    // 7. Your bids
+    // 7. Recent bids (last 5 bids, regardless of auction status)
+    const { data: recentBidsData } = await supabaseAdmin
+      .from("lead_bids")
+      .select("id, lead_id, amount, created_at")
+      .eq("agent_id", agentId)
+      .order("created_at", { ascending: false })
+      .limit(5);
+
+    const recentBidsLeadIds =
+      recentBidsData?.map((bid) => bid.lead_id as string) || [];
+
+    let recentBidsList: AgentDashboardData["recentBids"] = [];
+
+    if (recentBidsLeadIds.length > 0) {
+      // Fetch lead info for these bids
+      const { data: recentBidLeadsData } = await supabaseAdmin
+        .from("leads")
+        .select("id, city, urgency_level")
+        .in("id", recentBidsLeadIds);
+
+      const leadMap = new Map(
+        (recentBidLeadsData || []).map((lead) => [lead.id, lead])
+      );
+
+      recentBidsList = (recentBidsData || []).map((bid) => {
+        const lead = leadMap.get(bid.lead_id as string);
+        return {
+          id: bid.id,
+          leadId: bid.lead_id as string,
+          amount: bid.amount as number,
+          createdAt: bid.created_at || "",
+          leadCity: lead?.city || null,
+          leadUrgency: lead?.urgency_level || null,
+        };
+      });
+    }
+
+    // 8. Your bids (active auction bids only - for the "Your bids" panel)
     // Get all bids from this agent
     const { data: bidsData } = await supabaseAdmin
       .from("lead_bids")
@@ -188,7 +233,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // 8. Pending auctions
+    // 9. Pending auctions
     // Get auctions where this agent is involved (either highest bidder or has placed a bid)
     const { data: allPendingAuctions } = await supabaseAdmin
       .from("leads")
@@ -239,6 +284,7 @@ export async function GET(request: NextRequest) {
         agent_status: lead.agent_status || null,
       })),
       yourBids: yourBidsList,
+      recentBids: recentBidsList,
       pendingAuctions: pendingAuctionsList,
     };
 

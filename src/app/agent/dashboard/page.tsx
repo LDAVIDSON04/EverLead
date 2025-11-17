@@ -134,17 +134,32 @@ export default function AgentDashboardPage() {
           }))
         );
 
-        // Update your bids (map to existing type)
-        setYourBids(
-          (data.yourBids || []).map((bid: any) => ({
-            lead_id: bid.lead_id,
-            lead_city: bid.lead_city,
-            lead_urgency: bid.lead_urgency,
-            your_highest_bid: bid.amount,
-            is_highest_bidder: bid.is_highest,
-            auction_ends_at: bid.auction_ends_at,
-          }))
-        );
+        // Update your bids - use recentBids for the "Your bids" panel (last 5 bids)
+        // If recentBids exists, use it; otherwise fall back to yourBids (active auctions)
+        if (data.recentBids && data.recentBids.length > 0) {
+          setYourBids(
+            (data.recentBids || []).map((bid: any) => ({
+              lead_id: bid.leadId,
+              lead_city: bid.leadCity,
+              lead_urgency: bid.leadUrgency,
+              your_highest_bid: bid.amount,
+              is_highest_bidder: false, // We don't track this for recent bids
+              auction_ends_at: null,
+            }))
+          );
+        } else {
+          // Fall back to active auction bids if no recent bids
+          setYourBids(
+            (data.yourBids || []).map((bid: any) => ({
+              lead_id: bid.lead_id,
+              lead_city: bid.lead_city,
+              lead_urgency: bid.lead_urgency,
+              your_highest_bid: bid.amount,
+              is_highest_bidder: bid.is_highest,
+              auction_ends_at: bid.auction_ends_at,
+            }))
+          );
+        }
 
         // Update pending auctions (map to existing type)
         setPendingAuctions(
@@ -432,7 +447,7 @@ export default function AgentDashboardPage() {
                     {recentLeads.length === 0 ? (
                       <div className="py-8 text-center">
                         <p className="mb-4 text-sm text-[#6b6b6b]">
-                          You don&apos;t have any leads yet. Browse available leads to get started.
+                          You don&apos;t have any leads assigned yet. Purchase or claim a lead to see it here.
                         </p>
                         <Link
                           href="/agent/leads/available"
@@ -442,18 +457,9 @@ export default function AgentDashboardPage() {
                         </Link>
                       </div>
                     ) : (
-                      <div className="space-y-3">
+                      <div className="space-y-2">
                         {recentLeads.map((lead) => {
                               const { bg: statusBg, text: statusText } = getStatusColors(lead.agent_status || lead.status);
-                              
-                              // Format date as "MMM d, YYYY" (e.g., "Nov 16, 2025")
-                              const dateStr = lead.created_at
-                                ? new Date(lead.created_at).toLocaleDateString("en-US", {
-                                    month: "short",
-                                    day: "numeric",
-                                    year: "numeric",
-                                  })
-                                : "—";
                               
                               // Format location: "City, Province" or just "City"
                               const locationStr = lead.city
@@ -468,23 +474,41 @@ export default function AgentDashboardPage() {
                               return (
                                 <div
                                   key={lead.id}
-                                  className="border-b border-slate-100 pb-3 last:border-0 last:pb-0 cursor-pointer hover:bg-slate-50 -mx-3 px-3 py-2 rounded"
+                                  className="flex items-center justify-between border-b border-slate-100 pb-2 last:border-0 last:pb-0 cursor-pointer hover:bg-slate-50 -mx-3 px-3 py-2 rounded"
                                   onClick={() => router.push(`/agent/leads/${lead.id}`)}
                                 >
-                                  <div className="flex items-center gap-2 mb-1">
-                                    <span
-                                      className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${getUrgencyColor(
-                                        lead.urgency_level
-                                      )}`}
-                                    >
-                                      {formatUrgency(lead.urgency_level)}
-                                    </span>
-                                    <span className="text-sm text-slate-900">
-                                      {serviceType} in {locationStr}
-                                    </span>
+                                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                                    {lead.urgency_level && (
+                                      <span
+                                        className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${getUrgencyColor(
+                                          lead.urgency_level
+                                        )}`}
+                                      >
+                                        {formatUrgency(lead.urgency_level)}
+                                      </span>
+                                    )}
+                                    <div className="flex-1 min-w-0">
+                                      <div className="text-sm text-slate-900">
+                                        {locationStr}
+                                      </div>
+                                      <div className="text-xs text-slate-500">
+                                        {serviceType}
+                                      </div>
+                                    </div>
                                   </div>
-                                  <div className="text-xs text-slate-500">
-                                    Status: <span className={`${statusText} font-medium`}>{formatStatus(lead.agent_status || lead.status)}</span> · Created {dateStr}
+                                  <div className="flex items-center gap-3 ml-4">
+                                    <span
+                                      className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${statusBg} ${statusText}`}
+                                    >
+                                      {formatStatus(lead.agent_status || lead.status)}
+                                    </span>
+                                    <Link
+                                      href={`/agent/leads/${lead.id}`}
+                                      className="text-xs font-medium text-[#6b6b6b] hover:text-[#2a2a2a] transition-colors whitespace-nowrap"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      View details →
+                                    </Link>
                                   </div>
                                 </div>
                               );
@@ -510,33 +534,20 @@ export default function AgentDashboardPage() {
                         You haven&apos;t placed any bids yet.
                       </p>
                     ) : (
-                      <ul className="divide-y divide-slate-100">
-                        {yourBids.map((bid) => (
-                          <li key={bid.lead_id} className="flex items-center justify-between py-3">
+                      <div className="space-y-2">
+                        {yourBids.slice(0, 5).map((bid) => (
+                          <div
+                            key={bid.lead_id}
+                            className="flex items-center justify-between border-b border-slate-100 pb-2 last:border-0 last:pb-0"
+                          >
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-1">
-                                <span
-                                  className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${getUrgencyColor(
-                                    bid.lead_urgency
-                                  )}`}
-                                >
-                                  {formatUrgency(bid.lead_urgency)}
-                                </span>
-                                {bid.lead_city && (
-                                  <span className="text-xs text-[#6b6b6b]">
-                                    {bid.lead_city}
-                                  </span>
-                                )}
+                              <div className="text-sm text-slate-900 mb-0.5">
+                                {bid.lead_city || "Unknown"} • Auction
                               </div>
-                              <div className="flex items-center gap-3 text-xs text-[#4a4a4a]">
-                                <span>Bid: ${bid.your_highest_bid.toFixed(2)}</span>
-                                <span className={bid.is_highest_bidder ? "text-emerald-600 font-semibold" : "text-slate-500"}>
-                                  {bid.is_highest_bidder ? "Highest bidder" : "Outbid"}
-                                </span>
-                                {bid.auction_ends_at && (
-                                  <span className="font-mono">
-                                    {formatCountdown(bid.auction_ends_at)}
-                                  </span>
+                              <div className="text-xs text-slate-500">
+                                Your bid: ${bid.your_highest_bid.toFixed(2)}
+                                {bid.lead_urgency && (
+                                  <> · {formatUrgency(bid.lead_urgency)} lead</>
                                 )}
                               </div>
                             </div>
@@ -544,11 +555,11 @@ export default function AgentDashboardPage() {
                               href={`/agent/leads/${bid.lead_id}`}
                               className="text-xs font-medium text-[#6b6b6b] hover:text-[#2a2a2a] transition-colors whitespace-nowrap ml-4"
                             >
-                              View lead
+                              View lead →
                             </Link>
-                          </li>
+                          </div>
                         ))}
-                      </ul>
+                      </div>
                     )}
                   </div>
                 </div>
