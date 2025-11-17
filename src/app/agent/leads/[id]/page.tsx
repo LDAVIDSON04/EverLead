@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabaseClient } from "@/lib/supabaseClient";
@@ -19,10 +20,15 @@ type Lead = {
   last_name: string | null;
   email: string | null;
   phone: string | null;
+  age: number | null;
+  planning_for: string | null;
+  ceremony_preferences: string | null;
+  timeline_intent: string | null;
   preferred_contact_time: string | null;
-  budget_range: string | null;
+  additional_notes: string | null;
   notes_from_family: string | null;
   assigned_agent_id: string | null;
+  agent_status?: string | null; // For agent's workflow status
 };
 
 type LeadNote = {
@@ -31,6 +37,14 @@ type LeadNote = {
   created_at: string;
   agent_id: string;
 };
+
+const STATUS_OPTIONS = [
+  { value: "new", label: "New" },
+  { value: "contacted", label: "Contacted" },
+  { value: "in_followup", label: "In follow-up" },
+  { value: "closed_won", label: "Closed – won" },
+  { value: "closed_lost", label: "Closed – lost" },
+];
 
 export default function LeadDetailsPage() {
   useRequireRole("agent");
@@ -49,6 +63,10 @@ export default function LeadDetailsPage() {
   const [notesError, setNotesError] = useState<string | null>(null);
   const [newNote, setNewNote] = useState("");
   const [savingNote, setSavingNote] = useState(false);
+
+  const [agentStatus, setAgentStatus] = useState<string>("new");
+  const [savingStatus, setSavingStatus] = useState(false);
+  const [statusSaved, setStatusSaved] = useState(false);
 
   // Load lead + user
   useEffect(() => {
@@ -107,7 +125,10 @@ export default function LeadDetailsPage() {
           return;
         }
 
-        setLead(data as Lead);
+        const leadData = data as Lead;
+        setLead(leadData);
+        // Use agent_status if available, otherwise default to "new"
+        setAgentStatus(leadData.agent_status || "new");
       } catch (err) {
         console.error(err);
         setLeadError("Unexpected error loading lead.");
@@ -138,7 +159,7 @@ export default function LeadDetailsPage() {
           return;
         }
 
-        setNotes(body.notes || []);
+        setNotes((body.notes || []).reverse()); // Newest first
       } catch (err) {
         console.error(err);
         setNotesError("Unexpected error loading notes.");
@@ -150,22 +171,29 @@ export default function LeadDetailsPage() {
     loadNotes();
   }, [id]);
 
-  function formatUrgency(u: string | null) {
-    if (!u) return "Unknown";
-    const lower = u.toLowerCase();
-    if (lower === "hot") return "Hot";
-    if (lower === "warm") return "Warm";
-    if (lower === "cold") return "Cold";
-    return u;
-  }
+  async function handleStatusChange(newStatus: string) {
+    if (!id || !userId) return;
+    setSavingStatus(true);
+    setStatusSaved(false);
 
-  function formatDateTime(d: string | null) {
-    if (!d) return "Unknown";
     try {
-      const date = new Date(d);
-      return date.toLocaleString();
-    } catch {
-      return d;
+      const { error } = await supabaseClient
+        .from("leads")
+        .update({ agent_status: newStatus })
+        .eq("id", id);
+
+      if (error) {
+        console.error("Status update error:", error);
+        return;
+      }
+
+      setAgentStatus(newStatus);
+      setStatusSaved(true);
+      setTimeout(() => setStatusSaved(false), 2000);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSavingStatus(false);
     }
   }
 
@@ -196,7 +224,7 @@ export default function LeadDetailsPage() {
       }
 
       const saved = body.note as LeadNote;
-      setNotes((prev) => [...prev, saved]);
+      setNotes((prev) => [saved, ...prev]); // Add to top
       setNewNote("");
     } catch (err) {
       console.error(err);
@@ -206,6 +234,51 @@ export default function LeadDetailsPage() {
     }
   }
 
+  function formatUrgency(u: string | null) {
+    if (!u) return "Unknown";
+    const lower = u.toLowerCase();
+    if (lower === "hot") return "Hot";
+    if (lower === "warm") return "Warm";
+    if (lower === "cold") return "Cold";
+    return u;
+  }
+
+  function formatDateTime(d: string | null) {
+    if (!d) return "Unknown";
+    try {
+      const date = new Date(d);
+      return date.toLocaleString();
+    } catch {
+      return d;
+    }
+  }
+
+  function formatDate(d: string | null) {
+    if (!d) return "Unknown";
+    try {
+      return new Date(d).toLocaleDateString();
+    } catch {
+      return d;
+    }
+  }
+
+  function formatTimelineIntent(intent: string | null) {
+    if (!intent) return "Not specified";
+    if (intent === "purchase_now") return "Ready to purchase now";
+    if (intent === "talk_to_someone") return "Wants to talk to someone";
+    if (intent === "just_browsing") return "Just browsing / exploring";
+    return intent;
+  }
+
+  function formatPlanningFor(planning: string | null) {
+    if (!planning) return "Not specified";
+    if (planning === "myself") return "Myself";
+    if (planning === "spouse_partner") return "Spouse / Partner";
+    if (planning === "parent") return "Parent";
+    if (planning === "other_family") return "Other family member";
+    return planning;
+  }
+
   const displayName =
     lead?.full_name ||
     (lead?.first_name || lead?.last_name
@@ -213,16 +286,16 @@ export default function LeadDetailsPage() {
       : "Unnamed lead");
 
   return (
-    <main className="min-h-screen bg-slate-50">
+    <main className="min-h-screen bg-[#f7f4ef]">
       {/* Top bar */}
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
+      <header className="border-b border-[#ded3c2] bg-[#1f2933] text-white">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <div className="flex items-baseline gap-2">
-            <span className="text-sm font-semibold text-slate-900">
+            <span className="text-lg font-semibold text-white">
               EverLead
             </span>
-            <span className="text-[11px] uppercase tracking-wide text-slate-500">
-              Agent portal
+            <span className="text-[11px] uppercase tracking-[0.18em] text-[#e0d5bf]">
+              Agent Portal
             </span>
           </div>
         </div>
@@ -230,184 +303,312 @@ export default function LeadDetailsPage() {
 
       <AgentNav />
 
-      <section className="mx-auto max-w-5xl px-4 py-6">
+      <section className="mx-auto max-w-5xl px-4 py-8">
+        {/* Breadcrumb */}
+        <Link
+          href="/agent/leads/mine"
+          className="mb-4 inline-flex items-center gap-1 text-xs text-[#6b6b6b] hover:text-[#2a2a2a] transition-colors"
+        >
+          ← Back to leads
+        </Link>
+
         {leadLoading ? (
-          <p className="text-sm text-slate-600">Loading lead…</p>
+          <p className="text-sm text-[#6b6b6b]">Loading lead…</p>
         ) : leadError ? (
-          <p className="text-sm text-red-600">{leadError}</p>
+          <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3">
+            <p className="text-sm text-red-600">{leadError}</p>
+          </div>
         ) : !lead ? (
-          <p className="text-sm text-slate-600">Lead not found.</p>
+          <p className="text-sm text-[#6b6b6b]">Lead not found.</p>
         ) : (
           <>
-            {/* Header row */}
-            <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
-              <div>
-                <h1 className="text-lg font-semibold text-slate-900">
-                  {displayName}
-                </h1>
-                <p className="text-xs text-slate-500">
-                  {formatUrgency(lead.urgency_level)} •{" "}
-                  {lead.city || "Unknown city"}
-                  {lead.province ? `, ${lead.province}` : ""} • Created{" "}
-                  {formatDateTime(lead.created_at)}
-                </p>
-              </div>
+            {/* Header */}
+            <div className="mb-6">
+              <h1
+                className="mb-2 text-2xl font-normal text-[#2a2a2a]"
+                style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+              >
+                Lead details
+              </h1>
+              <p className="text-sm text-[#6b6b6b]">
+                Pre-need inquiry from {displayName || lead.city || "Unknown"}
+              </p>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2">
-              {/* Lead summary card */}
-              <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-                <h2 className="mb-2 text-sm font-semibold text-slate-900">
-                  Lead summary
-                </h2>
-                <dl className="space-y-1 text-xs text-slate-700">
-                  <div className="flex justify-between gap-2">
-                    <dt className="text-slate-500">Status</dt>
-                    <dd className="font-medium">
-                      {lead.status || "Unknown"}
-                    </dd>
-                  </div>
-                  <div className="flex justify-between gap-2">
-                    <dt className="text-slate-500">Service type</dt>
-                    <dd className="font-medium">
-                      {lead.service_type || "Pre-need planning"}
-                    </dd>
-                  </div>
-                  <div className="flex justify-between gap-2">
-                    <dt className="text-slate-500">Location</dt>
-                    <dd className="font-medium">
-                      {lead.city || "Unknown"}
-                      {lead.province ? `, ${lead.province}` : ""}
-                    </dd>
-                  </div>
-                  {lead.budget_range && (
-                    <div className="flex justify-between gap-2">
-                      <dt className="text-slate-500">Budget</dt>
-                      <dd className="font-medium">
-                        {lead.budget_range}
-                      </dd>
-                    </div>
-                  )}
-                  {lead.preferred_contact_time && (
-                    <div className="flex justify-between gap-2">
-                      <dt className="text-slate-500">
-                        Preferred contact time
-                      </dt>
-                      <dd className="font-medium">
-                        {lead.preferred_contact_time}
-                      </dd>
-                    </div>
-                  )}
-                </dl>
-              </div>
-
-              {/* Contact details */}
-              <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-                <h2 className="mb-2 text-sm font-semibold text-slate-900">
-                  Contact details
-                </h2>
-                <dl className="space-y-1 text-xs text-slate-700">
-                  <div className="flex justify-between gap-2">
-                    <dt className="text-slate-500">Name</dt>
-                    <dd className="font-medium">{displayName}</dd>
-                  </div>
-                  {lead.email && (
-                    <div className="flex justify-between gap-2">
-                      <dt className="text-slate-500">Email</dt>
-                      <dd className="font-medium break-all">
-                        {lead.email}
-                      </dd>
-                    </div>
-                  )}
-                  {lead.phone && (
-                    <div className="flex justify-between gap-2">
-                      <dt className="text-slate-500">Phone</dt>
-                      <dd className="font-medium">
-                        {lead.phone}
-                      </dd>
-                    </div>
-                  )}
-                </dl>
-
-                {lead.notes_from_family && (
-                  <div className="mt-3 rounded-md bg-slate-50 p-2 text-xs text-slate-700">
-                    <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                      Notes from family
-                    </div>
-                    <p>{lead.notes_from_family}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Notes section */}
-            <div className="mt-5 grid gap-4 md:grid-cols-[2fr,1fr]">
-              <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-                <h2 className="mb-2 text-sm font-semibold text-slate-900">
-                  Your notes
-                </h2>
-
-                <form onSubmit={handleAddNote} className="mb-3 space-y-2">
-                  <textarea
-                    value={newNote}
-                    onChange={(e) => setNewNote(e.target.value)}
-                    rows={3}
-                    placeholder="Log a call, email, or next step for this family…"
-                    className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
-                  />
-                  <div className="flex items-center justify-between">
-                    {notesError && (
-                      <p className="text-[11px] text-red-600">
-                        {notesError}
-                      </p>
+            {/* Main grid */}
+            <div className="grid gap-6 md:grid-cols-[2fr,1.3fr]">
+              {/* Left column */}
+              <div className="space-y-4">
+                {/* Family information */}
+                <div className="rounded-lg border border-slate-200 bg-white p-4 text-sm text-slate-800 shadow-sm">
+                  <h2
+                    className="mb-3 text-base font-normal text-[#2a2a2a]"
+                    style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+                  >
+                    Family information
+                  </h2>
+                  <dl className="space-y-2 text-sm">
+                    {displayName && (
+                      <div>
+                        <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                          Name
+                        </dt>
+                        <dd className="mt-1 text-[#2a2a2a]">{displayName}</dd>
+                      </div>
                     )}
-                    <button
-                      type="submit"
-                      disabled={savingNote || !newNote.trim()}
-                      className="ml-auto rounded-full bg-brand-600 px-3 py-1.5 text-[11px] font-medium text-white shadow-sm hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-70"
-                    >
-                      {savingNote ? "Saving…" : "Add note"}
-                    </button>
-                  </div>
-                </form>
+                    {(lead.city || lead.province) && (
+                      <div>
+                        <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                          Location
+                        </dt>
+                        <dd className="mt-1 text-[#2a2a2a]">
+                          {lead.city || ""}
+                          {lead.city && lead.province ? ", " : ""}
+                          {lead.province || ""}
+                        </dd>
+                      </div>
+                    )}
+                    {lead.age && (
+                      <div>
+                        <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                          Age
+                        </dt>
+                        <dd className="mt-1 text-[#2a2a2a]">{lead.age}</dd>
+                      </div>
+                    )}
+                    {lead.email && (
+                      <div>
+                        <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                          Email
+                        </dt>
+                        <dd className="mt-1 break-all text-[#2a2a2a]">
+                          <a
+                            href={`mailto:${lead.email}`}
+                            className="text-[#2a2a2a] hover:underline"
+                          >
+                            {lead.email}
+                          </a>
+                        </dd>
+                      </div>
+                    )}
+                    {lead.phone && (
+                      <div>
+                        <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                          Phone
+                        </dt>
+                        <dd className="mt-1 text-[#2a2a2a]">
+                          <a
+                            href={`tel:${lead.phone}`}
+                            className="text-[#2a2a2a] hover:underline"
+                          >
+                            {lead.phone}
+                          </a>
+                        </dd>
+                      </div>
+                    )}
+                    {lead.preferred_contact_time && (
+                      <div>
+                        <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                          Preferred contact time
+                        </dt>
+                        <dd className="mt-1 text-[#2a2a2a]">
+                          {lead.preferred_contact_time}
+                        </dd>
+                      </div>
+                    )}
+                  </dl>
+                </div>
 
-                {notesLoading ? (
-                  <p className="text-xs text-slate-600">
-                    Loading notes…
-                  </p>
-                ) : notes.length === 0 ? (
-                  <p className="text-xs text-slate-600">
-                    You haven&apos;t added any notes for this lead yet.
-                  </p>
-                ) : (
-                  <ul className="space-y-2 text-xs text-slate-700">
-                    {notes.map((note) => (
-                      <li
-                        key={note.id}
-                        className="rounded-md border border-slate-200 bg-slate-50 p-2"
-                      >
-                        <div className="mb-1 text-[10px] uppercase tracking-wide text-slate-500">
-                          {formatDateTime(note.created_at)}
-                        </div>
-                        <p>{note.content}</p>
-                      </li>
-                    ))}
-                  </ul>
-                )}
+                {/* Planning details */}
+                <div className="rounded-lg border border-slate-200 bg-white p-4 text-sm text-slate-800 shadow-sm">
+                  <h2
+                    className="mb-3 text-base font-normal text-[#2a2a2a]"
+                    style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+                  >
+                    Planning details
+                  </h2>
+                  <dl className="space-y-2 text-sm">
+                    <div>
+                      <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                        Urgency
+                      </dt>
+                      <dd className="mt-1">
+                        <span
+                          className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
+                            lead.urgency_level === "hot"
+                              ? "bg-red-100 text-red-900"
+                              : lead.urgency_level === "warm"
+                              ? "bg-amber-100 text-amber-900"
+                              : "bg-slate-100 text-slate-900"
+                          }`}
+                        >
+                          {formatUrgency(lead.urgency_level)}
+                        </span>
+                      </dd>
+                    </div>
+                    {lead.service_type && (
+                      <div>
+                        <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                          Service type
+                        </dt>
+                        <dd className="mt-1 text-[#2a2a2a]">
+                          {lead.service_type === "cremation"
+                            ? "Cremation"
+                            : lead.service_type === "burial"
+                            ? "Burial"
+                            : lead.service_type}
+                        </dd>
+                      </div>
+                    )}
+                    {lead.planning_for && (
+                      <div>
+                        <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                          Planning for
+                        </dt>
+                        <dd className="mt-1 text-[#2a2a2a]">
+                          {formatPlanningFor(lead.planning_for)}
+                        </dd>
+                      </div>
+                    )}
+                    {lead.timeline_intent && (
+                      <div>
+                        <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                          Timeline
+                        </dt>
+                        <dd className="mt-1 text-[#2a2a2a]">
+                          {formatTimelineIntent(lead.timeline_intent)}
+                        </dd>
+                      </div>
+                    )}
+                    {lead.ceremony_preferences && (
+                      <div>
+                        <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                          Ceremony preferences
+                        </dt>
+                        <dd className="mt-1 text-[#2a2a2a]">
+                          {lead.ceremony_preferences}
+                        </dd>
+                      </div>
+                    )}
+                    {lead.additional_notes && (
+                      <div>
+                        <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                          Additional notes
+                        </dt>
+                        <dd className="mt-1 text-[#2a2a2a] whitespace-pre-wrap">
+                          {lead.additional_notes}
+                        </dd>
+                      </div>
+                    )}
+                    {lead.notes_from_family && (
+                      <div>
+                        <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                          Notes from family
+                        </dt>
+                        <dd className="mt-1 text-[#2a2a2a] whitespace-pre-wrap">
+                          {lead.notes_from_family}
+                        </dd>
+                      </div>
+                    )}
+                    <div>
+                      <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                        Created
+                      </dt>
+                      <dd className="mt-1 text-[#2a2a2a]">
+                        {formatDate(lead.created_at)}
+                      </dd>
+                    </div>
+                  </dl>
+                </div>
               </div>
 
-              <div className="rounded-xl border border-slate-200 bg-white p-4 text-xs text-slate-600 shadow-sm">
-                <h2 className="mb-2 text-sm font-semibold text-slate-900">
-                  Next steps
-                </h2>
-                <p className="mb-2">
-                  Use notes to track every touchpoint: first call, voicemail,
-                  follow-up, and when the plan is closed.
-                </p>
-                <p>
-                  Over time you&apos;ll be able to see which types of leads
-                  convert best and how many touches it usually takes.
-                </p>
+              {/* Right column */}
+              <div className="space-y-4">
+                {/* Lead status */}
+                <div className="rounded-lg border border-slate-200 bg-white p-4 text-sm text-slate-800 shadow-sm">
+                  <h2
+                    className="mb-3 text-base font-normal text-[#2a2a2a]"
+                    style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+                  >
+                    Lead status
+                  </h2>
+                  <div className="space-y-2">
+                    <label className="block text-xs font-medium text-[#4a4a4a]">
+                      Status
+                    </label>
+                    <select
+                      value={agentStatus}
+                      onChange={(e) => handleStatusChange(e.target.value)}
+                      disabled={savingStatus}
+                      className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none disabled:opacity-50"
+                    >
+                      {STATUS_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                    {statusSaved && (
+                      <p className="text-[10px] text-green-600">Saved</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Private notes */}
+                <div className="rounded-lg border border-slate-200 bg-white p-4 text-sm text-slate-800 shadow-sm">
+                  <h2
+                    className="mb-3 text-base font-normal text-[#2a2a2a]"
+                    style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+                  >
+                    Notes
+                  </h2>
+
+                  <form onSubmit={handleAddNote} className="mb-3 space-y-2">
+                    <textarea
+                      value={newNote}
+                      onChange={(e) => setNewNote(e.target.value)}
+                      rows={3}
+                      placeholder="Log a call, email, or next step for this family…"
+                      className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900"
+                    />
+                    <div className="flex items-center justify-between">
+                      {notesError && (
+                        <p className="text-[11px] text-red-600">
+                          {notesError}
+                        </p>
+                      )}
+                      <button
+                        type="submit"
+                        disabled={savingNote || !newNote.trim()}
+                        className="ml-auto rounded-full bg-[#2a2a2a] px-3 py-1.5 text-xs font-semibold text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-70 transition-colors"
+                      >
+                        {savingNote ? "Saving…" : "Add note"}
+                      </button>
+                    </div>
+                  </form>
+
+                  {notesLoading ? (
+                    <p className="text-xs text-[#6b6b6b]">Loading notes…</p>
+                  ) : notes.length === 0 ? (
+                    <p className="text-xs text-[#6b6b6b]">
+                      You haven&apos;t added any notes for this lead yet.
+                    </p>
+                  ) : (
+                    <div className="mt-3 space-y-2">
+                      {notes.map((note) => (
+                        <div
+                          key={note.id}
+                          className="rounded-md border border-slate-200 bg-slate-50 p-2 text-xs text-slate-800"
+                        >
+                          <p>{note.content}</p>
+                          <p className="mt-1 text-[10px] text-slate-500">
+                            Added {formatDateTime(note.created_at)}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </>
@@ -416,4 +617,3 @@ export default function LeadDetailsPage() {
     </main>
   );
 }
-
