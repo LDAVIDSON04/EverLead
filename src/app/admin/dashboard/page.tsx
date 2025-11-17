@@ -4,13 +4,11 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { supabaseClient } from "@/lib/supabaseClient";
+import { useRequireRole } from "@/lib/hooks/useRequireRole";
 
 type DashboardStats = {
   totalLeads: number;
-  newLeads: number;
-  contactedLeads: number;
-  inFollowupLeads: number;
-  closedWonLeads: number;
+  leadsThisWeek: number;
   purchasedLeads: number;
   totalRevenueCents: number;
   hotLeads: number;
@@ -22,8 +20,9 @@ type DashboardStats = {
 
 type TopAgent = {
   agent_id: string;
-  purchased_count: number;
-  agent_email?: string;
+  agent_email: string | null;
+  purchased_count_all_time: number;
+  purchased_count_last_30_days: number;
 };
 
 type RecentLead = {
@@ -32,11 +31,14 @@ type RecentLead = {
   city: string | null;
   urgency_level: string | null;
   status: string | null;
+  agent_status: string | null;
   auction_enabled: boolean | null;
   price_charged_cents: number | null;
 };
 
 export default function AdminDashboardPage() {
+  useRequireRole("admin");
+  
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [topAgents, setTopAgents] = useState<TopAgent[]>([]);
   const [recentLeads, setRecentLeads] = useState<RecentLead[]>([]);
@@ -47,10 +49,21 @@ export default function AdminDashboardPage() {
     async function loadStats() {
       setLoading(true);
       try {
+        // Calculate date 7 days ago
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        const sevenDaysAgoISO = sevenDaysAgo.toISOString();
+
+        // Calculate date 30 days ago
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        const thirtyDaysAgoISO = thirtyDaysAgo.toISOString();
+
+        // Get all leads
         const { data, error } = await supabaseClient
           .from("leads")
           .select(
-            "urgency_level, status, agent_status, price_charged_cents, auction_enabled, current_bid_amount, assigned_agent_id"
+            "urgency_level, status, agent_status, price_charged_cents, auction_enabled, current_bid_amount, assigned_agent_id, created_at"
           );
 
         if (error) {
@@ -63,26 +76,23 @@ export default function AdminDashboardPage() {
         const leads = data || [];
 
         const totalLeads = leads.length;
-        const newLeads = leads.filter(
-          (l) => l.status === "new" || l.status === "cold_unassigned"
+        
+        // Leads this week
+        const leadsThisWeek = leads.filter(
+          (l) => l.created_at && new Date(l.created_at) >= sevenDaysAgo
         ).length;
-        const contactedLeads = leads.filter(
-          (l) => l.agent_status === "contacted"
-        ).length;
-        const inFollowupLeads = leads.filter(
-          (l) => l.agent_status === "in_followup"
-        ).length;
-        const closedWonLeads = leads.filter(
-          (l) => l.agent_status === "closed_won"
-        ).length;
+
+        // Purchased leads (sold)
         const purchasedLeads = leads.filter(
           (l) => l.status === "purchased_by_agent"
         ).length;
 
+        // Revenue
         const totalRevenueCents = leads
           .filter((l) => l.status === "purchased_by_agent")
           .reduce((sum, l) => sum + (l.price_charged_cents || 0), 0);
 
+        // Urgency breakdown
         const hotLeads = leads.filter((l) => l.urgency_level === "hot").length;
         const warmLeads = leads.filter(
           (l) => l.urgency_level === "warm"
@@ -91,6 +101,7 @@ export default function AdminDashboardPage() {
           (l) => l.urgency_level === "cold"
         ).length;
 
+        // Auction stats
         const auctionEnabledCount = leads.filter(
           (l) => l.auction_enabled === true
         ).length;
@@ -100,10 +111,7 @@ export default function AdminDashboardPage() {
 
         setStats({
           totalLeads,
-          newLeads,
-          contactedLeads,
-          inFollowupLeads,
-          closedWonLeads,
+          leadsThisWeek,
           purchasedLeads,
           totalRevenueCents,
           hotLeads,
@@ -113,33 +121,54 @@ export default function AdminDashboardPage() {
           auctionWithBidsCount,
         });
 
-        // Top agents by purchased leads
-        const agentPurchases: Record<string, number> = {};
+        // Top agents by purchased leads (all-time and last 30 days)
+        const agentPurchasesAllTime: Record<string, number> = {};
+        const agentPurchasesLast30Days: Record<string, number> = {};
+        
         leads
           .filter((l) => l.status === "purchased_by_agent" && l.assigned_agent_id)
           .forEach((l) => {
             const agentId = l.assigned_agent_id as string;
-            agentPurchases[agentId] = (agentPurchases[agentId] || 0) + 1;
+            agentPurchasesAllTime[agentId] = (agentPurchasesAllTime[agentId] || 0) + 1;
+            
+            // Check if purchased in last 30 days
+            if (l.created_at && new Date(l.created_at) >= thirtyDaysAgo) {
+              agentPurchasesLast30Days[agentId] = (agentPurchasesLast30Days[agentId] || 0) + 1;
+            }
           });
 
-        const topAgentsList: TopAgent[] = Object.entries(agentPurchases)
-          .map(([agent_id, purchased_count]) => ({
-            agent_id,
-            purchased_count,
-          }))
-          .sort((a, b) => b.purchased_count - a.purchased_count)
-          .slice(0, 5);
+        // Get top 10 agents by all-time purchases
+        const topAgentIds = Object.entries(agentPurchasesAllTime)
+          .sort(([, a], [, b]) => b - a)
+          .slice(0, 10)
+          .map(([id]) => id);
+
+        // Fetch agent emails
+        const { data: profilesData } = await supabaseClient
+          .from("profiles")
+          .select("id, email")
+          .in("id", topAgentIds);
+
+        const topAgentsList: TopAgent[] = topAgentIds.map((agentId) => {
+          const profile = profilesData?.find((p) => p.id === agentId);
+          return {
+            agent_id: agentId,
+            agent_email: profile?.email || null,
+            purchased_count_all_time: agentPurchasesAllTime[agentId] || 0,
+            purchased_count_last_30_days: agentPurchasesLast30Days[agentId] || 0,
+          };
+        });
 
         setTopAgents(topAgentsList);
 
-        // Recent leads
+        // Recent leads (last 20)
         const { data: recentData } = await supabaseClient
           .from("leads")
           .select(
-            "id, created_at, city, urgency_level, status, auction_enabled, price_charged_cents"
+            "id, created_at, city, urgency_level, status, agent_status, auction_enabled, price_charged_cents"
           )
           .order("created_at", { ascending: false })
-          .limit(10);
+          .limit(20);
 
         setRecentLeads((recentData || []) as RecentLead[]);
       } catch (err) {
@@ -236,28 +265,16 @@ export default function AdminDashboardPage() {
         {/* Top KPIs */}
         <div className="mb-8 grid gap-4 md:grid-cols-4">
           <StatCard label="Total Leads" value={stats.totalLeads} />
-          <StatCard label="Purchased Leads" value={stats.purchasedLeads} />
+          <StatCard label="Leads This Week" value={stats.leadsThisWeek} />
+          <StatCard label="Leads Sold" value={stats.purchasedLeads} />
           <StatCard
-            label="Total Revenue"
-            value={formatMoney(stats.totalRevenueCents)}
+            label="Approx. Revenue"
+            value={
+              stats.totalRevenueCents > 0
+                ? formatMoney(stats.totalRevenueCents)
+                : "$0.00 (test mode)"
+            }
           />
-          <StatCard label="New Leads" value={stats.newLeads} />
-        </div>
-
-        {/* Leads by Status */}
-        <div className="mb-8">
-          <h2
-            className="mb-4 text-lg font-normal text-[#2a2a2a]"
-            style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-          >
-            Leads by Status
-          </h2>
-          <div className="grid gap-4 md:grid-cols-4">
-            <StatCard label="New" value={stats.newLeads} />
-            <StatCard label="Contacted" value={stats.contactedLeads} />
-            <StatCard label="In Follow-up" value={stats.inFollowupLeads} />
-            <StatCard label="Closed – Won" value={stats.closedWonLeads} />
-          </div>
         </div>
 
         {/* Charts/Summaries */}
@@ -328,34 +345,44 @@ export default function AdminDashboardPage() {
               className="mb-4 text-lg font-normal text-[#2a2a2a]"
               style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
             >
-              Top Agents by Purchased Leads
+              Top Agents
             </h2>
-            <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-slate-200 bg-[#faf8f5]">
-                    <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
-                      Agent ID
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                      Agent
                     </th>
-                    <th className="px-4 py-2 text-right text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
-                      Purchased Leads
+                    <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                      Purchased (All-time)
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                      Purchased (Last 30 days)
                     </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {topAgents.map((agent) => (
-                    <tr
-                      key={agent.agent_id}
-                      className="border-b border-slate-100 hover:bg-[#faf8f5]"
-                    >
-                      <td className="px-4 py-2 text-[#4a4a4a]">
-                        {agent.agent_id.slice(0, 8)}…
-                      </td>
-                      <td className="px-4 py-2 text-right font-semibold text-[#2a2a2a]">
-                        {agent.purchased_count}
-                      </td>
-                    </tr>
-                  ))}
+                  {topAgents.map((agent) => {
+                    const email = agent.agent_email || `agent_${agent.agent_id.slice(0, 8)}`;
+                    const displayEmail = email.length > 30 ? `${email.slice(0, 27)}…` : email;
+                    return (
+                      <tr
+                        key={agent.agent_id}
+                        className="border-b border-slate-100 hover:bg-[#faf8f5]"
+                      >
+                        <td className="px-4 py-3 text-[#4a4a4a]">
+                          {displayEmail}
+                        </td>
+                        <td className="px-4 py-3 text-right font-semibold text-[#2a2a2a]">
+                          {agent.purchased_count_all_time}
+                        </td>
+                        <td className="px-4 py-3 text-right font-semibold text-[#2a2a2a]">
+                          {agent.purchased_count_last_30_days}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -413,7 +440,7 @@ export default function AdminDashboardPage() {
                       {formatUrgency(lead.urgency_level)}
                     </td>
                     <td className="px-4 py-3 text-sm text-[#4a4a4a]">
-                      {lead.status || "-"}
+                      {lead.agent_status || lead.status || "-"}
                     </td>
                     <td className="px-4 py-3 text-sm text-[#4a4a4a]">
                       {lead.auction_enabled ? (
