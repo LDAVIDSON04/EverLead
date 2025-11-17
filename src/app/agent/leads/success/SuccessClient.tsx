@@ -3,17 +3,15 @@
 
 import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { supabaseClient } from "@/lib/supabaseClient";
 import { AgentNav } from "@/components/AgentNav";
-import { useRequireRole } from "@/lib/hooks/useRequireRole";
 
-type Status = "checking" | "ok" | "error";
+type Status = "idle" | "loading" | "success" | "error";
 
 export default function SuccessClient() {
-  useRequireRole("agent");
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [status, setStatus] = useState<Status>("checking");
+  const [status, setStatus] = useState<Status>("idle");
+  const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const sessionId = searchParams.get("session_id");
@@ -22,52 +20,55 @@ export default function SuccessClient() {
 
     // Free lead path: we already updated DB in /api/leads/free-purchase
     if (free === "1" && leadId) {
-      setStatus("ok");
+      setStatus("success");
+      setTimeout(() => {
+        router.push("/agent/leads/mine");
+      }, 1500);
       return;
     }
 
     // Paid path: confirm with backend
     if (!sessionId || !leadId) {
       setStatus("error");
+      setMessage("Missing payment information. Please contact support.");
       return;
     }
 
-    async function confirm() {
+    const run = async () => {
       try {
-        const {
-          data: { user },
-        } = await supabaseClient.auth.getUser();
+        setStatus("loading");
+        const res = await fetch("/api/agent/leads/confirm-purchase", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sessionId, leadId }),
+        });
 
-        if (!user) {
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({ error: "Unknown error" }));
+          console.error("confirm-purchase failed", data);
           setStatus("error");
+          setMessage(
+            data?.error ??
+              "We processed your payment but had trouble assigning the lead. Please contact support."
+          );
           return;
         }
 
-        const res = await fetch("/api/checkout/confirm", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            sessionId,
-            leadId,
-            agentId: user.id,
-          }),
-        });
-
-        if (res.ok) {
-          setStatus("ok");
-        } else {
-          setStatus("error");
-        }
+        setStatus("success");
+        setTimeout(() => {
+          router.push("/agent/leads/mine");
+        }, 1500);
       } catch (err) {
-        console.error(err);
+        console.error("confirm-purchase crashed", err);
         setStatus("error");
+        setMessage(
+          "We processed your payment but had trouble assigning the lead. Please contact support."
+        );
       }
-    }
+    };
 
-    confirm();
-  }, [searchParams]);
+    run();
+  }, [searchParams, router]);
 
   return (
     <main className="min-h-screen bg-[#f7f4ef]">
@@ -88,13 +89,19 @@ export default function SuccessClient() {
 
       <section className="mx-auto max-w-6xl px-6 py-8">
         <div className="mx-auto max-w-2xl">
-        {status === "checking" && (
+        {status === "idle" && (
+          <div className="rounded-xl border border-slate-200 bg-white p-8 shadow-sm text-center">
+            <p className="text-sm text-[#6b6b6b]">Loading...</p>
+          </div>
+        )}
+
+        {status === "loading" && (
           <div className="rounded-xl border border-slate-200 bg-white p-8 shadow-sm text-center">
             <p className="text-sm text-[#6b6b6b]">Confirming your purchase...</p>
           </div>
         )}
 
-        {status === "ok" && (
+        {status === "success" && (
           <div className="rounded-xl border border-slate-200 bg-white p-8 shadow-sm">
             <h1
               className="mb-4 text-2xl font-semibold text-[#2a2a2a]"
@@ -104,6 +111,9 @@ export default function SuccessClient() {
             </h1>
             <p className="mb-6 text-sm text-[#6b6b6b]">
               You now have access to this lead in your account. It has been added to your dashboard.
+            </p>
+            <p className="mb-4 text-xs text-[#6b6b6b] italic">
+              Redirecting to My Leads...
             </p>
             <div className="flex flex-wrap gap-3">
               <button
@@ -131,7 +141,7 @@ export default function SuccessClient() {
               Something went wrong
             </h1>
             <p className="mb-6 text-sm text-red-700">
-              We couldn&apos;t confirm your lead purchase. Please contact support or try again.
+              {message || "We couldn't confirm your lead purchase. Please contact support or try again."}
             </p>
             <button
               onClick={() => router.push("/agent/leads/available")}

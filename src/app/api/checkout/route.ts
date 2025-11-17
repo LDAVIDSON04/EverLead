@@ -63,6 +63,9 @@ export async function POST(req: NextRequest) {
       ],
       success_url: successUrl,
       cancel_url: cancelUrl,
+      metadata: {
+        leadId: leadId,
+      },
     });
 
     return NextResponse.json({ url: session.url });
