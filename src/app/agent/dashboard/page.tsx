@@ -24,6 +24,28 @@ type RecentLead = {
   agent_status: string | null;
 };
 
+type TopAgent = {
+  agent_id: string;
+  agent_email: string | null;
+  purchased_count: number;
+};
+
+type PendingAuction = {
+  id: string;
+  city: string | null;
+  urgency_level: string | null;
+  auction_ends_at: string | null;
+  current_bid_amount: number | null;
+};
+
+type YourBid = {
+  lead_id: string;
+  lead_city: string | null;
+  lead_urgency: string | null;
+  your_highest_bid: number;
+  is_highest_bidder: boolean;
+};
+
 export default function AgentDashboardPage() {
   const router = useRouter();
   const [stats, setStats] = useState<Stats>({
@@ -34,6 +56,9 @@ export default function AgentDashboardPage() {
     totalSpent: 0,
   });
   const [recentLeads, setRecentLeads] = useState<RecentLead[]>([]);
+  const [topAgents, setTopAgents] = useState<TopAgent[]>([]);
+  const [pendingAuctions, setPendingAuctions] = useState<PendingAuction[]>([]);
+  const [yourBids, setYourBids] = useState<YourBid[]>([]);
   const [loading, setLoading] = useState(true);
   const [userEmail, setUserEmail] = useState<string | null>(null);
 
@@ -113,6 +138,101 @@ export default function AgentDashboardPage() {
           .limit(10);
 
         setRecentLeads((recentData || []) as RecentLead[]);
+
+        // Load top agents (purchased leads in last 30 days)
+        const { data: purchasedLeadsData } = await supabaseClient
+          .from("leads")
+          .select("assigned_agent_id, created_at")
+          .eq("status", "purchased_by_agent")
+          .not("assigned_agent_id", "is", null)
+          .gte("created_at", thirtyDaysAgoISO);
+
+        // Group by agent_id and count
+        const agentCounts: Record<string, number> = {};
+        purchasedLeadsData?.forEach((lead) => {
+          const aid = lead.assigned_agent_id as string;
+          agentCounts[aid] = (agentCounts[aid] || 0) + 1;
+        });
+
+        // Get top 5 agents
+        const topAgentIds = Object.entries(agentCounts)
+          .sort(([, a], [, b]) => b - a)
+          .slice(0, 5)
+          .map(([id]) => id);
+
+        // Fetch agent emails from profiles
+        const { data: profilesData } = await supabaseClient
+          .from("profiles")
+          .select("id, email")
+          .in("id", topAgentIds);
+
+        const topAgentsList: TopAgent[] = topAgentIds.map((aid) => {
+          const profile = profilesData?.find((p) => p.id === aid);
+          // Try to get email from profile, or fall back to auth.users if needed
+          // For now, we'll use profile email or show truncated agent ID
+          return {
+            agent_id: aid,
+            agent_email: profile?.email || `agent_${aid.slice(0, 8)}`,
+            purchased_count: agentCounts[aid] || 0,
+          };
+        });
+
+        setTopAgents(topAgentsList);
+
+        // Load pending auctions (auction_enabled = true, ends_at in future, not purchased)
+        const now = new Date().toISOString();
+        const { data: auctionsData } = await supabaseClient
+          .from("leads")
+          .select("id, city, urgency_level, auction_ends_at, current_bid_amount")
+          .eq("auction_enabled", true)
+          .neq("status", "purchased_by_agent")
+          .gt("auction_ends_at", now)
+          .order("auction_ends_at", { ascending: true })
+          .limit(5);
+
+        setPendingAuctions((auctionsData || []) as PendingAuction[]);
+
+        // Load your bids
+        const { data: bidsData } = await supabaseClient
+          .from("lead_bids")
+          .select("lead_id, amount")
+          .eq("agent_id", agentId)
+          .order("created_at", { ascending: false });
+
+        // Get distinct lead_ids and find highest bid per lead for this agent
+        const leadBidMap: Record<string, number> = {};
+        bidsData?.forEach((bid) => {
+          const lid = bid.lead_id as string;
+          const amount = bid.amount as number;
+          if (!leadBidMap[lid] || amount > leadBidMap[lid]) {
+            leadBidMap[lid] = amount;
+          }
+        });
+
+        const yourBidLeadIds = Object.keys(leadBidMap).slice(0, 10);
+
+        if (yourBidLeadIds.length > 0) {
+          // Fetch lead info for these bids
+          const { data: bidLeadsData } = await supabaseClient
+            .from("leads")
+            .select("id, city, urgency_level, current_bid_agent_id")
+            .in("id", yourBidLeadIds);
+
+          const yourBidsList: YourBid[] = yourBidLeadIds.map((lid) => {
+            const lead = bidLeadsData?.find((l) => l.id === lid);
+            return {
+              lead_id: lid,
+              lead_city: lead?.city || null,
+              lead_urgency: lead?.urgency_level || null,
+              your_highest_bid: leadBidMap[lid],
+              is_highest_bidder: lead?.current_bid_agent_id === agentId,
+            };
+          });
+
+          setYourBids(yourBidsList);
+        } else {
+          setYourBids([]);
+        }
       } catch (err) {
         console.error("Error loading agent dashboard stats:", err);
       } finally {
@@ -406,6 +526,188 @@ export default function AgentDashboardPage() {
                       </span>
                     </li>
                   </ul>
+                </div>
+              </div>
+            </div>
+
+            {/* Marketplace sections: Leaderboard, Pending Auctions, Your Bids */}
+            <div className="mt-8 grid gap-6 md:grid-cols-3">
+              {/* Leaderboard */}
+              <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
+                <div className="border-b border-slate-200 px-6 py-4">
+                  <h2
+                    className="text-base font-normal text-[#2a2a2a]"
+                    style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+                  >
+                    Top agents this month
+                  </h2>
+                </div>
+                <div className="px-6 py-4">
+                  {topAgents.length === 0 ? (
+                    <p className="text-sm text-[#6b6b6b]">No data yet</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {topAgents.map((agent, idx) => {
+                        const email = agent.agent_email || "Unknown";
+                        // Truncate email if too long, but preserve @domain part
+                        let displayEmail = email;
+                        if (email.includes("@") && email.length > 25) {
+                          const [user, domain] = email.split("@");
+                          displayEmail = `${user.slice(0, 15)}…@${domain}`;
+                        } else if (email.length > 25) {
+                          displayEmail = `${email.slice(0, 22)}…`;
+                        }
+                        return (
+                          <div
+                            key={agent.agent_id}
+                            className="flex items-center justify-between"
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-semibold text-[#6b6b6b]">
+                                {idx + 1}.
+                              </span>
+                              <span className="text-sm text-[#2a2a2a]">
+                                {displayEmail}
+                              </span>
+                            </div>
+                            <span className="text-sm font-semibold text-[#2a2a2a]">
+                              {agent.purchased_count} leads
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Pending Auctions */}
+              <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
+                <div className="border-b border-slate-200 px-6 py-4">
+                  <h2
+                    className="text-base font-normal text-[#2a2a2a]"
+                    style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+                  >
+                    Pending auctions
+                  </h2>
+                </div>
+                <div className="px-6 py-4">
+                  {pendingAuctions.length === 0 ? (
+                    <p className="text-sm text-[#6b6b6b]">
+                      No active auctions right now
+                    </p>
+                  ) : (
+                    <div className="space-y-3">
+                      {pendingAuctions.map((auction) => {
+                        const endDate = auction.auction_ends_at
+                          ? new Date(auction.auction_ends_at)
+                          : null;
+                        const endTimeStr = endDate
+                          ? endDate.toLocaleDateString() +
+                            " " +
+                            endDate.toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })
+                          : "Unknown";
+                        return (
+                          <div
+                            key={auction.id}
+                            className="border-b border-slate-100 pb-3 last:border-0 last:pb-0"
+                          >
+                            <div className="mb-2 flex items-center gap-2">
+                              <span
+                                className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${getUrgencyColor(
+                                  auction.urgency_level
+                                )}`}
+                              >
+                                {formatUrgency(auction.urgency_level)}
+                              </span>
+                              <span className="text-xs text-[#6b6b6b]">
+                                {auction.city || "Unknown"}
+                              </span>
+                            </div>
+                            <div className="mb-2 text-xs text-[#4a4a4a]">
+                              Ends: {endTimeStr}
+                            </div>
+                            <div className="mb-2 text-xs text-[#4a4a4a]">
+                              Current bid:{" "}
+                              {auction.current_bid_amount
+                                ? `$${auction.current_bid_amount.toFixed(2)}`
+                                : "No bids yet"}
+                            </div>
+                            <Link
+                              href={`/agent/leads/${auction.id}`}
+                              className="text-xs font-medium text-[#6b6b6b] hover:text-[#2a2a2a] transition-colors"
+                            >
+                              View / Bid →
+                            </Link>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Your Bids */}
+              <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
+                <div className="border-b border-slate-200 px-6 py-4">
+                  <h2
+                    className="text-base font-normal text-[#2a2a2a]"
+                    style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+                  >
+                    Your bids
+                  </h2>
+                </div>
+                <div className="px-6 py-4">
+                  {yourBids.length === 0 ? (
+                    <p className="text-sm text-[#6b6b6b]">
+                      You haven&apos;t placed any bids yet
+                    </p>
+                  ) : (
+                    <div className="space-y-3">
+                      {yourBids.map((bid) => (
+                        <div
+                          key={bid.lead_id}
+                          className="border-b border-slate-100 pb-3 last:border-0 last:pb-0"
+                        >
+                          <div className="mb-2 flex items-center gap-2">
+                            <span
+                              className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${getUrgencyColor(
+                                bid.lead_urgency
+                              )}`}
+                            >
+                              {formatUrgency(bid.lead_urgency)}
+                            </span>
+                            <span className="text-xs text-[#6b6b6b]">
+                              {bid.lead_city || "Unknown"}
+                            </span>
+                          </div>
+                          <div className="mb-2 text-xs text-[#4a4a4a]">
+                            Your bid: ${bid.your_highest_bid.toFixed(2)}
+                          </div>
+                          <div className="mb-2">
+                            {bid.is_highest_bidder ? (
+                              <span className="inline-block rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-900">
+                                Highest bidder
+                              </span>
+                            ) : (
+                              <span className="inline-block rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-900">
+                                Outbid
+                              </span>
+                            )}
+                          </div>
+                          <Link
+                            href={`/agent/leads/${bid.lead_id}`}
+                            className="text-xs font-medium text-[#6b6b6b] hover:text-[#2a2a2a] transition-colors"
+                          >
+                            View →
+                          </Link>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
