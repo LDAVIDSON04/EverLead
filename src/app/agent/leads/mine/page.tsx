@@ -11,10 +11,19 @@ type Lead = {
   id: string;
   city: string | null;
   urgency_level: string | null;
-  status: string | null;
+  agent_status: string | null;
   service_type: string | null;
   created_at: string | null;
 };
+
+const STATUS_OPTIONS = [
+  { value: "all", label: "All statuses" },
+  { value: "new", label: "New" },
+  { value: "contacted", label: "Contacted" },
+  { value: "in_followup", label: "In follow-up" },
+  { value: "closed_won", label: "Closed – won" },
+  { value: "closed_lost", label: "Closed – lost" },
+];
 
 export default function MyLeadsPage() {
   useRequireRole("agent");
@@ -22,6 +31,7 @@ export default function MyLeadsPage() {
   const router = useRouter();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
   useEffect(() => {
     async function load() {
@@ -36,11 +46,17 @@ export default function MyLeadsPage() {
           return;
         }
 
-        const { data, error } = await supabaseClient
+        let query = supabaseClient
           .from("leads")
           .select("*")
-          .eq("assigned_agent_id", user.id)
-          .order("created_at", { ascending: false });
+          .eq("assigned_agent_id", user.id);
+
+        // Apply status filter
+        if (statusFilter !== "all") {
+          query = query.eq("agent_status", statusFilter);
+        }
+
+        const { data, error } = await query.order("created_at", { ascending: false });
 
         if (error) {
           console.error(error);
@@ -53,7 +69,7 @@ export default function MyLeadsPage() {
     }
 
     load();
-  }, [router]);
+  }, [router, statusFilter]);
 
   function formatUrgency(u: string | null) {
     if (!u) return "Unknown";
@@ -62,6 +78,21 @@ export default function MyLeadsPage() {
     if (lower === "warm") return "Warm";
     if (lower === "cold") return "Cold";
     return u;
+  }
+
+  function formatStatus(status: string | null): string {
+    if (!status) return "New";
+    const option = STATUS_OPTIONS.find((opt) => opt.value === status);
+    return option ? option.label : status;
+  }
+
+  function getStatusColor(status: string | null): string {
+    if (!status || status === "new") return "bg-blue-100 text-blue-700";
+    if (status === "contacted") return "bg-slate-100 text-slate-700";
+    if (status === "in_followup") return "bg-amber-100 text-amber-700";
+    if (status === "closed_won") return "bg-emerald-100 text-emerald-700";
+    if (status === "closed_lost") return "bg-rose-100 text-rose-700";
+    return "bg-slate-100 text-slate-700";
   }
 
   return (
@@ -94,6 +125,26 @@ export default function MyLeadsPage() {
           </p>
         </div>
 
+        {/* Status filter */}
+        <div className="mb-6 rounded-lg border border-[#ded3c2] bg-white p-4 shadow-sm">
+          <div className="flex items-center gap-4">
+            <label className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+              Filter by status
+            </label>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="rounded-md border border-[#ded3c2] bg-white px-3 py-2 text-sm text-[#2a2a2a] outline-none focus:border-[#2a2a2a] focus:ring-1 focus:ring-[#2a2a2a]"
+            >
+              {STATUS_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
         {loading ? (
           <p className="text-sm text-[#6b6b6b]">Loading your leads…</p>
         ) : leads.length === 0 ? (
@@ -119,13 +170,14 @@ export default function MyLeadsPage() {
                       {lead.service_type || "Pre-need planning"}
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-xs uppercase tracking-[0.15em] text-[#6b6b6b]">
-                      Status
-                    </div>
-                    <div className="mt-1 text-xs font-semibold text-[#2a2a2a]">
-                      {lead.status || "Unknown"}
-                    </div>
+                  <div className="flex items-center gap-3">
+                    <span
+                      className={`inline-block rounded-full px-2.5 py-1 text-xs font-medium ${getStatusColor(
+                        lead.agent_status
+                      )}`}
+                    >
+                      {formatStatus(lead.agent_status)}
+                    </span>
                   </div>
                 </div>
                 <div className="mt-3">

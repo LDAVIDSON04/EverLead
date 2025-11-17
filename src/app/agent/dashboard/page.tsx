@@ -9,6 +9,7 @@ import { AgentNav } from "@/components/AgentNav";
 type Stats = {
   available: number;
   myLeads: number;
+  newLeads: number; // Leads with agent_status = 'new'
   purchased: number;
   purchasedThisMonth: number;
   totalSpent: number;
@@ -51,6 +52,7 @@ export default function AgentDashboardPage() {
   const [stats, setStats] = useState<Stats>({
     available: 0,
     myLeads: 0,
+    newLeads: 0,
     purchased: 0,
     purchasedThisMonth: 0,
     totalSpent: 0,
@@ -94,6 +96,13 @@ export default function AgentDashboardPage() {
           .select("id", { count: "exact", head: true })
           .eq("assigned_agent_id", agentId);
 
+        // Count new leads (agent_status = 'new')
+        const { count: newLeadsCount } = await supabaseClient
+          .from("leads")
+          .select("id", { count: "exact", head: true })
+          .eq("assigned_agent_id", agentId)
+          .eq("agent_status", "new");
+
         const { count: purchasedCount } = await supabaseClient
           .from("leads")
           .select("id", { count: "exact", head: true })
@@ -124,6 +133,7 @@ export default function AgentDashboardPage() {
         setStats({
           available: availableCount ?? 0,
           myLeads: myLeadsCount ?? 0,
+          newLeads: newLeadsCount ?? 0,
           purchased: purchasedCount ?? 0,
           purchasedThisMonth: purchasedThisMonthCount ?? 0,
           totalSpent: totalSpentCents / 100, // Convert to dollars
@@ -359,6 +369,11 @@ export default function AgentDashboardPage() {
                 <p className="mt-1 text-[11px] text-slate-500">
                   Leads currently assigned to you
                 </p>
+                {stats.newLeads > 0 && (
+                  <p className="mt-1 text-[11px] text-slate-500">
+                    {stats.newLeads} new {stats.newLeads === 1 ? "lead" : "leads"} need attention
+                  </p>
+                )}
               </Link>
 
               <Link
