@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useRequireRole } from "@/lib/hooks/useRequireRole";
 import { AgentNav } from "@/components/AgentNav";
 import { agentOwnsLead } from "@/lib/leads";
+import clsx from "clsx";
 
 type Lead = {
   id: string;
@@ -54,24 +55,9 @@ export default function AvailableLeadsPage() {
   // Countdown timer state
   const [now, setNow] = useState(() => new Date());
   
-  // Outbid detection state
-  type HighestStatus = "unknown" | "highest" | "not-highest";
-  const [highestStatusMap, setHighestStatusMap] = useState<Record<string, HighestStatus>>({});
-  const highestStatusMapRef = useRef<Record<string, HighestStatus>>({});
-  
-  // Update ref when state changes
-  useEffect(() => {
-    highestStatusMapRef.current = highestStatusMap;
-  }, [highestStatusMap]);
-  
-  // Toast state
-  type Toast = {
-    id: string;
-    message: string;
-    leadId: string;
-    leadCity: string | null;
-  };
-  const [toasts, setToasts] = useState<Toast[]>([]);
+  // Outbid detection - track previous highest bidder per lead
+  const previousHighestByLeadRef = useRef<Record<string, string | null>>({});
+  const [outbidMessage, setOutbidMessage] = useState<string | null>(null);
 
   // Countdown timer effect
   useEffect(() => {
@@ -81,9 +67,44 @@ export default function AvailableLeadsPage() {
     return () => clearInterval(interval);
   }, []);
 
-  // Function to load leads (reusable for initial load and polling)
+  // Helper function to compute auction countdown
+  function getRemainingTime(endsAt: string | null): {
+    label: string;
+    isEnded: boolean;
+    secondsRemaining: number;
+  } {
+    if (!endsAt) {
+      return { label: "No end time set", isEnded: false, secondsRemaining: Infinity };
+    }
+
+    const end = new Date(endsAt).getTime();
+    const now = Date.now();
+    const diffMs = end - now;
+
+    if (diffMs <= 0) {
+      return { label: "Auction ended", isEnded: true, secondsRemaining: 0 };
+    }
+
+    const totalSeconds = Math.floor(diffMs / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    let label: string;
+    if (hours > 0) {
+      label = `Ends in ${hours}h ${minutes.toString().padStart(2, "0")}m`;
+    } else if (minutes > 0) {
+      label = `Ends in ${minutes}m ${seconds.toString().padStart(2, "0")}s`;
+    } else {
+      label = `Ends in ${seconds}s`;
+    }
+
+    return { label, isEnded: false, secondsRemaining: totalSeconds };
+  }
+
+  // Function to refresh leads (reusable for initial load, polling, and after actions)
   // Memoized with useCallback to prevent recreation on every render
-  const loadLeads = useCallback(async (isPolling = false) => {
+  const refreshLeads = useCallback(async (isPolling = false) => {
     if (!isPolling) {
       setLoading(true);
       setError(null);
@@ -169,45 +190,27 @@ export default function AvailableLeadsPage() {
 
       // Detect outbid changes
       if (currentUserId) {
-        const newHighestStatusMap: Record<string, HighestStatus> = {};
-        const outbidLeads: Array<{ leadId: string; city: string | null }> = [];
-
         newLeads.forEach((lead) => {
-          if (lead.auction_enabled && lead.current_bid_agent_id) {
-            const isHighest = lead.current_bid_agent_id === currentUserId;
-            const status: HighestStatus = isHighest ? "highest" : "not-highest";
-            newHighestStatusMap[lead.id] = status;
+          if (lead.auction_enabled) {
+            const prevHighest = previousHighestByLeadRef.current[lead.id];
+            const currentHighest = lead.current_bid_agent_id;
 
             // Check if we were highest before but not now
-            const previousStatus = highestStatusMapRef.current[lead.id];
-            if (previousStatus === "highest" && status === "not-highest") {
-              outbidLeads.push({ leadId: lead.id, city: lead.city });
+            if (
+              prevHighest === currentUserId &&
+              currentHighest !== null &&
+              currentHighest !== currentUserId
+            ) {
+              // This agent has been outbid
+              const city = lead.city || "this";
+              setOutbidMessage(
+                `You've been outbid on ${city} lead.`
+              );
             }
-          } else {
-            newHighestStatusMap[lead.id] = "unknown";
+
+            // Always update the ref after processing
+            previousHighestByLeadRef.current[lead.id] = currentHighest ?? null;
           }
-        });
-
-        // Update status map
-        setHighestStatusMap(newHighestStatusMap);
-
-        // Show toast for each outbid
-        outbidLeads.forEach(({ leadId, city }) => {
-          const toastId = `${leadId}-${Date.now()}`;
-          setToasts((prev) => [
-            ...prev,
-            {
-              id: toastId,
-              message: `You've been outbid on a lead in ${city || "this area"}.`,
-              leadId,
-              leadCity: city,
-            },
-          ]);
-
-          // Auto-remove toast after 7 seconds
-          setTimeout(() => {
-            setToasts((prev) => prev.filter((t) => t.id !== toastId));
-          }, 7000);
         });
       }
 
@@ -230,26 +233,26 @@ export default function AvailableLeadsPage() {
 
   // Initial load
   useEffect(() => {
-    loadLeads(false).then(() => {
+    refreshLeads(false).then(() => {
       setInitialLoadComplete(true);
     });
-  }, [router, loadLeads]);
+  }, [router, refreshLeads]);
 
   // Filters are applied client-side, so no need to reload when filters change
 
-  // Polling effect (refresh every 4 seconds)
+  // Polling effect (refresh every 3 seconds)
   // Only start polling after initial load completes
   // Use refs to access latest values without recreating interval
   const loadingRef = useRef(loading);
-  const loadLeadsRef = useRef(loadLeads);
+  const refreshLeadsRef = useRef(refreshLeads);
   
   useEffect(() => {
     loadingRef.current = loading;
   }, [loading]);
   
   useEffect(() => {
-    loadLeadsRef.current = loadLeads;
-  }, [loadLeads]);
+    refreshLeadsRef.current = refreshLeads;
+  }, [refreshLeads]);
 
   useEffect(() => {
     if (!initialLoadComplete || !userId) return; // Wait for initial load and user
@@ -257,12 +260,19 @@ export default function AvailableLeadsPage() {
     const interval = setInterval(() => {
       // Only poll if we're not currently loading (to avoid conflicts with filter changes)
       if (!loadingRef.current) {
-        loadLeadsRef.current(true); // Polling mode (respects current filters via closure)
+        refreshLeadsRef.current(true); // Polling mode (respects current filters via closure)
       }
-    }, 4000); // 4 seconds
+    }, 5000); // 5 seconds
 
     return () => clearInterval(interval);
   }, [initialLoadComplete, userId]); // Stable deps - interval created once
+
+  // Auto-dismiss outbid message after 5 seconds
+  useEffect(() => {
+    if (!outbidMessage) return;
+    const timeout = setTimeout(() => setOutbidMessage(null), 5000);
+    return () => clearTimeout(timeout);
+  }, [outbidMessage]);
 
   async function handleClaimFree(leadId: string) {
     if (!userId) return;
@@ -292,7 +302,8 @@ export default function AvailableLeadsPage() {
       }
 
       setFirstFreeAvailable(false);
-      setLeads((prev) => prev.filter((l) => l.id !== leadId));
+      // Refresh leads after successful claim
+      await refreshLeads(false);
     } catch (err) {
       console.error(err);
       setError("Unexpected error claiming free lead.");
@@ -364,25 +375,9 @@ export default function AvailableLeadsPage() {
         return;
       }
 
-      // Update the lead in state
-      setLeads((prev) =>
-        prev.map((lead) =>
-          lead.id === leadId
-            ? {
-                ...lead,
-                current_bid_amount: body.lead.current_bid_amount,
-                current_bid_agent_id: body.lead.current_bid_agent_id,
-              }
-            : lead
-        )
-      );
-
-      // Update highest status map (we're now the highest bidder)
+      // Update the ref to track that we're now the highest bidder
       if (userId && body.lead.current_bid_agent_id === userId) {
-        setHighestStatusMap((prev) => ({
-          ...prev,
-          [leadId]: "highest",
-        }));
+        previousHighestByLeadRef.current[leadId] = userId;
       }
 
       // Clear bid input
@@ -391,6 +386,9 @@ export default function AvailableLeadsPage() {
         delete next[leadId];
         return next;
       });
+
+      // Refresh leads after successful bid
+      await refreshLeads(false);
     } catch (err) {
       console.error(err);
       setBidErrors((prev) => ({
@@ -430,39 +428,6 @@ export default function AvailableLeadsPage() {
     }
   }
 
-  function isAuctionEnded(endsAt: string | null) {
-    if (!endsAt) return false;
-    try {
-      return now.getTime() > new Date(endsAt).getTime();
-    } catch {
-      return false;
-    }
-  }
-
-  function formatCountdown(endsAt: string | null): { label: string; expired: boolean } {
-    if (!endsAt) return { label: "No end time", expired: false };
-    
-    try {
-      const endDate = new Date(endsAt);
-      const remainingMs = endDate.getTime() - now.getTime();
-      
-      if (remainingMs <= 0) {
-        return { label: "Auction ended", expired: true };
-      }
-
-      const totalSeconds = Math.floor(remainingMs / 1000);
-      const hours = Math.floor(totalSeconds / 3600);
-      const minutes = Math.floor((totalSeconds % 3600) / 60);
-      const seconds = totalSeconds % 60;
-      
-      const pad = (n: number) => n.toString().padStart(2, "0");
-      
-      return { label: `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`, expired: false };
-    } catch {
-      return { label: "Invalid date", expired: false };
-    }
-  }
-
   function canBid(lead: Lead) {
     // Explicitly check auction_enabled (handle null/undefined)
     const isAuctionEnabled = lead.auction_enabled === true;
@@ -472,41 +437,27 @@ export default function AvailableLeadsPage() {
     if (lead.status !== "new" && lead.status !== "cold_unassigned") return false;
     
     // Check auction hasn't ended
-    if (lead.auction_ends_at) {
-      const { expired } = formatCountdown(lead.auction_ends_at);
-      if (expired) return false;
-    }
+    const { isEnded } = getRemainingTime(lead.auction_ends_at ?? null);
+    if (isEnded) return false;
     
     return true;
   }
 
   return (
     <main className="min-h-screen bg-[#f7f4ef]">
-      {/* Toast notifications */}
-      {toasts.length > 0 && (
-        <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-sm">
-          {toasts.map((toast) => (
-            <div
-              key={toast.id}
-              className="rounded-md bg-slate-900 text-white px-3 py-2 text-sm shadow-lg flex items-center gap-3"
+      {/* Outbid toast notification */}
+      {outbidMessage && (
+        <div className="fixed bottom-4 right-4 z-50 rounded-md bg-slate-900 text-slate-50 px-4 py-3 text-sm shadow-lg">
+          <div className="flex items-center justify-between gap-3">
+            <span>{outbidMessage}</span>
+            <button
+              type="button"
+              className="text-xs underline"
+              onClick={() => setOutbidMessage(null)}
             >
-              <span>{toast.message}</span>
-              {toast.leadId && (
-                <Link
-                  href={`/agent/leads/${toast.leadId}`}
-                  className="rounded bg-white/10 px-2 py-1 text-xs font-medium hover:bg-white/20"
-                >
-                  View
-                </Link>
-              )}
-              <button
-                onClick={() => setToasts((prev) => prev.filter((t) => t.id !== toast.id))}
-                className="text-xs text-slate-300 hover:text-white"
-              >
-                ×
-              </button>
-            </div>
-          ))}
+              Dismiss
+            </button>
+          </div>
         </div>
       )}
 
@@ -735,7 +686,7 @@ export default function AvailableLeadsPage() {
               // Explicitly check auction_enabled (handle null/undefined)
               const isAuctionEnabled = lead.auction_enabled === true;
               const isHighestBidder = lead.current_bid_agent_id === userId;
-              const auctionEnded = lead.auction_ends_at ? isAuctionEnded(lead.auction_ends_at) : false;
+              const { isEnded: auctionEnded } = getRemainingTime(lead.auction_ends_at ?? null);
               const showBidForm = canBid(lead);
 
               return (
@@ -771,12 +722,6 @@ export default function AvailableLeadsPage() {
                           🔒 Purchase to reveal full name, phone, and email.
                         </p>
                       )}
-                      {/* Auction debug - only in development */}
-                      {process.env.NODE_ENV === "development" && (
-                        <p className="mt-2 text-[11px] text-slate-500 font-mono">
-                          Auction debug: enabled={String(lead.auction_enabled ?? "null")} · buy_now_price={String(lead.buy_now_price ?? "null")} · current_bid_amount={String(lead.current_bid_amount ?? "null")} · ends_at={lead.auction_ends_at ? new Date(lead.auction_ends_at).toISOString() : "null"}
-                        </p>
-                      )}
                     </div>
 
                     <div className="text-right">
@@ -803,16 +748,17 @@ export default function AvailableLeadsPage() {
                           {lead.auction_ends_at && (
                             <div className="mt-1">
                               {(() => {
-                                const { label, expired } = formatCountdown(lead.auction_ends_at);
+                                const { label, isEnded } = getRemainingTime(lead.auction_ends_at);
                                 return (
                                   <span
-                                    className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                                      expired
-                                        ? "bg-slate-100 text-slate-500"
-                                        : "bg-amber-100 text-amber-700"
-                                    }`}
+                                    className={clsx(
+                                      "inline-flex items-center rounded-full px-2 py-0.5 border text-[11px]",
+                                      isEnded
+                                        ? "border-slate-300 text-slate-400 bg-slate-50"
+                                        : "border-amber-300 text-amber-700 bg-amber-50"
+                                    )}
                                   >
-                                    {expired ? label : `Ends in ${label}`}
+                                    {isEnded ? "Auction ended" : label}
                                   </span>
                                 );
                               })()}
@@ -872,39 +818,56 @@ export default function AvailableLeadsPage() {
                             : "No bids yet"}
                         </p>
                         {lead.auction_ends_at && (
-                          <p className="text-[11px] text-slate-500">
-                            Ends: {formatDateTime(lead.auction_ends_at)}
-                          </p>
+                          <div className="mt-1 text-xs text-slate-500 flex items-center gap-1">
+                            {(() => {
+                              const { label, isEnded } = getRemainingTime(lead.auction_ends_at);
+                              return (
+                                <span
+                                  className={clsx(
+                                    "inline-flex items-center rounded-full px-2 py-0.5 border text-[11px]",
+                                    isEnded
+                                      ? "border-slate-300 text-slate-400 bg-slate-50"
+                                      : "border-amber-300 text-amber-700 bg-amber-50"
+                                  )}
+                                >
+                                  {isEnded ? "Auction ended" : label}
+                                </span>
+                              );
+                            })()}
+                          </div>
                         )}
 
                         {/* Place bid form - only show if auction is active and available */}
                         {showBidForm && (
-                          <div className="mt-2 flex items-center gap-2">
-                            <input
-                              type="number"
-                              min={1}
-                              step="1"
-                              value={bidAmounts[lead.id] || ""}
-                              onChange={(e) =>
-                                setBidAmounts((prev) => ({
-                                  ...prev,
-                                  [lead.id]: e.target.value,
-                                }))
-                              }
-                              className="w-24 rounded-md border border-slate-300 bg-white px-2 py-1 text-xs text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
-                              placeholder={
-                                lead.current_bid_amount
-                                  ? `Min: $${(lead.current_bid_amount + 0.01).toFixed(2)}`
-                                  : "Bid"
-                              }
-                            />
-                            <button
-                              onClick={() => handlePlaceBid(lead.id)}
-                              disabled={biddingId === lead.id}
-                              className="rounded-full bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-70 transition-colors"
-                            >
-                              {biddingId === lead.id ? "Placing bid…" : "Place bid"}
-                            </button>
+                          <div className="mt-2">
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="number"
+                                min={1}
+                                step="0.01"
+                                value={bidAmounts[lead.id] || ""}
+                                onChange={(e) =>
+                                  setBidAmounts((prev) => ({
+                                    ...prev,
+                                    [lead.id]: e.target.value,
+                                  }))
+                                }
+                                className="w-24 rounded-md border border-slate-300 bg-white px-2 py-1 text-xs text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
+                                placeholder="Enter amount"
+                              />
+                              <button
+                                onClick={() => handlePlaceBid(lead.id)}
+                                disabled={biddingId === lead.id}
+                                className="rounded-full bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-70 transition-colors"
+                              >
+                                {biddingId === lead.id ? "Placing bid…" : "Place bid"}
+                              </button>
+                            </div>
+                            {lead.current_bid_amount && (
+                              <p className="mt-1 text-[10px] text-slate-500">
+                                Min: ${(lead.current_bid_amount + 0.01).toFixed(2)}
+                              </p>
+                            )}
                           </div>
                         )}
                         {!showBidForm && isAuctionEnabled && auctionEnded && (
