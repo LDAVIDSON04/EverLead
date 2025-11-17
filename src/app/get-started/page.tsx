@@ -30,12 +30,13 @@ export default function GetStartedPage() {
     const auction_min_price_cents =
       urgency_level === "hot" ? 50 : urgency_level === "warm" ? 50 : null; // $0.50 for testing
 
+    // Capture age from form (but don't insert as a column - it doesn't exist in DB)
     const ageValue = formData.get("age");
-    let ageNumber: number | null = null;
+    let ageText = "";
     if (ageValue) {
       const parsed = parseInt(ageValue as string, 10);
       if (!isNaN(parsed) && parsed >= 18 && parsed <= 120) {
-        ageNumber = parsed;
+        ageText = `Age: ${parsed}`;
       } else {
         setError("Please enter a valid age between 18 and 120.");
         setFormState("error");
@@ -43,7 +44,11 @@ export default function GetStartedPage() {
       }
     }
 
-    // Build the insert payload - only include fields that exist in the form and DB
+    // Combine age with additional notes
+    const additionalNotes = formData.get("additional_notes") || "";
+    const combinedNotes = [ageText, additionalNotes].filter(Boolean).join("\n\n");
+
+    // Build the insert payload - only include fields that exist in the DB
     const leadData: any = {
       full_name: formData.get("full_name") || null,
       email: formData.get("email") || null,
@@ -51,13 +56,13 @@ export default function GetStartedPage() {
       city: formData.get("city") || null,
       province: formData.get("province") || null,
       postal_code: formData.get("postal_code") || null,
-      age: ageNumber,
-      age_range: null, // Explicitly set to null for backward compatibility
+      // age column removed - doesn't exist in DB
+      // age_range: null, // Removed - not needed
       planning_for: formData.get("planning_for") || null,
       service_type: formData.get("service_type") || null,
       timeline_intent,
       urgency_level,
-      additional_notes: formData.get("additional_notes") || null,
+      additional_notes: combinedNotes || null, // Includes age text if provided
       status: urgency_level === "cold" ? "cold_unassigned" : "new",
       buy_now_price_cents,
       auction_min_price_cents,
