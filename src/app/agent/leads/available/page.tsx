@@ -573,7 +573,7 @@ export default function AvailableLeadsPage() {
               </label>
               <select
                 value={urgencyFilter}
-                onChange={(e) => setUrgencyFilter(e.target.value)}
+                onChange={(e) => setUrgencyFilter(e.target.value as "all" | "hot" | "warm" | "cold")}
                 className="w-full rounded-md border border-[#ded3c2] bg-white px-3 py-2 text-sm text-[#2a2a2a] outline-none focus:border-[#2a2a2a] focus:ring-1 focus:ring-[#2a2a2a]"
               >
                 <option value="all">All</option>
@@ -922,7 +922,8 @@ export default function AvailableLeadsPage() {
               );
             })}
           </div>
-        )}
+          );
+        })()}
       </section>
     </main>
   );

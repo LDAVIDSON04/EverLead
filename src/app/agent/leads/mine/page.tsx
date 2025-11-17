@@ -130,7 +130,7 @@ export default function MyLeadsPage() {
             </label>
             <select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
+              onChange={(e) => setStatusFilter(e.target.value as "all" | "new" | "contacted" | "in_followup" | "closed_won" | "closed_lost")}
               className="rounded-md border border-[#ded3c2] bg-white px-3 py-2 text-sm text-[#2a2a2a] outline-none focus:border-[#2a2a2a] focus:ring-1 focus:ring-[#2a2a2a]"
             >
               {STATUS_OPTIONS.map((option) => (
