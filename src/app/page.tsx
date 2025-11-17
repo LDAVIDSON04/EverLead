@@ -70,17 +70,17 @@ export default function HomePage() {
 
       {/* Hero Section */}
       <section className="relative border-b border-slate-200 bg-[radial-gradient(circle_at_top,_#fdf7f2,_#f5f2ee)] hero-soft-pattern">
-        <div className="mx-auto flex max-w-4xl flex-col gap-6 px-4 py-16 text-center">
+        <div className="mx-auto flex max-w-4xl flex-col gap-6 px-4 py-16 text-center md:py-24">
           <p className="text-xs font-semibold tracking-[0.2em] text-slate-500 uppercase">
             Funeral pre-planning
           </p>
           <h1
-            className="text-4xl font-semibold text-slate-900 sm:text-5xl"
+            className="text-4xl font-semibold text-slate-900 leading-tight sm:text-5xl sm:leading-tight md:text-6xl md:leading-tight"
             style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
           >
             A gentle way to plan ahead, with care and clarity.
           </h1>
-          <p className="mx-auto max-w-2xl text-sm leading-relaxed text-slate-600 sm:text-base">
+          <p className="mx-auto max-w-2xl text-sm leading-relaxed text-slate-600 sm:text-base sm:leading-relaxed md:text-lg md:leading-relaxed">
             EverLead guides you through thoughtful pre-planning conversations,
             helping you record your wishes and connect with trusted specialists
             when you&apos;re ready—so your family can focus on what matters most.
@@ -95,6 +95,8 @@ export default function HomePage() {
             <button
               type="button"
               onClick={() => setShowVideoModal(true)}
+              aria-expanded={showVideoModal}
+              aria-controls="video-modal"
               className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white px-5 py-3 text-base text-slate-700 shadow-sm hover:bg-slate-50 transition-colors"
             >
               <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 text-xs text-slate-600">
@@ -492,22 +494,26 @@ export default function HomePage() {
       {/* Video Modal */}
       {showVideoModal && (
         <div
+          id="video-modal"
           className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 px-4"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
               setShowVideoModal(false);
             }
           }}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="video-modal-title"
         >
           <div className="w-full max-w-3xl rounded-2xl bg-white shadow-2xl">
             <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
-              <h2 className="text-sm font-semibold text-slate-900">
+              <h2 id="video-modal-title" className="text-sm font-semibold text-slate-900">
                 EverLead introduction
               </h2>
               <button
                 type="button"
                 onClick={() => setShowVideoModal(false)}
-                className="text-slate-400 hover:text-slate-600 text-2xl leading-none"
+                className="text-slate-400 hover:text-slate-600 text-2xl leading-none transition-colors"
                 aria-label="Close modal"
               >
                 ×
@@ -516,13 +522,18 @@ export default function HomePage() {
             <div className="aspect-video w-full bg-slate-100">
               {/* Placeholder video - replace URL later with actual EverLead intro video */}
               <iframe
-                className="h-full w-full rounded-b-2xl"
+                className="h-full w-full"
                 src="https://www.youtube.com/embed/dQw4w9WgXcQ"
                 title="EverLead introduction video"
                 frameBorder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 allowFullScreen
               />
+            </div>
+            <div className="border-t border-slate-200 px-6 py-4">
+              <p className="text-xs leading-relaxed text-slate-600">
+                This short introduction video explains how EverLead supports thoughtful pre-planning for your family.
+              </p>
             </div>
           </div>
         </div>
