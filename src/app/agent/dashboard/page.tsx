@@ -148,13 +148,13 @@ export default function AgentDashboardPage() {
           totalSpent: totalSpentCents / 100, // Convert to dollars
         });
 
-        // Load recent leads (assigned to this agent, limit 10)
+        // Load recent leads (assigned to this agent, limit 5)
         const { data: recentData } = await supabaseClient
           .from("leads")
           .select("id, created_at, full_name, first_name, last_name, city, urgency_level, status, agent_status, assigned_agent_id")
           .eq("assigned_agent_id", agentId)
           .order("created_at", { ascending: false })
-          .limit(10);
+          .limit(5);
 
         setRecentLeads((recentData || []) as RecentLead[]);
 
@@ -428,11 +428,11 @@ export default function AgentDashboardPage() {
                 <span className="text-[11px] text-slate-500">
                   Leads currently assigned to you
                 </span>
-                {stats.newLeads > 0 && (
-                  <span className="text-[11px] text-slate-500">
-                    {stats.newLeads} new {stats.newLeads === 1 ? "lead" : "leads"} need attention
-                  </span>
-                )}
+                <p className="mt-1 text-xs text-slate-500">
+                  {stats.newLeads === 0
+                    ? "No new leads needing attention"
+                    : `${stats.newLeads} new lead${stats.newLeads === 1 ? "" : "s"} need attention`}
+                </p>
               </Link>
 
               <Link
@@ -491,34 +491,58 @@ export default function AgentDashboardPage() {
                         </Link>
                       </div>
                     ) : (
-                      <ul className="divide-y divide-slate-100">
-                        {recentLeads.map((lead) => {
-                          const owns = userId ? agentOwnsLead(lead, userId) : false;
-                          const rawName = lead.full_name || 
-                            (lead.first_name || lead.last_name
-                              ? [lead.first_name, lead.last_name].filter(Boolean).join(" ")
-                              : null);
-                          const displayName = owns && rawName ? rawName : (rawName ? maskName(rawName) : null);
-                          const firstName = displayName ? displayName.split(" ")[0] : null;
-                          const { bg: statusBg, text: statusText } = getStatusColors(lead.agent_status || lead.status);
-                          
-                          return (
-                            <li key={lead.id} className="flex items-center justify-between py-3">
-                              <div className="flex items-center gap-3 flex-1">
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-2 mb-1">
-                                    {firstName && (
-                                      <span className="text-sm font-medium text-[#2a2a2a]">
-                                        {firstName}
-                                      </span>
-                                    )}
-                                    {lead.city && (
-                                      <span className="text-xs text-[#6b6b6b]">
-                                        {lead.city}
-                                      </span>
-                                    )}
-                                  </div>
-                                  <div className="flex items-center gap-2">
+                      <div className="overflow-hidden rounded-md border border-slate-200 bg-white">
+                        <table className="min-w-full divide-y divide-slate-200 text-sm">
+                          <thead className="bg-slate-50">
+                            <tr>
+                              <th className="px-3 py-2 text-left text-xs font-semibold text-slate-500">
+                                Family
+                              </th>
+                              <th className="px-3 py-2 text-left text-xs font-semibold text-slate-500">
+                                Location
+                              </th>
+                              <th className="px-3 py-2 text-left text-xs font-semibold text-slate-500">
+                                Urgency
+                              </th>
+                              <th className="px-3 py-2 text-left text-xs font-semibold text-slate-500">
+                                Status
+                              </th>
+                              <th className="px-3 py-2 text-right text-xs font-semibold text-slate-500">
+                                Added
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100 bg-white">
+                            {recentLeads.map((lead) => {
+                              const owns = userId ? agentOwnsLead(lead, userId) : false;
+                              const rawName = lead.full_name || 
+                                (lead.first_name || lead.last_name
+                                  ? [lead.first_name, lead.last_name].filter(Boolean).join(" ")
+                                  : null);
+                              const displayName = owns && rawName ? rawName : (rawName ? maskName(rawName) : null);
+                              const { bg: statusBg, text: statusText } = getStatusColors(lead.agent_status || lead.status);
+                              
+                              // Format date as "MMM d" (e.g., "Jan 15")
+                              const dateStr = lead.created_at
+                                ? new Date(lead.created_at).toLocaleDateString("en-US", {
+                                    month: "short",
+                                    day: "numeric",
+                                  })
+                                : "—";
+                              
+                              return (
+                                <tr
+                                  key={lead.id}
+                                  className="hover:bg-slate-50 cursor-pointer"
+                                  onClick={() => router.push(`/agent/leads/${lead.id}`)}
+                                >
+                                  <td className="px-3 py-2 text-slate-900">
+                                    {displayName ?? "—"}
+                                  </td>
+                                  <td className="px-3 py-2 text-slate-500">
+                                    {lead.city ?? "—"}
+                                  </td>
+                                  <td className="px-3 py-2">
                                     <span
                                       className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${getUrgencyColor(
                                         lead.urgency_level
@@ -526,24 +550,23 @@ export default function AgentDashboardPage() {
                                     >
                                       {formatUrgency(lead.urgency_level)}
                                     </span>
+                                  </td>
+                                  <td className="px-3 py-2 text-slate-500">
                                     <span
                                       className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${statusBg} ${statusText}`}
                                     >
                                       {formatStatus(lead.agent_status || lead.status)}
                                     </span>
-                                  </div>
-                                </div>
-                                <Link
-                                  href={`/agent/leads/${lead.id}`}
-                                  className="text-xs font-medium text-[#6b6b6b] hover:text-[#2a2a2a] transition-colors whitespace-nowrap"
-                                >
-                                  View
-                                </Link>
-                              </div>
-                            </li>
-                          );
-                        })}
-                      </ul>
+                                  </td>
+                                  <td className="px-3 py-2 text-right text-slate-400 text-xs">
+                                    {dateStr}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
                     )}
                   </div>
                 </div>
