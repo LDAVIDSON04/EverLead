@@ -16,6 +16,8 @@ type DashboardStats = {
   coldLeads: number;
   auctionEnabledCount: number;
   auctionWithBidsCount: number;
+  soldViaBuyNow: number;
+  soldViaAuction: number;
 };
 
 type TopAgent = {
@@ -29,6 +31,7 @@ type RecentLead = {
   id: string;
   created_at: string;
   city: string | null;
+  province: string | null;
   urgency_level: string | null;
   status: string | null;
   agent_status: string | null;
@@ -63,7 +66,7 @@ export default function AdminDashboardPage() {
         const { data, error } = await supabaseClient
           .from("leads")
           .select(
-            "urgency_level, status, agent_status, price_charged_cents, auction_enabled, current_bid_amount, assigned_agent_id, created_at"
+            "urgency_level, status, agent_status, price_charged_cents, auction_enabled, current_bid_amount, assigned_agent_id, created_at, buy_now_price_cents"
           );
 
         if (error) {
@@ -109,6 +112,17 @@ export default function AdminDashboardPage() {
           (l) => l.auction_enabled === true && l.current_bid_amount !== null
         ).length;
 
+        // Sold via Buy Now vs Auction
+        const purchasedLeadsList = leads.filter(
+          (l) => l.status === "purchased_by_agent"
+        );
+        const soldViaBuyNow = purchasedLeadsList.filter(
+          (l) => l.auction_enabled !== true || (l.buy_now_price_cents && !l.current_bid_amount)
+        ).length;
+        const soldViaAuction = purchasedLeadsList.filter(
+          (l) => l.auction_enabled === true && l.current_bid_amount !== null
+        ).length;
+
         setStats({
           totalLeads,
           leadsThisWeek,
@@ -119,6 +133,8 @@ export default function AdminDashboardPage() {
           coldLeads,
           auctionEnabledCount,
           auctionWithBidsCount,
+          soldViaBuyNow,
+          soldViaAuction,
         });
 
         // Top agents by purchased leads (all-time and last 30 days)
@@ -165,7 +181,7 @@ export default function AdminDashboardPage() {
         const { data: recentData } = await supabaseClient
           .from("leads")
           .select(
-            "id, created_at, city, urgency_level, status, agent_status, auction_enabled, price_charged_cents"
+            "id, created_at, city, province, urgency_level, status, agent_status, auction_enabled, price_charged_cents"
           )
           .order("created_at", { ascending: false })
           .limit(20);
@@ -268,57 +284,69 @@ export default function AdminDashboardPage() {
           <StatCard label="Leads This Week" value={stats.leadsThisWeek} />
           <StatCard label="Leads Sold" value={stats.purchasedLeads} />
           <StatCard
-            label="Approx. Revenue"
-            value={
-              stats.totalRevenueCents > 0
-                ? formatMoney(stats.totalRevenueCents)
-                : "$0.00 (test mode)"
-            }
+            label="Total Revenue (test mode)"
+            value={formatMoney(stats.totalRevenueCents)}
           />
         </div>
 
-        {/* Charts/Summaries */}
-        <div className="mb-8 grid gap-6 md:grid-cols-2">
-          {/* Leads by Urgency */}
-          <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-            <h2
-              className="mb-4 text-base font-normal text-[#2a2a2a]"
-              style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-            >
-              Leads by Urgency
-            </h2>
-            <table className="w-full text-sm">
-              <tbody>
-                <tr className="border-b border-slate-100">
-                  <td className="py-2 text-[#4a4a4a]">HOT</td>
-                  <td className="py-2 text-right font-semibold text-[#2a2a2a]">
-                    {stats.hotLeads}
-                  </td>
-                </tr>
-                <tr className="border-b border-slate-100">
-                  <td className="py-2 text-[#4a4a4a]">WARM</td>
-                  <td className="py-2 text-right font-semibold text-[#2a2a2a]">
-                    {stats.warmLeads}
-                  </td>
-                </tr>
-                <tr>
-                  <td className="py-2 text-[#4a4a4a]">COLD</td>
-                  <td className="py-2 text-right font-semibold text-[#2a2a2a]">
-                    {stats.coldLeads}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+        {/* Pipeline Overview */}
+        <div className="mb-8">
+          <h2
+            className="mb-4 text-lg font-normal text-[#2a2a2a]"
+            style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+          >
+            Pipeline Overview
+          </h2>
+          <div className="grid gap-6 md:grid-cols-2">
+            {/* Leads by Urgency */}
+            <div className="rounded-xl border border-slate-200 bg-white/70 p-6 shadow-sm">
+              <h3
+                className="mb-4 text-base font-semibold text-[#2a2a2a]"
+                style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+              >
+                Leads by Urgency
+              </h3>
+              <table className="w-full text-sm">
+                <tbody>
+                  <tr className="border-b border-slate-100">
+                    <td className="py-2 text-[#4a4a4a]">HOT</td>
+                    <td className="py-2 text-right font-semibold text-[#2a2a2a]">
+                      {stats.hotLeads}
+                    </td>
+                  </tr>
+                  <tr className="border-b border-slate-100">
+                    <td className="py-2 text-[#4a4a4a]">WARM</td>
+                    <td className="py-2 text-right font-semibold text-[#2a2a2a]">
+                      {stats.warmLeads}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="py-2 text-[#4a4a4a]">COLD</td>
+                    <td className="py-2 text-right font-semibold text-[#2a2a2a]">
+                      {stats.coldLeads}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
+        </div>
 
-          {/* Auctions Overview */}
-          <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-            <h2
-              className="mb-4 text-base font-normal text-[#2a2a2a]"
+        {/* Auctions */}
+        <div className="mb-8">
+          <h2
+            className="mb-4 text-lg font-normal text-[#2a2a2a]"
+            style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+          >
+            Auctions
+          </h2>
+          <div className="rounded-xl border border-slate-200 bg-white/70 p-6 shadow-sm">
+            <h3
+              className="mb-4 text-base font-semibold text-[#2a2a2a]"
               style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
             >
-              Auctions Overview
-            </h2>
+              Auctions vs Buy Now
+            </h3>
             <table className="w-full text-sm">
               <tbody>
                 <tr className="border-b border-slate-100">
@@ -327,10 +355,22 @@ export default function AdminDashboardPage() {
                     {stats.auctionEnabledCount}
                   </td>
                 </tr>
-                <tr>
+                <tr className="border-b border-slate-100">
                   <td className="py-2 text-[#4a4a4a]">With active bids</td>
                   <td className="py-2 text-right font-semibold text-[#2a2a2a]">
                     {stats.auctionWithBidsCount}
+                  </td>
+                </tr>
+                <tr className="border-b border-slate-100">
+                  <td className="py-2 text-[#4a4a4a]">Sold via Buy Now</td>
+                  <td className="py-2 text-right font-semibold text-[#2a2a2a]">
+                    {stats.soldViaBuyNow}
+                  </td>
+                </tr>
+                <tr>
+                  <td className="py-2 text-[#4a4a4a]">Sold via Auction</td>
+                  <td className="py-2 text-right font-semibold text-[#2a2a2a]">
+                    {stats.soldViaAuction}
                   </td>
                 </tr>
               </tbody>
@@ -338,27 +378,27 @@ export default function AdminDashboardPage() {
           </div>
         </div>
 
-        {/* Top Agents */}
+        {/* Agents */}
         {topAgents.length > 0 && (
           <div className="mb-8">
             <h2
               className="mb-4 text-lg font-normal text-[#2a2a2a]"
               style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
             >
-              Top Agents
+              Agents
             </h2>
-            <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm">
+            <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white/70 shadow-sm">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-slate-200 bg-[#faf8f5]">
                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
-                      Agent
+                      Agent email
                     </th>
                     <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
-                      Purchased (All-time)
+                      Leads purchased (all-time)
                     </th>
                     <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
-                      Purchased (Last 30 days)
+                      Leads purchased (last 30 days)
                     </th>
                   </tr>
                 </thead>
@@ -389,7 +429,7 @@ export default function AdminDashboardPage() {
           </div>
         )}
 
-        {/* Recent Leads Table */}
+        {/* Recent Leads */}
         <div>
           <h2
             className="mb-4 text-lg font-normal text-[#2a2a2a]"
@@ -397,15 +437,15 @@ export default function AdminDashboardPage() {
           >
             Recent Leads
           </h2>
-          <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm">
+          <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white/70 shadow-sm">
             <table className="w-full border-collapse text-sm">
               <thead>
                 <tr className="border-b border-slate-200 bg-[#faf8f5]">
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
-                    Date
+                    Created date
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
-                    City / Region
+                    City / Province
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
                     Urgency
@@ -414,10 +454,10 @@ export default function AdminDashboardPage() {
                     Status
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
-                    Auction
+                    Auction enabled?
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
-                    Purchased
+                    Purchased?
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
                     Action
@@ -434,7 +474,7 @@ export default function AdminDashboardPage() {
                       {formatDate(lead.created_at)}
                     </td>
                     <td className="px-4 py-3 text-sm text-[#4a4a4a]">
-                      {lead.city || "-"}
+                      {[lead.city, lead.province].filter(Boolean).join(", ") || "-"}
                     </td>
                     <td className="px-4 py-3 text-sm text-[#4a4a4a]">
                       {formatUrgency(lead.urgency_level)}
@@ -444,14 +484,14 @@ export default function AdminDashboardPage() {
                     </td>
                     <td className="px-4 py-3 text-sm text-[#4a4a4a]">
                       {lead.auction_enabled ? (
-                        <span className="text-green-600">Yes</span>
+                        <span className="text-green-600 font-medium">Yes</span>
                       ) : (
                         <span className="text-[#6b6b6b]">No</span>
                       )}
                     </td>
                     <td className="px-4 py-3 text-sm text-[#4a4a4a]">
                       {lead.price_charged_cents ? (
-                        <span className="text-green-600">Yes</span>
+                        <span className="text-green-600 font-medium">Yes</span>
                       ) : (
                         <span className="text-[#6b6b6b]">No</span>
                       )}
@@ -477,11 +517,11 @@ export default function AdminDashboardPage() {
 
 function StatCard({ label, value }: { label: string; value: number | string }) {
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-      <p className="mb-2 text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+    <div className="rounded-xl border border-slate-200 bg-white/80 px-4 py-3 shadow-sm flex flex-col gap-1">
+      <span className="text-xs font-medium uppercase tracking-wide text-slate-500">
         {label}
-      </p>
-      <p className="text-xl font-semibold text-[#2a2a2a]">{value}</p>
+      </span>
+      <span className="text-2xl font-semibold text-slate-900">{value}</span>
     </div>
   );
 }
