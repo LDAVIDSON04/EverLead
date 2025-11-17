@@ -20,6 +20,24 @@ type DashboardStats = {
   soldViaAuction: number;
 };
 
+type ApiStatsResponse = {
+  ok: boolean;
+  totalLeads: number;
+  totalPurchased: number;
+  totalRevenueCents: number;
+  leadsLast7Days: number;
+  urgencyCounts: {
+    hot: number;
+    warm: number;
+    cold: number;
+  };
+  topAgents: Array<{
+    agentId: string;
+    purchasedCount: number;
+  }>;
+  error?: string;
+};
+
 type TopAgent = {
   agent_id: string;
   agent_email: string | null;
@@ -51,133 +69,56 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     async function loadStats() {
       setLoading(true);
+      setError(null);
+      
       try {
-        // Calculate date 7 days ago
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-        const sevenDaysAgoISO = sevenDaysAgo.toISOString();
+        // Fetch stats from API
+        const res = await fetch("/api/admin/stats");
+        const apiData: ApiStatsResponse = await res.json();
 
-        // Calculate date 30 days ago
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        const thirtyDaysAgoISO = thirtyDaysAgo.toISOString();
-
-        // Get all leads
-        const { data, error } = await supabaseClient
-          .from("leads")
-          .select(
-            "urgency_level, status, agent_status, price_charged_cents, auction_enabled, current_bid_amount, assigned_agent_id, created_at, buy_now_price_cents"
-          );
-
-        if (error) {
-          console.error(error);
-          setError("Failed to load dashboard stats.");
-          setLoading(false);
-          return;
+        if (!res.ok || !apiData.ok) {
+          throw new Error(apiData.error || "Failed to load dashboard stats");
         }
 
-        const leads = data || [];
-
-        const totalLeads = leads.length;
-        
-        // Leads this week
-        const leadsThisWeek = leads.filter(
-          (l) => l.created_at && new Date(l.created_at) >= sevenDaysAgo
-        ).length;
-
-        // Purchased leads (sold)
-        const purchasedLeads = leads.filter(
-          (l) => l.status === "purchased_by_agent"
-        ).length;
-
-        // Revenue
-        const totalRevenueCents = leads
-          .filter((l) => l.status === "purchased_by_agent")
-          .reduce((sum, l) => sum + (l.price_charged_cents || 0), 0);
-
-        // Urgency breakdown
-        const hotLeads = leads.filter((l) => l.urgency_level === "hot").length;
-        const warmLeads = leads.filter(
-          (l) => l.urgency_level === "warm"
-        ).length;
-        const coldLeads = leads.filter(
-          (l) => l.urgency_level === "cold"
-        ).length;
-
-        // Auction stats
-        const auctionEnabledCount = leads.filter(
-          (l) => l.auction_enabled === true
-        ).length;
-        const auctionWithBidsCount = leads.filter(
-          (l) => l.auction_enabled === true && l.current_bid_amount !== null
-        ).length;
-
-        // Sold via Buy Now vs Auction
-        const purchasedLeadsList = leads.filter(
-          (l) => l.status === "purchased_by_agent"
-        );
-        const soldViaBuyNow = purchasedLeadsList.filter(
-          (l) => l.auction_enabled !== true || (l.buy_now_price_cents && !l.current_bid_amount)
-        ).length;
-        const soldViaAuction = purchasedLeadsList.filter(
-          (l) => l.auction_enabled === true && l.current_bid_amount !== null
-        ).length;
-
+        // Map API response to dashboard stats format
         setStats({
-          totalLeads,
-          leadsThisWeek,
-          purchasedLeads,
-          totalRevenueCents,
-          hotLeads,
-          warmLeads,
-          coldLeads,
-          auctionEnabledCount,
-          auctionWithBidsCount,
-          soldViaBuyNow,
-          soldViaAuction,
+          totalLeads: apiData.totalLeads,
+          leadsThisWeek: apiData.leadsLast7Days,
+          purchasedLeads: apiData.totalPurchased,
+          totalRevenueCents: apiData.totalRevenueCents,
+          hotLeads: apiData.urgencyCounts.hot,
+          warmLeads: apiData.urgencyCounts.warm,
+          coldLeads: apiData.urgencyCounts.cold,
+          auctionEnabledCount: 0, // Will be loaded separately if needed
+          auctionWithBidsCount: 0, // Will be loaded separately if needed
+          soldViaBuyNow: 0, // Will be loaded separately if needed
+          soldViaAuction: 0, // Will be loaded separately if needed
         });
 
-        // Top agents by purchased leads (all-time and last 30 days)
-        const agentPurchasesAllTime: Record<string, number> = {};
-        const agentPurchasesLast30Days: Record<string, number> = {};
-        
-        leads
-          .filter((l) => l.status === "purchased_by_agent" && l.assigned_agent_id)
-          .forEach((l) => {
-            const agentId = l.assigned_agent_id as string;
-            agentPurchasesAllTime[agentId] = (agentPurchasesAllTime[agentId] || 0) + 1;
-            
-            // Check if purchased in last 30 days
-            if (l.created_at && new Date(l.created_at) >= thirtyDaysAgo) {
-              agentPurchasesLast30Days[agentId] = (agentPurchasesLast30Days[agentId] || 0) + 1;
-            }
+        // Fetch agent emails for top agents
+        if (apiData.topAgents.length > 0) {
+          const topAgentIds = apiData.topAgents.map((a) => a.agentId);
+          const { data: profilesData } = await supabaseClient
+            .from("profiles")
+            .select("id, email")
+            .in("id", topAgentIds);
+
+          const topAgentsList: TopAgent[] = apiData.topAgents.map((apiAgent) => {
+            const profile = profilesData?.find((p) => p.id === apiAgent.agentId);
+            return {
+              agent_id: apiAgent.agentId,
+              agent_email: profile?.email || null,
+              purchased_count_all_time: apiAgent.purchasedCount,
+              purchased_count_last_30_days: 0, // API doesn't provide this yet
+            };
           });
 
-        // Get top 10 agents by all-time purchases
-        const topAgentIds = Object.entries(agentPurchasesAllTime)
-          .sort(([, a], [, b]) => b - a)
-          .slice(0, 10)
-          .map(([id]) => id);
+          setTopAgents(topAgentsList);
+        } else {
+          setTopAgents([]);
+        }
 
-        // Fetch agent emails
-        const { data: profilesData } = await supabaseClient
-          .from("profiles")
-          .select("id, email")
-          .in("id", topAgentIds);
-
-        const topAgentsList: TopAgent[] = topAgentIds.map((agentId) => {
-          const profile = profilesData?.find((p) => p.id === agentId);
-          return {
-            agent_id: agentId,
-            agent_email: profile?.email || null,
-            purchased_count_all_time: agentPurchasesAllTime[agentId] || 0,
-            purchased_count_last_30_days: agentPurchasesLast30Days[agentId] || 0,
-          };
-        });
-
-        setTopAgents(topAgentsList);
-
-        // Recent leads (last 20)
+        // Load recent leads and auction stats separately (still using client-side for now)
         const { data: recentData } = await supabaseClient
           .from("leads")
           .select(
@@ -187,8 +128,36 @@ export default function AdminDashboardPage() {
           .limit(20);
 
         setRecentLeads((recentData || []) as RecentLead[]);
+
+        // Load auction stats
+        const { data: allLeads } = await supabaseClient
+          .from("leads")
+          .select("auction_enabled, current_bid_amount, status, buy_now_price_cents");
+
+        if (allLeads) {
+          const auctionEnabledCount = allLeads.filter((l) => l.auction_enabled === true).length;
+          const auctionWithBidsCount = allLeads.filter(
+            (l) => l.auction_enabled === true && l.current_bid_amount !== null
+          ).length;
+
+          const purchasedLeadsList = allLeads.filter((l) => l.status === "purchased_by_agent");
+          const soldViaBuyNow = purchasedLeadsList.filter(
+            (l) => l.auction_enabled !== true || (l.buy_now_price_cents && !l.current_bid_amount)
+          ).length;
+          const soldViaAuction = purchasedLeadsList.filter(
+            (l) => l.auction_enabled === true && l.current_bid_amount !== null
+          ).length;
+
+          setStats((prev) => ({
+            ...prev!,
+            auctionEnabledCount,
+            auctionWithBidsCount,
+            soldViaBuyNow,
+            soldViaAuction,
+          }));
+        }
       } catch (err) {
-        console.error(err);
+        console.error("Failed to load admin dashboard stats:", err);
         setError("Failed to load dashboard stats.");
       } finally {
         setLoading(false);
