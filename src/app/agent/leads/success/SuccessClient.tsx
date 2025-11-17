@@ -4,10 +4,13 @@
 import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabaseClient } from "@/lib/supabaseClient";
+import { AgentNav } from "@/components/AgentNav";
+import { useRequireRole } from "@/lib/hooks/useRequireRole";
 
 type Status = "checking" | "ok" | "error";
 
 export default function SuccessClient() {
+  useRequireRole("agent");
   const searchParams = useSearchParams();
   const router = useRouter();
   const [status, setStatus] = useState<Status>("checking");
@@ -67,72 +70,80 @@ export default function SuccessClient() {
   }, [searchParams]);
 
   return (
-    <div style={{ maxWidth: "640px" }}>
-      {status === "checking" && <p>Confirming your purchase...</p>}
+    <main className="min-h-screen bg-[#f7f4ef]">
+      <header className="border-b border-[#ded3c2] bg-[#1f2933] text-white">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+          <div className="flex items-baseline gap-2">
+            <span className="text-lg font-semibold text-white">
+              EverLead
+            </span>
+            <span className="text-[11px] uppercase tracking-[0.18em] text-[#e0d5bf]">
+              Agent Portal
+            </span>
+          </div>
+        </div>
+      </header>
 
-      {status === "ok" && (
-        <>
-          <h1
-            style={{
-              fontSize: "24px",
-              fontWeight: 600,
-              marginBottom: "8px",
-            }}
-          >
-            Lead acquired successfully ✅
-          </h1>
-          <p style={{ color: "#4B5563", marginBottom: "12px" }}>
-            You now have access to this lead in your account.
-          </p>
-          <button
-            onClick={() => router.push("/agent/leads/mine")}
-            style={{
-              padding: "8px 16px",
-              borderRadius: "6px",
-              background: "#2563EB",
-              color: "white",
-              fontSize: "14px",
-              border: "none",
-              cursor: "pointer",
-            }}
-          >
-            Go to My Leads
-          </button>
-        </>
-      )}
+      <AgentNav />
 
-      {status === "error" && (
-        <>
-          <h1
-            style={{
-              fontSize: "24px",
-              fontWeight: 600,
-              marginBottom: "8px",
-            }}
-          >
-            Something went wrong
-          </h1>
-          <p style={{ color: "#DC2626", marginBottom: "12px" }}>
-            We couldn&apos;t confirm your lead. Please contact support or try
-            again.
-          </p>
-          <button
-            onClick={() => router.push("/agent/leads/available")}
-            style={{
-              padding: "8px 16px",
-              borderRadius: "6px",
-              background: "#6B7280",
-              color: "white",
-              fontSize: "14px",
-              border: "none",
-              cursor: "pointer",
-            }}
-          >
-            Back to Available Leads
-          </button>
-        </>
-      )}
-    </div>
+      <section className="mx-auto max-w-6xl px-6 py-8">
+        <div className="mx-auto max-w-2xl">
+        {status === "checking" && (
+          <div className="rounded-xl border border-slate-200 bg-white p-8 shadow-sm text-center">
+            <p className="text-sm text-[#6b6b6b]">Confirming your purchase...</p>
+          </div>
+        )}
+
+        {status === "ok" && (
+          <div className="rounded-xl border border-slate-200 bg-white p-8 shadow-sm">
+            <h1
+              className="mb-4 text-2xl font-semibold text-[#2a2a2a]"
+              style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+            >
+              Lead acquired successfully ✅
+            </h1>
+            <p className="mb-6 text-sm text-[#6b6b6b]">
+              You now have access to this lead in your account. It has been added to your dashboard.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <button
+                onClick={() => router.push("/agent/dashboard")}
+                className="rounded-full bg-[#2a2a2a] px-6 py-2 text-sm font-semibold text-white hover:bg-black transition-colors"
+              >
+                Go to Dashboard
+              </button>
+              <button
+                onClick={() => router.push("/agent/leads/mine")}
+                className="rounded-full border border-slate-300 bg-white px-6 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+              >
+                View My Leads
+              </button>
+            </div>
+          </div>
+        )}
+
+        {status === "error" && (
+          <div className="rounded-xl border border-red-200 bg-red-50 p-8 shadow-sm">
+            <h1
+              className="mb-4 text-2xl font-semibold text-red-900"
+              style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+            >
+              Something went wrong
+            </h1>
+            <p className="mb-6 text-sm text-red-700">
+              We couldn&apos;t confirm your lead purchase. Please contact support or try again.
+            </p>
+            <button
+              onClick={() => router.push("/agent/leads/available")}
+              className="rounded-full border border-red-300 bg-white px-6 py-2 text-sm font-medium text-red-700 hover:bg-red-50 transition-colors"
+            >
+              Back to Available Leads
+            </button>
+          </div>
+        )}
+        </div>
+      </section>
+    </main>
   );
 }
 

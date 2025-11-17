@@ -8,14 +8,16 @@ export async function POST(req: Request) {
     const body = await req.json();
     const sessionId = body.sessionId as string | undefined;
     const leadId = body.leadId as string | undefined;
+    const agentId = body.agentId as string | undefined;
 
-    if (!sessionId || !leadId) {
+    if (!sessionId || !leadId || !agentId) {
       return NextResponse.json(
-        { error: "Missing sessionId or leadId" },
+        { error: "Missing sessionId, leadId, or agentId" },
         { status: 400 }
       );
     }
 
+    // Verify Stripe session
     const session = await stripe.checkout.sessions.retrieve(sessionId);
 
     if (session.payment_status !== "paid") {
@@ -25,11 +27,12 @@ export async function POST(req: Request) {
       );
     }
 
-    // Mark lead as purchased
+    // Mark lead as purchased and assign to agent
     const { error } = await supabaseAdmin
       .from("leads")
       .update({
         status: "purchased_by_agent",
+        assigned_agent_id: agentId,
         price_charged_cents: session.amount_total ?? null,
       })
       .eq("id", leadId);

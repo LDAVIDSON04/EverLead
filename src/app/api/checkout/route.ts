@@ -1,9 +1,9 @@
 // src/app/api/checkout/route.ts
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const leadId = body.leadId as string | undefined;
@@ -37,8 +37,13 @@ export async function POST(req: Request) {
       );
     }
 
-    const successUrl = `${process.env.NEXT_PUBLIC_APP_URL}/agent/leads/success?session_id={CHECKOUT_SESSION_ID}&leadId=${leadId}`;
-    const cancelUrl = `${process.env.NEXT_PUBLIC_APP_URL}/agent/leads/available`;
+    // Get base URL from env var or fallback to request URL
+    const baseUrl =
+      process.env.NEXT_PUBLIC_SITE_URL ??
+      `${req.nextUrl.protocol}//${req.nextUrl.host}`;
+
+    const successUrl = `${baseUrl}/agent/leads/success?session_id={CHECKOUT_SESSION_ID}&leadId=${leadId}`;
+    const cancelUrl = `${baseUrl}/agent/leads/available`;
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
