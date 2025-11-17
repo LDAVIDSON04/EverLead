@@ -6,6 +6,7 @@ import { supabaseClient } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import { useRequireRole } from "@/lib/hooks/useRequireRole";
 import { AgentNav } from "@/components/AgentNav";
+import { agentOwnsLead } from "@/lib/leads";
 
 type Lead = {
   id: string;
@@ -16,6 +17,7 @@ type Lead = {
   service_type: string | null;
   suggested_price_cents: number | null;
   buy_now_price_cents: number | null;
+  assigned_agent_id: string | null;
   // Auction fields
   auction_enabled?: boolean | null;
   auction_ends_at?: string | null;
@@ -80,6 +82,9 @@ export default function AvailableLeadsPage() {
         const alreadyRedeemed = profile?.first_free_redeemed === true;
         setFirstFreeAvailable(!alreadyRedeemed);
 
+        // TODO: in a future pass, restrict contact fields at the API level
+        // so non-owning agents never receive full PII (name, email, phone).
+        // For now, we mask these fields in the UI.
         const { data: leadsData, error: leadsError } = await supabaseClient
           .from("leads")
           .select("*")
@@ -353,6 +358,9 @@ export default function AvailableLeadsPage() {
         ) : (
           <div className="space-y-3">
             {leads.map((lead) => {
+              // Check if agent owns this lead
+              const owns = userId ? agentOwnsLead(lead, userId) : false;
+              
               // Explicitly check auction_enabled (handle null/undefined)
               const isAuctionEnabled = lead.auction_enabled === true;
               const isHighestBidder = lead.current_bid_agent_id === userId;
@@ -387,6 +395,11 @@ export default function AvailableLeadsPage() {
                       <div className="text-xs text-[#6b6b6b]">
                         {lead.service_type || "Pre-need planning"}
                       </div>
+                      {!owns && (
+                        <p className="mt-2 text-[11px] text-slate-500">
+                          🔒 Purchase to reveal full name, phone, and email.
+                        </p>
+                      )}
                       {/* Auction debug - always show for every lead */}
                       <p className="mt-2 text-[11px] text-slate-500 font-mono">
                         Auction debug: enabled={String(lead.auction_enabled ?? "null")} · buy_now_price={String(lead.buy_now_price ?? "null")} · current_bid_amount={String(lead.current_bid_amount ?? "null")} · ends_at={lead.auction_ends_at ? new Date(lead.auction_ends_at).toISOString() : "null"}

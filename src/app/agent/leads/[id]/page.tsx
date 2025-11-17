@@ -6,6 +6,8 @@ import { useParams, useRouter } from "next/navigation";
 import { supabaseClient } from "@/lib/supabaseClient";
 import { useRequireRole } from "@/lib/hooks/useRequireRole";
 import { AgentNav } from "@/components/AgentNav";
+import { agentOwnsLead } from "@/lib/leads";
+import { maskName, maskEmail, maskPhone } from "@/lib/masking";
 
 type Lead = {
   id: string;
@@ -96,6 +98,9 @@ export default function LeadDetailsPage() {
 
         setUserId(user.id);
 
+        // TODO: in a future pass, restrict contact fields at the API level
+        // so non-owning agents never receive full PII (name, email, phone).
+        // For now, we mask these fields in the UI.
         const { data, error } = await supabaseClient
           .from("leads")
           .select("*")
@@ -279,11 +284,19 @@ export default function LeadDetailsPage() {
     return planning;
   }
 
-  const displayName =
+  // Determine if agent owns this lead
+  const owns = lead && userId ? agentOwnsLead(lead, userId) : false;
+
+  // Apply masking if agent doesn't own the lead
+  const rawDisplayName =
     lead?.full_name ||
     (lead?.first_name || lead?.last_name
       ? [lead?.first_name, lead?.last_name].filter(Boolean).join(" ")
       : "Unnamed lead");
+  
+  const displayName = owns ? rawDisplayName : maskName(rawDisplayName);
+  const displayEmail = owns ? lead?.email : (lead?.email ? maskEmail(lead.email) : null);
+  const displayPhone = owns ? lead?.phone : (lead?.phone ? maskPhone(lead.phone) : null);
 
   return (
     <main className="min-h-screen bg-[#f7f4ef]">
@@ -376,34 +389,49 @@ export default function LeadDetailsPage() {
                         <dd className="mt-1 text-[#2a2a2a]">{lead.age}</dd>
                       </div>
                     )}
-                    {lead.email && (
+                    {displayEmail && (
                       <div>
                         <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
                           Email
                         </dt>
                         <dd className="mt-1 break-all text-[#2a2a2a]">
-                          <a
-                            href={`mailto:${lead.email}`}
-                            className="text-[#2a2a2a] hover:underline"
-                          >
-                            {lead.email}
-                          </a>
+                          {owns ? (
+                            <a
+                              href={`mailto:${lead?.email}`}
+                              className="text-[#2a2a2a] hover:underline"
+                            >
+                              {displayEmail}
+                            </a>
+                          ) : (
+                            <span>{displayEmail}</span>
+                          )}
                         </dd>
                       </div>
                     )}
-                    {lead.phone && (
+                    {displayPhone && (
                       <div>
                         <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
                           Phone
                         </dt>
                         <dd className="mt-1 text-[#2a2a2a]">
-                          <a
-                            href={`tel:${lead.phone}`}
-                            className="text-[#2a2a2a] hover:underline"
-                          >
-                            {lead.phone}
-                          </a>
+                          {owns ? (
+                            <a
+                              href={`tel:${lead?.phone}`}
+                              className="text-[#2a2a2a] hover:underline"
+                            >
+                              {displayPhone}
+                            </a>
+                          ) : (
+                            <span>{displayPhone}</span>
+                          )}
                         </dd>
+                      </div>
+                    )}
+                    {!owns && (
+                      <div className="mt-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2">
+                        <p className="text-[11px] text-amber-900">
+                          🔒 Purchase this lead to reveal full contact details.
+                        </p>
                       </div>
                     )}
                     {lead.preferred_contact_time && (
