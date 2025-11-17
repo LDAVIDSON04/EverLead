@@ -82,7 +82,7 @@ export default function AvailableLeadsPage() {
     const diffMs = end - now;
 
     if (diffMs <= 0) {
-      return { label: "Auction ended", isEnded: true, secondsRemaining: 0 };
+      return { label: "Ended", isEnded: true, secondsRemaining: 0 };
     }
 
     const totalSeconds = Math.floor(diffMs / 1000);
@@ -91,7 +91,10 @@ export default function AvailableLeadsPage() {
     const seconds = totalSeconds % 60;
 
     let label: string;
-    if (hours > 0) {
+    if (totalSeconds < 60) {
+      // Less than 60 seconds remaining
+      label = "Ending soon";
+    } else if (hours > 0) {
       label = `Ends in ${hours}h ${minutes.toString().padStart(2, "0")}m`;
     } else if (minutes > 0) {
       label = `Ends in ${minutes}m ${seconds.toString().padStart(2, "0")}s`;
@@ -190,26 +193,49 @@ export default function AvailableLeadsPage() {
 
       // Detect outbid changes
       if (currentUserId) {
+        // Determine current set of leads where this agent is highest bidder
+        const newHighest = newLeads
+          .filter(
+            (l) =>
+              l.auction_enabled &&
+              l.current_bid_agent_id === currentUserId &&
+              (l.status === "new" || l.status === "cold_unassigned")
+          )
+          .map((l) => l.id);
+
+        // Check for leads where we were highest but are no longer
         newLeads.forEach((lead) => {
-          if (lead.auction_enabled) {
+          if (
+            lead.auction_enabled &&
+            (lead.status === "new" || lead.status === "cold_unassigned")
+          ) {
             const prevHighest = previousHighestByLeadRef.current[lead.id];
             const currentHighest = lead.current_bid_agent_id;
 
-            // Check if we were highest before but not now
+            // Check if we were highest before but not now (and lead is still active)
             if (
               prevHighest === currentUserId &&
               currentHighest !== null &&
-              currentHighest !== currentUserId
+              currentHighest !== currentUserId &&
+              !newHighest.includes(lead.id)
             ) {
               // This agent has been outbid
-              const city = lead.city || "this";
+              const urgency = lead.urgency_level
+                ? lead.urgency_level.toLowerCase()
+                : "";
+              const city = lead.city || "Unknown location";
               setOutbidMessage(
-                `You've been outbid on ${city} lead.`
+                `You've been outbid on the ${urgency} lead in ${city}.`
               );
             }
+          }
+        });
 
-            // Always update the ref after processing
-            previousHighestByLeadRef.current[lead.id] = currentHighest ?? null;
+        // Update refs for all auction-enabled leads
+        newLeads.forEach((lead) => {
+          if (lead.auction_enabled) {
+            previousHighestByLeadRef.current[lead.id] =
+              lead.current_bid_agent_id ?? null;
           }
         });
       }
@@ -262,15 +288,15 @@ export default function AvailableLeadsPage() {
       if (!loadingRef.current) {
         refreshLeadsRef.current(true); // Polling mode (respects current filters via closure)
       }
-    }, 5000); // 5 seconds
+    }, 3000); // 3 seconds
 
     return () => clearInterval(interval);
   }, [initialLoadComplete, userId]); // Stable deps - interval created once
 
-  // Auto-dismiss outbid message after 5 seconds
+  // Auto-dismiss outbid message after 7 seconds
   useEffect(() => {
     if (!outbidMessage) return;
-    const timeout = setTimeout(() => setOutbidMessage(null), 5000);
+    const timeout = setTimeout(() => setOutbidMessage(null), 7000);
     return () => clearTimeout(timeout);
   }, [outbidMessage]);
 
@@ -447,12 +473,12 @@ export default function AvailableLeadsPage() {
     <main className="min-h-screen bg-[#f7f4ef]">
       {/* Outbid toast notification */}
       {outbidMessage && (
-        <div className="fixed bottom-4 right-4 z-50 rounded-md bg-slate-900 text-slate-50 px-4 py-3 text-sm shadow-lg">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 rounded-full bg-black text-white text-sm px-4 py-2 shadow-lg">
           <div className="flex items-center justify-between gap-3">
             <span>{outbidMessage}</span>
             <button
               type="button"
-              className="text-xs underline"
+              className="ml-3 text-xs underline"
               onClick={() => setOutbidMessage(null)}
             >
               Dismiss
@@ -748,17 +774,19 @@ export default function AvailableLeadsPage() {
                           {lead.auction_ends_at && (
                             <div className="mt-1">
                               {(() => {
-                                const { label, isEnded } = getRemainingTime(lead.auction_ends_at);
+                                const { label, isEnded, secondsRemaining } = getRemainingTime(lead.auction_ends_at);
                                 return (
                                   <span
                                     className={clsx(
                                       "inline-flex items-center rounded-full px-2 py-0.5 border text-[11px]",
                                       isEnded
                                         ? "border-slate-300 text-slate-400 bg-slate-50"
+                                        : secondsRemaining < 60
+                                        ? "border-red-300 text-red-700 bg-red-50"
                                         : "border-amber-300 text-amber-700 bg-amber-50"
                                     )}
                                   >
-                                    {isEnded ? "Auction ended" : label}
+                                    {isEnded ? "Ended" : label}
                                   </span>
                                 );
                               })()}
@@ -819,21 +847,23 @@ export default function AvailableLeadsPage() {
                         </p>
                         {lead.auction_ends_at && (
                           <div className="mt-1 text-xs text-slate-500 flex items-center gap-1">
-                            {(() => {
-                              const { label, isEnded } = getRemainingTime(lead.auction_ends_at);
-                              return (
-                                <span
-                                  className={clsx(
-                                    "inline-flex items-center rounded-full px-2 py-0.5 border text-[11px]",
-                                    isEnded
-                                      ? "border-slate-300 text-slate-400 bg-slate-50"
-                                      : "border-amber-300 text-amber-700 bg-amber-50"
-                                  )}
-                                >
-                                  {isEnded ? "Auction ended" : label}
-                                </span>
-                              );
-                            })()}
+                              {(() => {
+                                const { label, isEnded, secondsRemaining } = getRemainingTime(lead.auction_ends_at);
+                                return (
+                                  <span
+                                    className={clsx(
+                                      "inline-flex items-center rounded-full px-2 py-0.5 border text-[11px]",
+                                      isEnded
+                                        ? "border-slate-300 text-slate-400 bg-slate-50"
+                                        : secondsRemaining < 60
+                                        ? "border-red-300 text-red-700 bg-red-50"
+                                        : "border-amber-300 text-amber-700 bg-amber-50"
+                                    )}
+                                  >
+                                    {isEnded ? "Ended" : label}
+                                  </span>
+                                );
+                              })()}
                           </div>
                         )}
 
