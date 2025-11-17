@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { supabaseClient } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import { useRequireRole } from "@/lib/hooks/useRequireRole";
@@ -82,11 +82,13 @@ export default function AvailableLeadsPage() {
   }, []);
 
   // Function to load leads (reusable for initial load and polling)
-  async function loadLeads(isPolling = false) {
+  // Memoized with useCallback to prevent recreation on every render
+  const loadLeads = useCallback(async (isPolling = false) => {
     if (!isPolling) {
       setLoading(true);
       setError(null);
     }
+    // IMPORTANT: Do NOT clear leads here - we want to keep existing leads visible during polling
 
     try {
       const {
@@ -258,7 +260,7 @@ export default function AvailableLeadsPage() {
         setLoading(false);
       }
     }
-  }
+  }, [urgencyFilter, locationFilter, serviceTypeFilter, priceMin, priceMax]);
 
   // Track if initial load has completed
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
@@ -268,25 +270,41 @@ export default function AvailableLeadsPage() {
     loadLeads(false).then(() => {
       setInitialLoadComplete(true);
     });
-  }, [router]);
+  }, [router, loadLeads]);
 
   // Reload when filters change (but not on initial mount)
   useEffect(() => {
     if (initialLoadComplete && !loading && userId) {
       loadLeads(false);
     }
-  }, [urgencyFilter, locationFilter, serviceTypeFilter, priceMin, priceMax, initialLoadComplete, loading, userId]);
+  }, [urgencyFilter, locationFilter, serviceTypeFilter, priceMin, priceMax, initialLoadComplete, loading, userId, loadLeads]);
 
   // Polling effect (refresh every 4 seconds)
+  // Only start polling after initial load completes
+  // Use refs to access latest values without recreating interval
+  const loadingRef = useRef(loading);
+  const loadLeadsRef = useRef(loadLeads);
+  
   useEffect(() => {
-    if (loading || !userId) return; // Don't poll while initial load is happening or no user
+    loadingRef.current = loading;
+  }, [loading]);
+  
+  useEffect(() => {
+    loadLeadsRef.current = loadLeads;
+  }, [loadLeads]);
+
+  useEffect(() => {
+    if (!initialLoadComplete || !userId) return; // Wait for initial load and user
 
     const interval = setInterval(() => {
-      loadLeads(true); // Polling mode (respects current filters)
+      // Only poll if we're not currently loading (to avoid conflicts with filter changes)
+      if (!loadingRef.current) {
+        loadLeadsRef.current(true); // Polling mode (respects current filters via closure)
+      }
     }, 4000); // 4 seconds
 
     return () => clearInterval(interval);
-  }, [loading, userId, urgencyFilter, locationFilter, serviceTypeFilter, priceMin, priceMax]);
+  }, [initialLoadComplete, userId]); // Stable deps - interval created once
 
   async function handleClaimFree(leadId: string) {
     if (!userId) return;
@@ -691,8 +709,14 @@ export default function AvailableLeadsPage() {
           </div>
         </div>
 
-        {loading ? (
+        {loading && leads.length === 0 ? (
           <p className="text-sm text-[#6b6b6b]">Loading leads…</p>
+        ) : error && leads.length === 0 ? (
+          <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3">
+            <p className="text-xs text-red-600">
+              {error} Please try refreshing the page.
+            </p>
+          </div>
         ) : leads.length === 0 ? (
           <p className="text-sm text-[#6b6b6b]">
             There are no available leads right now. Check back soon.

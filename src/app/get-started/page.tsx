@@ -31,9 +31,19 @@ export default function GetStartedPage() {
       urgency_level === "hot" ? 50 : urgency_level === "warm" ? 50 : null; // $0.50 for testing
 
     const ageValue = formData.get("age");
-    const age = ageValue ? parseInt(ageValue as string, 10) : null;
+    let ageNumber: number | null = null;
+    if (ageValue) {
+      const parsed = parseInt(ageValue as string, 10);
+      if (!isNaN(parsed) && parsed >= 18 && parsed <= 120) {
+        ageNumber = parsed;
+      } else {
+        setError("Please enter a valid age between 18 and 120.");
+        setFormState("error");
+        return;
+      }
+    }
 
-    // Build the insert payload
+    // Build the insert payload - only include fields that exist in the form and DB
     const leadData: any = {
       full_name: formData.get("full_name") || null,
       email: formData.get("email") || null,
@@ -41,25 +51,34 @@ export default function GetStartedPage() {
       city: formData.get("city") || null,
       province: formData.get("province") || null,
       postal_code: formData.get("postal_code") || null,
-      age: age,
+      age: ageNumber,
+      age_range: null, // Explicitly set to null for backward compatibility
       planning_for: formData.get("planning_for") || null,
       service_type: formData.get("service_type") || null,
-      ceremony_preferences: formData.get("ceremony_preferences") || null,
       timeline_intent,
       urgency_level,
       additional_notes: formData.get("additional_notes") || null,
       status: urgency_level === "cold" ? "cold_unassigned" : "new",
       buy_now_price_cents,
       auction_min_price_cents,
+      budget_range: null, // Explicitly set to null for backward compatibility
     };
 
     const { error: insertError } = await supabaseClient.from("leads").insert(leadData);
 
     if (insertError) {
-      console.error("Lead submission error", insertError);
+      // Log the full error for debugging
+      console.error("Lead submission error:", {
+        message: insertError.message,
+        details: insertError.details,
+        hint: insertError.hint,
+        code: insertError.code,
+        leadData: leadData,
+      });
+      
       // Provide more helpful error message
       if (insertError.message?.includes("column") || insertError.message?.includes("field")) {
-        setError("There was an issue with the form data. Please check all fields and try again.");
+        setError(`There was an issue with the form data: ${insertError.message}. Please check all fields and try again.`);
       } else {
         setError(insertError.message || "Something went wrong. Please try again.");
       }
