@@ -1,24 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import IntroVideoModal from "@/components/IntroVideoModal";
 
 export default function HomePage() {
   const [showVideoModal, setShowVideoModal] = useState(false);
-
-  // Handle Esc key to close modal
-  useEffect(() => {
-    if (!showVideoModal) return;
-
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setShowVideoModal(false);
-      }
-    };
-
-    document.addEventListener("keydown", handleEsc);
-    return () => document.removeEventListener("keydown", handleEsc);
-  }, [showVideoModal]);
   return (
     <main className="min-h-screen bg-[#faf8f5] text-[#2a2a2a]">
       {/* Header */}
@@ -69,26 +56,26 @@ export default function HomePage() {
       </header>
 
       {/* Hero Section */}
-      <section className="relative border-b border-slate-200 bg-[radial-gradient(circle_at_top,_#fdf7f2,_#f5f2ee)] hero-soft-pattern">
-        <div className="mx-auto flex max-w-4xl flex-col gap-6 px-4 py-16 text-center md:py-24">
+      <section className="relative border-b border-slate-200/50 bg-[radial-gradient(circle_at_top,_#fdf6ee_0%,_#f5f1eb_40%,_#f7f4ef_100%)] hero-soft-pattern shadow-sm">
+        <div className="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-24 text-center md:py-28">
           <p className="text-xs font-semibold tracking-[0.2em] text-slate-500 uppercase">
             Funeral pre-planning
           </p>
           <h1
-            className="text-4xl font-semibold text-slate-900 leading-tight sm:text-5xl sm:leading-tight md:text-6xl md:leading-tight"
+            className="text-4xl font-semibold text-slate-900 leading-tight tracking-tight sm:text-5xl md:text-5xl"
             style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
           >
             A gentle way to plan ahead, with care and clarity.
           </h1>
-          <p className="mx-auto max-w-2xl text-sm leading-relaxed text-slate-600 sm:text-base sm:leading-relaxed md:text-lg md:leading-relaxed">
+          <p className="mx-auto max-w-2xl text-sm leading-relaxed text-slate-600 sm:text-base md:text-base">
             EverLead guides you through thoughtful pre-planning conversations,
             helping you record your wishes and connect with trusted specialists
             when you&apos;re ready—so your family can focus on what matters most.
           </p>
-          <div className="flex flex-wrap items-center justify-center gap-3">
+          <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link
               href="/get-started"
-              className="rounded-full bg-[#2a2a2a] px-6 py-3 text-base font-medium text-white shadow-md hover:bg-[#3a3a3a] transition-colors"
+              className="w-full rounded-full bg-[#2a2a2a] px-6 py-3 text-base font-medium text-white shadow-md hover:bg-[#3a3a3a] transition-colors sm:w-auto"
             >
               Begin the Questionnaire
             </Link>
@@ -97,7 +84,7 @@ export default function HomePage() {
               onClick={() => setShowVideoModal(true)}
               aria-expanded={showVideoModal}
               aria-controls="video-modal"
-              className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white px-5 py-3 text-base text-slate-700 shadow-sm hover:bg-slate-50 transition-colors"
+              className="w-full inline-flex items-center justify-center gap-2 rounded-full border border-slate-300 bg-white px-5 py-3 text-base text-slate-700 shadow-sm hover:bg-slate-50 transition-colors sm:w-auto"
             >
               <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 text-xs text-slate-600">
                 ▶
@@ -111,9 +98,12 @@ export default function HomePage() {
       {/* What You Can Plan - Cards Section */}
       <section
         id="planning-options"
-        className="border-b border-slate-100 bg-white"
+        className="border-b border-slate-100 bg-[#faf7f3]"
       >
-        <div className="mx-auto max-w-5xl px-4 py-12">
+        <div className="mx-auto max-w-5xl px-4 py-16 md:py-20">
+          <p className="mb-4 text-center text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+            Planning Overview
+          </p>
           <h2
             className="text-center text-2xl font-semibold text-slate-900 sm:text-3xl"
             style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
@@ -123,7 +113,7 @@ export default function HomePage() {
           <p className="mt-2 text-center text-sm text-slate-600">
             Thoughtfully document your wishes across all aspects of pre-planning
           </p>
-          <div className="mt-8 grid gap-4 md:grid-cols-2">
+          <div className="mt-10 grid gap-6 md:grid-cols-2">
             {/* Service Preferences */}
             <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
               <h3
@@ -188,9 +178,9 @@ export default function HomePage() {
       </section>
 
       {/* Why Plan Ahead - Two Column Section */}
-      <section className="border-b border-[#ded3c2] bg-[#f7f4ef] py-14 md:py-20">
+      <section className="border-t border-[#ded3c2] border-b border-[#ded3c2] bg-[#f7f4ef] py-16 md:py-24">
         <div className="mx-auto max-w-6xl px-6">
-          <div className="grid gap-12 md:grid-cols-[1.2fr,1fr]">
+          <div className="grid gap-12 md:grid-cols-[1.3fr,1fr]">
             {/* Left Side - Text */}
             <div>
               <h2
@@ -213,7 +203,7 @@ export default function HomePage() {
             </div>
 
             {/* Right Side - At a Glance Box */}
-            <div className="rounded-lg border border-[#ded3c2] bg-white p-8 shadow-sm">
+            <div className="rounded-lg border border-[#ded3c2] bg-white p-8 shadow-md">
               <h3
                 className="mb-4 text-xl font-normal text-[#2a2a2a]"
                 style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
@@ -244,7 +234,7 @@ export default function HomePage() {
       </section>
 
       {/* Why Families Trust EverLead */}
-      <section className="border-b border-[#ded3c2] bg-white py-14 md:py-20">
+      <section className="border-b border-[#ded3c2] bg-[radial-gradient(circle_at_top,_#fdf6ee_0%,_#f5f1eb_40%,_#f7f4ef_100%)] py-16 md:py-24">
         <div className="mx-auto max-w-6xl px-6">
           <h2
             className="mb-12 text-center text-3xl font-normal text-[#2a2a2a] md:text-4xl"
@@ -254,7 +244,7 @@ export default function HomePage() {
           </h2>
 
           <div className="grid gap-8 md:grid-cols-3">
-            <div className="rounded-lg border border-[#ded3c2] bg-[#faf8f5] p-8 shadow-sm">
+            <div className="rounded-lg border border-[#ded3c2] bg-[#faf8f5] p-8 shadow-sm min-h-[200px]">
               <h3
                 className="mb-3 text-xl font-normal text-[#2a2a2a]"
                 style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
@@ -268,7 +258,7 @@ export default function HomePage() {
               </p>
             </div>
 
-            <div className="rounded-lg border border-[#ded3c2] bg-[#faf8f5] p-8 shadow-sm">
+            <div className="rounded-lg border border-[#ded3c2] bg-[#faf8f5] p-8 shadow-sm min-h-[200px]">
               <h3
                 className="mb-3 text-xl font-normal text-[#2a2a2a]"
                 style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
@@ -282,7 +272,7 @@ export default function HomePage() {
               </p>
             </div>
 
-            <div className="rounded-lg border border-[#ded3c2] bg-[#faf8f5] p-8 shadow-sm">
+            <div className="rounded-lg border border-[#ded3c2] bg-[#faf8f5] p-8 shadow-sm min-h-[200px]">
               <h3
                 className="mb-3 text-xl font-normal text-[#2a2a2a]"
                 style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
@@ -300,11 +290,11 @@ export default function HomePage() {
       </section>
 
       {/* Testimonials */}
-      <section className="border-b border-slate-100 bg-slate-50 py-12">
+      <section className="border-b border-slate-100 bg-slate-50 py-16 md:py-20">
         <div className="mx-auto max-w-5xl px-4">
           <div className="grid gap-6 md:grid-cols-3">
-            <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-              <span className="text-3xl text-slate-300">&ldquo;</span>
+            <div className="rounded-lg border border-slate-200 bg-white p-8 shadow-sm min-h-[220px]">
+              <span className="text-4xl text-slate-300">&ldquo;</span>
               <p className="mt-2 italic leading-relaxed text-slate-700">
                 EverLead helped me feel organised and prepared. It gave me peace
                 of mind knowing my wishes are documented.
@@ -317,8 +307,8 @@ export default function HomePage() {
               </p>
               <p className="text-xs text-slate-500">Penticton, BC</p>
             </div>
-            <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-              <span className="text-3xl text-slate-300">&ldquo;</span>
+            <div className="rounded-lg border border-slate-200 bg-white p-8 shadow-sm min-h-[220px]">
+              <span className="text-4xl text-slate-300">&ldquo;</span>
               <p className="mt-2 italic leading-relaxed text-slate-700">
                 It made a hard topic easier to talk about with my family. The
                 gentle approach made all the difference.
@@ -331,8 +321,8 @@ export default function HomePage() {
               </p>
               <p className="text-xs text-slate-500">Vernon, BC</p>
             </div>
-            <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-              <span className="text-3xl text-slate-300">&ldquo;</span>
+            <div className="rounded-lg border border-slate-200 bg-white p-8 shadow-sm min-h-[220px]">
+              <span className="text-4xl text-slate-300">&ldquo;</span>
               <p className="mt-2 italic leading-relaxed text-slate-700">
                 As a pre-need counsellor, I appreciate how EverLead respects
                 families&apos; pace and provides a thoughtful framework for
@@ -464,80 +454,27 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-[#ded3c2] bg-[#f7f4ef] py-10">
-        <div className="mx-auto flex max-w-6xl flex-col gap-4 px-6 text-xs text-[#6b6b6b] md:flex-row md:items-center md:justify-between">
+      <footer className="border-t border-[#ded3c2] bg-[#f7f4ef] py-8">
+        <div className="mx-auto flex max-w-6xl flex-col items-center gap-4 px-6 text-center text-xs text-[#6b6b6b] md:flex-row md:justify-between md:text-left">
           <div>
-            © {new Date().getFullYear()} EverLead. Gentle tools for thoughtful
-            pre-planning.
+            © {new Date().getFullYear()} EverLead. All rights reserved.
           </div>
-          <div className="flex flex-wrap items-center gap-4">
-            <Link href="/privacy" className="hover:text-[#2a2a2a] transition-colors">
+          <div className="flex flex-wrap items-center justify-center gap-4">
+            <Link href="#" className="hover:text-[#2a2a2a] transition-colors">
               Privacy
             </Link>
-            <Link href="/terms" className="hover:text-[#2a2a2a] transition-colors">
+            <Link href="#" className="hover:text-[#2a2a2a] transition-colors">
               Terms
             </Link>
-            <Link
-              href="/agent"
-              className="hover:text-[#2a2a2a] transition-colors"
-            >
-              For funeral professionals, EverLead offers a secure lead marketplace. Learn more →
-            </Link>
-            <span className="text-[#9b9b9b]">
-              EverLead is not a funeral home and does not provide legal or
-              financial advice.
-            </span>
           </div>
         </div>
       </footer>
 
       {/* Video Modal */}
-      {showVideoModal && (
-        <div
-          id="video-modal"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 px-4"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setShowVideoModal(false);
-            }
-          }}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="video-modal-title"
-        >
-          <div className="w-full max-w-3xl rounded-2xl bg-white shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
-              <h2 id="video-modal-title" className="text-sm font-semibold text-slate-900">
-                EverLead introduction
-              </h2>
-              <button
-                type="button"
-                onClick={() => setShowVideoModal(false)}
-                className="text-slate-400 hover:text-slate-600 text-2xl leading-none transition-colors"
-                aria-label="Close modal"
-              >
-                ×
-              </button>
-            </div>
-            <div className="aspect-video w-full bg-slate-100">
-              {/* Placeholder video - replace URL later with actual EverLead intro video */}
-              <iframe
-                className="h-full w-full"
-                src="https://www.youtube.com/embed/dQw4w9WgXcQ"
-                title="EverLead introduction video"
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowFullScreen
-              />
-            </div>
-            <div className="border-t border-slate-200 px-6 py-4">
-              <p className="text-xs leading-relaxed text-slate-600">
-                This short introduction video explains how EverLead supports thoughtful pre-planning for your family.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
+      <IntroVideoModal
+        open={showVideoModal}
+        onClose={() => setShowVideoModal(false)}
+      />
     </main>
   );
 }
