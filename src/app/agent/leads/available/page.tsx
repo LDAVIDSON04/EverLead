@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabaseClient } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import { useRequireRole } from "@/lib/hooks/useRequireRole";
@@ -42,33 +42,72 @@ export default function AvailableLeadsPage() {
   const [biddingId, setBiddingId] = useState<string | null>(null);
   const [bidAmounts, setBidAmounts] = useState<Record<string, string>>({});
   const [bidErrors, setBidErrors] = useState<Record<string, string>>({});
-
+  
+  // Countdown timer state
+  const [now, setNow] = useState(() => new Date());
+  
+  // Outbid detection state
+  type HighestStatus = "unknown" | "highest" | "not-highest";
+  const [highestStatusMap, setHighestStatusMap] = useState<Record<string, HighestStatus>>({});
+  const highestStatusMapRef = useRef<Record<string, HighestStatus>>({});
+  
+  // Update ref when state changes
   useEffect(() => {
-    async function load() {
+    highestStatusMapRef.current = highestStatusMap;
+  }, [highestStatusMap]);
+  
+  // Toast state
+  type Toast = {
+    id: string;
+    message: string;
+    leadId: string;
+    leadCity: string | null;
+  };
+  const [toasts, setToasts] = useState<Toast[]>([]);
+
+  // Countdown timer effect
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setNow(new Date());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Function to load leads (reusable for initial load and polling)
+  async function loadLeads(isPolling = false) {
+    if (!isPolling) {
       setLoading(true);
       setError(null);
+    }
 
-      try {
-        const {
-          data: { user },
-          error: userError,
-        } = await supabaseClient.auth.getUser();
+    try {
+      const {
+        data: { user },
+        error: userError,
+      } = await supabaseClient.auth.getUser();
 
-        if (userError) {
-          console.error(userError);
+      if (userError) {
+        console.error(userError);
+        if (!isPolling) {
           setError("Failed to load user.");
           setLoading(false);
-          return;
         }
+        return;
+      }
 
-        if (!user) {
+      if (!user) {
+        if (!isPolling) {
           router.push("/login");
-          return;
         }
+        return;
+      }
 
-        const currentUserId = user.id;
+      const currentUserId = user.id;
+      if (!isPolling) {
         setUserId(currentUserId);
+      }
 
+      if (!isPolling) {
         const { data: profile, error: profileError } = await supabaseClient
           .from("profiles")
           .select("first_free_redeemed")
@@ -81,45 +120,101 @@ export default function AvailableLeadsPage() {
 
         const alreadyRedeemed = profile?.first_free_redeemed === true;
         setFirstFreeAvailable(!alreadyRedeemed);
+      }
 
-        // TODO: in a future pass, restrict contact fields at the API level
-        // so non-owning agents never receive full PII (name, email, phone).
-        // For now, we mask these fields in the UI.
-        const { data: leadsData, error: leadsError } = await supabaseClient
-          .from("leads")
-          .select("*")
-          .eq("status", "new")
-          .order("created_at", { ascending: false });
+      // TODO: in a future pass, restrict contact fields at the API level
+      // so non-owning agents never receive full PII (name, email, phone).
+      // For now, we mask these fields in the UI.
+      const { data: leadsData, error: leadsError } = await supabaseClient
+        .from("leads")
+        .select("*")
+        .eq("status", "new")
+        .order("created_at", { ascending: false });
 
-        if (leadsError) {
-          console.error(leadsError);
+      if (leadsError) {
+        console.error(leadsError);
+        if (!isPolling) {
           setError("Failed to load leads.");
           setLoading(false);
-          return;
         }
+        return;
+      }
 
-        // Debug: log auction fields for first lead
-        if (leadsData && leadsData.length > 0) {
-          console.log("First lead auction fields:", {
-            id: leadsData[0].id,
-            auction_enabled: leadsData[0].auction_enabled,
-            buy_now_price: leadsData[0].buy_now_price,
-            current_bid_amount: leadsData[0].current_bid_amount,
-            auction_ends_at: leadsData[0].auction_ends_at,
-          });
-        }
+      const newLeads = (leadsData || []) as Lead[];
 
-        setLeads((leadsData || []) as Lead[]);
-      } catch (err) {
-        console.error(err);
+      // Detect outbid changes
+      if (currentUserId) {
+        const newHighestStatusMap: Record<string, HighestStatus> = {};
+        const outbidLeads: Array<{ leadId: string; city: string | null }> = [];
+
+        newLeads.forEach((lead) => {
+          if (lead.auction_enabled && lead.current_bid_agent_id) {
+            const isHighest = lead.current_bid_agent_id === currentUserId;
+            const status: HighestStatus = isHighest ? "highest" : "not-highest";
+            newHighestStatusMap[lead.id] = status;
+
+            // Check if we were highest before but not now
+            const previousStatus = highestStatusMapRef.current[lead.id];
+            if (previousStatus === "highest" && status === "not-highest") {
+              outbidLeads.push({ leadId: lead.id, city: lead.city });
+            }
+          } else {
+            newHighestStatusMap[lead.id] = "unknown";
+          }
+        });
+
+        // Update status map
+        setHighestStatusMap(newHighestStatusMap);
+
+        // Show toast for each outbid
+        outbidLeads.forEach(({ leadId, city }) => {
+          const toastId = `${leadId}-${Date.now()}`;
+          setToasts((prev) => [
+            ...prev,
+            {
+              id: toastId,
+              message: `You've been outbid on a lead in ${city || "Unknown location"}.`,
+              leadId,
+              leadCity: city,
+            },
+          ]);
+
+          // Auto-remove toast after 8 seconds
+          setTimeout(() => {
+            setToasts((prev) => prev.filter((t) => t.id !== toastId));
+          }, 8000);
+        });
+      }
+
+      setLeads(newLeads);
+    } catch (err) {
+      console.error(err);
+      if (!isPolling) {
         setError("Something went wrong loading available leads.");
-      } finally {
+        setLoading(false);
+      }
+    } finally {
+      if (!isPolling) {
         setLoading(false);
       }
     }
+  }
 
-    load();
+  // Initial load
+  useEffect(() => {
+    loadLeads(false);
   }, [router]);
+
+  // Polling effect (refresh every 4 seconds)
+  useEffect(() => {
+    if (loading || !userId) return; // Don't poll while initial load is happening or no user
+
+    const interval = setInterval(() => {
+      loadLeads(true); // Polling mode
+    }, 4000); // 4 seconds
+
+    return () => clearInterval(interval);
+  }, [loading, userId]);
 
   async function handleClaimFree(leadId: string) {
     if (!userId) return;
@@ -234,6 +329,14 @@ export default function AvailableLeadsPage() {
         )
       );
 
+      // Update highest status map (we're now the highest bidder)
+      if (userId && body.lead.current_bid_agent_id === userId) {
+        setHighestStatusMap((prev) => ({
+          ...prev,
+          [leadId]: "highest",
+        }));
+      }
+
       // Clear bid input
       setBidAmounts((prev) => {
         const next = { ...prev };
@@ -282,9 +385,29 @@ export default function AvailableLeadsPage() {
   function isAuctionEnded(endsAt: string | null) {
     if (!endsAt) return false;
     try {
-      return new Date() > new Date(endsAt);
+      return now.getTime() > new Date(endsAt).getTime();
     } catch {
       return false;
+    }
+  }
+
+  function formatCountdown(endsAt: string | null): string {
+    if (!endsAt) return "";
+    try {
+      const endDate = new Date(endsAt);
+      const remainingMs = endDate.getTime() - now.getTime();
+      
+      if (remainingMs <= 0) {
+        return "Auction ended";
+      }
+
+      const hours = Math.floor(remainingMs / (1000 * 60 * 60));
+      const minutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((remainingMs % (1000 * 60)) / 1000);
+
+      return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")} left`;
+    } catch {
+      return "";
     }
   }
 
@@ -304,6 +427,34 @@ export default function AvailableLeadsPage() {
 
   return (
     <main className="min-h-screen bg-[#f7f4ef]">
+      {/* Toast notifications */}
+      {toasts.length > 0 && (
+        <div className="fixed top-4 right-4 z-50 space-y-2 max-w-sm">
+          {toasts.map((toast) => (
+            <div
+              key={toast.id}
+              className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 shadow-lg"
+            >
+              <p className="text-sm font-medium text-amber-900">{toast.message}</p>
+              <div className="mt-2 flex items-center gap-2">
+                <Link
+                  href={`/agent/leads/${toast.leadId}`}
+                  className="text-xs font-semibold text-amber-900 hover:text-amber-700 underline"
+                >
+                  View lead →
+                </Link>
+                <button
+                  onClick={() => setToasts((prev) => prev.filter((t) => t.id !== toast.id))}
+                  className="text-xs text-amber-700 hover:text-amber-900"
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       <header className="border-b border-[#ded3c2] bg-[#1f2933] text-white">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <div className="flex items-baseline gap-2">
@@ -429,9 +580,13 @@ export default function AvailableLeadsPage() {
                           </div>
                           {lead.auction_ends_at && (
                             <div className="mt-1 text-[10px] text-[#6b6b6b]">
-                              {auctionEnded
-                                ? "Auction ended"
-                                : `Ends ${formatDateTime(lead.auction_ends_at)}`}
+                              {auctionEnded ? (
+                                <span className="text-red-600 font-medium">Auction ended</span>
+                              ) : (
+                                <span className="font-mono font-semibold text-[#2a2a2a]">
+                                  {formatCountdown(lead.auction_ends_at)}
+                                </span>
+                              )}
                             </div>
                           )}
                         </div>
