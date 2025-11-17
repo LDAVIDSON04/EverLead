@@ -6,6 +6,7 @@ import { supabaseClient } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import { useRequireRole } from "@/lib/hooks/useRequireRole";
 import { AgentNav } from "@/components/AgentNav";
+import clsx from "clsx";
 
 type Lead = {
   id: string;
@@ -31,7 +32,7 @@ export default function MyLeadsPage() {
   const router = useRouter();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "new" | "contacted" | "in_followup" | "closed_won" | "closed_lost">("all");
 
   useEffect(() => {
     async function load() {
@@ -46,17 +47,12 @@ export default function MyLeadsPage() {
           return;
         }
 
-        let query = supabaseClient
+        // Fetch all leads for this agent (filtering done client-side)
+        const { data, error } = await supabaseClient
           .from("leads")
           .select("*")
-          .eq("assigned_agent_id", user.id);
-
-        // Apply status filter
-        if (statusFilter !== "all") {
-          query = query.eq("agent_status", statusFilter);
-        }
-
-        const { data, error } = await query.order("created_at", { ascending: false });
+          .eq("assigned_agent_id", user.id)
+          .order("created_at", { ascending: false });
 
         if (error) {
           console.error(error);
@@ -69,7 +65,7 @@ export default function MyLeadsPage() {
     }
 
     load();
-  }, [router, statusFilter]);
+  }, [router]); // Filters applied client-side, no need to reload
 
   function formatUrgency(u: string | null) {
     if (!u) return "Unknown";
@@ -86,13 +82,14 @@ export default function MyLeadsPage() {
     return option ? option.label : status;
   }
 
-  function getStatusColor(status: string | null): string {
-    if (!status || status === "new") return "bg-blue-100 text-blue-700";
-    if (status === "contacted") return "bg-slate-100 text-slate-700";
-    if (status === "in_followup") return "bg-amber-100 text-amber-700";
-    if (status === "closed_won") return "bg-emerald-100 text-emerald-700";
-    if (status === "closed_lost") return "bg-rose-100 text-rose-700";
-    return "bg-slate-100 text-slate-700";
+  function getStatusColors(status: string | null): { bg: string; text: string } {
+    const s = (status ?? "new").toLowerCase();
+    if (s === "new") return { bg: "bg-blue-100", text: "text-blue-700" };
+    if (s === "contacted") return { bg: "bg-slate-100", text: "text-slate-700" };
+    if (s.includes("follow")) return { bg: "bg-amber-100", text: "text-amber-700" };
+    if (s.includes("won")) return { bg: "bg-emerald-100", text: "text-emerald-700" };
+    if (s.includes("lost")) return { bg: "bg-rose-100", text: "text-rose-700" };
+    return { bg: "bg-slate-100", text: "text-slate-700" };
   }
 
   return (
@@ -147,13 +144,41 @@ export default function MyLeadsPage() {
 
         {loading ? (
           <p className="text-sm text-[#6b6b6b]">Loading your leads…</p>
-        ) : leads.length === 0 ? (
-          <p className="text-sm text-[#6b6b6b]">
-            You don&apos;t have any leads yet.
-          </p>
-        ) : (
-          <div className="space-y-3">
-            {leads.map((lead) => (
+        ) : (() => {
+          // Apply client-side status filter
+          const filteredMyLeads = leads.filter((lead) => {
+            if (statusFilter === "all") return true;
+            
+            const normalized = (lead.agent_status ?? "").toLowerCase();
+            const filterNormalized = statusFilter.toLowerCase();
+            
+            // Map filter values to DB values
+            if (statusFilter === "new" && normalized !== "new") return false;
+            if (statusFilter === "contacted" && normalized !== "contacted") return false;
+            if (statusFilter === "in_followup" && !normalized.includes("follow")) return false;
+            if (statusFilter === "closed_won" && !normalized.includes("won")) return false;
+            if (statusFilter === "closed_lost" && !normalized.includes("lost")) return false;
+            
+            return true;
+          });
+
+          if (filteredMyLeads.length === 0) {
+            return (
+              <p className="text-sm text-[#6b6b6b]">
+                {leads.length === 0
+                  ? "You don't have any leads yet."
+                  : "No leads match your filter."}
+              </p>
+            );
+          }
+
+          return (
+            <div className="space-y-3">
+              {filteredMyLeads.map((lead) => {
+                const status = (lead.agent_status ?? "new") as string;
+                const { bg, text } = getStatusColors(status);
+                
+                return (
               <div
                 key={lead.id}
                 className="rounded-lg border border-[#ded3c2] bg-white p-4 shadow-sm"
@@ -172,9 +197,11 @@ export default function MyLeadsPage() {
                   </div>
                   <div className="flex items-center gap-3">
                     <span
-                      className={`inline-block rounded-full px-2.5 py-1 text-xs font-medium ${getStatusColor(
-                        lead.agent_status
-                      )}`}
+                      className={clsx(
+                        "inline-flex rounded-full px-2 py-0.5 text-xs font-medium",
+                        bg,
+                        text
+                      )}
                     >
                       {formatStatus(lead.agent_status)}
                     </span>
@@ -189,9 +216,11 @@ export default function MyLeadsPage() {
                   </Link>
                 </div>
               </div>
-            ))}
-          </div>
-        )}
+                );
+              })}
+            </div>
+          );
+        })()}
       </section>
     </main>
   );
