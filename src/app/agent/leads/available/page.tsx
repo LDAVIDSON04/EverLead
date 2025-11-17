@@ -405,7 +405,7 @@ export default function AvailableLeadsPage() {
       const minutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
       const seconds = Math.floor((remainingMs % (1000 * 60)) / 1000);
 
-      return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")} left`;
+      return `Ends in ${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
     } catch {
       return "";
     }
@@ -551,10 +551,12 @@ export default function AvailableLeadsPage() {
                           🔒 Purchase to reveal full name, phone, and email.
                         </p>
                       )}
-                      {/* Auction debug - always show for every lead */}
-                      <p className="mt-2 text-[11px] text-slate-500 font-mono">
-                        Auction debug: enabled={String(lead.auction_enabled ?? "null")} · buy_now_price={String(lead.buy_now_price ?? "null")} · current_bid_amount={String(lead.current_bid_amount ?? "null")} · ends_at={lead.auction_ends_at ? new Date(lead.auction_ends_at).toISOString() : "null"}
-                      </p>
+                      {/* Auction debug - only in development */}
+                      {process.env.NODE_ENV === "development" && (
+                        <p className="mt-2 text-[11px] text-slate-500 font-mono">
+                          Auction debug: enabled={String(lead.auction_enabled ?? "null")} · buy_now_price={String(lead.buy_now_price ?? "null")} · current_bid_amount={String(lead.current_bid_amount ?? "null")} · ends_at={lead.auction_ends_at ? new Date(lead.auction_ends_at).toISOString() : "null"}
+                        </p>
+                      )}
                     </div>
 
                     <div className="text-right">
