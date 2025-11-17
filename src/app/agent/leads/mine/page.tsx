@@ -123,23 +123,31 @@ export default function MyLeadsPage() {
         </div>
 
         {/* Status filter */}
-        <div className="mb-6 rounded-lg border border-[#ded3c2] bg-white p-4 shadow-sm">
-          <div className="flex items-center gap-4">
-            <label className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
-              Filter by status
-            </label>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as "all" | "new" | "contacted" | "in_followup" | "closed_won" | "closed_lost")}
-              className="rounded-md border border-[#ded3c2] bg-white px-3 py-2 text-sm text-[#2a2a2a] outline-none focus:border-[#2a2a2a] focus:ring-1 focus:ring-[#2a2a2a]"
+        <div className="mb-4 flex flex-wrap gap-2">
+          {[
+            { key: "all", label: "All" },
+            { key: "new", label: "New" },
+            { key: "contacted", label: "Contacted" },
+            { key: "in_followup", label: "In follow-up" },
+            { key: "closed_won", label: "Closed – won" },
+            { key: "closed_lost", label: "Closed – lost" },
+          ].map((option) => (
+            <button
+              key={option.key}
+              type="button"
+              onClick={() =>
+                setStatusFilter(option.key as typeof statusFilter)
+              }
+              className={clsx(
+                "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+                statusFilter === option.key
+                  ? "border-slate-900 bg-slate-900 text-white"
+                  : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+              )}
             >
-              {STATUS_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </div>
+              {option.label}
+            </button>
+          ))}
         </div>
 
         {loading ? (
@@ -149,15 +157,13 @@ export default function MyLeadsPage() {
           const filteredMyLeads = leads.filter((lead) => {
             if (statusFilter === "all") return true;
             
-            const normalized = (lead.agent_status ?? "").toLowerCase();
-            const filterNormalized = statusFilter.toLowerCase();
+            const s = (lead.agent_status ?? "").toLowerCase();
             
-            // Map filter values to DB values
-            if (statusFilter === "new" && normalized !== "new") return false;
-            if (statusFilter === "contacted" && normalized !== "contacted") return false;
-            if (statusFilter === "in_followup" && !normalized.includes("follow")) return false;
-            if (statusFilter === "closed_won" && !normalized.includes("won")) return false;
-            if (statusFilter === "closed_lost" && !normalized.includes("lost")) return false;
+            if (statusFilter === "new") return s === "new";
+            if (statusFilter === "contacted") return s === "contacted";
+            if (statusFilter === "in_followup") return s.includes("follow");
+            if (statusFilter === "closed_won") return s.includes("won");
+            if (statusFilter === "closed_lost") return s.includes("lost");
             
             return true;
           });
