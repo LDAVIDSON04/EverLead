@@ -44,11 +44,11 @@ export default function AvailableLeadsPage() {
   const [bidErrors, setBidErrors] = useState<Record<string, string>>({});
   
   // Filter state
-  const [urgencyFilter, setUrgencyFilter] = useState<string>("all");
+  const [urgencyFilter, setUrgencyFilter] = useState<"all" | "hot" | "warm" | "cold">("all");
   const [locationFilter, setLocationFilter] = useState<string>("all");
-  const [serviceTypeFilter, setServiceTypeFilter] = useState<string>("all");
-  const [priceMin, setPriceMin] = useState<string>("");
-  const [priceMax, setPriceMax] = useState<string>("");
+  const [serviceFilter, setServiceFilter] = useState<string>("all");
+  const [minPrice, setMinPrice] = useState<string>("");
+  const [maxPrice, setMaxPrice] = useState<string>("");
   const [availableLocations, setAvailableLocations] = useState<string[]>([]);
   
   // Countdown timer state
@@ -136,42 +136,11 @@ export default function AvailableLeadsPage() {
       // so non-owning agents never receive full PII (name, email, phone).
       // For now, we mask these fields in the UI.
       
-      // Build query with filters
-      let query = supabaseClient
+      // Fetch all available leads (filters applied client-side)
+      const { data: leadsData, error: leadsError } = await supabaseClient
         .from("leads")
         .select("*")
-        .eq("status", "new");
-
-      // Apply urgency filter
-      if (urgencyFilter !== "all") {
-        query = query.eq("urgency_level", urgencyFilter.toLowerCase());
-      }
-
-      // Apply location filter
-      if (locationFilter !== "all") {
-        query = query.eq("city", locationFilter);
-      }
-
-      // Apply service type filter
-      if (serviceTypeFilter !== "all") {
-        query = query.eq("service_type", serviceTypeFilter.toLowerCase());
-      }
-
-      // Apply price filters (using buy_now_price_cents)
-      if (priceMin) {
-        const minCents = parseFloat(priceMin) * 100;
-        if (!isNaN(minCents)) {
-          query = query.gte("buy_now_price_cents", minCents);
-        }
-      }
-      if (priceMax) {
-        const maxCents = parseFloat(priceMax) * 100;
-        if (!isNaN(maxCents)) {
-          query = query.lte("buy_now_price_cents", maxCents);
-        }
-      }
-
-      const { data: leadsData, error: leadsError } = await query
+        .eq("status", "new")
         .order("created_at", { ascending: false });
 
       if (leadsError) {
@@ -187,21 +156,15 @@ export default function AvailableLeadsPage() {
 
       // Extract unique locations for filter dropdown (only on initial load)
       if (!isPolling) {
-        const { data: allLeadsData } = await supabaseClient
-          .from("leads")
-          .select("city")
-          .eq("status", "new")
-          .not("city", "is", null);
-
-        const uniqueLocations = Array.from(
+        const uniqueCities = Array.from(
           new Set(
-            (allLeadsData || [])
-              .map((l) => l.city)
-              .filter((city): city is string => city !== null)
+            newLeads
+              .map((lead) => lead.city)
+              .filter((city): city is string => !!city)
           )
         ).sort();
 
-        setAvailableLocations(uniqueLocations);
+        setAvailableLocations(uniqueCities);
       }
 
       // Detect outbid changes
@@ -260,7 +223,7 @@ export default function AvailableLeadsPage() {
         setLoading(false);
       }
     }
-  }, [urgencyFilter, locationFilter, serviceTypeFilter, priceMin, priceMax]);
+  }, [router]);
 
   // Track if initial load has completed
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
@@ -272,12 +235,7 @@ export default function AvailableLeadsPage() {
     });
   }, [router, loadLeads]);
 
-  // Reload when filters change (but not on initial mount)
-  useEffect(() => {
-    if (initialLoadComplete && !loading && userId) {
-      loadLeads(false);
-    }
-  }, [urgencyFilter, locationFilter, serviceTypeFilter, priceMin, priceMax, initialLoadComplete, loading, userId, loadLeads]);
+  // Filters are applied client-side, so no need to reload when filters change
 
   // Polling effect (refresh every 4 seconds)
   // Only start polling after initial load completes
@@ -651,11 +609,11 @@ export default function AvailableLeadsPage() {
                 Service type
               </label>
               <select
-                value={serviceTypeFilter}
-                onChange={(e) => setServiceTypeFilter(e.target.value)}
+                value={serviceFilter}
+                onChange={(e) => setServiceFilter(e.target.value)}
                 className="w-full rounded-md border border-[#ded3c2] bg-white px-3 py-2 text-sm text-[#2a2a2a] outline-none focus:border-[#2a2a2a] focus:ring-1 focus:ring-[#2a2a2a]"
               >
-                <option value="all">All</option>
+                <option value="all">All service types</option>
                 <option value="burial">Burial</option>
                 <option value="cremation">Cremation</option>
                 <option value="other">Other</option>
@@ -672,8 +630,8 @@ export default function AvailableLeadsPage() {
                   type="number"
                   min="0"
                   step="0.01"
-                  value={priceMin}
-                  onChange={(e) => setPriceMin(e.target.value)}
+                  value={minPrice}
+                  onChange={(e) => setMinPrice(e.target.value)}
                   placeholder="Min"
                   className="w-full rounded-md border border-[#ded3c2] bg-white px-3 py-2 text-sm text-[#2a2a2a] outline-none focus:border-[#2a2a2a] focus:ring-1 focus:ring-[#2a2a2a]"
                 />
@@ -686,8 +644,8 @@ export default function AvailableLeadsPage() {
                   type="number"
                   min="0"
                   step="0.01"
-                  value={priceMax}
-                  onChange={(e) => setPriceMax(e.target.value)}
+                  value={maxPrice}
+                  onChange={(e) => setMaxPrice(e.target.value)}
                   placeholder="Max"
                   className="w-full rounded-md border border-[#ded3c2] bg-white px-3 py-2 text-sm text-[#2a2a2a] outline-none focus:border-[#2a2a2a] focus:ring-1 focus:ring-[#2a2a2a]"
                 />
@@ -697,16 +655,16 @@ export default function AvailableLeadsPage() {
             {/* Clear filters button */}
             {(urgencyFilter !== "all" ||
               locationFilter !== "all" ||
-              serviceTypeFilter !== "all" ||
-              priceMin !== "" ||
-              priceMax !== "") && (
+              serviceFilter !== "all" ||
+              minPrice !== "" ||
+              maxPrice !== "") && (
               <button
                 onClick={() => {
                   setUrgencyFilter("all");
                   setLocationFilter("all");
-                  setServiceTypeFilter("all");
-                  setPriceMin("");
-                  setPriceMax("");
+                  setServiceFilter("all");
+                  setMinPrice("");
+                  setMaxPrice("");
                 }}
                 className="rounded-md border border-[#ded3c2] bg-[#f7f4ef] px-4 py-2 text-xs font-medium text-[#2a2a2a] hover:bg-[#ded3c2] transition-colors"
               >
@@ -724,13 +682,53 @@ export default function AvailableLeadsPage() {
               {error} Please try refreshing the page.
             </p>
           </div>
-        ) : leads.length === 0 ? (
-          <p className="text-sm text-[#6b6b6b]">
-            There are no available leads right now. Check back soon.
-          </p>
-        ) : (
-          <div className="space-y-3">
-            {leads.map((lead) => {
+        ) : (() => {
+          // Apply client-side filters
+          const filteredLeads = leads.filter((lead) => {
+            // Urgency filter
+            if (urgencyFilter !== "all") {
+              const leadUrgency = (lead.urgency_level ?? "").toLowerCase();
+              if (leadUrgency !== urgencyFilter.toLowerCase()) {
+                return false;
+              }
+            }
+
+            // Location filter
+            if (locationFilter !== "all") {
+              const city = (lead.city ?? "").toLowerCase();
+              const selected = locationFilter.toLowerCase();
+              if (city !== selected) return false;
+            }
+
+            // Service type filter
+            if (serviceFilter !== "all") {
+              const type = (lead.service_type ?? "").toLowerCase();
+              if (type !== serviceFilter.toLowerCase()) return false;
+            }
+
+            // Price filter (using buy_now_price)
+            if (minPrice || maxPrice) {
+              const price = lead.buy_now_price ?? 0;
+              const min = minPrice ? parseFloat(minPrice) : 0;
+              const max = maxPrice ? parseFloat(maxPrice) : Infinity;
+              if (isNaN(min) || isNaN(max)) return true; // Skip if invalid numbers
+              if (price < min || price > max) return false;
+            }
+
+            return true;
+          });
+
+          if (filteredLeads.length === 0) {
+            return (
+              <p className="text-sm text-[#6b6b6b]">
+                No leads match your filters. Try adjusting your search criteria.
+              </p>
+            );
+          }
+
+          return (
+            <div className="space-y-3">
+              {filteredLeads.map((lead) => {
               // Check if agent owns this lead
               const owns = userId ? agentOwnsLead(lead, userId) : false;
               
