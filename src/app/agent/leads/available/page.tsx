@@ -43,6 +43,14 @@ export default function AvailableLeadsPage() {
   const [bidAmounts, setBidAmounts] = useState<Record<string, string>>({});
   const [bidErrors, setBidErrors] = useState<Record<string, string>>({});
   
+  // Filter state
+  const [urgencyFilter, setUrgencyFilter] = useState<string>("all");
+  const [locationFilter, setLocationFilter] = useState<string>("all");
+  const [serviceTypeFilter, setServiceTypeFilter] = useState<string>("all");
+  const [priceMin, setPriceMin] = useState<string>("");
+  const [priceMax, setPriceMax] = useState<string>("");
+  const [availableLocations, setAvailableLocations] = useState<string[]>([]);
+  
   // Countdown timer state
   const [now, setNow] = useState(() => new Date());
   
@@ -125,10 +133,43 @@ export default function AvailableLeadsPage() {
       // TODO: in a future pass, restrict contact fields at the API level
       // so non-owning agents never receive full PII (name, email, phone).
       // For now, we mask these fields in the UI.
-      const { data: leadsData, error: leadsError } = await supabaseClient
+      
+      // Build query with filters
+      let query = supabaseClient
         .from("leads")
         .select("*")
-        .eq("status", "new")
+        .eq("status", "new");
+
+      // Apply urgency filter
+      if (urgencyFilter !== "all") {
+        query = query.eq("urgency_level", urgencyFilter.toLowerCase());
+      }
+
+      // Apply location filter
+      if (locationFilter !== "all") {
+        query = query.eq("city", locationFilter);
+      }
+
+      // Apply service type filter
+      if (serviceTypeFilter !== "all") {
+        query = query.eq("service_type", serviceTypeFilter.toLowerCase());
+      }
+
+      // Apply price filters (using buy_now_price_cents)
+      if (priceMin) {
+        const minCents = parseFloat(priceMin) * 100;
+        if (!isNaN(minCents)) {
+          query = query.gte("buy_now_price_cents", minCents);
+        }
+      }
+      if (priceMax) {
+        const maxCents = parseFloat(priceMax) * 100;
+        if (!isNaN(maxCents)) {
+          query = query.lte("buy_now_price_cents", maxCents);
+        }
+      }
+
+      const { data: leadsData, error: leadsError } = await query
         .order("created_at", { ascending: false });
 
       if (leadsError) {
@@ -141,6 +182,25 @@ export default function AvailableLeadsPage() {
       }
 
       const newLeads = (leadsData || []) as Lead[];
+
+      // Extract unique locations for filter dropdown (only on initial load)
+      if (!isPolling) {
+        const { data: allLeadsData } = await supabaseClient
+          .from("leads")
+          .select("city")
+          .eq("status", "new")
+          .not("city", "is", null);
+
+        const uniqueLocations = Array.from(
+          new Set(
+            (allLeadsData || [])
+              .map((l) => l.city)
+              .filter((city): city is string => city !== null)
+          )
+        ).sort();
+
+        setAvailableLocations(uniqueLocations);
+      }
 
       // Detect outbid changes
       if (currentUserId) {
@@ -200,21 +260,33 @@ export default function AvailableLeadsPage() {
     }
   }
 
+  // Track if initial load has completed
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
+
   // Initial load
   useEffect(() => {
-    loadLeads(false);
+    loadLeads(false).then(() => {
+      setInitialLoadComplete(true);
+    });
   }, [router]);
+
+  // Reload when filters change (but not on initial mount)
+  useEffect(() => {
+    if (initialLoadComplete && !loading && userId) {
+      loadLeads(false);
+    }
+  }, [urgencyFilter, locationFilter, serviceTypeFilter, priceMin, priceMax, initialLoadComplete, loading, userId]);
 
   // Polling effect (refresh every 4 seconds)
   useEffect(() => {
     if (loading || !userId) return; // Don't poll while initial load is happening or no user
 
     const interval = setInterval(() => {
-      loadLeads(true); // Polling mode
+      loadLeads(true); // Polling mode (respects current filters)
     }, 4000); // 4 seconds
 
     return () => clearInterval(interval);
-  }, [loading, userId]);
+  }, [loading, userId, urgencyFilter, locationFilter, serviceTypeFilter, priceMin, priceMax]);
 
   async function handleClaimFree(leadId: string) {
     if (!userId) return;
@@ -499,6 +571,125 @@ export default function AvailableLeadsPage() {
             <p className="text-xs text-red-600">{error}</p>
           </div>
         )}
+
+        {/* Filters */}
+        <div className="mb-6 rounded-lg border border-[#ded3c2] bg-white p-4 shadow-sm">
+          <div className="mb-3 flex items-center gap-2">
+            <h2
+              className="text-sm font-normal text-[#2a2a2a]"
+              style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+            >
+              Filters
+            </h2>
+          </div>
+          <div className="flex flex-wrap items-end gap-4">
+            {/* Urgency filter */}
+            <div className="flex-1 min-w-[140px]">
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                Urgency
+              </label>
+              <select
+                value={urgencyFilter}
+                onChange={(e) => setUrgencyFilter(e.target.value)}
+                className="w-full rounded-md border border-[#ded3c2] bg-white px-3 py-2 text-sm text-[#2a2a2a] outline-none focus:border-[#2a2a2a] focus:ring-1 focus:ring-[#2a2a2a]"
+              >
+                <option value="all">All</option>
+                <option value="hot">HOT</option>
+                <option value="warm">WARM</option>
+                <option value="cold">COLD</option>
+              </select>
+            </div>
+
+            {/* Location filter */}
+            <div className="flex-1 min-w-[180px]">
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                Location
+              </label>
+              <select
+                value={locationFilter}
+                onChange={(e) => setLocationFilter(e.target.value)}
+                className="w-full rounded-md border border-[#ded3c2] bg-white px-3 py-2 text-sm text-[#2a2a2a] outline-none focus:border-[#2a2a2a] focus:ring-1 focus:ring-[#2a2a2a]"
+                disabled={availableLocations.length === 0}
+              >
+                <option value="all">All locations</option>
+                {availableLocations.map((location) => (
+                  <option key={location} value={location}>
+                    {location}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Service type filter */}
+            <div className="flex-1 min-w-[140px]">
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                Service type
+              </label>
+              <select
+                value={serviceTypeFilter}
+                onChange={(e) => setServiceTypeFilter(e.target.value)}
+                className="w-full rounded-md border border-[#ded3c2] bg-white px-3 py-2 text-sm text-[#2a2a2a] outline-none focus:border-[#2a2a2a] focus:ring-1 focus:ring-[#2a2a2a]"
+              >
+                <option value="all">All</option>
+                <option value="burial">Burial</option>
+                <option value="cremation">Cremation</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+
+            {/* Price range filters */}
+            <div className="flex items-end gap-2">
+              <div className="w-24">
+                <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                  Min price ($)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={priceMin}
+                  onChange={(e) => setPriceMin(e.target.value)}
+                  placeholder="Min"
+                  className="w-full rounded-md border border-[#ded3c2] bg-white px-3 py-2 text-sm text-[#2a2a2a] outline-none focus:border-[#2a2a2a] focus:ring-1 focus:ring-[#2a2a2a]"
+                />
+              </div>
+              <div className="w-24">
+                <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                  Max price ($)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={priceMax}
+                  onChange={(e) => setPriceMax(e.target.value)}
+                  placeholder="Max"
+                  className="w-full rounded-md border border-[#ded3c2] bg-white px-3 py-2 text-sm text-[#2a2a2a] outline-none focus:border-[#2a2a2a] focus:ring-1 focus:ring-[#2a2a2a]"
+                />
+              </div>
+            </div>
+
+            {/* Clear filters button */}
+            {(urgencyFilter !== "all" ||
+              locationFilter !== "all" ||
+              serviceTypeFilter !== "all" ||
+              priceMin !== "" ||
+              priceMax !== "") && (
+              <button
+                onClick={() => {
+                  setUrgencyFilter("all");
+                  setLocationFilter("all");
+                  setServiceTypeFilter("all");
+                  setPriceMin("");
+                  setPriceMax("");
+                }}
+                className="rounded-md border border-[#ded3c2] bg-[#f7f4ef] px-4 py-2 text-xs font-medium text-[#2a2a2a] hover:bg-[#ded3c2] transition-colors"
+              >
+                Clear all
+              </button>
+            )}
+          </div>
+        </div>
 
         {loading ? (
           <p className="text-sm text-[#6b6b6b]">Loading leads…</p>
