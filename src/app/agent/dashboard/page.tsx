@@ -24,7 +24,9 @@ type RecentLead = {
   first_name: string | null;
   last_name: string | null;
   city: string | null;
+  province: string | null;
   urgency_level: string | null;
+  service_type: string | null;
   status: string | null;
   agent_status: string | null;
   assigned_agent_id: string | null;
@@ -68,14 +70,18 @@ export default function AgentDashboardPage() {
   const [pendingAuctions, setPendingAuctions] = useState<PendingAuction[]>([]);
   const [yourBids, setYourBids] = useState<YourBid[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
-    async function loadStats() {
+    let cancelled = false;
+
+    async function loadDashboard() {
       setLoading(true);
       try {
+        // Get current user
         const {
           data: { user },
         } = await supabaseClient.auth.getUser();
@@ -89,76 +95,73 @@ export default function AgentDashboardPage() {
         const agentId = user.id;
         setUserId(agentId);
 
-        // Calculate date 30 days ago
+        // Fetch dashboard data from API
+        const res = await fetch(`/api/agent/dashboard?agentId=${agentId}`);
+        
+        if (!res.ok) {
+          throw new Error("Failed to load dashboard");
+        }
+
+        const data = await res.json();
+
+        if (cancelled) return;
+
+        // Update stats
+        setStats({
+          available: data.stats.availableLeads ?? 0,
+          myLeads: data.stats.myLeads ?? 0,
+          newLeads: data.stats.newLeadsNeedingAttention ?? 0,
+          purchased: 0, // Not used in UI
+          purchasedThisMonth: data.stats.purchasedThisMonth ?? 0,
+          totalSpent: (data.stats.totalSpentCents ?? 0) / 100, // Convert to dollars
+        });
+
+        // Update recent leads (map to existing type)
+        setRecentLeads(
+          (data.recentLeads || []).map((lead: any) => ({
+            id: lead.id,
+            created_at: lead.created_at,
+            full_name: null,
+            first_name: null,
+            last_name: null,
+            city: lead.city,
+            province: lead.province,
+            urgency_level: lead.urgency_level,
+            service_type: lead.service_type,
+            status: lead.status,
+            agent_status: lead.agent_status,
+            assigned_agent_id: agentId,
+          }))
+        );
+
+        // Update your bids (map to existing type)
+        setYourBids(
+          (data.yourBids || []).map((bid: any) => ({
+            lead_id: bid.lead_id,
+            lead_city: bid.lead_city,
+            lead_urgency: bid.lead_urgency,
+            your_highest_bid: bid.amount,
+            is_highest_bidder: bid.is_highest,
+            auction_ends_at: bid.auction_ends_at,
+          }))
+        );
+
+        // Update pending auctions (map to existing type)
+        setPendingAuctions(
+          (data.pendingAuctions || []).map((auction: any) => ({
+            id: auction.lead_id,
+            city: auction.lead_city,
+            urgency_level: auction.lead_urgency,
+            auction_ends_at: auction.auction_ends_at,
+            current_bid_amount: auction.current_bid_amount,
+          }))
+        );
+
+        // Load top agents (keep existing logic for now)
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
         const thirtyDaysAgoISO = thirtyDaysAgo.toISOString();
 
-        // Load stats
-        const { count: availableCount } = await supabaseClient
-          .from("leads")
-          .select("id", { count: "exact", head: true })
-          .eq("status", "new");
-
-        const { count: myLeadsCount } = await supabaseClient
-          .from("leads")
-          .select("id", { count: "exact", head: true })
-          .eq("assigned_agent_id", agentId);
-
-        // Count new leads (agent_status = 'new')
-        const { count: newLeadsCount } = await supabaseClient
-          .from("leads")
-          .select("id", { count: "exact", head: true })
-          .eq("assigned_agent_id", agentId)
-          .eq("agent_status", "new");
-
-        const { count: purchasedCount } = await supabaseClient
-          .from("leads")
-          .select("id", { count: "exact", head: true })
-          .eq("assigned_agent_id", agentId)
-          .eq("status", "purchased_by_agent");
-
-        // Purchased this month
-        const { count: purchasedThisMonthCount } = await supabaseClient
-          .from("leads")
-          .select("id", { count: "exact", head: true })
-          .eq("assigned_agent_id", agentId)
-          .eq("status", "purchased_by_agent")
-          .gte("created_at", thirtyDaysAgoISO);
-
-        // Total spent (sum of price_charged_cents for purchased leads)
-        const { data: purchasedLeads } = await supabaseClient
-          .from("leads")
-          .select("price_charged_cents")
-          .eq("assigned_agent_id", agentId)
-          .eq("status", "purchased_by_agent");
-
-        const totalSpentCents =
-          purchasedLeads?.reduce(
-            (sum, lead) => sum + (lead.price_charged_cents || 0),
-            0
-          ) || 0;
-
-        setStats({
-          available: availableCount ?? 0,
-          myLeads: myLeadsCount ?? 0,
-          newLeads: newLeadsCount ?? 0,
-          purchased: purchasedCount ?? 0,
-          purchasedThisMonth: purchasedThisMonthCount ?? 0,
-          totalSpent: totalSpentCents / 100, // Convert to dollars
-        });
-
-        // Load recent leads (assigned to this agent, limit 5)
-        const { data: recentData } = await supabaseClient
-          .from("leads")
-          .select("id, created_at, full_name, first_name, last_name, city, urgency_level, status, agent_status, assigned_agent_id")
-          .eq("assigned_agent_id", agentId)
-          .order("created_at", { ascending: false })
-          .limit(5);
-
-        setRecentLeads((recentData || []) as RecentLead[]);
-
-        // Load top agents (purchased leads in last 30 days)
         const { data: purchasedLeadsData } = await supabaseClient
           .from("leads")
           .select("assigned_agent_id, created_at")
@@ -166,20 +169,17 @@ export default function AgentDashboardPage() {
           .not("assigned_agent_id", "is", null)
           .gte("created_at", thirtyDaysAgoISO);
 
-        // Group by agent_id and count
         const agentCounts: Record<string, number> = {};
         purchasedLeadsData?.forEach((lead) => {
           const aid = lead.assigned_agent_id as string;
           agentCounts[aid] = (agentCounts[aid] || 0) + 1;
         });
 
-        // Get top 5 agents
         const topAgentIds = Object.entries(agentCounts)
           .sort(([, a], [, b]) => b - a)
           .slice(0, 5)
           .map(([id]) => id);
 
-        // Fetch agent emails from profiles
         const { data: profilesData } = await supabaseClient
           .from("profiles")
           .select("id, email")
@@ -187,8 +187,6 @@ export default function AgentDashboardPage() {
 
         const topAgentsList: TopAgent[] = topAgentIds.map((aid) => {
           const profile = profilesData?.find((p) => p.id === aid);
-          // Try to get email from profile, or fall back to auth.users if needed
-          // For now, we'll use profile email or show truncated agent ID
           return {
             agent_id: aid,
             agent_email: profile?.email || `agent_${aid.slice(0, 8)}`,
@@ -196,79 +194,26 @@ export default function AgentDashboardPage() {
           };
         });
 
-        setTopAgents(topAgentsList);
-
-        // Load pending auctions (auction_enabled = true, ends_at in future, not purchased)
-        const now = new Date().toISOString();
-        const { data: auctionsData } = await supabaseClient
-          .from("leads")
-          .select("id, city, urgency_level, auction_ends_at, current_bid_amount")
-          .eq("auction_enabled", true)
-          .neq("status", "purchased_by_agent")
-          .gt("auction_ends_at", now)
-          .order("auction_ends_at", { ascending: true })
-          .limit(5);
-
-        setPendingAuctions((auctionsData || []) as PendingAuction[]);
-
-        // Load your bids
-        const { data: bidsData } = await supabaseClient
-          .from("lead_bids")
-          .select("lead_id, amount")
-          .eq("agent_id", agentId)
-          .order("created_at", { ascending: false });
-
-        // Get distinct lead_ids and find highest bid per lead for this agent
-        const leadBidMap: Record<string, number> = {};
-        bidsData?.forEach((bid) => {
-          const lid = bid.lead_id as string;
-          const amount = bid.amount as number;
-          if (!leadBidMap[lid] || amount > leadBidMap[lid]) {
-            leadBidMap[lid] = amount;
-          }
-        });
-
-        const yourBidLeadIds = Object.keys(leadBidMap).slice(0, 10);
-
-        if (yourBidLeadIds.length > 0) {
-          // Fetch lead info for these bids (only active auctions)
-          const nowISO = new Date().toISOString();
-          const { data: bidLeadsData } = await supabaseClient
-            .from("leads")
-            .select("id, city, urgency_level, current_bid_agent_id, auction_ends_at, auction_enabled")
-            .in("id", yourBidLeadIds)
-            .eq("auction_enabled", true)
-            .gt("auction_ends_at", nowISO)
-            .neq("status", "purchased_by_agent");
-
-          const yourBidsList: YourBid[] = (bidLeadsData || [])
-            .map((lead) => ({
-              lead_id: lead.id,
-              lead_city: lead.city || null,
-              lead_urgency: lead.urgency_level || null,
-              your_highest_bid: leadBidMap[lead.id],
-              is_highest_bidder: lead.current_bid_agent_id === agentId,
-              auction_ends_at: lead.auction_ends_at,
-            }))
-            .sort((a, b) => {
-              // Sort by auction_ends_at (soonest first)
-              if (!a.auction_ends_at) return 1;
-              if (!b.auction_ends_at) return -1;
-              return new Date(a.auction_ends_at).getTime() - new Date(b.auction_ends_at).getTime();
-            });
-
-          setYourBids(yourBidsList);
-        } else {
-          setYourBids([]);
+        if (!cancelled) {
+          setTopAgents(topAgentsList);
         }
       } catch (err) {
-        console.error("Error loading agent dashboard stats:", err);
+        console.error("Error loading agent dashboard:", err);
+        if (!cancelled) {
+          setError("Failed to load dashboard stats");
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     }
 
-    loadStats();
+    loadDashboard();
+
+    return () => {
+      cancelled = true;
+    };
   }, [router]);
 
   // Countdown timer for Your bids
@@ -394,6 +339,12 @@ export default function AgentDashboardPage() {
           </p>
         </div>
 
+        {error && (
+          <div className="mb-4 rounded-md border border-red-200 bg-red-50 px-4 py-3">
+            <p className="text-xs text-red-600">{error}</p>
+          </div>
+        )}
+
         {loading ? (
           <p className="text-sm text-[#6b6b6b]">Loading your stats…</p>
         ) : (
@@ -491,58 +442,36 @@ export default function AgentDashboardPage() {
                         </Link>
                       </div>
                     ) : (
-                      <div className="overflow-hidden rounded-md border border-slate-200 bg-white">
-                        <table className="min-w-full divide-y divide-slate-200 text-sm">
-                          <thead className="bg-slate-50">
-                            <tr>
-                              <th className="px-3 py-2 text-left text-xs font-semibold text-slate-500">
-                                Family
-                              </th>
-                              <th className="px-3 py-2 text-left text-xs font-semibold text-slate-500">
-                                Location
-                              </th>
-                              <th className="px-3 py-2 text-left text-xs font-semibold text-slate-500">
-                                Urgency
-                              </th>
-                              <th className="px-3 py-2 text-left text-xs font-semibold text-slate-500">
-                                Status
-                              </th>
-                              <th className="px-3 py-2 text-right text-xs font-semibold text-slate-500">
-                                Added
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-slate-100 bg-white">
-                            {recentLeads.map((lead) => {
-                              const owns = userId ? agentOwnsLead(lead, userId) : false;
-                              const rawName = lead.full_name || 
-                                (lead.first_name || lead.last_name
-                                  ? [lead.first_name, lead.last_name].filter(Boolean).join(" ")
-                                  : null);
-                              const displayName = owns && rawName ? rawName : (rawName ? maskName(rawName) : null);
+                      <div className="space-y-3">
+                        {recentLeads.map((lead) => {
                               const { bg: statusBg, text: statusText } = getStatusColors(lead.agent_status || lead.status);
                               
-                              // Format date as "MMM d" (e.g., "Jan 15")
+                              // Format date as "MMM d, YYYY" (e.g., "Nov 16, 2025")
                               const dateStr = lead.created_at
                                 ? new Date(lead.created_at).toLocaleDateString("en-US", {
                                     month: "short",
                                     day: "numeric",
+                                    year: "numeric",
                                   })
                                 : "—";
                               
+                              // Format location: "City, Province" or just "City"
+                              const locationStr = lead.city
+                                ? lead.province
+                                  ? `${lead.city}, ${lead.province}`
+                                  : lead.city
+                                : "Unknown location";
+                              
+                              // Format service type
+                              const serviceType = lead.service_type || "Pre-need planning";
+                              
                               return (
-                                <tr
+                                <div
                                   key={lead.id}
-                                  className="hover:bg-slate-50 cursor-pointer"
+                                  className="border-b border-slate-100 pb-3 last:border-0 last:pb-0 cursor-pointer hover:bg-slate-50 -mx-3 px-3 py-2 rounded"
                                   onClick={() => router.push(`/agent/leads/${lead.id}`)}
                                 >
-                                  <td className="px-3 py-2 text-slate-900">
-                                    {displayName ?? "—"}
-                                  </td>
-                                  <td className="px-3 py-2 text-slate-500">
-                                    {lead.city ?? "—"}
-                                  </td>
-                                  <td className="px-3 py-2">
+                                  <div className="flex items-center gap-2 mb-1">
                                     <span
                                       className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${getUrgencyColor(
                                         lead.urgency_level
@@ -550,22 +479,16 @@ export default function AgentDashboardPage() {
                                     >
                                       {formatUrgency(lead.urgency_level)}
                                     </span>
-                                  </td>
-                                  <td className="px-3 py-2 text-slate-500">
-                                    <span
-                                      className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${statusBg} ${statusText}`}
-                                    >
-                                      {formatStatus(lead.agent_status || lead.status)}
+                                    <span className="text-sm text-slate-900">
+                                      {serviceType} in {locationStr}
                                     </span>
-                                  </td>
-                                  <td className="px-3 py-2 text-right text-slate-400 text-xs">
-                                    {dateStr}
-                                  </td>
-                                </tr>
+                                  </div>
+                                  <div className="text-xs text-slate-500">
+                                    Status: <span className={`${statusText} font-medium`}>{formatStatus(lead.agent_status || lead.status)}</span> · Created {dateStr}
+                                  </div>
+                                </div>
                               );
                             })}
-                          </tbody>
-                        </table>
                       </div>
                     )}
                   </div>
@@ -607,6 +530,9 @@ export default function AgentDashboardPage() {
                               </div>
                               <div className="flex items-center gap-3 text-xs text-[#4a4a4a]">
                                 <span>Bid: ${bid.your_highest_bid.toFixed(2)}</span>
+                                <span className={bid.is_highest_bidder ? "text-emerald-600 font-semibold" : "text-slate-500"}>
+                                  {bid.is_highest_bidder ? "Highest bidder" : "Outbid"}
+                                </span>
                                 {bid.auction_ends_at && (
                                   <span className="font-mono">
                                     {formatCountdown(bid.auction_ends_at)}
@@ -691,6 +617,9 @@ export default function AgentDashboardPage() {
                                 minute: "2-digit",
                               })
                             : "Unknown";
+                          const countdown = auction.auction_ends_at
+                            ? formatCountdown(auction.auction_ends_at)
+                            : null;
                           return (
                             <div
                               key={auction.id}
@@ -709,14 +638,16 @@ export default function AgentDashboardPage() {
                                 </span>
                               </div>
                               <div className="mb-2 text-xs text-[#4a4a4a]">
-                                Ends: {endTimeStr}
-                              </div>
-                              <div className="mb-2 text-xs text-[#4a4a4a]">
                                 Current bid:{" "}
                                 {auction.current_bid_amount
                                   ? `$${auction.current_bid_amount.toFixed(2)}`
                                   : "No bids yet"}
                               </div>
+                              {countdown && (
+                                <div className="mb-2 text-xs text-[#4a4a4a] font-mono">
+                                  Ends in: {countdown}
+                                </div>
+                              )}
                               <Link
                                 href={`/agent/leads/${auction.id}`}
                                 className="text-xs font-medium text-[#6b6b6b] hover:text-[#2a2a2a] transition-colors"
