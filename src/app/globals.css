@@ -17,3 +17,15 @@ a {
 a:hover {
   @apply text-brand-700;
 }
+
+/* Premium hero background pattern */
+.hero-soft-pattern::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 0% 0%, rgba(255, 255, 255, 0.5) 0, transparent 55%),
+    radial-gradient(circle at 100% 0%, rgba(255, 255, 255, 0.4) 0, transparent 55%);
+  opacity: 0.7;
+  pointer-events: none;
+}

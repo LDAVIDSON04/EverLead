@@ -1,7 +1,24 @@
-// src/app/page.tsx
+"use client";
+
 import Link from "next/link";
+import { useState, useEffect } from "react";
 
 export default function HomePage() {
+  const [showVideoModal, setShowVideoModal] = useState(false);
+
+  // Handle Esc key to close modal
+  useEffect(() => {
+    if (!showVideoModal) return;
+
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setShowVideoModal(false);
+      }
+    };
+
+    document.addEventListener("keydown", handleEsc);
+    return () => document.removeEventListener("keydown", handleEsc);
+  }, [showVideoModal]);
   return (
     <main className="min-h-screen bg-[#faf8f5] text-[#2a2a2a]">
       {/* Header */}
@@ -52,7 +69,7 @@ export default function HomePage() {
       </header>
 
       {/* Hero Section */}
-      <section className="border-b border-slate-100 bg-gradient-to-b from-slate-50 to-slate-100/40">
+      <section className="relative border-b border-slate-200 bg-[radial-gradient(circle_at_top,_#fdf7f2,_#f5f2ee)] hero-soft-pattern">
         <div className="mx-auto flex max-w-4xl flex-col gap-6 px-4 py-16 text-center">
           <p className="text-xs font-semibold tracking-[0.2em] text-slate-500 uppercase">
             Funeral pre-planning
@@ -75,15 +92,16 @@ export default function HomePage() {
             >
               Begin the Questionnaire
             </Link>
-            <a
-              href="#video"
+            <button
+              type="button"
+              onClick={() => setShowVideoModal(true)}
               className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white px-5 py-3 text-base text-slate-700 shadow-sm hover:bg-slate-50 transition-colors"
             >
               <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 text-xs text-slate-600">
                 ▶
               </span>
               Watch Introduction Video
-            </a>
+            </button>
           </div>
         </div>
       </section>
@@ -470,6 +488,45 @@ export default function HomePage() {
           </div>
         </div>
       </footer>
+
+      {/* Video Modal */}
+      {showVideoModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 px-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowVideoModal(false);
+            }
+          }}
+        >
+          <div className="w-full max-w-3xl rounded-2xl bg-white shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+              <h2 className="text-sm font-semibold text-slate-900">
+                EverLead introduction
+              </h2>
+              <button
+                type="button"
+                onClick={() => setShowVideoModal(false)}
+                className="text-slate-400 hover:text-slate-600 text-2xl leading-none"
+                aria-label="Close modal"
+              >
+                ×
+              </button>
+            </div>
+            <div className="aspect-video w-full bg-slate-100">
+              {/* Placeholder video - replace URL later with actual EverLead intro video */}
+              <iframe
+                className="h-full w-full rounded-b-2xl"
+                src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+                title="EverLead introduction video"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
