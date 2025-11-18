@@ -1,0 +1,219 @@
+// src/app/api/leads/create/route.ts
+import { NextRequest, NextResponse } from "next/server";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
+
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
+export async function POST(req: NextRequest) {
+  try {
+    // Validate environment variables
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!supabaseUrl || !serviceRoleKey) {
+      console.error("Missing Supabase environment variables", {
+        hasUrl: !!supabaseUrl,
+        hasKey: !!serviceRoleKey,
+      });
+      return NextResponse.json(
+        {
+          error: "Database configuration error. Please contact support.",
+          details: "Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY environment variables",
+        },
+        { status: 500 }
+      );
+    }
+
+    // Parse request body
+    let body: any;
+    try {
+      body = await req.json();
+    } catch (err: any) {
+      console.error("Failed to parse request body", err);
+      return NextResponse.json(
+        {
+          error: "Invalid request body",
+          details: err?.message || String(err),
+        },
+        { status: 400 }
+      );
+    }
+
+    console.log("Questionnaire API: Received lead data", {
+      hasFirstName: !!body.first_name,
+      hasLastName: !!body.last_name,
+      hasEmail: !!body.email,
+      hasAge: !!body.age,
+      keys: Object.keys(body),
+    });
+
+    // Validate required fields
+    const requiredFields = [
+      "first_name",
+      "last_name",
+      "email",
+      "phone",
+      "address_line1",
+      "city",
+      "province",
+      "postal_code",
+      "age",
+      "sex",
+      "timeline_intent",
+      "service_type",
+      "planning_for",
+    ];
+
+    const missingFields = requiredFields.filter((field) => !body[field]);
+    if (missingFields.length > 0) {
+      console.error("Missing required fields", missingFields);
+      return NextResponse.json(
+        {
+          error: "Missing required fields",
+          details: `Missing: ${missingFields.join(", ")}`,
+        },
+        { status: 400 }
+      );
+    }
+
+    // Validate age
+    const age = Number(body.age);
+    if (isNaN(age) || age < 18 || age > 120) {
+      return NextResponse.json(
+        {
+          error: "Invalid age",
+          details: "Age must be between 18 and 120",
+        },
+        { status: 400 }
+      );
+    }
+
+    // Build insert payload
+    const leadData: any = {
+      first_name: String(body.first_name).trim(),
+      last_name: String(body.last_name).trim(),
+      full_name: `${body.first_name} ${body.last_name}`.trim(),
+      email: String(body.email).trim(),
+      phone: String(body.phone).trim(),
+      address_line1: String(body.address_line1).trim(),
+      city: String(body.city).trim(),
+      province: String(body.province).trim(),
+      postal_code: String(body.postal_code).trim(),
+      age: age,
+      sex: String(body.sex).trim(),
+      planning_for: String(body.planning_for).trim(),
+      service_type: String(body.service_type).trim(),
+      timeline_intent: String(body.timeline_intent).trim(),
+      urgency_level: body.urgency_level || "cold",
+      additional_notes: body.additional_notes ? String(body.additional_notes).trim() : null,
+      status: body.status || "new",
+      buy_now_price_cents: body.buy_now_price_cents || null,
+      auction_min_price_cents: body.auction_min_price_cents || null,
+    };
+
+    // Clean payload: remove null/undefined/empty
+    const cleanPayload: any = {};
+    for (const [key, value] of Object.entries(leadData)) {
+      if (value !== null && value !== undefined && value !== "") {
+        cleanPayload[key] = value;
+      }
+    }
+
+    console.log("Questionnaire API: Inserting lead", {
+      email: cleanPayload.email,
+      city: cleanPayload.city,
+      keys: Object.keys(cleanPayload),
+    });
+
+    // Insert into database using admin client (bypasses RLS)
+    const { data, error: insertError } = await supabaseAdmin
+      .from("leads")
+      .insert(cleanPayload)
+      .select()
+      .single();
+
+    if (insertError) {
+      console.error("Questionnaire DB error", {
+        message: insertError.message,
+        details: insertError.details,
+        hint: insertError.hint,
+        code: insertError.code,
+        leadData: cleanPayload,
+        fullError: insertError,
+      });
+
+      // Handle specific error codes
+      if (insertError.code === "42703" || insertError.message?.includes("column")) {
+        return NextResponse.json(
+          {
+            error: "Database configuration error. Please contact support.",
+            details: `Missing database column: ${insertError.message}`,
+            code: insertError.code,
+          },
+          { status: 500 }
+        );
+      }
+
+      if (insertError.code === "23505") {
+        return NextResponse.json(
+          {
+            error: "This email address is already registered. Please use a different email.",
+            details: insertError.message,
+          },
+          { status: 409 }
+        );
+      }
+
+      // Generic database error
+      return NextResponse.json(
+        {
+          error: "Database configuration error. Please contact support.",
+          details: insertError.message || String(insertError),
+          code: insertError.code,
+        },
+        { status: 500 }
+      );
+    }
+
+    if (!data) {
+      console.error("No data returned from insert, but no error either");
+      return NextResponse.json(
+        {
+          error: "Database configuration error. Please contact support.",
+          details: "Insert succeeded but no data returned",
+        },
+        { status: 500 }
+      );
+    }
+
+    console.log("Questionnaire API: Lead created successfully", {
+      leadId: data.id,
+      email: data.email,
+    });
+
+    return NextResponse.json(
+      {
+        success: true,
+        lead: data,
+      },
+      { status: 201 }
+    );
+  } catch (err: any) {
+    console.error("Questionnaire POST error", {
+      message: err?.message,
+      stack: err?.stack,
+      name: err?.name,
+      fullError: err,
+    });
+
+    return NextResponse.json(
+      {
+        error: "Database configuration error. Please contact support.",
+        details: err?.message || String(err),
+      },
+      { status: 500 }
+    );
+  }
+}
+

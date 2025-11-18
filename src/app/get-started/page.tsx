@@ -3,7 +3,6 @@
 
 import { FormEvent, useState } from "react";
 import Link from "next/link";
-import { supabaseClient } from "@/lib/supabaseClient";
 
 type FormState = "idle" | "submitting" | "success" | "error";
 
@@ -123,53 +122,58 @@ export default function GetStartedPage() {
 
     console.log("Submitting lead with payload:", cleanPayload);
 
-    const { data, error: insertError } = await supabaseClient
-      .from("leads")
-      .insert(cleanPayload)
-      .select()
-      .single();
-
-    if (insertError) {
-      // Log the full error for debugging
-      console.error("Lead submission failed", {
-        message: insertError.message,
-        details: insertError.details,
-        hint: insertError.hint,
-        code: insertError.code,
-        leadData: cleanPayload,
-        fullError: insertError,
+    // Call API route instead of direct Supabase insert (uses service role key)
+    try {
+      const response = await fetch("/api/leads/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(cleanPayload),
       });
-      
-      // If error is about missing columns, provide helpful message
-      if (insertError.message?.includes("column") || insertError.code === "42703") {
-        console.error("Database column error - missing column in leads table");
-        console.error("Error details:", insertError);
-        setError("Database configuration error. Please contact support.");
+
+      let responseBody: any = null;
+      try {
+        responseBody = await response.json();
+      } catch (e) {
+        console.error("Failed to parse error JSON", e);
+      }
+
+      if (!response.ok) {
+        console.error("Questionnaire submit failed", {
+          status: response.status,
+          statusText: response.statusText,
+          body: responseBody,
+        });
+
+        // Show specific error messages from API
+        if (responseBody?.error) {
+          setError(responseBody.error);
+        } else {
+          setError("Something went wrong submitting your information. Please check all fields and try again.");
+        }
         setFormState("error");
         return;
       }
-      
-      // If error is about constraint violation (e.g., unique email)
-      if (insertError.code === "23505") {
-        setError("This email address is already registered. Please use a different email.");
+
+      if (!responseBody?.success) {
+        console.error("API returned success=false", responseBody);
+        setError("Something went wrong submitting your information. Please check all fields and try again.");
         setFormState("error");
         return;
       }
-      
-      // Provide more helpful error message
-      setError("Something went wrong submitting your information. Please check all fields and try again.");
+
+      console.log("Lead submitted successfully:", responseBody.lead);
+    } catch (fetchError: any) {
+      console.error("Network error submitting questionnaire", {
+        message: fetchError?.message,
+        stack: fetchError?.stack,
+        fullError: fetchError,
+      });
+      setError("Network error. Please check your connection and try again.");
       setFormState("error");
       return;
     }
-
-    if (!data) {
-      console.error("No data returned from insert, but no error either");
-      setError("Something went wrong submitting your information. Please check all fields and try again.");
-      setFormState("error");
-      return;
-    }
-
-    console.log("Lead submitted successfully:", data);
 
     setFormState("success");
   }
