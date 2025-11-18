@@ -1,6 +1,6 @@
 // src/app/api/leads/create/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { createClient } from "@supabase/supabase-js";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -15,11 +15,36 @@ export async function POST(req: NextRequest) {
       console.error("Missing Supabase environment variables", {
         hasUrl: !!supabaseUrl,
         hasKey: !!serviceRoleKey,
+        urlLength: supabaseUrl?.length || 0,
+        keyLength: serviceRoleKey?.length || 0,
       });
       return NextResponse.json(
         {
           error: "Database configuration error. Please contact support.",
-          details: "Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY environment variables",
+          details: `Missing environment variables: ${!supabaseUrl ? "NEXT_PUBLIC_SUPABASE_URL" : ""} ${!serviceRoleKey ? "SUPABASE_SERVICE_ROLE_KEY" : ""}`.trim(),
+        },
+        { status: 500 }
+      );
+    }
+
+    // Create admin client directly here to avoid import-time errors
+    let supabaseAdmin;
+    try {
+      supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
+        auth: {
+          persistSession: false,
+        },
+      });
+    } catch (clientError: any) {
+      console.error("Failed to create Supabase admin client", {
+        message: clientError?.message,
+        stack: clientError?.stack,
+        fullError: clientError,
+      });
+      return NextResponse.json(
+        {
+          error: "Database configuration error. Please contact support.",
+          details: `Failed to create database client: ${clientError?.message || String(clientError)}`,
         },
         { status: 500 }
       );
@@ -145,11 +170,14 @@ export async function POST(req: NextRequest) {
 
       // Handle specific error codes
       if (insertError.code === "42703" || insertError.message?.includes("column")) {
+        const errorDetails = `Missing database column. Error: ${insertError.message || insertError.details || "Unknown column error"}. Please run the migration: supabase/migrations/add_questionnaire_fields.sql`;
+        console.error("Database column error:", errorDetails);
         return NextResponse.json(
           {
             error: "Database configuration error. Please contact support.",
-            details: `Missing database column: ${insertError.message}`,
+            details: errorDetails,
             code: insertError.code,
+            hint: insertError.hint,
           },
           { status: 500 }
         );

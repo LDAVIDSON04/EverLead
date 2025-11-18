@@ -29,7 +29,7 @@ export async function GET(_req: NextRequest) {
     }
 
     const totalExpenses = (expenses || []).reduce(
-      (sum, exp) => sum + Number(exp.amount || 0),
+      (sum: number, exp: any) => sum + Number(exp.amount || 0),
       0
     );
 

@@ -120,7 +120,7 @@ export async function GET(request: NextRequest) {
 
     const totalSpentCents =
       purchasedLeads?.reduce(
-        (sum, lead) => sum + (lead.price_charged_cents || 0),
+        (sum: number, lead: any) => sum + (lead.price_charged_cents || 0),
         0
       ) || 0;
 
@@ -150,7 +150,7 @@ export async function GET(request: NextRequest) {
       .limit(5);
 
     const recentBidsLeadIds =
-      recentBidsData?.map((bid) => bid.lead_id as string) || [];
+      recentBidsData?.map((bid: any) => bid.lead_id as string) || [];
 
     let recentBidsList: AgentDashboardData["recentBids"] = [];
 
@@ -162,11 +162,11 @@ export async function GET(request: NextRequest) {
         .in("id", recentBidsLeadIds);
 
       const leadMap = new Map(
-        (recentBidLeadsData || []).map((lead) => [lead.id, lead])
+        (recentBidLeadsData || []).map((lead: any) => [lead.id, lead])
       );
 
-      recentBidsList = (recentBidsData || []).map((bid) => {
-        const lead = leadMap.get(bid.lead_id as string);
+      recentBidsList = (recentBidsData || []).map((bid: any) => {
+        const lead: any = leadMap.get(bid.lead_id as string);
         return {
           id: bid.id,
           leadId: bid.lead_id as string,
@@ -189,7 +189,7 @@ export async function GET(request: NextRequest) {
 
     // Group by lead_id to get highest bid per lead
     const leadBidMap: Record<string, number> = {};
-    bidsData?.forEach((bid) => {
+    bidsData?.forEach((bid: any) => {
       const lid = bid.lead_id as string;
       const amount = bid.amount as number;
       if (!leadBidMap[lid] || amount > leadBidMap[lid]) {
@@ -213,7 +213,7 @@ export async function GET(request: NextRequest) {
         .gt("auction_ends_at", nowISO)
         .neq("status", "purchased_by_agent");
 
-      yourBidsList = (bidLeadsData || []).map((lead) => ({
+      yourBidsList = (bidLeadsData || []).map((lead: any) => ({
         lead_id: lead.id,
         lead_city: lead.city || null,
         lead_urgency: lead.urgency_level || null,
@@ -250,12 +250,12 @@ export async function GET(request: NextRequest) {
       allPendingAuctions || []
     )
       .filter(
-        (auction) =>
+        (auction: any) =>
           auction.current_bid_agent_id === agentId ||
           agentBidLeadIds.has(auction.id)
       )
       .slice(0, 5)
-      .map((auction) => ({
+      .map((auction: any) => ({
         lead_id: auction.id,
         lead_city: auction.city || null,
         lead_urgency: auction.urgency_level || null,
@@ -273,7 +273,7 @@ export async function GET(request: NextRequest) {
         totalSpentCents: totalSpentCents,
         newLeadsNeedingAttention: newLeadsCount ?? 0,
       },
-      recentLeads: (recentLeadsData || []).map((lead) => ({
+      recentLeads: (recentLeadsData || []).map((lead: any) => ({
         id: lead.id,
         created_at: lead.created_at || "",
         city: lead.city || null,

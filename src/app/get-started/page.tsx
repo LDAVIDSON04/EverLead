@@ -146,9 +146,18 @@ export default function GetStartedPage() {
           body: responseBody,
         });
 
-        // Show specific error messages from API
+        // Show specific error messages from API, including details if available
         if (responseBody?.error) {
-          setError(responseBody.error);
+          let errorMessage = responseBody.error;
+          // Include details in console for debugging, but show user-friendly message
+          if (responseBody.details) {
+            console.error("Error details:", responseBody.details);
+            // For development, show more details
+            if (process.env.NODE_ENV === "development") {
+              errorMessage = `${responseBody.error}: ${responseBody.details}`;
+            }
+          }
+          setError(errorMessage);
         } else {
           setError("Something went wrong submitting your information. Please check all fields and try again.");
         }
