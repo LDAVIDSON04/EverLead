@@ -478,92 +478,173 @@ export default function AdminDashboardPage() {
 
         {/* Agents Tab */}
         {activeTab === "agents" && (
-          <div>
-            <h2
-              className="mb-4 text-lg font-normal text-[#2a2a2a]"
-              style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-            >
-              Agents
-            </h2>
-
-            {/* Total Agents Count */}
-            <div className="mb-6 rounded-xl border border-slate-200 bg-white/80 px-6 py-4 shadow-sm">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium uppercase tracking-[0.15em] text-[#6b6b6b]">
-                    Total Agents Signed Up
-                  </p>
-                  <p className="mt-1 text-3xl font-semibold text-[#2a2a2a]">
-                    {totalAgentsCount}
-                  </p>
+          <div className="space-y-8">
+            {/* Total Agents Section */}
+            <div>
+              <h2
+                className="mb-4 text-lg font-normal text-[#2a2a2a]"
+                style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+              >
+                Agent Overview
+              </h2>
+              <div className="rounded-xl border border-slate-200 bg-white/80 px-6 py-6 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-[0.15em] text-[#6b6b6b]">
+                      Total Agents in System
+                    </p>
+                    <p className="mt-2 text-4xl font-semibold text-[#2a2a2a]">
+                      {totalAgentsCount}
+                    </p>
+                    <p className="mt-2 text-sm text-[#6b6b6b]">
+                      {totalAgentsCount === 1 ? "agent" : "agents"} registered
+                    </p>
+                  </div>
+                  <div className="rounded-full bg-[#f7f4ef] p-4">
+                    <svg
+                      className="h-8 w-8 text-[#2a2a2a]"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                      />
+                    </svg>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Top Agents Table */}
-            {topAgents.length > 0 ? (
-              <div>
-                <h3
-                  className="mb-4 text-base font-normal text-[#2a2a2a]"
-                  style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-                >
-                  Top Agents (by purchases & spending)
-                </h3>
-                <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white/70 shadow-sm">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-slate-200 bg-[#faf8f5]">
-                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
-                          Agent email
-                        </th>
-                        <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
-                          Leads purchased (all-time)
-                        </th>
-                        <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
-                          Leads purchased (last 30 days)
-                        </th>
-                        <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
-                          Total spent
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {topAgents.map((agent) => {
-                        // Display email as primary label (not ID)
-                        const email = agent.agent_email || `agent_${agent.agent_id.slice(0, 8)}`;
-                        const displayEmail = email.length > 40 ? `${email.slice(0, 37)}…` : email;
-                        const revenue = agent.revenue || 0;
-                        return (
-                          <tr
-                            key={agent.agent_id}
-                            className="border-b border-slate-100 hover:bg-[#faf8f5]"
-                          >
-                            <td className="px-4 py-3 text-[#4a4a4a] font-medium">
-                              {displayEmail}
-                            </td>
-                            <td className="px-4 py-3 text-right font-semibold text-[#2a2a2a]">
-                              {agent.purchased_count_all_time}
-                            </td>
-                            <td className="px-4 py-3 text-right font-semibold text-[#2a2a2a]">
-                              {agent.purchased_count_last_30_days}
-                            </td>
-                            <td className="px-4 py-3 text-right font-semibold text-[#2a2a2a]">
-                              ${(revenue / 100).toFixed(2)}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
+            {/* Leaderboard Section */}
+            <div>
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <h2
+                    className="text-lg font-normal text-[#2a2a2a]"
+                    style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+                  >
+                    Agent Leaderboard
+                  </h2>
+                  <p className="mt-1 text-sm text-[#6b6b6b]">
+                    Top performers by purchases and spending
+                  </p>
                 </div>
               </div>
-            ) : (
-              <div className="rounded-xl border border-slate-200 bg-white/70 px-6 py-8 text-center shadow-sm">
-                <p className="text-sm text-[#6b6b6b]">
-                  No agents have purchased leads yet.
-                </p>
-              </div>
-            )}
+
+              {topAgents.length > 0 ? (
+                <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-slate-200 bg-[#faf8f5]">
+                          <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                            Rank
+                          </th>
+                          <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                            Agent Email
+                          </th>
+                          <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                            Leads Purchased
+                          </th>
+                          <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                            Last 30 Days
+                          </th>
+                          <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                            Total Spent
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {topAgents.map((agent, index) => {
+                          const email = agent.agent_email || `agent_${agent.agent_id.slice(0, 8)}`;
+                          const displayEmail = email.length > 40 ? `${email.slice(0, 37)}…` : email;
+                          const revenue = agent.revenue || 0;
+                          const rank = index + 1;
+                          
+                          // Medal colors for top 3
+                          const rankColor =
+                            rank === 1
+                              ? "text-yellow-600"
+                              : rank === 2
+                              ? "text-slate-400"
+                              : rank === 3
+                              ? "text-amber-600"
+                              : "text-[#6b6b6b]";
+
+                          return (
+                            <tr
+                              key={agent.agent_id}
+                              className="hover:bg-[#faf8f5] transition-colors"
+                            >
+                              <td className="px-6 py-4">
+                                <div className="flex items-center gap-2">
+                                  <span className={`text-lg font-bold ${rankColor}`}>
+                                    #{rank}
+                                  </span>
+                                  {rank <= 3 && (
+                                    <span className="text-lg">
+                                      {rank === 1 ? "🥇" : rank === 2 ? "🥈" : "🥉"}
+                                    </span>
+                                  )}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4">
+                                <div className="font-medium text-[#2a2a2a]">
+                                  {displayEmail}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 text-right">
+                                <span className="font-semibold text-[#2a2a2a]">
+                                  {agent.purchased_count_all_time}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 text-right">
+                                <span className="font-semibold text-[#2a2a2a]">
+                                  {agent.purchased_count_last_30_days}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 text-right">
+                                <span className="font-semibold text-[#2a2a2a]">
+                                  ${(revenue / 100).toFixed(2)}
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ) : (
+                <div className="rounded-xl border border-slate-200 bg-white/70 px-8 py-12 text-center shadow-sm">
+                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#f7f4ef]">
+                    <svg
+                      className="h-8 w-8 text-[#6b6b6b]"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                  </div>
+                  <p className="text-base font-medium text-[#2a2a2a]">
+                    No purchases yet
+                  </p>
+                  <p className="mt-1 text-sm text-[#6b6b6b]">
+                    Agents will appear here once they start purchasing leads.
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
