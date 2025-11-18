@@ -43,15 +43,7 @@ export async function POST(req: Request, context: any): Promise<Response> {
       );
     }
 
-    // Validate amount
-    if (!amount || typeof amount !== "number" || amount <= 0) {
-      return NextResponse.json(
-        { error: "Invalid bid amount. Must be a positive number." },
-        { status: 400 }
-      );
-    }
-
-    // Load the lead
+    // Load the lead first (needed for validation)
     const { data: lead, error: leadError } = await supabaseAdmin
       .from("leads")
       .select("*")
@@ -93,25 +85,29 @@ export async function POST(req: Request, context: any): Promise<Response> {
       }
     }
 
-    // Validate bid amount with $1 minimum increment
-    const MIN_INCREMENT = 1.0; // dollars
-    const currentBid = lead.current_bid_amount ?? 0;
-    const minAllowed = currentBid > 0 ? currentBid + MIN_INCREMENT : MIN_INCREMENT;
-
-    if (amount < minAllowed) {
+    // Validate bid amount - enforce $1 minimum increment
+    const newBid = Number(amount);
+    if (Number.isNaN(newBid) || newBid <= 0) {
       return NextResponse.json(
-        { error: `Bid must be at least $${minAllowed.toFixed(2)}.` },
+        { error: "Invalid bid amount." },
         { status: 400 }
       );
     }
 
-    // Convert amount to cents for storage (if we store in cents) or keep in dollars
-    // Based on the codebase, it seems prices are stored in cents, but bids might be in dollars
-    // For consistency, let's store bid amount in dollars (as numeric)
-    const bidAmount = amount;
+    const current = lead.current_bid_amount ?? 0;
+
+    if (newBid < current + 1) {
+      return NextResponse.json(
+        { error: `Your bid must be at least $${current + 1}.` },
+        { status: 400 }
+      );
+    }
+
+    // Use the validated newBid amount
+    const bidAmount = newBid;
 
     // Insert bid and update lead (we'll do this in sequence since Supabase doesn't support transactions easily)
-    const { data: newBid, error: bidInsertError } = await supabaseAdmin
+    const { data: insertedBid, error: bidInsertError } = await supabaseAdmin
       .from("lead_bids")
       .insert({
         lead_id: leadId,
@@ -143,7 +139,7 @@ export async function POST(req: Request, context: any): Promise<Response> {
     if (updateError) {
       console.error("Lead update error", updateError);
       // Try to rollback the bid insert (optional, but good practice)
-      await supabaseAdmin.from("lead_bids").delete().eq("id", newBid.id);
+      await supabaseAdmin.from("lead_bids").delete().eq("id", insertedBid.id);
       return NextResponse.json(
         { error: "Failed to update lead" },
         { status: 500 }
@@ -152,7 +148,7 @@ export async function POST(req: Request, context: any): Promise<Response> {
 
     return NextResponse.json({
       lead: updatedLead,
-      bid: newBid,
+      bid: insertedBid,
     });
   } catch (err: any) {
     console.error("Bid error", err);

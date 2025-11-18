@@ -494,14 +494,15 @@ export default function AdminDashboardPage() {
                     </thead>
                     <tbody>
                       {topAgents.map((agent) => {
-                        const email = agent.agent_email || agent.agent_id;
+                        // Display email as primary label (not ID)
+                        const email = agent.agent_email || `agent_${agent.agent_id.slice(0, 8)}`;
                         const displayEmail = email.length > 40 ? `${email.slice(0, 37)}…` : email;
                         return (
                           <tr
                             key={agent.agent_id}
                             className="border-b border-slate-100 hover:bg-[#faf8f5]"
                           >
-                            <td className="px-4 py-3 text-[#4a4a4a]">
+                            <td className="px-4 py-3 text-[#4a4a4a] font-medium">
                               {displayEmail}
                             </td>
                             <td className="px-4 py-3 text-right font-semibold text-[#2a2a2a]">

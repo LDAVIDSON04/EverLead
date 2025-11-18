@@ -55,7 +55,8 @@ export default function AvailableLeadsPage() {
   const [availableLocations, setAvailableLocations] = useState<string[]>([]);
   
   // Geographic search state
-  const [search, setSearch] = useState<string>("");
+  const [locationQuery, setLocationQuery] = useState<string>("");
+  const [provinceFilter, setProvinceFilter] = useState<string>("");
   
   // Countdown timer state
   const [now, setNow] = useState(() => new Date());
@@ -538,15 +539,29 @@ export default function AvailableLeadsPage() {
         )}
 
         {/* Geographic Search */}
-        <div className="mb-4 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-          <h2 className="text-lg font-semibold text-slate-900">Available leads</h2>
+        <div className="mb-4 flex flex-wrap gap-3 items-end">
+          <h2 className="text-lg font-semibold text-slate-900 w-full sm:w-auto">Available leads</h2>
           <input
             type="text"
-            placeholder="Search by city, province, or postal code…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full md:w-80 rounded-lg border border-slate-200 px-3 py-2 text-sm shadow-sm focus:border-slate-400 focus:outline-none"
+            placeholder="Search by city or postal code"
+            value={locationQuery}
+            onChange={(e) => setLocationQuery(e.target.value)}
+            className="border rounded-md px-3 py-2 text-sm w-full sm:w-64"
           />
+          <select
+            value={provinceFilter}
+            onChange={(e) => setProvinceFilter(e.target.value)}
+            className="border rounded-md px-3 py-2 text-sm w-full sm:w-48"
+          >
+            <option value="">All provinces</option>
+            {availableLocations
+              .filter((loc) => loc && !loc.includes(","))
+              .map((loc) => (
+                <option key={loc} value={loc}>
+                  {loc}
+                </option>
+              ))}
+          </select>
         </div>
 
         {/* Filters */}
@@ -679,22 +694,18 @@ export default function AvailableLeadsPage() {
         ) : (() => {
           // Apply client-side filters
           const filteredLeads = leads.filter((lead) => {
-            // Geographic search filter
-            const searchTerm = search.trim().toLowerCase();
-            if (searchTerm) {
-              const haystack = [
-                lead.city,
-                lead.province,
-                lead.postal_code,
-                lead.service_type,
-              ]
-                .filter(Boolean)
-                .join(" ")
-                .toLowerCase();
-              
-              if (!haystack.includes(searchTerm)) {
-                return false;
-              }
+            // Geographic search filter - city or postal code
+            const matchesLocation =
+              !locationQuery ||
+              lead.city?.toLowerCase().includes(locationQuery.toLowerCase()) ||
+              lead.postal_code?.toLowerCase().includes(locationQuery.toLowerCase());
+
+            // Province filter
+            const matchesProvince =
+              !provinceFilter || lead.province === provinceFilter;
+
+            if (!matchesLocation || !matchesProvince) {
+              return false;
             }
 
             // Urgency filter
