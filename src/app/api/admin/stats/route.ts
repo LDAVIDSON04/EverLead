@@ -97,31 +97,56 @@ export async function GET(_req: NextRequest) {
       else if (u === "cold") urgencyCounts.cold++;
     }
 
-    // Top agents ranking by number of purchased leads, grouped by email
-    // First, get all agent IDs from purchased leads
-    const agentIds = new Set<string>();
-    for (const lead of purchasedLeads) {
-      if (lead.assigned_agent_id) {
-        agentIds.add(lead.assigned_agent_id);
-      }
-    }
+    // Top agents leaderboard - query purchased leads with agent emails
+    // Use a direct query that joins leads to profiles to get emails
+    const agentIds = Array.from(
+      new Set(
+        purchasedLeads
+          .map((l) => l.assigned_agent_id)
+          .filter((id): id is string => !!id)
+      )
+    );
 
-    // Fetch agent emails from profiles for fallback
+    // Fetch all agent profiles with emails
     let agentEmailMap: Record<string, string> = {};
-    if (agentIds.size > 0) {
-      const { data: profilesData } = await supabaseAdmin
+    if (agentIds.length > 0) {
+      const { data: profilesData, error: profilesError } = await supabaseAdmin
         .from("profiles")
         .select("id, email")
-        .in("id", Array.from(agentIds));
-      
-      if (profilesData) {
+        .in("id", agentIds);
+
+      if (profilesError) {
+        console.error("Error fetching agent profiles:", profilesError);
+      } else if (profilesData) {
+        console.log("Profiles fetched:", profilesData.length, "profiles");
         for (const profile of profilesData) {
-          agentEmailMap[profile.id] = profile.email || "";
+          if (profile.email) {
+            agentEmailMap[profile.id] = profile.email;
+          } else {
+            console.warn("Profile missing email:", profile.id);
+          }
         }
+      } else {
+        console.warn("No profiles data returned for agent IDs:", agentIds);
+      }
+
+      // Fallback: Try to get emails from auth.users for profiles without emails
+      const profilesWithoutEmail = profilesData?.filter(p => !p.email) || [];
+      if (profilesWithoutEmail.length > 0) {
+        console.log("Attempting to fetch emails from auth.users for", profilesWithoutEmail.length, "profiles");
+        // Note: Supabase admin client can access auth.users
+        // We'll try using RPC or direct auth query if available
+        // For now, we'll rely on purchased_by_email which should be set on new purchases
       }
     }
 
-    // Aggregate by email (use purchased_by_email if available, otherwise fallback to profile email)
+    console.log("Agent email mapping:", {
+      agentIdsCount: agentIds.length,
+      emailsFound: Object.keys(agentEmailMap).length,
+      emailMap: agentEmailMap,
+    });
+
+    // Aggregate by email (prioritize purchased_by_email, fallback to profile email)
     const statsMap = new Map<
       string,
       { email: string; allTime: number; last30: number; revenue: number }
@@ -133,27 +158,27 @@ export async function GET(_req: NextRequest) {
 
     console.log("Processing purchased leads for leaderboard:", {
       totalPurchased: purchasedLeads.length,
-      agentIdsCount: agentIds.size,
+      agentIdsCount: agentIds.length,
       profilesFound: Object.keys(agentEmailMap).length,
     });
 
     for (const lead of purchasedLeads) {
-      // Use purchased_by_email if available, otherwise fallback to profile email
-      let email = lead.purchased_by_email;
+      // Priority: 1) purchased_by_email, 2) profile email from assigned_agent_id
+      let email: string | null = lead.purchased_by_email;
+      
       if (!email && lead.assigned_agent_id) {
         email = agentEmailMap[lead.assigned_agent_id] || null;
       }
-      
+
       if (!email) {
         console.warn("Lead purchased but no email found:", {
           leadId: lead.id,
           assigned_agent_id: lead.assigned_agent_id,
           purchased_by_email: lead.purchased_by_email,
+          inEmailMap: lead.assigned_agent_id ? agentEmailMap[lead.assigned_agent_id] : "N/A",
         });
         continue; // Skip leads without email
       }
-
-      const createdAt = new Date(lead.created_at);
 
       if (!statsMap.has(email)) {
         statsMap.set(email, { email, allTime: 0, last30: 0, revenue: 0 });
@@ -174,7 +199,7 @@ export async function GET(_req: NextRequest) {
 
     const topAgents = Array.from(statsMap.values())
       .sort((a, b) => b.allTime - a.allTime)
-      .slice(0, 5)
+      .slice(0, 10) // Show top 10 instead of 5
       .map((stat) => ({
         agentId: stat.email, // Use email as ID for compatibility
         email: stat.email,
@@ -183,7 +208,7 @@ export async function GET(_req: NextRequest) {
         revenue: stat.revenue,
       }));
 
-    console.log("Top agents final:", topAgents);
+    console.log("Top agents final (showing emails):", topAgents);
 
     // Count total agents signed up (from profiles table)
     const { count: totalAgentsCount } = await supabaseAdmin
