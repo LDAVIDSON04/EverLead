@@ -106,8 +106,16 @@ export default function AdminLeadDetailPage() {
         }
       }
 
-      if (auctionEndsAt) {
-        updateData.auction_ends_at = new Date(auctionEndsAt).toISOString();
+      // If auction is enabled and no end time is set, default to 24 hours from now
+      if (auctionEnabled) {
+        if (auctionEndsAt) {
+          updateData.auction_ends_at = new Date(auctionEndsAt).toISOString();
+        } else {
+          // Default to 24 hours from now
+          const now = new Date();
+          const twentyFourHoursLater = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+          updateData.auction_ends_at = twentyFourHoursLater.toISOString();
+        }
       } else {
         updateData.auction_ends_at = null;
       }

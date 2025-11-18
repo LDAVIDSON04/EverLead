@@ -20,6 +20,14 @@ type DashboardStats = {
   soldViaAuction: number;
 };
 
+type GeoStat = {
+  city: string | null;
+  province: string | null;
+  totalLeads: number;
+  soldLeads: number;
+  totalRevenueCents: number;
+};
+
 type ApiStatsResponse = {
   ok: boolean;
   totalLeads: number;
@@ -35,6 +43,7 @@ type ApiStatsResponse = {
     agentId: string;
     purchasedCount: number;
   }>;
+  geography?: GeoStat[];
   error?: string;
 };
 
@@ -65,6 +74,8 @@ export default function AdminDashboardPage() {
   const [recentLeads, setRecentLeads] = useState<RecentLead[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [geography, setGeography] = useState<GeoStat[]>([]);
+  const [marketingSpend, setMarketingSpend] = useState<number | "">("");
 
   useEffect(() => {
     async function loadStats() {
@@ -94,6 +105,11 @@ export default function AdminDashboardPage() {
           soldViaBuyNow: 0, // Will be loaded separately if needed
           soldViaAuction: 0, // Will be loaded separately if needed
         });
+
+        // Set geography data
+        if (apiData.geography) {
+          setGeography(apiData.geography);
+        }
 
         // Fetch agent emails for top agents
         if (apiData.topAgents.length > 0) {
@@ -394,6 +410,102 @@ export default function AdminDashboardPage() {
                   })}
                 </tbody>
               </table>
+            </div>
+          </div>
+        )}
+
+        {/* Marketing ROI Card */}
+        <div className="mb-8">
+          <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+            <h2 className="text-sm font-semibold text-slate-900">
+              Marketing ROI (admin-only)
+            </h2>
+            <p className="mt-1 text-xs text-slate-500">
+              Enter your monthly marketing spend to estimate your return based on EverLead revenue.
+            </p>
+
+            <div className="mt-3 flex items-center gap-2">
+              <span className="text-sm text-slate-600">$</span>
+              <input
+                type="number"
+                min={0}
+                value={marketingSpend}
+                onChange={(e) =>
+                  setMarketingSpend(
+                    e.target.value === "" ? "" : Number(e.target.value)
+                  )
+                }
+                className="w-32 rounded-md border border-slate-200 px-2 py-1 text-sm"
+                placeholder="0"
+              />
+              <span className="text-xs text-slate-500">per month</span>
+            </div>
+
+            <div className="mt-3 text-sm text-slate-700">
+              <div>Total revenue (all time): {formatMoney(stats.totalRevenueCents)}</div>
+              {(() => {
+                const spendNumber =
+                  typeof marketingSpend === "number"
+                    ? marketingSpend
+                    : parseFloat(String(marketingSpend || "0"));
+                const roi =
+                  spendNumber > 0 ? stats.totalRevenueCents / 100 / spendNumber : null;
+                
+                return roi !== null ? (
+                  <div className="mt-1">
+                    Estimated ROI:{" "}
+                    <span className="font-semibold">
+                      {roi.toFixed(1)}x
+                    </span>
+                  </div>
+                ) : (
+                  <div className="mt-1 text-xs text-slate-500">
+                    Enter a spend amount to see your estimated ROI.
+                  </div>
+                );
+              })()}
+            </div>
+          </div>
+        </div>
+
+        {/* Geography Section */}
+        {geography.length > 0 && (
+          <div className="mb-8">
+            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+              <h2 className="text-sm font-semibold text-slate-900">
+                Geography (where leads and sales come from)
+              </h2>
+              <p className="mt-1 text-xs text-slate-500">
+                Top regions by total leads and sales.
+              </p>
+
+              <div className="mt-3 overflow-x-auto">
+                <table className="min-w-full text-left text-xs">
+                  <thead className="border-b border-slate-200 text-slate-500">
+                    <tr>
+                      <th className="py-1 pr-3">Region</th>
+                      <th className="py-1 pr-3">Total leads</th>
+                      <th className="py-1 pr-3">Sold leads</th>
+                      <th className="py-1 pr-3">Revenue</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {geography.map((geo, idx) => (
+                      <tr key={`${geo.city}-${geo.province}-${idx}`} className="border-b border-slate-100">
+                        <td className="py-1 pr-3">
+                          {(geo.city || "Unknown city") +
+                            (geo.province ? `, ${geo.province}` : "")}
+                        </td>
+                        <td className="py-1 pr-3">{geo.totalLeads}</td>
+                        <td className="py-1 pr-3">{geo.soldLeads}</td>
+                        <td className="py-1 pr-3">
+                          {formatMoney(geo.totalRevenueCents)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         )}

@@ -13,6 +13,8 @@ type Lead = {
   id: string;
   created_at: string | null;
   city: string | null;
+  province: string | null;
+  postal_code: string | null;
   urgency_level: string | null;
   status: string | null;
   service_type: string | null;
@@ -51,6 +53,9 @@ export default function AvailableLeadsPage() {
   const [minPrice, setMinPrice] = useState<string>("");
   const [maxPrice, setMaxPrice] = useState<string>("");
   const [availableLocations, setAvailableLocations] = useState<string[]>([]);
+  
+  // Geographic search state
+  const [search, setSearch] = useState<string>("");
   
   // Countdown timer state
   const [now, setNow] = useState(() => new Date());
@@ -532,6 +537,18 @@ export default function AvailableLeadsPage() {
           </div>
         )}
 
+        {/* Geographic Search */}
+        <div className="mb-4 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+          <h2 className="text-lg font-semibold text-slate-900">Available leads</h2>
+          <input
+            type="text"
+            placeholder="Search by city, province, or postal code…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full md:w-80 rounded-lg border border-slate-200 px-3 py-2 text-sm shadow-sm focus:border-slate-400 focus:outline-none"
+          />
+        </div>
+
         {/* Filters */}
         <div className="mb-6 rounded-lg border border-[#ded3c2] bg-white p-4 shadow-sm">
           <div className="mb-3 flex items-center gap-2">
@@ -662,6 +679,24 @@ export default function AvailableLeadsPage() {
         ) : (() => {
           // Apply client-side filters
           const filteredLeads = leads.filter((lead) => {
+            // Geographic search filter
+            const searchTerm = search.trim().toLowerCase();
+            if (searchTerm) {
+              const haystack = [
+                lead.city,
+                lead.province,
+                lead.postal_code,
+                lead.service_type,
+              ]
+                .filter(Boolean)
+                .join(" ")
+                .toLowerCase();
+              
+              if (!haystack.includes(searchTerm)) {
+                return false;
+              }
+            }
+
             // Urgency filter
             if (urgencyFilter !== "all") {
               const leadUrgency = (lead.urgency_level ?? "").toLowerCase();

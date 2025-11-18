@@ -93,14 +93,16 @@ export async function POST(req: Request, context: any): Promise<Response> {
       }
     }
 
-    // Validate bid amount is higher than current bid
-    if (lead.current_bid_amount !== null && lead.current_bid_amount !== undefined) {
-      if (amount <= lead.current_bid_amount) {
-        return NextResponse.json(
-          { error: `Bid must be higher than current bid of $${lead.current_bid_amount.toFixed(2)}` },
-          { status: 400 }
-        );
-      }
+    // Validate bid amount with $1 minimum increment
+    const MIN_INCREMENT = 1.0; // dollars
+    const currentBid = lead.current_bid_amount ?? 0;
+    const minAllowed = currentBid > 0 ? currentBid + MIN_INCREMENT : MIN_INCREMENT;
+
+    if (amount < minAllowed) {
+      return NextResponse.json(
+        { error: `Bid must be at least $${minAllowed.toFixed(2)}.` },
+        { status: 400 }
+      );
     }
 
     // Convert amount to cents for storage (if we store in cents) or keep in dollars

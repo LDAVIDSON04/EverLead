@@ -30,46 +30,70 @@ export default function GetStartedPage() {
     const auction_min_price_cents =
       urgency_level === "hot" ? 50 : urgency_level === "warm" ? 50 : null; // $0.50 for testing
 
-    // Capture age from form (but don't insert as a column - it doesn't exist in DB)
-    const ageValue = formData.get("age");
-    let ageText = "";
-    if (ageValue) {
-      const parsed = parseInt(ageValue as string, 10);
-      if (!isNaN(parsed) && parsed >= 18 && parsed <= 120) {
-        ageText = `Age: ${parsed}`;
-      } else {
-        setError("Please enter a valid age between 18 and 120.");
+    // Validate required fields
+    const requiredFields = [
+      "full_name",
+      "email",
+      "phone",
+      "address_line1",
+      "city",
+      "postal_code",
+      "age",
+      "sex",
+    ];
+
+    for (const field of requiredFields) {
+      const value = formData.get(field);
+      if (!value || (typeof value === "string" && value.trim() === "")) {
+        setError(`Please fill in all required fields. Missing: ${field.replace("_", " ")}`);
         setFormState("error");
         return;
       }
     }
 
-    // Combine age with additional notes
+    // Validate age
+    const ageValue = formData.get("age");
+    const ageParsed = parseInt(ageValue as string, 10);
+    if (isNaN(ageParsed) || ageParsed < 18 || ageParsed > 120) {
+      setError("Please enter a valid age between 18 and 120.");
+      setFormState("error");
+      return;
+    }
+
+    // Capture age and sex for notes (since they may not be DB columns)
+    const ageText = `Age: ${ageParsed}`;
+    const sexValue = formData.get("sex") as string;
+    const sexText = sexValue ? `Sex: ${sexValue}` : "";
+
+    // Combine age, sex with additional notes
     const additionalNotes = formData.get("additional_notes") || "";
-    const combinedNotes = [ageText, additionalNotes].filter(Boolean).join("\n\n");
+    const combinedNotes = [ageText, sexText, additionalNotes].filter(Boolean).join("\n\n");
 
     // Build the insert payload - only include fields that exist in the DB
     const leadData: any = {
       full_name: formData.get("full_name") || null,
       email: formData.get("email") || null,
       phone: formData.get("phone") || null,
+      address_line1: formData.get("address_line1") || null,
       city: formData.get("city") || null,
       province: formData.get("province") || null,
       postal_code: formData.get("postal_code") || null,
-      // age column removed - doesn't exist in DB
-      // age_range: null, // Removed - not needed
       planning_for: formData.get("planning_for") || null,
       service_type: formData.get("service_type") || null,
       timeline_intent,
       urgency_level,
-      additional_notes: combinedNotes || null, // Includes age text if provided
+      additional_notes: combinedNotes || null, // Includes age and sex text
       status: urgency_level === "cold" ? "cold_unassigned" : "new",
       buy_now_price_cents,
       auction_min_price_cents,
       budget_range: null, // Explicitly set to null for backward compatibility
     };
 
-    const { error: insertError } = await supabaseClient.from("leads").insert(leadData);
+    const { data, error: insertError } = await supabaseClient
+      .from("leads")
+      .insert(leadData)
+      .select()
+      .single();
 
     if (insertError) {
       // Log the full error for debugging
@@ -82,11 +106,13 @@ export default function GetStartedPage() {
       });
       
       // Provide more helpful error message
-      if (insertError.message?.includes("column") || insertError.message?.includes("field")) {
-        setError(`There was an issue with the form data: ${insertError.message}. Please check all fields and try again.`);
-      } else {
-        setError(insertError.message || "Something went wrong. Please try again.");
-      }
+      setError("Something went wrong submitting your information. Please check all fields and try again.");
+      setFormState("error");
+      return;
+    }
+
+    if (!data) {
+      setError("Something went wrong submitting your information. Please check all fields and try again.");
       setFormState("error");
       return;
     }
@@ -159,7 +185,7 @@ export default function GetStartedPage() {
               <div className="space-y-4">
                 <div>
                   <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
-                    Full name
+                    Full name *
                   </label>
                   <input
                     name="full_name"
@@ -170,7 +196,7 @@ export default function GetStartedPage() {
 
                 <div>
                   <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
-                    Email
+                    Email *
                   </label>
                   <input
                     type="email"
@@ -182,24 +208,35 @@ export default function GetStartedPage() {
 
                 <div>
                   <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
-                    Phone
+                    Phone *
                   </label>
                   <input
                     name="phone"
+                    type="tel"
+                    required
                     className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
                   />
-                  <p className="mt-1 text-[11px] text-slate-500">
-                    Optional, but helpful if a specialist needs to reach you.
-                  </p>
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
+                    Address Line 1 *
+                  </label>
+                  <input
+                    name="address_line1"
+                    required
+                    className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
+                  />
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-3">
                   <div>
                     <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
-                      City
+                      City *
                     </label>
                     <input
                       name="city"
+                      required
                       className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
                     />
                   </div>
@@ -217,10 +254,11 @@ export default function GetStartedPage() {
 
                   <div>
                     <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
-                      Postal code
+                      Postal code *
                     </label>
                     <input
                       name="postal_code"
+                      required
                       className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
                     />
                   </div>
@@ -229,7 +267,7 @@ export default function GetStartedPage() {
                 <div className="grid gap-4 md:grid-cols-2">
                   <div>
                     <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
-                      Your Age
+                      Age *
                     </label>
                     <input
                       type="number"
@@ -243,19 +281,36 @@ export default function GetStartedPage() {
 
                   <div>
                     <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
-                      Who are you planning for?
+                      Sex *
                     </label>
                     <select
-                      name="planning_for"
+                      name="sex"
+                      required
                       className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
                     >
                       <option value="">Select...</option>
-                      <option value="myself">Myself</option>
-                      <option value="spouse_partner">Spouse / Partner</option>
-                      <option value="parent">Parent</option>
-                      <option value="other_family">Other family member</option>
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                      <option value="Other">Other</option>
+                      <option value="Prefer not to say">Prefer not to say</option>
                     </select>
                   </div>
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
+                    Who are you planning for?
+                  </label>
+                  <select
+                    name="planning_for"
+                    className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
+                  >
+                    <option value="">Select...</option>
+                    <option value="myself">Myself</option>
+                    <option value="spouse_partner">Spouse / Partner</option>
+                    <option value="parent">Parent</option>
+                    <option value="other_family">Other family member</option>
+                  </select>
                 </div>
               </div>
             </div>

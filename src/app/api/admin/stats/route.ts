@@ -88,6 +88,46 @@ export async function GET(_req: NextRequest) {
       .sort((a, b) => b.purchasedCount - a.purchasedCount)
       .slice(0, 5);
 
+    // Geographic aggregation
+    type GeoStat = {
+      city: string | null;
+      province: string | null;
+      totalLeads: number;
+      soldLeads: number;
+      totalRevenueCents: number;
+    };
+
+    const geoMap = new Map<string, GeoStat>();
+
+    for (const lead of allLeads) {
+      const city = lead.city ?? "";
+      const province = lead.province ?? "";
+      const key = `${city}__${province}`;
+
+      const isSold = lead.price_charged_cents && lead.price_charged_cents > 0;
+
+      if (!geoMap.has(key)) {
+        geoMap.set(key, {
+          city: city || null,
+          province: province || null,
+          totalLeads: 0,
+          soldLeads: 0,
+          totalRevenueCents: 0,
+        });
+      }
+
+      const stat = geoMap.get(key)!;
+      stat.totalLeads += 1;
+      if (isSold) {
+        stat.soldLeads += 1;
+        stat.totalRevenueCents += lead.price_charged_cents ?? 0;
+      }
+    }
+
+    const geography = Array.from(geoMap.values()).sort(
+      (a, b) => b.totalLeads - a.totalLeads
+    );
+
     return NextResponse.json(
       {
         ok: true,
@@ -97,6 +137,7 @@ export async function GET(_req: NextRequest) {
         leadsLast7Days,
         urgencyCounts,
         topAgents,
+        geography,
       },
       { status: 200 }
     );
