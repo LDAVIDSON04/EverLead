@@ -58,51 +58,74 @@ export default function GetStartedPage() {
 
     // Validate age
     const ageValue = formData.get("age");
-    const ageParsed = ageValue ? Number(ageValue) : null;
+    const ageStr = ageValue ? String(ageValue).trim() : "";
+    const ageParsed = ageStr ? Number(ageStr) : null;
     if (!ageParsed || isNaN(ageParsed) || ageParsed < 18 || ageParsed > 120) {
       setError("Please enter a valid age between 18 and 120.");
       setFormState("error");
       return;
     }
 
+    // Validate email format
+    const emailValue = (formData.get("email") as string)?.trim() || "";
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailValue)) {
+      setError("Please enter a valid email address.");
+      setFormState("error");
+      return;
+    }
+
     // Get form values
-    const sexValue = formData.get("sex") as string;
-    const additionalNotes = formData.get("additional_notes") || "";
+    const sexValue = (formData.get("sex") as string) || "";
+    const additionalNotesValue = formData.get("additional_notes");
+    const additionalNotes = typeof additionalNotesValue === "string" ? additionalNotesValue : "";
 
     // Build the insert payload - ensure types are correct
     const leadData: any = {
-      first_name: (formData.get("first_name") as string) || null,
-      last_name: (formData.get("last_name") as string) || null,
-      email: (formData.get("email") as string) || null,
-      phone: (formData.get("phone") as string) || null,
-      address_line1: (formData.get("address_line1") as string) || null,
-      city: (formData.get("city") as string) || null,
-      province: (formData.get("province") as string) || null,
-      postal_code: (formData.get("postal_code") as string) || null,
-      age: ageParsed, // Number type
-      sex: sexValue || null,
-      planning_for: (formData.get("planning_for") as string) || null,
-      service_type: (formData.get("service_type") as string) || null,
-      timeline_intent,
+      first_name: (formData.get("first_name") as string)?.trim() || null,
+      last_name: (formData.get("last_name") as string)?.trim() || null,
+      email: emailValue.trim(),
+      phone: (formData.get("phone") as string)?.trim() || null,
+      address_line1: (formData.get("address_line1") as string)?.trim() || null,
+      city: (formData.get("city") as string)?.trim() || null,
+      province: (formData.get("province") as string)?.trim() || null,
+      postal_code: (formData.get("postal_code") as string)?.trim() || null,
+      age: ageParsed, // Number type (validated above)
+      sex: sexValue?.trim() || null,
+      planning_for: (formData.get("planning_for") as string)?.trim() || null,
+      service_type: (formData.get("service_type") as string)?.trim() || null,
+      timeline_intent: timeline_intent.trim(),
       urgency_level,
-      additional_notes: additionalNotes || null,
+      additional_notes: additionalNotes?.trim() || null,
       status: urgency_level === "cold" ? "cold_unassigned" : "new",
       buy_now_price_cents,
       auction_min_price_cents,
-      budget_range: null,
     };
 
-    // Try to insert - if first_name/last_name don't exist, fall back to full_name
-    let insertPayload = { ...leadData };
-    
-    // If DB uses full_name instead of first_name/last_name, combine them
-    if (leadData.first_name && leadData.last_name) {
-      insertPayload.full_name = `${leadData.first_name} ${leadData.last_name}`.trim();
+    // Always include full_name for backward compatibility
+    const insertPayload = {
+      ...leadData,
+      full_name: `${leadData.first_name} ${leadData.last_name}`.trim(),
+    };
+
+    // Clean payload: only include fields that exist, remove null/undefined/empty strings
+    const cleanPayload: any = {};
+    for (const [key, value] of Object.entries(insertPayload)) {
+      if (value !== null && value !== undefined && value !== "") {
+        cleanPayload[key] = value;
+      }
     }
+
+    // Ensure full_name exists for backward compatibility (even if other fields were filtered)
+    if (!cleanPayload.full_name && leadData.first_name && leadData.last_name) {
+      cleanPayload.full_name = `${leadData.first_name} ${leadData.last_name}`.trim();
+    }
+
+    console.log("Submitting lead with payload:", cleanPayload);
 
     const { data, error: insertError } = await supabaseClient
       .from("leads")
-      .insert(insertPayload)
+      .insert(cleanPayload)
       .select()
       .single();
 
@@ -113,52 +136,23 @@ export default function GetStartedPage() {
         details: insertError.details,
         hint: insertError.hint,
         code: insertError.code,
-        leadData: insertPayload,
+        leadData: cleanPayload,
+        fullError: insertError,
       });
       
-      // If error is about missing columns, try fallback approach
-      if (insertError.message?.includes("column")) {
-        console.log("Retrying with fallback column names");
-        const fallbackData: any = {
-          full_name: insertPayload.full_name || `${leadData.first_name} ${leadData.last_name}`.trim(),
-          email: leadData.email,
-          phone: leadData.phone,
-          address_line1: leadData.address_line1,
-          city: leadData.city,
-          province: leadData.province,
-          postal_code: leadData.postal_code,
-          planning_for: leadData.planning_for,
-          service_type: leadData.service_type,
-          timeline_intent: leadData.timeline_intent,
-          urgency_level: leadData.urgency_level,
-          additional_notes: `Age: ${leadData.age}\nSex: ${leadData.sex}\n\n${leadData.additional_notes || ""}`.trim(),
-          status: leadData.status,
-          buy_now_price_cents: leadData.buy_now_price_cents,
-          auction_min_price_cents: leadData.auction_min_price_cents,
-          budget_range: null,
-        };
-        
-        const { data: retryDataResult, error: retryError } = await supabaseClient
-          .from("leads")
-          .insert(fallbackData)
-          .select()
-          .single();
-        
-        if (retryError) {
-          console.error("Retry also failed:", retryError);
-          setError("Something went wrong submitting your information. Please check all fields and try again.");
-          setFormState("error");
-          return;
-        }
-        
-        if (!retryDataResult) {
-          setError("Something went wrong submitting your information. Please check all fields and try again.");
-          setFormState("error");
-          return;
-        }
-        
-        // Success on retry
-        setFormState("success");
+      // If error is about missing columns, provide helpful message
+      if (insertError.message?.includes("column") || insertError.code === "42703") {
+        console.error("Database column error - missing column in leads table");
+        console.error("Error details:", insertError);
+        setError("Database configuration error. Please contact support.");
+        setFormState("error");
+        return;
+      }
+      
+      // If error is about constraint violation (e.g., unique email)
+      if (insertError.code === "23505") {
+        setError("This email address is already registered. Please use a different email.");
+        setFormState("error");
         return;
       }
       
@@ -169,10 +163,13 @@ export default function GetStartedPage() {
     }
 
     if (!data) {
+      console.error("No data returned from insert, but no error either");
       setError("Something went wrong submitting your information. Please check all fields and try again.");
       setFormState("error");
       return;
     }
+
+    console.log("Lead submitted successfully:", data);
 
     setFormState("success");
   }
