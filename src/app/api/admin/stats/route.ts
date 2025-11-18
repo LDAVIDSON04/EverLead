@@ -76,17 +76,44 @@ export async function GET(_req: NextRequest) {
       else if (u === "cold") urgencyCounts.cold++;
     }
 
-    // Very simple "top agents" ranking by number of purchased leads
+    // Top agents ranking by number of purchased leads, with emails
     const agentPurchaseCounts: Record<string, number> = {};
+    const agentRevenue: Record<string, number> = {};
+    
     for (const lead of purchasedLeads) {
       if (!lead.assigned_agent_id) continue;
       agentPurchaseCounts[lead.assigned_agent_id] =
         (agentPurchaseCounts[lead.assigned_agent_id] ?? 0) + 1;
+      agentRevenue[lead.assigned_agent_id] =
+        (agentRevenue[lead.assigned_agent_id] ?? 0) + (lead.price_charged_cents ?? 0);
     }
-    const topAgents = Object.entries(agentPurchaseCounts)
-      .map(([agentId, count]) => ({ agentId, purchasedCount: count }))
-      .sort((a, b) => b.purchasedCount - a.purchasedCount)
-      .slice(0, 5);
+    
+    const topAgentIds = Object.entries(agentPurchaseCounts)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 5)
+      .map(([id]) => id);
+
+    // Fetch agent emails from profiles
+    let agentEmailMap: Record<string, string> = {};
+    if (topAgentIds.length > 0) {
+      const { data: profilesData } = await supabaseAdmin
+        .from("profiles")
+        .select("id, email")
+        .in("id", topAgentIds);
+      
+      if (profilesData) {
+        for (const profile of profilesData) {
+          agentEmailMap[profile.id] = profile.email || "";
+        }
+      }
+    }
+
+    const topAgents = topAgentIds.map((agentId) => ({
+      agentId,
+      email: agentEmailMap[agentId] || `agent_${agentId.slice(0, 8)}`,
+      purchasedCount: agentPurchaseCounts[agentId] || 0,
+      revenue: agentRevenue[agentId] || 0,
+    }));
 
     // Geographic aggregation
     type GeoStat = {

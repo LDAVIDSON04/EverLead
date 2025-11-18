@@ -32,14 +32,19 @@ export default function GetStartedPage() {
 
     // Validate required fields
     const requiredFields = [
-      "full_name",
+      "first_name",
+      "last_name",
       "email",
       "phone",
       "address_line1",
       "city",
+      "province",
       "postal_code",
       "age",
       "sex",
+      "timeline_intent",
+      "service_type",
+      "planning_for",
     ];
 
     for (const field of requiredFields) {
@@ -53,47 +58,51 @@ export default function GetStartedPage() {
 
     // Validate age
     const ageValue = formData.get("age");
-    const ageParsed = parseInt(ageValue as string, 10);
-    if (isNaN(ageParsed) || ageParsed < 18 || ageParsed > 120) {
+    const ageParsed = ageValue ? Number(ageValue) : null;
+    if (!ageParsed || isNaN(ageParsed) || ageParsed < 18 || ageParsed > 120) {
       setError("Please enter a valid age between 18 and 120.");
       setFormState("error");
       return;
     }
 
-    // Capture age and sex for notes (since they may not be DB columns)
-    const ageText = `Age: ${ageParsed}`;
+    // Get form values
     const sexValue = formData.get("sex") as string;
-    const sexText = sexValue ? `Sex: ${sexValue}` : "";
-
-    // Combine age, sex with additional notes
     const additionalNotes = formData.get("additional_notes") || "";
-    const combinedNotes = [ageText, sexText, additionalNotes].filter(Boolean).join("\n\n");
 
-    // Build the insert payload - include age and sex if columns exist
+    // Build the insert payload - ensure types are correct
     const leadData: any = {
-      full_name: formData.get("full_name") || null,
-      email: formData.get("email") || null,
-      phone: formData.get("phone") || null,
-      address_line1: formData.get("address_line1") || null,
-      city: formData.get("city") || null,
-      province: formData.get("province") || null,
-      postal_code: formData.get("postal_code") || null,
-      age: ageParsed, // Try to insert age directly
-      sex: sexValue || null, // Try to insert sex directly
-      planning_for: formData.get("planning_for") || null,
-      service_type: formData.get("service_type") || null,
+      first_name: (formData.get("first_name") as string) || null,
+      last_name: (formData.get("last_name") as string) || null,
+      email: (formData.get("email") as string) || null,
+      phone: (formData.get("phone") as string) || null,
+      address_line1: (formData.get("address_line1") as string) || null,
+      city: (formData.get("city") as string) || null,
+      province: (formData.get("province") as string) || null,
+      postal_code: (formData.get("postal_code") as string) || null,
+      age: ageParsed, // Number type
+      sex: sexValue || null,
+      planning_for: (formData.get("planning_for") as string) || null,
+      service_type: (formData.get("service_type") as string) || null,
       timeline_intent,
       urgency_level,
-      additional_notes: combinedNotes || null, // Also includes age and sex text as backup
+      additional_notes: additionalNotes || null,
       status: urgency_level === "cold" ? "cold_unassigned" : "new",
       buy_now_price_cents,
       auction_min_price_cents,
-      budget_range: null, // Explicitly set to null for backward compatibility
+      budget_range: null,
     };
+
+    // Try to insert - if first_name/last_name don't exist, fall back to full_name
+    let insertPayload = { ...leadData };
+    
+    // If DB uses full_name instead of first_name/last_name, combine them
+    if (leadData.first_name && leadData.last_name) {
+      insertPayload.full_name = `${leadData.first_name} ${leadData.last_name}`.trim();
+    }
 
     const { data, error: insertError } = await supabaseClient
       .from("leads")
-      .insert(leadData)
+      .insert(insertPayload)
       .select()
       .single();
 
@@ -104,19 +113,34 @@ export default function GetStartedPage() {
         details: insertError.details,
         hint: insertError.hint,
         code: insertError.code,
-        leadData: leadData,
+        leadData: insertPayload,
       });
       
-      // If error is about missing columns (age/sex), try again without them
-      if (insertError.message?.includes("column") && (insertError.message?.includes("age") || insertError.message?.includes("sex"))) {
-        console.log("Retrying without age/sex columns, storing in notes instead");
-        const retryData = { ...leadData };
-        delete retryData.age;
-        delete retryData.sex;
+      // If error is about missing columns, try fallback approach
+      if (insertError.message?.includes("column")) {
+        console.log("Retrying with fallback column names");
+        const fallbackData: any = {
+          full_name: insertPayload.full_name || `${leadData.first_name} ${leadData.last_name}`.trim(),
+          email: leadData.email,
+          phone: leadData.phone,
+          address_line1: leadData.address_line1,
+          city: leadData.city,
+          province: leadData.province,
+          postal_code: leadData.postal_code,
+          planning_for: leadData.planning_for,
+          service_type: leadData.service_type,
+          timeline_intent: leadData.timeline_intent,
+          urgency_level: leadData.urgency_level,
+          additional_notes: `Age: ${leadData.age}\nSex: ${leadData.sex}\n\n${leadData.additional_notes || ""}`.trim(),
+          status: leadData.status,
+          buy_now_price_cents: leadData.buy_now_price_cents,
+          auction_min_price_cents: leadData.auction_min_price_cents,
+          budget_range: null,
+        };
         
         const { data: retryDataResult, error: retryError } = await supabaseClient
           .from("leads")
-          .insert(retryData)
+          .insert(fallbackData)
           .select()
           .single();
         
@@ -216,15 +240,27 @@ export default function GetStartedPage() {
                 About you
               </h2>
               <div className="space-y-4">
-                <div>
-                  <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
-                    Full name *
-                  </label>
-                  <input
-                    name="full_name"
-                    required
-                    className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
-                  />
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
+                      First name *
+                    </label>
+                    <input
+                      name="first_name"
+                      required
+                      className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
+                      Last name *
+                    </label>
+                    <input
+                      name="last_name"
+                      required
+                      className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
+                    />
+                  </div>
                 </div>
 
                 <div>
@@ -276,11 +312,12 @@ export default function GetStartedPage() {
 
                   <div>
                     <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
-                      Province / State
+                      Province / State *
                     </label>
                     <input
                       name="province"
                       defaultValue="BC"
+                      required
                       className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
                     />
                   </div>
@@ -332,10 +369,11 @@ export default function GetStartedPage() {
 
                 <div>
                   <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
-                    Who are you planning for?
+                    Who are you planning for? *
                   </label>
                   <select
                     name="planning_for"
+                    required
                     className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
                   >
                     <option value="">Select...</option>
@@ -364,19 +402,18 @@ export default function GetStartedPage() {
               <div className="space-y-4">
                 <div>
                   <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
-                    Service type
+                    Service type *
                   </label>
                   <select
                     name="service_type"
+                    required
                     className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
                   >
-                    <option value="">Not sure / need guidance</option>
+                    <option value="">Select...</option>
                     <option value="cremation">Cremation</option>
                     <option value="burial">Burial</option>
+                    <option value="other">Other</option>
                   </select>
-                  <p className="mt-1 text-[11px] text-slate-500">
-                    You can always change this later as you learn more.
-                  </p>
                 </div>
               </div>
             </div>
@@ -415,6 +452,9 @@ export default function GetStartedPage() {
                       I&apos;m just browsing / not sure
                     </option>
                   </select>
+                  <p className="mt-1 text-[11px] text-slate-500">
+                    This helps us understand your timeline and urgency.
+                  </p>
                 </div>
 
                 <div>

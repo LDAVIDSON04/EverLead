@@ -41,7 +41,9 @@ type ApiStatsResponse = {
   };
   topAgents: Array<{
     agentId: string;
+    email: string;
     purchasedCount: number;
+    revenue: number;
   }>;
   geography?: GeoStat[];
   error?: string;
@@ -75,8 +77,19 @@ export default function AdminDashboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [geography, setGeography] = useState<GeoStat[]>([]);
-  const [marketingSpend, setMarketingSpend] = useState<number | "">("");
-  const [activeTab, setActiveTab] = useState<"overview" | "auctions" | "agents" | "geography" | "recent">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "auctions" | "agents" | "geography" | "recent" | "roi">("overview");
+  
+  // ROI state
+  const [expenses, setExpenses] = useState<any[]>([]);
+  const [totalExpenses, setTotalExpenses] = useState(0);
+  const [loadingExpenses, setLoadingExpenses] = useState(false);
+  const [newExpense, setNewExpense] = useState({
+    expense_date: new Date().toISOString().split("T")[0],
+    amount: "",
+    description: "",
+    channel: "",
+  });
+  const [submittingExpense, setSubmittingExpense] = useState(false);
 
   useEffect(() => {
     async function loadStats() {
@@ -112,24 +125,14 @@ export default function AdminDashboardPage() {
           setGeography(apiData.geography);
         }
 
-        // Fetch agent emails for top agents
-        if (apiData.topAgents.length > 0) {
-          const topAgentIds = apiData.topAgents.map((a) => a.agentId);
-          const { data: profilesData } = await supabaseClient
-            .from("profiles")
-            .select("id, email")
-            .in("id", topAgentIds);
-
-          const topAgentsList: TopAgent[] = apiData.topAgents.map((apiAgent) => {
-            const profile = profilesData?.find((p) => p.id === apiAgent.agentId);
-            return {
-              agent_id: apiAgent.agentId,
-              agent_email: profile?.email || null,
-              purchased_count_all_time: apiAgent.purchasedCount,
-              purchased_count_last_30_days: 0, // API doesn't provide this yet
-            };
-          });
-
+        // Map top agents from API (emails are now included in API response)
+        if (apiData.topAgents && apiData.topAgents.length > 0) {
+          const topAgentsList: TopAgent[] = apiData.topAgents.map((apiAgent: any) => ({
+            agent_id: apiAgent.agentId,
+            agent_email: apiAgent.email || null,
+            purchased_count_all_time: apiAgent.purchasedCount || 0,
+            purchased_count_last_30_days: 0, // API doesn't provide this yet
+          }));
           setTopAgents(topAgentsList);
         } else {
           setTopAgents([]);
@@ -183,6 +186,71 @@ export default function AdminDashboardPage() {
 
     loadStats();
   }, []);
+
+  // Load expenses function
+  async function loadExpenses() {
+    setLoadingExpenses(true);
+    try {
+      const res = await fetch("/api/admin/expenses");
+      if (!res.ok) {
+        throw new Error("Failed to load expenses");
+      }
+      const data = await res.json();
+      setExpenses(data.expenses || []);
+      setTotalExpenses(data.totals?.totalExpenses || 0);
+    } catch (err) {
+      console.error("Error loading expenses:", err);
+    } finally {
+      setLoadingExpenses(false);
+    }
+  }
+
+  // Load expenses when ROI tab is active
+  useEffect(() => {
+    if (activeTab === "roi") {
+      loadExpenses();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
+
+  // Handle add expense
+  async function handleAddExpense(e: React.FormEvent) {
+    e.preventDefault();
+    setSubmittingExpense(true);
+    try {
+      const res = await fetch("/api/admin/expenses", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          expense_date: newExpense.expense_date,
+          amount: Number(newExpense.amount),
+          description: newExpense.description || null,
+          channel: newExpense.channel || null,
+        }),
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Failed to add expense");
+      }
+
+      // Reset form
+      setNewExpense({
+        expense_date: new Date().toISOString().split("T")[0],
+        amount: "",
+        description: "",
+        channel: "",
+      });
+
+      // Reload expenses
+      await loadExpenses();
+    } catch (err) {
+      console.error("Error adding expense:", err);
+      alert("Failed to add expense. Please try again.");
+    } finally {
+      setSubmittingExpense(false);
+    }
+  }
 
   if (error) {
     return (
@@ -273,6 +341,7 @@ export default function AdminDashboardPage() {
               { id: "agents" as const, label: "Agents" },
               { id: "geography" as const, label: "Geography" },
               { id: "recent" as const, label: "Recent leads" },
+              { id: "roi" as const, label: "ROI" },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -346,59 +415,6 @@ export default function AdminDashboardPage() {
               </div>
             </div>
 
-            {/* Marketing ROI Card */}
-            <div>
-              <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-                <h2 className="text-sm font-semibold text-slate-900">
-                  Marketing ROI (admin-only)
-                </h2>
-                <p className="mt-1 text-xs text-slate-500">
-                  Enter your monthly marketing spend to estimate your return based on EverLead revenue.
-                </p>
-
-                <div className="mt-3 flex items-center gap-2">
-                  <span className="text-sm text-slate-600">$</span>
-                  <input
-                    type="number"
-                    min={0}
-                    value={marketingSpend}
-                    onChange={(e) =>
-                      setMarketingSpend(
-                        e.target.value === "" ? "" : Number(e.target.value)
-                      )
-                    }
-                    className="w-32 rounded-md border border-slate-200 px-2 py-1 text-sm"
-                    placeholder="0"
-                  />
-                  <span className="text-xs text-slate-500">per month</span>
-                </div>
-
-                <div className="mt-3 text-sm text-slate-700">
-                  <div>Total revenue (all time): {formatMoney(stats.totalRevenueCents)}</div>
-                  {(() => {
-                    const spendNumber =
-                      typeof marketingSpend === "number"
-                        ? marketingSpend
-                        : parseFloat(String(marketingSpend || "0"));
-                    const roi =
-                      spendNumber > 0 ? stats.totalRevenueCents / 100 / spendNumber : null;
-                    
-                    return roi !== null ? (
-                      <div className="mt-1">
-                        Estimated ROI:{" "}
-                        <span className="font-semibold">
-                          {roi.toFixed(1)}x
-                        </span>
-                      </div>
-                    ) : (
-                      <div className="mt-1 text-xs text-slate-500">
-                        Enter a spend amount to see your estimated ROI.
-                      </div>
-                    );
-                  })()}
-                </div>
-              </div>
-            </div>
           </div>
         )}
 
@@ -478,8 +494,8 @@ export default function AdminDashboardPage() {
                     </thead>
                     <tbody>
                       {topAgents.map((agent) => {
-                        const email = agent.agent_email || `agent_${agent.agent_id.slice(0, 8)}`;
-                        const displayEmail = email.length > 30 ? `${email.slice(0, 27)}…` : email;
+                        const email = agent.agent_email || agent.agent_id;
+                        const displayEmail = email.length > 40 ? `${email.slice(0, 37)}…` : email;
                         return (
                           <tr
                             key={agent.agent_id}
@@ -631,6 +647,189 @@ export default function AdminDashboardPage() {
                   ))}
                 </tbody>
               </table>
+            </div>
+          </div>
+        )}
+
+        {/* ROI Tab */}
+        {activeTab === "roi" && (
+          <div>
+            <h2
+              className="mb-4 text-lg font-normal text-[#2a2a2a]"
+              style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+            >
+              ROI Tracker
+            </h2>
+
+            {/* Summary Cards */}
+            <div className="mb-6 grid gap-4 md:grid-cols-4">
+              <div className="rounded-xl border border-slate-200 bg-white/80 px-4 py-3 shadow-sm flex flex-col gap-1">
+                <span className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                  Total Revenue
+                </span>
+                <span className="text-2xl font-semibold text-slate-900">
+                  {formatMoney(stats.totalRevenueCents)}
+                </span>
+              </div>
+              <div className="rounded-xl border border-slate-200 bg-white/80 px-4 py-3 shadow-sm flex flex-col gap-1">
+                <span className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                  Total Expenses
+                </span>
+                <span className="text-2xl font-semibold text-slate-900">
+                  ${totalExpenses.toFixed(2)}
+                </span>
+              </div>
+              <div className="rounded-xl border border-slate-200 bg-white/80 px-4 py-3 shadow-sm flex flex-col gap-1">
+                <span className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                  Net Profit
+                </span>
+                <span className={`text-2xl font-semibold ${
+                  (stats.totalRevenueCents / 100 - totalExpenses) >= 0
+                    ? "text-green-600"
+                    : "text-red-600"
+                }`}>
+                  ${((stats.totalRevenueCents / 100) - totalExpenses).toFixed(2)}
+                </span>
+              </div>
+              <div className="rounded-xl border border-slate-200 bg-white/80 px-4 py-3 shadow-sm flex flex-col gap-1">
+                <span className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                  ROI %
+                </span>
+                <span className={`text-2xl font-semibold ${
+                  totalExpenses > 0 && ((stats.totalRevenueCents / 100 - totalExpenses) / totalExpenses * 100) >= 0
+                    ? "text-green-600"
+                    : "text-red-600"
+                }`}>
+                  {totalExpenses > 0
+                    ? `${(((stats.totalRevenueCents / 100 - totalExpenses) / totalExpenses) * 100).toFixed(1)}%`
+                    : "—"}
+                </span>
+              </div>
+            </div>
+
+            {/* Two Column Layout */}
+            <div className="grid gap-6 md:grid-cols-2">
+              {/* New Expense Form */}
+              <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                <h3
+                  className="mb-4 text-base font-semibold text-[#2a2a2a]"
+                  style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+                >
+                  Add Expense
+                </h3>
+                <form
+                  onSubmit={handleAddExpense}
+                  className="space-y-4"
+                >
+                  <div>
+                    <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
+                      Date *
+                    </label>
+                    <input
+                      type="date"
+                      required
+                      value={newExpense.expense_date}
+                      onChange={(e) =>
+                        setNewExpense({ ...newExpense, expense_date: e.target.value })
+                      }
+                      className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
+                      Amount ($) *
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      required
+                      value={newExpense.amount}
+                      onChange={(e) =>
+                        setNewExpense({ ...newExpense, amount: e.target.value })
+                      }
+                      className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
+                      Description
+                    </label>
+                    <input
+                      type="text"
+                      value={newExpense.description}
+                      onChange={(e) =>
+                        setNewExpense({ ...newExpense, description: e.target.value })
+                      }
+                      className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
+                      placeholder="e.g., Google Ads, Facebook campaign"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
+                      Channel (optional)
+                    </label>
+                    <input
+                      type="text"
+                      value={newExpense.channel}
+                      onChange={(e) =>
+                        setNewExpense({ ...newExpense, channel: e.target.value })
+                      }
+                      className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
+                      placeholder="e.g., Online, Print, Radio"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={submittingExpense}
+                    className="w-full rounded-full bg-[#2a2a2a] px-5 py-2 text-sm font-semibold text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-70 transition-colors"
+                  >
+                    {submittingExpense ? "Adding..." : "Add Expense"}
+                  </button>
+                </form>
+              </div>
+
+              {/* Expenses Table */}
+              <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                <h3
+                  className="mb-4 text-base font-semibold text-[#2a2a2a]"
+                  style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+                >
+                  Expenses
+                </h3>
+                {loadingExpenses ? (
+                  <p className="text-sm text-[#6b6b6b]">Loading expenses...</p>
+                ) : expenses.length === 0 ? (
+                  <p className="text-sm text-[#6b6b6b]">No expenses recorded yet.</p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full text-left text-xs">
+                      <thead className="border-b border-slate-200 text-slate-500">
+                        <tr>
+                          <th className="py-1 pr-3">Date</th>
+                          <th className="py-1 pr-3">Description</th>
+                          <th className="py-1 pr-3">Channel</th>
+                          <th className="py-1 pr-3 text-right">Amount</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {expenses.map((expense) => (
+                          <tr key={expense.id} className="border-b border-slate-100">
+                            <td className="py-1 pr-3">
+                              {new Date(expense.expense_date).toLocaleDateString()}
+                            </td>
+                            <td className="py-1 pr-3">{expense.description || "—"}</td>
+                            <td className="py-1 pr-3">{expense.channel || "—"}</td>
+                            <td className="py-1 pr-3 text-right">
+                              ${Number(expense.amount).toFixed(2)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}
