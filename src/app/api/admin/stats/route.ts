@@ -131,7 +131,7 @@ export async function GET(_req: NextRequest) {
       }
 
       // Fallback: Try to get emails from auth.users for profiles without emails
-      const profilesWithoutEmail = profilesData?.filter(p => !p.email) || [];
+      const profilesWithoutEmail = profilesData?.filter((p: { id: string; email: string | null }) => !p.email) || [];
       if (profilesWithoutEmail.length > 0) {
         console.log("Attempting to fetch emails from auth.users for", profilesWithoutEmail.length, "profiles");
         // Note: Supabase admin client can access auth.users
