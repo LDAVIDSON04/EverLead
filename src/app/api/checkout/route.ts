@@ -45,6 +45,8 @@ export async function POST(req: NextRequest) {
     const successUrl = `${baseUrl}/agent/leads/success?session_id={CHECKOUT_SESSION_ID}&leadId=${leadId}`;
     const cancelUrl = `${baseUrl}/agent/leads/available`;
 
+    // Get the current agent's ID from the request (if available via auth)
+    // We'll rely on email matching in confirm-purchase, but include it in metadata if we can
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card"],
@@ -65,7 +67,11 @@ export async function POST(req: NextRequest) {
       cancel_url: cancelUrl,
       metadata: {
         leadId: leadId,
+        // Include price for verification
+        priceCents: String(lead.buy_now_price_cents),
       },
+      // Ensure we capture email for agent identification
+      customer_email: undefined, // Let Stripe collect it
     });
 
     return NextResponse.json({ url: session.url });
