@@ -13,6 +13,7 @@ type LeadRow = {
   province: string | null;
   service_type: string | null;
   assigned_agent_id: string | null;
+  purchased_by_email: string | null;
   status: string | null;
   price_charged_cents: number | null;
 };
@@ -31,6 +32,7 @@ export async function GET(_req: NextRequest) {
           "province",
           "service_type",
           "assigned_agent_id",
+          "purchased_by_email",
           "status",
           "price_charged_cents",
         ].join(", ")
@@ -76,44 +78,45 @@ export async function GET(_req: NextRequest) {
       else if (u === "cold") urgencyCounts.cold++;
     }
 
-    // Top agents ranking by number of purchased leads, with emails
-    const agentPurchaseCounts: Record<string, number> = {};
-    const agentRevenue: Record<string, number> = {};
-    
+    // Top agents ranking by number of purchased leads, grouped by email
+    // Aggregate by purchased_by_email (ignoring nulls)
+    const statsMap = new Map<
+      string,
+      { email: string; allTime: number; last30: number; revenue: number }
+    >();
+
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const thirtyDaysAgoISO = thirtyDaysAgo.toISOString();
+
     for (const lead of purchasedLeads) {
-      if (!lead.assigned_agent_id) continue;
-      agentPurchaseCounts[lead.assigned_agent_id] =
-        (agentPurchaseCounts[lead.assigned_agent_id] ?? 0) + 1;
-      agentRevenue[lead.assigned_agent_id] =
-        (agentRevenue[lead.assigned_agent_id] ?? 0) + (lead.price_charged_cents ?? 0);
-    }
-    
-    const topAgentIds = Object.entries(agentPurchaseCounts)
-      .sort(([, a], [, b]) => b - a)
-      .slice(0, 5)
-      .map(([id]) => id);
+      const email = lead.purchased_by_email;
+      if (!email) continue; // Skip leads without email
 
-    // Fetch agent emails from profiles
-    let agentEmailMap: Record<string, string> = {};
-    if (topAgentIds.length > 0) {
-      const { data: profilesData } = await supabaseAdmin
-        .from("profiles")
-        .select("id, email")
-        .in("id", topAgentIds);
-      
-      if (profilesData) {
-        for (const profile of profilesData) {
-          agentEmailMap[profile.id] = profile.email || "";
-        }
+      const createdAt = new Date(lead.created_at);
+
+      if (!statsMap.has(email)) {
+        statsMap.set(email, { email, allTime: 0, last30: 0, revenue: 0 });
       }
+
+      const stat = statsMap.get(email)!;
+      stat.allTime += 1;
+      if (lead.created_at >= thirtyDaysAgoISO) {
+        stat.last30 += 1;
+      }
+      stat.revenue += lead.price_charged_cents ?? 0;
     }
 
-    const topAgents = topAgentIds.map((agentId) => ({
-      agentId,
-      email: agentEmailMap[agentId] || `agent_${agentId.slice(0, 8)}`,
-      purchasedCount: agentPurchaseCounts[agentId] || 0,
-      revenue: agentRevenue[agentId] || 0,
-    }));
+    const topAgents = Array.from(statsMap.values())
+      .sort((a, b) => b.allTime - a.allTime)
+      .slice(0, 5)
+      .map((stat) => ({
+        agentId: stat.email, // Use email as ID for compatibility
+        email: stat.email,
+        purchasedCount: stat.allTime,
+        purchasedCountLast30: stat.last30,
+        revenue: stat.revenue,
+      }));
 
     // Geographic aggregation
     type GeoStat = {

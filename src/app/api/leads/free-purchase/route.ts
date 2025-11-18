@@ -15,10 +15,10 @@ export async function POST(req: Request) {
       );
     }
 
-    // 1) Check profile and free flag
+    // 1) Check profile and free flag, get email
     const { data: profile, error: profileError } = await supabaseAdmin
       .from("profiles")
-      .select("first_free_redeemed")
+      .select("first_free_redeemed, email")
       .eq("id", agentId)
       .maybeSingle();
 
@@ -29,6 +29,8 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
+
+    const agentEmail = profile.email || null;
 
     if (profile.first_free_redeemed) {
       // Not eligible for free lead anymore
@@ -66,7 +68,9 @@ export async function POST(req: Request) {
       .update({
         status: "purchased_by_agent",
         assigned_agent_id: agentId,
+        purchased_by_email: agentEmail, // Save agent's email
         price_charged_cents: 0,
+        purchased_at: new Date().toISOString(),
       })
       .eq("id", leadId);
 

@@ -43,6 +43,7 @@ type ApiStatsResponse = {
     agentId: string;
     email: string;
     purchasedCount: number;
+    purchasedCountLast30: number;
     revenue: number;
   }>;
   geography?: GeoStat[];
@@ -125,13 +126,13 @@ export default function AdminDashboardPage() {
           setGeography(apiData.geography);
         }
 
-        // Map top agents from API (emails are now included in API response)
+        // Map top agents from API (grouped by email)
         if (apiData.topAgents && apiData.topAgents.length > 0) {
           const topAgentsList: TopAgent[] = apiData.topAgents.map((apiAgent: any) => ({
-            agent_id: apiAgent.agentId,
+            agent_id: apiAgent.agentId || apiAgent.email, // Use email as ID
             agent_email: apiAgent.email || null,
             purchased_count_all_time: apiAgent.purchasedCount || 0,
-            purchased_count_last_30_days: 0, // API doesn't provide this yet
+            purchased_count_last_30_days: apiAgent.purchasedCountLast30 || 0,
           }));
           setTopAgents(topAgentsList);
         } else {

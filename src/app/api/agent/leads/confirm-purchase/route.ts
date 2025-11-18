@@ -99,7 +99,9 @@ export async function POST(request: NextRequest) {
       .update({
         status: "purchased_by_agent",
         assigned_agent_id: agentId,
+        purchased_by_email: customerEmail, // Save agent's email from Stripe
         price_charged_cents: amountCents,
+        purchased_at: new Date().toISOString(),
       })
       .eq("id", leadId)
       .select()
