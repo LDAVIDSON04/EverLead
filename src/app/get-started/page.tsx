@@ -69,7 +69,7 @@ export default function GetStartedPage() {
     const additionalNotes = formData.get("additional_notes") || "";
     const combinedNotes = [ageText, sexText, additionalNotes].filter(Boolean).join("\n\n");
 
-    // Build the insert payload - only include fields that exist in the DB
+    // Build the insert payload - include age and sex if columns exist
     const leadData: any = {
       full_name: formData.get("full_name") || null,
       email: formData.get("email") || null,
@@ -78,11 +78,13 @@ export default function GetStartedPage() {
       city: formData.get("city") || null,
       province: formData.get("province") || null,
       postal_code: formData.get("postal_code") || null,
+      age: ageParsed, // Try to insert age directly
+      sex: sexValue || null, // Try to insert sex directly
       planning_for: formData.get("planning_for") || null,
       service_type: formData.get("service_type") || null,
       timeline_intent,
       urgency_level,
-      additional_notes: combinedNotes || null, // Includes age and sex text
+      additional_notes: combinedNotes || null, // Also includes age and sex text as backup
       status: urgency_level === "cold" ? "cold_unassigned" : "new",
       buy_now_price_cents,
       auction_min_price_cents,
@@ -97,13 +99,44 @@ export default function GetStartedPage() {
 
     if (insertError) {
       // Log the full error for debugging
-      console.error("Lead submission error:", {
+      console.error("Lead submission failed", {
         message: insertError.message,
         details: insertError.details,
         hint: insertError.hint,
         code: insertError.code,
         leadData: leadData,
       });
+      
+      // If error is about missing columns (age/sex), try again without them
+      if (insertError.message?.includes("column") && (insertError.message?.includes("age") || insertError.message?.includes("sex"))) {
+        console.log("Retrying without age/sex columns, storing in notes instead");
+        const retryData = { ...leadData };
+        delete retryData.age;
+        delete retryData.sex;
+        
+        const { data: retryDataResult, error: retryError } = await supabaseClient
+          .from("leads")
+          .insert(retryData)
+          .select()
+          .single();
+        
+        if (retryError) {
+          console.error("Retry also failed:", retryError);
+          setError("Something went wrong submitting your information. Please check all fields and try again.");
+          setFormState("error");
+          return;
+        }
+        
+        if (!retryDataResult) {
+          setError("Something went wrong submitting your information. Please check all fields and try again.");
+          setFormState("error");
+          return;
+        }
+        
+        // Success on retry
+        setFormState("success");
+        return;
+      }
       
       // Provide more helpful error message
       setError("Something went wrong submitting your information. Please check all fields and try again.");

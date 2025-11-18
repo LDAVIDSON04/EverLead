@@ -32,12 +32,6 @@ type RecentLead = {
   assigned_agent_id: string | null;
 };
 
-type TopAgent = {
-  agent_id: string;
-  agent_email: string | null;
-  purchased_count: number;
-};
-
 type PendingAuction = {
   id: string;
   city: string | null;
@@ -66,7 +60,6 @@ export default function AgentDashboardPage() {
     totalSpent: 0,
   });
   const [recentLeads, setRecentLeads] = useState<RecentLead[]>([]);
-  const [topAgents, setTopAgents] = useState<TopAgent[]>([]);
   const [pendingAuctions, setPendingAuctions] = useState<PendingAuction[]>([]);
   const [yourBids, setYourBids] = useState<YourBid[]>([]);
   const [loading, setLoading] = useState(true);
@@ -99,12 +92,18 @@ export default function AgentDashboardPage() {
         const res = await fetch(`/api/agent/dashboard?agentId=${agentId}`);
         
         if (!res.ok) {
-          throw new Error("Failed to load dashboard");
+          const errorData = await res.json().catch(() => ({}));
+          console.error("Dashboard API error:", errorData);
+          throw new Error(errorData.error || "Failed to load dashboard");
         }
 
         const data = await res.json();
 
         if (cancelled) return;
+
+        if (!data || data.error) {
+          throw new Error(data.error || "Failed to load dashboard data");
+        }
 
         // Update stats
         setStats({
@@ -172,46 +171,7 @@ export default function AgentDashboardPage() {
           }))
         );
 
-        // Load top agents (keep existing logic for now)
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        const thirtyDaysAgoISO = thirtyDaysAgo.toISOString();
-
-        const { data: purchasedLeadsData } = await supabaseClient
-          .from("leads")
-          .select("assigned_agent_id, created_at")
-          .eq("status", "purchased_by_agent")
-          .not("assigned_agent_id", "is", null)
-          .gte("created_at", thirtyDaysAgoISO);
-
-        const agentCounts: Record<string, number> = {};
-        purchasedLeadsData?.forEach((lead) => {
-          const aid = lead.assigned_agent_id as string;
-          agentCounts[aid] = (agentCounts[aid] || 0) + 1;
-        });
-
-        const topAgentIds = Object.entries(agentCounts)
-          .sort(([, a], [, b]) => b - a)
-          .slice(0, 5)
-          .map(([id]) => id);
-
-        const { data: profilesData } = await supabaseClient
-          .from("profiles")
-          .select("id, email")
-          .in("id", topAgentIds);
-
-        const topAgentsList: TopAgent[] = topAgentIds.map((aid) => {
-          const profile = profilesData?.find((p) => p.id === aid);
-          return {
-            agent_id: aid,
-            agent_email: profile?.email || `agent_${aid.slice(0, 8)}`,
-            purchased_count: agentCounts[aid] || 0,
-          };
-        });
-
-        if (!cancelled) {
-          setTopAgents(topAgentsList);
-        }
+        // Top agents removed - leaderboard only exists in admin dashboard
       } catch (err) {
         console.error("Error loading agent dashboard:", err);
         if (!cancelled) {
@@ -361,7 +321,16 @@ export default function AgentDashboardPage() {
         )}
 
         {loading ? (
-          <p className="text-sm text-[#6b6b6b]">Loading your stats…</p>
+          <div className="text-center py-8">
+            <p className="text-sm text-[#6b6b6b]">Loading your stats…</p>
+          </div>
+        ) : error ? (
+          <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3">
+            <p className="text-sm text-red-600">{error}</p>
+            <p className="mt-2 text-xs text-red-500">
+              We couldn&apos;t load your stats. Please refresh the page.
+            </p>
+          </div>
         ) : (
           <div className="space-y-6">
             {/* Stat cards row */}
@@ -665,54 +634,6 @@ export default function AgentDashboardPage() {
                               >
                                 View / Bid →
                               </Link>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Top Agents */}
-                <div className="rounded-xl border border-slate-200 bg-white/70 shadow-sm">
-                  <div className="border-b border-slate-200 px-6 py-4">
-                    <h2
-                      className="text-lg font-normal text-[#2a2a2a]"
-                      style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-                    >
-                      Top agents this month
-                    </h2>
-                  </div>
-                  <div className="px-6 py-4">
-                    {topAgents.length === 0 ? (
-                      <p className="text-sm text-[#6b6b6b]">No data yet</p>
-                    ) : (
-                      <div className="space-y-3">
-                        {topAgents.map((agent, idx) => {
-                          const email = agent.agent_email || "Unknown";
-                          let displayEmail = email;
-                          if (email.includes("@") && email.length > 25) {
-                            const [user, domain] = email.split("@");
-                            displayEmail = `${user.slice(0, 15)}…@${domain}`;
-                          } else if (email.length > 25) {
-                            displayEmail = `${email.slice(0, 22)}…`;
-                          }
-                          return (
-                            <div
-                              key={agent.agent_id}
-                              className="flex items-center justify-between"
-                            >
-                              <div className="flex items-center gap-2">
-                                <span className="text-xs font-semibold text-[#6b6b6b]">
-                                  {idx + 1}.
-                                </span>
-                                <span className="text-sm text-[#2a2a2a]">
-                                  {displayEmail}
-                                </span>
-                              </div>
-                              <span className="text-sm font-semibold text-[#2a2a2a]">
-                                {agent.purchased_count} leads
-                              </span>
                             </div>
                           );
                         })}
