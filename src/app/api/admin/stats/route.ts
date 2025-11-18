@@ -51,7 +51,26 @@ export async function GET(_req: NextRequest) {
     const allLeads: LeadRow[] = leads as unknown as LeadRow[];
 
     const totalLeads = allLeads.length;
-    const purchasedLeads = allLeads.filter((l) => l.status === "purchased_by_agent");
+    
+    // Debug: log all unique status values
+    const statusValues = new Set(allLeads.map(l => l.status).filter(Boolean));
+    console.log("All unique lead statuses in DB:", Array.from(statusValues));
+    
+    // Filter for purchased leads - check multiple possible status values
+    const purchasedLeads = allLeads.filter((l) => {
+      const status = (l.status || "").toLowerCase();
+      return status === "purchased_by_agent" || 
+             status === "purchased" ||
+             (l.assigned_agent_id && (l.price_charged_cents || 0) > 0);
+    });
+    
+    console.log("Purchased leads found:", {
+      total: purchasedLeads.length,
+      withEmail: purchasedLeads.filter(l => l.purchased_by_email).length,
+      withAssignedAgent: purchasedLeads.filter(l => l.assigned_agent_id).length,
+      sampleStatuses: purchasedLeads.slice(0, 3).map(l => ({ status: l.status, hasEmail: !!l.purchased_by_email, hasAgentId: !!l.assigned_agent_id })),
+    });
+    
     const totalPurchased = purchasedLeads.length;
 
     const totalRevenueCents = purchasedLeads.reduce(
@@ -79,7 +98,30 @@ export async function GET(_req: NextRequest) {
     }
 
     // Top agents ranking by number of purchased leads, grouped by email
-    // Aggregate by purchased_by_email (ignoring nulls)
+    // First, get all agent IDs from purchased leads
+    const agentIds = new Set<string>();
+    for (const lead of purchasedLeads) {
+      if (lead.assigned_agent_id) {
+        agentIds.add(lead.assigned_agent_id);
+      }
+    }
+
+    // Fetch agent emails from profiles for fallback
+    let agentEmailMap: Record<string, string> = {};
+    if (agentIds.size > 0) {
+      const { data: profilesData } = await supabaseAdmin
+        .from("profiles")
+        .select("id, email")
+        .in("id", Array.from(agentIds));
+      
+      if (profilesData) {
+        for (const profile of profilesData) {
+          agentEmailMap[profile.id] = profile.email || "";
+        }
+      }
+    }
+
+    // Aggregate by email (use purchased_by_email if available, otherwise fallback to profile email)
     const statsMap = new Map<
       string,
       { email: string; allTime: number; last30: number; revenue: number }
@@ -89,9 +131,27 @@ export async function GET(_req: NextRequest) {
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     const thirtyDaysAgoISO = thirtyDaysAgo.toISOString();
 
+    console.log("Processing purchased leads for leaderboard:", {
+      totalPurchased: purchasedLeads.length,
+      agentIdsCount: agentIds.size,
+      profilesFound: Object.keys(agentEmailMap).length,
+    });
+
     for (const lead of purchasedLeads) {
-      const email = lead.purchased_by_email;
-      if (!email) continue; // Skip leads without email
+      // Use purchased_by_email if available, otherwise fallback to profile email
+      let email = lead.purchased_by_email;
+      if (!email && lead.assigned_agent_id) {
+        email = agentEmailMap[lead.assigned_agent_id] || null;
+      }
+      
+      if (!email) {
+        console.warn("Lead purchased but no email found:", {
+          leadId: lead.id,
+          assigned_agent_id: lead.assigned_agent_id,
+          purchased_by_email: lead.purchased_by_email,
+        });
+        continue; // Skip leads without email
+      }
 
       const createdAt = new Date(lead.created_at);
 
@@ -107,6 +167,11 @@ export async function GET(_req: NextRequest) {
       stat.revenue += lead.price_charged_cents ?? 0;
     }
 
+    console.log("Leaderboard stats calculated:", {
+      uniqueEmails: statsMap.size,
+      stats: Array.from(statsMap.values()),
+    });
+
     const topAgents = Array.from(statsMap.values())
       .sort((a, b) => b.allTime - a.allTime)
       .slice(0, 5)
@@ -117,6 +182,8 @@ export async function GET(_req: NextRequest) {
         purchasedCountLast30: stat.last30,
         revenue: stat.revenue,
       }));
+
+    console.log("Top agents final:", topAgents);
 
     // Count total agents signed up (from profiles table)
     const { count: totalAgentsCount } = await supabaseAdmin
