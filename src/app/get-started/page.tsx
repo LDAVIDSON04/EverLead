@@ -132,11 +132,15 @@ export default function GetStartedPage() {
         body: JSON.stringify(cleanPayload),
       });
 
+      // Get response text first (can only read once)
+      const responseText = await response.text();
       let responseBody: any = null;
       try {
-        responseBody = await response.json();
+        responseBody = JSON.parse(responseText);
       } catch (e) {
         console.error("Failed to parse error JSON", e);
+        console.error("Response text:", responseText);
+        responseBody = { error: "Failed to parse server response", raw: responseText };
       }
 
       if (!response.ok) {
@@ -145,6 +149,14 @@ export default function GetStartedPage() {
           statusText: response.statusText,
           body: responseBody,
         });
+        // Log the full error details
+        console.error("Full API Error Response:", JSON.stringify(responseBody, null, 2));
+        if (responseBody?.details) {
+          console.error("API Error Details:", responseBody.details);
+        }
+        if (responseBody?.code) {
+          console.error("API Error Code:", responseBody.code);
+        }
 
         // Show specific error messages from API, including details if available
         if (responseBody?.error) {

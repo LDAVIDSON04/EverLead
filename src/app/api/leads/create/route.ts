@@ -228,17 +228,24 @@ export async function POST(req: NextRequest) {
       { status: 201 }
     );
   } catch (err: any) {
-    console.error("Questionnaire POST error", {
+    // Log the full error with all details
+    const errorDetails = {
       message: err?.message,
       stack: err?.stack,
       name: err?.name,
+      code: err?.code,
+      cause: err?.cause,
       fullError: err,
-    });
+    };
+    console.error("Questionnaire POST error (catch block):", errorDetails);
 
+    // Return detailed error response
     return NextResponse.json(
       {
         error: "Database configuration error. Please contact support.",
         details: err?.message || String(err),
+        errorType: err?.name || "UnknownError",
+        stack: process.env.NODE_ENV === "development" ? err?.stack : undefined,
       },
       { status: 500 }
     );
