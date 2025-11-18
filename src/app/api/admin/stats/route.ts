@@ -118,6 +118,12 @@ export async function GET(_req: NextRequest) {
         revenue: stat.revenue,
       }));
 
+    // Count total agents signed up (from profiles table)
+    const { count: totalAgentsCount } = await supabaseAdmin
+      .from("profiles")
+      .select("id", { count: "exact", head: true })
+      .eq("role", "agent");
+
     // Geographic aggregation
     type GeoStat = {
       city: string | null;
@@ -167,6 +173,7 @@ export async function GET(_req: NextRequest) {
         leadsLast7Days,
         urgencyCounts,
         topAgents,
+        totalAgentsCount: totalAgentsCount ?? 0,
         geography,
       },
       { status: 200 }

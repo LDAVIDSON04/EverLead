@@ -46,6 +46,7 @@ type ApiStatsResponse = {
     purchasedCountLast30: number;
     revenue: number;
   }>;
+  totalAgentsCount?: number;
   geography?: GeoStat[];
   error?: string;
 };
@@ -55,6 +56,7 @@ type TopAgent = {
   agent_email: string | null;
   purchased_count_all_time: number;
   purchased_count_last_30_days: number;
+  revenue?: number; // Total spent in cents
 };
 
 type RecentLead = {
@@ -74,6 +76,8 @@ export default function AdminDashboardPage() {
   
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [topAgents, setTopAgents] = useState<TopAgent[]>([]);
+  const [totalAgentsCount, setTotalAgentsCount] = useState<number>(0);
+  const [apiData, setApiData] = useState<ApiStatsResponse | null>(null);
   const [recentLeads, setRecentLeads] = useState<RecentLead[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -101,6 +105,7 @@ export default function AdminDashboardPage() {
         // Fetch stats from API
         const res = await fetch("/api/admin/stats");
         const apiData: ApiStatsResponse = await res.json();
+        setApiData(apiData); // Store for use in Agents tab
 
         if (!res.ok || !apiData.ok) {
           throw new Error(apiData.error || "Failed to load dashboard stats");
@@ -126,6 +131,9 @@ export default function AdminDashboardPage() {
           setGeography(apiData.geography);
         }
 
+        // Set total agents count
+        setTotalAgentsCount(apiData.totalAgentsCount ?? 0);
+
         // Map top agents from API (grouped by email)
         if (apiData.topAgents && apiData.topAgents.length > 0) {
           const topAgentsList: TopAgent[] = apiData.topAgents.map((apiAgent: any) => ({
@@ -133,6 +141,7 @@ export default function AdminDashboardPage() {
             agent_email: apiAgent.email || null,
             purchased_count_all_time: apiAgent.purchasedCount || 0,
             purchased_count_last_30_days: apiAgent.purchasedCountLast30 || 0,
+            revenue: apiAgent.revenue || 0, // Include revenue
           }));
           setTopAgents(topAgentsList);
         } else {
@@ -470,14 +479,36 @@ export default function AdminDashboardPage() {
         {/* Agents Tab */}
         {activeTab === "agents" && (
           <div>
-            {topAgents.length > 0 && (
+            <h2
+              className="mb-4 text-lg font-normal text-[#2a2a2a]"
+              style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+            >
+              Agents
+            </h2>
+
+            {/* Total Agents Count */}
+            <div className="mb-6 rounded-xl border border-slate-200 bg-white/80 px-6 py-4 shadow-sm">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-[0.15em] text-[#6b6b6b]">
+                    Total Agents Signed Up
+                  </p>
+                  <p className="mt-1 text-3xl font-semibold text-[#2a2a2a]">
+                    {totalAgentsCount}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Top Agents Table */}
+            {topAgents.length > 0 ? (
               <div>
-                <h2
-                  className="mb-4 text-lg font-normal text-[#2a2a2a]"
+                <h3
+                  className="mb-4 text-base font-normal text-[#2a2a2a]"
                   style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
                 >
-                  Agents
-                </h2>
+                  Top Agents (by purchases & spending)
+                </h3>
                 <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white/70 shadow-sm">
                   <table className="w-full text-sm">
                     <thead>
@@ -491,6 +522,9 @@ export default function AdminDashboardPage() {
                         <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
                           Leads purchased (last 30 days)
                         </th>
+                        <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                          Total spent
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
@@ -498,6 +532,7 @@ export default function AdminDashboardPage() {
                         // Display email as primary label (not ID)
                         const email = agent.agent_email || `agent_${agent.agent_id.slice(0, 8)}`;
                         const displayEmail = email.length > 40 ? `${email.slice(0, 37)}…` : email;
+                        const revenue = agent.revenue || 0;
                         return (
                           <tr
                             key={agent.agent_id}
@@ -512,12 +547,21 @@ export default function AdminDashboardPage() {
                             <td className="px-4 py-3 text-right font-semibold text-[#2a2a2a]">
                               {agent.purchased_count_last_30_days}
                             </td>
+                            <td className="px-4 py-3 text-right font-semibold text-[#2a2a2a]">
+                              ${(revenue / 100).toFixed(2)}
+                            </td>
                           </tr>
                         );
                       })}
                     </tbody>
                   </table>
                 </div>
+              </div>
+            ) : (
+              <div className="rounded-xl border border-slate-200 bg-white/70 px-6 py-8 text-center shadow-sm">
+                <p className="text-sm text-[#6b6b6b]">
+                  No agents have purchased leads yet.
+                </p>
               </div>
             )}
           </div>
