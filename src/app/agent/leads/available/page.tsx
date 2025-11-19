@@ -846,18 +846,21 @@ export default function AvailableLeadsPage() {
 
                   <div className="mt-4 space-y-3">
                     <div className="flex flex-wrap items-center gap-2">
-                      {lead.buy_now_price_cents && !auctionEnded && (
+                      {/* Buy Now button - show if lead is unsold and has a buy now price */}
+                      {lead.assigned_agent_id === null && lead.buy_now_price_cents != null && (
                         <button
                           onClick={() =>
                             handleBuyNow(lead.id, lead.buy_now_price_cents)
                           }
                           disabled={buyingId === lead.id}
-                          className="rounded-full bg-[#2a2a2a] px-4 py-1.5 text-xs font-semibold text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-70 transition-colors"
+                          className="rounded-full bg-emerald-600 px-4 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-70 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
                         >
-                          {buyingId === lead.id ? "Starting checkout…" : "Buy now"}
+                          {buyingId === lead.id 
+                            ? "Starting checkout…" 
+                            : `Buy now for $${((lead.buy_now_price_cents || 0) / 100).toFixed(2)}`}
                         </button>
                       )}
-                      {auctionEnded && (
+                      {auctionEnded && isAuctionEnabled && (
                         <span className="text-xs text-slate-500 italic">Bidding closed</span>
                       )}
 
