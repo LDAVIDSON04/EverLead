@@ -115,6 +115,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Build insert payload
+    // IMPORTANT: Ensure new leads are unsold and available
     const leadData: any = {
       first_name: String(body.first_name).trim(),
       last_name: String(body.last_name).trim(),
@@ -130,9 +131,12 @@ export async function POST(req: NextRequest) {
       planning_for: String(body.planning_for).trim(),
       service_type: String(body.service_type).trim(),
       timeline_intent: String(body.timeline_intent).trim(),
-      urgency_level: body.urgency_level || "cold",
+      urgency_level: body.urgency_level || "warm",
       additional_notes: body.additional_notes ? String(body.additional_notes).trim() : null,
-      status: body.status || "new",
+      // Explicitly set status to "new" and ensure lead is unsold
+      status: "new",
+      assigned_agent_id: null, // Ensure lead is unsold
+      purchased_at: null, // Ensure lead is unsold
       buy_now_price_cents: body.buy_now_price_cents || null,
       auction_min_price_cents: body.auction_min_price_cents || null,
     };

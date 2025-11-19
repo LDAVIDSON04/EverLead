@@ -166,11 +166,12 @@ export default function AvailableLeadsPage() {
       // so non-owning agents never receive full PII (name, email, phone).
       // For now, we mask these fields in the UI.
       
-      // Fetch all available leads (filters applied client-side)
+      // Fetch all available leads (unsold leads only - filters applied client-side)
+      // Show any lead where assigned_agent_id is null (unsold)
       const { data: leadsData, error: leadsError } = await supabaseClient
         .from("leads")
         .select("*")
-        .eq("status", "new")
+        .is("assigned_agent_id", null) // Only unsold leads
         .order("created_at", { ascending: false });
 
       if (leadsError) {
