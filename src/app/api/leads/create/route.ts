@@ -137,7 +137,14 @@ export async function POST(req: NextRequest) {
       status: "new",
       assigned_agent_id: null, // Ensure lead is unsold
       purchased_at: null, // Ensure lead is unsold
-      buy_now_price_cents: body.buy_now_price_cents || null,
+      // Set default Buy Now price if not provided (ensures Buy Now option is available)
+      // Default: $49 for hot, $29 for warm, $19 for cold
+      buy_now_price_cents: body.buy_now_price_cents || (() => {
+        const urgency = (body.urgency_level || "warm").toLowerCase();
+        if (urgency === "hot") return 4900; // $49
+        if (urgency === "warm") return 2900; // $29
+        return 1900; // $19 for cold or default
+      })(),
       auction_min_price_cents: body.auction_min_price_cents || null,
     };
 
