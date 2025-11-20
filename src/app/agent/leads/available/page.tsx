@@ -762,6 +762,21 @@ export default function AvailableLeadsPage() {
               const { isEnded: auctionEnded } = getRemainingTime(lead.auction_ends_at ?? null);
               const showBidForm = canBid(lead);
 
+              // Get Buy Now price - use existing price or default based on urgency
+              const getBuyNowPrice = (): number | null => {
+                // If lead has a price set, use it
+                if (lead.buy_now_price_cents != null) {
+                  return lead.buy_now_price_cents;
+                }
+                // Otherwise, use default based on urgency level
+                const urgency = (lead.urgency_level || "warm").toLowerCase();
+                if (urgency === "hot") return 4900; // $49
+                if (urgency === "warm") return 2900; // $29
+                return 1900; // $19 for cold or default
+              };
+              
+              const buyNowPriceCents = getBuyNowPrice();
+
               return (
                 <div
                   key={lead.id}
@@ -798,13 +813,13 @@ export default function AvailableLeadsPage() {
                     </div>
 
                     <div className="text-right">
-                      {lead.buy_now_price_cents && (
+                      {buyNowPriceCents && (
                         <div className="mb-1">
                           <div className="text-xs uppercase tracking-[0.15em] text-[#6b6b6b]">
                             Buy now
                           </div>
                           <div className="text-sm font-semibold text-[#2a2a2a]">
-                            {formatPrice(lead.buy_now_price_cents)}
+                            {formatPrice(buyNowPriceCents)}
                           </div>
                         </div>
                       )}
@@ -846,18 +861,18 @@ export default function AvailableLeadsPage() {
 
                   <div className="mt-4 space-y-3">
                     <div className="flex flex-wrap items-center gap-2">
-                      {/* Buy Now button - show if lead is unsold and has a buy now price */}
-                      {lead.assigned_agent_id === null && lead.buy_now_price_cents != null && (
+                      {/* Buy Now button - show if lead is unsold (we always have a default price) */}
+                      {lead.assigned_agent_id === null && buyNowPriceCents != null && (
                         <button
                           onClick={() =>
-                            handleBuyNow(lead.id, lead.buy_now_price_cents)
+                            handleBuyNow(lead.id, buyNowPriceCents)
                           }
                           disabled={buyingId === lead.id}
                           className="rounded-full bg-emerald-600 px-4 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-70 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
                         >
                           {buyingId === lead.id 
                             ? "Starting checkout…" 
-                            : `Buy now for $${((lead.buy_now_price_cents || 0) / 100).toFixed(2)}`}
+                            : `Buy now for $${((buyNowPriceCents || 0) / 100).toFixed(2)}`}
                         </button>
                       )}
                       {auctionEnded && isAuctionEnabled && (

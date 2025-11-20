@@ -30,11 +30,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (!lead.buy_now_price_cents) {
-      return NextResponse.json(
-        { error: "Lead has no buy_now_price_cents set" },
-        { status: 400 }
-      );
+    // Get Buy Now price - use existing price or default based on urgency
+    let buyNowPriceCents = lead.buy_now_price_cents;
+    if (!buyNowPriceCents) {
+      // Default pricing based on urgency level (same as in create route)
+      const urgency = (lead.urgency_level || "warm").toLowerCase();
+      if (urgency === "hot") buyNowPriceCents = 4900; // $49
+      else if (urgency === "warm") buyNowPriceCents = 2900; // $29
+      else buyNowPriceCents = 1900; // $19 for cold or default
     }
 
     // Get base URL from env var or fallback to request URL
@@ -53,14 +56,14 @@ export async function POST(req: NextRequest) {
       line_items: [
         {
           quantity: 1,
-          price_data: {
-            currency: "cad",
-            unit_amount: lead.buy_now_price_cents,
-            product_data: {
-              name: "Funeral Pre-Arrangement Lead",
-              description: `Lead in ${lead.city || "your area"}`,
+            price_data: {
+              currency: "cad",
+              unit_amount: buyNowPriceCents,
+              product_data: {
+                name: "Funeral Pre-Arrangement Lead",
+                description: `Lead in ${lead.city || "your area"}`,
+              },
             },
-          },
         },
       ],
       success_url: successUrl,
@@ -68,7 +71,7 @@ export async function POST(req: NextRequest) {
       metadata: {
         leadId: leadId,
         // Include price for verification
-        priceCents: String(lead.buy_now_price_cents),
+        priceCents: String(buyNowPriceCents),
       },
       // Ensure we capture email for agent identification
       customer_email: undefined, // Let Stripe collect it
