@@ -31,13 +31,22 @@ export async function POST(req: NextRequest) {
     }
 
     // Get Buy Now price - use existing price or default based on urgency
+    // Also fix legacy low prices (like $1) to proper defaults
     let buyNowPriceCents = lead.buy_now_price_cents;
+    const urgency = (lead.urgency_level || "warm").toLowerCase();
+    
+    // Determine proper default based on urgency
+    let properDefault: number;
+    if (urgency === "hot") properDefault = 3000; // $30
+    else if (urgency === "warm") properDefault = 2000; // $20
+    else properDefault = 1000; // $10 for cold or default
+    
     if (!buyNowPriceCents) {
-      // Default pricing based on urgency level (same as in create route)
-      const urgency = (lead.urgency_level || "warm").toLowerCase();
-      if (urgency === "hot") buyNowPriceCents = 3000; // $30
-      else if (urgency === "warm") buyNowPriceCents = 2000; // $20
-      else buyNowPriceCents = 1000; // $10 for cold or default
+      // Use default pricing based on urgency level
+      buyNowPriceCents = properDefault;
+    } else if (buyNowPriceCents < 500) {
+      // If price is less than $5 (500 cents), treat it as legacy and use proper default
+      buyNowPriceCents = properDefault;
     }
 
     // Get base URL from env var or fallback to request URL

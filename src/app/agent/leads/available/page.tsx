@@ -763,16 +763,27 @@ export default function AvailableLeadsPage() {
               const showBidForm = canBid(lead);
 
               // Get Buy Now price - use existing price or default based on urgency
+              // Also fix legacy low prices (like $1) to proper defaults
               const getBuyNowPrice = (): number | null => {
-                // If lead has a price set, use it
+                const urgency = (lead.urgency_level || "warm").toLowerCase();
+                
+                // Determine proper default based on urgency
+                let properDefault: number;
+                if (urgency === "hot") properDefault = 3000; // $30
+                else if (urgency === "warm") properDefault = 2000; // $20
+                else properDefault = 1000; // $10 for cold or default
+                
+                // If lead has a price set, use it UNLESS it's a legacy low price (like $1 = 100 cents)
                 if (lead.buy_now_price_cents != null) {
+                  // If price is less than $5 (500 cents), treat it as legacy and use proper default
+                  if (lead.buy_now_price_cents < 500) {
+                    return properDefault;
+                  }
                   return lead.buy_now_price_cents;
                 }
+                
                 // Otherwise, use default based on urgency level
-                const urgency = (lead.urgency_level || "warm").toLowerCase();
-                if (urgency === "hot") return 3000; // $30
-                if (urgency === "warm") return 2000; // $20
-                return 1000; // $10 for cold or default
+                return properDefault;
               };
               
               const buyNowPriceCents = getBuyNowPrice();
