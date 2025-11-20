@@ -35,9 +35,9 @@ export async function POST(req: NextRequest) {
     if (!buyNowPriceCents) {
       // Default pricing based on urgency level (same as in create route)
       const urgency = (lead.urgency_level || "warm").toLowerCase();
-      if (urgency === "hot") buyNowPriceCents = 4900; // $49
-      else if (urgency === "warm") buyNowPriceCents = 2900; // $29
-      else buyNowPriceCents = 1900; // $19 for cold or default
+      if (urgency === "hot") buyNowPriceCents = 3000; // $30
+      else if (urgency === "warm") buyNowPriceCents = 2000; // $20
+      else buyNowPriceCents = 1000; // $10 for cold or default
     }
 
     // Get base URL from env var or fallback to request URL

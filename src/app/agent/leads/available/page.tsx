@@ -462,8 +462,8 @@ export default function AvailableLeadsPage() {
   }
 
   function canBid(lead: Lead) {
-    // Explicitly check auction_enabled (handle null/undefined)
-    const isAuctionEnabled = lead.auction_enabled === true;
+    // Check auction_enabled - treat null/undefined as enabled (all leads have auctions now)
+    const isAuctionEnabled = lead.auction_enabled !== false; // true or null/undefined = enabled
     if (!isAuctionEnabled) return false;
     
     // Check lead is still available
@@ -756,8 +756,8 @@ export default function AvailableLeadsPage() {
               // Check if agent owns this lead
               const owns = userId ? agentOwnsLead(lead, userId) : false;
               
-              // Explicitly check auction_enabled (handle null/undefined)
-              const isAuctionEnabled = lead.auction_enabled === true;
+              // Check auction_enabled - treat null/undefined as enabled (all leads have auctions now)
+              const isAuctionEnabled = lead.auction_enabled !== false; // true or null/undefined = enabled
               const isHighestBidder = lead.current_bid_agent_id === userId;
               const { isEnded: auctionEnded } = getRemainingTime(lead.auction_ends_at ?? null);
               const showBidForm = canBid(lead);
@@ -770,9 +770,9 @@ export default function AvailableLeadsPage() {
                 }
                 // Otherwise, use default based on urgency level
                 const urgency = (lead.urgency_level || "warm").toLowerCase();
-                if (urgency === "hot") return 4900; // $49
-                if (urgency === "warm") return 2900; // $29
-                return 1900; // $19 for cold or default
+                if (urgency === "hot") return 3000; // $30
+                if (urgency === "warm") return 2000; // $20
+                return 1000; // $10 for cold or default
               };
               
               const buyNowPriceCents = getBuyNowPrice();

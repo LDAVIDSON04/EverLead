@@ -138,12 +138,20 @@ export async function POST(req: NextRequest) {
       assigned_agent_id: null, // Ensure lead is unsold
       purchased_at: null, // Ensure lead is unsold
       // Set default Buy Now price if not provided (ensures Buy Now option is available)
-      // Default: $49 for hot, $29 for warm, $19 for cold
+      // Default: $30 for hot, $20 for warm, $10 for cold
       buy_now_price_cents: body.buy_now_price_cents || (() => {
         const urgency = (body.urgency_level || "warm").toLowerCase();
-        if (urgency === "hot") return 4900; // $49
-        if (urgency === "warm") return 2900; // $29
-        return 1900; // $19 for cold or default
+        if (urgency === "hot") return 3000; // $30
+        if (urgency === "warm") return 2000; // $20
+        return 1000; // $10 for cold or default
+      })(),
+      // Enable auction on every lead by default
+      auction_enabled: body.auction_enabled !== undefined ? body.auction_enabled : true,
+      // Set auction end time to 24 hours from now (standardized auction timer)
+      auction_ends_at: body.auction_ends_at || (() => {
+        const now = new Date();
+        const twentyFourHoursLater = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+        return twentyFourHoursLater.toISOString();
       })(),
       auction_min_price_cents: body.auction_min_price_cents || null,
     };
