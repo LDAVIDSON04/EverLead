@@ -51,12 +51,6 @@ export default function HomePage() {
             >
               Get started
             </Link>
-            <Link
-              href="/agent"
-              className="text-sm text-[#6b6b6b] hover:text-[#2a2a2a] transition-colors"
-            >
-              For professionals
-            </Link>
           </div>
         </div>
       </header>
@@ -467,8 +461,11 @@ export default function HomePage() {
             © {new Date().getFullYear()} Soradin. All rights reserved.
           </div>
           <div className="flex flex-wrap items-center justify-center gap-4">
-            <Link href="/agent" className="hover:text-[#2a2a2a] transition-colors">
-              For funeral professionals →
+            <Link 
+              href="/agent/dashboard" 
+              className="text-[10px] text-[#6b6b6b] hover:text-[#2a2a2a] hover:underline transition-colors"
+            >
+              For professionals (agent login)
             </Link>
             <Link href="#" className="hover:text-[#2a2a2a] transition-colors">
               Privacy
