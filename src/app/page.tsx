@@ -13,7 +13,7 @@ export default function HomePage() {
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
           <div className="flex flex-col">
             <span className="text-2xl font-semibold tracking-tight text-[#2a2a2a]">
-              EverLead
+              Soradin
             </span>
             <span className="text-[11px] uppercase tracking-[0.2em] text-[#6b6b6b] mt-0.5">
               Funeral pre-planning
@@ -49,7 +49,7 @@ export default function HomePage() {
               href="/agent"
               className="text-sm text-[#6b6b6b] hover:text-[#2a2a2a] transition-colors"
             >
-              For agents
+              For professionals
             </Link>
           </nav>
         </div>
@@ -59,7 +59,7 @@ export default function HomePage() {
       <section className="relative border-b border-slate-200/50 bg-[radial-gradient(circle_at_top,_#fdf6ee_0%,_#f5f1eb_40%,_#f7f4ef_100%)] hero-soft-pattern shadow-sm">
         <div className="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-24 text-center md:py-28">
           <p className="text-xs font-semibold tracking-[0.2em] text-slate-500 uppercase">
-            Funeral pre-planning
+            FUNERAL PRE-PLANNING
           </p>
           <h1
             className="text-4xl font-semibold text-slate-900 leading-tight tracking-tight sm:text-5xl md:text-5xl"
@@ -68,7 +68,7 @@ export default function HomePage() {
             A gentle way to plan ahead, with care and clarity.
           </h1>
           <p className="mx-auto max-w-2xl text-sm leading-relaxed text-slate-600 sm:text-base md:text-base">
-            EverLead guides you through thoughtful pre-planning conversations,
+            Soradin guides you through thoughtful pre-planning conversations,
             helping you record your wishes and connect with trusted specialists
             when you&apos;re ready—so your family can focus on what matters most.
           </p>
@@ -77,7 +77,7 @@ export default function HomePage() {
               href="/get-started"
               className="w-full rounded-full bg-[#2a2a2a] px-6 py-3 text-base font-medium text-white shadow-md hover:bg-[#3a3a3a] transition-colors sm:w-auto"
             >
-              Begin the Questionnaire
+              Start planning online
             </Link>
             <button
               type="button"
@@ -108,7 +108,7 @@ export default function HomePage() {
             className="text-center text-2xl font-semibold text-slate-900 sm:text-3xl"
             style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
           >
-            What you can plan with EverLead
+            What you can plan with Soradin
           </h2>
           <p className="mt-2 text-center text-sm text-slate-600">
             Thoughtfully document your wishes across all aspects of pre-planning
@@ -195,7 +195,7 @@ export default function HomePage() {
                 clarity during one of life&apos;s most difficult moments.
               </p>
               <p className="text-base leading-relaxed text-[#4a4a4a] md:text-lg">
-                EverLead provides a calm, organized space to think through
+                Soradin provides a calm, organized space to think through
                 these important decisions at your own pace. We help you gather
                 your thoughts, document your preferences, and connect with
                 trusted professionals when you&apos;re ready—not before.
@@ -233,14 +233,14 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Why Families Trust EverLead */}
+      {/* Why Families Trust Soradin */}
       <section className="border-b border-[#ded3c2] bg-[radial-gradient(circle_at_top,_#fdf6ee_0%,_#f5f1eb_40%,_#f7f4ef_100%)] py-16 md:py-24">
         <div className="mx-auto max-w-6xl px-6">
           <h2
             className="mb-12 text-center text-3xl font-normal text-[#2a2a2a] md:text-4xl"
             style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
           >
-            Why Families Trust EverLead
+            Why Families Trust Soradin
           </h2>
 
           <div className="grid gap-8 md:grid-cols-3">
@@ -266,7 +266,7 @@ export default function HomePage() {
                 Independent of any single funeral home
               </h3>
               <p className="text-sm leading-relaxed text-[#4a4a4a]">
-                EverLead is not affiliated with any specific funeral home. We
+                Soradin is not affiliated with any specific funeral home. We
                 help you explore your options and connect with professionals
                 who match your needs and values.
               </p>
@@ -296,7 +296,7 @@ export default function HomePage() {
             <div className="rounded-lg border border-slate-200 bg-white p-8 shadow-sm min-h-[220px]">
               <span className="text-4xl text-slate-300">&ldquo;</span>
               <p className="mt-2 italic leading-relaxed text-slate-700">
-                EverLead helped me feel organised and prepared. It gave me peace
+                Soradin helped me feel organised and prepared. It gave me peace
                 of mind knowing my wishes are documented.
               </p>
               <p
@@ -324,7 +324,7 @@ export default function HomePage() {
             <div className="rounded-lg border border-slate-200 bg-white p-8 shadow-sm min-h-[220px]">
               <span className="text-4xl text-slate-300">&ldquo;</span>
               <p className="mt-2 italic leading-relaxed text-slate-700">
-                As a pre-need counsellor, I appreciate how EverLead respects
+                As a pre-need counsellor, I appreciate how Soradin respects
                 families&apos; pace and provides a thoughtful framework for
                 planning.
               </p>
@@ -379,7 +379,7 @@ export default function HomePage() {
                     All the Key Decisions in One Place
                   </h3>
                   <p className="text-sm leading-relaxed text-[#4a4a4a]">
-                    A comprehensive checklist that mirrors the EverLead
+                    A comprehensive checklist that mirrors the Soradin
                     questionnaire, so you can review or complete it offline at
                     your own pace.
                   </p>
@@ -402,7 +402,7 @@ export default function HomePage() {
                     Is there any obligation to buy a plan?
                   </h3>
                   <p className="text-sm leading-relaxed text-slate-600">
-                    No. EverLead helps you think through your wishes first.
+                    No. Soradin helps you think through your wishes first.
                     When you&apos;re ready, we can connect you with a carefully
                     selected local professional. There is no obligation or
                     payment required to begin planning.
@@ -425,12 +425,12 @@ export default function HomePage() {
                 {/* FAQ 3 */}
                 <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
                   <h3 className="mb-2 text-base font-semibold text-slate-900">
-                    Do I pay EverLead or the funeral home?
+                    Do I pay Soradin or the funeral home?
                   </h3>
                   <p className="text-sm leading-relaxed text-slate-600">
-                    EverLead is free to use for planning. If you choose to
+                    Soradin is free to use for planning. If you choose to
                     purchase a pre-arrangement plan, you work directly with the
-                    funeral home or pre-need specialist. EverLead does not
+                    funeral home or pre-need specialist. Soradin does not
                     charge families for our planning tools.
                   </p>
                 </div>
@@ -442,7 +442,7 @@ export default function HomePage() {
                   </h3>
                   <p className="text-sm leading-relaxed text-slate-600">
                     Plans can be updated at any time. Many people revisit their
-                    wishes as life changes; EverLead is designed to support that
+                    wishes as life changes; Soradin is designed to support that
                     flexibility. Your answers are stored securely and can be
                     modified whenever you need.
                   </p>
@@ -457,9 +457,12 @@ export default function HomePage() {
       <footer className="border-t border-[#ded3c2] bg-[#f7f4ef] py-8">
         <div className="mx-auto flex max-w-6xl flex-col items-center gap-4 px-6 text-center text-xs text-[#6b6b6b] md:flex-row md:justify-between md:text-left">
           <div>
-            © {new Date().getFullYear()} EverLead. All rights reserved.
+            © {new Date().getFullYear()} Soradin. All rights reserved.
           </div>
           <div className="flex flex-wrap items-center justify-center gap-4">
+            <Link href="/agent" className="hover:text-[#2a2a2a] transition-colors">
+              For funeral professionals →
+            </Link>
             <Link href="#" className="hover:text-[#2a2a2a] transition-colors">
               Privacy
             </Link>

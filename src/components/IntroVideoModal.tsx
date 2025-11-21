@@ -39,7 +39,7 @@ export default function IntroVideoModal({ open, onClose }: IntroVideoModalProps)
       <div className="w-full max-w-3xl rounded-2xl bg-white shadow-2xl">
         <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
           <h2 id="video-modal-title" className="text-lg font-semibold text-slate-900">
-            EverLead Introduction
+            Soradin Introduction
           </h2>
           <button
             type="button"
@@ -55,7 +55,7 @@ export default function IntroVideoModal({ open, onClose }: IntroVideoModalProps)
           <iframe
             className="h-full w-full rounded-b-2xl"
             src="https://www.youtube.com/embed/dQw4w9WgXcQ"
-            title="EverLead introduction video"
+            title="Soradin introduction video"
             frameBorder="0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             allowFullScreen

@@ -3,8 +3,8 @@ import "./globals.css";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "EverLead",
-  description: "Pre-need lead marketplace for funeral professionals.",
+  title: "Soradin | Gentle funeral pre-planning, online.",
+  description: "Soradin helps families thoughtfully plan funeral wishes in advance and connects them with trusted local professionals when they're ready.",
 };
 
 export default function RootLayout({
