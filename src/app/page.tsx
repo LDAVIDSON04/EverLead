@@ -11,6 +11,7 @@ export default function HomePage() {
       {/* Header */}
       <header className="border-b border-[#ded3c2] bg-white">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
+          {/* Left: Logo */}
           <div className="flex flex-col">
             <span className="text-2xl font-semibold tracking-tight text-[#2a2a2a]">
               Soradin
@@ -20,13 +21,14 @@ export default function HomePage() {
             </span>
           </div>
 
-          <nav className="flex items-center gap-6 text-sm">
-            <a
-              href="#"
+          {/* Center: Nav items */}
+          <nav className="hidden md:flex items-center gap-6 text-sm">
+            <Link
+              href="/"
               className="text-[#4a4a4a] hover:text-[#2a2a2a] transition-colors"
             >
               Home
-            </a>
+            </Link>
             <a
               href="#planning-options"
               className="text-[#4a4a4a] hover:text-[#2a2a2a] transition-colors"
@@ -39,11 +41,15 @@ export default function HomePage() {
             >
               Resources
             </a>
+          </nav>
+
+          {/* Right: Actions */}
+          <div className="flex items-center gap-4">
             <Link
               href="/get-started"
               className="rounded-md bg-[#2a2a2a] px-5 py-2 text-sm font-medium text-white hover:bg-[#3a3a3a] transition-colors"
             >
-              Get Started
+              Get started
             </Link>
             <Link
               href="/agent"
@@ -51,7 +57,7 @@ export default function HomePage() {
             >
               For professionals
             </Link>
-          </nav>
+          </div>
         </div>
       </header>
 
@@ -79,18 +85,19 @@ export default function HomePage() {
             >
               Start planning online
             </Link>
-            <button
-              type="button"
-              onClick={() => setShowVideoModal(true)}
-              aria-expanded={showVideoModal}
-              aria-controls="video-modal"
+            <a
+              href="#intro-video"
+              onClick={(e) => {
+                e.preventDefault();
+                setShowVideoModal(true);
+              }}
               className="w-full inline-flex items-center justify-center gap-2 rounded-full border border-slate-300 bg-white px-5 py-3 text-base text-slate-700 shadow-sm hover:bg-slate-50 transition-colors sm:w-auto"
             >
               <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 text-xs text-slate-600">
                 ▶
               </span>
-              Watch Introduction Video
-            </button>
+              Watch introduction video
+            </a>
           </div>
         </div>
       </section>
