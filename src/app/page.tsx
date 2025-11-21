@@ -96,6 +96,65 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* How it Works Section */}
+      <section className="border-b border-slate-100 bg-white py-16 md:py-20">
+        <div className="mx-auto max-w-5xl px-4">
+          <p className="mb-4 text-center text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+            Simple Process
+          </p>
+          <h2
+            className="mb-12 text-center text-2xl font-semibold text-slate-900 sm:text-3xl"
+            style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+          >
+            How it works
+          </h2>
+          <div className="grid gap-8 md:grid-cols-3">
+            <div className="text-center">
+              <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-full bg-[#f7f4ef] text-lg font-semibold text-[#2a2a2a]">
+                1
+              </div>
+              <h3
+                className="mb-3 text-lg font-normal text-[#2a2a2a]"
+                style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+              >
+                Answer thoughtful questions
+              </h3>
+              <p className="text-sm leading-relaxed text-slate-600">
+                Our gentle questionnaire helps you think through your wishes at your own pace. There&apos;s no pressure, and you can save your progress anytime.
+              </p>
+            </div>
+            <div className="text-center">
+              <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-full bg-[#f7f4ef] text-lg font-semibold text-[#2a2a2a]">
+                2
+              </div>
+              <h3
+                className="mb-3 text-lg font-normal text-[#2a2a2a]"
+                style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+              >
+                Review and refine
+              </h3>
+              <p className="text-sm leading-relaxed text-slate-600">
+                Your answers are saved securely. Come back anytime to update your preferences as your thoughts evolve or circumstances change.
+              </p>
+            </div>
+            <div className="text-center">
+              <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-full bg-[#f7f4ef] text-lg font-semibold text-[#2a2a2a]">
+                3
+              </div>
+              <h3
+                className="mb-3 text-lg font-normal text-[#2a2a2a]"
+                style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+              >
+                Share when ready
+              </h3>
+              <p className="text-sm leading-relaxed text-slate-600">
+                When you&apos;re ready, we can help connect you with trusted local professionals who understand your wishes and can guide you through next steps.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* What You Can Plan - Cards Section */}
       <section
         id="planning-options"
@@ -199,7 +258,7 @@ export default function HomePage() {
                 Soradin provides a calm, organized space to think through
                 these important decisions at your own pace. We help you gather
                 your thoughts, document your preferences, and connect with
-                trusted professionals when you&apos;re ready—not before.
+                trusted local professionals when you&apos;re ready—not before.
               </p>
             </div>
 
@@ -222,7 +281,7 @@ export default function HomePage() {
                 </li>
                 <li className="flex items-start">
                   <span className="mr-3 text-[#6b6b6b]">•</span>
-                  <span>Connect with vetted pre-planning specialists when ready</span>
+                  <span>Connect with trusted local professionals when ready</span>
                 </li>
                 <li className="flex items-start">
                   <span className="mr-3 text-[#6b6b6b]">•</span>
@@ -264,12 +323,12 @@ export default function HomePage() {
                 className="mb-3 text-xl font-normal text-[#2a2a2a]"
                 style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
               >
-                Independent of any single funeral home
+                Independent and unbiased
               </h3>
               <p className="text-sm leading-relaxed text-[#4a4a4a]">
                 Soradin is not affiliated with any specific funeral home. We
-                help you explore your options and connect with professionals
-                who match your needs and values.
+                help you explore your options and connect with trusted local
+                professionals who match your needs and values.
               </p>
             </div>
 
@@ -278,12 +337,12 @@ export default function HomePage() {
                 className="mb-3 text-xl font-normal text-[#2a2a2a]"
                 style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
               >
-                Built with pre-need professionals
+                Secure and private
               </h3>
               <p className="text-sm leading-relaxed text-[#4a4a4a]">
-                Our platform and resources are developed in collaboration with
-                experienced pre-arrangement specialists who understand the
-                nuances of thoughtful planning.
+                Your information is kept completely confidential. We only share
+                your details with trusted local professionals when you explicitly
+                choose to be contacted.
               </p>
             </div>
           </div>
@@ -293,7 +352,7 @@ export default function HomePage() {
       {/* Testimonials */}
       <section className="border-b border-slate-100 bg-slate-50 py-16 md:py-20">
         <div className="mx-auto max-w-5xl px-4">
-          <div className="grid gap-6 md:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-2">
             <div className="rounded-lg border border-slate-200 bg-white p-8 shadow-sm min-h-[220px]">
               <span className="text-4xl text-slate-300">&ldquo;</span>
               <p className="mt-2 italic leading-relaxed text-slate-700">
@@ -321,21 +380,6 @@ export default function HomePage() {
                 M. L.
               </p>
               <p className="text-xs text-slate-500">Vernon, BC</p>
-            </div>
-            <div className="rounded-lg border border-slate-200 bg-white p-8 shadow-sm min-h-[220px]">
-              <span className="text-4xl text-slate-300">&ldquo;</span>
-              <p className="mt-2 italic leading-relaxed text-slate-700">
-                As a pre-need counsellor, I appreciate how Soradin respects
-                families&apos; pace and provides a thoughtful framework for
-                planning.
-              </p>
-              <p
-                className="mt-4 text-sm font-medium text-slate-900"
-                style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-              >
-                Licensed Pre-Need Counsellor
-              </p>
-              <p className="text-xs text-slate-500">Kelowna, BC</p>
             </div>
           </div>
         </div>
@@ -413,12 +457,12 @@ export default function HomePage() {
                 {/* FAQ 2 */}
                 <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
                   <h3 className="mb-2 text-base font-semibold text-slate-900">
-                    How are my details shared with professionals?
+                    How are my details shared?
                   </h3>
                   <p className="text-sm leading-relaxed text-slate-600">
                     Your details are kept completely confidential. If you
                     choose to be contacted, we only share your information with
-                    selected, vetted professionals who match your needs—never
+                    selected, trusted local professionals who match your needs—never
                     with a public list or multiple providers.
                   </p>
                 </div>
@@ -461,12 +505,6 @@ export default function HomePage() {
             © {new Date().getFullYear()} Soradin. All rights reserved.
           </div>
           <div className="flex flex-wrap items-center justify-center gap-4">
-            <Link 
-              href="/agent/dashboard" 
-              className="text-[10px] text-[#6b6b6b] hover:text-[#2a2a2a] hover:underline transition-colors"
-            >
-              For professionals (agent login)
-            </Link>
             <Link href="#" className="hover:text-[#2a2a2a] transition-colors">
               Privacy
             </Link>
