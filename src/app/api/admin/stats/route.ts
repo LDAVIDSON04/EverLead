@@ -210,9 +210,17 @@ export async function GET(_req: NextRequest) {
       stats: Array.from(statsMap.values()),
     });
 
+    // Sort by total spent (revenue) descending, then by purchased count
     const topAgents = Array.from(statsMap.values())
-      .sort((a, b) => b.allTime - a.allTime)
-      .slice(0, 10) // Show top 10 instead of 5
+      .sort((a, b) => {
+        // Primary sort: by revenue (total spent)
+        if (b.revenue !== a.revenue) {
+          return b.revenue - a.revenue;
+        }
+        // Secondary sort: by purchased count
+        return b.allTime - a.allTime;
+      })
+      .slice(0, 10) // Show top 10
       .map((stat) => ({
         agentId: stat.email, // Use email as ID for compatibility
         email: stat.email,

@@ -397,16 +397,18 @@ export default function AvailableLeadsPage() {
 
       if (!res.ok || !body?.url) {
         console.error("Checkout create error:", body);
-        setError(body?.error || "Failed to start checkout.");
+        setError(body?.error || "Could not start checkout. Please try again.");
         setBuyingId(null);
         return;
       }
 
+      // Redirect to Stripe checkout - Stripe will handle success/cancel URLs
       window.location.href = body.url;
     } catch (err) {
-      console.error(err);
-      setError("Unexpected error starting checkout.");
+      console.error("Buy Now error:", err);
+      setError("Could not start checkout. Please try again.");
       setBuyingId(null);
+      // DO NOT redirect, logout, or call router.back() - just show error
     }
   }
 

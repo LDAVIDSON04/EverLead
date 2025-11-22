@@ -71,7 +71,8 @@ export async function POST(req: NextRequest) {
       process.env.NEXT_PUBLIC_SITE_URL ??
       `${req.nextUrl.protocol}//${req.nextUrl.host}`;
 
-    const successUrl = `${baseUrl}/agent/leads/success?session_id={CHECKOUT_SESSION_ID}&leadId=${leadId}`;
+    // Redirect to dashboard on success, available leads on cancel
+    const successUrl = `${baseUrl}/agent/dashboard?session_id={CHECKOUT_SESSION_ID}`;
     const cancelUrl = `${baseUrl}/agent/leads/available`;
 
     // Get the current agent's ID from the request (if available via auth)

@@ -25,7 +25,7 @@ export default function SuccessClient() {
         setStatus("success");
         setTimeout(() => {
           try {
-            router.push("/agent/leads/mine");
+            router.replace("/agent/dashboard");
           } catch (navError) {
             console.error("Navigation error (non-fatal):", navError);
             // Don't crash - user can click button manually
@@ -98,7 +98,7 @@ export default function SuccessClient() {
           setStatus("success");
           setTimeout(() => {
             try {
-              router.push("/agent/leads/mine");
+              router.replace("/agent/dashboard");
             } catch (navError) {
               console.error("Navigation error (non-fatal):", navError);
               // Don't crash - user can click button manually
@@ -169,7 +169,7 @@ export default function SuccessClient() {
               You now have access to this lead in your account. It has been added to your dashboard.
             </p>
             <p className="mb-4 text-xs text-[#6b6b6b] italic">
-              Redirecting to My Leads...
+              Redirecting to Dashboard...
             </p>
             <div className="flex flex-wrap gap-3">
               <button

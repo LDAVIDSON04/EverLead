@@ -149,13 +149,17 @@ export default function AdminDashboardPage() {
         }
 
         // Load recent leads and auction stats separately (still using client-side for now)
-        const { data: recentData } = await supabaseClient
+        const { data: recentData, error: recentError } = await supabaseClient
           .from("leads")
           .select(
             "id, created_at, city, province, urgency_level, status, agent_status, auction_enabled, price_charged_cents"
           )
           .order("created_at", { ascending: false })
           .limit(20);
+
+        if (recentError) {
+          console.error("Error loading recent leads:", recentError);
+        }
 
         setRecentLeads((recentData || []) as RecentLead[]);
 
@@ -676,78 +680,84 @@ export default function AdminDashboardPage() {
             >
               Recent Leads
             </h2>
-            <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white/70 shadow-sm">
-              <table className="w-full border-collapse text-sm">
-                <thead>
-                  <tr className="border-b border-slate-200 bg-[#faf8f5]">
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
-                      Created date
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
-                      City / Province
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
-                      Urgency
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
-                      Status
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
-                      Auction enabled?
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
-                      Purchased?
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
-                      Action
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentLeads.map((lead) => (
-                    <tr
-                      key={lead.id}
-                      className="border-b border-slate-100 hover:bg-[#faf8f5]"
-                    >
-                      <td className="whitespace-nowrap px-4 py-3 text-sm text-[#4a4a4a]">
-                        {formatDate(lead.created_at)}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-[#4a4a4a]">
-                        {[lead.city, lead.province].filter(Boolean).join(", ") || "-"}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-[#4a4a4a]">
-                        {formatUrgency(lead.urgency_level)}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-[#4a4a4a]">
-                        {lead.agent_status || lead.status || "-"}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-[#4a4a4a]">
-                        {lead.auction_enabled ? (
-                          <span className="text-green-600 font-medium">Yes</span>
-                        ) : (
-                          <span className="text-[#6b6b6b]">No</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-[#4a4a4a]">
-                        {lead.price_charged_cents ? (
-                          <span className="text-green-600 font-medium">Yes</span>
-                        ) : (
-                          <span className="text-[#6b6b6b]">No</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3">
-                        <Link
-                          href={`/admin/leads/${lead.id}`}
-                          className="text-xs font-medium text-[#6b6b6b] hover:text-[#2a2a2a] transition-colors"
-                        >
-                          View →
-                        </Link>
-                      </td>
+            {recentLeads.length === 0 ? (
+              <div className="rounded-xl border border-slate-200 bg-white/70 px-8 py-12 text-center shadow-sm">
+                <p className="text-sm text-[#6b6b6b]">No leads found.</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white/70 shadow-sm">
+                <table className="w-full border-collapse text-sm">
+                  <thead>
+                    <tr className="border-b border-slate-200 bg-[#faf8f5]">
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                        Created date
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                        City / Province
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                        Urgency
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                        Status
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                        Auction enabled?
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                        Purchased?
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                        Action
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {recentLeads.map((lead) => (
+                      <tr
+                        key={lead.id}
+                        className="border-b border-slate-100 hover:bg-[#faf8f5]"
+                      >
+                        <td className="whitespace-nowrap px-4 py-3 text-sm text-[#4a4a4a]">
+                          {formatDate(lead.created_at)}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-[#4a4a4a]">
+                          {[lead.city, lead.province].filter(Boolean).join(", ") || "-"}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-[#4a4a4a]">
+                          {formatUrgency(lead.urgency_level)}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-[#4a4a4a]">
+                          {lead.agent_status || lead.status || "New"}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-[#4a4a4a]">
+                          {lead.auction_enabled ? (
+                            <span className="text-green-600 font-medium">Yes</span>
+                          ) : (
+                            <span className="text-[#6b6b6b]">No</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-[#4a4a4a]">
+                          {lead.price_charged_cents ? (
+                            <span className="text-green-600 font-medium">Yes</span>
+                          ) : (
+                            <span className="text-[#6b6b6b]">No</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          <Link
+                            href={`/admin/leads/${lead.id}`}
+                            className="text-xs font-medium text-[#6b6b6b] hover:text-[#2a2a2a] transition-colors"
+                          >
+                            View →
+                          </Link>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
 
