@@ -968,88 +968,81 @@ export default function AvailableLeadsPage() {
                     </div>
 
                     {/* Auction section - show when auction is enabled */}
-                    {isAuctionEnabled && (
-                      <div className="mt-2 rounded-md border border-slate-200 bg-slate-50 p-2">
-                        <p className="text-[11px] font-semibold text-slate-700">
-                          Auction
-                        </p>
-                        {auctionStatusLabel && (
-                          <p className="mt-1 text-[11px] text-slate-600">
-                            {auctionStatusLabel}
+                    {isAuctionEnabled && (() => {
+                      // Pure function to determine auction state based on time (no hooks)
+                      const now = Date.now();
+                      const startsAt = lead.auction_starts_at ? new Date(lead.auction_starts_at).getTime() : null;
+                      const endsAt = lead.auction_ends_at ? new Date(lead.auction_ends_at).getTime() : null;
+                      
+                      const isNotYetOpen = startsAt && now < startsAt;
+                      const isActive = startsAt && endsAt && now >= startsAt && now < endsAt;
+                      const isExpired = endsAt && now >= endsAt;
+                      
+                      return (
+                        <div className="mt-2 rounded-md border border-slate-200 bg-slate-50 p-2">
+                          <p className="text-[11px] font-semibold text-slate-700">
+                            Auction
                           </p>
-                        )}
-                        {lead.auction_status === 'scheduled' && (
-                          <>
-                            <p className="mt-1 text-[11px] text-slate-600">
-                              {lead.auction_starts_at
-                                ? (() => {
-                                    const startDate = new Date(lead.auction_starts_at);
-                                    const localTime = startDate.toLocaleTimeString('en-US', {
-                                      hour: 'numeric',
-                                      minute: '2-digit',
-                                      hour12: true,
-                                    });
-                                    return `Auction opens at ${localTime}`;
-                                  })()
-                                : 'Auction opens at 8:00 AM'}
-                            </p>
-                            <p className="mt-1 text-[10px] text-slate-500 italic">
-                              Bidding will open soon.
-                            </p>
-                            {/* Disable bid buttons for scheduled auctions */}
-                            <div className="mt-2">
-                              <div className="flex flex-wrap gap-2 opacity-50 pointer-events-none">
-                                <button
-                                  disabled
-                                  className="rounded-md bg-slate-400 px-3 py-1.5 text-xs font-semibold text-white cursor-not-allowed"
-                                >
-                                  + $5
-                                </button>
-                                <button
-                                  disabled
-                                  className="rounded-md bg-slate-400 px-3 py-1.5 text-xs font-semibold text-white cursor-not-allowed"
-                                >
-                                  + $10
-                                </button>
-                                <button
-                                  disabled
-                                  className="rounded-md bg-slate-400 px-3 py-1.5 text-xs font-semibold text-white cursor-not-allowed"
-                                >
-                                  + $15
-                                </button>
+                          
+                          {/* Not yet open - show scheduled time */}
+                          {isNotYetOpen && startsAt && (
+                            <>
+                              <p className="mt-1 text-[11px] text-slate-600">
+                                {(() => {
+                                  const startDate = new Date(startsAt);
+                                  const localTime = startDate.toLocaleTimeString('en-US', {
+                                    hour: 'numeric',
+                                    minute: '2-digit',
+                                    hour12: true,
+                                  });
+                                  return `Auction opens at ${localTime}`;
+                                })()}
+                              </p>
+                              <p className="mt-1 text-[10px] text-slate-500 italic">
+                                Bidding will open soon.
+                              </p>
+                              {/* Disabled bid buttons */}
+                              <div className="mt-2">
+                                <div className="flex flex-wrap gap-2 opacity-50 pointer-events-none">
+                                  <button
+                                    disabled
+                                    className="rounded-md bg-slate-400 px-3 py-1.5 text-xs font-semibold text-white cursor-not-allowed"
+                                  >
+                                    + $5
+                                  </button>
+                                  <button
+                                    disabled
+                                    className="rounded-md bg-slate-400 px-3 py-1.5 text-xs font-semibold text-white cursor-not-allowed"
+                                  >
+                                    + $10
+                                  </button>
+                                  <button
+                                    disabled
+                                    className="rounded-md bg-slate-400 px-3 py-1.5 text-xs font-semibold text-white cursor-not-allowed"
+                                  >
+                                    + $15
+                                  </button>
+                                </div>
                               </div>
-                            </div>
-                          </>
-                        )}
-
-                        {lead.auction_status === 'open' && (
-                          <>
-                            <p className="mt-1 text-[11px] text-slate-600">
-                              {lead.current_bid_amount
-                                ? `Current bid: $${lead.current_bid_amount.toFixed(2)}`
-                                : `Starting bid: $${startingBid.toFixed(2)}`}
-                            </p>
-                            
-                            <AuctionCountdown
-                              auctionEndsAt={lead.auction_ends_at ?? null}
-                              hasBids={!!lead.current_bid_amount && lead.current_bid_amount > 0}
-                            />
-
-                            {/* Preset bid buttons - only show if auction is active and available */}
-                            {(() => {
-                              // Pure function to check if expired (no hooks)
-                              // Also check if auction_status is 'closed' or 'ended'
-                              const isAuctionExpired = !!lead.auction_ends_at &&
-                                new Date(lead.auction_ends_at).getTime() <= Date.now();
-                              const status = lead.auction_status as string | null | undefined;
-                              const isClosed = status === 'closed' || status === 'ended';
-                              const shouldDisable = isAuctionExpired || isClosed || !showBidForm;
+                            </>
+                          )}
+                          
+                          {/* Active auction - show countdown and enabled buttons */}
+                          {isActive && (
+                            <>
+                              <p className="mt-1 text-[11px] text-slate-600">
+                                {lead.current_bid_amount
+                                  ? `Current bid: $${lead.current_bid_amount.toFixed(2)}`
+                                  : `Starting bid: $${startingBid.toFixed(2)}`}
+                              </p>
                               
-                              if (!showBidForm && !isAuctionExpired && !isClosed) {
-                                return null;
-                              }
-                              
-                              return (
+                              <AuctionCountdown
+                                auctionEndsAt={lead.auction_ends_at ?? null}
+                                hasBids={!!lead.current_bid_amount && lead.current_bid_amount > 0}
+                              />
+
+                              {/* Preset bid buttons */}
+                              {showBidForm && (
                                 <div className="mt-2">
                                   <p className="mb-1 text-[10px] text-slate-500">
                                     Bid increments:
@@ -1057,34 +1050,22 @@ export default function AvailableLeadsPage() {
                                   <div className="flex flex-wrap gap-2">
                                     <button
                                       onClick={() => handlePlaceBid(lead.id, minIncrement)}
-                                      disabled={shouldDisable || biddingId === lead.id}
-                                      className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
-                                        shouldDisable
-                                          ? "bg-slate-400 text-white cursor-not-allowed opacity-50"
-                                          : "bg-slate-900 text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-70"
-                                      }`}
+                                      disabled={biddingId === lead.id}
+                                      className="rounded-md px-3 py-1.5 text-xs font-semibold transition-colors bg-slate-900 text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-70"
                                     >
                                       {biddingId === lead.id ? "Placing…" : `+ $${minIncrement}`}
                                     </button>
                                     <button
                                       onClick={() => handlePlaceBid(lead.id, minIncrement * 2)}
-                                      disabled={shouldDisable || biddingId === lead.id}
-                                      className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
-                                        shouldDisable
-                                          ? "bg-slate-400 text-white cursor-not-allowed opacity-50"
-                                          : "bg-slate-900 text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-70"
-                                      }`}
+                                      disabled={biddingId === lead.id}
+                                      className="rounded-md px-3 py-1.5 text-xs font-semibold transition-colors bg-slate-900 text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-70"
                                     >
                                       {biddingId === lead.id ? "Placing…" : `+ $${minIncrement * 2}`}
                                     </button>
                                     <button
                                       onClick={() => handlePlaceBid(lead.id, minIncrement * 3)}
-                                      disabled={shouldDisable || biddingId === lead.id}
-                                      className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
-                                        shouldDisable
-                                          ? "bg-slate-400 text-white cursor-not-allowed opacity-50"
-                                          : "bg-slate-900 text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-70"
-                                      }`}
+                                      disabled={biddingId === lead.id}
+                                      className="rounded-md px-3 py-1.5 text-xs font-semibold transition-colors bg-slate-900 text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-70"
                                     >
                                       {biddingId === lead.id ? "Placing…" : `+ $${minIncrement * 3}`}
                                     </button>
@@ -1093,31 +1074,55 @@ export default function AvailableLeadsPage() {
                                     Next bid: ${(currentBid + minIncrement).toFixed(2)}
                                   </p>
                                 </div>
-                              );
-                            })()}
-                          </>
-                        )}
-
-                        {lead.auction_status === 'ended' && (
-                          <>
-                            {lead.winning_agent_id && userId && lead.winning_agent_id === userId ? (
+                              )}
+                            </>
+                          )}
+                          
+                          {/* Expired auction - show closed message and disabled buttons */}
+                          {isExpired && (
+                            <>
                               <p className="mt-1 text-[11px] text-slate-600">
-                                You've won this lead. Complete purchase to view contact details.
+                                {lead.current_bid_amount
+                                  ? `Current bid: $${lead.current_bid_amount.toFixed(2)}`
+                                  : `Starting bid: $${startingBid.toFixed(2)}`}
                               </p>
-                            ) : (
-                              <p className="mt-1 text-[11px] text-slate-600">
+                              <p className="mt-1 text-[11px] font-medium text-slate-500">
                                 Bidding closed
                               </p>
-                            )}
-                          </>
-                        )}
-                        {bidErrors[lead.id] && (
-                          <p className="mt-1 text-[11px] text-red-600">
-                            {bidErrors[lead.id]}
-                          </p>
-                        )}
-                      </div>
-                    )}
+                              {/* Disabled bid buttons */}
+                              <div className="mt-2">
+                                <div className="flex flex-wrap gap-2 opacity-50 pointer-events-none">
+                                  <button
+                                    disabled
+                                    className="rounded-md bg-slate-400 px-3 py-1.5 text-xs font-semibold text-white cursor-not-allowed"
+                                  >
+                                    + $5
+                                  </button>
+                                  <button
+                                    disabled
+                                    className="rounded-md bg-slate-400 px-3 py-1.5 text-xs font-semibold text-white cursor-not-allowed"
+                                  >
+                                    + $10
+                                  </button>
+                                  <button
+                                    disabled
+                                    className="rounded-md bg-slate-400 px-3 py-1.5 text-xs font-semibold text-white cursor-not-allowed"
+                                  >
+                                    + $15
+                                  </button>
+                                </div>
+                              </div>
+                            </>
+                          )}
+                          
+                          {bidErrors[lead.id] && (
+                            <p className="mt-1 text-[11px] text-red-600">
+                              {bidErrors[lead.id]}
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
               );
