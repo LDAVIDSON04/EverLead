@@ -990,12 +990,13 @@ export default function AvailableLeadsPage() {
                               <p className="mt-1 text-[11px] text-slate-600">
                                 {(() => {
                                   const startDate = new Date(startsAt);
-                                  const localTime = startDate.toLocaleTimeString('en-US', {
+                                  // Format in the user's local timezone
+                                  const timeLabel = startDate.toLocaleTimeString([], {
                                     hour: 'numeric',
                                     minute: '2-digit',
                                     hour12: true,
                                   });
-                                  return `Auction opens at ${localTime}`;
+                                  return `Auction opens at ${timeLabel}`;
                                 })()}
                               </p>
                               <p className="mt-1 text-[10px] text-slate-500 italic">

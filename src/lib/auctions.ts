@@ -14,59 +14,79 @@ export interface AuctionTiming {
 /**
  * Calculate auction timing for a new lead based on creation time
  * Returns timing fields that should be set when creating a lead
+ * Uses America/Vancouver timezone for business hours (8:00-19:00)
  */
 export function calculateAuctionTiming(createdAt: Date | string): AuctionTiming {
   const created = typeof createdAt === 'string' ? new Date(createdAt) : createdAt;
   const now = new Date(created);
   
-  // Get server's local time (app server timezone)
-  const serverTZ = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const nowInServerTZ = new Date(now.toLocaleString('en-US', { timeZone: serverTZ }));
-  const hour = nowInServerTZ.getHours();
+  // Use BC time for now
+  const tz = 'America/Vancouver';
   
-  // Business hours: 8:00-19:00 (8am-7pm) in server's local time
-  const isBusinessHours = hour >= 8 && hour < 19;
+  // Get "now" in that timezone
+  const nowZonedStr = now.toLocaleString('en-CA', { timeZone: tz });
+  const nowZoned = new Date(nowZonedStr);
   
-  if (isBusinessHours) {
-    // Within business hours - auction starts immediately
-    const auctionEndsAt = new Date(now.getTime() + 30 * 60 * 1000); // +30 minutes
-    return {
-      auction_status: 'open',
-      auction_starts_at: now.toISOString(),
-      auction_ends_at: auctionEndsAt.toISOString(),
-    };
+  const BUSINESS_OPEN_HOUR = 8;  // 8:00 AM
+  const BUSINESS_CLOSE_HOUR = 19; // 7:00 PM
+  
+  const year = nowZoned.getFullYear();
+  const month = nowZoned.getMonth();
+  const day = nowZoned.getDate();
+  
+  const openToday = new Date(year, month, day, BUSINESS_OPEN_HOUR, 0, 0, 0);
+  const closeToday = new Date(year, month, day, BUSINESS_CLOSE_HOUR, 0, 0, 0);
+  
+  let auctionStartsAt: Date;
+  
+  if (nowZoned < openToday) {
+    // Before 8am → start at 8am today
+    auctionStartsAt = openToday;
+  } else if (nowZoned >= closeToday) {
+    // After 7pm → start at 8am tomorrow
+    const tomorrow = new Date(year, month, day + 1, BUSINESS_OPEN_HOUR, 0, 0, 0);
+    auctionStartsAt = tomorrow;
   } else {
-    // Outside business hours - schedule for next 8:00 AM in server timezone
-    const next8amDate = new Date(nowInServerTZ);
-    
-    if (hour >= 19) {
-      // After 7pm, schedule for next day 8am
-      next8amDate.setDate(next8amDate.getDate() + 1);
-    }
-    // If before 8am, schedule for today 8am (no date change needed)
-    next8amDate.setHours(8, 0, 0, 0);
-    
-    // Convert the local 8am time to UTC for storage
-    // We need to create a date that represents 8am in server timezone
-    const year = next8amDate.getFullYear();
-    const month = next8amDate.getMonth();
-    const day = next8amDate.getDate();
-    
-    // Create a date string in server timezone format, then parse it
-    // This ensures we get the correct UTC representation
-    const local8amStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}T08:00:00`;
-    
-    // Parse as if it's in server timezone, then convert to UTC
-    // Use a simpler approach: create date in local time, then adjust for UTC
-    const local8am = new Date(year, month, day, 8, 0, 0, 0);
-    const offset = local8am.getTimezoneOffset() * 60 * 1000;
-    const auctionStartsAt = new Date(local8am.getTime() - offset).toISOString();
-    const auctionEndsAt = new Date(new Date(auctionStartsAt).getTime() + 30 * 60 * 1000).toISOString();
-    
-    return {
-      auction_status: 'scheduled',
-      auction_starts_at: auctionStartsAt,
-      auction_ends_at: auctionEndsAt,
-    };
+    // During business hours → start immediately
+    auctionStartsAt = nowZoned;
   }
+  
+  // 30-minute auction window
+  const auctionEndsAt = new Date(auctionStartsAt.getTime() + 30 * 60 * 1000);
+  
+  // Convert to UTC ISO strings for storage
+  // We need to create UTC dates that represent the Vancouver time
+  // The dates we created (auctionStartsAt, auctionEndsAt) are in local JS timezone
+  // but represent Vancouver time. We need to convert them to UTC.
+  
+  // Use Intl.DateTimeFormat to get the proper UTC representation
+  // Create a date string in ISO format that represents Vancouver time
+  const startYear = auctionStartsAt.getFullYear();
+  const startMonth = auctionStartsAt.getMonth();
+  const startDay = auctionStartsAt.getDate();
+  const startHour = auctionStartsAt.getHours();
+  const startMinute = auctionStartsAt.getMinutes();
+  
+  // Create a date string representing Vancouver time
+  const vancouverDateStr = `${startYear}-${String(startMonth + 1).padStart(2, '0')}-${String(startDay).padStart(2, '0')}T${String(startHour).padStart(2, '0')}:${String(startMinute).padStart(2, '0')}:00`;
+  
+  // To convert Vancouver time to UTC, we need to calculate the offset
+  // Use a sample UTC date to calculate the offset for Vancouver at this date
+  const sampleUTC = new Date(Date.UTC(startYear, startMonth, startDay, 12, 0, 0, 0));
+  const vancouverTimeStr = sampleUTC.toLocaleString('en-US', { timeZone: tz, hour12: false });
+  const vancouverTimeDate = new Date(vancouverTimeStr);
+  const offsetMs = sampleUTC.getTime() - vancouverTimeDate.getTime();
+  
+  // Create UTC date that represents Vancouver time
+  const utcStartsAt = new Date(Date.UTC(startYear, startMonth, startDay, startHour, startMinute, 0));
+  const auctionStartsAtUTC = new Date(utcStartsAt.getTime() - offsetMs);
+  const auctionEndsAtUTC = new Date(auctionStartsAtUTC.getTime() + 30 * 60 * 1000);
+  
+  const isBusinessHours = nowZoned >= openToday && nowZoned < closeToday;
+  
+  return {
+    auction_status: isBusinessHours ? 'open' : 'scheduled',
+    auction_starts_at: auctionStartsAtUTC.toISOString(),
+    auction_ends_at: auctionEndsAtUTC.toISOString(),
+  };
 }
