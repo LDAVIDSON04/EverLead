@@ -1,38 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import * as React from "react";
 import { useEffect, useState, useRef, useCallback } from "react";
-
-function useCountdown(endTime?: string | null) {
-  const [timeLeft, setTimeLeft] = useState<number | null>(() => {
-    if (!endTime) return null;
-    const end = new Date(endTime).getTime();
-    return Math.max(end - Date.now(), 0);
-  });
-
-  useEffect(() => {
-    if (!endTime) return;
-
-    const interval = setInterval(() => {
-      const end = new Date(endTime).getTime();
-      const remaining = end - Date.now();
-      setTimeLeft(remaining > 0 ? remaining : 0);
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [endTime]);
-
-  if (timeLeft === null) return { label: null, isExpired: false };
-
-  const totalSeconds = Math.floor(timeLeft / 1000);
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-
-  const label = `${minutes}:${seconds.toString().padStart(2, "0")}`;
-  const isExpired = totalSeconds <= 0;
-
-  return { label, isExpired };
-}
 import { supabaseClient } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import { useRequireRole } from "@/lib/hooks/useRequireRole";
@@ -1040,39 +1010,19 @@ export default function AvailableLeadsPage() {
                                 : `Starting bid: $${startingBid.toFixed(2)}`}
                             </p>
                             
-                            {(() => {
-                              // Use countdown hook
-                              const { label: timeLeft, isExpired } = useCountdown(lead.auction_ends_at ?? null);
-                              
-                              return (
-                                <>
-                                  {timeLeft && !isExpired && (
-                                    <span className="mt-1 text-[11px] text-amber-700 font-medium">
-                                      Time left: {timeLeft}
-                                    </span>
-                                  )}
-                                  
-                                  {(!timeLeft || isExpired) && lead.auction_ends_at && (
-                                    <span className="mt-1 text-[11px] text-slate-500">
-                                      Bidding closed
-                                    </span>
-                                  )}
-                                  
-                                  {!lead.auction_ends_at && (
-                                    <p className="mt-1 text-[10px] text-slate-500">
-                                      No bids yet — be the first to bid
-                                    </p>
-                                  )}
-                                </>
-                              );
-                            })()}
+                            <AuctionCountdown
+                              auctionEndsAt={lead.auction_ends_at ?? null}
+                              hasBids={!!lead.current_bid_amount && lead.current_bid_amount > 0}
+                            />
 
                             {/* Preset bid buttons - only show if auction is active and available */}
                             {(() => {
-                              const { isExpired } = useCountdown(lead.auction_ends_at ?? null);
-                              const shouldDisable = isExpired || !showBidForm;
+                              // Pure function to check if expired (no hooks)
+                              const isAuctionExpired = !!lead.auction_ends_at &&
+                                new Date(lead.auction_ends_at).getTime() <= Date.now();
+                              const shouldDisable = isAuctionExpired || !showBidForm;
                               
-                              if (!showBidForm && !isExpired) {
+                              if (!showBidForm && !isAuctionExpired) {
                                 return null;
                               }
                               
@@ -1154,5 +1104,79 @@ export default function AvailableLeadsPage() {
         })()}
       </section>
     </main>
+  );
+}
+
+// Auction countdown component - uses hooks properly (not in a loop)
+type AuctionCountdownProps = {
+  auctionEndsAt: string | null;
+  hasBids: boolean;
+};
+
+function useCountdown(auctionEndsAt: string | null) {
+  const [remainingMs, setRemainingMs] = React.useState<number | null>(() => {
+    if (!auctionEndsAt) return null;
+    const end = new Date(auctionEndsAt).getTime();
+    const now = Date.now();
+    return Math.max(end - now, 0);
+  });
+
+  React.useEffect(() => {
+    if (!auctionEndsAt) return;
+
+    const interval = setInterval(() => {
+      const end = new Date(auctionEndsAt).getTime();
+      const now = Date.now();
+      const diff = end - now;
+      setRemainingMs(diff > 0 ? diff : 0);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [auctionEndsAt]);
+
+  if (remainingMs === null) {
+    return {
+      label: null,
+      isExpired: false,
+    };
+  }
+
+  const isExpired = remainingMs <= 0;
+  const totalSeconds = Math.max(Math.floor(remainingMs / 1000), 0);
+  const minutes = Math.floor(totalSeconds / 60)
+    .toString()
+    .padStart(2, "0");
+  const seconds = (totalSeconds % 60).toString().padStart(2, "0");
+
+  return {
+    label: `${minutes}:${seconds}`,
+    isExpired,
+  };
+}
+
+function AuctionCountdown({ auctionEndsAt, hasBids }: AuctionCountdownProps) {
+  const { label, isExpired } = useCountdown(auctionEndsAt);
+
+  // No auction end set yet
+  if (!auctionEndsAt) {
+    return (
+      <p className="mt-1 text-[10px] text-slate-500">
+        No bids yet — be the first to bid
+      </p>
+    );
+  }
+
+  if (isExpired) {
+    return (
+      <p className="mt-1 text-[11px] font-medium text-slate-500">
+        Bidding closed
+      </p>
+    );
+  }
+
+  return (
+    <p className="mt-1 text-[11px] font-medium text-amber-700">
+      Time left: {label}
+    </p>
   );
 }
