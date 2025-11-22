@@ -141,8 +141,8 @@ export async function POST(req: NextRequest) {
       auction_enabled: body.auction_enabled !== undefined ? body.auction_enabled : true,
     };
 
-    // Set auction-related fields - simplified to avoid date math errors
-    // For now, do NOT compute Date objects here to avoid "Invalid time value" errors
+    // Set auction-related fields - simple and safe
+    // Bidding is allowed immediately (24/7), auction_ends_at will be set on first bid
     if (leadData.auction_enabled) {
       // Set default auction values
       leadData.starting_bid = 10;
@@ -151,12 +151,19 @@ export async function POST(req: NextRequest) {
       // Also set buy_now_price_cents for backward compatibility
       leadData.buy_now_price_cents = 5000; // $50
       
-      // Set auction timing to null for now - will be set later when auction logic is safer
-      // This prevents RangeError from invalid date calculations
-      leadData.auction_status = 'scheduled';
-      leadData.auction_starts_at = null;
+      // Set auction_starts_at to now (bidding allowed immediately)
+      // auction_ends_at will be null until first bid
+      const now = new Date();
+      if (isNaN(now.getTime())) {
+        // Guard against invalid date
+        console.error("Invalid date when creating lead");
+        leadData.auction_starts_at = null;
+      } else {
+        leadData.auction_starts_at = now.toISOString();
+      }
       leadData.auction_ends_at = null;
       leadData.current_bid_amount = null;
+      leadData.auction_status = 'open'; // Bidding is open 24/7
     }
 
     // Clean payload: remove null/undefined/empty

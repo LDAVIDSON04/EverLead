@@ -1,6 +1,7 @@
 // src/app/api/leads/[leadId]/bid/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { computeAuctionEndsAt } from "@/lib/auctionTiming";
 
 const DEFAULT_TZ = 'America/Vancouver'; // Business hours timezone
 
@@ -193,17 +194,36 @@ export async function POST(req: NextRequest, context: any): Promise<Response> {
     // Determine if this is the first bid (auction_ends_at is null)
     const isFirstBid = !lead.auction_ends_at;
     const now = new Date();
+    
+    // Guard against invalid date
+    if (isNaN(now.getTime())) {
+      console.error("Invalid date when processing bid");
+      return NextResponse.json(
+        { error: "Invalid date" },
+        { status: 500 }
+      );
+    }
+    
     const nowISO = now.toISOString();
     
-    // Calculate new auction end time (30 minutes from now)
-    // This resets the 30-minute window on every bid
-    const newAuctionEnd = new Date(now.getTime() + 30 * 60 * 1000).toISOString();
+    // Calculate new auction end time using business rules:
+    // - earliest win is 30 minutes after max(now, nextMarketOpen)
+    // - every bid resets the 30-minute clock
+    const newAuctionEnd = computeAuctionEndsAt(now);
+    
+    if (!newAuctionEnd) {
+      console.error("Failed to compute auction end time");
+      return NextResponse.json(
+        { error: "Failed to compute auction end time" },
+        { status: 500 }
+      );
+    }
 
     const updateData: any = {
       current_bid_amount: bidAmount,
       current_bid_agent_id: agentId,
       winning_agent_id: agentId, // Set winning agent on each bid
-      auction_ends_at: newAuctionEnd, // Set/reset 30-minute window
+      auction_ends_at: newAuctionEnd, // Set/reset 30-minute window based on business rules
     };
 
     // If this is the first bid, also set auction_starts_at and ensure status is 'open'
