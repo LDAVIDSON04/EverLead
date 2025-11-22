@@ -6,7 +6,6 @@ import { useEffect, useState } from "react";
 import { supabaseClient } from "@/lib/supabaseClient";
 import { maskName } from "@/lib/masking";
 import { agentOwnsLead } from "@/lib/leads";
-import { AgentNav } from "@/components/AgentNav";
 
 type Stats = {
   available: number;
@@ -181,8 +180,6 @@ export default function AgentDashboardPage() {
 
   return (
     <>
-      <AgentNav />
-      
       {/* Content */}
       <section className="mx-auto max-w-6xl px-4 py-8">
         {/* Header */}

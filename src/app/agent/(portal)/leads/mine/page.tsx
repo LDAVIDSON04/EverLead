@@ -6,7 +6,6 @@ import { supabaseClient } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import { useRequireRole } from "@/lib/hooks/useRequireRole";
 import clsx from "clsx";
-import { AgentNav } from "@/components/AgentNav";
 
 type Lead = {
   id: string;
@@ -94,9 +93,7 @@ export default function MyLeadsPage() {
 
   return (
     <>
-      <AgentNav />
-      
-      <section className="mx-auto max-w-6xl px-6 py-8">
+      <section className="w-full">
         <div className="mb-6">
           <h1
             className="mb-2 text-2xl font-normal text-[#2a2a2a]"

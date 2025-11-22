@@ -12,7 +12,6 @@ import { useRouter } from "next/navigation";
 import { useRequireRole } from "@/lib/hooks/useRequireRole";
 import AgentLeadCard, { AgentLead } from '@/components/agent/AgentLeadCard';
 import { getLeadPriceFromUrgency } from "@/lib/leads/pricing";
-import { AgentNav } from "@/components/AgentNav";
 
 // Using AgentLead type from component
 
@@ -257,8 +256,6 @@ export default function AvailableLeadsPage() {
 
   return (
     <div className="w-full">
-      <AgentNav />
-      
       <div className="mb-6">
         <h1
           className="mb-2 text-2xl font-normal text-[#2a2a2a]"
