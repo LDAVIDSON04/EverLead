@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 interface AuctionCountdownProps {
   auctionEndsAt: string | null;
-  auctionStatus: 'open' | 'closed' | 'pending' | null;
+  auctionStatus: 'open' | 'scheduled' | 'ended' | null;
   onEnd?: () => void;
 }
 
@@ -49,7 +49,7 @@ export function useAuctionCountdown(auctionEndAt?: string | Date | null): Auctio
 
   const label =
     minutes > 0
-      ? `${minutes}m ${seconds.toString().padStart(2, "0")}s`
+      ? `${minutes}:${seconds.toString().padStart(2, "0")}`
       : `${seconds}s`;
 
   return { timeLeftLabel: label, isAuctionEnded: false };
@@ -68,29 +68,28 @@ export function AuctionCountdown({ auctionEndsAt, auctionStatus, onEnd }: Auctio
     }
   }, [isAuctionEnded, hasEnded, onEnd]);
 
-  // Don't show anything if no end time or not open
-  if (!auctionEndsAt || auctionStatus !== 'open') {
+  // Don't show anything if not open
+  if (auctionStatus !== 'open') {
     return null;
   }
 
-  // Show ended message
+  // Show ended message if timer has expired
   if (isAuctionEnded || hasEnded) {
     return (
-      <p className="mt-1 text-sm font-medium text-red-600">
-        Auction ended — bidding closed
+      <p className="mt-1 text-[11px] font-medium text-red-600">
+        Bidding closed
       </p>
     );
   }
 
-  // Show countdown
-  if (timeLeftLabel) {
+  // Show countdown if we have an end time
+  if (auctionEndsAt && timeLeftLabel) {
     return (
-      <p className="mt-1 text-sm text-gray-600">
-        Auction ends in <span className="font-medium text-gray-800">{timeLeftLabel}</span>
+      <p className="mt-1 text-[11px] text-slate-600">
+        Time left: <span className="font-medium text-slate-800">{timeLeftLabel}</span>
       </p>
     );
   }
 
   return null;
 }
-

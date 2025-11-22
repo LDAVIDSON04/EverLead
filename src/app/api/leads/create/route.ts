@@ -147,9 +147,8 @@ export async function POST(req: NextRequest) {
       const auctionTiming = calculateAuctionTiming(new Date());
       
       leadData.auction_status = auctionTiming.auction_status;
-      leadData.auction_start_time = auctionTiming.auction_start_time;
-      leadData.auction_end_time = auctionTiming.auction_end_time;
-      leadData.after_hours_release_time = auctionTiming.after_hours_release_time;
+      leadData.auction_starts_at = auctionTiming.auction_starts_at;
+      leadData.auction_ends_at = auctionTiming.auction_ends_at;
       
       // Set default auction values
       leadData.starting_bid = 10;

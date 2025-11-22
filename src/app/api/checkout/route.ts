@@ -2,7 +2,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { normalizePendingLeads } from "@/lib/auctions";
 
 export async function POST(req: NextRequest) {
   try {
@@ -31,9 +30,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Normalize lead status (pending->open, open->closed)
-    const normalizedLeads = await normalizePendingLeads([lead], supabaseAdmin);
-    const finalizedLead = normalizedLeads[0] || lead;
+    const finalizedLead = lead;
 
     // Check if lead is already sold
     if (finalizedLead.status === "purchased_by_agent" || finalizedLead.assigned_agent_id) {

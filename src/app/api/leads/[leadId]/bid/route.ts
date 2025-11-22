@@ -1,9 +1,10 @@
 // src/app/api/leads/[leadId]/bid/route.ts
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { validateBidAmount, calculateNewAuctionEnd } from "@/lib/auctions";
 
-export async function POST(req: Request, context: any): Promise<Response> {
+const DEFAULT_TZ = 'America/Vancouver'; // Business hours timezone
+
+export async function POST(req: NextRequest, context: any): Promise<Response> {
   try {
     const { leadId } = await context.params;
 
@@ -11,7 +12,7 @@ export async function POST(req: Request, context: any): Promise<Response> {
       return NextResponse.json({ error: "Missing leadId" }, { status: 400 });
     }
 
-    // Parse request body
+    // Parse request body to get agentId (client sends it)
     const body = await req.json().catch(() => null);
     const increment = body?.increment;
     const amount = body?.amount;
@@ -19,10 +20,11 @@ export async function POST(req: Request, context: any): Promise<Response> {
 
     if (!agentId) {
       return NextResponse.json(
-        { error: "agentId is required" },
-        { status: 400 }
+        { error: "Authentication required. Please log in and try again." },
+        { status: 401 }
       );
     }
+
 
     // Verify user is an agent
     const { data: profile, error: profileError } = await supabaseAdmin
@@ -32,6 +34,7 @@ export async function POST(req: Request, context: any): Promise<Response> {
       .maybeSingle();
 
     if (profileError || !profile) {
+      console.error("Profile error:", profileError);
       return NextResponse.json(
         { error: "Profile not found" },
         { status: 403 }
@@ -53,6 +56,7 @@ export async function POST(req: Request, context: any): Promise<Response> {
       .maybeSingle();
 
     if (leadError || !lead) {
+      console.error("Lead error:", leadError);
       return NextResponse.json(
         { error: "Lead not found" },
         { status: 404 }
@@ -67,36 +71,17 @@ export async function POST(req: Request, context: any): Promise<Response> {
       );
     }
 
-    // Check auction status
-    if (lead.auction_status === 'pending') {
-      // Check if release time has passed
-      if (lead.after_hours_release_time) {
-        const releaseTime = new Date(lead.after_hours_release_time);
-        const now = new Date();
-        if (now < releaseTime) {
-          return NextResponse.json(
-            { error: "Auction has not opened yet." },
-            { status: 400 }
-          );
-        }
-      } else {
-        return NextResponse.json(
-          { error: "Auction has not opened yet." },
-          { status: 400 }
-        );
-      }
-    }
-
-    if (lead.auction_status === 'closed') {
+    // Check auction status - reject if ended
+    if (lead.auction_status === 'ended') {
       return NextResponse.json(
-        { error: "Auction has ended." },
+        { error: "Auction has ended" },
         { status: 400 }
       );
     }
 
     // Check if auction has ended by time (even if status hasn't been updated yet)
-    if (lead.auction_status === 'open' && lead.auction_end_time) {
-      const endAt = new Date(lead.auction_end_time);
+    if (lead.auction_ends_at) {
+      const endAt = new Date(lead.auction_ends_at);
       const now = new Date();
       if (now >= endAt) {
         // Find highest bidder
@@ -109,17 +94,36 @@ export async function POST(req: Request, context: any): Promise<Response> {
 
         const winningAgentId = bids && bids.length > 0 ? bids[0].agent_id : null;
 
-        // Update to closed
+        // Update to ended
         await supabaseAdmin
           .from('leads')
           .update({
-            auction_status: 'closed',
+            auction_status: 'ended',
             winning_agent_id: winningAgentId,
           })
           .eq('id', leadId);
 
         return NextResponse.json(
-          { error: "Auction has ended." },
+          { error: "Auction has ended" },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Check if scheduled auction has started
+    if (lead.auction_status === 'scheduled') {
+      if (lead.auction_starts_at) {
+        const startAt = new Date(lead.auction_starts_at);
+        const now = new Date();
+        if (now < startAt) {
+          return NextResponse.json(
+            { error: "Auction has not opened yet" },
+            { status: 400 }
+          );
+        }
+      } else {
+        return NextResponse.json(
+          { error: "Auction has not opened yet" },
           { status: 400 }
         );
       }
@@ -152,10 +156,9 @@ export async function POST(req: Request, context: any): Promise<Response> {
     }
 
     // Validate bid amount
-    const validation = validateBidAmount(bidAmount, currentBid, startingBid, minIncrement);
-    if (!validation.valid) {
+    if (bidAmount < effectiveCurrent + minIncrement) {
       return NextResponse.json(
-        { error: validation.error },
+        { error: `Bid must be at least $${(effectiveCurrent + minIncrement).toFixed(2)} (current: $${effectiveCurrent.toFixed(2)}, minimum increment: $${minIncrement})` },
         { status: 400 }
       );
     }
@@ -180,36 +183,39 @@ export async function POST(req: Request, context: any): Promise<Response> {
       .single();
 
     if (bidInsertError) {
-      console.error("Bid insert error", bidInsertError);
+      console.error("Bid insert error:", bidInsertError);
       return NextResponse.json(
-        { error: "Failed to place bid" },
+        { error: "Failed to place bid", details: bidInsertError.message },
         { status: 500 }
       );
     }
 
     // Determine if this is the first bid
-    const isFirstBid = !lead.current_bid_amount && !lead.auction_start_time;
-    const now = new Date().toISOString();
-    const newAuctionEnd = calculateNewAuctionEnd();
+    const isFirstBid = !lead.current_bid_amount && !lead.auction_starts_at;
+    const now = new Date();
+    const nowISO = now.toISOString();
+    
+    // Calculate new auction end time (30 minutes from now)
+    const newAuctionEnd = new Date(now.getTime() + 30 * 60 * 1000).toISOString();
 
     const updateData: any = {
       current_bid_amount: bidAmount,
       current_bid_agent_id: agentId,
       winning_agent_id: agentId, // Set winning agent on each bid
-      auction_end_time: newAuctionEnd, // Reset 30-minute window
-      last_bid_at: now,
+      auction_ends_at: newAuctionEnd, // Reset 30-minute window
+      auction_last_bid_at: nowISO,
     };
 
-    // If this is the first bid, set auction_start_time and ensure status is 'open'
+    // If this is the first bid, set auction_starts_at and ensure status is 'open'
     if (isFirstBid) {
-      updateData.auction_start_time = now;
+      updateData.auction_starts_at = nowISO;
       updateData.auction_status = 'open';
-      updateData.auction_end_time = newAuctionEnd;
+      updateData.auction_ends_at = newAuctionEnd;
     } else {
       // Reset the 30-minute window on each bid
-      updateData.auction_end_time = newAuctionEnd;
+      updateData.auction_ends_at = newAuctionEnd;
       // Ensure status is open
-      if (lead.auction_status === 'pending') {
+      if (lead.auction_status === 'scheduled') {
         updateData.auction_status = 'open';
       }
     }
@@ -222,11 +228,28 @@ export async function POST(req: Request, context: any): Promise<Response> {
       .single();
 
     if (updateError) {
-      console.error("Lead update error", updateError);
+      console.error("Lead update error - full details:", {
+        error: updateError,
+        code: updateError.code,
+        message: updateError.message,
+        details: updateError.details,
+        hint: updateError.hint,
+        updateData,
+        leadId,
+      });
+      
       // Try to rollback the bid insert
-      await supabaseAdmin.from("lead_bids").delete().eq("id", insertedBid.id);
+      try {
+        await supabaseAdmin.from("lead_bids").delete().eq("id", insertedBid.id);
+      } catch (rollbackError) {
+        console.error("Failed to rollback bid:", rollbackError);
+      }
+      
       return NextResponse.json(
-        { error: "Failed to update lead" },
+        { 
+          error: "Failed to update lead",
+          details: updateError.message || "Database update failed",
+        },
         { status: 500 }
       );
     }
@@ -236,7 +259,7 @@ export async function POST(req: Request, context: any): Promise<Response> {
       bid: insertedBid,
     });
   } catch (err: any) {
-    console.error("Bid error", err);
+    console.error("Bid error - unexpected:", err);
     return NextResponse.json(
       { error: err.message || "Something went wrong placing bid" },
       { status: 500 }

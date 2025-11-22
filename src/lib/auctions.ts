@@ -1,17 +1,14 @@
 // src/lib/auctions.ts
 // Auction scheduling and finalization logic
 
-import { DateTime } from 'luxon';
+const DEFAULT_TZ = 'America/Vancouver'; // Business hours timezone
 
-const DEFAULT_TZ = 'America/Vancouver';
-
-export type AuctionStatus = 'open' | 'closed' | 'pending';
+export type AuctionStatus = 'open' | 'scheduled' | 'ended';
 
 export interface AuctionTiming {
   auction_status: AuctionStatus;
-  auction_start_time: string | null;
-  auction_end_time: string | null;
-  after_hours_release_time: string | null;
+  auction_starts_at: string | null;
+  auction_ends_at: string | null;
 }
 
 /**
@@ -20,152 +17,39 @@ export interface AuctionTiming {
  */
 export function calculateAuctionTiming(createdAt: Date | string): AuctionTiming {
   const created = typeof createdAt === 'string' ? new Date(createdAt) : createdAt;
-  const now = DateTime.now().setZone(DEFAULT_TZ);
-  const localTime = DateTime.fromJSDate(created, { zone: DEFAULT_TZ });
-
-  const marketOpen = localTime.set({ hour: 8, minute: 0, second: 0, millisecond: 0 });
-  const marketClose = localTime.set({ hour: 19, minute: 0, second: 0, millisecond: 0 });
-
-  // Check if within operating hours (08:00 - 19:00)
-  if (localTime >= marketOpen && localTime < marketClose) {
-    // Within business hours - auction is open but no timer until first bid
+  const now = new Date(created);
+  
+  // Get local time in business hours timezone
+  const localTime = new Date(now.toLocaleString('en-US', { timeZone: DEFAULT_TZ }));
+  const hour = localTime.getHours();
+  
+  // Business hours: 8:00-19:00 (8am-7pm)
+  const isBusinessHours = hour >= 8 && hour < 19;
+  
+  if (isBusinessHours) {
+    // Within business hours - auction starts immediately
     return {
       auction_status: 'open',
-      auction_start_time: null, // Will be set when first bid is placed
-      auction_end_time: null, // Will be set when first bid is placed
-      after_hours_release_time: null,
+      auction_starts_at: now.toISOString(),
+      auction_ends_at: null, // Will be set to NOW() + 30 minutes on first bid
     };
   } else {
-    // Outside business hours - set to pending with release time
-    let releaseTime: DateTime;
-    if (localTime < marketOpen) {
-      // Before 8am same day
-      releaseTime = marketOpen;
-    } else {
-      // After 7pm - next day 8am
-      releaseTime = marketOpen.plus({ days: 1 });
+    // Outside business hours - schedule for next 8:00 AM
+    const next8am = new Date(localTime);
+    if (hour >= 19) {
+      // After 7pm, schedule for next day 8am
+      next8am.setDate(next8am.getDate() + 1);
     }
-
+    next8am.setHours(8, 0, 0, 0);
+    
+    // Convert back to UTC for storage
+    const next8amUTC = new Date(next8am.toLocaleString('en-US', { timeZone: 'UTC' }));
+    const auctionEndsAt = new Date(next8amUTC.getTime() + 30 * 60 * 1000); // +30 minutes
+    
     return {
-      auction_status: 'pending',
-      auction_start_time: null,
-      auction_end_time: null,
-      after_hours_release_time: releaseTime.toISO(),
+      auction_status: 'scheduled',
+      auction_starts_at: next8amUTC.toISOString(),
+      auction_ends_at: auctionEndsAt.toISOString(),
     };
   }
-}
-
-/**
- * Normalize pending leads that are ready to open
- * Call this when fetching leads to transition pending -> open
- */
-export async function normalizePendingLeads(
-  leads: any[],
-  supabaseAdmin: any
-): Promise<any[]> {
-  const now = new Date();
-
-  const updatedLeads = await Promise.all(
-    leads.map(async (lead) => {
-      // Check if pending lead is ready to open
-      if (
-        lead.auction_status === 'pending' &&
-        lead.after_hours_release_time &&
-        new Date(lead.after_hours_release_time) <= now
-      ) {
-        // Flip it to open
-        const { data, error } = await supabaseAdmin
-          .from('leads')
-          .update({
-            auction_status: 'open',
-            auction_start_time: null,
-            auction_end_time: null,
-          })
-          .eq('id', lead.id)
-          .select()
-          .single();
-
-        if (!error && data) {
-          return data;
-        }
-      }
-
-      // Check if open auction should be closed
-      if (
-        lead.auction_status === 'open' &&
-        lead.auction_end_time &&
-        new Date(lead.auction_end_time) <= now
-      ) {
-        // Find highest bidder
-        const { data: bids } = await supabaseAdmin
-          .from('lead_bids')
-          .select('agent_id, amount')
-          .eq('lead_id', lead.id)
-          .order('amount', { ascending: false })
-          .limit(1);
-
-        const winningAgentId = bids && bids.length > 0 ? bids[0].agent_id : null;
-
-        const { data, error } = await supabaseAdmin
-          .from('leads')
-          .update({
-            auction_status: 'closed',
-            winning_agent_id: winningAgentId,
-          })
-          .eq('id', lead.id)
-          .select()
-          .single();
-
-        if (!error && data) {
-          return data;
-        }
-      }
-
-      return lead;
-    })
-  );
-
-  return updatedLeads;
-}
-
-/**
- * Calculate new auction end time (rolling 30-minute window)
- */
-export function calculateNewAuctionEnd(): string {
-  const iso = DateTime.now().setZone(DEFAULT_TZ).plus({ minutes: 30 }).toISO();
-  if (!iso) {
-    throw new Error(`Failed to calculate auction end time`);
-  }
-  return iso;
-}
-
-/**
- * Validate bid amount against auction rules
- */
-export function validateBidAmount(
-  newBid: number,
-  currentBid: number | null,
-  startingBid: number,
-  minIncrement: number
-): { valid: boolean; error?: string } {
-  const effectiveCurrent = currentBid || startingBid;
-
-  // Must be at least current + increment
-  if (newBid < effectiveCurrent + minIncrement) {
-    return {
-      valid: false,
-      error: `Bid must be at least $${effectiveCurrent + minIncrement} (current: $${effectiveCurrent}, minimum increment: $${minIncrement})`,
-    };
-  }
-
-  // Must be a multiple of increment over starting bid
-  const overStarting = newBid - startingBid;
-  if (overStarting % minIncrement !== 0) {
-    return {
-      valid: false,
-      error: `Bid must be a multiple of $${minIncrement} over the starting bid of $${startingBid}`,
-    };
-  }
-
-  return { valid: true };
 }

@@ -2,7 +2,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { normalizePendingLeads } from "@/lib/auctions";
 
 export async function POST(request: NextRequest) {
   try {
@@ -162,9 +161,7 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Normalize lead status (pending->open, open->closed)
-      const normalizedLeads = await normalizePendingLeads([leadData], supabaseAdmin);
-      lead = normalizedLeads[0] || leadData;
+      lead = leadData;
     } catch (dbError: any) {
       console.error("confirm-purchase: Database error fetching lead", dbError);
       return NextResponse.json(

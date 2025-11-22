@@ -2,7 +2,6 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { normalizePendingLeads } from "@/lib/auctions";
 
 export const dynamic = "force-dynamic";
 
@@ -53,9 +52,7 @@ export async function GET(_req: NextRequest) {
       throw new Error("No leads data returned");
     }
 
-    // Normalize leads (pending->open, open->closed)
-    const normalizedLeads = await normalizePendingLeads(leads, supabaseAdmin);
-    const allLeads: LeadRow[] = normalizedLeads as unknown as LeadRow[];
+    const allLeads: LeadRow[] = leads as unknown as LeadRow[];
 
     const totalLeads = allLeads.length;
     

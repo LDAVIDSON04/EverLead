@@ -10,8 +10,6 @@ import { agentOwnsLead } from "@/lib/leads";
 import clsx from "clsx";
 import { AuctionCountdown } from "@/components/AuctionCountdown";
 import { AuctionBidButtons } from "@/components/AuctionBidButtons";
-import { normalizePendingLeads } from "@/lib/auctions";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 type Lead = {
   id: string;
@@ -27,10 +25,10 @@ type Lead = {
   assigned_agent_id: string | null;
   // Auction fields
   auction_enabled?: boolean | null;
-  auction_start_time?: string | null;
-  auction_end_time?: string | null;
-  after_hours_release_time?: string | null;
-  auction_status?: 'open' | 'closed' | 'pending' | null;
+  auction_starts_at?: string | null;
+  auction_ends_at?: string | null;
+  auction_last_bid_at?: string | null;
+  auction_status?: 'open' | 'scheduled' | 'ended' | null;
   auction_timezone?: string | null;
   starting_bid?: number | null;
   min_increment?: number | null;
@@ -199,27 +197,19 @@ export default function AvailableLeadsPage() {
 
       let newLeads = (leadsData || []) as Lead[];
 
-      // Normalize pending->open and open->closed transitions
-      try {
-        newLeads = await normalizePendingLeads(newLeads, supabaseAdmin);
-      } catch (err) {
-        console.error('Error normalizing leads:', err);
-        // Continue with original leads if normalization fails
-      }
-
-      // Filter: exclude closed auctions unless current user is the winner
+      // Filter: exclude ended auctions unless current user is the winner
       if (currentUserId) {
         newLeads = newLeads.filter((lead: Lead) => {
-          // If auction is closed, only show to the winner
-          if (lead.auction_status === 'closed') {
+          // If auction is ended, only show to the winner
+          if (lead.auction_status === 'ended') {
             return lead.winning_agent_id === currentUserId;
           }
-          // Show all non-closed leads (pending, open, or null)
+          // Show all non-ended leads (scheduled, open, or null)
           return true;
         });
       } else {
-        // If no user ID, filter out closed auctions entirely
-        newLeads = newLeads.filter((lead: Lead) => lead.auction_status !== 'closed');
+        // If no user ID, filter out ended auctions entirely
+        newLeads = newLeads.filter((lead: Lead) => lead.auction_status !== 'ended');
       }
 
       // Extract unique locations for filter dropdown (only on initial load)
@@ -486,14 +476,15 @@ export default function AvailableLeadsPage() {
     if (!isAuctionEnabled) return false;
     
     // Check auction status
-    if (lead.auction_status === 'closed') return false;
+    if (lead.auction_status === 'ended') return false;
+    if (lead.auction_status === 'scheduled') return false;
     
-    // Must be 'open' to bid (pending auctions need to be normalized first)
+    // Must be 'open' to bid
     if (lead.auction_status !== 'open') return false;
     
     // Check if auction has ended by time
-    if (lead.auction_end_time) {
-      const endAt = new Date(lead.auction_end_time);
+    if (lead.auction_ends_at) {
+      const endAt = new Date(lead.auction_ends_at);
       const now = new Date();
       if (now >= endAt) return false; // Auction has ended
     }
@@ -509,28 +500,28 @@ export default function AvailableLeadsPage() {
     
     const status = lead.auction_status;
     
-    if (status === 'pending') {
-      if (lead.after_hours_release_time) {
-        const releaseDate = new Date(lead.after_hours_release_time);
-        const localTime = releaseDate.toLocaleTimeString('en-US', { 
+    if (status === 'scheduled') {
+      if (lead.auction_starts_at) {
+        const startDate = new Date(lead.auction_starts_at);
+        const localTime = startDate.toLocaleTimeString('en-US', { 
           hour: 'numeric', 
           minute: '2-digit',
           hour12: true 
         });
-        return `Auction starts at ${localTime}`;
+        return `Auction opens at ${localTime}`;
       }
-      return 'Auction starts at 8:00am';
+      return 'Auction opens at 8:00 AM';
     }
     
     if (status === 'open') {
       return null; // Will show countdown instead
     }
     
-    if (status === 'closed') {
+    if (status === 'ended') {
       if (lead.winning_agent_id && userId && lead.winning_agent_id === userId) {
-        return 'You\'ve won this auction. Complete purchase to view the full details.';
+        return 'You\'ve won this lead. Complete purchase to view contact details.';
       }
-      return 'Auction ended';
+      return 'Bidding closed';
     }
     
     return null;
@@ -907,7 +898,7 @@ export default function AvailableLeadsPage() {
                     <div className="flex flex-wrap items-center gap-2">
                       {/* Buy Now button - visibility rules based on auction status */}
                       {(() => {
-                        const isClosed = lead.auction_status === 'closed';
+                        const isClosed = lead.auction_status === 'ended';
                         const hasWinner = !!lead.winning_agent_id;
                         const isWinner = userId && lead.winning_agent_id === userId;
                         const canBuyNow = 
@@ -968,25 +959,25 @@ export default function AvailableLeadsPage() {
                             {auctionStatusLabel}
                           </p>
                         )}
-                        {lead.auction_status === 'pending' && (
+                        {lead.auction_status === 'scheduled' && (
                           <>
                             <p className="mt-1 text-[11px] text-slate-600">
-                              {lead.after_hours_release_time
+                              {lead.auction_starts_at
                                 ? (() => {
-                                    const releaseDate = new Date(lead.after_hours_release_time);
-                                    const localTime = releaseDate.toLocaleTimeString('en-US', {
+                                    const startDate = new Date(lead.auction_starts_at);
+                                    const localTime = startDate.toLocaleTimeString('en-US', {
                                       hour: 'numeric',
                                       minute: '2-digit',
                                       hour12: true,
                                     });
-                                    return `Auction starts at ${localTime}`;
+                                    return `Auction opens at ${localTime}`;
                                   })()
-                                : 'Auction starts at 8:00am'}
+                                : 'Auction opens at 8:00 AM'}
                             </p>
                             <p className="mt-1 text-[10px] text-slate-500 italic">
                               Bidding will open soon.
                             </p>
-                            {/* Disable bid buttons for pending auctions */}
+                            {/* Disable bid buttons for scheduled auctions */}
                             <div className="mt-2">
                               <div className="flex flex-wrap gap-2 opacity-50 pointer-events-none">
                                 <button
@@ -1020,9 +1011,9 @@ export default function AvailableLeadsPage() {
                                 : `Starting bid: $${startingBid.toFixed(2)}`}
                             </p>
                             
-                            {lead.auction_end_time ? (
+                            {lead.auction_ends_at ? (
                               <AuctionCountdown
-                                auctionEndsAt={lead.auction_end_time}
+                                auctionEndsAt={lead.auction_ends_at}
                                 auctionStatus={lead.auction_status}
                                 onEnd={() => {
                                   // Trigger a refresh when auction ends
@@ -1042,22 +1033,22 @@ export default function AvailableLeadsPage() {
                               currentBid={currentBid}
                               biddingId={biddingId}
                               showBidForm={showBidForm}
-                              auctionEndTime={lead.auction_end_time ?? null}
+                              auctionEndTime={lead.auction_ends_at ?? null}
                               auctionStatus={lead.auction_status ?? null}
                               onPlaceBid={handlePlaceBid}
                             />
                           </>
                         )}
 
-                        {lead.auction_status === 'closed' && (
+                        {lead.auction_status === 'ended' && (
                           <>
                             {lead.winning_agent_id && userId && lead.winning_agent_id === userId ? (
                               <p className="mt-1 text-[11px] text-slate-600">
-                                You've won this auction. Complete purchase to view the full details.
+                                You've won this lead. Complete purchase to view contact details.
                               </p>
                             ) : (
                               <p className="mt-1 text-[11px] text-slate-600">
-                                Auction ended.
+                                Bidding closed
                               </p>
                             )}
                           </>

@@ -9,7 +9,7 @@ interface AuctionBidButtonsProps {
   biddingId: string | null;
   showBidForm: boolean;
   auctionEndTime: string | null;
-  auctionStatus: 'open' | 'closed' | 'pending' | null;
+  auctionStatus: 'open' | 'scheduled' | 'ended' | null;
   onPlaceBid: (leadId: string, increment: number) => void;
 }
 
