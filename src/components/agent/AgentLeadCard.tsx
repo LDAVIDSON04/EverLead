@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 type Urgency = 'hot' | 'warm' | 'cold';
 
@@ -19,72 +19,114 @@ type Props = {
 };
 
 function urgencyLabel(urgency: Urgency) {
-  if (urgency === 'hot') return 'HOT LEAD';
-  if (urgency === 'warm') return 'WARM LEAD';
-  return 'COLD LEAD';
+  if (urgency === 'hot') return 'HOT';
+  if (urgency === 'warm') return 'WARM';
+  return 'COLD';
+}
+
+function getServiceTypeLabel(serviceType: string | null): string {
+  if (!serviceType) return 'pre-need enquiry';
+  const lower = serviceType.toLowerCase();
+  if (lower === 'cremation') return 'cremation pre-need enquiry';
+  if (lower === 'burial') return 'burial pre-need enquiry';
+  return `${serviceType} pre-need enquiry`;
 }
 
 export default function AgentLeadCard({ lead }: Props) {
-  const router = useRouter();
+  const [buying, setBuying] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const price = (lead.lead_price_cents ?? 0) / 100;
 
-  const notePreview =
-    lead.additional_details && lead.additional_details.length > 0
-      ? lead.additional_details.length > 140
-        ? lead.additional_details.slice(0, 137) + '…'
-        : lead.additional_details
-      : 'No extra details provided yet.';
+  // Note preview - truncate to 2 lines max
+  const notePreview = lead.additional_details && lead.additional_details.length > 0
+    ? lead.additional_details
+    : 'No extra details provided yet.';
 
-  const handleBuyNow = () => {
-    router.push(`/agent/leads/${lead.id}/buy`);
+  const handleBuyNow = async () => {
+    setBuying(true);
+    setError(null);
+
+    try {
+      const res = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ leadId: lead.id }),
+      });
+
+      const body = await res.json();
+
+      if (!res.ok || !body?.url) {
+        console.error('Checkout create error:', body);
+        setError(body?.error || 'Could not start checkout. Please try again.');
+        setBuying(false);
+        return;
+      }
+
+      // Open Stripe checkout in a new tab
+      window.open(body.url, '_blank', 'noopener,noreferrer');
+      setBuying(false);
+    } catch (err) {
+      console.error('Buy Now error:', err);
+      setError('Could not start checkout. Please try again.');
+      setBuying(false);
+    }
   };
 
   return (
-    <article className="flex items-stretch justify-between rounded-xl border border-neutral-200 bg-white px-6 py-5 shadow-sm">
-      {/* LEFT SIDE */}
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center gap-3">
-          <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-amber-800">
-            {urgencyLabel(lead.urgency)}
-          </span>
-          {lead.city && (
-            <p className="text-sm text-neutral-500">
-              {lead.city}
-              {lead.province ? `, ${lead.province}` : ''}
-            </p>
+    <article className="rounded-lg border border-[#ded3c2] bg-white p-4 shadow-sm">
+      <div className="flex items-start justify-between gap-4">
+        {/* LEFT SIDE */}
+        <div className="flex-1 min-w-0">
+          {/* Top row: Urgency badge, City + province, Service type */}
+          <div className="mb-2 flex flex-wrap items-center gap-2">
+            <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-amber-800">
+              {urgencyLabel(lead.urgency)}
+            </span>
+            {lead.city && (
+              <span className="text-sm text-[#6b6b6b]">
+                {lead.city}
+                {lead.province ? `, ${lead.province}` : ''}
+              </span>
+            )}
+            <span className="text-sm text-[#6b6b6b]">
+              {getServiceTypeLabel(lead.service_type)}
+            </span>
+          </div>
+
+          {/* Body: Note preview (1-2 lines, truncated) */}
+          <p className="mb-2 line-clamp-2 text-sm leading-relaxed text-[#4a4a4a]">
+            {notePreview}
+          </p>
+
+          {/* Helper text */}
+          <p className="mb-3 text-xs text-[#6b6b6b]">
+            Purchase to reveal full name, phone, and email.
+          </p>
+
+          {/* Buy button - normal sized, on left side */}
+          {error && (
+            <p className="mb-2 text-xs text-red-600">{error}</p>
           )}
+          <button
+            type="button"
+            onClick={handleBuyNow}
+            disabled={buying}
+            className="inline-flex items-center justify-center rounded-full bg-[#2a2a2a] px-4 py-2 text-sm font-medium text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-70 transition-colors"
+          >
+            {buying ? 'Starting checkout…' : 'Buy now'}
+          </button>
         </div>
 
-        <p className="text-sm font-medium text-neutral-900">
-          {lead.service_type ? `${lead.service_type} pre-need enquiry` : 'Pre-need enquiry'}
-        </p>
-
-        <p className="mt-1 max-w-xl text-sm leading-relaxed text-neutral-600">
-          {notePreview}
-        </p>
-
-        <p className="mt-2 text-xs text-neutral-500">
-          Purchase to reveal full name, phone, and email.
-        </p>
-
-        <button
-          type="button"
-          onClick={handleBuyNow}
-          className="mt-3 inline-flex items-center justify-center rounded-full bg-black px-4 py-2 text-sm font-medium text-white hover:bg-neutral-900"
-        >
-          Buy now
-        </button>
-      </div>
-
-      {/* RIGHT SIDE – PRICE */}
-      <div className="flex flex-col items-end justify-center text-right text-sm">
-        <span className="text-[11px] uppercase tracking-[0.22em] text-neutral-500">
-          Buy now
-        </span>
-        <span className="text-lg font-semibold text-neutral-900">
-          ${price.toFixed(2)}
-        </span>
+        {/* RIGHT SIDE – PRICE (aligned to same row as Buy button) */}
+        <div className="flex flex-shrink-0 flex-col items-end justify-end text-right">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+            BUY NOW
+          </span>
+          <span className="mt-1 text-lg font-semibold text-[#2a2a2a]">
+            ${price.toFixed(2)}
+          </span>
+        </div>
       </div>
     </article>
   );
