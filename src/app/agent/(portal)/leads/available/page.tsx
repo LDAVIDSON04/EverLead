@@ -2,14 +2,43 @@
 
 import Link from "next/link";
 import { useEffect, useState, useRef, useCallback } from "react";
+
+function useCountdown(endTime?: string | null) {
+  const [timeLeft, setTimeLeft] = useState<number | null>(() => {
+    if (!endTime) return null;
+    const end = new Date(endTime).getTime();
+    return Math.max(end - Date.now(), 0);
+  });
+
+  useEffect(() => {
+    if (!endTime) return;
+
+    const interval = setInterval(() => {
+      const end = new Date(endTime).getTime();
+      const remaining = end - Date.now();
+      setTimeLeft(remaining > 0 ? remaining : 0);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [endTime]);
+
+  if (timeLeft === null) return { label: null, isExpired: false };
+
+  const totalSeconds = Math.floor(timeLeft / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+
+  const label = `${minutes}:${seconds.toString().padStart(2, "0")}`;
+  const isExpired = totalSeconds <= 0;
+
+  return { label, isExpired };
+}
 import { supabaseClient } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import { useRequireRole } from "@/lib/hooks/useRequireRole";
 import { AgentNav } from "@/components/AgentNav";
 import { agentOwnsLead } from "@/lib/leads";
 import clsx from "clsx";
-import { AuctionCountdown } from "@/components/AuctionCountdown";
-import { AuctionBidButtons } from "@/components/AuctionBidButtons";
 
 type Lead = {
   id: string;
@@ -1011,32 +1040,88 @@ export default function AvailableLeadsPage() {
                                 : `Starting bid: $${startingBid.toFixed(2)}`}
                             </p>
                             
-                            {lead.auction_ends_at ? (
-                              <AuctionCountdown
-                                auctionEndsAt={lead.auction_ends_at}
-                                auctionStatus={lead.auction_status}
-                                onEnd={() => {
-                                  // Trigger a refresh when auction ends
-                                  refreshLeads(false);
-                                }}
-                              />
-                            ) : (
-                              <p className="mt-1 text-[10px] text-slate-500">
-                                No bids yet — be the first to bid
-                              </p>
-                            )}
+                            {(() => {
+                              // Use countdown hook
+                              const { label: timeLeft, isExpired } = useCountdown(lead.auction_ends_at ?? null);
+                              
+                              return (
+                                <>
+                                  {timeLeft && !isExpired && (
+                                    <span className="mt-1 text-[11px] text-amber-700 font-medium">
+                                      Time left: {timeLeft}
+                                    </span>
+                                  )}
+                                  
+                                  {(!timeLeft || isExpired) && lead.auction_ends_at && (
+                                    <span className="mt-1 text-[11px] text-slate-500">
+                                      Bidding closed
+                                    </span>
+                                  )}
+                                  
+                                  {!lead.auction_ends_at && (
+                                    <p className="mt-1 text-[10px] text-slate-500">
+                                      No bids yet — be the first to bid
+                                    </p>
+                                  )}
+                                </>
+                              );
+                            })()}
 
                             {/* Preset bid buttons - only show if auction is active and available */}
-                            <AuctionBidButtons
-                              leadId={lead.id}
-                              minIncrement={minIncrement}
-                              currentBid={currentBid}
-                              biddingId={biddingId}
-                              showBidForm={showBidForm}
-                              auctionEndTime={lead.auction_ends_at ?? null}
-                              auctionStatus={lead.auction_status ?? null}
-                              onPlaceBid={handlePlaceBid}
-                            />
+                            {(() => {
+                              const { isExpired } = useCountdown(lead.auction_ends_at ?? null);
+                              const shouldDisable = isExpired || !showBidForm;
+                              
+                              if (!showBidForm && !isExpired) {
+                                return null;
+                              }
+                              
+                              return (
+                                <div className="mt-2">
+                                  <p className="mb-1 text-[10px] text-slate-500">
+                                    Bid increments:
+                                  </p>
+                                  <div className="flex flex-wrap gap-2">
+                                    <button
+                                      onClick={() => handlePlaceBid(lead.id, minIncrement)}
+                                      disabled={shouldDisable || biddingId === lead.id}
+                                      className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
+                                        shouldDisable
+                                          ? "bg-slate-400 text-white cursor-not-allowed opacity-50"
+                                          : "bg-slate-900 text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-70"
+                                      }`}
+                                    >
+                                      {biddingId === lead.id ? "Placing…" : `+ $${minIncrement}`}
+                                    </button>
+                                    <button
+                                      onClick={() => handlePlaceBid(lead.id, minIncrement * 2)}
+                                      disabled={shouldDisable || biddingId === lead.id}
+                                      className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
+                                        shouldDisable
+                                          ? "bg-slate-400 text-white cursor-not-allowed opacity-50"
+                                          : "bg-slate-900 text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-70"
+                                      }`}
+                                    >
+                                      {biddingId === lead.id ? "Placing…" : `+ $${minIncrement * 2}`}
+                                    </button>
+                                    <button
+                                      onClick={() => handlePlaceBid(lead.id, minIncrement * 3)}
+                                      disabled={shouldDisable || biddingId === lead.id}
+                                      className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
+                                        shouldDisable
+                                          ? "bg-slate-400 text-white cursor-not-allowed opacity-50"
+                                          : "bg-slate-900 text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-70"
+                                      }`}
+                                    >
+                                      {biddingId === lead.id ? "Placing…" : `+ $${minIncrement * 3}`}
+                                    </button>
+                                  </div>
+                                  <p className="mt-1 text-[10px] text-slate-500">
+                                    Next bid: ${(currentBid + minIncrement).toFixed(2)}
+                                  </p>
+                                </div>
+                              );
+                            })()}
                           </>
                         )}
 
