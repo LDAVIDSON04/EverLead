@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { finalizeAuctionStatus } from "@/lib/auctions";
 
 export async function POST(request: NextRequest) {
   try {
@@ -141,7 +142,7 @@ export async function POST(request: NextRequest) {
     try {
       const { data: leadData, error: leadError } = await supabaseAdmin
         .from("leads")
-        .select("id, status, assigned_agent_id, buy_now_price_cents")
+        .select("*")
         .eq("id", finalLeadId)
         .maybeSingle();
 
@@ -161,7 +162,9 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      lead = leadData;
+      // Run lazy finalization to ensure auction status is up-to-date
+      const { lead: finalizedLead } = await finalizeAuctionStatus(leadData, supabaseAdmin);
+      lead = finalizedLead;
     } catch (dbError: any) {
       console.error("confirm-purchase: Database error fetching lead", dbError);
       return NextResponse.json(
@@ -209,9 +212,12 @@ export async function POST(request: NextRequest) {
         .update({
           status: "purchased_by_agent",
           assigned_agent_id: agentId,
+          winning_agent_id: agentId, // Set winning agent for Buy Now
+          auction_status: "sold_buy_now", // Mark as sold via Buy Now
           purchased_by_email: customerEmail, // Save agent's email from Stripe
           price_charged_cents: amountCents,
           purchased_at: new Date().toISOString(),
+          current_bid_amount: lead.buy_now_price || (amountCents ? amountCents / 100 : null), // Set to buy now price
         })
         .eq("id", finalLeadId)
         .select()

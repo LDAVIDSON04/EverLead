@@ -237,9 +237,10 @@ export async function GET(request: NextRequest) {
     // Get auctions where this agent is involved (either highest bidder or has placed a bid)
     const { data: allPendingAuctions } = await supabaseAdmin
       .from("leads")
-      .select("id, city, urgency_level, current_bid_amount, buy_now_price, auction_ends_at, current_bid_agent_id")
+      .select("id, city, urgency_level, current_bid_amount, buy_now_price, auction_ends_at, auction_status, current_bid_agent_id")
       .eq("auction_enabled", true)
-      .gt("auction_ends_at", nowISO)
+      .in("auction_status", ["pending", "open"])
+      .or("auction_ends_at.gt." + nowISO + ",auction_ends_at.is.null")
       .neq("status", "purchased_by_agent")
       .order("auction_ends_at", { ascending: true })
       .limit(20);

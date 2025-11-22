@@ -10,7 +10,9 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.81.1",
+    "@types/luxon": "^3.7.1",
     "clsx": "^2.1.1",
+    "luxon": "^3.7.2",
     "next": "16.0.3",
     "react": "19.2.0",
     "react-dom": "19.2.0",

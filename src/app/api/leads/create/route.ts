@@ -1,6 +1,7 @@
 // src/app/api/leads/create/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { calculateAuctionSchedule } from "@/lib/auctions";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -137,24 +138,27 @@ export async function POST(req: NextRequest) {
       status: "new",
       assigned_agent_id: null, // Ensure lead is unsold
       purchased_at: null, // Ensure lead is unsold
-      // Set default Buy Now price if not provided (ensures Buy Now option is available)
-      // Default: $30 for hot, $20 for warm, $10 for cold
-      buy_now_price_cents: body.buy_now_price_cents || (() => {
-        const urgency = (body.urgency_level || "warm").toLowerCase();
-        if (urgency === "hot") return 3000; // $30
-        if (urgency === "warm") return 2000; // $20
-        return 1000; // $10 for cold or default
-      })(),
       // Enable auction on every lead by default
       auction_enabled: body.auction_enabled !== undefined ? body.auction_enabled : true,
-      // Set auction end time to 24 hours from now (standardized auction timer)
-      auction_ends_at: body.auction_ends_at || (() => {
-        const now = new Date();
-        const twentyFourHoursLater = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-        return twentyFourHoursLater.toISOString();
-      })(),
-      auction_min_price_cents: body.auction_min_price_cents || null,
     };
+
+    // Calculate auction schedule if auction is enabled
+    if (leadData.auction_enabled) {
+      const auctionSchedule = calculateAuctionSchedule(new Date(), {
+        province: leadData.province,
+        country: null, // Could be added to form later
+      });
+      
+      leadData.auction_start_at = auctionSchedule.auction_start_at;
+      leadData.auction_end_at = auctionSchedule.auction_end_at;
+      leadData.auction_status = auctionSchedule.auction_status;
+      leadData.auction_timezone = auctionSchedule.auction_timezone;
+      leadData.starting_bid = auctionSchedule.starting_bid;
+      leadData.min_increment = auctionSchedule.min_increment;
+      leadData.buy_now_price = auctionSchedule.buy_now_price;
+      // Also set buy_now_price_cents for backward compatibility
+      leadData.buy_now_price_cents = Math.round(auctionSchedule.buy_now_price * 100);
+    }
 
     // Clean payload: remove null/undefined/empty
     const cleanPayload: any = {};

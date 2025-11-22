@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { finalizeAuctionStatus } from "@/lib/auctions";
 
 export async function POST(req: NextRequest) {
   try {
@@ -30,23 +31,41 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Get Buy Now price - use existing price or default based on urgency
-    // Also fix legacy low prices (like $1) to proper defaults
-    let buyNowPriceCents = lead.buy_now_price_cents;
-    const urgency = (lead.urgency_level || "warm").toLowerCase();
-    
-    // Determine proper default based on urgency
-    let properDefault: number;
-    if (urgency === "hot") properDefault = 3000; // $30
-    else if (urgency === "warm") properDefault = 2000; // $20
-    else properDefault = 1000; // $10 for cold or default
-    
-    if (!buyNowPriceCents) {
-      // Use default pricing based on urgency level
-      buyNowPriceCents = properDefault;
-    } else if (buyNowPriceCents < 500) {
-      // If price is less than $5 (500 cents), treat it as legacy and use proper default
-      buyNowPriceCents = properDefault;
+    // Run lazy finalization to ensure auction status is up-to-date
+    const { lead: finalizedLead } = await finalizeAuctionStatus(lead, supabaseAdmin);
+
+    // Check if lead is already sold
+    if (finalizedLead.auction_status === 'sold_auction' || finalizedLead.auction_status === 'sold_buy_now') {
+      return NextResponse.json(
+        { error: "This lead has already been sold" },
+        { status: 400 }
+      );
+    }
+
+    if (finalizedLead.status === "purchased_by_agent" || finalizedLead.assigned_agent_id) {
+      return NextResponse.json(
+        { error: "This lead is no longer available" },
+        { status: 400 }
+      );
+    }
+
+    // Get Buy Now price - prioritize buy_now_price from auction system
+    let buyNowPriceCents: number;
+    if (finalizedLead.buy_now_price) {
+      buyNowPriceCents = Math.round(finalizedLead.buy_now_price * 100);
+    } else if (finalizedLead.buy_now_price_cents) {
+      buyNowPriceCents = finalizedLead.buy_now_price_cents;
+    } else {
+      // Fallback to urgency-based pricing
+      const urgency = (finalizedLead.urgency_level || "warm").toLowerCase();
+      if (urgency === "hot") buyNowPriceCents = 3000; // $30
+      else if (urgency === "warm") buyNowPriceCents = 2000; // $20
+      else buyNowPriceCents = 1000; // $10 for cold or default
+    }
+
+    // Ensure minimum price
+    if (buyNowPriceCents < 500) {
+      buyNowPriceCents = 5000; // $50 default from auction system
     }
 
     // Get base URL from env var or fallback to request URL

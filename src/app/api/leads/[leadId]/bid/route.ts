@@ -1,6 +1,7 @@
 // src/app/api/leads/[leadId]/bid/route.ts
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { finalizeAuctionStatus, validateBidAmount, calculateNewAuctionEnd } from "@/lib/auctions";
 
 export async function POST(req: Request, context: any): Promise<Response> {
   try {
@@ -12,7 +13,8 @@ export async function POST(req: Request, context: any): Promise<Response> {
 
     // Parse request body
     const body = await req.json().catch(() => null);
-    const amount = body?.amount;
+    const increment = body?.increment; // New: accepts increment (5, 10, 15, etc.)
+    const amount = body?.amount; // Legacy: still accept direct amount
     const agentId = body?.agentId;
 
     if (!agentId) {
@@ -57,54 +59,69 @@ export async function POST(req: Request, context: any): Promise<Response> {
       );
     }
 
+    // Run lazy finalization to ensure auction status is up-to-date
+    const { lead: finalizedLead } = await finalizeAuctionStatus(lead, supabaseAdmin);
+
     // Validate auction is enabled
-    if (!lead.auction_enabled) {
+    if (!finalizedLead.auction_enabled) {
       return NextResponse.json(
         { error: "Auction is not enabled for this lead" },
         { status: 400 }
       );
     }
 
+    // Validate auction status
+    if (finalizedLead.auction_status !== 'open') {
+      if (finalizedLead.auction_status === 'pending') {
+        return NextResponse.json(
+          { error: "Auction has not started yet" },
+          { status: 400 }
+        );
+      }
+      if (finalizedLead.auction_status === 'expired' || finalizedLead.auction_status === 'sold_auction' || finalizedLead.auction_status === 'sold_buy_now') {
+        return NextResponse.json(
+          { error: "Auction is no longer active" },
+          { status: 400 }
+        );
+      }
+    }
+
     // Validate lead is available (not purchased/assigned)
-    if (lead.status !== "new" && lead.status !== "cold_unassigned") {
+    if (finalizedLead.status === "purchased_by_agent" || finalizedLead.assigned_agent_id) {
       return NextResponse.json(
         { error: "Lead is no longer available for bidding" },
         { status: 400 }
       );
     }
 
-    // Validate auction hasn't ended
-    if (lead.auction_ends_at) {
-      const endsAt = new Date(lead.auction_ends_at);
-      const now = new Date();
-      if (now > endsAt) {
-        return NextResponse.json(
-          { error: "Auction has ended" },
-          { status: 400 }
-        );
-      }
-    }
+    // Calculate bid amount
+    const startingBid = finalizedLead.starting_bid || 10;
+    const minIncrement = finalizedLead.min_increment || 5;
+    const currentBid = finalizedLead.current_bid_amount || null;
+    const effectiveCurrent = currentBid || startingBid;
 
-    // Validate bid amount - enforce $1 minimum increment
-    const newBid = Number(amount);
-    if (Number.isNaN(newBid) || newBid <= 0) {
+    let bidAmount: number;
+    if (increment !== undefined) {
+      // New: use increment
+      bidAmount = effectiveCurrent + Number(increment);
+    } else if (amount !== undefined) {
+      // Legacy: use direct amount
+      bidAmount = Number(amount);
+    } else {
       return NextResponse.json(
-        { error: "Invalid bid amount." },
+        { error: "Either 'increment' or 'amount' is required" },
         { status: 400 }
       );
     }
 
-    const current = lead.current_bid_amount ?? 0;
-
-    if (newBid < current + 1) {
+    // Validate bid amount
+    const validation = validateBidAmount(bidAmount, currentBid, startingBid, minIncrement);
+    if (!validation.valid) {
       return NextResponse.json(
-        { error: `Your bid must be at least $${current + 1}.` },
+        { error: validation.error },
         { status: 400 }
       );
     }
-
-    // Use the validated newBid amount
-    const bidAmount = newBid;
 
     // Insert bid and update lead (we'll do this in sequence since Supabase doesn't support transactions easily)
     const { data: insertedBid, error: bidInsertError } = await supabaseAdmin
@@ -125,12 +142,16 @@ export async function POST(req: Request, context: any): Promise<Response> {
       );
     }
 
-    // Update lead with new current bid
+    // Update lead with new current bid and rolling 30-minute window
+    const timezone = finalizedLead.auction_timezone || 'America/Edmonton';
+    const newAuctionEnd = calculateNewAuctionEnd(timezone);
+
     const { data: updatedLead, error: updateError } = await supabaseAdmin
       .from("leads")
       .update({
         current_bid_amount: bidAmount,
         current_bid_agent_id: agentId,
+        auction_end_at: newAuctionEnd, // Rolling 30-minute window
       })
       .eq("id", leadId)
       .select("*")

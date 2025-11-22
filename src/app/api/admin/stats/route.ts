@@ -16,6 +16,7 @@ type LeadRow = {
   purchased_by_email: string | null;
   status: string | null;
   price_charged_cents: number | null;
+  auction_status: 'pending' | 'open' | 'expired' | 'sold_auction' | 'sold_buy_now' | null;
 };
 
 export async function GET(_req: NextRequest) {
@@ -35,6 +36,7 @@ export async function GET(_req: NextRequest) {
           "purchased_by_email",
           "status",
           "price_charged_cents",
+          "auction_status",
         ].join(", ")
       )
       .order("created_at", { ascending: false });
@@ -56,9 +58,17 @@ export async function GET(_req: NextRequest) {
     const statusValues = new Set(allLeads.map(l => l.status).filter(Boolean));
     console.log("All unique lead statuses in DB:", Array.from(statusValues));
     
-    // Filter for purchased leads - check multiple possible status values
+    // Filter for purchased leads - check multiple possible status values and auction_status
     const purchasedLeads = allLeads.filter((l) => {
       const status = (l.status || "").toLowerCase();
+      const auctionStatus = l.auction_status;
+      
+      // Check auction_status first (new system)
+      if (auctionStatus === 'sold_auction' || auctionStatus === 'sold_buy_now') {
+        return true;
+      }
+      
+      // Fallback to old status-based check
       return status === "purchased_by_agent" || 
              status === "purchased" ||
              (l.assigned_agent_id && (l.price_charged_cents || 0) > 0);
