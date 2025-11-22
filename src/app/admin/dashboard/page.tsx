@@ -59,6 +59,16 @@ type TopAgent = {
   revenue?: number; // Total spent in cents
 };
 
+type AgentWithStats = {
+  id: string;
+  email: string | null;
+  full_name: string | null;
+  funeral_home: string | null;
+  region: string | null;
+  leads_purchased: number;
+  total_spent: number; // in cents
+};
+
 type RecentLead = {
   id: string;
   created_at: string;
@@ -79,6 +89,7 @@ export default function AdminDashboardPage() {
   const [totalAgentsCount, setTotalAgentsCount] = useState<number>(0);
   const [apiData, setApiData] = useState<ApiStatsResponse | null>(null);
   const [recentLeads, setRecentLeads] = useState<RecentLead[]>([]);
+  const [allAgents, setAllAgents] = useState<AgentWithStats[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [geography, setGeography] = useState<GeoStat[]>([]);
@@ -155,13 +166,52 @@ export default function AdminDashboardPage() {
             "id, created_at, city, province, urgency_level, status, agent_status, auction_enabled, price_charged_cents"
           )
           .order("created_at", { ascending: false })
-          .limit(20);
+          .limit(50);
 
         if (recentError) {
           console.error("Error loading recent leads:", recentError);
         }
 
         setRecentLeads((recentData || []) as RecentLead[]);
+
+        // Load all agents with stats
+        const { data: allAgentsData, error: agentsError } = await supabaseClient
+          .from("profiles")
+          .select("id, email, full_name, funeral_home, region")
+          .eq("role", "agent");
+
+        if (agentsError) {
+          console.error("Error loading agents:", agentsError);
+        } else if (allAgentsData) {
+          // For each agent, calculate leads purchased and total spent
+          const agentsWithStats: AgentWithStats[] = await Promise.all(
+            allAgentsData.map(async (agent) => {
+              // Get purchased leads for this agent
+              const { data: purchasedLeads } = await supabaseClient
+                .from("leads")
+                .select("id, price_charged_cents")
+                .eq("assigned_agent_id", agent.id)
+                .not("price_charged_cents", "is", null);
+
+              const leadsPurchased = purchasedLeads?.length || 0;
+              const totalSpent = purchasedLeads?.reduce((sum, lead) => sum + (lead.price_charged_cents || 0), 0) || 0;
+
+              return {
+                id: agent.id,
+                email: agent.email,
+                full_name: agent.full_name,
+                funeral_home: agent.funeral_home || null,
+                region: agent.region || null,
+                leads_purchased: leadsPurchased,
+                total_spent: totalSpent,
+              };
+            })
+          );
+
+          // Sort by total spent descending
+          agentsWithStats.sort((a, b) => b.total_spent - a.total_spent);
+          setAllAgents(agentsWithStats);
+        }
 
         // Load auction stats
         const { data: allLeads } = await supabaseClient
@@ -399,7 +449,133 @@ export default function AdminDashboardPage() {
                     </tbody>
                   </table>
                 </div>
+
+                {/* Auctions vs Buy Now */}
+                <div className="rounded-xl border border-slate-200 bg-white/70 p-6 shadow-sm">
+                  <h3
+                    className="mb-4 text-base font-semibold text-[#2a2a2a]"
+                    style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+                  >
+                    Auctions vs Buy Now
+                  </h3>
+                  <table className="w-full text-sm">
+                    <tbody>
+                      <tr className="border-b border-slate-100">
+                        <td className="py-2 text-[#4a4a4a]">Auction enabled</td>
+                        <td className="py-2 text-right font-semibold text-[#2a2a2a]">
+                          {stats.auctionEnabledCount}
+                        </td>
+                      </tr>
+                      <tr className="border-b border-slate-100">
+                        <td className="py-2 text-[#4a4a4a]">With active bids</td>
+                        <td className="py-2 text-right font-semibold text-[#2a2a2a]">
+                          {stats.auctionWithBidsCount}
+                        </td>
+                      </tr>
+                      <tr className="border-b border-slate-100">
+                        <td className="py-2 text-[#4a4a4a]">Sold via Buy Now</td>
+                        <td className="py-2 text-right font-semibold text-[#2a2a2a]">
+                          {stats.soldViaBuyNow}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="py-2 text-[#4a4a4a]">Sold via Auction</td>
+                        <td className="py-2 text-right font-semibold text-[#2a2a2a]">
+                          {stats.soldViaAuction}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
               </div>
+            </div>
+
+            {/* Recent Leads Table */}
+            <div>
+              <h2
+                className="mb-4 text-lg font-normal text-[#2a2a2a]"
+                style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+              >
+                Recent Leads
+              </h2>
+              {recentLeads.length === 0 ? (
+                <div className="rounded-xl border border-slate-200 bg-white/70 px-8 py-12 text-center shadow-sm">
+                  <p className="text-sm text-[#6b6b6b]">No leads found.</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white/70 shadow-sm">
+                  <table className="w-full border-collapse text-sm">
+                    <thead>
+                      <tr className="border-b border-slate-200 bg-[#faf8f5]">
+                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                          Created date
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                          City / Province
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                          Urgency
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                          Status
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                          Auction enabled?
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                          Purchased?
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                          Action
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {recentLeads.slice(0, 10).map((lead) => (
+                        <tr
+                          key={lead.id}
+                          className="border-b border-slate-100 hover:bg-[#faf8f5]"
+                        >
+                          <td className="whitespace-nowrap px-4 py-3 text-sm text-[#4a4a4a]">
+                            {formatDate(lead.created_at)}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-[#4a4a4a]">
+                            {[lead.city, lead.province].filter(Boolean).join(", ") || "-"}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-[#4a4a4a]">
+                            {formatUrgency(lead.urgency_level)}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-[#4a4a4a]">
+                            {lead.agent_status || lead.status || "New"}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-[#4a4a4a]">
+                            {lead.auction_enabled ? (
+                              <span className="text-green-600 font-medium">Yes</span>
+                            ) : (
+                              <span className="text-[#6b6b6b]">No</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-[#4a4a4a]">
+                            {lead.price_charged_cents ? (
+                              <span className="text-green-600 font-medium">Yes</span>
+                            ) : (
+                              <span className="text-[#6b6b6b]">No</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3">
+                            <Link
+                              href={`/admin/leads/${lead.id}`}
+                              className="text-xs font-medium text-[#6b6b6b] hover:text-[#2a2a2a] transition-colors"
+                            >
+                              View →
+                            </Link>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
 
           </div>
@@ -496,7 +672,7 @@ export default function AdminDashboardPage() {
               </div>
             </div>
 
-            {/* Leaderboard Section */}
+            {/* Agent Leaderboard Section */}
             <div>
               <div className="mb-4 flex items-center justify-between">
                 <div>
@@ -507,28 +683,31 @@ export default function AdminDashboardPage() {
                     Agent Leaderboard
                   </h2>
                   <p className="mt-1 text-sm text-[#6b6b6b]">
-                    Top performers by purchases and spending
+                    All agents sorted by total spending
                   </p>
                 </div>
               </div>
 
-              {topAgents.length > 0 ? (
+              {allAgents.length > 0 ? (
                 <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b border-slate-200 bg-[#faf8f5]">
                           <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
-                            Rank
+                            Name
                           </th>
                           <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
-                            Agent Email
+                            Email
+                          </th>
+                          <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                            Funeral Home
+                          </th>
+                          <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                            Region
                           </th>
                           <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
                             Leads Purchased
-                          </th>
-                          <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
-                            Last 30 Days
                           </th>
                           <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
                             Total Spent
@@ -536,57 +715,44 @@ export default function AdminDashboardPage() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
-                        {topAgents.map((agent, index) => {
-                          const email = agent.agent_email || `agent_${agent.agent_id.slice(0, 8)}`;
-                          const displayEmail = email.length > 40 ? `${email.slice(0, 37)}…` : email;
-                          const revenue = agent.revenue || 0;
-                          const rank = index + 1;
-                          
-                          // Medal colors for top 3
-                          const rankColor =
-                            rank === 1
-                              ? "text-yellow-600"
-                              : rank === 2
-                              ? "text-slate-400"
-                              : rank === 3
-                              ? "text-amber-600"
-                              : "text-[#6b6b6b]";
+                        {allAgents.map((agent) => {
+                          const displayEmail = agent.email && agent.email.length > 40 
+                            ? `${agent.email.slice(0, 37)}…` 
+                            : agent.email || "-";
 
                           return (
                             <tr
-                              key={agent.agent_id}
+                              key={agent.id}
                               className="hover:bg-[#faf8f5] transition-colors"
                             >
                               <td className="px-6 py-4">
-                                <div className="flex items-center gap-2">
-                                  <span className={`text-lg font-bold ${rankColor}`}>
-                                    #{rank}
-                                  </span>
-                                  {rank <= 3 && (
-                                    <span className="text-lg">
-                                      {rank === 1 ? "🥇" : rank === 2 ? "🥈" : "🥉"}
-                                    </span>
-                                  )}
+                                <div className="font-medium text-[#2a2a2a]">
+                                  {agent.full_name || "-"}
                                 </div>
                               </td>
                               <td className="px-6 py-4">
-                                <div className="font-medium text-[#2a2a2a]">
+                                <div className="text-[#4a4a4a]">
                                   {displayEmail}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4">
+                                <div className="text-[#4a4a4a]">
+                                  {agent.funeral_home || "-"}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4">
+                                <div className="text-[#4a4a4a]">
+                                  {agent.region || "-"}
                                 </div>
                               </td>
                               <td className="px-6 py-4 text-right">
                                 <span className="font-semibold text-[#2a2a2a]">
-                                  {agent.purchased_count_all_time}
+                                  {agent.leads_purchased}
                                 </span>
                               </td>
                               <td className="px-6 py-4 text-right">
                                 <span className="font-semibold text-[#2a2a2a]">
-                                  {agent.purchased_count_last_30_days}
-                                </span>
-                              </td>
-                              <td className="px-6 py-4 text-right">
-                                <span className="font-semibold text-[#2a2a2a]">
-                                  ${(revenue / 100).toFixed(2)}
+                                  ${(agent.total_spent / 100).toFixed(2)}
                                 </span>
                               </td>
                             </tr>
@@ -614,10 +780,10 @@ export default function AdminDashboardPage() {
                     </svg>
                   </div>
                   <p className="text-base font-medium text-[#2a2a2a]">
-                    No purchases yet
+                    No agents found
                   </p>
                   <p className="mt-1 text-sm text-[#6b6b6b]">
-                    Agents will appear here once they start purchasing leads.
+                    Agents will appear here once they register.
                   </p>
                 </div>
               )}
@@ -712,8 +878,8 @@ export default function AdminDashboardPage() {
                       </th>
                     </tr>
                   </thead>
-                  <tbody>
-                    {recentLeads.map((lead) => (
+                    <tbody>
+                      {recentLeads.slice(0, 50).map((lead) => (
                       <tr
                         key={lead.id}
                         className="border-b border-slate-100 hover:bg-[#faf8f5]"
