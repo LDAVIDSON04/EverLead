@@ -18,3 +18,4 @@ CREATE INDEX IF NOT EXISTS idx_leads_purchased_by_email
 ON public.leads(purchased_by_email) 
 WHERE purchased_by_email IS NOT NULL;
 
+

@@ -80,7 +80,7 @@ export default function AgentDashboardPage() {
         } = await supabaseClient.auth.getUser();
 
         if (!user) {
-          router.push("/login");
+          router.push("/agent");
           return;
         }
 
@@ -201,7 +201,7 @@ export default function AgentDashboardPage() {
 
   async function handleLogout() {
     await supabaseClient.auth.signOut();
-    router.push("/login");
+    router.push("/");
   }
 
   function formatUrgency(urgency: string | null) {

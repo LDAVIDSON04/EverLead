@@ -43,7 +43,7 @@ export default function MyLeadsPage() {
         } = await supabaseClient.auth.getUser();
 
         if (!user) {
-          router.push("/login");
+          router.push("/agent");
           return;
         }
 

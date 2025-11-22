@@ -10,3 +10,4 @@ ADD COLUMN IF NOT EXISTS agent_status VARCHAR(50) NULL DEFAULT 'new';
 -- ADD CONSTRAINT check_agent_status
 -- CHECK (agent_status IN ('new', 'contacted', 'in_followup', 'closed_won', 'closed_lost') OR agent_status IS NULL);
 
+

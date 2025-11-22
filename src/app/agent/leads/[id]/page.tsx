@@ -92,7 +92,7 @@ export default function LeadDetailsPage() {
         }
 
         if (!user) {
-          router.push("/login");
+          router.push("/agent");
           return;
         }
 

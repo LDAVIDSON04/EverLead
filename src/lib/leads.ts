@@ -15,3 +15,4 @@ export function agentOwnsLead(lead: Lead, currentAgentId: string): boolean {
   return lead.assigned_agent_id === currentAgentId;
 }
 
+

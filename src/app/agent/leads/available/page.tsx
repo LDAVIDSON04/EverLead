@@ -137,7 +137,7 @@ export default function AvailableLeadsPage() {
 
       if (!user) {
         if (!isPolling) {
-          router.push("/login");
+          router.push("/agent");
         }
         return;
       }

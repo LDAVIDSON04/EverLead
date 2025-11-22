@@ -18,3 +18,4 @@ create policy "Service role can manage expenses"
   using (true)
   with check (true);
 
+

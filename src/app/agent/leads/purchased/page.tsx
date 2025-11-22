@@ -32,7 +32,7 @@ export default function PurchasedLeadsPage() {
         } = await supabaseClient.auth.getUser();
 
         if (!user) {
-          router.push("/login");
+          router.push("/agent");
           return;
         }
 
