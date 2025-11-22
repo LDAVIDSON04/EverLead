@@ -264,23 +264,19 @@ export default function AdminDashboardPage() {
 
   if (error) {
     return (
-      <main className="min-h-screen bg-[#f7f4ef]">
-        <div className="mx-auto max-w-6xl px-6 py-8">
-          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
-            <p className="text-sm text-red-600">{error}</p>
-          </div>
+      <section className="mx-auto max-w-6xl px-6 py-8">
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+          <p className="text-sm text-red-600">{error}</p>
         </div>
-      </main>
+      </section>
     );
   }
 
   if (loading || !stats) {
     return (
-      <main className="min-h-screen bg-[#f7f4ef]">
-        <div className="mx-auto max-w-6xl px-6 py-8">
-          <p className="text-sm text-[#6b6b6b]">Loading dashboard...</p>
-        </div>
-      </main>
+      <section className="mx-auto max-w-6xl px-6 py-8">
+        <p className="text-sm text-[#6b6b6b]">Loading dashboard...</p>
+      </section>
     );
   }
 
@@ -304,30 +300,7 @@ export default function AdminDashboardPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f7f4ef]">
-      {/* Header */}
-      <header className="border-b border-[#ded3c2] bg-white">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <div className="flex items-baseline gap-2">
-            <span className="text-lg font-semibold text-[#2a2a2a]">
-              EverLead
-            </span>
-            <span className="text-[11px] uppercase tracking-[0.18em] text-[#6b6b6b]">
-              Admin
-            </span>
-          </div>
-          <div className="flex items-center gap-4">
-            <span className="text-xs text-[#6b6b6b]">Owner view</span>
-            <button
-              onClick={() => (window.location.href = "/logout")}
-              className="rounded-md border border-[#ded3c2] bg-white px-3 py-1 text-xs font-medium text-[#6b6b6b] hover:bg-[#f7f4ef] transition-colors"
-            >
-              Log out
-            </button>
-          </div>
-        </div>
-      </header>
-
+    <>
       {/* Content */}
       <section className="mx-auto max-w-6xl px-6 py-8">
         <div className="mb-6">
@@ -962,7 +935,7 @@ export default function AdminDashboardPage() {
         )}
 
       </section>
-    </main>
+    </>
   );
 }
 

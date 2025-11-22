@@ -494,20 +494,6 @@ export default function AvailableLeadsPage() {
         </div>
       )}
 
-      <header className="border-b border-[#ded3c2] bg-[#1f2933] text-white">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <div className="flex items-baseline gap-2">
-            <span className="text-lg font-semibold text-white">
-              EverLead
-            </span>
-            <span className="text-[11px] uppercase tracking-[0.18em] text-[#e0d5bf]">
-              Agent Portal
-            </span>
-          </div>
-        </div>
-      </header>
-
-      <AgentNav />
 
       <section className="mx-auto max-w-6xl px-6 py-8">
         <div className="mb-6">

@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabaseClient } from "@/lib/supabaseClient";
-import { AgentNav } from "@/components/AgentNav";
 import { maskName } from "@/lib/masking";
 import { agentOwnsLead } from "@/lib/leads";
 
@@ -64,7 +63,6 @@ export default function AgentDashboardPage() {
   const [yourBids, setYourBids] = useState<YourBid[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [userEmail, setUserEmail] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [now, setNow] = useState(() => new Date());
 
@@ -84,7 +82,6 @@ export default function AgentDashboardPage() {
           return;
         }
 
-        setUserEmail(user.email || null);
         const agentId = user.id;
         setUserId(agentId);
 
@@ -199,10 +196,6 @@ export default function AgentDashboardPage() {
     return () => clearInterval(interval);
   }, []);
 
-  async function handleLogout() {
-    await supabaseClient.auth.signOut();
-    router.push("/");
-  }
 
   function formatUrgency(urgency: string | null) {
     if (!urgency) return "Unknown";
@@ -270,34 +263,7 @@ export default function AgentDashboardPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f7f4ef]">
-      {/* Top bar */}
-      <header className="border-b border-[#ded3c2] bg-[#1f2933] text-white">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <div className="flex items-baseline gap-2">
-            <span className="text-lg font-semibold text-white">
-              EverLead
-            </span>
-            <span className="text-[11px] uppercase tracking-[0.18em] text-[#e0d5bf]">
-              Agent Portal
-            </span>
-          </div>
-          <div className="flex items-center gap-4">
-            {userEmail && (
-              <span className="text-xs text-[#e0d5bf]">{userEmail}</span>
-            )}
-            <button
-              onClick={handleLogout}
-              className="rounded-md border border-[#e5d7b5] bg-transparent px-3 py-1 text-[11px] font-medium text-[#e0d5bf] hover:bg-white/10 transition-colors"
-            >
-              Log out
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {/* Agent nav */}
-      <AgentNav />
+    <>
 
       {/* Content */}
       <section className="mx-auto max-w-6xl px-4 py-8">
@@ -680,6 +646,6 @@ export default function AgentDashboardPage() {
           </div>
         )}
       </section>
-    </main>
+    </>
   );
 }

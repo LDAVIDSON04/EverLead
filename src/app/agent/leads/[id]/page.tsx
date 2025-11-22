@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabaseClient } from "@/lib/supabaseClient";
 import { useRequireRole } from "@/lib/hooks/useRequireRole";
-import { AgentNav } from "@/components/AgentNav";
 import { agentOwnsLead } from "@/lib/leads";
 import { maskName, maskEmail, maskPhone } from "@/lib/masking";
 
@@ -299,22 +298,7 @@ export default function LeadDetailsPage() {
   const displayPhone = owns ? lead?.phone : (lead?.phone ? maskPhone(lead.phone) : null);
 
   return (
-    <main className="min-h-screen bg-[#f7f4ef]">
-      {/* Top bar */}
-      <header className="border-b border-[#ded3c2] bg-[#1f2933] text-white">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <div className="flex items-baseline gap-2">
-            <span className="text-lg font-semibold text-white">
-              EverLead
-            </span>
-            <span className="text-[11px] uppercase tracking-[0.18em] text-[#e0d5bf]">
-              Agent Portal
-            </span>
-          </div>
-        </div>
-      </header>
-
-      <AgentNav />
+    <>
 
       <section className="mx-auto max-w-5xl px-4 py-8">
         {/* Breadcrumb */}
@@ -642,6 +626,6 @@ export default function LeadDetailsPage() {
           </>
         )}
       </section>
-    </main>
+    </>
   );
 }
