@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 
 type Urgency = 'hot' | 'warm' | 'cold';
 
@@ -49,7 +50,6 @@ function getServiceTypeLabel(serviceType: string | null): string {
 export default function AgentLeadCard({ lead }: Props) {
   const [buying, setBuying] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isExpanded, setIsExpanded] = useState(false);
 
   const price = lead.lead_price ?? 0;
 
@@ -91,7 +91,7 @@ export default function AgentLeadCard({ lead }: Props) {
 
   return (
     <article className="mb-6 rounded-2xl border border-gray-200 bg-white shadow-[0_4px_16px_rgba(0,0,0,0.06)] overflow-hidden">
-      <div className="p-8">
+      <div className="p-6">
         <div className="flex items-start justify-between gap-6">
           <div className="flex-1 min-w-0">
             {/* Urgency badge */}
@@ -102,7 +102,7 @@ export default function AgentLeadCard({ lead }: Props) {
             </div>
 
             {/* City + province */}
-            <div className="text-base text-gray-700 font-medium mb-2">
+            <div className="text-base text-gray-700 font-medium mb-1">
               {lead.city && (
                 <>
                   {lead.city}
@@ -116,8 +116,8 @@ export default function AgentLeadCard({ lead }: Props) {
               {getServiceTypeLabel(lead.service_type)}
             </div>
 
-            {/* Note preview (collapsed) */}
-            {!isExpanded && noteSnippet && (
+            {/* Note preview */}
+            {noteSnippet && (
               <p className="text-sm text-gray-600 leading-relaxed mb-3 line-clamp-2">
                 {noteSnippet}
               </p>
@@ -128,7 +128,7 @@ export default function AgentLeadCard({ lead }: Props) {
               Purchase to reveal full name, phone, and email.
             </p>
 
-            {/* Green pill Buy now button */}
+            {/* Green pill Buy now button and View details link */}
             <div className="flex items-center justify-between">
               <button
                 type="button"
@@ -139,14 +139,13 @@ export default function AgentLeadCard({ lead }: Props) {
                 {buying ? 'Starting checkout…' : `Buy now for $${price.toFixed(2)}`}
               </button>
 
-              {/* View details link */}
-              <button
-                type="button"
-                onClick={() => setIsExpanded(!isExpanded)}
+              {/* View details link - navigates to detail page */}
+              <Link
+                href={`/agent/leads/${lead.id}`}
                 className="text-xs font-medium text-gray-500 hover:text-gray-900 transition-colors"
               >
-                {isExpanded ? 'Hide details ↑' : 'View details →'}
-              </button>
+                View details →
+              </Link>
             </div>
 
             {error && (
@@ -164,73 +163,6 @@ export default function AgentLeadCard({ lead }: Props) {
             </div>
           </div>
         </div>
-
-        {/* Expanded details section */}
-        {isExpanded && (
-          <div className="mt-6 pt-6 border-t border-gray-100">
-            {/* Full note text */}
-            <div className="mb-6">
-              <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">
-                Additional Details
-              </h4>
-              <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
-                {lead.additional_details?.trim() || 'No additional details provided.'}
-              </p>
-            </div>
-
-            {/* Metadata grid */}
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              <div>
-                <div className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">
-                  Location
-                </div>
-                <div className="text-sm text-gray-700">
-                  {lead.city || 'Not specified'}
-                  {lead.province ? `, ${lead.province}` : ''}
-                </div>
-              </div>
-
-              <div>
-                <div className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">
-                  Service Type
-                </div>
-                <div className="text-sm text-gray-700">
-                  {getServiceTypeLabel(lead.service_type)}
-                </div>
-              </div>
-
-              {lead.planning_for && (
-                <div>
-                  <div className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">
-                    Planning For
-                  </div>
-                  <div className="text-sm text-gray-700">
-                    {lead.planning_for}
-                  </div>
-                </div>
-              )}
-
-              <div>
-                <div className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">
-                  Urgency
-                </div>
-                <div className="text-sm text-gray-700">
-                  {urgencyLabel(lead.urgency)}
-                </div>
-              </div>
-            </div>
-
-            {/* Contact info (hidden until purchase) */}
-            <div className="pt-4 border-t border-gray-100">
-              <div className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">
-                Contact Information
-              </div>
-              <div className="text-sm text-gray-400 italic">
-                Hidden until purchase
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </article>
   );

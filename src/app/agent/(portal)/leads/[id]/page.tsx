@@ -303,10 +303,10 @@ export default function LeadDetailsPage() {
       <section className="mx-auto max-w-5xl px-4 py-8">
         {/* Breadcrumb */}
         <Link
-          href="/agent/leads/mine"
+          href={owns ? "/agent/leads/mine" : "/agent/leads/available"}
           className="mb-4 inline-flex items-center gap-1 text-xs text-[#6b6b6b] hover:text-[#2a2a2a] transition-colors"
         >
-          ← Back to leads
+          ← Back to {owns ? "my leads" : "available leads"}
         </Link>
 
         {leadLoading ? (
