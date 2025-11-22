@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation";
 import { useRequireRole } from "@/lib/hooks/useRequireRole";
 import AgentLeadCard, { AgentLead } from '@/components/agent/AgentLeadCard';
 import { getLeadPriceFromUrgency } from "@/lib/leads/pricing";
+import { AgentNav } from "@/components/AgentNav";
 
 // Using AgentLead type from component
 
@@ -114,9 +115,8 @@ export default function AvailableLeadsPage() {
       // Map to AgentLead format
       const newLeads: AgentLead[] = (leadsData || []).map((lead: any) => {
         const urgency = (lead.urgency_level || "cold").toLowerCase() as 'hot' | 'warm' | 'cold';
-        // Convert lead_price (dollars) to cents, or calculate from urgency
-        const leadPriceDollars = lead.lead_price ?? getLeadPriceFromUrgency(lead.urgency_level);
-        const leadPriceCents = Math.round(leadPriceDollars * 100);
+        // Use lead_price from database (in dollars), or calculate from urgency if not set
+        const leadPrice = lead.lead_price ?? getLeadPriceFromUrgency(lead.urgency_level);
         
         return {
           id: lead.id,
@@ -124,7 +124,7 @@ export default function AvailableLeadsPage() {
           city: lead.city,
           province: lead.province,
           service_type: lead.service_type,
-          lead_price_cents: leadPriceCents,
+          lead_price: leadPrice,
           additional_details: lead.additional_notes,
         };
       });
@@ -257,17 +257,19 @@ export default function AvailableLeadsPage() {
 
   return (
     <div className="w-full">
-        <div className="mb-6">
-          <h1
-            className="mb-2 text-2xl font-normal text-[#2a2a2a]"
-            style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-          >
-            Available leads
-          </h1>
-          <p className="text-sm text-[#6b6b6b]">
-            New pre-need inquiries you can purchase or use your one-time free lead on.
-          </p>
-        </div>
+      <AgentNav />
+      
+      <div className="mb-6">
+        <h1
+          className="mb-2 text-2xl font-normal text-[#2a2a2a]"
+          style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+        >
+          Available leads
+        </h1>
+        <p className="text-sm text-[#6b6b6b]">
+          New pre-need inquiries you can purchase or use your one-time free lead on.
+        </p>
+      </div>
 
         {firstFreeAvailable && (
           <div className="mb-4 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-xs text-amber-900">
@@ -475,9 +477,9 @@ export default function AvailableLeadsPage() {
               if (type !== serviceFilter.toLowerCase()) return false;
             }
 
-            // Price filter (using lead_price_cents)
+            // Price filter (using lead_price in dollars)
             if (minPrice || maxPrice) {
-              const price = lead.lead_price_cents / 100; // Convert cents to dollars
+              const price = lead.lead_price;
               const min = minPrice ? parseFloat(minPrice) : 0;
               const max = maxPrice ? parseFloat(maxPrice) : Infinity;
               if (isNaN(min) || isNaN(max)) return true; // Skip if invalid numbers
