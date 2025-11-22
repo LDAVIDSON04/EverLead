@@ -9,6 +9,7 @@ import { AgentNav } from "@/components/AgentNav";
 import { agentOwnsLead } from "@/lib/leads";
 import clsx from "clsx";
 import { AuctionCountdown } from "@/components/AuctionCountdown";
+import { AuctionBidButtons } from "@/components/AuctionBidButtons";
 import { normalizePendingLeads } from "@/lib/auctions";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
@@ -1020,16 +1021,14 @@ export default function AvailableLeadsPage() {
                             </p>
                             
                             {lead.auction_end_time ? (
-                              <div className="mt-1">
-                                <AuctionCountdown
-                                  auctionEndsAt={lead.auction_end_time}
-                                  auctionStatus={lead.auction_status}
-                                  onEnd={() => {
-                                    // Trigger a refresh when auction ends
-                                    refreshLeads(false);
-                                  }}
-                                />
-                              </div>
+                              <AuctionCountdown
+                                auctionEndsAt={lead.auction_end_time}
+                                auctionStatus={lead.auction_status}
+                                onEnd={() => {
+                                  // Trigger a refresh when auction ends
+                                  refreshLeads(false);
+                                }}
+                              />
                             ) : (
                               <p className="mt-1 text-[10px] text-slate-500">
                                 No bids yet — be the first to bid
@@ -1037,39 +1036,16 @@ export default function AvailableLeadsPage() {
                             )}
 
                             {/* Preset bid buttons - only show if auction is active and available */}
-                            {showBidForm && (
-                              <div className="mt-2">
-                                <p className="mb-1 text-[10px] text-slate-500">
-                                  Bid increments:
-                                </p>
-                                <div className="flex flex-wrap gap-2">
-                                  <button
-                                    onClick={() => handlePlaceBid(lead.id, minIncrement)}
-                                    disabled={biddingId === lead.id}
-                                    className="rounded-md bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-70 transition-colors"
-                                  >
-                                    {biddingId === lead.id ? "Placing…" : `+ $${minIncrement}`}
-                                  </button>
-                                  <button
-                                    onClick={() => handlePlaceBid(lead.id, minIncrement * 2)}
-                                    disabled={biddingId === lead.id}
-                                    className="rounded-md bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-70 transition-colors"
-                                  >
-                                    {biddingId === lead.id ? "Placing…" : `+ $${minIncrement * 2}`}
-                                  </button>
-                                  <button
-                                    onClick={() => handlePlaceBid(lead.id, minIncrement * 3)}
-                                    disabled={biddingId === lead.id}
-                                    className="rounded-md bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-70 transition-colors"
-                                  >
-                                    {biddingId === lead.id ? "Placing…" : `+ $${minIncrement * 3}`}
-                                  </button>
-                                </div>
-                                <p className="mt-1 text-[10px] text-slate-500">
-                                  Next bid: ${(currentBid + minIncrement).toFixed(2)}
-                                </p>
-                              </div>
-                            )}
+                            <AuctionBidButtons
+                              leadId={lead.id}
+                              minIncrement={minIncrement}
+                              currentBid={currentBid}
+                              biddingId={biddingId}
+                              showBidForm={showBidForm}
+                              auctionEndTime={lead.auction_end_time ?? null}
+                              auctionStatus={lead.auction_status ?? null}
+                              onPlaceBid={handlePlaceBid}
+                            />
                           </>
                         )}
 

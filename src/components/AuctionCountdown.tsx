@@ -8,73 +8,86 @@ interface AuctionCountdownProps {
   onEnd?: () => void;
 }
 
-export function AuctionCountdown({ auctionEndsAt, auctionStatus, onEnd }: AuctionCountdownProps) {
-  const [remaining, setRemaining] = useState<number | null>(null);
-  const [localStatus, setLocalStatus] = useState(auctionStatus);
+export interface AuctionCountdownResult {
+  timeLeftLabel: string | null;
+  isAuctionEnded: boolean;
+}
+
+export function useAuctionCountdown(auctionEndAt?: string | Date | null): AuctionCountdownResult {
+  const [remainingMs, setRemainingMs] = useState<number | null>(null);
 
   useEffect(() => {
-    // Reset local status when prop changes
-    setLocalStatus(auctionStatus);
-  }, [auctionStatus]);
-
-  useEffect(() => {
-    // Don't show countdown if no end time or not open
-    if (!auctionEndsAt || localStatus !== 'open') {
-      setRemaining(null);
+    if (!auctionEndAt) {
+      setRemainingMs(null);
       return;
     }
 
-    const end = new Date(auctionEndsAt).getTime();
+    const end = new Date(auctionEndAt).getTime();
 
-    const tick = () => {
+    const update = () => {
       const now = Date.now();
-      const diff = Math.max(0, end - now);
-      setRemaining(diff);
-
-      if (diff <= 0) {
-        setLocalStatus('closed');
-        if (onEnd) {
-          onEnd();
-        }
-      }
+      const diff = end - now;
+      setRemainingMs(diff > 0 ? diff : 0);
     };
 
-    // Initial tick
-    tick();
+    update();
+    const interval = setInterval(update, 1000);
+    return () => clearInterval(interval);
+  }, [auctionEndAt]);
 
-    // Update every second
-    const intervalId = setInterval(tick, 1000);
+  if (remainingMs === null) {
+    return { timeLeftLabel: null, isAuctionEnded: false };
+  }
 
-    return () => clearInterval(intervalId);
-  }, [auctionEndsAt, localStatus, onEnd]);
+  if (remainingMs <= 0) {
+    return { timeLeftLabel: "0s", isAuctionEnded: true };
+  }
 
-  // Format remaining time
-  const formatTime = (ms: number): string => {
-    const totalSeconds = Math.floor(ms / 1000);
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
+  const totalSeconds = Math.floor(remainingMs / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
 
-    if (minutes > 0) {
-      return `${minutes}m ${seconds.toString().padStart(2, '0')}s`;
+  const label =
+    minutes > 0
+      ? `${minutes}m ${seconds.toString().padStart(2, "0")}s`
+      : `${seconds}s`;
+
+  return { timeLeftLabel: label, isAuctionEnded: false };
+}
+
+export function AuctionCountdown({ auctionEndsAt, auctionStatus, onEnd }: AuctionCountdownProps) {
+  const { timeLeftLabel, isAuctionEnded } = useAuctionCountdown(auctionEndsAt);
+  const [hasEnded, setHasEnded] = useState(false);
+
+  useEffect(() => {
+    if (isAuctionEnded && !hasEnded) {
+      setHasEnded(true);
+      if (onEnd) {
+        onEnd();
+      }
     }
-    return `${seconds}s`;
-  };
+  }, [isAuctionEnded, hasEnded, onEnd]);
 
-  // Handle different states
-  if (localStatus === 'closed' || (remaining !== null && remaining <= 0)) {
+  // Don't show anything if no end time or not open
+  if (!auctionEndsAt || auctionStatus !== 'open') {
+    return null;
+  }
+
+  // Show ended message
+  if (isAuctionEnded || hasEnded) {
     return (
-      <span className="inline-flex items-center rounded-full px-2 py-0.5 border border-slate-300 text-slate-400 bg-slate-50 text-[11px]">
-        Auction ended
-      </span>
+      <p className="mt-1 text-sm font-medium text-red-600">
+        Auction ended — bidding closed
+      </p>
     );
   }
 
-  if (localStatus === 'open' && remaining !== null) {
-    const isUrgent = remaining < 60000; // Less than 1 minute
+  // Show countdown
+  if (timeLeftLabel) {
     return (
-      <div className="text-sm text-gray-600 mt-2">
-        Auction ends in: <span className="font-medium">{formatTime(remaining)}</span>
-      </div>
+      <p className="mt-1 text-sm text-gray-600">
+        Auction ends in <span className="font-medium text-gray-800">{timeLeftLabel}</span>
+      </p>
     );
   }
 
