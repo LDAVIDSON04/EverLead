@@ -11,9 +11,10 @@ export interface Lead {
   buy_now_price_cents: number | null;
   // Auction fields
   auction_enabled: boolean;
-  auction_start_at: string | null;
-  auction_ends_at: string | null;
-  auction_status: 'pending' | 'open' | 'ended' | null;
+  auction_start_time: string | null;
+  auction_end_time: string | null;
+  after_hours_release_time: string | null;
+  auction_status: 'open' | 'closed' | 'pending' | null;
   auction_timezone: string | null;
   starting_bid: number | null;
   min_increment: number | null;

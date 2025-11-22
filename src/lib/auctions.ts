@@ -2,130 +2,141 @@
 // Auction scheduling and finalization logic
 
 import { DateTime } from 'luxon';
-import { getTimezoneForLead } from './timezone';
 
-export type AuctionStatus = 'pending' | 'open' | 'ended';
+const DEFAULT_TZ = 'America/Vancouver';
 
-export interface AuctionSchedule {
-  auction_start_at: string | null;
-  auction_end_at: string | null;
+export type AuctionStatus = 'open' | 'closed' | 'pending';
+
+export interface AuctionTiming {
   auction_status: AuctionStatus;
-  auction_timezone: string;
-  starting_bid: number;
-  min_increment: number;
-  buy_now_price: number;
+  auction_start_time: string | null;
+  auction_end_time: string | null;
+  after_hours_release_time: string | null;
 }
 
 /**
- * Calculate auction schedule for a new lead based on creation time and timezone
+ * Calculate auction timing for a new lead based on creation time
+ * Returns timing fields that should be set when creating a lead
  */
-export function calculateAuctionSchedule(
-  createdAt: Date | string,
-  lead: { province?: string | null; country?: string | null }
-): AuctionSchedule {
-  const timezone = getTimezoneForLead(lead);
+export function calculateAuctionTiming(createdAt: Date | string): AuctionTiming {
   const created = typeof createdAt === 'string' ? new Date(createdAt) : createdAt;
-  const localTime = DateTime.fromJSDate(created, { zone: timezone });
+  const now = DateTime.now().setZone(DEFAULT_TZ);
+  const localTime = DateTime.fromJSDate(created, { zone: DEFAULT_TZ });
 
   const marketOpen = localTime.set({ hour: 8, minute: 0, second: 0, millisecond: 0 });
   const marketClose = localTime.set({ hour: 19, minute: 0, second: 0, millisecond: 0 });
 
-  let auction_start_at: DateTime;
-  let auction_status: AuctionStatus;
-
   // Check if within operating hours (08:00 - 19:00)
   if (localTime >= marketOpen && localTime < marketClose) {
-    // Auction can start immediately, but status is 'open' only after first bid
-    auction_start_at = localTime;
-    auction_status = 'open'; // Will be set to 'open' when first bid is placed
+    // Within business hours - auction is open but no timer until first bid
+    return {
+      auction_status: 'open',
+      auction_start_time: null, // Will be set when first bid is placed
+      auction_end_time: null, // Will be set when first bid is placed
+      after_hours_release_time: null,
+    };
   } else {
-    // Schedule for next 8am
+    // Outside business hours - set to pending with release time
+    let releaseTime: DateTime;
     if (localTime < marketOpen) {
-      // Same day 8am
-      auction_start_at = marketOpen;
+      // Before 8am same day
+      releaseTime = marketOpen;
     } else {
-      // Next day 8am
-      auction_start_at = marketOpen.plus({ days: 1 });
+      // After 7pm - next day 8am
+      releaseTime = marketOpen.plus({ days: 1 });
     }
-    auction_status = 'pending';
+
+    return {
+      auction_status: 'pending',
+      auction_start_time: null,
+      auction_end_time: null,
+      after_hours_release_time: releaseTime.toISO(),
+    };
   }
-
-  // auction_ends_at is NULL until first bid is placed
-  // It will be set to NOW() + 30 minutes when the first bid is made
-
-  return {
-    auction_start_at: auction_start_at.toISO(),
-    auction_end_at: null, // Set to NULL - will be set on first bid
-    auction_status,
-    auction_timezone: timezone,
-    starting_bid: 10,
-    min_increment: 5,
-    buy_now_price: 50,
-  };
 }
 
 /**
- * Lazy finalization: check and update auction status based on current time
- * This should be called before returning lead data to ensure consistency
+ * Normalize pending leads that are ready to open
+ * Call this when fetching leads to transition pending -> open
  */
-export async function finalizeAuctionStatus(
-  lead: any,
+export async function normalizePendingLeads(
+  leads: any[],
   supabaseAdmin: any
-): Promise<{ updated: boolean; lead: any }> {
-  if (!lead.auction_enabled || !lead.auction_status) {
-    return { updated: false, lead };
+): Promise<any[]> {
+  const now = new Date();
+
+  const updatedLeads = await Promise.all(
+    leads.map(async (lead) => {
+      // Check if pending lead is ready to open
+      if (
+        lead.auction_status === 'pending' &&
+        lead.after_hours_release_time &&
+        new Date(lead.after_hours_release_time) <= now
+      ) {
+        // Flip it to open
+        const { data, error } = await supabaseAdmin
+          .from('leads')
+          .update({
+            auction_status: 'open',
+            auction_start_time: null,
+            auction_end_time: null,
+          })
+          .eq('id', lead.id)
+          .select()
+          .single();
+
+        if (!error && data) {
+          return data;
+        }
+      }
+
+      // Check if open auction should be closed
+      if (
+        lead.auction_status === 'open' &&
+        lead.auction_end_time &&
+        new Date(lead.auction_end_time) <= now
+      ) {
+        // Find highest bidder
+        const { data: bids } = await supabaseAdmin
+          .from('lead_bids')
+          .select('agent_id, amount')
+          .eq('lead_id', lead.id)
+          .order('amount', { ascending: false })
+          .limit(1);
+
+        const winningAgentId = bids && bids.length > 0 ? bids[0].agent_id : null;
+
+        const { data, error } = await supabaseAdmin
+          .from('leads')
+          .update({
+            auction_status: 'closed',
+            winning_agent_id: winningAgentId,
+          })
+          .eq('id', lead.id)
+          .select()
+          .single();
+
+        if (!error && data) {
+          return data;
+        }
+      }
+
+      return lead;
+    })
+  );
+
+  return updatedLeads;
+}
+
+/**
+ * Calculate new auction end time (rolling 30-minute window)
+ */
+export function calculateNewAuctionEnd(): string {
+  const iso = DateTime.now().setZone(DEFAULT_TZ).plus({ minutes: 30 }).toISO();
+  if (!iso) {
+    throw new Error(`Failed to calculate auction end time`);
   }
-
-  const now = DateTime.now();
-  const timezone = lead.auction_timezone || 'America/Edmonton';
-  let updated = false;
-  let updatedLead = { ...lead };
-
-  // Transition from 'pending' to 'open' when auction_start_at is reached
-  if (lead.auction_status === 'pending' && lead.auction_start_at) {
-    const startAt = DateTime.fromISO(lead.auction_start_at, { zone: timezone });
-    if (now >= startAt) {
-      // Auction can now accept bids, but stays 'pending' until first bid
-      // Status will be set to 'open' when first bid is placed
-      // No status change here - just allow bids to proceed
-    }
-  }
-
-  // Transition from 'open' to 'ended' when auction_end_at is reached
-  if (lead.auction_status === 'open' && lead.auction_end_at) {
-    const endAt = DateTime.fromISO(lead.auction_end_at, { zone: timezone });
-    if (now >= endAt) {
-      // Auction has ended
-      updatedLead.auction_status = 'ended';
-      updated = true;
-    }
-  }
-
-  // If we made updates, persist them
-  if (updated) {
-    const { data: savedLead, error: updateError } = await supabaseAdmin
-      .from('leads')
-      .update({
-        auction_status: updatedLead.auction_status,
-        winning_agent_id: updatedLead.winning_agent_id || null,
-        assigned_agent_id: updatedLead.assigned_agent_id || null,
-        status: updatedLead.status || lead.status,
-        current_bid_amount: updatedLead.current_bid_amount || lead.current_bid_amount,
-        notification_sent_at: updatedLead.notification_sent_at || lead.notification_sent_at,
-      })
-      .eq('id', lead.id)
-      .select()
-      .single();
-
-    if (updateError) {
-      console.error('Error updating lead during finalization:', updateError);
-      return { updated: false, lead };
-    }
-
-    return { updated: true, lead: savedLead };
-  }
-
-  return { updated: false, lead };
+  return iso;
 }
 
 /**
@@ -158,15 +169,3 @@ export function validateBidAmount(
 
   return { valid: true };
 }
-
-/**
- * Calculate new auction end time (rolling 30-minute window)
- */
-export function calculateNewAuctionEnd(timezone: string): string {
-  const iso = DateTime.now().setZone(timezone).plus({ minutes: 30 }).toISO();
-  if (!iso) {
-    throw new Error(`Failed to calculate auction end time for timezone: ${timezone}`);
-  }
-  return iso;
-}
-

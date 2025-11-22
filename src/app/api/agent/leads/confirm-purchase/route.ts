@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { finalizeAuctionStatus } from "@/lib/auctions";
+import { normalizePendingLeads } from "@/lib/auctions";
 
 export async function POST(request: NextRequest) {
   try {
@@ -162,9 +162,9 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Run lazy finalization to ensure auction status is up-to-date
-      const { lead: finalizedLead } = await finalizeAuctionStatus(leadData, supabaseAdmin);
-      lead = finalizedLead;
+      // Normalize lead status (pending->open, open->closed)
+      const normalizedLeads = await normalizePendingLeads([leadData], supabaseAdmin);
+      lead = normalizedLeads[0] || leadData;
     } catch (dbError: any) {
       console.error("confirm-purchase: Database error fetching lead", dbError);
       return NextResponse.json(
@@ -205,12 +205,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if auction is ended - only winner can purchase
-    if (lead.auction_status === 'ended' && lead.winning_agent_id && lead.winning_agent_id !== agentId) {
+    // Check if auction is closed - only winner can purchase
+    if (lead.auction_status === 'closed' && lead.winning_agent_id && lead.winning_agent_id !== agentId) {
       return NextResponse.json(
         { 
-          error: "This auction has ended and you are not the winning bidder. Only the winner can purchase this lead.",
-          details: "Auction ended, winner only"
+          error: "This auction has closed and you are not the winning bidder. Only the winner can purchase this lead.",
+          details: "Auction closed, winner only"
         },
         { status: 403 }
       );

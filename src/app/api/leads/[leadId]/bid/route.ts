@@ -1,7 +1,7 @@
 // src/app/api/leads/[leadId]/bid/route.ts
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { finalizeAuctionStatus, validateBidAmount, calculateNewAuctionEnd } from "@/lib/auctions";
+import { validateBidAmount, calculateNewAuctionEnd } from "@/lib/auctions";
 
 export async function POST(req: Request, context: any): Promise<Response> {
   try {
@@ -13,8 +13,8 @@ export async function POST(req: Request, context: any): Promise<Response> {
 
     // Parse request body
     const body = await req.json().catch(() => null);
-    const increment = body?.increment; // New: accepts increment (5, 10, 15, etc.)
-    const amount = body?.amount; // Legacy: still accept direct amount
+    const increment = body?.increment;
+    const amount = body?.amount;
     const agentId = body?.agentId;
 
     if (!agentId) {
@@ -59,22 +59,27 @@ export async function POST(req: Request, context: any): Promise<Response> {
       );
     }
 
-    // Run lazy finalization to ensure auction status is up-to-date
-    const { lead: finalizedLead } = await finalizeAuctionStatus(lead, supabaseAdmin);
-
     // Validate auction is enabled
-    if (!finalizedLead.auction_enabled) {
+    if (!lead.auction_enabled) {
       return NextResponse.json(
         { error: "Auction is not enabled for this lead" },
         { status: 400 }
       );
     }
 
-    // Check if auction has started (must check auction_start_at)
-    if (finalizedLead.auction_start_at) {
-      const startAt = new Date(finalizedLead.auction_start_at);
-      const now = new Date();
-      if (now < startAt) {
+    // Check auction status
+    if (lead.auction_status === 'pending') {
+      // Check if release time has passed
+      if (lead.after_hours_release_time) {
+        const releaseTime = new Date(lead.after_hours_release_time);
+        const now = new Date();
+        if (now < releaseTime) {
+          return NextResponse.json(
+            { error: "Auction has not opened yet." },
+            { status: 400 }
+          );
+        }
+      } else {
         return NextResponse.json(
           { error: "Auction has not opened yet." },
           { status: 400 }
@@ -82,54 +87,46 @@ export async function POST(req: Request, context: any): Promise<Response> {
       }
     }
 
-    // Check if auction has ended
-    if (finalizedLead.auction_status === 'ended') {
+    if (lead.auction_status === 'closed') {
       return NextResponse.json(
-        { error: "Auction has ended" },
+        { error: "Auction has ended." },
         { status: 400 }
       );
     }
 
     // Check if auction has ended by time (even if status hasn't been updated yet)
-    if (finalizedLead.auction_end_at) {
-      const endAt = new Date(finalizedLead.auction_end_at);
+    if (lead.auction_status === 'open' && lead.auction_end_time) {
+      const endAt = new Date(lead.auction_end_time);
       const now = new Date();
       if (now >= endAt) {
-        // Auction has ended - update status and reject bid
+        // Find highest bidder
+        const { data: bids } = await supabaseAdmin
+          .from('lead_bids')
+          .select('agent_id, amount')
+          .eq('lead_id', leadId)
+          .order('amount', { ascending: false })
+          .limit(1);
+
+        const winningAgentId = bids && bids.length > 0 ? bids[0].agent_id : null;
+
+        // Update to closed
         await supabaseAdmin
           .from('leads')
-          .update({ auction_status: 'ended' })
+          .update({
+            auction_status: 'closed',
+            winning_agent_id: winningAgentId,
+          })
           .eq('id', leadId);
-        return NextResponse.json(
-          { error: "Auction has ended" },
-          { status: 400 }
-        );
-      }
-    }
 
-    // Check if auction is pending - allow bids if we're past auction_start_at
-    const isPending = finalizedLead.auction_status === 'pending';
-    if (isPending && finalizedLead.auction_start_at) {
-      const startAt = new Date(finalizedLead.auction_start_at);
-      const now = new Date();
-      if (now < startAt) {
         return NextResponse.json(
-          { error: "Auction has not opened yet." },
+          { error: "Auction has ended." },
           { status: 400 }
         );
       }
-      // Auction can accept bids now - will transition to 'open' below
-    } else if (isPending && !finalizedLead.auction_start_at) {
-      // No start time set - allow bids to proceed
-    } else if (finalizedLead.auction_status !== 'open') {
-      return NextResponse.json(
-        { error: "Auction is not open for bidding." },
-        { status: 400 }
-      );
     }
 
     // Validate lead is available (not purchased/assigned)
-    if (finalizedLead.status === "purchased_by_agent" || finalizedLead.assigned_agent_id) {
+    if (lead.status === "purchased_by_agent" || lead.assigned_agent_id) {
       return NextResponse.json(
         { error: "Lead is no longer available for bidding" },
         { status: 400 }
@@ -137,17 +134,15 @@ export async function POST(req: Request, context: any): Promise<Response> {
     }
 
     // Calculate bid amount
-    const startingBid = finalizedLead.starting_bid || 10;
-    const minIncrement = finalizedLead.min_increment || 5;
-    const currentBid = finalizedLead.current_bid_amount || null;
+    const startingBid = lead.starting_bid || 10;
+    const minIncrement = lead.min_increment || 5;
+    const currentBid = lead.current_bid_amount || null;
     const effectiveCurrent = currentBid || startingBid;
 
     let bidAmount: number;
     if (increment !== undefined) {
-      // New: use increment
       bidAmount = effectiveCurrent + Number(increment);
     } else if (amount !== undefined) {
-      // Legacy: use direct amount
       bidAmount = Number(amount);
     } else {
       return NextResponse.json(
@@ -165,7 +160,15 @@ export async function POST(req: Request, context: any): Promise<Response> {
       );
     }
 
-    // Insert bid and update lead (we'll do this in sequence since Supabase doesn't support transactions easily)
+    // Check if this is a higher bid
+    if (currentBid && bidAmount <= currentBid) {
+      return NextResponse.json(
+        { error: `Your bid must be higher than the current bid of $${currentBid.toFixed(2)}` },
+        { status: 400 }
+      );
+    }
+
+    // Insert bid
     const { data: insertedBid, error: bidInsertError } = await supabaseAdmin
       .from("lead_bids")
       .insert({
@@ -184,27 +187,31 @@ export async function POST(req: Request, context: any): Promise<Response> {
       );
     }
 
-    // Update lead with new current bid and rolling 30-minute window
-    const timezone = finalizedLead.auction_timezone || 'America/Edmonton';
-    const newAuctionEnd = calculateNewAuctionEnd(timezone);
-    const now = new Date().toISOString();
-
     // Determine if this is the first bid
-    const isFirstBid = !finalizedLead.current_bid_amount && !finalizedLead.auction_end_at;
+    const isFirstBid = !lead.current_bid_amount && !lead.auction_start_time;
+    const now = new Date().toISOString();
+    const newAuctionEnd = calculateNewAuctionEnd();
 
     const updateData: any = {
       current_bid_amount: bidAmount,
       current_bid_agent_id: agentId,
       winning_agent_id: agentId, // Set winning agent on each bid
-      auction_end_at: newAuctionEnd, // Rolling 30-minute window (resets on each bid)
-      last_bid_at: now, // Track when last bid was placed
+      auction_end_time: newAuctionEnd, // Reset 30-minute window
+      last_bid_at: now,
     };
 
-    // If this is the first bid, transition from 'pending' to 'open'
-    if (isFirstBid || finalizedLead.auction_status === 'pending') {
+    // If this is the first bid, set auction_start_time and ensure status is 'open'
+    if (isFirstBid) {
+      updateData.auction_start_time = now;
       updateData.auction_status = 'open';
+      updateData.auction_end_time = newAuctionEnd;
     } else {
-      updateData.auction_status = 'open'; // Ensure it stays open
+      // Reset the 30-minute window on each bid
+      updateData.auction_end_time = newAuctionEnd;
+      // Ensure status is open
+      if (lead.auction_status === 'pending') {
+        updateData.auction_status = 'open';
+      }
     }
 
     const { data: updatedLead, error: updateError } = await supabaseAdmin
@@ -216,7 +223,7 @@ export async function POST(req: Request, context: any): Promise<Response> {
 
     if (updateError) {
       console.error("Lead update error", updateError);
-      // Try to rollback the bid insert (optional, but good practice)
+      // Try to rollback the bid insert
       await supabaseAdmin.from("lead_bids").delete().eq("id", insertedBid.id);
       return NextResponse.json(
         { error: "Failed to update lead" },
@@ -236,4 +243,3 @@ export async function POST(req: Request, context: any): Promise<Response> {
     );
   }
 }
-

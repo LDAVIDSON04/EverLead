@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 interface AuctionCountdownProps {
   auctionEndsAt: string | null;
-  auctionStatus: 'pending' | 'open' | 'ended' | null;
+  auctionStatus: 'open' | 'closed' | 'pending' | null;
   onEnd?: () => void;
 }
 
@@ -32,7 +32,7 @@ export function AuctionCountdown({ auctionEndsAt, auctionStatus, onEnd }: Auctio
       setRemaining(diff);
 
       if (diff <= 0) {
-        setLocalStatus('ended');
+        setLocalStatus('closed');
         if (onEnd) {
           onEnd();
         }
@@ -61,7 +61,7 @@ export function AuctionCountdown({ auctionEndsAt, auctionStatus, onEnd }: Auctio
   };
 
   // Handle different states
-  if (localStatus === 'ended' || (remaining !== null && remaining <= 0)) {
+  if (localStatus === 'closed' || (remaining !== null && remaining <= 0)) {
     return (
       <span className="inline-flex items-center rounded-full px-2 py-0.5 border border-slate-300 text-slate-400 bg-slate-50 text-[11px]">
         Auction ended
@@ -69,26 +69,12 @@ export function AuctionCountdown({ auctionEndsAt, auctionStatus, onEnd }: Auctio
     );
   }
 
-  if (localStatus === 'pending' || !auctionEndsAt) {
-    return (
-      <span className="text-[11px] text-slate-600">
-        No bids yet — be the first to bid
-      </span>
-    );
-  }
-
   if (localStatus === 'open' && remaining !== null) {
     const isUrgent = remaining < 60000; // Less than 1 minute
     return (
-      <span
-        className={`inline-flex items-center rounded-full px-2 py-0.5 border text-[11px] ${
-          isUrgent
-            ? "border-red-300 text-red-700 bg-red-50"
-            : "border-amber-300 text-amber-700 bg-amber-50"
-        }`}
-      >
-        Auction ends in {formatTime(remaining)}
-      </span>
+      <div className="text-sm text-gray-600 mt-2">
+        Auction ends in: <span className="font-medium">{formatTime(remaining)}</span>
+      </div>
     );
   }
 

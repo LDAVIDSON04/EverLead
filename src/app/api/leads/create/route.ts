@@ -1,7 +1,7 @@
 // src/app/api/leads/create/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { calculateAuctionSchedule } from "@/lib/auctions";
+import { calculateAuctionTiming } from "@/lib/auctions";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -142,22 +142,21 @@ export async function POST(req: NextRequest) {
       auction_enabled: body.auction_enabled !== undefined ? body.auction_enabled : true,
     };
 
-    // Calculate auction schedule if auction is enabled
+    // Calculate auction timing if auction is enabled
     if (leadData.auction_enabled) {
-      const auctionSchedule = calculateAuctionSchedule(new Date(), {
-        province: leadData.province,
-        country: null, // Could be added to form later
-      });
+      const auctionTiming = calculateAuctionTiming(new Date());
       
-      leadData.auction_start_at = auctionSchedule.auction_start_at;
-      leadData.auction_end_at = auctionSchedule.auction_end_at;
-      leadData.auction_status = auctionSchedule.auction_status;
-      leadData.auction_timezone = auctionSchedule.auction_timezone;
-      leadData.starting_bid = auctionSchedule.starting_bid;
-      leadData.min_increment = auctionSchedule.min_increment;
-      leadData.buy_now_price = auctionSchedule.buy_now_price;
+      leadData.auction_status = auctionTiming.auction_status;
+      leadData.auction_start_time = auctionTiming.auction_start_time;
+      leadData.auction_end_time = auctionTiming.auction_end_time;
+      leadData.after_hours_release_time = auctionTiming.after_hours_release_time;
+      
+      // Set default auction values
+      leadData.starting_bid = 10;
+      leadData.min_increment = 5;
+      leadData.buy_now_price = 50;
       // Also set buy_now_price_cents for backward compatibility
-      leadData.buy_now_price_cents = Math.round(auctionSchedule.buy_now_price * 100);
+      leadData.buy_now_price_cents = 5000; // $50
     }
 
     // Clean payload: remove null/undefined/empty

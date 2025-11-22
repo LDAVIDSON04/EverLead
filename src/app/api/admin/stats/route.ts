@@ -2,6 +2,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { normalizePendingLeads } from "@/lib/auctions";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +17,7 @@ type LeadRow = {
   purchased_by_email: string | null;
   status: string | null;
   price_charged_cents: number | null;
-  auction_status: 'pending' | 'open' | 'ended' | null;
+  auction_status: 'open' | 'closed' | 'pending' | null;
   winning_agent_id: string | null;
 };
 
@@ -52,7 +53,9 @@ export async function GET(_req: NextRequest) {
       throw new Error("No leads data returned");
     }
 
-    const allLeads: LeadRow[] = leads as unknown as LeadRow[];
+    // Normalize leads (pending->open, open->closed)
+    const normalizedLeads = await normalizePendingLeads(leads, supabaseAdmin);
+    const allLeads: LeadRow[] = normalizedLeads as unknown as LeadRow[];
 
     const totalLeads = allLeads.length;
     
@@ -66,8 +69,8 @@ export async function GET(_req: NextRequest) {
       const auctionStatus = l.auction_status;
       
       // Check auction_status first (new system)
-      // Ended auctions with winners are considered purchased
-      if (auctionStatus === 'ended' && l.winning_agent_id) {
+      // Closed auctions with winners are considered purchased
+      if (auctionStatus === 'closed' && l.winning_agent_id) {
         return true;
       }
       

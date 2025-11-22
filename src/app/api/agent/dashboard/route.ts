@@ -206,11 +206,11 @@ export async function GET(request: NextRequest) {
       const { data: bidLeadsData } = await supabaseAdmin
         .from("leads")
         .select(
-          "id, city, urgency_level, current_bid_agent_id, auction_ends_at, auction_enabled, status"
+          "id, city, urgency_level, current_bid_agent_id, auction_end_time, auction_enabled, status"
         )
         .in("id", yourBidLeadIds)
         .eq("auction_enabled", true)
-        .gt("auction_ends_at", nowISO)
+        .gt("auction_end_time", nowISO)
         .neq("status", "purchased_by_agent");
 
       yourBidsList = (bidLeadsData || []).map((lead: any) => ({
@@ -219,7 +219,7 @@ export async function GET(request: NextRequest) {
         lead_urgency: lead.urgency_level || null,
         amount: leadBidMap[lead.id],
         is_highest: lead.current_bid_agent_id === agentId,
-        auction_ends_at: lead.auction_ends_at || null,
+        auction_ends_at: lead.auction_end_time || null,
       }));
 
       // Sort by auction_ends_at (soonest first)
@@ -237,12 +237,12 @@ export async function GET(request: NextRequest) {
     // Get auctions where this agent is involved (either highest bidder or has placed a bid)
     const { data: allPendingAuctions } = await supabaseAdmin
       .from("leads")
-      .select("id, city, urgency_level, current_bid_amount, buy_now_price, auction_ends_at, auction_status, current_bid_agent_id")
+      .select("id, city, urgency_level, current_bid_amount, buy_now_price, auction_end_time, auction_status, current_bid_agent_id")
       .eq("auction_enabled", true)
       .in("auction_status", ["pending", "open"])
-      .or("auction_ends_at.gt." + nowISO + ",auction_ends_at.is.null")
+      .or("auction_end_time.gt." + nowISO + ",auction_end_time.is.null")
       .neq("status", "purchased_by_agent")
-      .order("auction_ends_at", { ascending: true })
+      .order("auction_end_time", { ascending: true })
       .limit(20);
 
     // Filter to only auctions where this agent is involved
@@ -262,7 +262,7 @@ export async function GET(request: NextRequest) {
         lead_urgency: auction.urgency_level || null,
         current_bid_amount: auction.current_bid_amount || null,
         buy_now_price: auction.buy_now_price || null,
-        auction_ends_at: auction.auction_ends_at || null,
+        auction_ends_at: auction.auction_end_time || null,
         is_highest_bidder: auction.current_bid_agent_id === agentId,
       }));
 

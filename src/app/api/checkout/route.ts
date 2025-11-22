@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { finalizeAuctionStatus } from "@/lib/auctions";
+import { normalizePendingLeads } from "@/lib/auctions";
 
 export async function POST(req: NextRequest) {
   try {
@@ -31,8 +31,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Run lazy finalization to ensure auction status is up-to-date
-    const { lead: finalizedLead } = await finalizeAuctionStatus(lead, supabaseAdmin);
+    // Normalize lead status (pending->open, open->closed)
+    const normalizedLeads = await normalizePendingLeads([lead], supabaseAdmin);
+    const finalizedLead = normalizedLeads[0] || lead;
 
     // Check if lead is already sold
     if (finalizedLead.status === "purchased_by_agent" || finalizedLead.assigned_agent_id) {
@@ -42,8 +43,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check auction status - if ended, only winner can buy
-    if (finalizedLead.auction_status === 'ended' && finalizedLead.winning_agent_id) {
+    // Check auction status - if closed, only winner can buy
+    if (finalizedLead.auction_status === 'closed' && finalizedLead.winning_agent_id) {
       // This will be checked in confirm-purchase based on email, but we can't get agent ID here
       // So we'll allow the checkout to proceed and validate in confirm-purchase
       // The frontend should already hide the button for non-winners
