@@ -1,7 +1,6 @@
 // src/app/api/leads/create/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { calculateAuctionTiming } from "@/lib/auctions";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -142,20 +141,22 @@ export async function POST(req: NextRequest) {
       auction_enabled: body.auction_enabled !== undefined ? body.auction_enabled : true,
     };
 
-    // Calculate auction timing if auction is enabled
+    // Set auction-related fields - simplified to avoid date math errors
+    // For now, do NOT compute Date objects here to avoid "Invalid time value" errors
     if (leadData.auction_enabled) {
-      const auctionTiming = calculateAuctionTiming(new Date());
-      
-      leadData.auction_status = auctionTiming.auction_status;
-      leadData.auction_starts_at = auctionTiming.auction_starts_at;
-      leadData.auction_ends_at = auctionTiming.auction_ends_at;
-      
       // Set default auction values
       leadData.starting_bid = 10;
       leadData.min_increment = 5;
       leadData.buy_now_price = 50;
       // Also set buy_now_price_cents for backward compatibility
       leadData.buy_now_price_cents = 5000; // $50
+      
+      // Set auction timing to null for now - will be set later when auction logic is safer
+      // This prevents RangeError from invalid date calculations
+      leadData.auction_status = 'scheduled';
+      leadData.auction_starts_at = null;
+      leadData.auction_ends_at = null;
+      leadData.current_bid_amount = null;
     }
 
     // Clean payload: remove null/undefined/empty

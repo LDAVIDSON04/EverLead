@@ -970,13 +970,41 @@ export default function AvailableLeadsPage() {
                     {/* Auction section - show when auction is enabled */}
                     {isAuctionEnabled && (() => {
                       // Pure function to determine auction state based on time (no hooks)
-                      const now = Date.now();
-                      const startsAt = lead.auction_starts_at ? new Date(lead.auction_starts_at).getTime() : null;
-                      const endsAt = lead.auction_ends_at ? new Date(lead.auction_ends_at).getTime() : null;
+                      // Safely handle null auction times
+                      const startsAtRaw = lead.auction_starts_at;
+                      const endsAtRaw = lead.auction_ends_at;
                       
+                      let startsAt: number | null = null;
+                      let endsAt: number | null = null;
+                      
+                      // Safely parse dates, checking for null and invalid dates
+                      if (startsAtRaw) {
+                        try {
+                          const startDate = new Date(startsAtRaw);
+                          if (!isNaN(startDate.getTime())) {
+                            startsAt = startDate.getTime();
+                          }
+                        } catch (e) {
+                          // Invalid date, keep as null
+                        }
+                      }
+                      
+                      if (endsAtRaw) {
+                        try {
+                          const endDate = new Date(endsAtRaw);
+                          if (!isNaN(endDate.getTime())) {
+                            endsAt = endDate.getTime();
+                          }
+                        } catch (e) {
+                          // Invalid date, keep as null
+                        }
+                      }
+                      
+                      const now = Date.now();
                       const isNotYetOpen = startsAt && now < startsAt;
                       const isActive = startsAt && endsAt && now >= startsAt && now < endsAt;
                       const isExpired = endsAt && now >= endsAt;
+                      const hasNoAuctionTime = !startsAtRaw && !endsAtRaw;
                       
                       return (
                         <div className="mt-2 rounded-md border border-slate-200 bg-slate-50 p-2">
@@ -984,19 +1012,61 @@ export default function AvailableLeadsPage() {
                             Auction
                           </p>
                           
+                          {/* No auction time set yet - show safe message */}
+                          {hasNoAuctionTime && (
+                            <>
+                              <p className="mt-1 text-[11px] text-slate-600">
+                                Bidding will open soon.
+                              </p>
+                              <p className="mt-1 text-[10px] text-slate-500 italic">
+                                Auction timing is being configured.
+                              </p>
+                              {/* Disabled bid buttons */}
+                              <div className="mt-2">
+                                <div className="flex flex-wrap gap-2 opacity-50 pointer-events-none">
+                                  <button
+                                    disabled
+                                    className="rounded-md bg-slate-400 px-3 py-1.5 text-xs font-semibold text-white cursor-not-allowed"
+                                  >
+                                    + $5
+                                  </button>
+                                  <button
+                                    disabled
+                                    className="rounded-md bg-slate-400 px-3 py-1.5 text-xs font-semibold text-white cursor-not-allowed"
+                                  >
+                                    + $10
+                                  </button>
+                                  <button
+                                    disabled
+                                    className="rounded-md bg-slate-400 px-3 py-1.5 text-xs font-semibold text-white cursor-not-allowed"
+                                  >
+                                    + $15
+                                  </button>
+                                </div>
+                              </div>
+                            </>
+                          )}
+                          
                           {/* Not yet open - show scheduled time */}
-                          {isNotYetOpen && startsAt && (
+                          {!hasNoAuctionTime && isNotYetOpen && startsAt && (
                             <>
                               <p className="mt-1 text-[11px] text-slate-600">
                                 {(() => {
-                                  const startDate = new Date(startsAt);
-                                  // Format in the user's local timezone
-                                  const timeLabel = startDate.toLocaleTimeString([], {
-                                    hour: 'numeric',
-                                    minute: '2-digit',
-                                    hour12: true,
-                                  });
-                                  return `Auction opens at ${timeLabel}`;
+                                  try {
+                                    const startDate = new Date(startsAt);
+                                    if (isNaN(startDate.getTime())) {
+                                      return 'Bidding will open soon.';
+                                    }
+                                    // Format in the user's local timezone
+                                    const timeLabel = startDate.toLocaleTimeString([], {
+                                      hour: 'numeric',
+                                      minute: '2-digit',
+                                      hour12: true,
+                                    });
+                                    return `Auction opens at ${timeLabel}`;
+                                  } catch (e) {
+                                    return 'Bidding will open soon.';
+                                  }
                                 })()}
                               </p>
                               <p className="mt-1 text-[10px] text-slate-500 italic">
@@ -1145,19 +1215,32 @@ type AuctionCountdownProps = {
 function useCountdown(auctionEndsAt: string | null) {
   const [remainingMs, setRemainingMs] = React.useState<number | null>(() => {
     if (!auctionEndsAt) return null;
-    const end = new Date(auctionEndsAt).getTime();
-    const now = Date.now();
-    return Math.max(end - now, 0);
+    try {
+      const end = new Date(auctionEndsAt).getTime();
+      if (isNaN(end)) return null;
+      const now = Date.now();
+      return Math.max(end - now, 0);
+    } catch (e) {
+      return null;
+    }
   });
 
   React.useEffect(() => {
     if (!auctionEndsAt) return;
 
     const interval = setInterval(() => {
-      const end = new Date(auctionEndsAt).getTime();
-      const now = Date.now();
-      const diff = end - now;
-      setRemainingMs(diff > 0 ? diff : 0);
+      try {
+        const end = new Date(auctionEndsAt).getTime();
+        if (isNaN(end)) {
+          setRemainingMs(null);
+          return;
+        }
+        const now = Date.now();
+        const diff = end - now;
+        setRemainingMs(diff > 0 ? diff : 0);
+      } catch (e) {
+        setRemainingMs(null);
+      }
     }, 1000);
 
     return () => clearInterval(interval);
