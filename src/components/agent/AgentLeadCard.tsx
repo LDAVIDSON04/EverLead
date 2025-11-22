@@ -86,18 +86,18 @@ export default function AgentLeadCard({ lead }: Props) {
   };
 
   return (
-    <article className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
-      <div className="flex items-start justify-between gap-6 p-5">
+    <article className="mb-8 rounded-2xl border border-gray-200 bg-white shadow-[0_4px_16px_rgba(0,0,0,0.06)] overflow-hidden">
+      <div className="flex items-start justify-between gap-8 p-8">
         <div className="flex-1">
           {/* Urgency badge */}
-          <div className="mb-2">
+          <div className="mt-1 mb-4">
             <span className={badgeClassForUrgency(lead.urgency)}>
               {urgencyLabel(lead.urgency)}
             </span>
           </div>
 
           {/* City + service type */}
-          <div className="text-sm text-gray-700 font-medium">
+          <div className="text-base text-gray-700 font-medium leading-relaxed mb-3">
             {lead.city && (
               <>
                 {lead.city}
@@ -111,38 +111,38 @@ export default function AgentLeadCard({ lead }: Props) {
           </div>
 
           {/* Note snippet */}
-          <p className="mt-2 text-sm text-gray-600 line-clamp-2">
+          <p className="text-base text-gray-600 line-clamp-2 leading-relaxed mb-3">
             {noteSnippet ||
               "This family has shared some details about what they're looking for. Purchase the lead to review their full note."}
           </p>
 
           {/* Disclosure line */}
-          <p className="mt-2 text-xs text-gray-400">
+          <p className="text-xs text-gray-400 font-medium">
             Purchase to reveal full name, phone, and email.
           </p>
         </div>
 
         {/* Price summary on the right */}
-        <div className="text-right min-w-[120px]">
-          <div className="text-xs tracking-wide text-gray-500 uppercase">
+        <div className="text-right min-w-[140px] pr-2">
+          <div className="text-xs tracking-wide text-gray-500 uppercase font-medium mb-2">
             Buy now
           </div>
-          <div className="mt-1 text-lg font-semibold text-gray-900">
+          <div className="text-xl font-semibold text-gray-900">
             ${price.toFixed(2)}
           </div>
         </div>
       </div>
 
       {/* Bottom buy button */}
-      <div className="border-t border-gray-100 bg-gray-50 px-5 py-3">
+      <div className="border-t border-gray-100 bg-gray-50 px-8 py-4">
         {error && (
-          <p className="mb-2 text-xs text-red-600">{error}</p>
+          <p className="mb-3 text-xs text-red-600">{error}</p>
         )}
         <button
           type="button"
           onClick={handleBuyNow}
           disabled={buying}
-          className="w-full inline-flex items-center justify-center rounded-full bg-emerald-500 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-600 transition disabled:cursor-not-allowed disabled:opacity-70"
+          className="w-full inline-flex items-center justify-center rounded-full bg-emerald-500 px-6 py-4 text-sm font-semibold text-white shadow-sm hover:bg-emerald-600 hover:shadow-md transition-all disabled:cursor-not-allowed disabled:opacity-70"
         >
           {buying ? 'Starting checkout…' : 'Buy now'}
         </button>

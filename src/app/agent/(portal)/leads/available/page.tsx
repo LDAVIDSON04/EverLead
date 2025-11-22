@@ -495,7 +495,7 @@ export default function AvailableLeadsPage() {
           }
 
           return (
-            <div className="mt-6 space-y-4">
+            <div className="mt-6">
               {filteredLeads.map((lead: AgentLead) => (
                 <AgentLeadCard key={lead.id} lead={lead} />
               ))}
