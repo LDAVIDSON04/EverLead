@@ -1,8 +1,8 @@
 // lib/auctionTiming.ts
-// Helper functions for computing auction end times based on business rules
+// Helper functions for computing auction timing based on business rules
 
 export const MARKET_OPEN_HOUR = 8;  // 8:00 local
-export const MARKET_CLOSE_HOUR = 19; // 7pm, for future use
+export const MARKET_CLOSE_HOUR = 19; // 7pm
 
 /**
  * Returns a Date for the next market open (8:00) in the local timezone of `now`
@@ -33,41 +33,122 @@ export function getNextMarketOpen(now: Date): Date {
 }
 
 /**
- * Computes a new auction_ends_at based on business rules:
- * - bidding allowed now (24/7)
- * - earliest win is 30 minutes after max(now, nextMarketOpen)
- * Returns ISO string, or null if date calculation fails
+ * Calculates auction_starts_at based on business hours:
+ * - If created between 08:00 and 19:00: auction_starts_at = now
+ * - If created after 19:00 or before 08:00: auction_starts_at = next day at 08:00
+ * Returns ISO string or null if calculation fails
  */
-export function computeAuctionEndsAt(now: Date): string | null {
+export function calculateAuctionStartsAt(now: Date): string | null {
   try {
     if (isNaN(now.getTime())) {
-      console.error("Invalid date passed to computeAuctionEndsAt");
+      console.error("Invalid date passed to calculateAuctionStartsAt");
       return null;
     }
 
-    const nextOpen = getNextMarketOpen(now);
+    const hour = now.getHours();
     
-    // Ensure nextOpen is valid
+    // If created between 08:00 and 19:00, start immediately
+    if (hour >= MARKET_OPEN_HOUR && hour < MARKET_CLOSE_HOUR) {
+      return now.toISOString();
+    }
+    
+    // Otherwise, start at next 08:00
+    const nextOpen = getNextMarketOpen(now);
     if (isNaN(nextOpen.getTime())) {
       console.error("Invalid nextOpen date");
       return null;
     }
+    
+    return nextOpen.toISOString();
+  } catch (error) {
+    console.error("Error in calculateAuctionStartsAt:", error);
+    return null;
+  }
+}
 
-    // Base time is the later of now or next market open
-    const base = now > nextOpen ? now : nextOpen;
+/**
+ * Computes auction_ends_at when creating a lead:
+ * auction_ends_at = auction_starts_at + 30 minutes
+ * Returns ISO string or null if calculation fails
+ */
+export function calculateInitialAuctionEndsAt(auctionStartsAt: string): string | null {
+  try {
+    const startsAt = new Date(auctionStartsAt);
+    if (isNaN(startsAt.getTime())) {
+      console.error("Invalid auction_starts_at in calculateInitialAuctionEndsAt");
+      return null;
+    }
     
-    // Add 30 minutes
-    const end = new Date(base.getTime() + 30 * 60 * 1000);
+    const endsAt = new Date(startsAt.getTime() + 30 * 60 * 1000);
+    if (isNaN(endsAt.getTime())) {
+      console.error("Invalid end date calculated");
+      return null;
+    }
     
-    // Validate the result
-    if (isNaN(end.getTime())) {
+    return endsAt.toISOString();
+  } catch (error) {
+    console.error("Error in calculateInitialAuctionEndsAt:", error);
+    return null;
+  }
+}
+
+/**
+ * Computes a new auction_ends_at when placing a bid:
+ * - If now < auction_starts_at: returns auction_starts_at + 30 minutes (don't move earlier)
+ * - If now >= auction_starts_at: returns now + 30 minutes (rolling soft close)
+ * Returns ISO string, or null if date calculation fails
+ */
+export function computeAuctionEndsAtOnBid(
+  now: Date,
+  auctionStartsAt: string | null
+): string | null {
+  try {
+    if (isNaN(now.getTime())) {
+      console.error("Invalid date passed to computeAuctionEndsAtOnBid");
+      return null;
+    }
+
+    // If no auction_starts_at, use next market open as base
+    if (!auctionStartsAt) {
+      const nextOpen = getNextMarketOpen(now);
+      if (isNaN(nextOpen.getTime())) {
+        console.error("Invalid nextOpen date");
+        return null;
+      }
+      const endsAt = new Date(nextOpen.getTime() + 30 * 60 * 1000);
+      if (isNaN(endsAt.getTime())) {
+        console.error("Invalid end date calculated");
+        return null;
+      }
+      return endsAt.toISOString();
+    }
+
+    const startsAt = new Date(auctionStartsAt);
+    if (isNaN(startsAt.getTime())) {
+      console.error("Invalid auction_starts_at in computeAuctionEndsAtOnBid");
+      return null;
+    }
+
+    // If now < auction_starts_at, don't move auction_ends_at earlier than starts_at + 30min
+    if (now < startsAt) {
+      const earliestEnd = new Date(startsAt.getTime() + 30 * 60 * 1000);
+      if (isNaN(earliestEnd.getTime())) {
+        console.error("Invalid earliest end date");
+        return null;
+      }
+      return earliestEnd.toISOString();
+    }
+
+    // If now >= auction_starts_at, set to now + 30 minutes (rolling soft close)
+    const endsAt = new Date(now.getTime() + 30 * 60 * 1000);
+    if (isNaN(endsAt.getTime())) {
       console.error("Invalid end date calculated");
       return null;
     }
 
-    return end.toISOString();
+    return endsAt.toISOString();
   } catch (error) {
-    console.error("Error in computeAuctionEndsAt:", error);
+    console.error("Error in computeAuctionEndsAtOnBid:", error);
     return null;
   }
 }

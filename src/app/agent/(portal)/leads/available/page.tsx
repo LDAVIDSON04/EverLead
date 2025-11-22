@@ -971,64 +971,31 @@ export default function AvailableLeadsPage() {
                     {isAuctionEnabled && (() => {
                       // Pure function to determine auction state based on time (no hooks)
                       // Safely handle null auction times
-                      const startsAtRaw = lead.auction_starts_at;
-                      const endsAtRaw = lead.auction_ends_at;
+                      const now = new Date();
+                      const startsAt = lead.auction_starts_at ? new Date(lead.auction_starts_at) : null;
+                      const endsAt = lead.auction_ends_at ? new Date(lead.auction_ends_at) : null;
                       
-                      let startsAt: number | null = null;
-                      let endsAt: number | null = null;
+                      // Validate dates
+                      const hasTimes = startsAt && endsAt && !isNaN(startsAt.getTime()) && !isNaN(endsAt.getTime());
+                      const beforeOpen = hasTimes && now < startsAt!;
+                      const afterOpen = hasTimes && now >= startsAt!;
+                      const isExpired = hasTimes && now >= endsAt!;
                       
-                      // Safely parse dates, checking for null and invalid dates
-                      if (startsAtRaw) {
-                        try {
-                          const startDate = new Date(startsAtRaw);
-                          if (!isNaN(startDate.getTime())) {
-                            startsAt = startDate.getTime();
-                          }
-                        } catch (e) {
-                          // Invalid date, keep as null
+                      // Helper to format local time
+                      const formatLocalTime = (date: Date, format: string) => {
+                        if (format === 'h:mm A') {
+                          return date.toLocaleTimeString([], {
+                            hour: 'numeric',
+                            minute: '2-digit',
+                            hour12: true,
+                          });
                         }
-                      }
-                      
-                      if (endsAtRaw) {
-                        try {
-                          const endDate = new Date(endsAtRaw);
-                          if (!isNaN(endDate.getTime())) {
-                            endsAt = endDate.getTime();
-                          }
-                        } catch (e) {
-                          // Invalid date, keep as null
-                        }
-                      }
-                      
-                      const now = Date.now();
-                      const isNotYetOpen = startsAt && now < startsAt;
-                      const isActive = startsAt && endsAt && now >= startsAt && now < endsAt;
-                      const isExpired = endsAt && now >= endsAt;
-                      const hasNoAuctionTime = !startsAtRaw && !endsAtRaw;
-                      
-                      // Determine status label and expiration state
-                      let statusLabel = '';
-                      let isExpiredState = false;
-                      
-                      if (!endsAtRaw) {
-                        // No auction end yet – show "opens at 8am" messaging
-                        statusLabel = 'Auction opens at 8:00 AM. Bidding is open now — earliest win is 30 minutes after opening.';
-                      } else if (endsAtRaw) {
-                        try {
-                          const endDate = new Date(endsAtRaw);
-                          if (isNaN(endDate.getTime())) {
-                            statusLabel = 'Bidding will open soon.';
-                          } else if (now >= endDate.getTime()) {
-                            statusLabel = 'Bidding closed';
-                            isExpiredState = true;
-                          } else {
-                            // Show countdown - will be handled by AuctionCountdown component
-                            statusLabel = ''; // Empty, countdown will show
-                          }
-                        } catch (e) {
-                          statusLabel = 'Bidding will open soon.';
-                        }
-                      }
+                        return date.toLocaleTimeString([], {
+                          hour: 'numeric',
+                          minute: '2-digit',
+                          hour12: true,
+                        });
+                      };
                       
                       return (
                         <div className="mt-2 rounded-md border border-slate-200 bg-slate-50 p-2">
@@ -1036,20 +1003,18 @@ export default function AvailableLeadsPage() {
                             Auction
                           </p>
                           
-                          {/* Show current bid or starting bid */}
-                          <p className="mt-1 text-[11px] text-slate-600">
-                            {lead.current_bid_amount
-                              ? `Current bid: $${lead.current_bid_amount.toFixed(2)}`
-                              : `Starting bid: $${startingBid.toFixed(2)}`}
-                          </p>
-                          
-                          {/* No auction end time set yet - show "opens at 8am" message */}
-                          {!endsAtRaw && (
+                          {/* Before 08:00 (bidding open but cannot win yet) */}
+                          {beforeOpen && (
                             <>
-                              <p className="mt-1 text-[10px] text-slate-600">
-                                {statusLabel}
+                              <p className="mt-1 text-[11px] text-slate-600">
+                                {lead.current_bid_amount
+                                  ? `Current bid: $${lead.current_bid_amount.toFixed(2)}`
+                                  : `Starting bid: $${startingBid.toFixed(2)}`}
                               </p>
-                              {/* Bid buttons are enabled - bidding is open 24/7 */}
+                              <p className="mt-1 text-[10px] text-slate-600">
+                                Auction opens at {formatLocalTime(startsAt!, 'h:mm A')}. Bidding is open now — earliest win is 30 minutes after opening.
+                              </p>
+                              {/* Bid buttons enabled */}
                               {showBidForm && (
                                 <div className="mt-2">
                                   <p className="mb-1 text-[10px] text-slate-500">
@@ -1086,15 +1051,22 @@ export default function AvailableLeadsPage() {
                             </>
                           )}
                           
-                          {/* Active auction with end time - show countdown and enabled buttons */}
-                          {endsAtRaw && !isExpiredState && (
+                          {/* After open, not expired - show countdown */}
+                          {afterOpen && !isExpired && (
                             <>
+                              <p className="mt-1 text-[11px] text-slate-600">
+                                {lead.current_bid_amount
+                                  ? `Current bid: $${lead.current_bid_amount.toFixed(2)}`
+                                  : `Starting bid: $${startingBid.toFixed(2)}`}
+                              </p>
                               <AuctionCountdown
                                 auctionEndsAt={lead.auction_ends_at ?? null}
                                 hasBids={!!lead.current_bid_amount && lead.current_bid_amount > 0}
                               />
-
-                              {/* Preset bid buttons */}
+                              <p className="mt-1 text-[10px] text-slate-500">
+                                Each new bid extends the clock by 30 minutes.
+                              </p>
+                              {/* Bid buttons enabled */}
                               {showBidForm && (
                                 <div className="mt-2">
                                   <p className="mb-1 text-[10px] text-slate-500">
@@ -1131,11 +1103,19 @@ export default function AvailableLeadsPage() {
                             </>
                           )}
                           
-                          {/* Expired auction - show closed message and disabled bid buttons */}
-                          {isExpiredState && (
+                          {/* After expiry */}
+                          {isExpired && (
                             <>
+                              <p className="mt-1 text-[11px] text-slate-600">
+                                {lead.current_bid_amount
+                                  ? `Current bid: $${lead.current_bid_amount.toFixed(2)}`
+                                  : `Starting bid: $${startingBid.toFixed(2)}`}
+                              </p>
                               <p className="mt-1 text-[11px] font-medium text-slate-500">
-                                {statusLabel}
+                                Bidding closed.
+                              </p>
+                              <p className="mt-1 text-[10px] text-slate-500">
+                                The winning bidder will be notified by email.
                               </p>
                               {/* Disabled bid buttons */}
                               <div className="mt-2">
@@ -1160,6 +1140,20 @@ export default function AvailableLeadsPage() {
                                   </button>
                                 </div>
                               </div>
+                            </>
+                          )}
+                          
+                          {/* Fallback for leads without proper auction times */}
+                          {!hasTimes && (
+                            <>
+                              <p className="mt-1 text-[11px] text-slate-600">
+                                {lead.current_bid_amount
+                                  ? `Current bid: $${lead.current_bid_amount.toFixed(2)}`
+                                  : `Starting bid: $${startingBid.toFixed(2)}`}
+                              </p>
+                              <p className="mt-1 text-[10px] text-slate-500">
+                                Bidding will open soon.
+                              </p>
                             </>
                           )}
                           
@@ -1244,25 +1238,21 @@ function useCountdown(auctionEndsAt: string | null) {
 }
 
 function AuctionCountdown({ auctionEndsAt, hasBids }: AuctionCountdownProps) {
+  // This component is only called when afterOpen && !isExpired
+  // So we can assume auctionEndsAt is valid
   const { label, isExpired } = useCountdown(auctionEndsAt);
 
-  // No auction end set yet
-  if (!auctionEndsAt) {
-    return (
-      <p className="mt-1 text-[10px] text-slate-500">
-        No bids yet — be the first to bid
-      </p>
-    );
+  // Guard against null/invalid (shouldn't happen, but be safe)
+  if (!auctionEndsAt || !label) {
+    return null;
   }
 
+  // If expired, parent will handle the "Bidding closed" message
   if (isExpired) {
-    return (
-      <p className="mt-1 text-[11px] font-medium text-slate-500">
-        Bidding closed
-      </p>
-    );
+    return null;
   }
 
+  // Show countdown timer (only called when afterOpen && !isExpired)
   return (
     <p className="mt-1 text-[11px] font-medium text-amber-700">
       Time left: {label}

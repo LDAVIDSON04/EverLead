@@ -1,6 +1,7 @@
 // src/app/api/leads/create/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { calculateAuctionStartsAt, calculateInitialAuctionEndsAt } from "@/lib/auctionTiming";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -141,8 +142,7 @@ export async function POST(req: NextRequest) {
       auction_enabled: body.auction_enabled !== undefined ? body.auction_enabled : true,
     };
 
-    // Set auction-related fields - simple and safe
-    // Bidding is allowed immediately (24/7), auction_ends_at will be set on first bid
+    // Set auction-related fields based on business hours
     if (leadData.auction_enabled) {
       // Set default auction values
       leadData.starting_bid = 10;
@@ -151,17 +151,27 @@ export async function POST(req: NextRequest) {
       // Also set buy_now_price_cents for backward compatibility
       leadData.buy_now_price_cents = 5000; // $50
       
-      // Set auction_starts_at to now (bidding allowed immediately)
-      // auction_ends_at will be null until first bid
+      // Calculate auction_starts_at based on business hours:
+      // - If created between 08:00 and 19:00: auction_starts_at = now
+      // - If created after 19:00 or before 08:00: auction_starts_at = next day at 08:00
       const now = new Date();
       if (isNaN(now.getTime())) {
-        // Guard against invalid date
         console.error("Invalid date when creating lead");
         leadData.auction_starts_at = null;
+        leadData.auction_ends_at = null;
       } else {
-        leadData.auction_starts_at = now.toISOString();
+        const auctionStartsAt = calculateAuctionStartsAt(now);
+        if (!auctionStartsAt) {
+          console.error("Failed to calculate auction_starts_at");
+          leadData.auction_starts_at = null;
+          leadData.auction_ends_at = null;
+        } else {
+          leadData.auction_starts_at = auctionStartsAt;
+          // auction_ends_at = auction_starts_at + 30 minutes (earliest possible win time)
+          const auctionEndsAt = calculateInitialAuctionEndsAt(auctionStartsAt);
+          leadData.auction_ends_at = auctionEndsAt;
+        }
       }
-      leadData.auction_ends_at = null;
       leadData.current_bid_amount = null;
       leadData.auction_status = 'open'; // Bidding is open 24/7
     }

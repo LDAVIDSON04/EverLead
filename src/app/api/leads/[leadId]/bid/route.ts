@@ -1,7 +1,7 @@
 // src/app/api/leads/[leadId]/bid/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { computeAuctionEndsAt } from "@/lib/auctionTiming";
+import { computeAuctionEndsAtOnBid } from "@/lib/auctionTiming";
 
 const DEFAULT_TZ = 'America/Vancouver'; // Business hours timezone
 
@@ -191,8 +191,6 @@ export async function POST(req: NextRequest, context: any): Promise<Response> {
       );
     }
 
-    // Determine if this is the first bid (auction_ends_at is null)
-    const isFirstBid = !lead.auction_ends_at;
     const now = new Date();
     
     // Guard against invalid date
@@ -204,12 +202,21 @@ export async function POST(req: NextRequest, context: any): Promise<Response> {
       );
     }
     
-    const nowISO = now.toISOString();
+    // Check if auction has ended
+    if (lead.auction_ends_at) {
+      const endsAt = new Date(lead.auction_ends_at);
+      if (!isNaN(endsAt.getTime()) && now >= endsAt) {
+        return NextResponse.json(
+          { error: "Bidding closed" },
+          { status: 400 }
+        );
+      }
+    }
     
-    // Calculate new auction end time using business rules:
-    // - earliest win is 30 minutes after max(now, nextMarketOpen)
-    // - every bid resets the 30-minute clock
-    const newAuctionEnd = computeAuctionEndsAt(now);
+    // Calculate new auction end time based on business rules:
+    // - If now < auction_starts_at: don't move auction_ends_at earlier than auction_starts_at + 30 minutes
+    // - If now >= auction_starts_at: set auction_ends_at = now + 30 minutes (rolling soft close)
+    const newAuctionEnd = computeAuctionEndsAtOnBid(now, lead.auction_starts_at);
     
     if (!newAuctionEnd) {
       console.error("Failed to compute auction end time");
@@ -223,18 +230,25 @@ export async function POST(req: NextRequest, context: any): Promise<Response> {
       current_bid_amount: bidAmount,
       current_bid_agent_id: agentId,
       winning_agent_id: agentId, // Set winning agent on each bid
-      auction_ends_at: newAuctionEnd, // Set/reset 30-minute window based on business rules
     };
 
-    // If this is the first bid, also set auction_starts_at and ensure status is 'open'
-    if (isFirstBid) {
-      updateData.auction_starts_at = nowISO;
-      updateData.auction_status = 'open';
-    } else {
-      // Ensure status is open for subsequent bids
-      if (lead.auction_status === 'scheduled') {
-        updateData.auction_status = 'open';
+    // Only update auction_ends_at if now >= auction_starts_at
+    // If now < auction_starts_at, keep auction_ends_at as is (auction_starts_at + 30 minutes)
+    if (lead.auction_starts_at) {
+      const startsAt = new Date(lead.auction_starts_at);
+      if (!isNaN(startsAt.getTime()) && now >= startsAt) {
+        // After market open: rolling soft close
+        updateData.auction_ends_at = newAuctionEnd;
       }
+      // Before market open: don't update auction_ends_at (it stays at auction_starts_at + 30 minutes)
+    } else {
+      // No auction_starts_at set, use the computed end time
+      updateData.auction_ends_at = newAuctionEnd;
+    }
+
+    // Ensure status is open
+    if (lead.auction_status === 'scheduled') {
+      updateData.auction_status = 'open';
     }
 
     const { data: updatedLead, error: updateError } = await supabaseAdmin
