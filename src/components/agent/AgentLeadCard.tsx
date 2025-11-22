@@ -38,10 +38,12 @@ export default function AgentLeadCard({ lead }: Props) {
 
   const price = lead.lead_price ?? 0;
 
-  // Note preview - show 2-3 lines, truncated with ellipsis
-  const notePreview = lead.additional_details && lead.additional_details.length > 0
-    ? lead.additional_details
-    : 'No extra details provided yet.';
+  // Note preview - trim and truncate to ~180 characters if present
+  const noteSnippet = lead.additional_details 
+    ? lead.additional_details.trim().length > 180
+      ? lead.additional_details.trim().substring(0, 180) + '…'
+      : lead.additional_details.trim()
+    : null;
 
   const handleBuyNow = async () => {
     setBuying(true);
@@ -96,17 +98,19 @@ export default function AgentLeadCard({ lead }: Props) {
             <span>{getServiceTypeLabel(lead.service_type)}</span>
           </div>
 
-          {/* Multi-line note preview (2-3 lines, truncated) */}
-          <p className="mb-3 line-clamp-3 text-sm leading-relaxed text-[#4a4a4a]">
-            {notePreview}
-          </p>
+          {/* Customer note snippet (only if present) */}
+          {noteSnippet && (
+            <p className="mb-3 text-sm leading-relaxed text-gray-700">
+              {noteSnippet}
+            </p>
+          )}
 
           {/* Helper text */}
           <p className="mb-4 text-xs text-[#6b6b6b]">
             Purchase to reveal full name, phone, and email.
           </p>
 
-          {/* Full-width black Buy now button */}
+          {/* Green Buy now button */}
           {error && (
             <p className="mb-2 text-xs text-red-600">{error}</p>
           )}
@@ -114,7 +118,7 @@ export default function AgentLeadCard({ lead }: Props) {
             type="button"
             onClick={handleBuyNow}
             disabled={buying}
-            className="w-full rounded-full bg-[#2a2a2a] px-6 py-3 text-sm font-medium text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-70 transition-colors"
+            className="rounded-full bg-green-600 px-6 py-3 text-sm font-medium text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-70 transition-colors"
           >
             {buying ? 'Starting checkout…' : 'Buy now'}
           </button>
