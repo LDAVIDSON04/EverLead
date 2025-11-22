@@ -13,7 +13,7 @@ export interface Lead {
   auction_enabled: boolean;
   auction_start_at: string | null;
   auction_ends_at: string | null;
-  auction_status: 'scheduled' | 'open' | 'closed' | null;
+  auction_status: 'pending' | 'open' | 'ended' | null;
   auction_timezone: string | null;
   starting_bid: number | null;
   min_increment: number | null;

@@ -82,37 +82,50 @@ export async function POST(req: Request, context: any): Promise<Response> {
       }
     }
 
-    // Validate auction status
-    if (finalizedLead.auction_status !== 'open') {
-      if (finalizedLead.auction_status === 'scheduled') {
+    // Check if auction has ended
+    if (finalizedLead.auction_status === 'ended') {
+      return NextResponse.json(
+        { error: "Auction has ended" },
+        { status: 400 }
+      );
+    }
+
+    // Check if auction has ended by time (even if status hasn't been updated yet)
+    if (finalizedLead.auction_end_at) {
+      const endAt = new Date(finalizedLead.auction_end_at);
+      const now = new Date();
+      if (now >= endAt) {
+        // Auction has ended - update status and reject bid
+        await supabaseAdmin
+          .from('leads')
+          .update({ auction_status: 'ended' })
+          .eq('id', leadId);
         return NextResponse.json(
-          { error: "Auction has not opened yet." },
-          { status: 400 }
-        );
-      }
-      if (finalizedLead.auction_status === 'closed') {
-        return NextResponse.json(
-          { error: "Auction has closed." },
+          { error: "Auction has ended" },
           { status: 400 }
         );
       }
     }
 
-    // Check if auction has ended (even if status hasn't been updated yet)
-    if (finalizedLead.auction_end_at) {
-      const endAt = new Date(finalizedLead.auction_end_at);
+    // Check if auction is pending - allow bids if we're past auction_start_at
+    const isPending = finalizedLead.auction_status === 'pending';
+    if (isPending && finalizedLead.auction_start_at) {
+      const startAt = new Date(finalizedLead.auction_start_at);
       const now = new Date();
-      if (now >= endAt) {
-        // Auction has ended - reject bid and update status if needed
-        if (finalizedLead.auction_status === 'open') {
-          // Update to closed (finalization will handle winner assignment)
-          await finalizeAuctionStatus(finalizedLead, supabaseAdmin);
-        }
+      if (now < startAt) {
         return NextResponse.json(
-          { error: "Auction has closed." },
+          { error: "Auction has not opened yet." },
           { status: 400 }
         );
       }
+      // Auction can accept bids now - will transition to 'open' below
+    } else if (isPending && !finalizedLead.auction_start_at) {
+      // No start time set - allow bids to proceed
+    } else if (finalizedLead.auction_status !== 'open') {
+      return NextResponse.json(
+        { error: "Auction is not open for bidding." },
+        { status: 400 }
+      );
     }
 
     // Validate lead is available (not purchased/assigned)
@@ -176,16 +189,27 @@ export async function POST(req: Request, context: any): Promise<Response> {
     const newAuctionEnd = calculateNewAuctionEnd(timezone);
     const now = new Date().toISOString();
 
+    // Determine if this is the first bid
+    const isFirstBid = !finalizedLead.current_bid_amount && !finalizedLead.auction_end_at;
+
+    const updateData: any = {
+      current_bid_amount: bidAmount,
+      current_bid_agent_id: agentId,
+      winning_agent_id: agentId, // Set winning agent on each bid
+      auction_end_at: newAuctionEnd, // Rolling 30-minute window (resets on each bid)
+      last_bid_at: now, // Track when last bid was placed
+    };
+
+    // If this is the first bid, transition from 'pending' to 'open'
+    if (isFirstBid || finalizedLead.auction_status === 'pending') {
+      updateData.auction_status = 'open';
+    } else {
+      updateData.auction_status = 'open'; // Ensure it stays open
+    }
+
     const { data: updatedLead, error: updateError } = await supabaseAdmin
       .from("leads")
-      .update({
-        current_bid_amount: bidAmount,
-        current_bid_agent_id: agentId,
-        winning_agent_id: agentId, // Set winning agent on each bid
-        auction_end_at: newAuctionEnd, // Rolling 30-minute window
-        auction_status: 'open', // Ensure status is open
-        last_bid_at: now, // Track when last bid was placed
-      })
+      .update(updateData)
       .eq("id", leadId)
       .select("*")
       .single();

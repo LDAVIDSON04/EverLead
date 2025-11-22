@@ -239,7 +239,7 @@ export async function GET(request: NextRequest) {
       .from("leads")
       .select("id, city, urgency_level, current_bid_amount, buy_now_price, auction_ends_at, auction_status, current_bid_agent_id")
       .eq("auction_enabled", true)
-      .in("auction_status", ["scheduled", "open"])
+      .in("auction_status", ["pending", "open"])
       .or("auction_ends_at.gt." + nowISO + ",auction_ends_at.is.null")
       .neq("status", "purchased_by_agent")
       .order("auction_ends_at", { ascending: true })

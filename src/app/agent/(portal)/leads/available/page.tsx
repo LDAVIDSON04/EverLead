@@ -8,6 +8,7 @@ import { useRequireRole } from "@/lib/hooks/useRequireRole";
 import { AgentNav } from "@/components/AgentNav";
 import { agentOwnsLead } from "@/lib/leads";
 import clsx from "clsx";
+import { AuctionCountdown } from "@/components/AuctionCountdown";
 
 type Lead = {
   id: string;
@@ -25,7 +26,7 @@ type Lead = {
   auction_enabled?: boolean | null;
   auction_ends_at?: string | null;
   auction_start_at?: string | null;
-  auction_status?: 'scheduled' | 'open' | 'closed' | null;
+  auction_status?: 'pending' | 'open' | 'ended' | null;
   auction_timezone?: string | null;
   starting_bid?: number | null;
   min_increment?: number | null;
@@ -194,19 +195,19 @@ export default function AvailableLeadsPage() {
 
       let newLeads = (leadsData || []) as Lead[];
 
-      // Filter: exclude closed auctions unless current user is the winner
+      // Filter: exclude ended auctions unless current user is the winner
       if (currentUserId) {
         newLeads = newLeads.filter((lead: Lead) => {
-          // If auction is closed, only show to the winner
-          if (lead.auction_status === 'closed') {
+          // If auction is ended, only show to the winner
+          if (lead.auction_status === 'ended') {
             return lead.winning_agent_id === currentUserId;
           }
-          // Show all non-closed leads (scheduled, open, or null)
+          // Show all non-ended leads (pending, open, or null)
           return true;
         });
       } else {
-        // If no user ID, filter out closed auctions entirely
-        newLeads = newLeads.filter((lead: Lead) => lead.auction_status !== 'closed');
+        // If no user ID, filter out ended auctions entirely
+        newLeads = newLeads.filter((lead: Lead) => lead.auction_status !== 'ended');
       }
 
       // Extract unique locations for filter dropdown (only on initial load)
@@ -473,14 +474,13 @@ export default function AvailableLeadsPage() {
     if (!isAuctionEnabled) return false;
     
     // Check auction status
-    if (lead.auction_status === 'closed') return false;
-    if (lead.auction_status === 'scheduled') return false; // Auction hasn't started yet
+    if (lead.auction_status === 'ended') return false;
     
-    // Must be 'open' to bid
-    if (lead.auction_status !== 'open') return false;
+    // Must be 'open' or 'pending' to bid
+    if (lead.auction_status !== 'open' && lead.auction_status !== 'pending') return false;
     
-    // Check auction_start_at - must have started
-    if (lead.auction_start_at) {
+    // Check auction_start_at - must have started (for pending auctions)
+    if (lead.auction_status === 'pending' && lead.auction_start_at) {
       const startAt = new Date(lead.auction_start_at);
       const now = new Date();
       if (now < startAt) return false; // Auction hasn't opened yet
@@ -489,9 +489,12 @@ export default function AvailableLeadsPage() {
     // Check lead is still available
     if (lead.status === "purchased_by_agent" || lead.assigned_agent_id) return false;
     
-    // Check auction hasn't ended
-    const { isEnded } = getRemainingTime(lead.auction_ends_at ?? null);
-    if (isEnded) return false;
+    // Check auction hasn't ended by time
+    if (lead.auction_ends_at) {
+      const endAt = new Date(lead.auction_ends_at);
+      const now = new Date();
+      if (now >= endAt) return false; // Auction has ended
+    }
     
     return true;
   }
@@ -501,7 +504,7 @@ export default function AvailableLeadsPage() {
     
     const status = lead.auction_status;
     
-    if (status === 'scheduled') {
+    if (status === 'pending') {
       if (lead.auction_start_at) {
         const startDate = new Date(lead.auction_start_at);
         const localTime = startDate.toLocaleTimeString('en-US', { 
@@ -518,7 +521,7 @@ export default function AvailableLeadsPage() {
       return null; // Will show countdown instead
     }
     
-    if (status === 'closed') {
+    if (status === 'ended') {
       if (lead.winning_agent_id && userId && lead.winning_agent_id === userId) {
         return 'You won this auction';
       }
@@ -886,20 +889,16 @@ export default function AvailableLeadsPage() {
                               ? formatPriceDollars(lead.current_bid_amount)
                               : formatPriceDollars(startingBid)}
                           </div>
-                          {lead.auction_status === 'open' && lead.auction_ends_at && (
+                          {lead.auction_status === 'open' && (
                             <div className="mt-1">
-                              <span
-                                className={clsx(
-                                  "inline-flex items-center rounded-full px-2 py-0.5 border text-[11px]",
-                                  auctionEnded
-                                    ? "border-slate-300 text-slate-400 bg-slate-50"
-                                    : countdownLabel.includes('0:')
-                                    ? "border-red-300 text-red-700 bg-red-50"
-                                    : "border-amber-300 text-amber-700 bg-amber-50"
-                                )}
-                              >
-                                {auctionEnded ? "Ended" : `Ends in ${countdownLabel}`}
-                              </span>
+                              <AuctionCountdown
+                                auctionEndsAt={lead.auction_ends_at ?? null}
+                                auctionStatus={lead.auction_status ?? null}
+                                onEnd={() => {
+                                  // Trigger a refresh when auction ends
+                                  refreshLeads(false);
+                                }}
+                              />
                             </div>
                           )}
                           {auctionStatusLabel && (
@@ -916,17 +915,17 @@ export default function AvailableLeadsPage() {
                     <div className="flex flex-wrap items-center gap-2">
                       {/* Buy Now button - visibility rules based on auction status */}
                       {(() => {
-                        const isClosed = lead.auction_status === 'closed';
+                        const isEnded = lead.auction_status === 'ended';
                         const hasWinner = !!lead.winning_agent_id;
                         const isWinner = userId && lead.winning_agent_id === userId;
                         const canBuyNow = 
                           lead.assigned_agent_id === null && 
                           buyNowPriceCents != null &&
                           (
-                            // Before close: anyone can buy
-                            !isClosed ||
-                            // After close: only winner can buy
-                            (isClosed && hasWinner && isWinner)
+                            // Before end: anyone can buy
+                            !isEnded ||
+                            // After end: only winner can buy
+                            (isEnded && hasWinner && isWinner)
                           );
                         
                         return canBuyNow ? (
@@ -941,7 +940,7 @@ export default function AvailableLeadsPage() {
                               ? "Starting checkout…" 
                               : `Buy now for $${((buyNowPriceCents || 0) / 100).toFixed(2)}`}
                           </button>
-                        ) : isClosed && hasWinner && !isWinner ? (
+                        ) : isEnded && hasWinner && !isWinner ? (
                           <span className="text-xs text-slate-500 italic">Auction ended</span>
                         ) : null;
                       })()}
@@ -1037,8 +1036,11 @@ export default function AvailableLeadsPage() {
                             )}
                           </>
                         )}
-                        {!showBidForm && lead.auction_status === 'closed' && !lead.winning_agent_id && (
-                          <p className="mt-1 text-[10px] text-slate-500">Auction ended – still available via Buy Now</p>
+                        {lead.auction_status === 'pending' && !lead.auction_ends_at && (
+                          <p className="mt-1 text-[10px] text-slate-500">No bids yet — be the first to bid</p>
+                        )}
+                        {lead.auction_status === 'ended' && !lead.winning_agent_id && (
+                          <p className="mt-1 text-[10px] text-slate-500">Auction ended</p>
                         )}
                         {bidErrors[lead.id] && (
                           <p className="mt-1 text-[11px] text-red-600">

@@ -4,7 +4,7 @@
 import { DateTime } from 'luxon';
 import { getTimezoneForLead } from './timezone';
 
-export type AuctionStatus = 'scheduled' | 'open' | 'closed';
+export type AuctionStatus = 'pending' | 'open' | 'ended';
 
 export interface AuctionSchedule {
   auction_start_at: string | null;
@@ -35,9 +35,9 @@ export function calculateAuctionSchedule(
 
   // Check if within operating hours (08:00 - 19:00)
   if (localTime >= marketOpen && localTime < marketClose) {
-    // Auction starts immediately
+    // Auction can start immediately, but status is 'open' only after first bid
     auction_start_at = localTime;
-    auction_status = 'open';
+    auction_status = 'open'; // Will be set to 'open' when first bid is placed
   } else {
     // Schedule for next 8am
     if (localTime < marketOpen) {
@@ -47,15 +47,15 @@ export function calculateAuctionSchedule(
       // Next day 8am
       auction_start_at = marketOpen.plus({ days: 1 });
     }
-    auction_status = 'scheduled';
+    auction_status = 'pending';
   }
 
-  // Auction end is always 30 minutes after start
-  const auction_end_at = auction_start_at.plus({ minutes: 30 });
+  // auction_ends_at is NULL until first bid is placed
+  // It will be set to NOW() + 30 minutes when the first bid is made
 
   return {
     auction_start_at: auction_start_at.toISO(),
-    auction_end_at: auction_end_at.toISO(),
+    auction_end_at: null, // Set to NULL - will be set on first bid
     auction_status,
     auction_timezone: timezone,
     starting_bid: 10,
@@ -81,55 +81,23 @@ export async function finalizeAuctionStatus(
   let updated = false;
   let updatedLead = { ...lead };
 
-  // Transition from 'scheduled' to 'open' when auction_start_at is reached
-  if (lead.auction_status === 'scheduled' && lead.auction_start_at) {
+  // Transition from 'pending' to 'open' when auction_start_at is reached
+  if (lead.auction_status === 'pending' && lead.auction_start_at) {
     const startAt = DateTime.fromISO(lead.auction_start_at, { zone: timezone });
     if (now >= startAt) {
-      updatedLead.auction_status = 'open';
-      updated = true;
-
-      // Send notifications if not already sent
-      if (!lead.notification_sent_at) {
-        try {
-          // Import here to avoid circular dependencies
-          const { notifyAgentsForLead } = await import('./notifyAgentsForLead');
-          await notifyAgentsForLead(lead, supabaseAdmin);
-          updatedLead.notification_sent_at = now.toISO();
-        } catch (err) {
-          console.error('Error sending notifications:', err);
-          // Continue even if notification fails
-        }
-      }
+      // Auction can now accept bids, but stays 'pending' until first bid
+      // Status will be set to 'open' when first bid is placed
+      // No status change here - just allow bids to proceed
     }
   }
 
-  // Transition from 'open' to 'closed' when auction_end_at is reached
+  // Transition from 'open' to 'ended' when auction_end_at is reached
   if (lead.auction_status === 'open' && lead.auction_end_at) {
     const endAt = DateTime.fromISO(lead.auction_end_at, { zone: timezone });
     if (now >= endAt) {
-      // Find highest bid
-      const { data: bids, error: bidsError } = await supabaseAdmin
-        .from('lead_bids')
-        .select('agent_id, amount')
-        .eq('lead_id', lead.id)
-        .order('amount', { ascending: false })
-        .limit(1);
-
-      if (bidsError) {
-        console.error('Error fetching bids for finalization:', bidsError);
-      } else if (bids && bids.length > 0) {
-        // Highest bidder wins
-        const winningBid = bids[0];
-        updatedLead.auction_status = 'closed';
-        updatedLead.winning_agent_id = winningBid.agent_id;
-        // Don't auto-assign - winner needs to purchase
-        updatedLead.current_bid_amount = winningBid.amount;
-        updated = true;
-      } else {
-        // No bids - auction closed with no winner
-        updatedLead.auction_status = 'closed';
-        updated = true;
-      }
+      // Auction has ended
+      updatedLead.auction_status = 'ended';
+      updated = true;
     }
   }
 

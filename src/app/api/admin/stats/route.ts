@@ -16,7 +16,7 @@ type LeadRow = {
   purchased_by_email: string | null;
   status: string | null;
   price_charged_cents: number | null;
-  auction_status: 'scheduled' | 'open' | 'closed' | null;
+  auction_status: 'pending' | 'open' | 'ended' | null;
   winning_agent_id: string | null;
 };
 
@@ -66,8 +66,8 @@ export async function GET(_req: NextRequest) {
       const auctionStatus = l.auction_status;
       
       // Check auction_status first (new system)
-      // Closed auctions with winners are considered purchased
-      if (auctionStatus === 'closed' && l.winning_agent_id) {
+      // Ended auctions with winners are considered purchased
+      if (auctionStatus === 'ended' && l.winning_agent_id) {
         return true;
       }
       

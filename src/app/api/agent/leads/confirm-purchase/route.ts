@@ -205,12 +205,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if auction is closed - only winner can purchase
-    if (lead.auction_status === 'closed' && lead.winning_agent_id && lead.winning_agent_id !== agentId) {
+    // Check if auction is ended - only winner can purchase
+    if (lead.auction_status === 'ended' && lead.winning_agent_id && lead.winning_agent_id !== agentId) {
       return NextResponse.json(
         { 
-          error: "This auction has closed and you are not the winning bidder. Only the winner can purchase this lead.",
-          details: "Auction closed, winner only"
+          error: "This auction has ended and you are not the winning bidder. Only the winner can purchase this lead.",
+          details: "Auction ended, winner only"
         },
         { status: 403 }
       );
