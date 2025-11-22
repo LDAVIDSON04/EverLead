@@ -70,17 +70,46 @@ export async function POST(req: Request, context: any): Promise<Response> {
       );
     }
 
-    // Validate auction status
-    if (finalizedLead.auction_status !== 'open') {
-      if (finalizedLead.auction_status === 'pending') {
+    // Check if auction has started (must check auction_start_at)
+    if (finalizedLead.auction_start_at) {
+      const startAt = new Date(finalizedLead.auction_start_at);
+      const now = new Date();
+      if (now < startAt) {
         return NextResponse.json(
-          { error: "Auction has not started yet" },
+          { error: "Auction has not opened yet." },
           { status: 400 }
         );
       }
-      if (finalizedLead.auction_status === 'expired' || finalizedLead.auction_status === 'sold_auction' || finalizedLead.auction_status === 'sold_buy_now') {
+    }
+
+    // Validate auction status
+    if (finalizedLead.auction_status !== 'open') {
+      if (finalizedLead.auction_status === 'scheduled') {
         return NextResponse.json(
-          { error: "Auction is no longer active" },
+          { error: "Auction has not opened yet." },
+          { status: 400 }
+        );
+      }
+      if (finalizedLead.auction_status === 'closed') {
+        return NextResponse.json(
+          { error: "Auction has closed." },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Check if auction has ended (even if status hasn't been updated yet)
+    if (finalizedLead.auction_end_at) {
+      const endAt = new Date(finalizedLead.auction_end_at);
+      const now = new Date();
+      if (now >= endAt) {
+        // Auction has ended - reject bid and update status if needed
+        if (finalizedLead.auction_status === 'open') {
+          // Update to closed (finalization will handle winner assignment)
+          await finalizeAuctionStatus(finalizedLead, supabaseAdmin);
+        }
+        return NextResponse.json(
+          { error: "Auction has closed." },
           { status: 400 }
         );
       }
@@ -145,13 +174,17 @@ export async function POST(req: Request, context: any): Promise<Response> {
     // Update lead with new current bid and rolling 30-minute window
     const timezone = finalizedLead.auction_timezone || 'America/Edmonton';
     const newAuctionEnd = calculateNewAuctionEnd(timezone);
+    const now = new Date().toISOString();
 
     const { data: updatedLead, error: updateError } = await supabaseAdmin
       .from("leads")
       .update({
         current_bid_amount: bidAmount,
         current_bid_agent_id: agentId,
+        winning_agent_id: agentId, // Set winning agent on each bid
         auction_end_at: newAuctionEnd, // Rolling 30-minute window
+        auction_status: 'open', // Ensure status is open
+        last_bid_at: now, // Track when last bid was placed
       })
       .eq("id", leadId)
       .select("*")

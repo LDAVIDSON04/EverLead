@@ -4,7 +4,7 @@
 import { DateTime } from 'luxon';
 import { getTimezoneForLead } from './timezone';
 
-export type AuctionStatus = 'pending' | 'open' | 'expired' | 'sold_auction' | 'sold_buy_now';
+export type AuctionStatus = 'scheduled' | 'open' | 'closed';
 
 export interface AuctionSchedule {
   auction_start_at: string | null;
@@ -47,7 +47,7 @@ export function calculateAuctionSchedule(
       // Next day 8am
       auction_start_at = marketOpen.plus({ days: 1 });
     }
-    auction_status = 'pending';
+    auction_status = 'scheduled';
   }
 
   // Auction end is always 30 minutes after start
@@ -81,8 +81,8 @@ export async function finalizeAuctionStatus(
   let updated = false;
   let updatedLead = { ...lead };
 
-  // Transition from 'pending' to 'open' when auction_start_at is reached
-  if (lead.auction_status === 'pending' && lead.auction_start_at) {
+  // Transition from 'scheduled' to 'open' when auction_start_at is reached
+  if (lead.auction_status === 'scheduled' && lead.auction_start_at) {
     const startAt = DateTime.fromISO(lead.auction_start_at, { zone: timezone });
     if (now >= startAt) {
       updatedLead.auction_status = 'open';
@@ -103,7 +103,7 @@ export async function finalizeAuctionStatus(
     }
   }
 
-  // Transition from 'open' to 'expired' or 'sold_auction' when auction_end_at is reached
+  // Transition from 'open' to 'closed' when auction_end_at is reached
   if (lead.auction_status === 'open' && lead.auction_end_at) {
     const endAt = DateTime.fromISO(lead.auction_end_at, { zone: timezone });
     if (now >= endAt) {
@@ -120,15 +120,14 @@ export async function finalizeAuctionStatus(
       } else if (bids && bids.length > 0) {
         // Highest bidder wins
         const winningBid = bids[0];
-        updatedLead.auction_status = 'sold_auction';
+        updatedLead.auction_status = 'closed';
         updatedLead.winning_agent_id = winningBid.agent_id;
-        updatedLead.assigned_agent_id = winningBid.agent_id;
-        updatedLead.status = 'purchased_by_agent';
+        // Don't auto-assign - winner needs to purchase
         updatedLead.current_bid_amount = winningBid.amount;
         updated = true;
       } else {
-        // No bids - auction expired
-        updatedLead.auction_status = 'expired';
+        // No bids - auction closed with no winner
+        updatedLead.auction_status = 'closed';
         updated = true;
       }
     }

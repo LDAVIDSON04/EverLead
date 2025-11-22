@@ -205,6 +205,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check if auction is closed - only winner can purchase
+    if (lead.auction_status === 'closed' && lead.winning_agent_id && lead.winning_agent_id !== agentId) {
+      return NextResponse.json(
+        { 
+          error: "This auction has closed and you are not the winning bidder. Only the winner can purchase this lead.",
+          details: "Auction closed, winner only"
+        },
+        { status: 403 }
+      );
+    }
+
     // Mark the lead as purchased for this agent (atomic update)
     try {
       const { data: updatedLead, error: updateError } = await supabaseAdmin
@@ -213,7 +224,6 @@ export async function POST(request: NextRequest) {
           status: "purchased_by_agent",
           assigned_agent_id: agentId,
           winning_agent_id: agentId, // Set winning agent for Buy Now
-          auction_status: "sold_buy_now", // Mark as sold via Buy Now
           purchased_by_email: customerEmail, // Save agent's email from Stripe
           price_charged_cents: amountCents,
           purchased_at: new Date().toISOString(),

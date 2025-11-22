@@ -25,7 +25,7 @@ type Lead = {
   auction_enabled?: boolean | null;
   auction_ends_at?: string | null;
   auction_start_at?: string | null;
-  auction_status?: 'pending' | 'open' | 'expired' | 'sold_auction' | 'sold_buy_now' | null;
+  auction_status?: 'scheduled' | 'open' | 'closed' | null;
   auction_timezone?: string | null;
   starting_bid?: number | null;
   min_increment?: number | null;
@@ -173,7 +173,10 @@ export default function AvailableLeadsPage() {
       // For now, we mask these fields in the UI.
       
       // Fetch all available leads (unsold leads only - filters applied client-side)
-      // Show any lead where assigned_agent_id is null (unsold)
+      // Show leads where:
+      // - assigned_agent_id is null (unsold), AND
+      // - auction_status is NOT 'closed', OR
+      // - auction_status is 'closed' BUT winning_agent_id matches current user (winner can see it)
       const { data: leadsData, error: leadsError } = await supabaseClient
         .from("leads")
         .select("*")
@@ -189,7 +192,22 @@ export default function AvailableLeadsPage() {
         return;
       }
 
-      const newLeads = (leadsData || []) as Lead[];
+      let newLeads = (leadsData || []) as Lead[];
+
+      // Filter: exclude closed auctions unless current user is the winner
+      if (currentUserId) {
+        newLeads = newLeads.filter((lead: Lead) => {
+          // If auction is closed, only show to the winner
+          if (lead.auction_status === 'closed') {
+            return lead.winning_agent_id === currentUserId;
+          }
+          // Show all non-closed leads (scheduled, open, or null)
+          return true;
+        });
+      } else {
+        // If no user ID, filter out closed auctions entirely
+        newLeads = newLeads.filter((lead: Lead) => lead.auction_status !== 'closed');
+      }
 
       // Extract unique locations for filter dropdown (only on initial load)
       if (!isPolling) {
@@ -455,12 +473,18 @@ export default function AvailableLeadsPage() {
     if (!isAuctionEnabled) return false;
     
     // Check auction status
-    if (lead.auction_status === 'sold_auction' || lead.auction_status === 'sold_buy_now') return false;
-    if (lead.auction_status === 'expired') return false; // Can't bid on expired, but can Buy Now
-    if (lead.auction_status === 'pending') return false; // Auction hasn't started yet
+    if (lead.auction_status === 'closed') return false;
+    if (lead.auction_status === 'scheduled') return false; // Auction hasn't started yet
     
     // Must be 'open' to bid
     if (lead.auction_status !== 'open') return false;
+    
+    // Check auction_start_at - must have started
+    if (lead.auction_start_at) {
+      const startAt = new Date(lead.auction_start_at);
+      const now = new Date();
+      if (now < startAt) return false; // Auction hasn't opened yet
+    }
     
     // Check lead is still available
     if (lead.status === "purchased_by_agent" || lead.assigned_agent_id) return false;
@@ -477,7 +501,7 @@ export default function AvailableLeadsPage() {
     
     const status = lead.auction_status;
     
-    if (status === 'pending') {
+    if (status === 'scheduled') {
       if (lead.auction_start_at) {
         const startDate = new Date(lead.auction_start_at);
         const localTime = startDate.toLocaleTimeString('en-US', { 
@@ -485,25 +509,20 @@ export default function AvailableLeadsPage() {
           minute: '2-digit',
           hour12: true 
         });
-        return `Auction starts at ${localTime} local time`;
+        return `Auction opens at ${localTime}`;
       }
-      return 'Auction starts at 8:00am local time';
+      return 'Auction opens at 8:00am local time';
     }
     
     if (status === 'open') {
       return null; // Will show countdown instead
     }
     
-    if (status === 'expired') {
-      return 'Auction ended – still available via Buy Now';
-    }
-    
-    if (status === 'sold_auction') {
-      return 'Sold via auction';
-    }
-    
-    if (status === 'sold_buy_now') {
-      return 'Sold via Buy Now';
+    if (status === 'closed') {
+      if (lead.winning_agent_id && userId && lead.winning_agent_id === userId) {
+        return 'You won this auction';
+      }
+      return 'Auction ended';
     }
     
     return null;
@@ -895,29 +914,37 @@ export default function AvailableLeadsPage() {
 
                   <div className="mt-4 space-y-3">
                     <div className="flex flex-wrap items-center gap-2">
-                      {/* Buy Now button - show if lead is unsold (we always have a default price) */}
-                      {lead.assigned_agent_id === null && 
-                       lead.auction_status !== 'sold_auction' && 
-                       lead.auction_status !== 'sold_buy_now' &&
-                       buyNowPriceCents != null && (
-                        <button
-                          onClick={() =>
-                            handleBuyNow(lead.id, buyNowPriceCents)
-                          }
-                          disabled={buyingId === lead.id}
-                          className="rounded-full bg-emerald-600 px-4 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-70 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
-                        >
-                          {buyingId === lead.id 
-                            ? "Starting checkout…" 
-                            : `Buy now for $${((buyNowPriceCents || 0) / 100).toFixed(2)}`}
-                        </button>
-                      )}
-                      {(lead.auction_status === 'sold_auction' || lead.auction_status === 'sold_buy_now') && (
-                        <span className="text-xs text-slate-500 italic">Sold</span>
-                      )}
-                      {lead.auction_status === 'expired' && (
-                        <span className="text-xs text-slate-500 italic">Auction ended</span>
-                      )}
+                      {/* Buy Now button - visibility rules based on auction status */}
+                      {(() => {
+                        const isClosed = lead.auction_status === 'closed';
+                        const hasWinner = !!lead.winning_agent_id;
+                        const isWinner = userId && lead.winning_agent_id === userId;
+                        const canBuyNow = 
+                          lead.assigned_agent_id === null && 
+                          buyNowPriceCents != null &&
+                          (
+                            // Before close: anyone can buy
+                            !isClosed ||
+                            // After close: only winner can buy
+                            (isClosed && hasWinner && isWinner)
+                          );
+                        
+                        return canBuyNow ? (
+                          <button
+                            onClick={() =>
+                              handleBuyNow(lead.id, buyNowPriceCents)
+                            }
+                            disabled={buyingId === lead.id}
+                            className="rounded-full bg-emerald-600 px-4 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-70 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+                          >
+                            {buyingId === lead.id 
+                              ? "Starting checkout…" 
+                              : `Buy now for $${((buyNowPriceCents || 0) / 100).toFixed(2)}`}
+                          </button>
+                        ) : isClosed && hasWinner && !isWinner ? (
+                          <span className="text-xs text-slate-500 italic">Auction ended</span>
+                        ) : null;
+                      })()}
 
                       {firstFreeAvailable && (
                         <button
@@ -1010,7 +1037,7 @@ export default function AvailableLeadsPage() {
                             )}
                           </>
                         )}
-                        {!showBidForm && lead.auction_status === 'expired' && (
+                        {!showBidForm && lead.auction_status === 'closed' && !lead.winning_agent_id && (
                           <p className="mt-1 text-[10px] text-slate-500">Auction ended – still available via Buy Now</p>
                         )}
                         {bidErrors[lead.id] && (

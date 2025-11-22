@@ -35,18 +35,18 @@ export async function POST(req: NextRequest) {
     const { lead: finalizedLead } = await finalizeAuctionStatus(lead, supabaseAdmin);
 
     // Check if lead is already sold
-    if (finalizedLead.auction_status === 'sold_auction' || finalizedLead.auction_status === 'sold_buy_now') {
-      return NextResponse.json(
-        { error: "This lead has already been sold" },
-        { status: 400 }
-      );
-    }
-
     if (finalizedLead.status === "purchased_by_agent" || finalizedLead.assigned_agent_id) {
       return NextResponse.json(
         { error: "This lead is no longer available" },
         { status: 400 }
       );
+    }
+
+    // Check auction status - if closed, only winner can buy
+    if (finalizedLead.auction_status === 'closed' && finalizedLead.winning_agent_id) {
+      // This will be checked in confirm-purchase based on email, but we can't get agent ID here
+      // So we'll allow the checkout to proceed and validate in confirm-purchase
+      // The frontend should already hide the button for non-winners
     }
 
     // Get Buy Now price - prioritize buy_now_price from auction system
