@@ -64,9 +64,9 @@ export async function POST(req: NextRequest) {
       process.env.NEXT_PUBLIC_SITE_URL ??
       `${req.nextUrl.protocol}//${req.nextUrl.host}`;
 
-    // Redirect to dashboard on success, available leads on cancel
+    // Redirect to dashboard on success and cancel
     const successUrl = `${baseUrl}/agent/dashboard?session_id={CHECKOUT_SESSION_ID}`;
-    const cancelUrl = `${baseUrl}/agent/leads/available`;
+    const cancelUrl = `${baseUrl}/agent/dashboard`;
 
     // Get the current agent's ID from the request (if available via auth)
     // We'll rely on email matching in confirm-purchase, but include it in metadata if we can

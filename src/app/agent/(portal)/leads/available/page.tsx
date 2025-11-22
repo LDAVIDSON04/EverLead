@@ -5,38 +5,21 @@
  * Buy-Now-Only: Fixed pricing based on urgency (Cold: $10, Warm: $20, Hot: $35)
  */
 
-import Link from "next/link";
 import * as React from "react";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { supabaseClient } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import { useRequireRole } from "@/lib/hooks/useRequireRole";
-import { AgentNav } from "@/components/AgentNav";
-import { agentOwnsLead } from "@/lib/leads";
+import AgentLeadCard, { AgentLead } from '@/components/agent/AgentLeadCard';
 import { getLeadPriceFromUrgency } from "@/lib/leads/pricing";
-import clsx from "clsx";
 
-type Lead = {
-  id: string;
-  created_at: string | null;
-  city: string | null;
-  province: string | null;
-  postal_code: string | null;
-  urgency_level: string | null;
-  status: string | null;
-  service_type: string | null;
-  planning_for: string | null;
-  additional_notes: string | null;
-  lead_price: number | null;
-  buy_now_price_cents: number | null;
-  assigned_agent_id: string | null;
-};
+// Using AgentLead type from component
 
 export default function AvailableLeadsPage() {
   useRequireRole("agent");
 
   const router = useRouter();
-  const [leads, setLeads] = useState<Lead[]>([]);
+  const [leads, setLeads] = useState<AgentLead[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -44,7 +27,6 @@ export default function AvailableLeadsPage() {
   const [firstFreeAvailable, setFirstFreeAvailable] = useState(false);
 
   const [claimingId, setClaimingId] = useState<string | null>(null);
-  const [buyingId, setBuyingId] = useState<string | null>(null);
   
   // Filter state
   const [urgencyFilter, setUrgencyFilter] = useState<"all" | "hot" | "warm" | "cold">("all");
@@ -116,7 +98,7 @@ export default function AvailableLeadsPage() {
       // Fetch all available leads (unsold leads only - filters applied client-side)
       const { data: leadsData, error: leadsError } = await supabaseClient
         .from("leads")
-        .select("id, created_at, city, province, postal_code, urgency_level, status, service_type, planning_for, additional_notes, lead_price, buy_now_price_cents, assigned_agent_id")
+        .select("id, city, province, urgency_level, service_type, lead_price, additional_notes, assigned_agent_id")
         .is("assigned_agent_id", null) // Only unsold leads
         .order("created_at", { ascending: false });
 
@@ -129,22 +111,50 @@ export default function AvailableLeadsPage() {
         return;
       }
 
-      let newLeads = (leadsData || []) as Lead[];
+      // Map to AgentLead format
+      const newLeads: AgentLead[] = (leadsData || []).map((lead: any) => {
+        const urgency = (lead.urgency_level || "cold").toLowerCase() as 'hot' | 'warm' | 'cold';
+        // Convert lead_price (dollars) to cents, or calculate from urgency
+        const leadPriceDollars = lead.lead_price ?? getLeadPriceFromUrgency(lead.urgency_level);
+        const leadPriceCents = Math.round(leadPriceDollars * 100);
+        
+        return {
+          id: lead.id,
+          urgency,
+          city: lead.city,
+          province: lead.province,
+          service_type: lead.service_type,
+          lead_price_cents: leadPriceCents,
+          additional_details: lead.additional_notes,
+        };
+      });
 
       // No auction filtering needed - all unsold leads are available
 
-      // Extract unique locations for filter dropdown (only on initial load)
-      if (!isPolling) {
-        const uniqueCities = Array.from(
-          new Set(
-            newLeads
-              .map((lead) => lead.city)
-              .filter((city): city is string => !!city)
-          )
-        ).sort();
+        // Extract unique locations for filter dropdown (only on initial load)
+        if (!isPolling) {
+          const uniqueCities = Array.from(
+            new Set(
+              newLeads
+                .map((lead) => lead.city)
+                .filter((city): city is string => !!city)
+            )
+          ).sort();
 
-        setAvailableLocations(uniqueCities);
-      }
+          setAvailableLocations(uniqueCities);
+        }
+
+        // Check for first free availability
+        if (!isPolling && currentUserId) {
+          const { data: profile } = await supabaseClient
+            .from("profiles")
+            .select("first_free_redeemed")
+            .eq("id", currentUserId)
+            .maybeSingle();
+
+          const alreadyRedeemed = profile?.first_free_redeemed === true;
+          setFirstFreeAvailable(!alreadyRedeemed);
+        }
 
       // No outbid detection needed - buy-now-only
 
@@ -240,72 +250,13 @@ export default function AvailableLeadsPage() {
     }
   }
 
-  async function handleBuyNow(leadId: string, priceCents?: number | null) {
-    if (!userId) return;
-    setError(null);
-    setBuyingId(leadId);
-
-    try {
-      const res = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ leadId }),
-      });
-
-      const body = await res.json();
-
-      if (!res.ok || !body?.url) {
-        console.error("Checkout create error:", body);
-        setError(body?.error || "Could not start checkout. Please try again.");
-        setBuyingId(null);
-        return;
-      }
-
-      // Redirect to Stripe checkout - Stripe will handle success/cancel URLs
-      window.location.href = body.url;
-    } catch (err) {
-      console.error("Buy Now error:", err);
-      setError("Could not start checkout. Please try again.");
-      setBuyingId(null);
-      // DO NOT redirect, logout, or call router.back() - just show error
-    }
-  }
+  // Buy now is handled by the AgentLeadCard component which routes to /agent/leads/[id]/buy
 
 
-  function formatUrgency(urgency: string | null) {
-    if (!urgency) return "Unknown";
-    const lower = urgency.toLowerCase();
-    if (lower === "hot") return "Hot";
-    if (lower === "warm") return "Warm";
-    if (lower === "cold") return "Cold";
-    return urgency;
-  }
-
-  function formatPrice(priceCents: number | null | undefined) {
-    if (!priceCents || priceCents <= 0) return "Set at checkout";
-    return `$${(priceCents / 100).toFixed(2)}`;
-  }
-
-  function formatPriceDollars(price: number | null | undefined) {
-    if (!price || price <= 0) return null;
-    return `$${price.toFixed(2)}`;
-  }
-
-  function formatDateTime(dateString: string | null) {
-    if (!dateString) return null;
-    try {
-      return new Date(dateString).toLocaleString();
-    } catch {
-      return dateString;
-    }
-  }
 
 
   return (
-    <main className="min-h-screen bg-[#f7f4ef]">
-
-
-      <section className="mx-auto max-w-6xl px-6 py-8">
+    <div className="w-full">
         <div className="mb-6">
           <h1
             className="mb-2 text-2xl font-normal text-[#2a2a2a]"
@@ -340,7 +291,7 @@ export default function AvailableLeadsPage() {
           <h2 className="text-lg font-semibold text-slate-900 w-full sm:w-auto">Available leads</h2>
           <input
             type="text"
-            placeholder="Search by city or postal code"
+            placeholder="Search by city"
             value={locationQuery}
             onChange={(e) => setLocationQuery(e.target.value)}
             className="border rounded-md px-3 py-2 text-sm w-full sm:w-64"
@@ -491,11 +442,10 @@ export default function AvailableLeadsPage() {
         ) : (() => {
           // Apply client-side filters
           const filteredLeads = leads.filter((lead) => {
-            // Geographic search filter - city or postal code
+            // Geographic search filter - city
             const matchesLocation =
               !locationQuery ||
-              lead.city?.toLowerCase().includes(locationQuery.toLowerCase()) ||
-              lead.postal_code?.toLowerCase().includes(locationQuery.toLowerCase());
+              lead.city?.toLowerCase().includes(locationQuery.toLowerCase());
 
             // Province filter
             const matchesProvince =
@@ -507,8 +457,7 @@ export default function AvailableLeadsPage() {
 
             // Urgency filter
             if (urgencyFilter !== "all") {
-              const leadUrgency = (lead.urgency_level ?? "").toLowerCase();
-              if (leadUrgency !== urgencyFilter.toLowerCase()) {
+              if (lead.urgency !== urgencyFilter) {
                 return false;
               }
             }
@@ -526,9 +475,9 @@ export default function AvailableLeadsPage() {
               if (type !== serviceFilter.toLowerCase()) return false;
             }
 
-            // Price filter (using lead_price or calculated from urgency)
+            // Price filter (using lead_price_cents)
             if (minPrice || maxPrice) {
-              const price = lead.lead_price ?? getLeadPriceFromUrgency(lead.urgency_level);
+              const price = lead.lead_price_cents / 100; // Convert cents to dollars
               const min = minPrice ? parseFloat(minPrice) : 0;
               const max = maxPrice ? parseFloat(maxPrice) : Infinity;
               if (isNaN(min) || isNaN(max)) return true; // Skip if invalid numbers
@@ -540,115 +489,21 @@ export default function AvailableLeadsPage() {
 
           if (filteredLeads.length === 0) {
             return (
-              <p className="text-sm text-[#6b6b6b]">
-                No leads match your filters. Try adjusting your search criteria.
+              <p className="text-sm text-neutral-500">
+                No leads are currently available. Check back again soon.
               </p>
             );
           }
 
           return (
-            <div className="space-y-3">
-              {filteredLeads.map((lead) => {
-              // Check if agent owns this lead
-              const owns = userId ? agentOwnsLead(lead, userId) : false;
-              
-              // Get Buy Now price - use lead_price if available, otherwise calculate from urgency
-              const leadPrice = lead.lead_price ?? getLeadPriceFromUrgency(lead.urgency_level);
-              const buyNowPriceCents = leadPrice * 100;
-              
-              // Get additional notes preview (first 2 lines or 100 chars)
-              const additionalNotes = lead.additional_notes || "";
-              const notesPreview = additionalNotes.length > 100 
-                ? additionalNotes.substring(0, 100) + "..." 
-                : additionalNotes;
-
-              return (
-                <div
-                  key={lead.id}
-                  className="rounded-lg border border-[#ded3c2] bg-white p-4 shadow-sm"
-                >
-                  <div className="flex flex-wrap items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
-                          {formatUrgency(lead.urgency_level)} lead
-                        </div>
-                      </div>
-                      <div className="mt-1 text-sm font-semibold text-[#2a2a2a]">
-                        {lead.city || "Unknown location"}
-                        {lead.province && `, ${lead.province}`}
-                      </div>
-                      <div className="mt-1 text-xs text-[#6b6b6b]">
-                        Planning for: {lead.planning_for || "Not specified"}
-                      </div>
-                      <div className="mt-1 text-xs text-[#6b6b6b]">
-                        Service type: {lead.service_type || "Not specified"}
-                      </div>
-                      {notesPreview && (
-                        <div className="mt-2 text-xs text-[#4a4a4a] italic">
-                          "{notesPreview}"
-                        </div>
-                      )}
-                      {!owns && (
-                        <p className="mt-2 text-[11px] text-slate-500">
-                          🔒 Purchase to reveal full name, phone, and email.
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="text-right flex-shrink-0">
-                      <div className="mb-2">
-                        <div className="text-xs uppercase tracking-[0.15em] text-[#6b6b6b]">
-                          Buy now
-                        </div>
-                        <div className="text-lg font-semibold text-[#2a2a2a]">
-                          ${leadPrice.toFixed(2)}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mt-4 flex flex-wrap items-center gap-2">
-                    {/* Buy Now button - always available for unsold leads */}
-                    {lead.assigned_agent_id === null && (
-                      <button
-                        onClick={() => handleBuyNow(lead.id, buyNowPriceCents)}
-                        disabled={buyingId === lead.id}
-                        className="rounded-full bg-emerald-600 px-4 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-70 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
-                      >
-                        {buyingId === lead.id 
-                          ? "Starting checkout…" 
-                          : `Buy now for $${leadPrice.toFixed(2)}`}
-                      </button>
-                    )}
-
-                    {firstFreeAvailable && lead.assigned_agent_id === null && (
-                      <button
-                        onClick={() => handleClaimFree(lead.id)}
-                        disabled={claimingId === lead.id}
-                        className="rounded-md border border-amber-400 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-900 hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-70 transition-colors"
-                      >
-                        {claimingId === lead.id
-                          ? "Claiming free lead…"
-                          : "Use my one free lead"}
-                      </button>
-                    )}
-
-                    <Link
-                      href={`/agent/leads/${lead.id}`}
-                      className="ml-auto text-xs font-medium text-[#6b6b6b] hover:text-[#2a2a2a] transition-colors"
-                    >
-                      View details →
-                    </Link>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+            <div className="mt-6 space-y-4">
+              {filteredLeads.map((lead: AgentLead) => (
+                <AgentLeadCard key={lead.id} lead={lead} />
+              ))}
+            </div>
           );
         })()}
-      </section>
-    </main>
+    </div>
   );
 }
 
