@@ -21,28 +21,6 @@ export default function HomePage() {
             </span>
           </div>
 
-          {/* Center: Nav items */}
-          <nav className="hidden md:flex items-center gap-6 text-sm">
-            <Link
-              href="/"
-              className="text-[#4a4a4a] hover:text-[#2a2a2a] transition-colors"
-            >
-              Home
-            </Link>
-            <a
-              href="#planning-options"
-              className="text-[#4a4a4a] hover:text-[#2a2a2a] transition-colors"
-            >
-              Planning Options
-            </a>
-            <a
-              href="#resources"
-              className="text-[#4a4a4a] hover:text-[#2a2a2a] transition-colors"
-            >
-              Resources
-            </a>
-          </nav>
-
           {/* Right: Actions */}
           <div className="flex items-center gap-4">
             <Link
@@ -50,6 +28,12 @@ export default function HomePage() {
               className="rounded-md bg-[#2a2a2a] px-5 py-2 text-sm font-medium text-white hover:bg-[#3a3a3a] transition-colors"
             >
               Get started
+            </Link>
+            <Link
+              href="/agent"
+              className="text-sm text-[#6b6b6b] hover:text-[#2a2a2a] transition-colors"
+            >
+              For professionals
             </Link>
           </div>
         </div>
