@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { getLeadPriceCentsFromUrgency } from "@/lib/leads/pricing";
 
 export async function POST(req: NextRequest) {
   try {
@@ -40,30 +41,22 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check auction status - if closed, only winner can buy
-    if (finalizedLead.auction_status === 'closed' && finalizedLead.winning_agent_id) {
-      // This will be checked in confirm-purchase based on email, but we can't get agent ID here
-      // So we'll allow the checkout to proceed and validate in confirm-purchase
-      // The frontend should already hide the button for non-winners
-    }
-
-    // Get Buy Now price - prioritize buy_now_price from auction system
+    // Get Buy Now price - use lead_price if available, otherwise calculate from urgency
     let buyNowPriceCents: number;
-    if (finalizedLead.buy_now_price) {
-      buyNowPriceCents = Math.round(finalizedLead.buy_now_price * 100);
+    if (finalizedLead.lead_price) {
+      // Use stored lead_price (in dollars, convert to cents)
+      buyNowPriceCents = Math.round(finalizedLead.lead_price * 100);
     } else if (finalizedLead.buy_now_price_cents) {
+      // Fallback to buy_now_price_cents if lead_price not set
       buyNowPriceCents = finalizedLead.buy_now_price_cents;
     } else {
-      // Fallback to urgency-based pricing
-      const urgency = (finalizedLead.urgency_level || "warm").toLowerCase();
-      if (urgency === "hot") buyNowPriceCents = 3000; // $30
-      else if (urgency === "warm") buyNowPriceCents = 2000; // $20
-      else buyNowPriceCents = 1000; // $10 for cold or default
+      // Calculate from urgency using pricing helper
+      buyNowPriceCents = getLeadPriceCentsFromUrgency(finalizedLead.urgency_level);
     }
 
-    // Ensure minimum price
-    if (buyNowPriceCents < 500) {
-      buyNowPriceCents = 5000; // $50 default from auction system
+    // Ensure minimum price (shouldn't happen with our pricing, but safety check)
+    if (buyNowPriceCents < 1000) {
+      buyNowPriceCents = 1000; // $10 minimum
     }
 
     // Get base URL from env var or fallback to request URL

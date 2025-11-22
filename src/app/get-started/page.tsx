@@ -44,6 +44,7 @@ export default function GetStartedPage() {
       "timeline_intent",
       "service_type",
       "planning_for",
+      "additional_notes",
     ];
 
     for (const field of requiredFields) {
@@ -77,7 +78,14 @@ export default function GetStartedPage() {
     // Get form values
     const sexValue = (formData.get("sex") as string) || "";
     const additionalNotesValue = formData.get("additional_notes");
-    const additionalNotes = typeof additionalNotesValue === "string" ? additionalNotesValue : "";
+    const additionalNotes = typeof additionalNotesValue === "string" ? additionalNotesValue.trim() : "";
+    
+    // Validate additional_notes is not empty
+    if (!additionalNotes || additionalNotes.length === 0) {
+      setError("Please provide additional details about your preferences and needs.");
+      setFormState("error");
+      return;
+    }
 
     // Build the insert payload - ensure types are correct
     const leadData: any = {
@@ -95,7 +103,7 @@ export default function GetStartedPage() {
       service_type: (formData.get("service_type") as string)?.trim() || null,
       timeline_intent: timeline_intent.trim(),
       urgency_level,
-      additional_notes: additionalNotes?.trim() || null,
+      additional_notes: additionalNotes,
       status: urgency_level === "cold" ? "cold_unassigned" : "new",
       buy_now_price_cents,
       auction_min_price_cents,
@@ -481,14 +489,18 @@ export default function GetStartedPage() {
 
                 <div>
                   <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
-                    Anything else you&apos;d like us to know?
+                    Additional details *
                   </label>
                   <textarea
                     name="additional_notes"
                     rows={4}
+                    required
                     className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
-                    placeholder="Any special considerations, questions, or preferences you'd like to share..."
+                    placeholder="Please add any additional details you think the specialist should know — for example, preferences, concerns, or what kind of guidance you're looking for. This makes sure you're matched with the best possible pre-need specialist."
                   />
+                  <p className="mt-1 text-[11px] text-slate-500">
+                    Please add any additional details you think the specialist should know — for example, preferences, concerns, or what kind of guidance you're looking for. This makes sure you're matched with the best possible pre-need specialist.
+                  </p>
                 </div>
               </div>
             </div>

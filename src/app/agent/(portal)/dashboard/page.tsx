@@ -31,22 +31,6 @@ type RecentLead = {
   assigned_agent_id: string | null;
 };
 
-type PendingAuction = {
-  id: string;
-  city: string | null;
-  urgency_level: string | null;
-  auction_ends_at: string | null;
-  current_bid_amount: number | null;
-};
-
-type YourBid = {
-  lead_id: string;
-  lead_city: string | null;
-  lead_urgency: string | null;
-  your_highest_bid: number;
-  is_highest_bidder: boolean;
-  auction_ends_at: string | null;
-};
 
 export default function AgentDashboardPage() {
   const router = useRouter();
@@ -59,12 +43,9 @@ export default function AgentDashboardPage() {
     totalSpent: 0,
   });
   const [recentLeads, setRecentLeads] = useState<RecentLead[]>([]);
-  const [pendingAuctions, setPendingAuctions] = useState<PendingAuction[]>([]);
-  const [yourBids, setYourBids] = useState<YourBid[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
-  const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
     let cancelled = false;
@@ -130,43 +111,7 @@ export default function AgentDashboardPage() {
           }))
         );
 
-        // Update your bids - use recentBids for the "Your bids" panel (last 5 bids)
-        // If recentBids exists, use it; otherwise fall back to yourBids (active auctions)
-        if (data.recentBids && data.recentBids.length > 0) {
-          setYourBids(
-            (data.recentBids || []).map((bid: any) => ({
-              lead_id: bid.leadId,
-              lead_city: bid.leadCity,
-              lead_urgency: bid.leadUrgency,
-              your_highest_bid: bid.amount,
-              is_highest_bidder: false, // We don't track this for recent bids
-              auction_ends_at: null,
-            }))
-          );
-        } else {
-          // Fall back to active auction bids if no recent bids
-          setYourBids(
-            (data.yourBids || []).map((bid: any) => ({
-              lead_id: bid.lead_id,
-              lead_city: bid.lead_city,
-              lead_urgency: bid.lead_urgency,
-              your_highest_bid: bid.amount,
-              is_highest_bidder: bid.is_highest,
-              auction_ends_at: bid.auction_ends_at,
-            }))
-          );
-        }
-
-        // Update pending auctions (map to existing type)
-        setPendingAuctions(
-          (data.pendingAuctions || []).map((auction: any) => ({
-            id: auction.lead_id,
-            city: auction.lead_city,
-            urgency_level: auction.lead_urgency,
-            auction_ends_at: auction.auction_ends_at,
-            current_bid_amount: auction.current_bid_amount,
-          }))
-        );
+        // No auction data needed - buy-now-only
 
         // Top agents removed - leaderboard only exists in admin dashboard
       } catch (err) {
@@ -188,13 +133,6 @@ export default function AgentDashboardPage() {
     };
   }, [router]);
 
-  // Countdown timer for Your bids
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setNow(new Date());
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
 
 
   function formatUrgency(urgency: string | null) {
@@ -229,28 +167,6 @@ export default function AgentDashboardPage() {
     return status;
   }
 
-  function formatCountdown(endsAt: string | null): string {
-    if (!endsAt) return "";
-    try {
-      const endDate = new Date(endsAt);
-      const remainingMs = endDate.getTime() - now.getTime();
-      
-      if (remainingMs <= 0) {
-        return "Auction ended";
-      }
-
-      const totalSeconds = Math.floor(remainingMs / 1000);
-      const hours = Math.floor(totalSeconds / 3600);
-      const minutes = Math.floor((totalSeconds % 3600) / 60);
-      const seconds = totalSeconds % 60;
-      
-      const pad = (n: number) => n.toString().padStart(2, "0");
-      
-      return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
-    } catch {
-      return "";
-    }
-  }
 
   function getStatusColors(status: string | null): { bg: string; text: string } {
     const s = (status ?? "new").toLowerCase();
@@ -453,51 +369,6 @@ export default function AgentDashboardPage() {
                   </div>
                 </div>
 
-                {/* Your Bids Card */}
-                <div className="rounded-xl border border-slate-200 bg-white/70 shadow-sm">
-                  <div className="border-b border-slate-200 px-6 py-4">
-                    <h2
-                      className="text-lg font-normal text-[#2a2a2a]"
-                      style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-                    >
-                      Your bids
-                    </h2>
-                  </div>
-                  <div className="px-6 py-4">
-                    {yourBids.length === 0 ? (
-                      <p className="py-4 text-sm text-[#6b6b6b]">
-                        You haven&apos;t placed any bids yet.
-                      </p>
-                    ) : (
-                      <div className="space-y-2">
-                        {yourBids.slice(0, 5).map((bid) => (
-                          <div
-                            key={bid.lead_id}
-                            className="flex items-center justify-between border-b border-slate-100 pb-2 last:border-0 last:pb-0"
-                          >
-                            <div className="flex-1 min-w-0">
-                              <div className="text-sm text-slate-900 mb-0.5">
-                                {bid.lead_city || "Unknown"} • Auction
-                              </div>
-                              <div className="text-xs text-slate-500">
-                                Your bid: ${bid.your_highest_bid.toFixed(2)}
-                                {bid.lead_urgency && (
-                                  <> · {formatUrgency(bid.lead_urgency)} lead</>
-                                )}
-                              </div>
-                            </div>
-                            <Link
-                              href={`/agent/leads/${bid.lead_id}`}
-                              className="text-xs font-medium text-[#6b6b6b] hover:text-[#2a2a2a] transition-colors whitespace-nowrap ml-4"
-                            >
-                              View lead →
-                            </Link>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
               </div>
 
               {/* Right column */}
@@ -534,79 +405,6 @@ export default function AgentDashboardPage() {
                   </div>
                 </div>
 
-                {/* Pending Auctions */}
-                <div className="rounded-xl border border-slate-200 bg-white/70 shadow-sm">
-                  <div className="border-b border-slate-200 px-6 py-4">
-                    <h2
-                      className="text-lg font-normal text-[#2a2a2a]"
-                      style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-                    >
-                      Pending auctions
-                    </h2>
-                  </div>
-                  <div className="px-6 py-4">
-                    {pendingAuctions.length === 0 ? (
-                      <p className="text-sm text-[#6b6b6b]">
-                        No active auctions right now
-                      </p>
-                    ) : (
-                      <div className="space-y-3">
-                        {pendingAuctions.map((auction) => {
-                          const endDate = auction.auction_ends_at
-                            ? new Date(auction.auction_ends_at)
-                            : null;
-                          const endTimeStr = endDate
-                            ? endDate.toLocaleDateString() +
-                              " " +
-                              endDate.toLocaleTimeString([], {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })
-                            : "Unknown";
-                          const countdown = auction.auction_ends_at
-                            ? formatCountdown(auction.auction_ends_at)
-                            : null;
-                          return (
-                            <div
-                              key={auction.id}
-                              className="border-b border-slate-100 pb-3 last:border-0 last:pb-0"
-                            >
-                              <div className="mb-2 flex items-center gap-2">
-                                <span
-                                  className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${getUrgencyColor(
-                                    auction.urgency_level
-                                  )}`}
-                                >
-                                  {formatUrgency(auction.urgency_level)}
-                                </span>
-                                <span className="text-xs text-[#6b6b6b]">
-                                  {auction.city || "Unknown"}
-                                </span>
-                              </div>
-                              <div className="mb-2 text-xs text-[#4a4a4a]">
-                                Current bid:{" "}
-                                {auction.current_bid_amount
-                                  ? `$${auction.current_bid_amount.toFixed(2)}`
-                                  : "No bids yet"}
-                              </div>
-                              {countdown && (
-                                <div className="mb-2 text-xs text-[#4a4a4a] font-mono">
-                                  Ends in: {countdown}
-                                </div>
-                              )}
-                              <Link
-                                href={`/agent/leads/${auction.id}`}
-                                className="text-xs font-medium text-[#6b6b6b] hover:text-[#2a2a2a] transition-colors"
-                              >
-                                View / Bid →
-                              </Link>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                </div>
 
                 {/* Tips */}
                 <div className="rounded-xl border border-slate-200 bg-white/70 shadow-sm">

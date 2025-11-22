@@ -14,10 +14,6 @@ type DashboardStats = {
   hotLeads: number;
   warmLeads: number;
   coldLeads: number;
-  auctionEnabledCount: number;
-  auctionWithBidsCount: number;
-  soldViaBuyNow: number;
-  soldViaAuction: number;
 };
 
 type GeoStat = {
@@ -93,7 +89,7 @@ export default function AdminDashboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [geography, setGeography] = useState<GeoStat[]>([]);
-  const [activeTab, setActiveTab] = useState<"overview" | "auctions" | "agents" | "geography" | "recent" | "roi">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "agents" | "geography" | "recent" | "roi">("overview");
   
   // ROI state
   const [expenses, setExpenses] = useState<any[]>([]);
@@ -131,10 +127,6 @@ export default function AdminDashboardPage() {
           hotLeads: apiData.urgencyCounts.hot,
           warmLeads: apiData.urgencyCounts.warm,
           coldLeads: apiData.urgencyCounts.cold,
-          auctionEnabledCount: 0, // Will be loaded separately if needed
-          auctionWithBidsCount: 0, // Will be loaded separately if needed
-          soldViaBuyNow: 0, // Will be loaded separately if needed
-          soldViaAuction: 0, // Will be loaded separately if needed
         });
 
         // Set geography data
@@ -213,33 +205,7 @@ export default function AdminDashboardPage() {
           setAllAgents(agentsWithStats);
         }
 
-        // Load auction stats
-        const { data: allLeads } = await supabaseClient
-          .from("leads")
-          .select("auction_enabled, current_bid_amount, status, buy_now_price_cents");
-
-        if (allLeads) {
-          const auctionEnabledCount = allLeads.filter((l) => l.auction_enabled === true).length;
-          const auctionWithBidsCount = allLeads.filter(
-            (l) => l.auction_enabled === true && l.current_bid_amount !== null
-          ).length;
-
-          const purchasedLeadsList = allLeads.filter((l) => l.status === "purchased_by_agent");
-          const soldViaBuyNow = purchasedLeadsList.filter(
-            (l) => l.auction_enabled !== true || (l.buy_now_price_cents && !l.current_bid_amount)
-          ).length;
-          const soldViaAuction = purchasedLeadsList.filter(
-            (l) => l.auction_enabled === true && l.current_bid_amount !== null
-          ).length;
-
-          setStats((prev) => ({
-            ...prev!,
-            auctionEnabledCount,
-            auctionWithBidsCount,
-            soldViaBuyNow,
-            soldViaAuction,
-          }));
-        }
+        // No auction stats needed - buy-now-only
       } catch (err) {
         console.error("Failed to load admin dashboard stats:", err);
         setError("Failed to load dashboard stats.");
@@ -374,7 +340,6 @@ export default function AdminDashboardPage() {
           <div className="flex gap-4">
             {[
               { id: "overview" as const, label: "Overview" },
-              { id: "auctions" as const, label: "Auctions" },
               { id: "agents" as const, label: "Agents" },
               { id: "geography" as const, label: "Geography" },
               { id: "recent" as const, label: "Recent leads" },
@@ -450,38 +415,26 @@ export default function AdminDashboardPage() {
                   </table>
                 </div>
 
-                {/* Auctions vs Buy Now */}
+                {/* Sales Summary */}
                 <div className="rounded-xl border border-slate-200 bg-white/70 p-6 shadow-sm">
                   <h3
                     className="mb-4 text-base font-semibold text-[#2a2a2a]"
                     style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
                   >
-                    Auctions vs Buy Now
+                    Sales Summary
                   </h3>
                   <table className="w-full text-sm">
                     <tbody>
                       <tr className="border-b border-slate-100">
-                        <td className="py-2 text-[#4a4a4a]">Auction enabled</td>
+                        <td className="py-2 text-[#4a4a4a]">Leads sold</td>
                         <td className="py-2 text-right font-semibold text-[#2a2a2a]">
-                          {stats.auctionEnabledCount}
-                        </td>
-                      </tr>
-                      <tr className="border-b border-slate-100">
-                        <td className="py-2 text-[#4a4a4a]">With active bids</td>
-                        <td className="py-2 text-right font-semibold text-[#2a2a2a]">
-                          {stats.auctionWithBidsCount}
-                        </td>
-                      </tr>
-                      <tr className="border-b border-slate-100">
-                        <td className="py-2 text-[#4a4a4a]">Sold via Buy Now</td>
-                        <td className="py-2 text-right font-semibold text-[#2a2a2a]">
-                          {stats.soldViaBuyNow}
+                          {stats.purchasedLeads}
                         </td>
                       </tr>
                       <tr>
-                        <td className="py-2 text-[#4a4a4a]">Sold via Auction</td>
+                        <td className="py-2 text-[#4a4a4a]">Total revenue</td>
                         <td className="py-2 text-right font-semibold text-[#2a2a2a]">
-                          {stats.soldViaAuction}
+                          {formatMoney(stats.totalRevenueCents)}
                         </td>
                       </tr>
                     </tbody>
@@ -581,53 +534,6 @@ export default function AdminDashboardPage() {
           </div>
         )}
 
-        {/* Auctions Tab */}
-        {activeTab === "auctions" && (
-          <div>
-            <h2
-              className="mb-4 text-lg font-normal text-[#2a2a2a]"
-              style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-            >
-              Auctions
-            </h2>
-            <div className="rounded-xl border border-slate-200 bg-white/70 p-6 shadow-sm">
-              <h3
-                className="mb-4 text-base font-semibold text-[#2a2a2a]"
-                style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-              >
-                Auctions vs Buy Now
-              </h3>
-              <table className="w-full text-sm">
-                <tbody>
-                  <tr className="border-b border-slate-100">
-                    <td className="py-2 text-[#4a4a4a]">Auction enabled</td>
-                    <td className="py-2 text-right font-semibold text-[#2a2a2a]">
-                      {stats.auctionEnabledCount}
-                    </td>
-                  </tr>
-                  <tr className="border-b border-slate-100">
-                    <td className="py-2 text-[#4a4a4a]">With active bids</td>
-                    <td className="py-2 text-right font-semibold text-[#2a2a2a]">
-                      {stats.auctionWithBidsCount}
-                    </td>
-                  </tr>
-                  <tr className="border-b border-slate-100">
-                    <td className="py-2 text-[#4a4a4a]">Sold via Buy Now</td>
-                    <td className="py-2 text-right font-semibold text-[#2a2a2a]">
-                      {stats.soldViaBuyNow}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="py-2 text-[#4a4a4a]">Sold via Auction</td>
-                    <td className="py-2 text-right font-semibold text-[#2a2a2a]">
-                      {stats.soldViaAuction}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
 
         {/* Agents Tab */}
         {activeTab === "agents" && (

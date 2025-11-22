@@ -2,12 +2,7 @@
 
 /**
  * Available Leads Page - Agent Portal
- * 
- * Timer behavior:
- * - Timer starts on first bid (auction_ends_at is set to now() + 30 minutes)
- * - Timer resets on each higher bid (auction_ends_at is reset to now() + 30 minutes)
- * - Bidding is disabled when timer expires or auction_status is 'closed'/'ended'
- * - Countdown displays "Time left: mm:ss" in amber inside the grey auction box
+ * Buy-Now-Only: Fixed pricing based on urgency (Cold: $10, Warm: $20, Hot: $35)
  */
 
 import Link from "next/link";
@@ -18,6 +13,7 @@ import { useRouter } from "next/navigation";
 import { useRequireRole } from "@/lib/hooks/useRequireRole";
 import { AgentNav } from "@/components/AgentNav";
 import { agentOwnsLead } from "@/lib/leads";
+import { getLeadPriceFromUrgency } from "@/lib/leads/pricing";
 import clsx from "clsx";
 
 type Lead = {
@@ -29,22 +25,11 @@ type Lead = {
   urgency_level: string | null;
   status: string | null;
   service_type: string | null;
-  suggested_price_cents: number | null;
+  planning_for: string | null;
+  additional_notes: string | null;
+  lead_price: number | null;
   buy_now_price_cents: number | null;
   assigned_agent_id: string | null;
-  // Auction fields
-  auction_enabled?: boolean | null;
-  auction_starts_at?: string | null;
-  auction_ends_at?: string | null;
-  auction_last_bid_at?: string | null;
-  auction_status?: 'open' | 'scheduled' | 'ended' | 'closed' | null;
-  auction_timezone?: string | null;
-  starting_bid?: number | null;
-  min_increment?: number | null;
-  buy_now_price?: number | null;
-  current_bid_amount?: number | null;
-  current_bid_agent_id?: string | null;
-  winning_agent_id?: string | null;
 };
 
 export default function AvailableLeadsPage() {
@@ -60,9 +45,6 @@ export default function AvailableLeadsPage() {
 
   const [claimingId, setClaimingId] = useState<string | null>(null);
   const [buyingId, setBuyingId] = useState<string | null>(null);
-  const [biddingId, setBiddingId] = useState<string | null>(null);
-  const [bidAmounts, setBidAmounts] = useState<Record<string, string>>({});
-  const [bidErrors, setBidErrors] = useState<Record<string, string>>({});
   
   // Filter state
   const [urgencyFilter, setUrgencyFilter] = useState<"all" | "hot" | "warm" | "cold">("all");
@@ -75,59 +57,6 @@ export default function AvailableLeadsPage() {
   // Geographic search state
   const [locationQuery, setLocationQuery] = useState<string>("");
   const [provinceFilter, setProvinceFilter] = useState<string>("");
-  
-  // Countdown timer state
-  const [now, setNow] = useState(() => new Date());
-  
-  // Outbid detection - track previous highest bidder per lead
-  const previousHighestByLeadRef = useRef<Record<string, string | null>>({});
-  const [outbidMessage, setOutbidMessage] = useState<string | null>(null);
-
-  // Countdown timer effect
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setNow(new Date());
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Helper function to compute auction countdown
-  function getRemainingTime(endsAt: string | null): {
-    label: string;
-    isEnded: boolean;
-    secondsRemaining: number;
-  } {
-    if (!endsAt) {
-      return { label: "No end time set", isEnded: false, secondsRemaining: Infinity };
-    }
-
-    const end = new Date(endsAt).getTime();
-    const now = Date.now();
-    const diffMs = end - now;
-
-    if (diffMs <= 0) {
-      return { label: "Ended", isEnded: true, secondsRemaining: 0 };
-    }
-
-    const totalSeconds = Math.floor(diffMs / 1000);
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const seconds = totalSeconds % 60;
-
-    let label: string;
-    if (totalSeconds < 60) {
-      // Less than 60 seconds remaining
-      label = "Ending soon";
-    } else if (hours > 0) {
-      label = `Ends in ${hours}h ${minutes.toString().padStart(2, "0")}m`;
-    } else if (minutes > 0) {
-      label = `Ends in ${minutes}m ${seconds.toString().padStart(2, "0")}s`;
-    } else {
-      label = `Ends in ${seconds}s`;
-    }
-
-    return { label, isEnded: false, secondsRemaining: totalSeconds };
-  }
 
   // Function to refresh leads (reusable for initial load, polling, and after actions)
   // Memoized with useCallback to prevent recreation on every render
@@ -185,13 +114,9 @@ export default function AvailableLeadsPage() {
       // For now, we mask these fields in the UI.
       
       // Fetch all available leads (unsold leads only - filters applied client-side)
-      // Show leads where:
-      // - assigned_agent_id is null (unsold), AND
-      // - auction_status is NOT 'closed', OR
-      // - auction_status is 'closed' BUT winning_agent_id matches current user (winner can see it)
       const { data: leadsData, error: leadsError } = await supabaseClient
         .from("leads")
-        .select("*")
+        .select("id, created_at, city, province, postal_code, urgency_level, status, service_type, planning_for, additional_notes, lead_price, buy_now_price_cents, assigned_agent_id")
         .is("assigned_agent_id", null) // Only unsold leads
         .order("created_at", { ascending: false });
 
@@ -206,20 +131,7 @@ export default function AvailableLeadsPage() {
 
       let newLeads = (leadsData || []) as Lead[];
 
-      // Filter: exclude ended auctions unless current user is the winner
-      if (currentUserId) {
-        newLeads = newLeads.filter((lead: Lead) => {
-          // If auction is ended, only show to the winner
-          if (lead.auction_status === 'ended') {
-            return lead.winning_agent_id === currentUserId;
-          }
-          // Show all non-ended leads (scheduled, open, or null)
-          return true;
-        });
-      } else {
-        // If no user ID, filter out ended auctions entirely
-        newLeads = newLeads.filter((lead: Lead) => lead.auction_status !== 'ended');
-      }
+      // No auction filtering needed - all unsold leads are available
 
       // Extract unique locations for filter dropdown (only on initial load)
       if (!isPolling) {
@@ -234,54 +146,7 @@ export default function AvailableLeadsPage() {
         setAvailableLocations(uniqueCities);
       }
 
-      // Detect outbid changes
-      if (currentUserId) {
-        // Determine current set of leads where this agent is highest bidder
-        const newHighest = newLeads
-          .filter(
-            (l) =>
-              l.auction_enabled &&
-              l.current_bid_agent_id === currentUserId &&
-              (l.status === "new" || l.status === "cold_unassigned")
-          )
-          .map((l) => l.id);
-
-        // Check for leads where we were highest but are no longer
-        newLeads.forEach((lead) => {
-          if (
-            lead.auction_enabled &&
-            (lead.status === "new" || lead.status === "cold_unassigned")
-          ) {
-            const prevHighest = previousHighestByLeadRef.current[lead.id];
-            const currentHighest = lead.current_bid_agent_id;
-
-            // Check if we were highest before but not now (and lead is still active)
-            if (
-              prevHighest === currentUserId &&
-              currentHighest !== null &&
-              currentHighest !== currentUserId &&
-              !newHighest.includes(lead.id)
-            ) {
-              // This agent has been outbid
-              const urgency = lead.urgency_level
-                ? lead.urgency_level.toLowerCase()
-                : "";
-              const city = lead.city || "Unknown location";
-              setOutbidMessage(
-                `You've been outbid on the ${urgency} lead in ${city}.`
-              );
-            }
-          }
-        });
-
-        // Update refs for all auction-enabled leads
-        newLeads.forEach((lead) => {
-          if (lead.auction_enabled) {
-            previousHighestByLeadRef.current[lead.id] =
-              lead.current_bid_agent_id ?? null;
-          }
-        });
-      }
+      // No outbid detection needed - buy-now-only
 
       setLeads(newLeads);
     } catch (err) {
@@ -336,12 +201,6 @@ export default function AvailableLeadsPage() {
     return () => clearInterval(interval);
   }, [initialLoadComplete, userId]); // Stable deps - interval created once
 
-  // Auto-dismiss outbid message after 7 seconds
-  useEffect(() => {
-    if (!outbidMessage) return;
-    const timeout = setTimeout(() => setOutbidMessage(null), 7000);
-    return () => clearTimeout(timeout);
-  }, [outbidMessage]);
 
   async function handleClaimFree(leadId: string) {
     if (!userId) return;
@@ -412,56 +271,6 @@ export default function AvailableLeadsPage() {
     }
   }
 
-  async function handlePlaceBid(leadId: string, increment: number) {
-    if (!userId) return;
-
-    setBiddingId(leadId);
-    setBidErrors((prev) => ({ ...prev, [leadId]: "" }));
-
-    try {
-      const res = await fetch(`/api/leads/${leadId}/bid`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ increment, agentId: userId }),
-      });
-
-      const body = await res.json();
-
-      if (!res.ok) {
-        // Show the actual error message from the API
-        const errorMessage = body?.error || body?.details || "Failed to place bid";
-        setBidErrors((prev) => ({
-          ...prev,
-          [leadId]: errorMessage,
-        }));
-        console.error("Bid API error:", body);
-        return;
-      }
-
-      // Update the ref to track that we're now the highest bidder
-      if (userId && body.lead?.current_bid_agent_id === userId) {
-        previousHighestByLeadRef.current[leadId] = userId;
-      }
-
-      // Update local state with the updated lead from API response
-      if (body.lead) {
-        setLeads((prevLeads) =>
-          prevLeads.map((l) => (l.id === leadId ? { ...l, ...body.lead } : l))
-        );
-      }
-
-      // Also refresh leads to ensure we have the latest data
-      await refreshLeads(false);
-    } catch (err) {
-      console.error(err);
-      setBidErrors((prev) => ({
-        ...prev,
-        [leadId]: "Unexpected error placing bid",
-      }));
-    } finally {
-      setBiddingId(null);
-    }
-  }
 
   function formatUrgency(urgency: string | null) {
     if (!urgency) return "Unknown";
@@ -491,80 +300,9 @@ export default function AvailableLeadsPage() {
     }
   }
 
-  function canBid(lead: Lead) {
-    // Check auction_enabled - treat null/undefined as enabled
-    const isAuctionEnabled = lead.auction_enabled !== false;
-    if (!isAuctionEnabled) return false;
-    
-    // Check auction status
-    if (lead.auction_status === 'ended') return false;
-    if (lead.auction_status === 'scheduled') return false;
-    
-    // Must be 'open' to bid
-    if (lead.auction_status !== 'open') return false;
-    
-    // Check if auction has ended by time
-    if (lead.auction_ends_at) {
-      const endAt = new Date(lead.auction_ends_at);
-      const now = new Date();
-      if (now >= endAt) return false; // Auction has ended
-    }
-    
-    // Check lead is still available
-    if (lead.status === "purchased_by_agent" || lead.assigned_agent_id) return false;
-    
-    return true;
-  }
-
-  function getAuctionStatusLabel(lead: Lead): string | null {
-    if (!lead.auction_enabled) return null;
-    
-    const status = lead.auction_status;
-    
-    if (status === 'scheduled') {
-      if (lead.auction_starts_at) {
-        const startDate = new Date(lead.auction_starts_at);
-        const localTime = startDate.toLocaleTimeString('en-US', { 
-          hour: 'numeric', 
-          minute: '2-digit',
-          hour12: true 
-        });
-        return `Auction opens at ${localTime}`;
-      }
-      return 'Auction opens at 8:00 AM';
-    }
-    
-    if (status === 'open') {
-      return null; // Will show countdown instead
-    }
-    
-    if (status === 'ended') {
-      if (lead.winning_agent_id && userId && lead.winning_agent_id === userId) {
-        return 'You\'ve won this lead. Complete purchase to view contact details.';
-      }
-      return 'Bidding closed';
-    }
-    
-    return null;
-  }
 
   return (
     <main className="min-h-screen bg-[#f7f4ef]">
-      {/* Outbid toast notification */}
-      {outbidMessage && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 rounded-full bg-black text-white text-sm px-4 py-2 shadow-lg">
-          <div className="flex items-center justify-between gap-3">
-            <span>{outbidMessage}</span>
-            <button
-              type="button"
-              className="ml-3 text-xs underline"
-              onClick={() => setOutbidMessage(null)}
-            >
-              Dismiss
-            </button>
-          </div>
-        </div>
-      )}
 
 
       <section className="mx-auto max-w-6xl px-6 py-8">
@@ -576,7 +314,7 @@ export default function AvailableLeadsPage() {
             Available leads
           </h1>
           <p className="text-sm text-[#6b6b6b]">
-            New pre-need inquiries you can buy, bid on, or use your one-time free lead on.
+            New pre-need inquiries you can purchase or use your one-time free lead on.
           </p>
         </div>
 
@@ -788,9 +526,9 @@ export default function AvailableLeadsPage() {
               if (type !== serviceFilter.toLowerCase()) return false;
             }
 
-            // Price filter (using buy_now_price)
+            // Price filter (using lead_price or calculated from urgency)
             if (minPrice || maxPrice) {
-              const price = lead.buy_now_price ?? 0;
+              const price = lead.lead_price ?? getLeadPriceFromUrgency(lead.urgency_level);
               const min = minPrice ? parseFloat(minPrice) : 0;
               const max = maxPrice ? parseFloat(maxPrice) : Infinity;
               if (isNaN(min) || isNaN(max)) return true; // Skip if invalid numbers
@@ -814,69 +552,43 @@ export default function AvailableLeadsPage() {
               // Check if agent owns this lead
               const owns = userId ? agentOwnsLead(lead, userId) : false;
               
-              // Check auction_enabled - treat null/undefined as enabled (all leads have auctions now)
-              const isAuctionEnabled = lead.auction_enabled !== false; // true or null/undefined = enabled
-              const isHighestBidder = lead.current_bid_agent_id === userId;
-              const showBidForm = canBid(lead);
-              const auctionStatusLabel = getAuctionStatusLabel(lead);
-              const startingBid = lead.starting_bid || 10;
-              const minIncrement = lead.min_increment || 5;
-              const currentBid = lead.current_bid_amount || startingBid;
-
-              // Get Buy Now price - use existing price or default based on urgency
-              // Also fix legacy low prices (like $1) to proper defaults
-              const getBuyNowPrice = (): number | null => {
-                const urgency = (lead.urgency_level || "warm").toLowerCase();
-                
-                // Determine proper default based on urgency
-                let properDefault: number;
-                if (urgency === "hot") properDefault = 3000; // $30
-                else if (urgency === "warm") properDefault = 2000; // $20
-                else properDefault = 1000; // $10 for cold or default
-                
-                // If lead has a price set, use it UNLESS it's a legacy low price (like $1 = 100 cents)
-                if (lead.buy_now_price_cents != null) {
-                  // If price is less than $5 (500 cents), treat it as legacy and use proper default
-                  if (lead.buy_now_price_cents < 500) {
-                    return properDefault;
-                  }
-                  return lead.buy_now_price_cents;
-                }
-                
-                // Otherwise, use default based on urgency level
-                return properDefault;
-              };
+              // Get Buy Now price - use lead_price if available, otherwise calculate from urgency
+              const leadPrice = lead.lead_price ?? getLeadPriceFromUrgency(lead.urgency_level);
+              const buyNowPriceCents = leadPrice * 100;
               
-              const buyNowPriceCents = getBuyNowPrice();
+              // Get additional notes preview (first 2 lines or 100 chars)
+              const additionalNotes = lead.additional_notes || "";
+              const notesPreview = additionalNotes.length > 100 
+                ? additionalNotes.substring(0, 100) + "..." 
+                : additionalNotes;
 
               return (
                 <div
                   key={lead.id}
                   className="rounded-lg border border-[#ded3c2] bg-white p-4 shadow-sm"
                 >
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-2">
                         <div className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
                           {formatUrgency(lead.urgency_level)} lead
                         </div>
-                        {isAuctionEnabled && (
-                          <span className="rounded-full bg-[#f7f4ef] px-2 py-0.5 text-[10px] font-medium text-[#6b6b6b]">
-                            Auction
-                          </span>
-                        )}
-                        {isHighestBidder && (
-                          <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-900">
-                            You are highest bidder
-                          </span>
-                        )}
                       </div>
                       <div className="mt-1 text-sm font-semibold text-[#2a2a2a]">
                         {lead.city || "Unknown location"}
+                        {lead.province && `, ${lead.province}`}
                       </div>
-                      <div className="text-xs text-[#6b6b6b]">
-                        {lead.service_type || "Pre-need planning"}
+                      <div className="mt-1 text-xs text-[#6b6b6b]">
+                        Planning for: {lead.planning_for || "Not specified"}
                       </div>
+                      <div className="mt-1 text-xs text-[#6b6b6b]">
+                        Service type: {lead.service_type || "Not specified"}
+                      </div>
+                      {notesPreview && (
+                        <div className="mt-2 text-xs text-[#4a4a4a] italic">
+                          "{notesPreview}"
+                        </div>
+                      )}
                       {!owns && (
                         <p className="mt-2 text-[11px] text-slate-500">
                           🔒 Purchase to reveal full name, phone, and email.
@@ -884,220 +596,50 @@ export default function AvailableLeadsPage() {
                       )}
                     </div>
 
-                    <div className="text-right">
-                      {buyNowPriceCents && (
-                        <div className="mb-1">
-                          <div className="text-xs uppercase tracking-[0.15em] text-[#6b6b6b]">
-                            Buy now
-                          </div>
-                          <div className="text-sm font-semibold text-[#2a2a2a]">
-                            {formatPrice(buyNowPriceCents)}
-                          </div>
+                    <div className="text-right flex-shrink-0">
+                      <div className="mb-2">
+                        <div className="text-xs uppercase tracking-[0.15em] text-[#6b6b6b]">
+                          Buy now
                         </div>
-                      )}
-                      {isAuctionEnabled && (
-                        <div>
-                          <div className="text-xs uppercase tracking-[0.15em] text-[#6b6b6b]">
-                            {lead.auction_status === 'open' ? 'Current bid' : 'Start price'}
-                          </div>
-                          <div className="text-sm font-semibold text-[#2a2a2a]">
-                            {lead.current_bid_amount
-                              ? formatPriceDollars(lead.current_bid_amount)
-                              : formatPriceDollars(startingBid)}
-                          </div>
-                          {auctionStatusLabel && (
-                            <div className="mt-1 text-[10px] text-[#6b6b6b]">
-                              {auctionStatusLabel}
-                            </div>
-                          )}
+                        <div className="text-lg font-semibold text-[#2a2a2a]">
+                          ${leadPrice.toFixed(2)}
                         </div>
-                      )}
+                      </div>
                     </div>
                   </div>
 
-                  <div className="mt-4 space-y-3">
-                    <div className="flex flex-wrap items-center gap-2">
-                      {/* Buy Now button - visibility rules based on auction status */}
-                      {(() => {
-                        const isClosed = lead.auction_status === 'ended';
-                        const hasWinner = !!lead.winning_agent_id;
-                        const isWinner = userId && lead.winning_agent_id === userId;
-                        const canBuyNow = 
-                          lead.assigned_agent_id === null && 
-                          buyNowPriceCents != null &&
-                          (
-                            // Before close: anyone can buy
-                            !isClosed ||
-                            // After close: only winner can buy
-                            (isClosed && hasWinner && isWinner)
-                          );
-                        
-                        return canBuyNow ? (
-                          <button
-                            onClick={() =>
-                              handleBuyNow(lead.id, buyNowPriceCents)
-                            }
-                            disabled={buyingId === lead.id}
-                            className="rounded-full bg-emerald-600 px-4 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-70 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
-                          >
-                            {buyingId === lead.id 
-                              ? "Starting checkout…" 
-                              : `Buy now for $${((buyNowPriceCents || 0) / 100).toFixed(2)}`}
-                          </button>
-                        ) : isClosed && hasWinner && !isWinner ? (
-                          <span className="text-xs text-slate-500 italic">Auction ended</span>
-                        ) : null;
-                      })()}
-
-                      {firstFreeAvailable && (
-                        <button
-                          onClick={() => handleClaimFree(lead.id)}
-                          disabled={claimingId === lead.id}
-                          className="rounded-md border border-amber-400 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-900 hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-70 transition-colors"
-                        >
-                          {claimingId === lead.id
-                            ? "Claiming free lead…"
-                            : "Use my one free lead"}
-                        </button>
-                      )}
-
-                      <Link
-                        href={`/agent/leads/${lead.id}`}
-                        className="ml-auto text-xs font-medium text-[#6b6b6b] hover:text-[#2a2a2a] transition-colors"
+                  <div className="mt-4 flex flex-wrap items-center gap-2">
+                    {/* Buy Now button - always available for unsold leads */}
+                    {lead.assigned_agent_id === null && (
+                      <button
+                        onClick={() => handleBuyNow(lead.id, buyNowPriceCents)}
+                        disabled={buyingId === lead.id}
+                        className="rounded-full bg-emerald-600 px-4 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-70 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
                       >
-                        View details →
-                      </Link>
-                    </div>
+                        {buyingId === lead.id 
+                          ? "Starting checkout…" 
+                          : `Buy now for $${leadPrice.toFixed(2)}`}
+                      </button>
+                    )}
 
-                    {/* Auction section - show when auction is enabled */}
-                    {isAuctionEnabled && (() => {
-                      // Pure function to determine auction state based on time (no hooks)
-                      // Safely handle null auction times
-                      const now = new Date();
-                      const startsAt = lead.auction_starts_at ? new Date(lead.auction_starts_at) : null;
-                      const endsAt = lead.auction_ends_at ? new Date(lead.auction_ends_at) : null;
-                      
-                      // Validate dates
-                      const hasTimes = startsAt && endsAt && !isNaN(startsAt.getTime()) && !isNaN(endsAt.getTime());
-                      const beforeOpen = hasTimes && now < startsAt!;
-                      const afterOpen = hasTimes && now >= startsAt!;
-                      const isExpired = hasTimes && now >= endsAt!;
-                      
-                      return (
-                        <div className="mt-2 rounded-md border border-slate-200 bg-slate-50 p-2">
-                          <p className="text-[11px] font-semibold text-slate-700">
-                            Auction
-                          </p>
-                          
-                          {/* Show current bid or starting bid */}
-                          <p className="mt-1 text-[11px] text-slate-600">
-                            {lead.current_bid_amount
-                              ? `Current bid: $${lead.current_bid_amount.toFixed(2)}`
-                              : `Starting bid: $${startingBid.toFixed(2)}`}
-                          </p>
-                          
-                          {/* Always show the static "Auction opens at 8:00 AM" line */}
-                          <p className="mt-1 text-[10px] text-slate-600">
-                            Auction opens at <span className="font-medium">8:00 AM</span>. Bidding is open now — earliest win is 30 minutes after opening.
-                          </p>
-                          
-                          {/* Show countdown or "Bidding closed" below the static line */}
-                          {hasTimes && afterOpen && !isExpired && (
-                            <AuctionCountdown
-                              auctionEndsAt={lead.auction_ends_at ?? null}
-                              hasBids={!!lead.current_bid_amount && lead.current_bid_amount > 0}
-                            />
-                          )}
-                          
-                          {hasTimes && isExpired && (
-                            <p className="mt-1 text-[11px] font-medium text-slate-500">
-                              Bidding closed
-                            </p>
-                          )}
-                          
-                          {/* Show "Each new bid extends..." only when active and not expired */}
-                          {hasTimes && afterOpen && !isExpired && (
-                            <p className="mt-1 text-[10px] text-slate-500">
-                              Each new bid extends the clock by 30 minutes.
-                            </p>
-                          )}
-                          
-                          {/* Bid buttons - enabled before open and after open (not expired), disabled when expired */}
-                          {showBidForm && hasTimes && !isExpired && (
-                            <div className="mt-2">
-                              <p className="mb-1 text-[10px] text-slate-500">
-                                Bid increments:
-                              </p>
-                              <div className="flex flex-wrap gap-2">
-                                <button
-                                  onClick={() => handlePlaceBid(lead.id, minIncrement)}
-                                  disabled={biddingId === lead.id}
-                                  className="rounded-md px-3 py-1.5 text-xs font-semibold transition-colors bg-slate-900 text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-70"
-                                >
-                                  {biddingId === lead.id ? "Placing…" : `+ $${minIncrement}`}
-                                </button>
-                                <button
-                                  onClick={() => handlePlaceBid(lead.id, minIncrement * 2)}
-                                  disabled={biddingId === lead.id}
-                                  className="rounded-md px-3 py-1.5 text-xs font-semibold transition-colors bg-slate-900 text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-70"
-                                >
-                                  {biddingId === lead.id ? "Placing…" : `+ $${minIncrement * 2}`}
-                                </button>
-                                <button
-                                  onClick={() => handlePlaceBid(lead.id, minIncrement * 3)}
-                                  disabled={biddingId === lead.id}
-                                  className="rounded-md px-3 py-1.5 text-xs font-semibold transition-colors bg-slate-900 text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-70"
-                                >
-                                  {biddingId === lead.id ? "Placing…" : `+ $${minIncrement * 3}`}
-                                </button>
-                              </div>
-                              <p className="mt-1 text-[10px] text-slate-500">
-                                Next bid: ${(currentBid + minIncrement).toFixed(2)}
-                              </p>
-                            </div>
-                          )}
-                          
-                          {/* Disabled bid buttons when expired */}
-                          {hasTimes && isExpired && (
-                            <div className="mt-2">
-                              <div className="flex flex-wrap gap-2 opacity-50 pointer-events-none">
-                                <button
-                                  disabled
-                                  className="rounded-md bg-slate-400 px-3 py-1.5 text-xs font-semibold text-white cursor-not-allowed"
-                                >
-                                  + $5
-                                </button>
-                                <button
-                                  disabled
-                                  className="rounded-md bg-slate-400 px-3 py-1.5 text-xs font-semibold text-white cursor-not-allowed"
-                                >
-                                  + $10
-                                </button>
-                                <button
-                                  disabled
-                                  className="rounded-md bg-slate-400 px-3 py-1.5 text-xs font-semibold text-white cursor-not-allowed"
-                                >
-                                  + $15
-                                </button>
-                              </div>
-                            </div>
-                          )}
-                          
-                          {/* Fallback for leads without proper auction times */}
-                          {!hasTimes && (
-                            <p className="mt-1 text-[10px] text-slate-500">
-                              Bidding will open soon.
-                            </p>
-                          )}
-                          
-                          {bidErrors[lead.id] && (
-                            <p className="mt-1 text-[11px] text-red-600">
-                              {bidErrors[lead.id]}
-                            </p>
-                          )}
-                        </div>
-                      );
-                    })()}
+                    {firstFreeAvailable && lead.assigned_agent_id === null && (
+                      <button
+                        onClick={() => handleClaimFree(lead.id)}
+                        disabled={claimingId === lead.id}
+                        className="rounded-md border border-amber-400 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-900 hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-70 transition-colors"
+                      >
+                        {claimingId === lead.id
+                          ? "Claiming free lead…"
+                          : "Use my one free lead"}
+                      </button>
+                    )}
+
+                    <Link
+                      href={`/agent/leads/${lead.id}`}
+                      className="ml-auto text-xs font-medium text-[#6b6b6b] hover:text-[#2a2a2a] transition-colors"
+                    >
+                      View details →
+                    </Link>
                   </div>
                 </div>
               );
@@ -1110,85 +652,3 @@ export default function AvailableLeadsPage() {
   );
 }
 
-// Auction countdown component - uses hooks properly (not in a loop)
-type AuctionCountdownProps = {
-  auctionEndsAt: string | null;
-  hasBids: boolean;
-};
-
-function useCountdown(auctionEndsAt: string | null) {
-  const [remainingMs, setRemainingMs] = React.useState<number | null>(() => {
-    if (!auctionEndsAt) return null;
-    try {
-      const end = new Date(auctionEndsAt).getTime();
-      if (isNaN(end)) return null;
-      const now = Date.now();
-      return Math.max(end - now, 0);
-    } catch (e) {
-      return null;
-    }
-  });
-
-  React.useEffect(() => {
-    if (!auctionEndsAt) return;
-
-    const interval = setInterval(() => {
-      try {
-        const end = new Date(auctionEndsAt).getTime();
-        if (isNaN(end)) {
-          setRemainingMs(null);
-          return;
-        }
-        const now = Date.now();
-        const diff = end - now;
-        setRemainingMs(diff > 0 ? diff : 0);
-      } catch (e) {
-        setRemainingMs(null);
-      }
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [auctionEndsAt]);
-
-  if (remainingMs === null) {
-    return {
-      label: null,
-      isExpired: false,
-    };
-  }
-
-  const isExpired = remainingMs <= 0;
-  const totalSeconds = Math.max(Math.floor(remainingMs / 1000), 0);
-  const minutes = Math.floor(totalSeconds / 60)
-    .toString()
-    .padStart(2, "0");
-  const seconds = (totalSeconds % 60).toString().padStart(2, "0");
-
-  return {
-    label: `${minutes}:${seconds}`,
-    isExpired,
-  };
-}
-
-function AuctionCountdown({ auctionEndsAt, hasBids }: AuctionCountdownProps) {
-  // This component is only called when afterOpen && !isExpired
-  // So we can assume auctionEndsAt is valid
-  const { label, isExpired } = useCountdown(auctionEndsAt);
-
-  // Guard against null/invalid (shouldn't happen, but be safe)
-  if (!auctionEndsAt || !label) {
-    return null;
-  }
-
-  // If expired, parent will handle the "Bidding closed" message
-  if (isExpired) {
-    return null;
-  }
-
-  // Show countdown timer (only called when afterOpen && !isExpired)
-  return (
-    <p className="mt-1 text-[11px] font-medium text-amber-700">
-      Time left: {label}
-    </p>
-  );
-}

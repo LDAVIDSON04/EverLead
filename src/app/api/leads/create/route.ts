@@ -1,7 +1,7 @@
 // src/app/api/leads/create/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { calculateAuctionStartsAt, calculateInitialAuctionEndsAt } from "@/lib/auctionTiming";
+import { getLeadPriceFromUrgency } from "@/lib/leads/pricing";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -89,15 +89,31 @@ export async function POST(req: NextRequest) {
       "timeline_intent",
       "service_type",
       "planning_for",
+      "additional_notes",
     ];
 
-    const missingFields = requiredFields.filter((field) => !body[field]);
+    const missingFields = requiredFields.filter((field) => {
+      const value = body[field];
+      return !value || (typeof value === "string" && value.trim() === "");
+    });
     if (missingFields.length > 0) {
       console.error("Missing required fields", missingFields);
       return NextResponse.json(
         {
           error: "Missing required fields",
           details: `Missing: ${missingFields.join(", ")}`,
+        },
+        { status: 400 }
+      );
+    }
+    
+    // Validate additional_notes is not empty
+    const additionalNotes = body.additional_notes ? String(body.additional_notes).trim() : "";
+    if (!additionalNotes || additionalNotes.length === 0) {
+      return NextResponse.json(
+        {
+          error: "Additional notes is required",
+          details: "Please provide additional details about your preferences and needs.",
         },
         { status: 400 }
       );
@@ -133,48 +149,21 @@ export async function POST(req: NextRequest) {
       service_type: String(body.service_type).trim(),
       timeline_intent: String(body.timeline_intent).trim(),
       urgency_level: body.urgency_level || "warm",
-      additional_notes: body.additional_notes ? String(body.additional_notes).trim() : null,
+      additional_notes: additionalNotes,
       // Explicitly set status to "new" and ensure lead is unsold
       status: "new",
       assigned_agent_id: null, // Ensure lead is unsold
       purchased_at: null, // Ensure lead is unsold
-      // Enable auction on every lead by default
-      auction_enabled: body.auction_enabled !== undefined ? body.auction_enabled : true,
+      // Buy-now-only: no auctions
+      auction_enabled: false,
     };
 
-    // Set auction-related fields based on business hours
-    if (leadData.auction_enabled) {
-      // Set default auction values
-      leadData.starting_bid = 10;
-      leadData.min_increment = 5;
-      leadData.buy_now_price = 50;
-      // Also set buy_now_price_cents for backward compatibility
-      leadData.buy_now_price_cents = 5000; // $50
-      
-      // Calculate auction_starts_at based on business hours:
-      // - If created between 08:00 and 19:00: auction_starts_at = now
-      // - If created after 19:00 or before 08:00: auction_starts_at = next day at 08:00
-      const now = new Date();
-      if (isNaN(now.getTime())) {
-        console.error("Invalid date when creating lead");
-        leadData.auction_starts_at = null;
-        leadData.auction_ends_at = null;
-      } else {
-        const auctionStartsAt = calculateAuctionStartsAt(now);
-        if (!auctionStartsAt) {
-          console.error("Failed to calculate auction_starts_at");
-          leadData.auction_starts_at = null;
-          leadData.auction_ends_at = null;
-        } else {
-          leadData.auction_starts_at = auctionStartsAt;
-          // auction_ends_at = auction_starts_at + 30 minutes (earliest possible win time)
-          const auctionEndsAt = calculateInitialAuctionEndsAt(auctionStartsAt);
-          leadData.auction_ends_at = auctionEndsAt;
-        }
-      }
-      leadData.current_bid_amount = null;
-      leadData.auction_status = 'open'; // Bidding is open 24/7
-    }
+    // Calculate and store lead price based on urgency
+    const urgency = leadData.urgency_level || "warm";
+    const leadPrice = getLeadPriceFromUrgency(urgency);
+    leadData.lead_price = leadPrice;
+    // Also set buy_now_price_cents for backward compatibility with Stripe
+    leadData.buy_now_price_cents = leadPrice * 100;
 
     // Clean payload: remove null/undefined/empty
     const cleanPayload: any = {};

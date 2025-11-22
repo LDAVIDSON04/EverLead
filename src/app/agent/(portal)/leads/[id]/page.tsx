@@ -505,7 +505,7 @@ export default function LeadDetailsPage() {
                     {lead.additional_notes && (
                       <div>
                         <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
-                          Additional notes
+                          Additional details
                         </dt>
                         <dd className="mt-1 text-[#2a2a2a] whitespace-pre-wrap">
                           {lead.additional_notes}
