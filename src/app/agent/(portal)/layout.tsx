@@ -1,7 +1,7 @@
-// src/app/agent/layout.tsx
+// src/app/agent/(portal)/layout.tsx
 import { AgentTopBar } from "@/components/AgentTopBar";
 
-export default function AgentLayout({
+export default function AgentPortalLayout({
   children,
 }: {
   children: React.ReactNode;

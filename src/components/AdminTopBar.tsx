@@ -1,15 +1,54 @@
 // src/components/AdminTopBar.tsx
 "use client";
 
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabaseClient } from "@/lib/supabaseClient";
 
 export function AdminTopBar() {
   const router = useRouter();
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    async function loadUser() {
+      const {
+        data: { user },
+      } = await supabaseClient.auth.getUser();
+      if (user) {
+        setUser(user);
+        setUserEmail(user.email || null);
+      } else {
+        setUser(null);
+        setUserEmail(null);
+      }
+    }
+    loadUser();
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabaseClient.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setUser(session.user);
+        setUserEmail(session.user.email || null);
+      } else {
+        setUser(null);
+        setUserEmail(null);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   async function handleLogout() {
     await supabaseClient.auth.signOut();
     router.push("/");
+  }
+
+  // Only show header if user is authenticated
+  if (!user) {
+    return null;
   }
 
   return (
@@ -24,6 +63,9 @@ export function AdminTopBar() {
           </span>
         </div>
         <div className="flex items-center gap-4">
+          {userEmail && (
+            <span className="text-xs text-[#6b6b6b]">{userEmail}</span>
+          )}
           <span className="text-xs text-[#6b6b6b]">Owner view</span>
           <button
             onClick={handleLogout}

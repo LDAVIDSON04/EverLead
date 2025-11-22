@@ -144,7 +144,7 @@ export default function AgentLandingPage() {
 
   return (
     <main className="min-h-screen bg-[#faf8f5] text-[#2a2a2a]">
-      {/* Header */}
+      {/* Public Header - No logout button */}
       <header className="border-b border-[#ded3c2] bg-white">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
           <div className="flex flex-col">

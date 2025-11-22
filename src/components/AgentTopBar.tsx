@@ -9,22 +9,47 @@ import { AgentNav } from "@/components/AgentNav";
 export function AgentTopBar() {
   const router = useRouter();
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
     async function loadUser() {
       const {
         data: { user },
       } = await supabaseClient.auth.getUser();
-      if (user?.email) {
-        setUserEmail(user.email);
+      if (user) {
+        setUser(user);
+        setUserEmail(user.email || null);
+      } else {
+        setUser(null);
+        setUserEmail(null);
       }
     }
     loadUser();
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabaseClient.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setUser(session.user);
+        setUserEmail(session.user.email || null);
+      } else {
+        setUser(null);
+        setUserEmail(null);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   async function handleLogout() {
     await supabaseClient.auth.signOut();
     router.push("/");
+  }
+
+  // Only show logout if user is authenticated
+  if (!user) {
+    return null;
   }
 
   return (
