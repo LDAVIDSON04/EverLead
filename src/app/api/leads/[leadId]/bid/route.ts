@@ -190,31 +190,28 @@ export async function POST(req: NextRequest, context: any): Promise<Response> {
       );
     }
 
-    // Determine if this is the first bid
-    const isFirstBid = !lead.current_bid_amount && !lead.auction_starts_at;
+    // Determine if this is the first bid (auction_ends_at is null)
+    const isFirstBid = !lead.auction_ends_at;
     const now = new Date();
     const nowISO = now.toISOString();
     
     // Calculate new auction end time (30 minutes from now)
+    // This resets the 30-minute window on every bid
     const newAuctionEnd = new Date(now.getTime() + 30 * 60 * 1000).toISOString();
 
     const updateData: any = {
       current_bid_amount: bidAmount,
       current_bid_agent_id: agentId,
       winning_agent_id: agentId, // Set winning agent on each bid
-      auction_ends_at: newAuctionEnd, // Reset 30-minute window
-      auction_last_bid_at: nowISO,
+      auction_ends_at: newAuctionEnd, // Set/reset 30-minute window
     };
 
-    // If this is the first bid, set auction_starts_at and ensure status is 'open'
+    // If this is the first bid, also set auction_starts_at and ensure status is 'open'
     if (isFirstBid) {
       updateData.auction_starts_at = nowISO;
       updateData.auction_status = 'open';
-      updateData.auction_ends_at = newAuctionEnd;
     } else {
-      // Reset the 30-minute window on each bid
-      updateData.auction_ends_at = newAuctionEnd;
-      // Ensure status is open
+      // Ensure status is open for subsequent bids
       if (lead.auction_status === 'scheduled') {
         updateData.auction_status = 'open';
       }

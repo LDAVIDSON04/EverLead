@@ -1,5 +1,15 @@
 "use client";
 
+/**
+ * Available Leads Page - Agent Portal
+ * 
+ * Timer behavior:
+ * - Timer starts on first bid (auction_ends_at is set to now() + 30 minutes)
+ * - Timer resets on each higher bid (auction_ends_at is reset to now() + 30 minutes)
+ * - Bidding is disabled when timer expires or auction_status is 'closed'/'ended'
+ * - Countdown displays "Time left: mm:ss" in amber inside the grey auction box
+ */
+
 import Link from "next/link";
 import * as React from "react";
 import { useEffect, useState, useRef, useCallback } from "react";
@@ -27,7 +37,7 @@ type Lead = {
   auction_starts_at?: string | null;
   auction_ends_at?: string | null;
   auction_last_bid_at?: string | null;
-  auction_status?: 'open' | 'scheduled' | 'ended' | null;
+  auction_status?: 'open' | 'scheduled' | 'ended' | 'closed' | null;
   auction_timezone?: string | null;
   starting_bid?: number | null;
   min_increment?: number | null;
@@ -416,19 +426,29 @@ export default function AvailableLeadsPage() {
       const body = await res.json();
 
       if (!res.ok) {
+        // Show the actual error message from the API
+        const errorMessage = body?.error || body?.details || "Failed to place bid";
         setBidErrors((prev) => ({
           ...prev,
-          [leadId]: body?.error || "Failed to place bid",
+          [leadId]: errorMessage,
         }));
+        console.error("Bid API error:", body);
         return;
       }
 
       // Update the ref to track that we're now the highest bidder
-      if (userId && body.lead.current_bid_agent_id === userId) {
+      if (userId && body.lead?.current_bid_agent_id === userId) {
         previousHighestByLeadRef.current[leadId] = userId;
       }
 
-      // Refresh leads after successful bid
+      // Update local state with the updated lead from API response
+      if (body.lead) {
+        setLeads((prevLeads) =>
+          prevLeads.map((l) => (l.id === leadId ? { ...l, ...body.lead } : l))
+        );
+      }
+
+      // Also refresh leads to ensure we have the latest data
       await refreshLeads(false);
     } catch (err) {
       console.error(err);
@@ -1018,11 +1038,14 @@ export default function AvailableLeadsPage() {
                             {/* Preset bid buttons - only show if auction is active and available */}
                             {(() => {
                               // Pure function to check if expired (no hooks)
+                              // Also check if auction_status is 'closed' or 'ended'
                               const isAuctionExpired = !!lead.auction_ends_at &&
                                 new Date(lead.auction_ends_at).getTime() <= Date.now();
-                              const shouldDisable = isAuctionExpired || !showBidForm;
+                              const status = lead.auction_status as string | null | undefined;
+                              const isClosed = status === 'closed' || status === 'ended';
+                              const shouldDisable = isAuctionExpired || isClosed || !showBidForm;
                               
-                              if (!showBidForm && !isAuctionExpired) {
+                              if (!showBidForm && !isAuctionExpired && !isClosed) {
                                 return null;
                               }
                               
