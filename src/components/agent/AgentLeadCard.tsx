@@ -12,6 +12,7 @@ export type AgentLead = {
   service_type: string | null;
   lead_price: number; // Price in dollars from database
   additional_details: string | null; // Maps to additional_notes in DB
+  planning_for?: string | null; // Who they are planning for
 };
 
 type Props = {
@@ -48,12 +49,15 @@ function getServiceTypeLabel(serviceType: string | null): string {
 export default function AgentLeadCard({ lead }: Props) {
   const [buying, setBuying] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const price = lead.lead_price ?? 0;
 
-  // Note snippet - 1-2 lines, truncated
+  // Note snippet - 1-2 lines, truncated to ~180 characters
   const noteSnippet = lead.additional_details 
-    ? lead.additional_details.trim()
+    ? lead.additional_details.trim().length > 180
+      ? lead.additional_details.trim().substring(0, 180) + '…'
+      : lead.additional_details.trim()
     : null;
 
   const handleBuyNow = async () => {
@@ -86,66 +90,147 @@ export default function AgentLeadCard({ lead }: Props) {
   };
 
   return (
-    <article className="mb-8 rounded-2xl border border-gray-200 bg-white shadow-[0_4px_16px_rgba(0,0,0,0.06)] overflow-hidden">
-      <div className="flex items-start justify-between gap-8 p-8">
-        <div className="flex-1">
-          {/* Urgency badge */}
-          <div className="mt-1 mb-4">
-            <span className={badgeClassForUrgency(lead.urgency)}>
-              {urgencyLabel(lead.urgency)}
-            </span>
-          </div>
+    <article className="mb-6 rounded-2xl border border-gray-200 bg-white shadow-[0_4px_16px_rgba(0,0,0,0.06)] overflow-hidden">
+      <div className="p-8">
+        <div className="flex items-start justify-between gap-6">
+          <div className="flex-1 min-w-0">
+            {/* Urgency badge */}
+            <div className="mb-3">
+              <span className={badgeClassForUrgency(lead.urgency)}>
+                {urgencyLabel(lead.urgency)}
+              </span>
+            </div>
 
-          {/* City + service type */}
-          <div className="text-base text-gray-700 font-medium leading-relaxed mb-3">
-            {lead.city && (
-              <>
-                {lead.city}
-                {lead.province ? `, ${lead.province}` : ''}
-              </>
-            )}
-            {lead.city && <span className="text-gray-400 mx-1">•</span>}
-            <span className="text-gray-600">
+            {/* City + province */}
+            <div className="text-base text-gray-700 font-medium mb-2">
+              {lead.city && (
+                <>
+                  {lead.city}
+                  {lead.province ? `, ${lead.province}` : ''}
+                </>
+              )}
+            </div>
+
+            {/* Service type */}
+            <div className="text-sm text-gray-600 mb-3">
               {getServiceTypeLabel(lead.service_type)}
-            </span>
+            </div>
+
+            {/* Note preview (collapsed) */}
+            {!isExpanded && noteSnippet && (
+              <p className="text-sm text-gray-600 leading-relaxed mb-3 line-clamp-2">
+                {noteSnippet}
+              </p>
+            )}
+
+            {/* Disclosure line */}
+            <p className="text-xs text-gray-400 mb-4">
+              Purchase to reveal full name, phone, and email.
+            </p>
+
+            {/* Green pill Buy now button */}
+            <div className="flex items-center justify-between">
+              <button
+                type="button"
+                onClick={handleBuyNow}
+                disabled={buying}
+                className="inline-flex items-center justify-center rounded-full bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-600 transition-all disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {buying ? 'Starting checkout…' : `Buy now for $${price.toFixed(2)}`}
+              </button>
+
+              {/* View details link */}
+              <button
+                type="button"
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="text-xs font-medium text-gray-500 hover:text-gray-900 transition-colors"
+              >
+                {isExpanded ? 'Hide details ↑' : 'View details →'}
+              </button>
+            </div>
+
+            {error && (
+              <p className="mt-3 text-xs text-red-600">{error}</p>
+            )}
           </div>
 
-          {/* Note snippet */}
-          <p className="text-base text-gray-600 line-clamp-2 leading-relaxed mb-3">
-            {noteSnippet ||
-              "This family has shared some details about what they're looking for. Purchase the lead to review their full note."}
-          </p>
-
-          {/* Disclosure line */}
-          <p className="text-xs text-gray-400 font-medium">
-            Purchase to reveal full name, phone, and email.
-          </p>
+          {/* Price summary on the right */}
+          <div className="text-right min-w-[120px] flex-shrink-0">
+            <div className="text-xs tracking-wide text-gray-500 uppercase font-medium mb-1">
+              BUY NOW
+            </div>
+            <div className="text-xl font-semibold text-gray-900">
+              ${price.toFixed(2)}
+            </div>
+          </div>
         </div>
 
-        {/* Price summary on the right */}
-        <div className="text-right min-w-[140px] pr-2">
-          <div className="text-xs tracking-wide text-gray-500 uppercase font-medium mb-2">
-            Buy now
-          </div>
-          <div className="text-xl font-semibold text-gray-900">
-            ${price.toFixed(2)}
-          </div>
-        </div>
-      </div>
+        {/* Expanded details section */}
+        {isExpanded && (
+          <div className="mt-6 pt-6 border-t border-gray-100">
+            {/* Full note text */}
+            <div className="mb-6">
+              <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">
+                Additional Details
+              </h4>
+              <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+                {lead.additional_details?.trim() || 'No additional details provided.'}
+              </p>
+            </div>
 
-      {/* Bottom buy button */}
-      <div className="border-t border-gray-100 bg-gray-50 px-8 py-4">
-        {error && (
-          <p className="mb-3 text-xs text-red-600">{error}</p>
+            {/* Metadata grid */}
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">
+                  Location
+                </div>
+                <div className="text-sm text-gray-700">
+                  {lead.city || 'Not specified'}
+                  {lead.province ? `, ${lead.province}` : ''}
+                </div>
+              </div>
+
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">
+                  Service Type
+                </div>
+                <div className="text-sm text-gray-700">
+                  {getServiceTypeLabel(lead.service_type)}
+                </div>
+              </div>
+
+              {lead.planning_for && (
+                <div>
+                  <div className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">
+                    Planning For
+                  </div>
+                  <div className="text-sm text-gray-700">
+                    {lead.planning_for}
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">
+                  Urgency
+                </div>
+                <div className="text-sm text-gray-700">
+                  {urgencyLabel(lead.urgency)}
+                </div>
+              </div>
+            </div>
+
+            {/* Contact info (hidden until purchase) */}
+            <div className="pt-4 border-t border-gray-100">
+              <div className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">
+                Contact Information
+              </div>
+              <div className="text-sm text-gray-400 italic">
+                Hidden until purchase
+              </div>
+            </div>
+          </div>
         )}
-        <button
-          type="button"
-          onClick={handleBuyNow}
-          disabled={buying}
-          className="w-full inline-flex items-center justify-center rounded-full bg-emerald-500 px-6 py-4 text-sm font-semibold text-white shadow-sm hover:bg-emerald-600 hover:shadow-md transition-all disabled:cursor-not-allowed disabled:opacity-70"
-        >
-          {buying ? 'Starting checkout…' : 'Buy now'}
-        </button>
       </div>
     </article>
   );

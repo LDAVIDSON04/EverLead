@@ -98,7 +98,7 @@ export default function AvailableLeadsPage() {
       // Fetch all available leads (unsold leads only - filters applied client-side)
       const { data: leadsData, error: leadsError } = await supabaseClient
         .from("leads")
-        .select("id, city, province, urgency_level, service_type, lead_price, additional_notes, assigned_agent_id")
+        .select("id, city, province, urgency_level, service_type, lead_price, additional_notes, assigned_agent_id, planning_for")
         .is("assigned_agent_id", null) // Only unsold leads
         .order("created_at", { ascending: false });
 
@@ -125,6 +125,7 @@ export default function AvailableLeadsPage() {
           service_type: lead.service_type,
           lead_price: leadPrice,
           additional_details: lead.additional_notes,
+          planning_for: lead.planning_for,
         };
       });
 
