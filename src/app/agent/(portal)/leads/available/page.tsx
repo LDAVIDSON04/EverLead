@@ -1089,12 +1089,6 @@ export default function AvailableLeadsPage() {
                           {/* Active auction with end time - show countdown and enabled buttons */}
                           {endsAtRaw && !isExpiredState && (
                             <>
-                              <p className="mt-1 text-[11px] text-slate-600">
-                                {lead.current_bid_amount
-                                  ? `Current bid: $${lead.current_bid_amount.toFixed(2)}`
-                                  : `Starting bid: $${startingBid.toFixed(2)}`}
-                              </p>
-                              
                               <AuctionCountdown
                                 auctionEndsAt={lead.auction_ends_at ?? null}
                                 hasBids={!!lead.current_bid_amount && lead.current_bid_amount > 0}
