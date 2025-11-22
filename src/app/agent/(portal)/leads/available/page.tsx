@@ -983,22 +983,16 @@ export default function AvailableLeadsPage() {
                                 ? `Current bid: $${lead.current_bid_amount.toFixed(2)}`
                                 : `Starting bid: $${startingBid.toFixed(2)}`}
                             </p>
-                            {lead.auction_ends_at && (
-                              <div className="mt-1 text-xs text-slate-500 flex items-center gap-1">
-                                <span
-                                  className={clsx(
-                                    "inline-flex items-center rounded-full px-2 py-0.5 border text-[11px]",
-                                    auctionEnded
-                                      ? "border-slate-300 text-slate-400 bg-slate-50"
-                                      : countdownLabel.includes('0:')
-                                      ? "border-red-300 text-red-700 bg-red-50"
-                                      : "border-amber-300 text-amber-700 bg-amber-50"
-                                  )}
-                                >
-                                  {auctionEnded ? "Ended" : `Ends in ${countdownLabel}`}
-                                </span>
-                              </div>
-                            )}
+                            <div className="mt-1">
+                              <AuctionCountdown
+                                auctionEndsAt={lead.auction_ends_at ?? null}
+                                auctionStatus={lead.auction_status ?? null}
+                                onEnd={() => {
+                                  // Trigger a refresh when auction ends
+                                  refreshLeads(false);
+                                }}
+                              />
+                            </div>
 
                             {/* Preset bid buttons - only show if auction is active and available */}
                             {showBidForm && (
