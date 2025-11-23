@@ -406,7 +406,7 @@ export default function HomePage() {
             © {new Date().getFullYear()} Soradin. All rights reserved.
           </div>
           <div className="flex flex-wrap items-center justify-center gap-6">
-            <Link href="#" className="hover:text-[#1a1a1a] transition-colors">
+            <Link href="/privacy" className="hover:text-[#1a1a1a] transition-colors">
               Privacy
             </Link>
             <Link href="/terms" className="hover:text-[#1a1a1a] transition-colors">
