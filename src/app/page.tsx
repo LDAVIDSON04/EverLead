@@ -80,69 +80,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* What You Can Plan - Cards Section */}
-      <section
-        id="planning-options"
-        className="relative py-24 md:py-32"
-      >
-        <div className="mx-auto max-w-6xl px-6">
-          <div className="text-center mb-16 space-y-4">
-            <h2
-              className="text-4xl font-light text-[#1a1a1a] sm:text-5xl md:text-5xl tracking-tight"
-              style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-            >
-              Practical. Efficient. Simplified.
-            </h2>
-            <p className="text-base text-[#6b6b6b] font-light max-w-2xl mx-auto">
-              Soradin helps you by collecting some important information and linking you with our network of experts.
-            </p>
-          </div>
-          <div className="grid gap-8 md:grid-cols-2">
-            {/* Burial or Cremation options */}
-            <div className="group rounded-2xl border border-[#e5ddd0]/60 bg-white/40 backdrop-blur-sm p-8 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-[#d4c9b8] transition-all duration-500">
-              <h3
-                className="mb-3 text-xl font-light text-[#1a1a1a] tracking-tight"
-                style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-              >
-                Burial or Cremation options
-              </h3>
-              <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
-                Understanding your options with clear explanations and local knowledge.
-              </p>
-            </div>
-
-            {/* Service Preferences */}
-            <div className="group rounded-2xl border border-[#e5ddd0]/60 bg-white/40 backdrop-blur-sm p-8 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-[#d4c9b8] transition-all duration-500">
-              <h3
-                className="mb-3 text-xl font-light text-[#1a1a1a] tracking-tight"
-                style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-              >
-                Service Preferences
-              </h3>
-              <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
-                Decide on what kind of service, gathering, memorial or lack of formal service suits you best.
-              </p>
-            </div>
-
-            {/* Personal Wishes */}
-            <div className="group rounded-2xl border border-[#e5ddd0]/60 bg-white/40 backdrop-blur-sm p-8 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-[#d4c9b8] transition-all duration-500">
-              <h3
-                className="mb-3 text-xl font-light text-[#1a1a1a] tracking-tight"
-                style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-              >
-                Personal Wishes
-              </h3>
-              <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
-                From no service to a full traditional, the logistics matter and preplanning helps to remove uncertainty.
-              </p>
-            </div>
-          </div>
-          <p className="text-center text-sm text-[#7a7a7a] mt-12 font-light tracking-wide">
-            Your decisions are saved safely and shared only when you choose.
-          </p>
-        </div>
-      </section>
-
       {/* How Soradin Works Section */}
       <section className="relative py-24 md:py-32">
         <div className="mx-auto max-w-6xl px-6">
@@ -220,7 +157,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Why People Choose Soradin */}
+      {/* Making taking the next step more supportive for your peace of mind */}
       <section className="relative py-24 md:py-32">
         <div className="mx-auto max-w-6xl px-6">
           <div className="text-center mb-16 space-y-6">
@@ -305,6 +242,69 @@ export default function HomePage() {
               </p>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Practical. Efficient. Simplified. */}
+      <section
+        id="planning-options"
+        className="relative py-24 md:py-32"
+      >
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="text-center mb-16 space-y-4">
+            <h2
+              className="text-4xl font-light text-[#1a1a1a] sm:text-5xl md:text-5xl tracking-tight"
+              style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+            >
+              Practical. Efficient. Simplified.
+            </h2>
+            <p className="text-base text-[#6b6b6b] font-light max-w-2xl mx-auto">
+              Soradin helps you by collecting some important information and linking you with our network of experts.
+            </p>
+          </div>
+          <div className="grid gap-8 md:grid-cols-2">
+            {/* Burial or Cremation options */}
+            <div className="group rounded-2xl border border-[#e5ddd0]/60 bg-white/40 backdrop-blur-sm p-8 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-[#d4c9b8] transition-all duration-500">
+              <h3
+                className="mb-3 text-xl font-light text-[#1a1a1a] tracking-tight"
+                style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+              >
+                Burial or Cremation options
+              </h3>
+              <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
+                Understanding your options with clear explanations and local knowledge.
+              </p>
+            </div>
+
+            {/* Service Preferences */}
+            <div className="group rounded-2xl border border-[#e5ddd0]/60 bg-white/40 backdrop-blur-sm p-8 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-[#d4c9b8] transition-all duration-500">
+              <h3
+                className="mb-3 text-xl font-light text-[#1a1a1a] tracking-tight"
+                style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+              >
+                Service Preferences
+              </h3>
+              <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
+                Decide on what kind of service, gathering, memorial or lack of formal service suits you best.
+              </p>
+            </div>
+
+            {/* Personal Wishes */}
+            <div className="group rounded-2xl border border-[#e5ddd0]/60 bg-white/40 backdrop-blur-sm p-8 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-[#d4c9b8] transition-all duration-500">
+              <h3
+                className="mb-3 text-xl font-light text-[#1a1a1a] tracking-tight"
+                style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+              >
+                Personal Wishes
+              </h3>
+              <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
+                From no service to a full traditional, the logistics matter and preplanning helps to remove uncertainty.
+              </p>
+            </div>
+          </div>
+          <p className="text-center text-sm text-[#7a7a7a] mt-12 font-light tracking-wide">
+            Your decisions are saved safely and shared only when you choose.
+          </p>
         </div>
       </section>
 
