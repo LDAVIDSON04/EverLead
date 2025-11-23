@@ -67,7 +67,7 @@ export default function HomePage() {
                   <span className="text-[#4a4a4a]">with care, clarity, and confidence.</span>
                 </h1>
                 <p className="mx-auto max-w-2xl text-lg leading-relaxed text-[#5a5a5a] sm:text-xl md:text-xl font-light">
-                  Planning ahead doesn&apos;t have to feel overwhelming. Soradin guides you through simple, thoughtful conversations about your wishes, helping you make decisions now so the people you love are supported later.
+                  Planning ahead doesn&apos;t have to feel overwhelming. Soradin will help to guide you through the various options available to you for your legacy planning. Connecting you to experts in your area with the local knowledge you desire, the compassion you need and the experience to make the entire process a little bit easier. By taking the time now to make your arrangements, we ensure the people you love are supported later.
                 </p>
               </div>
               <div className="flex flex-col items-center justify-center gap-4 sm:flex-row pt-4">
@@ -107,64 +107,49 @@ export default function HomePage() {
               className="text-4xl font-light text-[#1a1a1a] sm:text-5xl md:text-5xl tracking-tight"
               style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
             >
-              Everything you need to document
-              <br />
-              <span className="text-[#4a4a4a]">all in one place.</span>
+              Practical. Efficient. Simplified.
             </h2>
             <p className="text-base text-[#6b6b6b] font-light max-w-2xl mx-auto">
-              Soradin helps you organize every major part of your pre-planning
+              Soradin helps you by collecting some important information and linking you with our network of experts.
             </p>
           </div>
           <div className="grid gap-8 md:grid-cols-2">
-            {/* Cremation or burial choices */}
+            {/* Burial or Cremation options */}
             <div className="group rounded-2xl border border-[#e5ddd0]/60 bg-white/40 backdrop-blur-sm p-8 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-[#d4c9b8] transition-all duration-500">
               <h3
                 className="mb-3 text-xl font-light text-[#1a1a1a] tracking-tight"
                 style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
               >
-                Cremation or burial choices
+                Burial or Cremation options
               </h3>
               <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
-                Understand your options with clear explanations.
+                Understanding your options with clear explanations and local knowledge.
               </p>
             </div>
 
-            {/* Service preferences */}
+            {/* Service Preferences */}
             <div className="group rounded-2xl border border-[#e5ddd0]/60 bg-white/40 backdrop-blur-sm p-8 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-[#d4c9b8] transition-all duration-500">
               <h3
                 className="mb-3 text-xl font-light text-[#1a1a1a] tracking-tight"
                 style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
               >
-                Service preferences
+                Service Preferences
               </h3>
               <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
-                Decide what kind of gathering feels right for you.
+                Decide on what kind of service, gathering, memorial or lack of formal service suits you best.
               </p>
             </div>
 
-            {/* Personal wishes */}
+            {/* Personal Wishes */}
             <div className="group rounded-2xl border border-[#e5ddd0]/60 bg-white/40 backdrop-blur-sm p-8 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-[#d4c9b8] transition-all duration-500">
               <h3
                 className="mb-3 text-xl font-light text-[#1a1a1a] tracking-tight"
                 style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
               >
-                Personal wishes
+                Personal Wishes
               </h3>
               <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
-                From music to readings to final requests — capture it all.
-              </p>
-            </div>
-
-            {/* Practical details */}
-            <div className="group rounded-2xl border border-[#e5ddd0]/60 bg-white/40 backdrop-blur-sm p-8 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-[#d4c9b8] transition-all duration-500">
-              <h3
-                className="mb-3 text-xl font-light text-[#1a1a1a] tracking-tight"
-                style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-              >
-                Practical details
-              </h3>
-              <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
-                Documents, contacts, and everything your family needs in the future.
+                From no service to a full traditional, the logistics matter and preplanning helps to remove uncertainty.
               </p>
             </div>
           </div>
@@ -202,7 +187,7 @@ export default function HomePage() {
                 Start with a guided questionnaire
               </h3>
               <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
-                Our step-by-step experience helps you think through your choices at your own pace.
+                Our step-by-step helps guide you through the common questions to begin to outline your wishes.
               </p>
             </div>
             <div className="text-center space-y-4">
@@ -216,7 +201,7 @@ export default function HomePage() {
                 Review your personalized plan
               </h3>
               <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
-                We summarize your wishes clearly — no paperwork, no pressure.
+                We summarize your wishes clearly and send them to you for your planning file.
               </p>
             </div>
             <div className="text-center space-y-4">
@@ -227,10 +212,10 @@ export default function HomePage() {
                 className="text-lg font-light text-[#1a1a1a] tracking-tight"
                 style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
               >
-                Connect with trusted specialists
+                Connect with a trusted specialist
               </h3>
               <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
-                If you&apos;re ready, we can help match you with professional support in your area.
+                We match you with a trusted prearrangement specialist in your area to help you finalize your plan and answer any further questions.
               </p>
             </div>
             <div className="text-center space-y-4">
@@ -241,10 +226,10 @@ export default function HomePage() {
                 className="text-lg font-light text-[#1a1a1a] tracking-tight"
                 style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
               >
-                Access your plan any time
+                Access and Download your plan anytime
               </h3>
               <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
-                Update or add details whenever life changes.
+                Update or add details whenever life changes with your planning profile.
               </p>
             </div>
           </div>
@@ -259,23 +244,20 @@ export default function HomePage() {
               className="text-4xl font-light text-[#1a1a1a] md:text-5xl tracking-tight"
               style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
             >
-              Clarity when it matters most.
+              Making taking the next step more supportive for your peace of mind
             </h2>
-            <p className="mx-auto max-w-2xl text-lg leading-relaxed text-[#5a5a5a] font-light">
-              Pre-planning isn&apos;t about preparing for loss — it&apos;s about protecting the people you love. Soradin makes the process simple, thoughtful, and emotionally grounded.
-            </p>
           </div>
 
-          <div className="grid gap-8 md:grid-cols-3">
+          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
             <div className="group rounded-2xl border border-[#e5ddd0]/60 bg-white/40 backdrop-blur-sm p-10 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-[#d4c9b8] transition-all duration-500">
               <h3
                 className="mb-4 text-xl font-light text-[#1a1a1a] tracking-tight"
                 style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
               >
-                Reduce stress for your family later
+                Remove financial burdens
               </h3>
               <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
-                Your choices are recorded clearly so no one has to guess.
+                Preplanning helps to remove the financial burden from your loved ones at a time when making financial decisions can be difficult.
               </p>
             </div>
 
@@ -287,7 +269,31 @@ export default function HomePage() {
                 Avoid unexpected costs
               </h3>
               <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
-                Understanding your options early helps you make informed decisions.
+                Understanding your options helps you make informed decisions.
+              </p>
+            </div>
+
+            <div className="group rounded-2xl border border-[#e5ddd0]/60 bg-white/40 backdrop-blur-sm p-10 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-[#d4c9b8] transition-all duration-500">
+              <h3
+                className="mb-4 text-xl font-light text-[#1a1a1a] tracking-tight"
+                style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+              >
+                Having time to breath
+              </h3>
+              <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
+                Being prepared ahead of time allows your family to step back, take a breath and move through the process with clarity.
+              </p>
+            </div>
+
+            <div className="group rounded-2xl border border-[#e5ddd0]/60 bg-white/40 backdrop-blur-sm p-10 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-[#d4c9b8] transition-all duration-500">
+              <h3
+                className="mb-4 text-xl font-light text-[#1a1a1a] tracking-tight"
+                style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+              >
+                Fulfilling your duty
+              </h3>
+              <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
+                Taking responsibility for your estate plan and ensuring your loved ones are not left in a tough situation.
               </p>
             </div>
 
@@ -299,64 +305,26 @@ export default function HomePage() {
                 Keep everything organized
               </h3>
               <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
-                All your wishes stored in one private, secure place.
+                All your wishes stored in a private and secure place.
+              </p>
+            </div>
+
+            <div className="group rounded-2xl border border-[#e5ddd0]/60 bg-white/40 backdrop-blur-sm p-10 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-[#d4c9b8] transition-all duration-500">
+              <h3
+                className="mb-4 text-xl font-light text-[#1a1a1a] tracking-tight"
+                style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+              >
+                Remove uncertainty
+              </h3>
+              <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
+                Your choices are recorded clearly and your plan helps to ensure your family and loved ones understand your wishes.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Testimonials */}
-      <section className="relative py-24 md:py-32">
-        <div className="mx-auto max-w-6xl px-6">
-          <div className="text-center mb-16">
-            <h2
-              className="text-4xl font-light text-[#1a1a1a] sm:text-5xl tracking-tight mb-4"
-              style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-            >
-              What families are saying
-            </h2>
-          </div>
-          <div className="grid gap-8 md:grid-cols-3">
-            <div className="group rounded-2xl border border-[#e5ddd0]/60 bg-white/40 backdrop-blur-sm p-10 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-[#d4c9b8] transition-all duration-500">
-              <span className="text-5xl text-[#e5ddd0] font-light leading-none block mb-4">&ldquo;</span>
-              <p className="mb-6 italic leading-relaxed text-[#5a5a5a] font-light text-[15px]">
-                Soradin helped me put everything in writing in less than half an hour. I finally feel prepared — and my kids are relieved too.
-              </p>
-              <p
-                className="text-sm font-light text-[#1a1a1a] tracking-wide"
-                style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-              >
-                – Margaret R.
-              </p>
-            </div>
-            <div className="group rounded-2xl border border-[#e5ddd0]/60 bg-white/40 backdrop-blur-sm p-10 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-[#d4c9b8] transition-all duration-500">
-              <span className="text-5xl text-[#e5ddd0] font-light leading-none block mb-4">&ldquo;</span>
-              <p className="mb-6 italic leading-relaxed text-[#5a5a5a] font-light text-[15px]">
-                The process was gentle and thoughtful. It made something difficult feel manageable.
-              </p>
-              <p
-                className="text-sm font-light text-[#1a1a1a] tracking-wide"
-                style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-              >
-                – Daniel S.
-              </p>
-            </div>
-            <div className="group rounded-2xl border border-[#e5ddd0]/60 bg-white/40 backdrop-blur-sm p-10 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-[#d4c9b8] transition-all duration-500">
-              <span className="text-5xl text-[#e5ddd0] font-light leading-none block mb-4">&ldquo;</span>
-              <p className="mb-6 italic leading-relaxed text-[#5a5a5a] font-light text-[15px]">
-                I didn&apos;t know where to start. Soradin made the steps clear and simple.
-              </p>
-              <p
-                className="text-sm font-light text-[#1a1a1a] tracking-wide"
-                style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-              >
-                – Alyssa P.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Testimonials - Removed per document note: "What families are saying... remove this for now until we have reviews, then it should go on the bottom" */}
 
       {/* FAQ Section */}
       <section
@@ -369,37 +337,57 @@ export default function HomePage() {
               className="text-4xl font-light text-[#1a1a1a] md:text-5xl tracking-tight"
               style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
             >
-              Common questions
+              FAQ Common Questions
             </h2>
           </div>
           <div className="space-y-6">
             {/* FAQ 1 */}
             <div className="group rounded-2xl border border-[#e5ddd0]/60 bg-white/40 backdrop-blur-sm p-8 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-[#d4c9b8] transition-all duration-500">
               <h3 className="mb-3 text-lg font-light text-[#1a1a1a] tracking-tight">
-                Do I need to know all my decisions now?
+                I have filled out the form, what happens next?
               </h3>
               <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
-                No — you can complete what you&apos;re certain about and return anytime to add details.
+                A prearrangement agent in your area will follow up with you to help you understand the various options to you and further discuss your plan.
               </p>
             </div>
 
             {/* FAQ 2 */}
             <div className="group rounded-2xl border border-[#e5ddd0]/60 bg-white/40 backdrop-blur-sm p-8 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-[#d4c9b8] transition-all duration-500">
               <h3 className="mb-3 text-lg font-light text-[#1a1a1a] tracking-tight">
-                Is my information secure?
+                Do I need to make a decision now?
               </h3>
               <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
-                Yes. Soradin uses encrypted storage and never shares your details without your permission.
+                No, Soradin connects you with an agent in your area so you can begin the process of Funeral Planning, there is no obligation to finalize your plan now and you can move at your own pace.
               </p>
             </div>
 
             {/* FAQ 3 */}
             <div className="group rounded-2xl border border-[#e5ddd0]/60 bg-white/40 backdrop-blur-sm p-8 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-[#d4c9b8] transition-all duration-500">
               <h3 className="mb-3 text-lg font-light text-[#1a1a1a] tracking-tight">
+                Can I download my profile?
+              </h3>
+              <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
+                Yes, you can download your profile and add it the print out to your Estate Planning paperwork.
+              </p>
+            </div>
+
+            {/* FAQ 4 */}
+            <div className="group rounded-2xl border border-[#e5ddd0]/60 bg-white/40 backdrop-blur-sm p-8 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-[#d4c9b8] transition-all duration-500">
+              <h3 className="mb-3 text-lg font-light text-[#1a1a1a] tracking-tight">
+                Is my information secure?
+              </h3>
+              <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
+                Yes, Soradin uses encrypted storage and only shares your information with our network of vetted prearrangement specialists.
+              </p>
+            </div>
+
+            {/* FAQ 5 */}
+            <div className="group rounded-2xl border border-[#e5ddd0]/60 bg-white/40 backdrop-blur-sm p-8 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-[#d4c9b8] transition-all duration-500">
+              <h3 className="mb-3 text-lg font-light text-[#1a1a1a] tracking-tight">
                 Does this commit me to anything?
               </h3>
               <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
-                Not at all. Completing your plan is free and comes with no obligation.
+                No, filling out the information form is free and comes with no obligation.
               </p>
             </div>
           </div>
