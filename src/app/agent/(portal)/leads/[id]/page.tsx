@@ -110,7 +110,7 @@ export default function LeadDetailsPage() {
           .maybeSingle();
 
         if (error) {
-          console.error(error);
+          console.error("Error loading lead:", error);
           setLeadError("Failed to load lead.");
           setLeadLoading(false);
           return;
@@ -121,6 +121,18 @@ export default function LeadDetailsPage() {
           setLeadLoading(false);
           return;
         }
+
+        // Debug: Log the data to see what fields are available
+        console.log("Lead data loaded:", {
+          id: data.id,
+          has_remains_disposition: !!data.remains_disposition,
+          has_service_celebration: !!data.service_celebration,
+          has_family_pre_arranged: !!data.family_pre_arranged,
+          remains_disposition: data.remains_disposition,
+          service_celebration: data.service_celebration,
+          family_pre_arranged: data.family_pre_arranged,
+          all_keys: Object.keys(data),
+        });
 
         // Optional: basic access check (only owner or new)
         if (
@@ -492,52 +504,44 @@ export default function LeadDetailsPage() {
                         </span>
                       </dd>
                     </div>
-                    {lead.service_type && (
-                      <div>
-                        <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
-                          Service type
-                        </dt>
-                        <dd className="mt-1 text-[#2a2a2a]">
-                          {lead.service_type === "cremation"
-                            ? "Cremation"
-                            : lead.service_type === "burial"
-                            ? "Burial"
-                            : lead.service_type === "unsure"
-                            ? "Unsure"
-                            : lead.service_type}
-                        </dd>
-                      </div>
-                    )}
-                    {lead.remains_disposition && (
-                      <div>
-                        <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
-                          What will the family do with the remains?
-                        </dt>
-                        <dd className="mt-1 text-[#2a2a2a]">
-                          {formatRemainsDisposition(lead.remains_disposition)}
-                        </dd>
-                      </div>
-                    )}
-                    {lead.service_celebration && (
-                      <div>
-                        <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
-                          Would there be a service celebration of life, memorial event?
-                        </dt>
-                        <dd className="mt-1 text-[#2a2a2a]">
-                          {formatServiceCelebration(lead.service_celebration)}
-                        </dd>
-                      </div>
-                    )}
-                    {lead.family_pre_arranged && (
-                      <div>
-                        <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
-                          Has anyone else in your family had a pre-arranged funeral plan?
-                        </dt>
-                        <dd className="mt-1 text-[#2a2a2a]">
-                          {formatFamilyPreArranged(lead.family_pre_arranged)}
-                        </dd>
-                      </div>
-                    )}
+                    <div>
+                      <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                        Service type
+                      </dt>
+                      <dd className="mt-1 text-[#2a2a2a]">
+                        {lead.service_type === "cremation"
+                          ? "Cremation"
+                          : lead.service_type === "burial"
+                          ? "Burial"
+                          : lead.service_type === "unsure"
+                          ? "Unsure"
+                          : lead.service_type || "Not specified"}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                        What will the family do with the remains?
+                      </dt>
+                      <dd className="mt-1 text-[#2a2a2a]">
+                        {formatRemainsDisposition(lead.remains_disposition)}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                        Would there be a service celebration of life, memorial event?
+                      </dt>
+                      <dd className="mt-1 text-[#2a2a2a]">
+                        {formatServiceCelebration(lead.service_celebration)}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                        Has anyone else in your family had a pre-arranged funeral plan?
+                      </dt>
+                      <dd className="mt-1 text-[#2a2a2a]">
+                        {formatFamilyPreArranged(lead.family_pre_arranged)}
+                      </dd>
+                    </div>
                     {lead.planning_for && (
                       <div>
                         <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
