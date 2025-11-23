@@ -89,6 +89,9 @@ export async function POST(req: NextRequest) {
       "timeline_intent",
       "service_type",
       "planning_for",
+      "remains_disposition",
+      "service_celebration",
+      "family_pre_arranged",
       "additional_notes",
     ];
 
@@ -149,6 +152,9 @@ export async function POST(req: NextRequest) {
       service_type: String(body.service_type).trim(),
       timeline_intent: String(body.timeline_intent).trim(),
       urgency_level: body.urgency_level || "warm",
+      remains_disposition: body.remains_disposition ? String(body.remains_disposition).trim() : null,
+      service_celebration: body.service_celebration ? String(body.service_celebration).trim() : null,
+      family_pre_arranged: body.family_pre_arranged ? String(body.family_pre_arranged).trim() : null,
       additional_notes: additionalNotes,
       // Explicitly set status to "new" and ensure lead is unsold
       status: "new",

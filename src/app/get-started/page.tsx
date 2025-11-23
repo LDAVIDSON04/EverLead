@@ -20,8 +20,8 @@ export default function GetStartedPage() {
     const timeline_intent = (formData.get("timeline_intent") as string) || "";
 
     let urgency_level: "hot" | "warm" | "cold" = "cold";
-    if (timeline_intent === "purchase_now") urgency_level = "hot";
-    else if (timeline_intent === "talk_to_someone") urgency_level = "warm";
+    if (timeline_intent === "ready_now") urgency_level = "hot";
+    else if (timeline_intent === "speak_with_family" || timeline_intent === "collecting_info_need_done") urgency_level = "warm";
 
     // Simple default pricing logic for MVP
     const buy_now_price_cents =
@@ -44,6 +44,9 @@ export default function GetStartedPage() {
       "timeline_intent",
       "service_type",
       "planning_for",
+      "remains_disposition",
+      "service_celebration",
+      "family_pre_arranged",
       "additional_notes",
     ];
 
@@ -103,6 +106,9 @@ export default function GetStartedPage() {
       service_type: (formData.get("service_type") as string)?.trim() || null,
       timeline_intent: timeline_intent.trim(),
       urgency_level,
+      remains_disposition: (formData.get("remains_disposition") as string)?.trim() || null,
+      service_celebration: (formData.get("service_celebration") as string)?.trim() || null,
+      family_pre_arranged: (formData.get("family_pre_arranged") as string)?.trim() || null,
       additional_notes: additionalNotes,
       status: urgency_level === "cold" ? "cold_unassigned" : "new",
       buy_now_price_cents,
@@ -442,7 +448,56 @@ export default function GetStartedPage() {
                     <option value="">Select...</option>
                     <option value="cremation">Cremation</option>
                     <option value="burial">Burial</option>
-                    <option value="other">Other</option>
+                    <option value="unsure">Unsure</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
+                    What will the family do with the remains? *
+                  </label>
+                  <select
+                    name="remains_disposition"
+                    required
+                    className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
+                  >
+                    <option value="">Select...</option>
+                    <option value="scatter_cremated_remains">Scatter cremated remains</option>
+                    <option value="keep_remains">Keep remains</option>
+                    <option value="burial_at_cemetery">Burial at cemetery</option>
+                    <option value="unsure">Unsure</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
+                    Would there be a service celebration of life, memorial event? *
+                  </label>
+                  <select
+                    name="service_celebration"
+                    required
+                    className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
+                  >
+                    <option value="">Select...</option>
+                    <option value="yes">Yes</option>
+                    <option value="no">No</option>
+                    <option value="unsure">Unsure</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
+                    Has anyone else in your family had a pre-arranged funeral plan? *
+                  </label>
+                  <select
+                    name="family_pre_arranged"
+                    required
+                    className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
+                  >
+                    <option value="">Select...</option>
+                    <option value="yes">Yes</option>
+                    <option value="no">No</option>
+                    <option value="unsure">Unsure</option>
                   </select>
                 </div>
               </div>
@@ -464,7 +519,7 @@ export default function GetStartedPage() {
               <div className="space-y-4">
                 <div>
                   <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
-                    When are you hoping to make a decision?
+                    How soon after you have more information do you expect to put your plan in place? *
                   </label>
                   <select
                     name="timeline_intent"
@@ -472,19 +527,20 @@ export default function GetStartedPage() {
                     className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
                   >
                     <option value="">Select...</option>
-                    <option value="purchase_now">
-                      I&apos;m ready to purchase a plan now
+                    <option value="ready_now">
+                      We are ready to make our plan now and make things easier for our loved ones.
                     </option>
-                    <option value="talk_to_someone">
-                      I want to talk to someone and think about it
+                    <option value="speak_with_family">
+                      We will need to speak with other family member first.
                     </option>
-                    <option value="just_browsing">
-                      I&apos;m just browsing / not sure
+                    <option value="collecting_info_unsure">
+                      We are just collecting information and not sure if we want to pre plan.
                     </option>
+                    <option value="collecting_info_need_done">
+                      We are just collecting information but we know we need to get this done.
+                    </option>
+                    <option value="unsure">Unsure</option>
                   </select>
-                  <p className="mt-1 text-[11px] text-slate-500">
-                    This helps us understand your timeline and urgency.
-                  </p>
                 </div>
 
                 <div>
