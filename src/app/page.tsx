@@ -1,11 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import IntroVideoModal from "@/components/IntroVideoModal";
 
 export default function HomePage() {
-  const [showVideoModal, setShowVideoModal] = useState(false);
   return (
     <main className="min-h-screen bg-gradient-to-b from-[#faf8f5] via-[#f7f4ef] to-[#f5f1eb] text-[#2a2a2a]">
       {/* Header */}
@@ -70,26 +67,13 @@ export default function HomePage() {
                   Planning ahead doesn&apos;t have to feel overwhelming. Soradin will help to guide you through the various options available to you for your legacy planning. Connecting you to experts in your area with the local knowledge you desire, the compassion you need and the experience to make the entire process a little bit easier. By taking the time now to make your arrangements, we ensure the people you love are supported later.
                 </p>
               </div>
-              <div className="flex flex-col items-center justify-center gap-4 sm:flex-row pt-4">
+              <div className="flex flex-col items-center justify-center pt-6">
                 <Link
                   href="/get-started"
-                  className="group w-full rounded-full bg-[#1a1a1a] px-8 py-4 text-base font-light tracking-wide text-white shadow-lg shadow-black/5 hover:bg-[#2a2a2a] hover:shadow-xl hover:shadow-black/10 transition-all duration-300 sm:w-auto"
+                  className="group w-full max-w-md rounded-full bg-[#1a1a1a] px-10 py-5 text-lg font-medium tracking-wide text-white shadow-xl shadow-black/10 hover:bg-[#2a2a2a] hover:shadow-2xl hover:shadow-black/15 transition-all duration-300"
                 >
                   Start planning online
                 </Link>
-                <a
-                  href="#intro-video"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setShowVideoModal(true);
-                  }}
-                  className="w-full inline-flex items-center justify-center gap-3 rounded-full border border-[#d4c9b8] bg-white/60 backdrop-blur-sm px-6 py-4 text-base text-[#2a2a2a] shadow-sm hover:bg-white/80 hover:border-[#c4b9a8] transition-all duration-300 sm:w-auto font-light"
-                >
-                  <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#f7f4ef] text-xs text-[#6b6b6b]">
-                    ▶
-                  </span>
-                  Watch Introduction Video
-                </a>
               </div>
             </div>
           </div>
@@ -432,11 +416,6 @@ export default function HomePage() {
         </div>
       </footer>
 
-      {/* Video Modal */}
-      <IntroVideoModal
-        open={showVideoModal}
-        onClose={() => setShowVideoModal(false)}
-      />
     </main>
   );
 }
