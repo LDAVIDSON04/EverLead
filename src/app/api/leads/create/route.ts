@@ -171,6 +171,21 @@ export async function POST(req: NextRequest) {
     // Also set buy_now_price_cents for backward compatibility with Stripe
     leadData.buy_now_price_cents = leadPrice * 100;
 
+    // Geocode location to get latitude/longitude for distance filtering
+    if (leadData.city && leadData.province) {
+      try {
+        const { geocodeLocation } = await import("@/lib/geocoding");
+        const geocodeResult = await geocodeLocation(leadData.city, leadData.province);
+        if (geocodeResult) {
+          leadData.latitude = geocodeResult.latitude;
+          leadData.longitude = geocodeResult.longitude;
+        }
+      } catch (error) {
+        console.warn("Failed to geocode lead location:", error);
+        // Continue without coordinates - distance filtering will show all leads
+      }
+    }
+
     // Clean payload: remove null/undefined/empty
     const cleanPayload: any = {};
     for (const [key, value] of Object.entries(leadData)) {

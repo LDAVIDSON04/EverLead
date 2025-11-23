@@ -3,6 +3,7 @@
 /**
  * Available Leads Page - Agent Portal
  * Buy-Now-Only: Fixed pricing based on urgency (Cold: $10, Warm: $20, Hot: $35)
+ * Location-based filtering with Google Maps integration
  */
 
 import * as React from "react";
@@ -12,6 +13,9 @@ import { useRouter } from "next/navigation";
 import { useRequireRole } from "@/lib/hooks/useRequireRole";
 import AgentLeadCard, { AgentLead } from '@/components/agent/AgentLeadCard';
 import { getLeadPriceFromUrgency } from "@/lib/leads/pricing";
+import LocationChangeModal from "@/components/agent/LocationChangeModal";
+import { useBrowserGeolocation } from "@/lib/hooks/useBrowserGeolocation";
+import { isWithinRadius } from "@/lib/distance";
 
 // Using AgentLead type from component
 
@@ -39,6 +43,18 @@ export default function AvailableLeadsPage() {
   // Geographic search state
   const [locationQuery, setLocationQuery] = useState<string>("");
   const [provinceFilter, setProvinceFilter] = useState<string>("");
+
+  // Agent location state
+  const [agentCity, setAgentCity] = useState<string | null>(null);
+  const [agentProvince, setAgentProvince] = useState<string | null>(null);
+  const [agentLat, setAgentLat] = useState<number | null>(null);
+  const [agentLng, setAgentLng] = useState<number | null>(null);
+  const [searchRadius, setSearchRadius] = useState<number>(50);
+  const [showLocationModal, setShowLocationModal] = useState(false);
+  const [locationInitialized, setLocationInitialized] = useState(false);
+  
+  // Browser geolocation
+  const { result: geoResult, loading: geoLoading } = useBrowserGeolocation();
 
   // Function to refresh leads (reusable for initial load, polling, and after actions)
   // Memoized with useCallback to prevent recreation on every render
@@ -79,7 +95,7 @@ export default function AvailableLeadsPage() {
       if (!isPolling) {
         const { data: profile, error: profileError } = await supabaseClient
           .from("profiles")
-          .select("first_free_redeemed")
+          .select("first_free_redeemed, agent_city, agent_province, agent_latitude, agent_longitude, search_radius_km")
           .eq("id", currentUserId)
           .maybeSingle();
 
@@ -89,6 +105,16 @@ export default function AvailableLeadsPage() {
 
         const alreadyRedeemed = profile?.first_free_redeemed === true;
         setFirstFreeAvailable(!alreadyRedeemed);
+
+        // Load agent location from profile
+        if (profile?.agent_city && profile?.agent_province && profile?.agent_latitude && profile?.agent_longitude) {
+          setAgentCity(profile.agent_city);
+          setAgentProvince(profile.agent_province);
+          setAgentLat(profile.agent_latitude);
+          setAgentLng(profile.agent_longitude);
+          setSearchRadius(profile.search_radius_km || 50);
+          setLocationInitialized(true);
+        }
       }
 
       // TODO: in a future pass, restrict contact fields at the API level
@@ -98,7 +124,7 @@ export default function AvailableLeadsPage() {
       // Fetch all available leads (unsold leads only - filters applied client-side)
       const { data: leadsData, error: leadsError } = await supabaseClient
         .from("leads")
-        .select("id, city, province, urgency_level, service_type, lead_price, additional_notes, assigned_agent_id, planning_for")
+        .select("id, city, province, urgency_level, service_type, lead_price, additional_notes, assigned_agent_id, planning_for, latitude, longitude")
         .is("assigned_agent_id", null) // Only unsold leads
         .order("created_at", { ascending: false });
 
@@ -126,6 +152,8 @@ export default function AvailableLeadsPage() {
           lead_price: leadPrice,
           additional_details: lead.additional_notes,
           planning_for: lead.planning_for,
+          latitude: lead.latitude,
+          longitude: lead.longitude,
         };
       });
 
@@ -175,6 +203,52 @@ export default function AvailableLeadsPage() {
   // Track if initial load has completed
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
 
+  // Initialize location on first visit (browser geolocation or profile)
+  useEffect(() => {
+    if (locationInitialized || geoLoading) return;
+
+    // If profile has location, use it (already set in refreshLeads)
+    if (agentCity && agentProvince && agentLat && agentLng) {
+      setLocationInitialized(true);
+      return;
+    }
+
+    // If browser geolocation is available, use it
+    if (geoResult && geoResult.latitude && geoResult.longitude) {
+      const updateLocation = async () => {
+        if (!userId) return; // Wait for userId to be set
+        
+        try {
+          const response = await fetch("/api/agent/update-location", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              city: geoResult.city || "Unknown",
+              province: geoResult.province || "BC",
+              latitude: geoResult.latitude,
+              longitude: geoResult.longitude,
+              search_radius_km: 50, // Default radius
+              userId, // Send userId from authenticated session
+            }),
+          });
+
+          if (response.ok) {
+            setAgentCity(geoResult.city || "Unknown");
+            setAgentProvince(geoResult.province || "BC");
+            setAgentLat(geoResult.latitude);
+            setAgentLng(geoResult.longitude);
+            setSearchRadius(50);
+            setLocationInitialized(true);
+          }
+        } catch (error) {
+          console.error("Failed to save browser location:", error);
+        }
+      };
+
+      updateLocation();
+    }
+  }, [geoResult, geoLoading, locationInitialized, agentCity, agentProvince, agentLat, agentLng, userId]);
+
   // Initial load
   useEffect(() => {
     refreshLeads(false).then(() => {
@@ -211,6 +285,53 @@ export default function AvailableLeadsPage() {
     return () => clearInterval(interval);
   }, [initialLoadComplete, userId]); // Stable deps - interval created once
 
+
+  async function handleLocationSave(
+    city: string,
+    province: string,
+    lat: number,
+    lng: number,
+    radius: number
+  ) {
+    if (!userId) {
+      setError("You must be logged in to update your location.");
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/agent/update-location", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          city,
+          province,
+          latitude: lat,
+          longitude: lng,
+          search_radius_km: radius,
+          userId, // Send userId from authenticated session
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        setError(data.error || "Failed to update location.");
+        return;
+      }
+
+      setAgentCity(city);
+      setAgentProvince(province);
+      setAgentLat(lat);
+      setAgentLng(lng);
+      setSearchRadius(radius);
+      setLocationInitialized(true);
+      
+      // Refresh leads to apply new location filter
+      await refreshLeads(false);
+    } catch (err) {
+      console.error("Location update error:", err);
+      setError("Failed to update location. Please try again.");
+    }
+  }
 
   async function handleClaimFree(leadId: string) {
     if (!userId) return;
@@ -257,17 +378,63 @@ export default function AvailableLeadsPage() {
 
   return (
     <div className="w-full">
-      <div className="mb-6">
-        <h1
-          className="mb-2 text-2xl font-normal text-[#2a2a2a]"
-          style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+      <div className="mb-6 flex items-start justify-between">
+        <div>
+          <h1
+            className="mb-2 text-2xl font-normal text-[#2a2a2a]"
+            style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+          >
+            Available leads
+          </h1>
+          <p className="text-sm text-[#6b6b6b]">
+            New pre-need inquiries you can purchase or use your one-time free lead on.
+          </p>
+        </div>
+        
+        {/* Location Indicator */}
+        <button
+          onClick={() => setShowLocationModal(true)}
+          className="flex items-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-2 text-sm text-[#2a2a2a] hover:bg-gray-50 transition-colors"
         >
-          Available leads
-        </h1>
-        <p className="text-sm text-[#6b6b6b]">
-          New pre-need inquiries you can purchase or use your one-time free lead on.
-        </p>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-4 w-4 text-gray-500"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+            />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+            />
+          </svg>
+          <span>
+            {agentCity && agentProvince
+              ? `${agentCity}, ${agentProvince} • Within ${searchRadius} km`
+              : "Set location"}
+          </span>
+        </button>
       </div>
+
+      {/* Location Change Modal */}
+      <LocationChangeModal
+        isOpen={showLocationModal}
+        onClose={() => setShowLocationModal(false)}
+        currentCity={agentCity}
+        currentProvince={agentProvince}
+        currentLat={agentLat}
+        currentLng={agentLng}
+        currentRadius={searchRadius}
+        onSave={handleLocationSave}
+      />
 
         {firstFreeAvailable && (
           <div className="mb-4 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-xs text-amber-900">
@@ -442,6 +609,16 @@ export default function AvailableLeadsPage() {
         ) : (() => {
           // Apply client-side filters
           const filteredLeads = leads.filter((lead) => {
+            // Distance-based filtering (if agent location is set)
+            if (agentLat && agentLng && locationInitialized) {
+              const leadLat = (lead as any).latitude;
+              const leadLng = (lead as any).longitude;
+              
+              if (!isWithinRadius(agentLat, agentLng, leadLat, leadLng, searchRadius)) {
+                return false;
+              }
+            }
+
             // Geographic search filter - city
             const matchesLocation =
               !locationQuery ||

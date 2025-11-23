@@ -14,6 +14,8 @@ export type AgentLead = {
   lead_price: number; // Price in dollars from database
   additional_details: string | null; // Maps to additional_notes in DB
   planning_for?: string | null; // Who they are planning for
+  latitude?: number | null; // For distance calculations
+  longitude?: number | null; // For distance calculations
 };
 
 type Props = {
