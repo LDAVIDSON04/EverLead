@@ -43,51 +43,57 @@ export default function HomePage() {
       {/* Hero Section */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-[#faf8f5] via-[#f7f4ef] to-[#f5f1eb]"></div>
-        <div className="relative mx-auto max-w-6xl px-6 py-16 md:py-20">
-          <div className="relative w-full h-[380px] md:h-[480px] lg:h-[520px] rounded-3xl overflow-hidden shadow-sm mb-10">
+        <div className="relative w-full">
+          {/* Hero Image - Full Width */}
+          <div className="relative w-full h-[380px] md:h-[480px] lg:h-[520px] overflow-hidden">
             <Image
               src="/hero.jpg"
               alt="Comforting hands"
               fill
               priority
               className="object-cover"
+              sizes="100vw"
             />
-            <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/30"></div>
+            <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/20"></div>
           </div>
-          <div className="relative mx-auto flex max-w-5xl flex-col gap-8 text-center">
-            <div className="space-y-6">
-              <h1
-                className="text-5xl font-light text-[#1a1a1a] leading-[1.1] tracking-tight sm:text-6xl md:text-7xl"
-                style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-              >
-                A gentle way to plan ahead
-                <br />
-                <span className="text-[#4a4a4a]">with care, clarity, and confidence.</span>
-              </h1>
-              <p className="mx-auto max-w-2xl text-lg leading-relaxed text-[#5a5a5a] sm:text-xl md:text-xl font-light">
-                Planning ahead doesn&apos;t have to feel overwhelming. Soradin guides you through simple, thoughtful conversations about your wishes, helping you make decisions now so the people you love are supported later.
-              </p>
-            </div>
-            <div className="flex flex-col items-center justify-center gap-4 sm:flex-row pt-4">
-              <Link
-                href="/get-started"
-                className="group w-full rounded-full bg-[#1a1a1a] px-8 py-4 text-base font-light tracking-wide text-white shadow-lg shadow-black/5 hover:bg-[#2a2a2a] hover:shadow-xl hover:shadow-black/10 transition-all duration-300 sm:w-auto"
-              >
-                Start planning online
-              </Link>
-              <a
-                href="#intro-video"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setShowVideoModal(true);
-                }}
-                className="w-full inline-flex items-center justify-center gap-3 rounded-full border border-[#d4c9b8] bg-white/60 backdrop-blur-sm px-6 py-4 text-base text-[#2a2a2a] shadow-sm hover:bg-white/80 hover:border-[#c4b9a8] transition-all duration-300 sm:w-auto font-light"
-              >
-                <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#f7f4ef] text-xs text-[#6b6b6b]">
-                  ▶
-                </span>
-                Watch Introduction Video
-              </a>
+          
+          {/* Content Below Image */}
+          <div className="relative mx-auto max-w-5xl px-6 py-16 md:py-20">
+            <div className="flex flex-col gap-8 text-center">
+              <div className="space-y-6">
+                <h1
+                  className="text-5xl font-light text-[#1a1a1a] leading-[1.1] tracking-tight sm:text-6xl md:text-7xl"
+                  style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+                >
+                  A gentle way to plan ahead
+                  <br />
+                  <span className="text-[#4a4a4a]">with care, clarity, and confidence.</span>
+                </h1>
+                <p className="mx-auto max-w-2xl text-lg leading-relaxed text-[#5a5a5a] sm:text-xl md:text-xl font-light">
+                  Planning ahead doesn&apos;t have to feel overwhelming. Soradin guides you through simple, thoughtful conversations about your wishes, helping you make decisions now so the people you love are supported later.
+                </p>
+              </div>
+              <div className="flex flex-col items-center justify-center gap-4 sm:flex-row pt-4">
+                <Link
+                  href="/get-started"
+                  className="group w-full rounded-full bg-[#1a1a1a] px-8 py-4 text-base font-light tracking-wide text-white shadow-lg shadow-black/5 hover:bg-[#2a2a2a] hover:shadow-xl hover:shadow-black/10 transition-all duration-300 sm:w-auto"
+                >
+                  Start planning online
+                </Link>
+                <a
+                  href="#intro-video"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setShowVideoModal(true);
+                  }}
+                  className="w-full inline-flex items-center justify-center gap-3 rounded-full border border-[#d4c9b8] bg-white/60 backdrop-blur-sm px-6 py-4 text-base text-[#2a2a2a] shadow-sm hover:bg-white/80 hover:border-[#c4b9a8] transition-all duration-300 sm:w-auto font-light"
+                >
+                  <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#f7f4ef] text-xs text-[#6b6b6b]">
+                    ▶
+                  </span>
+                  Watch Introduction Video
+                </a>
+              </div>
             </div>
           </div>
         </div>
