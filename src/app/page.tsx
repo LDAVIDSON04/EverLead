@@ -173,7 +173,7 @@ export default function HomePage() {
               >
                 Start with a guided questionnaire
               </h3>
-              <p className="text-sm leading-relaxed text-slate-600">
+              <p className="text-sm leading-relaxed text-[#4a4a4a]">
                 Our step-by-step experience helps you think through your choices at your own pace.
               </p>
             </div>
@@ -187,7 +187,7 @@ export default function HomePage() {
               >
                 Review your personalized plan
               </h3>
-              <p className="text-sm leading-relaxed text-slate-600">
+              <p className="text-sm leading-relaxed text-[#4a4a4a]">
                 We summarize your wishes clearly — no paperwork, no pressure.
               </p>
             </div>
@@ -201,7 +201,7 @@ export default function HomePage() {
               >
                 Connect with trusted specialists (optional)
               </h3>
-              <p className="text-sm leading-relaxed text-slate-600">
+              <p className="text-sm leading-relaxed text-[#4a4a4a]">
                 If you&apos;re ready, we can help match you with professional support in your area.
               </p>
             </div>
@@ -215,7 +215,7 @@ export default function HomePage() {
               >
                 Access your plan any time
               </h3>
-              <p className="text-sm leading-relaxed text-slate-600">
+              <p className="text-sm leading-relaxed text-[#4a4a4a]">
                 Update or add details whenever life changes.
               </p>
             </div>
