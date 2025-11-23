@@ -179,11 +179,16 @@ export async function POST(req: NextRequest) {
         if (geocodeResult) {
           leadData.latitude = geocodeResult.latitude;
           leadData.longitude = geocodeResult.longitude;
+          console.log(`✅ Geocoded lead: ${leadData.city}, ${leadData.province} → ${geocodeResult.latitude}, ${geocodeResult.longitude}`);
+        } else {
+          console.warn(`⚠️ Geocoding failed for: ${leadData.city}, ${leadData.province}`);
         }
       } catch (error) {
-        console.warn("Failed to geocode lead location:", error);
-        // Continue without coordinates - distance filtering will show all leads
+        console.error("❌ Geocoding error:", error);
+        // Continue without coordinates - lead will be created but won't show in location filtering
       }
+    } else {
+      console.warn("⚠️ Lead missing city or province, skipping geocoding");
     }
 
     // Clean payload: remove null/undefined/empty
