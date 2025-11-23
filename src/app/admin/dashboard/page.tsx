@@ -89,7 +89,9 @@ export default function AdminDashboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [geography, setGeography] = useState<GeoStat[]>([]);
-  const [activeTab, setActiveTab] = useState<"overview" | "agents" | "geography" | "recent" | "roi">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "agents" | "geography" | "recent" | "roi" | "approvals">("overview");
+  const [pendingAgents, setPendingAgents] = useState<any[]>([]);
+  const [loadingApprovals, setLoadingApprovals] = useState(false);
   
   // ROI state
   const [expenses, setExpenses] = useState<any[]>([]);
@@ -243,6 +245,101 @@ export default function AdminDashboardPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
+  // Load pending agents when approvals tab is active
+  useEffect(() => {
+    if (activeTab === "approvals") {
+      loadPendingAgents();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
+
+  async function loadPendingAgents() {
+    setLoadingApprovals(true);
+    try {
+      const { data, error } = await supabaseClient
+        .from("profiles")
+        .select("id, email, full_name, phone, funeral_home, licensed_in_province, licensed_funeral_director, approval_status, created_at")
+        .eq("role", "agent")
+        .in("approval_status", ["pending", "declined"])
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Error loading pending agents:", error);
+      } else {
+        setPendingAgents(data || []);
+      }
+    } catch (err) {
+      console.error("Error loading pending agents:", err);
+    } finally {
+      setLoadingApprovals(false);
+    }
+  }
+
+  async function handleApproveAgent(agentId: string) {
+    if (!confirm("Are you sure you want to approve this agent?")) {
+      return;
+    }
+
+    try {
+      // Get current user ID
+      const { data: { user } } = await supabaseClient.auth.getUser();
+      if (!user) {
+        alert("You must be logged in to approve agents.");
+        return;
+      }
+
+      const res = await fetch("/api/admin/approve-agent", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ agentId, action: "approve", adminUserId: user.id }),
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Failed to approve agent");
+      }
+
+      // Reload pending agents
+      await loadPendingAgents();
+      alert("Agent approved successfully. They will receive an email notification.");
+    } catch (err: any) {
+      console.error("Error approving agent:", err);
+      alert(err.message || "Failed to approve agent. Please try again.");
+    }
+  }
+
+  async function handleDeclineAgent(agentId: string) {
+    const reason = prompt("Please provide a reason for declining (optional):");
+    if (reason === null) return; // User cancelled
+
+    try {
+      // Get current user ID
+      const { data: { user } } = await supabaseClient.auth.getUser();
+      if (!user) {
+        alert("You must be logged in to decline agents.");
+        return;
+      }
+
+      const res = await fetch("/api/admin/approve-agent", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ agentId, action: "decline", notes: reason || undefined, adminUserId: user.id }),
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Failed to decline agent");
+      }
+
+      // Reload pending agents
+      await loadPendingAgents();
+      alert("Agent declined. They will receive an email notification.");
+    } catch (err: any) {
+      console.error("Error declining agent:", err);
+      alert(err.message || "Failed to decline agent. Please try again.");
+    }
+  }
+
   // Handle add expense
   async function handleAddExpense(e: React.FormEvent) {
     e.preventDefault();
@@ -344,6 +441,7 @@ export default function AdminDashboardPage() {
               { id: "geography" as const, label: "Geography" },
               { id: "recent" as const, label: "Recent leads" },
               { id: "roi" as const, label: "ROI" },
+              { id: "approvals" as const, label: "Agent Approvals" },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -828,6 +926,77 @@ export default function AdminDashboardPage() {
                     ))}
                   </tbody>
                 </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Agent Approvals Tab */}
+        {activeTab === "approvals" && (
+          <div>
+            <h2
+              className="mb-4 text-lg font-normal text-[#2a2a2a]"
+              style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+            >
+              Pending Agent Applications
+            </h2>
+            {loadingApprovals ? (
+              <p className="text-sm text-[#6b6b6b]">Loading applications...</p>
+            ) : pendingAgents.length === 0 ? (
+              <div className="rounded-xl border border-slate-200 bg-white/70 px-8 py-12 text-center shadow-sm">
+                <p className="text-sm text-[#6b6b6b]">No pending applications.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {pendingAgents.map((agent) => (
+                  <div
+                    key={agent.id}
+                    className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
+                  >
+                    <div className="mb-4 flex items-start justify-between">
+                      <div className="flex-1">
+                        <h3 className="mb-2 text-base font-semibold text-[#2a2a2a]">
+                          {agent.full_name || "No name provided"}
+                        </h3>
+                        <div className="space-y-1 text-sm text-[#4a4a4a]">
+                          <p><strong>Email:</strong> {agent.email || "-"}</p>
+                          <p><strong>Phone:</strong> {agent.phone || "-"}</p>
+                          <p><strong>Funeral Home/Agency:</strong> {agent.funeral_home || "-"}</p>
+                          <p><strong>Licensed in Province:</strong> {agent.licensed_in_province ? "Yes" : "No"}</p>
+                          <p><strong>Licensed Funeral Director:</strong> {agent.licensed_funeral_director ? "Yes" : "No"}</p>
+                          <p><strong>Status:</strong> <span className="font-medium capitalize">{agent.approval_status || "pending"}</span></p>
+                          <p><strong>Applied:</strong> {formatDate(agent.created_at)}</p>
+                        </div>
+                      </div>
+                      <div className="ml-6 flex flex-col gap-2">
+                        {agent.approval_status === "pending" && (
+                          <>
+                            <button
+                              onClick={() => handleApproveAgent(agent.id)}
+                              className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 transition-colors"
+                            >
+                              Approve
+                            </button>
+                            <button
+                              onClick={() => handleDeclineAgent(agent.id)}
+                              className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 transition-colors"
+                            >
+                              Decline
+                            </button>
+                          </>
+                        )}
+                        {agent.approval_status === "declined" && (
+                          <button
+                            onClick={() => handleApproveAgent(agent.id)}
+                            className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 transition-colors"
+                          >
+                            Re-approve
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>

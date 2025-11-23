@@ -15,8 +15,13 @@ export default function AgentLandingPage() {
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
   const [password, setPassword] = useState("");
+  const [phone, setPhone] = useState("");
+  const [funeralHome, setFuneralHome] = useState("");
+  const [licensedInProvince, setLicensedInProvince] = useState<"yes" | "no" | "">("");
+  const [licensedFuneralDirector, setLicensedFuneralDirector] = useState<"yes" | "no" | "">("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [signupSuccess, setSignupSuccess] = useState(false);
 
   useEffect(() => {
     async function checkAuth() {
@@ -63,37 +68,39 @@ export default function AgentLandingPage() {
 
     try {
       if (mode === "signup") {
-        const { data, error: signUpError } = await supabaseClient.auth.signUp({
-          email,
-          password,
+        // Validate all required fields
+        if (!fullName || !email || !password || !phone || !funeralHome || !licensedInProvince || !licensedFuneralDirector) {
+          setError("Please fill in all required fields.");
+          setSubmitting(false);
+          return;
+        }
+
+        // Call API route for signup
+        const response = await fetch("/api/agent/signup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email,
+            password,
+            full_name: fullName,
+            phone,
+            funeral_home: funeralHome,
+            licensed_in_province: licensedInProvince === "yes",
+            licensed_funeral_director: licensedFuneralDirector === "yes",
+          }),
         });
 
-        if (signUpError || !data.user) {
-          console.error(signUpError);
-          setError(signUpError?.message || "Failed to sign up.");
+        const data = await response.json();
+
+        if (!response.ok) {
+          setError(data.error || "Failed to create account.");
           setSubmitting(false);
           return;
         }
 
-        const userId = data.user.id;
-
-        const { error: profileError } = await supabaseClient
-          .from("profiles")
-          .insert({
-            id: userId,
-            full_name: fullName || null,
-            role: "agent",
-            email,
-          });
-
-        if (profileError) {
-          console.error(profileError);
-          setError("Failed to create profile.");
-          setSubmitting(false);
-          return;
-        }
-
-        router.push("/agent/dashboard");
+        // Show success message
+        setSignupSuccess(true);
+        setSubmitting(false);
       } else {
         const { data, error: signInError } =
           await supabaseClient.auth.signInWithPassword({
@@ -110,13 +117,20 @@ export default function AgentLandingPage() {
 
         const { data: profile, error: profileError } = await supabaseClient
           .from("profiles")
-          .select("role")
+          .select("role, approval_status")
           .eq("id", data.user.id)
           .maybeSingle();
 
         if (profileError || !profile) {
           console.error(profileError);
           setError("Failed to load profile.");
+          setSubmitting(false);
+          return;
+        }
+
+        // Check approval status for agents
+        if (profile.role === "agent" && profile.approval_status !== "approved") {
+          setError("Your account is pending approval. You will receive an email when your account is approved.");
           setSubmitting(false);
           return;
         }
@@ -214,51 +228,158 @@ export default function AgentLandingPage() {
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border border-[#ded3c2] bg-white p-6 shadow-sm">
-            {mode === "signup" && (
+          {signupSuccess ? (
+            <div className="rounded-lg border border-green-200 bg-green-50 p-6 shadow-sm">
+              <h3 className="mb-2 text-base font-semibold text-green-900">Account Created Successfully</h3>
+              <p className="mb-4 text-sm text-green-800">
+                Thank you for your interest in Soradin! Your account has been submitted for review. 
+                Our team will review your application and you will receive an email notification once 
+                your account has been approved. This typically takes 1-2 business days.
+              </p>
+              <p className="text-xs text-green-700">
+                You can close this page. We'll send you an email when your account is ready.
+              </p>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border border-[#ded3c2] bg-white p-6 shadow-sm">
+              {mode === "signup" && (
+                <>
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-[#4a4a4a]">
+                      Full name *
+                    </label>
+                    <input
+                      type="text"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-[#2a2a2a] outline-none focus:border-[#2a2a2a] focus:ring-1 focus:ring-[#2a2a2a]"
+                      placeholder="Jane Doe"
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-[#4a4a4a]">
+                      Phone number *
+                    </label>
+                    <input
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-[#2a2a2a] outline-none focus:border-[#2a2a2a] focus:ring-1 focus:ring-[#2a2a2a]"
+                      placeholder="(555) 123-4567"
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-[#4a4a4a]">
+                      Funeral home or agency *
+                    </label>
+                    <input
+                      type="text"
+                      value={funeralHome}
+                      onChange={(e) => setFuneralHome(e.target.value)}
+                      className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-[#2a2a2a] outline-none focus:border-[#2a2a2a] focus:ring-1 focus:ring-[#2a2a2a]"
+                      placeholder="Smith Funeral Home"
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-[#4a4a4a]">
+                      Are you licensed in your province? *
+                    </label>
+                    <div className="flex gap-4">
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="licensed_in_province"
+                          value="yes"
+                          checked={licensedInProvince === "yes"}
+                          onChange={(e) => setLicensedInProvince(e.target.value as "yes" | "no")}
+                          className="text-[#2a2a2a]"
+                          required
+                        />
+                        <span className="text-sm text-[#4a4a4a]">Yes</span>
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="licensed_in_province"
+                          value="no"
+                          checked={licensedInProvince === "no"}
+                          onChange={(e) => setLicensedInProvince(e.target.value as "yes" | "no")}
+                          className="text-[#2a2a2a]"
+                          required
+                        />
+                        <span className="text-sm text-[#4a4a4a]">No</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-[#4a4a4a]">
+                      Are you a licensed funeral director? *
+                    </label>
+                    <div className="flex gap-4">
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="licensed_funeral_director"
+                          value="yes"
+                          checked={licensedFuneralDirector === "yes"}
+                          onChange={(e) => setLicensedFuneralDirector(e.target.value as "yes" | "no")}
+                          className="text-[#2a2a2a]"
+                          required
+                        />
+                        <span className="text-sm text-[#4a4a4a]">Yes</span>
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="licensed_funeral_director"
+                          value="no"
+                          checked={licensedFuneralDirector === "no"}
+                          onChange={(e) => setLicensedFuneralDirector(e.target.value as "yes" | "no")}
+                          className="text-[#2a2a2a]"
+                          required
+                        />
+                        <span className="text-sm text-[#4a4a4a]">No</span>
+                      </label>
+                    </div>
+                  </div>
+                </>
+              )}
+
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-[#4a4a4a]">
-                  Full name
+                  Email
                 </label>
                 <input
-                  type="text"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-[#2a2a2a] outline-none focus:border-[#2a2a2a] focus:ring-1 focus:ring-[#2a2a2a]"
-                  placeholder="Jane Doe"
+                  placeholder="you@example.com"
                   required
                 />
               </div>
-            )}
 
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-[#4a4a4a]">
-                Email
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-[#2a2a2a] outline-none focus:border-[#2a2a2a] focus:ring-1 focus:ring-[#2a2a2a]"
-                placeholder="you@example.com"
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-[#4a4a4a]">
-                Password
-              </label>
-              <input
-                type="password"
-                value={password}
-                minLength={6}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-[#2a2a2a] outline-none focus:border-[#2a2a2a] focus:ring-1 focus:ring-[#2a2a2a]"
-                placeholder="••••••••"
-                required
-              />
-            </div>
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-[#4a4a4a]">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  value={password}
+                  minLength={6}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-[#2a2a2a] outline-none focus:border-[#2a2a2a] focus:ring-1 focus:ring-[#2a2a2a]"
+                  placeholder="••••••••"
+                  required
+                />
+              </div>
 
             {error && (
               <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2">
@@ -294,22 +415,23 @@ export default function AgentLandingPage() {
               </p>
             )}
 
-            {mode === "signup" && (
-              <p className="text-center text-xs text-[#6b6b6b]">
-                Already have an account?{" "}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMode("login");
-                    setError(null);
-                  }}
-                  className="text-[#2a2a2a] hover:underline"
-                >
-                  Sign in
-                </button>
-              </p>
-            )}
-          </form>
+              {mode === "signup" && (
+                <p className="text-center text-xs text-[#6b6b6b]">
+                  Already have an account?{" "}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMode("login");
+                      setError(null);
+                    }}
+                    className="text-[#2a2a2a] hover:underline"
+                  >
+                    Sign in
+                  </button>
+                </p>
+              )}
+            </form>
+          )}
         </div>
       </section>
 
