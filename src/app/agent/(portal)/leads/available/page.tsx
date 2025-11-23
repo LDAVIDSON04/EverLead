@@ -318,6 +318,7 @@ export default function AvailableLeadsPage() {
         return;
       }
 
+      // Update location state immediately
       setAgentCity(city);
       setAgentProvince(province);
       setAgentLat(lat);
@@ -325,8 +326,8 @@ export default function AvailableLeadsPage() {
       setSearchRadius(radius);
       setLocationInitialized(true);
       
-      // Refresh leads to apply new location filter
-      await refreshLeads(false);
+      // Force a re-render by updating a state that triggers filtering
+      // The filtering will happen automatically in the render
     } catch (err) {
       console.error("Location update error:", err);
       setError("Failed to update location. Please try again.");
@@ -609,8 +610,17 @@ export default function AvailableLeadsPage() {
         ) : (() => {
           // Apply client-side filters
           const filteredLeads = leads.filter((lead) => {
-            // Distance-based filtering (if agent location is set)
+            // Distance-based filtering (if agent location is set and initialized)
             if (agentLat && agentLng && locationInitialized) {
+              const leadLat = (lead as any).latitude;
+              const leadLng = (lead as any).longitude;
+              
+              // Strict filtering: only show leads within radius, exclude leads without coordinates
+              if (!isWithinRadius(agentLat, agentLng, leadLat, leadLng, searchRadius)) {
+                return false;
+              }
+            } else if (agentLat && agentLng) {
+              // If location is set but not yet initialized, still filter (location was just updated)
               const leadLat = (lead as any).latitude;
               const leadLng = (lead as any).longitude;
               
@@ -666,14 +676,28 @@ export default function AvailableLeadsPage() {
 
           if (filteredLeads.length === 0) {
             return (
-              <p className="text-sm text-neutral-500">
-                No leads are currently available. Check back again soon.
-              </p>
+              <div className="mt-6">
+                <p className="text-sm text-neutral-500 mb-2">
+                  {agentLat && agentLng && locationInitialized
+                    ? `No leads found within ${searchRadius} km of ${agentCity}, ${agentProvince}.`
+                    : "No leads are currently available. Check back again soon."}
+                </p>
+                {agentLat && agentLng && locationInitialized && (
+                  <p className="text-xs text-neutral-400">
+                    Try increasing your search radius or check if leads have location data.
+                  </p>
+                )}
+              </div>
             );
           }
 
           return (
             <div className="mt-6">
+              {agentLat && agentLng && locationInitialized && (
+                <p className="text-sm text-neutral-600 mb-4">
+                  Showing {filteredLeads.length} lead{filteredLeads.length !== 1 ? 's' : ''} within {searchRadius} km of {agentCity}, {agentProvince}
+                </p>
+              )}
               {filteredLeads.map((lead: AgentLead) => (
                 <AgentLeadCard key={lead.id} lead={lead} />
               ))}

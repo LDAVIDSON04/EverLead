@@ -34,6 +34,7 @@ function toRadians(degrees: number): number {
 
 /**
  * Check if a lead is within the agent's search radius
+ * Returns false if coordinates are missing (strict filtering when location is set)
  */
 export function isWithinRadius(
   agentLat: number | null,
@@ -42,11 +43,18 @@ export function isWithinRadius(
   leadLon: number | null,
   radiusKm: number
 ): boolean {
-  if (!agentLat || !agentLon || !leadLat || !leadLon) {
-    return true; // If coordinates are missing, show all leads (fallback)
+  // If agent location is set, we require both agent and lead coordinates
+  if (agentLat && agentLon) {
+    // If lead coordinates are missing, exclude the lead (strict filtering)
+    if (!leadLat || !leadLon) {
+      return false;
+    }
+    // Calculate distance and check if within radius
+    const distance = calculateDistance(agentLat, agentLon, leadLat, leadLon);
+    return distance <= radiusKm;
   }
-
-  const distance = calculateDistance(agentLat, agentLon, leadLat, leadLon);
-  return distance <= radiusKm;
+  
+  // If agent location is not set, show all leads (no filtering)
+  return true;
 }
 
