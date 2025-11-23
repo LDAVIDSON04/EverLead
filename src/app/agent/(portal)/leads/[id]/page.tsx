@@ -30,6 +30,9 @@ type Lead = {
   notes_from_family: string | null;
   assigned_agent_id: string | null;
   agent_status?: string | null; // For agent's workflow status
+  remains_disposition: string | null;
+  service_celebration: string | null;
+  family_pre_arranged: string | null;
 };
 
 type LeadNote = {
@@ -268,10 +271,41 @@ export default function LeadDetailsPage() {
 
   function formatTimelineIntent(intent: string | null) {
     if (!intent) return "Not specified";
+    if (intent === "ready_now") return "We are ready to make our plan now and make things easier for our loved ones.";
+    if (intent === "speak_with_family") return "We will need to speak with other family member first.";
+    if (intent === "collecting_info_unsure") return "We are just collecting information and not sure if we want to pre plan.";
+    if (intent === "collecting_info_need_done") return "We are just collecting information but we know we need to get this done.";
+    if (intent === "unsure") return "Unsure";
+    // Legacy values for backward compatibility
     if (intent === "purchase_now") return "Ready to purchase now";
     if (intent === "talk_to_someone") return "Wants to talk to someone";
     if (intent === "just_browsing") return "Just browsing / exploring";
     return intent;
+  }
+
+  function formatRemainsDisposition(disposition: string | null) {
+    if (!disposition) return "Not specified";
+    if (disposition === "scatter_cremated_remains") return "Scatter cremated remains";
+    if (disposition === "keep_remains") return "Keep remains";
+    if (disposition === "burial_at_cemetery") return "Burial at cemetery";
+    if (disposition === "unsure") return "Unsure";
+    return disposition;
+  }
+
+  function formatServiceCelebration(celebration: string | null) {
+    if (!celebration) return "Not specified";
+    if (celebration === "yes") return "Yes";
+    if (celebration === "no") return "No";
+    if (celebration === "unsure") return "Unsure";
+    return celebration;
+  }
+
+  function formatFamilyPreArranged(preArranged: string | null) {
+    if (!preArranged) return "Not specified";
+    if (preArranged === "yes") return "Yes";
+    if (preArranged === "no") return "No";
+    if (preArranged === "unsure") return "Unsure";
+    return preArranged;
   }
 
   function formatPlanningFor(planning: string | null) {
@@ -468,7 +502,39 @@ export default function LeadDetailsPage() {
                             ? "Cremation"
                             : lead.service_type === "burial"
                             ? "Burial"
+                            : lead.service_type === "unsure"
+                            ? "Unsure"
                             : lead.service_type}
+                        </dd>
+                      </div>
+                    )}
+                    {lead.remains_disposition && (
+                      <div>
+                        <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                          What will the family do with the remains?
+                        </dt>
+                        <dd className="mt-1 text-[#2a2a2a]">
+                          {formatRemainsDisposition(lead.remains_disposition)}
+                        </dd>
+                      </div>
+                    )}
+                    {lead.service_celebration && (
+                      <div>
+                        <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                          Would there be a service celebration of life, memorial event?
+                        </dt>
+                        <dd className="mt-1 text-[#2a2a2a]">
+                          {formatServiceCelebration(lead.service_celebration)}
+                        </dd>
+                      </div>
+                    )}
+                    {lead.family_pre_arranged && (
+                      <div>
+                        <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                          Has anyone else in your family had a pre-arranged funeral plan?
+                        </dt>
+                        <dd className="mt-1 text-[#2a2a2a]">
+                          {formatFamilyPreArranged(lead.family_pre_arranged)}
                         </dd>
                       </div>
                     )}
@@ -485,7 +551,7 @@ export default function LeadDetailsPage() {
                     {lead.timeline_intent && (
                       <div>
                         <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
-                          Timeline
+                          How soon after you have more information do you expect to put your plan in place?
                         </dt>
                         <dd className="mt-1 text-[#2a2a2a]">
                           {formatTimelineIntent(lead.timeline_intent)}
