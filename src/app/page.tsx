@@ -409,7 +409,7 @@ export default function HomePage() {
             <Link href="#" className="hover:text-[#1a1a1a] transition-colors">
               Privacy
             </Link>
-            <Link href="#" className="hover:text-[#1a1a1a] transition-colors">
+            <Link href="/terms" className="hover:text-[#1a1a1a] transition-colors">
               Terms
             </Link>
           </div>
