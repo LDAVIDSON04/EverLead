@@ -179,18 +179,47 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // List of new optional fields that might not exist in database yet
+    const optionalNewFields = ['remains_disposition', 'service_celebration', 'family_pre_arranged'];
+    
+    // Create payload without optional new fields first (in case migration hasn't run)
+    const safePayload: any = {};
+    for (const [key, value] of Object.entries(cleanPayload)) {
+      if (!optionalNewFields.includes(key)) {
+        safePayload[key] = value;
+      }
+    }
+
     console.log("Questionnaire API: Inserting lead", {
       email: cleanPayload.email,
       city: cleanPayload.city,
-      keys: Object.keys(cleanPayload),
+      keys: Object.keys(safePayload),
+      hasNewFields: optionalNewFields.some(f => cleanPayload[f]),
     });
 
-    // Insert into database using admin client (bypasses RLS)
-    const { data, error: insertError } = await supabaseAdmin
+    // Try inserting with all fields first
+    let insertResult = await supabaseAdmin
       .from("leads")
       .insert(cleanPayload)
       .select()
       .single();
+
+    // If insert fails with PGRST204 (missing column), retry without new optional fields
+    if (insertResult.error && (insertResult.error.code === 'PGRST204' || insertResult.error.message?.includes("Could not find"))) {
+      console.log("Database columns for new fields don't exist yet, retrying without them. Please run migration: supabase/migrations/add_new_questionnaire_fields.sql");
+      insertResult = await supabaseAdmin
+        .from("leads")
+        .insert(safePayload)
+        .select()
+        .single();
+      
+      // Log a warning that migration should be run
+      if (!insertResult.error) {
+        console.warn("Lead created successfully but new fields (remains_disposition, service_celebration, family_pre_arranged) were not saved. Please run migration to enable these fields.");
+      }
+    }
+
+    const { data, error: insertError } = insertResult;
 
     if (insertError) {
       console.error("Questionnaire DB error", {
