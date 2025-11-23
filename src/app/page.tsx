@@ -45,15 +45,14 @@ export default function HomePage() {
         <div className="relative w-full">
           {/* Hero Image - Full Width */}
           <div className="relative w-full h-[380px] md:h-[480px] lg:h-[520px] overflow-hidden bg-[#e5ddd0]">
-            <img
+            <Image
               src="/hero.jpg"
-              alt="Comforting hands"
-              className="w-full h-full object-cover"
-              onError={(e) => {
-                console.error('Hero image failed to load. Please ensure /public/hero.jpg exists.');
-                // Hide the broken image icon
-                e.currentTarget.style.display = 'none';
-              }}
+              alt=""
+              fill
+              priority
+              className="object-cover"
+              sizes="100vw"
+              unoptimized
             />
             <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/20 pointer-events-none"></div>
           </div>
