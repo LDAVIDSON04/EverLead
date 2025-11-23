@@ -9,7 +9,7 @@ export default function HomePage() {
   return (
     <main className="min-h-screen bg-[#f7f4ef] text-[#2a2a2a]">
       {/* Header */}
-      <header className="bg-[#1f2933] text-white border-b border-[#ded3c2]">
+      <header className="bg-[#1f2933] text-white">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           {/* Left: Logo */}
           <div className="flex items-baseline gap-2">
@@ -40,7 +40,7 @@ export default function HomePage() {
       </header>
 
       {/* Hero Section */}
-      <section className="relative border-b border-[#ded3c2] bg-[#f7f4ef] hero-soft-pattern shadow-sm">
+      <section className="relative bg-[#f7f4ef] hero-soft-pattern shadow-sm">
         <div className="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-24 text-center md:py-28">
           <h1
             className="text-4xl font-semibold text-[#2a2a2a] leading-tight tracking-tight sm:text-5xl md:text-5xl"
@@ -79,7 +79,7 @@ export default function HomePage() {
       {/* What You Can Plan - Cards Section */}
       <section
         id="planning-options"
-        className="border-b border-[#ded3c2] bg-[#f7f4ef]"
+        className="bg-[#f7f4ef]"
       >
         <div className="mx-auto max-w-5xl px-4 py-16 md:py-20">
           <h2
@@ -151,7 +151,7 @@ export default function HomePage() {
       </section>
 
       {/* How Soradin Works Section */}
-      <section className="border-b border-[#ded3c2] bg-[#f7f4ef] py-16 md:py-20">
+      <section className="bg-[#f7f4ef] py-16 md:py-20">
         <div className="mx-auto max-w-5xl px-4">
           <h2
             className="mb-3 text-center text-2xl font-semibold text-[#2a2a2a] sm:text-3xl"
@@ -224,7 +224,7 @@ export default function HomePage() {
       </section>
 
       {/* Why People Choose Soradin */}
-      <section className="border-b border-[#ded3c2] bg-[#f7f4ef] py-16 md:py-24">
+      <section className="bg-[#f7f4ef] py-16 md:py-24">
         <div className="mx-auto max-w-6xl px-6">
           <h2
             className="mb-4 text-center text-3xl font-normal text-[#2a2a2a] md:text-4xl"
@@ -277,7 +277,7 @@ export default function HomePage() {
       </section>
 
       {/* Testimonials */}
-      <section className="border-b border-[#ded3c2] bg-[#f7f4ef] py-16 md:py-20">
+      <section className="bg-[#f7f4ef] py-16 md:py-20">
         <div className="mx-auto max-w-5xl px-4">
           <h2
             className="mb-12 text-center text-2xl font-semibold text-[#2a2a2a] sm:text-3xl"
@@ -329,7 +329,7 @@ export default function HomePage() {
       {/* FAQ Section */}
       <section
         id="resources"
-        className="border-b border-[#ded3c2] bg-[#f7f4ef] py-14 md:py-20"
+        className="bg-[#f7f4ef] py-14 md:py-20"
       >
         <div className="mx-auto max-w-3xl px-6">
           <h2
@@ -373,7 +373,7 @@ export default function HomePage() {
       </section>
 
       {/* Final CTA Section */}
-      <section className="border-b border-[#ded3c2] bg-[#f7f4ef] py-16 md:py-24">
+      <section className="bg-[#f7f4ef] py-16 md:py-24">
         <div className="mx-auto max-w-2xl px-6 text-center">
           <h2
             className="mb-4 text-3xl font-normal text-[#2a2a2a] md:text-4xl"
@@ -394,7 +394,7 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-[#ded3c2] bg-[#f7f4ef] py-8">
+      <footer className="bg-[#f7f4ef] py-8">
         <div className="mx-auto flex max-w-6xl flex-col items-center gap-4 px-6 text-center text-xs text-[#6b6b6b] md:flex-row md:justify-between md:text-left">
           <div>
             © {new Date().getFullYear()} Soradin. All rights reserved.
