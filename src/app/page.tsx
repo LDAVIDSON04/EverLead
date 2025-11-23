@@ -7,7 +7,7 @@ import IntroVideoModal from "@/components/IntroVideoModal";
 export default function HomePage() {
   const [showVideoModal, setShowVideoModal] = useState(false);
   return (
-    <main className="min-h-screen bg-[#faf8f5] text-[#2a2a2a]">
+    <main className="min-h-screen bg-[#f7f4ef] text-[#2a2a2a]">
       {/* Header */}
       <header className="border-b border-[#ded3c2] bg-white">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
@@ -40,7 +40,7 @@ export default function HomePage() {
       </header>
 
       {/* Hero Section */}
-      <section className="relative border-b border-slate-200/50 bg-[radial-gradient(circle_at_top,_#fdf6ee_0%,_#f5f1eb_40%,_#f7f4ef_100%)] hero-soft-pattern shadow-sm">
+      <section className="relative border-b border-slate-200/50 bg-[#f7f4ef] hero-soft-pattern shadow-sm">
         <div className="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-24 text-center md:py-28">
           <h1
             className="text-4xl font-semibold text-slate-900 leading-tight tracking-tight sm:text-5xl md:text-5xl"
@@ -79,7 +79,7 @@ export default function HomePage() {
       {/* What You Can Plan - Cards Section */}
       <section
         id="planning-options"
-        className="border-b border-slate-100 bg-[#faf7f3]"
+        className="border-b border-slate-100 bg-[#f7f4ef]"
       >
         <div className="mx-auto max-w-5xl px-4 py-16 md:py-20">
           <h2
@@ -151,7 +151,7 @@ export default function HomePage() {
       </section>
 
       {/* How Soradin Works Section */}
-      <section className="border-b border-slate-100 bg-white py-16 md:py-20">
+      <section className="border-b border-slate-100 bg-[#f7f4ef] py-16 md:py-20">
         <div className="mx-auto max-w-5xl px-4">
           <h2
             className="mb-3 text-center text-2xl font-semibold text-slate-900 sm:text-3xl"
@@ -224,7 +224,7 @@ export default function HomePage() {
       </section>
 
       {/* Why People Choose Soradin */}
-      <section className="border-b border-[#ded3c2] bg-[radial-gradient(circle_at_top,_#fdf6ee_0%,_#f5f1eb_40%,_#f7f4ef_100%)] py-16 md:py-24">
+      <section className="border-b border-[#ded3c2] bg-[#f7f4ef] py-16 md:py-24">
         <div className="mx-auto max-w-6xl px-6">
           <h2
             className="mb-4 text-center text-3xl font-normal text-[#2a2a2a] md:text-4xl"
@@ -277,7 +277,7 @@ export default function HomePage() {
       </section>
 
       {/* Testimonials */}
-      <section className="border-b border-slate-100 bg-slate-50 py-16 md:py-20">
+      <section className="border-b border-slate-100 bg-[#f7f4ef] py-16 md:py-20">
         <div className="mx-auto max-w-5xl px-4">
           <h2
             className="mb-12 text-center text-2xl font-semibold text-slate-900 sm:text-3xl"
@@ -329,7 +329,7 @@ export default function HomePage() {
       {/* FAQ Section */}
       <section
         id="resources"
-        className="border-b border-[#ded3c2] bg-white py-14 md:py-20"
+        className="border-b border-[#ded3c2] bg-[#f7f4ef] py-14 md:py-20"
       >
         <div className="mx-auto max-w-3xl px-6">
           <h2
@@ -373,7 +373,7 @@ export default function HomePage() {
       </section>
 
       {/* Final CTA Section */}
-      <section className="border-b border-[#ded3c2] bg-[radial-gradient(circle_at_top,_#fdf6ee_0%,_#f5f1eb_40%,_#f7f4ef_100%)] py-16 md:py-24">
+      <section className="border-b border-[#ded3c2] bg-[#f7f4ef] py-16 md:py-24">
         <div className="mx-auto max-w-2xl px-6 text-center">
           <h2
             className="mb-4 text-3xl font-normal text-[#2a2a2a] md:text-4xl"
