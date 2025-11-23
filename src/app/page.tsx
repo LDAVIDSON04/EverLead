@@ -9,15 +9,15 @@ export default function HomePage() {
   return (
     <main className="min-h-screen bg-[#f7f4ef] text-[#2a2a2a]">
       {/* Header */}
-      <header className="border-b border-[#ded3c2] bg-white">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
+      <header className="bg-[#1f2933] text-white border-b border-[#ded3c2]">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           {/* Left: Logo */}
-          <div className="flex flex-col">
-            <span className="text-2xl font-semibold tracking-tight text-[#2a2a2a]">
+          <div className="flex items-baseline gap-2">
+            <span className="text-lg font-semibold text-white">
               Soradin
             </span>
-            <span className="text-[11px] uppercase tracking-[0.2em] text-[#6b6b6b] mt-0.5">
-              Funeral pre-planning
+            <span className="text-[11px] uppercase tracking-[0.18em] text-[#e0d5bf]">
+              FUNERAL PRE-PLANNING
             </span>
           </div>
 
@@ -25,13 +25,13 @@ export default function HomePage() {
           <div className="flex items-center gap-4">
             <Link
               href="/get-started"
-              className="rounded-md bg-[#2a2a2a] px-5 py-2 text-sm font-medium text-white hover:bg-[#3a3a3a] transition-colors"
+              className="rounded-md border border-[#e5d7b5] bg-transparent px-3 py-1 text-[11px] font-medium text-[#e0d5bf] hover:bg-white/10 transition-colors"
             >
               Get started
             </Link>
             <Link
               href="/agent"
-              className="text-sm text-[#6b6b6b] hover:text-[#2a2a2a] transition-colors"
+              className="text-[11px] text-[#e0d5bf] hover:text-white transition-colors"
             >
               For professionals
             </Link>
@@ -40,16 +40,16 @@ export default function HomePage() {
       </header>
 
       {/* Hero Section */}
-      <section className="relative border-b border-slate-200/50 bg-[#f7f4ef] hero-soft-pattern shadow-sm">
+      <section className="relative border-b border-[#ded3c2] bg-[#f7f4ef] hero-soft-pattern shadow-sm">
         <div className="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-24 text-center md:py-28">
           <h1
-            className="text-4xl font-semibold text-slate-900 leading-tight tracking-tight sm:text-5xl md:text-5xl"
+            className="text-4xl font-semibold text-[#2a2a2a] leading-tight tracking-tight sm:text-5xl md:text-5xl"
             style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
           >
             A gentle way to plan ahead —<br />
             with care, clarity, and confidence.
           </h1>
-          <p className="mx-auto max-w-2xl text-base leading-relaxed text-slate-600 sm:text-lg md:text-lg">
+          <p className="mx-auto max-w-2xl text-base leading-relaxed text-[#4a4a4a] sm:text-lg md:text-lg">
             Planning ahead doesn&apos;t have to feel overwhelming. Soradin guides you through simple, thoughtful conversations about your wishes, helping you make decisions now so the people you love are supported later.
           </p>
           <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
@@ -65,9 +65,9 @@ export default function HomePage() {
                 e.preventDefault();
                 setShowVideoModal(true);
               }}
-              className="w-full inline-flex items-center justify-center gap-2 rounded-full border border-slate-300 bg-white px-5 py-3 text-base text-slate-700 shadow-sm hover:bg-slate-50 transition-colors sm:w-auto"
+              className="w-full inline-flex items-center justify-center gap-2 rounded-full border border-[#ded3c2] bg-white px-5 py-3 text-base text-[#2a2a2a] shadow-sm hover:bg-[#f7f4ef] transition-colors sm:w-auto"
             >
-              <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 text-xs text-slate-600">
+              <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#f7f4ef] text-xs text-[#6b6b6b]">
                 ▶
               </span>
               Watch Introduction Video
@@ -79,7 +79,7 @@ export default function HomePage() {
       {/* What You Can Plan - Cards Section */}
       <section
         id="planning-options"
-        className="border-b border-slate-100 bg-[#f7f4ef]"
+        className="border-b border-[#ded3c2] bg-[#f7f4ef]"
       >
         <div className="mx-auto max-w-5xl px-4 py-16 md:py-20">
           <h2
@@ -93,73 +93,73 @@ export default function HomePage() {
           </p>
           <div className="grid gap-6 md:grid-cols-2">
             {/* Cremation or burial choices */}
-            <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="rounded-lg border border-[#ded3c2] bg-white p-6 shadow-sm">
               <h3
-                className="mb-2 text-lg font-semibold text-slate-900"
+                className="mb-2 text-lg font-semibold text-[#2a2a2a]"
                 style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
               >
                 Cremation or burial choices
               </h3>
-              <p className="text-sm leading-relaxed text-slate-600">
+              <p className="text-sm leading-relaxed text-[#4a4a4a]">
                 Understand your options with clear explanations.
               </p>
             </div>
 
             {/* Service preferences */}
-            <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="rounded-lg border border-[#ded3c2] bg-white p-6 shadow-sm">
               <h3
-                className="mb-2 text-lg font-semibold text-slate-900"
+                className="mb-2 text-lg font-semibold text-[#2a2a2a]"
                 style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
               >
                 Service preferences
               </h3>
-              <p className="text-sm leading-relaxed text-slate-600">
+              <p className="text-sm leading-relaxed text-[#4a4a4a]">
                 Decide what kind of gathering feels right for you.
               </p>
             </div>
 
             {/* Personal wishes */}
-            <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="rounded-lg border border-[#ded3c2] bg-white p-6 shadow-sm">
               <h3
-                className="mb-2 text-lg font-semibold text-slate-900"
+                className="mb-2 text-lg font-semibold text-[#2a2a2a]"
                 style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
               >
                 Personal wishes
               </h3>
-              <p className="text-sm leading-relaxed text-slate-600">
+              <p className="text-sm leading-relaxed text-[#4a4a4a]">
                 From music to readings to final requests — capture it all.
               </p>
             </div>
 
             {/* Practical details */}
-            <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="rounded-lg border border-[#ded3c2] bg-white p-6 shadow-sm">
               <h3
-                className="mb-2 text-lg font-semibold text-slate-900"
+                className="mb-2 text-lg font-semibold text-[#2a2a2a]"
                 style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
               >
                 Practical details
               </h3>
-              <p className="text-sm leading-relaxed text-slate-600">
+              <p className="text-sm leading-relaxed text-[#4a4a4a]">
                 Documents, contacts, and everything your family needs in the future.
               </p>
             </div>
           </div>
-          <p className="text-center text-sm text-slate-600 mt-8">
+          <p className="text-center text-sm text-[#6b6b6b] mt-8">
             Your decisions are saved safely and shared only when you choose.
           </p>
         </div>
       </section>
 
       {/* How Soradin Works Section */}
-      <section className="border-b border-slate-100 bg-[#f7f4ef] py-16 md:py-20">
+      <section className="border-b border-[#ded3c2] bg-[#f7f4ef] py-16 md:py-20">
         <div className="mx-auto max-w-5xl px-4">
           <h2
-            className="mb-3 text-center text-2xl font-semibold text-slate-900 sm:text-3xl"
+            className="mb-3 text-center text-2xl font-semibold text-[#2a2a2a] sm:text-3xl"
             style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
           >
             Simple, supportive, and designed for peace of mind.
           </h2>
-          <p className="mb-12 text-center text-sm text-slate-600">
+          <p className="mb-12 text-center text-sm text-[#6b6b6b]">
             How Soradin works
           </p>
           <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
@@ -277,46 +277,46 @@ export default function HomePage() {
       </section>
 
       {/* Testimonials */}
-      <section className="border-b border-slate-100 bg-[#f7f4ef] py-16 md:py-20">
+      <section className="border-b border-[#ded3c2] bg-[#f7f4ef] py-16 md:py-20">
         <div className="mx-auto max-w-5xl px-4">
           <h2
-            className="mb-12 text-center text-2xl font-semibold text-slate-900 sm:text-3xl"
+            className="mb-12 text-center text-2xl font-semibold text-[#2a2a2a] sm:text-3xl"
             style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
           >
             What families are saying
           </h2>
           <div className="grid gap-6 md:grid-cols-3">
-            <div className="rounded-lg border border-slate-200 bg-white p-8 shadow-sm">
-              <span className="text-4xl text-slate-300">&ldquo;</span>
-              <p className="mt-2 italic leading-relaxed text-slate-700">
+            <div className="rounded-lg border border-[#ded3c2] bg-white p-8 shadow-sm">
+              <span className="text-4xl text-[#ded3c2]">&ldquo;</span>
+              <p className="mt-2 italic leading-relaxed text-[#4a4a4a]">
                 Soradin helped me put everything in writing in less than half an hour. I finally feel prepared — and my kids are relieved too.
               </p>
               <p
-                className="mt-4 text-sm font-medium text-slate-900"
+                className="mt-4 text-sm font-medium text-[#2a2a2a]"
                 style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
               >
                 – Margaret R.
               </p>
             </div>
-            <div className="rounded-lg border border-slate-200 bg-white p-8 shadow-sm">
-              <span className="text-4xl text-slate-300">&ldquo;</span>
-              <p className="mt-2 italic leading-relaxed text-slate-700">
+            <div className="rounded-lg border border-[#ded3c2] bg-white p-8 shadow-sm">
+              <span className="text-4xl text-[#ded3c2]">&ldquo;</span>
+              <p className="mt-2 italic leading-relaxed text-[#4a4a4a]">
                 The process was gentle and thoughtful. It made something difficult feel manageable.
               </p>
               <p
-                className="mt-4 text-sm font-medium text-slate-900"
+                className="mt-4 text-sm font-medium text-[#2a2a2a]"
                 style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
               >
                 – Daniel S.
               </p>
             </div>
-            <div className="rounded-lg border border-slate-200 bg-white p-8 shadow-sm">
-              <span className="text-4xl text-slate-300">&ldquo;</span>
-              <p className="mt-2 italic leading-relaxed text-slate-700">
+            <div className="rounded-lg border border-[#ded3c2] bg-white p-8 shadow-sm">
+              <span className="text-4xl text-[#ded3c2]">&ldquo;</span>
+              <p className="mt-2 italic leading-relaxed text-[#4a4a4a]">
                 I didn&apos;t know where to start. Soradin made the steps clear and simple.
               </p>
               <p
-                className="mt-4 text-sm font-medium text-slate-900"
+                className="mt-4 text-sm font-medium text-[#2a2a2a]"
                 style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
               >
                 – Alyssa P.
@@ -340,31 +340,31 @@ export default function HomePage() {
           </h2>
           <div className="space-y-4">
             {/* FAQ 1 */}
-            <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-              <h3 className="mb-2 text-base font-semibold text-slate-900">
+            <div className="rounded-lg border border-[#ded3c2] bg-white p-6 shadow-sm">
+              <h3 className="mb-2 text-base font-semibold text-[#2a2a2a]">
                 Do I need to know all my decisions now?
               </h3>
-              <p className="text-sm leading-relaxed text-slate-600">
+              <p className="text-sm leading-relaxed text-[#4a4a4a]">
                 No — you can complete what you&apos;re certain about and return anytime to add details.
               </p>
             </div>
 
             {/* FAQ 2 */}
-            <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-              <h3 className="mb-2 text-base font-semibold text-slate-900">
+            <div className="rounded-lg border border-[#ded3c2] bg-white p-6 shadow-sm">
+              <h3 className="mb-2 text-base font-semibold text-[#2a2a2a]">
                 Is my information secure?
               </h3>
-              <p className="text-sm leading-relaxed text-slate-600">
+              <p className="text-sm leading-relaxed text-[#4a4a4a]">
                 Yes. Soradin uses encrypted storage and never shares your details without your permission.
               </p>
             </div>
 
             {/* FAQ 3 */}
-            <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-              <h3 className="mb-2 text-base font-semibold text-slate-900">
+            <div className="rounded-lg border border-[#ded3c2] bg-white p-6 shadow-sm">
+              <h3 className="mb-2 text-base font-semibold text-[#2a2a2a]">
                 Does this commit me to anything?
               </h3>
-              <p className="text-sm leading-relaxed text-slate-600">
+              <p className="text-sm leading-relaxed text-[#4a4a4a]">
                 Not at all. Completing your plan is free and comes with no obligation.
               </p>
             </div>
