@@ -45,14 +45,11 @@ export default function HomePage() {
         <div className="relative w-full">
           {/* Hero Image - Full Width */}
           <div className="relative w-full h-[380px] md:h-[480px] lg:h-[520px] overflow-hidden bg-[#e5ddd0]">
-            <Image
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
               src="/hero.jpg"
               alt=""
-              fill
-              priority
-              className="object-cover"
-              sizes="100vw"
-              unoptimized
+              className="w-full h-full object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/20 pointer-events-none"></div>
           </div>
