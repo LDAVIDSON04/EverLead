@@ -610,12 +610,12 @@ export default function AvailableLeadsPage() {
         ) : (() => {
           // Apply client-side filters
           const filteredLeads = leads.filter((lead) => {
-            // Distance-based filtering (if agent location is set)
+            // Distance-based filtering (if agent location is set) - STRICT: only show leads within radius
             if (agentLat && agentLng) {
               const leadLat = (lead as any).latitude;
               const leadLng = (lead as any).longitude;
               
-              // Filter by distance - leads without coordinates will still show (they'll be geocoded later)
+              // Strict filtering: only show leads with coordinates that are within radius
               if (!isWithinRadius(agentLat, agentLng, leadLat, leadLng, searchRadius)) {
                 return false;
               }
@@ -666,10 +666,6 @@ export default function AvailableLeadsPage() {
             return true;
           });
 
-          // Count leads with and without coordinates
-          const leadsWithCoords = filteredLeads.filter((lead: any) => lead.latitude && lead.longitude).length;
-          const leadsWithoutCoords = filteredLeads.length - leadsWithCoords;
-
           if (filteredLeads.length === 0) {
             return (
               <div className="mt-6">
@@ -680,7 +676,7 @@ export default function AvailableLeadsPage() {
                 </p>
                 {agentLat && agentLng && (
                   <p className="text-xs text-neutral-400">
-                    Try increasing your search radius.
+                    Try increasing your search radius or selecting a different location.
                   </p>
                 )}
               </div>
@@ -689,18 +685,6 @@ export default function AvailableLeadsPage() {
 
           return (
             <div className="mt-6">
-              {agentLat && agentLng && (
-                <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm">
-                  <p className="text-blue-900 font-medium">
-                    Showing {filteredLeads.length} lead{filteredLeads.length !== 1 ? 's' : ''} within {searchRadius} km of {agentCity}, {agentProvince}
-                  </p>
-                  {leadsWithoutCoords > 0 && (
-                    <p className="text-xs text-blue-700 mt-1">
-                      Note: {leadsWithoutCoords} lead{leadsWithoutCoords !== 1 ? 's' : ''} {leadsWithoutCoords !== 1 ? 'are' : 'is'} shown but {leadsWithoutCoords !== 1 ? 'do' : 'does'} not have precise location data yet.
-                    </p>
-                  )}
-                </div>
-              )}
               {filteredLeads.map((lead: AgentLead) => (
                 <AgentLeadCard key={lead.id} lead={lead} />
               ))}
