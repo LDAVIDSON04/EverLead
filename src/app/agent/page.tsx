@@ -21,7 +21,7 @@ export default function AgentLandingPage() {
   const [licensedFuneralDirector, setLicensedFuneralDirector] = useState<"yes" | "no" | "">("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [signupSuccess, setSignupSuccess] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   useEffect(() => {
     async function checkAuth() {
@@ -98,9 +98,18 @@ export default function AgentLandingPage() {
           return;
         }
 
-        // Show success message
-        setSignupSuccess(true);
+        // Show success modal
+        setShowSuccessModal(true);
         setSubmitting(false);
+        
+        // Reset form
+        setFullName("");
+        setEmail("");
+        setPassword("");
+        setPhone("");
+        setFuneralHome("");
+        setLicensedInProvince("");
+        setLicensedFuneralDirector("");
       } else {
         const { data, error: signInError } =
           await supabaseClient.auth.signInWithPassword({
@@ -217,6 +226,7 @@ export default function AgentLandingPage() {
               onClick={() => {
                 setMode("signup");
                 setError(null);
+                setShowSuccessModal(false);
               }}
               className={`flex-1 rounded-full px-4 py-2 transition-colors ${
                 mode === "signup"
@@ -228,20 +238,7 @@ export default function AgentLandingPage() {
             </button>
           </div>
 
-          {signupSuccess ? (
-            <div className="rounded-lg border border-green-200 bg-green-50 p-6 shadow-sm">
-              <h3 className="mb-2 text-base font-semibold text-green-900">Account Created Successfully</h3>
-              <p className="mb-4 text-sm text-green-800">
-                Thank you for your interest in Soradin! Your account has been submitted for review. 
-                Our team will review your application and you will receive an email notification once 
-                your account has been approved. This typically takes 1-2 business days.
-              </p>
-              <p className="text-xs text-green-700">
-                You can close this page. We'll send you an email when your account is ready.
-              </p>
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border border-[#ded3c2] bg-white p-6 shadow-sm">
+          <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border border-[#ded3c2] bg-white p-6 shadow-sm">
               {mode === "signup" && (
                 <>
                   <div className="space-y-2">
@@ -396,7 +393,7 @@ export default function AgentLandingPage() {
                 ? "Please wait..."
                 : mode === "login"
                 ? "Sign in"
-                : "Create account"}
+                : "Submit for approval"}
             </button>
 
             {mode === "login" && (
@@ -431,6 +428,37 @@ export default function AgentLandingPage() {
                 </p>
               )}
             </form>
+
+          {/* Success Modal */}
+          {showSuccessModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+              <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+                <div className="text-center">
+                  <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
+                    <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-semibold text-[#2a2a2a] mb-2">
+                    Thank you for your request
+                  </h3>
+                  <p className="text-sm text-[#4a4a4a] mb-6">
+                    We will get back to you soon. Your account has been submitted for review. 
+                    Our team will review your application and you will receive an email notification once 
+                    your account has been approved. This typically takes 1-2 business days.
+                  </p>
+                  <button
+                    onClick={() => {
+                      setShowSuccessModal(false);
+                      setMode("login");
+                    }}
+                    className="w-full rounded-md bg-[#2a2a2a] px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-[#3a3a3a] transition-colors"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
           )}
         </div>
       </section>

@@ -29,10 +29,13 @@ export async function POST(req: NextRequest) {
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
     const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-    // Create auth user
+    // Create auth user (disable email confirmation for now - we'll approve manually)
     const { data: authData, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        emailRedirectTo: undefined, // No email confirmation needed - manual approval instead
+      },
     });
 
     if (signUpError || !authData.user) {
