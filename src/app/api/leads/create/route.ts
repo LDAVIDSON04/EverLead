@@ -306,17 +306,33 @@ export async function POST(req: NextRequest) {
     // Notify agents about the new lead (async, don't wait for it)
     // Only notify if lead has location coordinates
     if (data.latitude && data.longitude) {
+      console.log("📧 Triggering agent notifications for new lead", {
+        leadId: data.id,
+        city: data.city,
+        province: data.province,
+        latitude: data.latitude,
+        longitude: data.longitude,
+      });
       try {
         const { notifyAgentsForLead } = await import("@/lib/notifyAgentsForLead");
         // Fire and forget - don't block the response
         notifyAgentsForLead(data).catch((err) => {
-          console.error("Error notifying agents (non-fatal):", err);
+          console.error("❌ Error notifying agents (non-fatal):", err);
+          console.error("Error details:", {
+            message: err?.message,
+            stack: err?.stack,
+            name: err?.name,
+          });
         });
       } catch (importError) {
-        console.error("Error importing notifyAgentsForLead (non-fatal):", importError);
+        console.error("❌ Error importing notifyAgentsForLead (non-fatal):", importError);
       }
     } else {
-      console.log("Skipping agent notifications - lead has no location coordinates");
+      console.log("⚠️ Skipping agent notifications - lead has no location coordinates", {
+        leadId: data.id,
+        city: data.city,
+        province: data.province,
+      });
     }
 
     return NextResponse.json(

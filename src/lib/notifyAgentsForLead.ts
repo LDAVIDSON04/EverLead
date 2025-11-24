@@ -180,6 +180,14 @@ async function sendEmailNotification(params: EmailNotificationParams): Promise<v
   if (resendApiKey) {
     // Use Resend API
     try {
+      // Format from email properly for Resend
+      // If RESEND_FROM_EMAIL doesn't contain <>, wrap it
+      let fromEmail = process.env.RESEND_FROM_EMAIL || 'Soradin <notifications@soradin.com>';
+      if (fromEmail && !fromEmail.includes('<')) {
+        // If it's just an email, wrap it with a name
+        fromEmail = `Soradin <${fromEmail}>`;
+      }
+
       const resendResponse = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: {
@@ -187,7 +195,7 @@ async function sendEmailNotification(params: EmailNotificationParams): Promise<v
           'Authorization': `Bearer ${resendApiKey}`,
         },
         body: JSON.stringify({
-          from: process.env.RESEND_FROM_EMAIL || 'Soradin <notifications@soradin.com>',
+          from: fromEmail,
           to: [to],
           subject: `New Lead Available in ${city}, ${province} - ${urgency} Lead`,
           html: `
