@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 
 export default function HomePage() {
   return (
@@ -10,23 +9,13 @@ export default function HomePage() {
       <header className="bg-[#1f2933]/95 backdrop-blur-sm text-white border-b border-[#1f2933]/20 sticky top-0 z-50 shadow-sm">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-8 py-5">
           {/* Left: Logo */}
-          <div className="flex items-center gap-3">
-            <Image
-              src="/logo.png"
-              alt="Soradin Logo"
-              width={40}
-              height={40}
-              className="h-10 w-auto"
-              priority
-            />
-            <div className="flex flex-col">
-              <span className="text-xl font-light tracking-wide text-white leading-tight">
-                Soradin
-              </span>
-              <span className="text-[10px] uppercase tracking-[0.3em] text-[#e0d5bf]/80 font-light">
-                PRE-PLANNING
-              </span>
-            </div>
+          <div className="flex items-baseline gap-3">
+            <span className="text-xl font-light tracking-wide text-white">
+              Soradin
+            </span>
+            <span className="text-[10px] uppercase tracking-[0.3em] text-[#e0d5bf]/80 font-light">
+              PRE-PLANNING
+            </span>
           </div>
 
           {/* Right: Actions */}
