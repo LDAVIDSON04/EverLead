@@ -67,18 +67,34 @@ export async function notifyAgentsForLead(lead: any, supabaseAdminClient: any = 
     // Filter agents by distance - only notify those within their search radius
     const agentsToNotify: Array<{ id: string; full_name: string | null; email: string }> = [];
 
+    console.log(`🔍 Checking ${agents.length} agents against lead location (${leadLat}, ${leadLon})`);
+
     for (const agent of agents) {
+      console.log(`🔍 Checking agent: ${agent.full_name} (${agent.id})`, {
+        agentLat: agent.agent_latitude,
+        agentLon: agent.agent_longitude,
+        radius: agent.search_radius_km,
+      });
+
       const agentLat = parseFloat(agent.agent_latitude);
       const agentLon = parseFloat(agent.agent_longitude);
       const radius = agent.search_radius_km || 50; // Default to 50km if not set
 
       if (isNaN(agentLat) || isNaN(agentLon)) {
+        console.log(`⚠️ Skipping agent ${agent.full_name}: Invalid coordinates (${agent.agent_latitude}, ${agent.agent_longitude})`);
         continue; // Skip agents with invalid coordinates
       }
 
       // Check if lead is within agent's search radius
       // isWithinRadius(agentLat, agentLon, leadLat, leadLon, radiusKm)
       const isWithin = isWithinRadius(agentLat, agentLon, leadLat, leadLon, radius);
+      
+      console.log(`📍 Distance check for ${agent.full_name}:`, {
+        agentLocation: `${agentLat}, ${agentLon}`,
+        leadLocation: `${leadLat}, ${leadLon}`,
+        radius: `${radius}km`,
+        isWithin,
+      });
       
       if (isWithin) {
         // Get email from auth.users
@@ -102,7 +118,12 @@ export async function notifyAgentsForLead(lead: any, supabaseAdminClient: any = 
         // Calculate distance for logging
         const { calculateDistance } = await import('./distance');
         const distance = calculateDistance(agentLat, agentLon, leadLat, leadLon);
-        console.log(`⏭️ Agent ${agent.full_name} (${agent.id}) is ${distance.toFixed(1)}km away (radius: ${radius}km) - not notifying`);
+        console.log(`⏭️ Agent ${agent.full_name} (${agent.id}) is ${distance.toFixed(1)}km away (radius: ${radius}km) - not notifying`, {
+          agentLocation: `${agentLat}, ${agentLon}`,
+          leadLocation: `${leadLat}, ${leadLon}`,
+          calculatedDistance: `${distance.toFixed(2)}km`,
+          agentRadius: `${radius}km`,
+        });
       }
     }
 
