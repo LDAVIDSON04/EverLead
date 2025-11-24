@@ -36,53 +36,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check if email already exists
-    const { data: existingProfile, error: checkError } = await supabaseAdmin
-      .from("profiles")
-      .select("id, email, role, approval_status")
-      .eq("email", email)
-      .maybeSingle();
-
-    if (checkError) {
-      console.error("Error checking existing profile:", checkError);
-      // Continue anyway - might be a permissions issue, but we'll try to create
-    }
-
-    if (existingProfile) {
-      // Email already exists
-      if (existingProfile.role === "agent") {
-        if (existingProfile.approval_status === "pending") {
-          return NextResponse.json(
-            { error: "An account with this email is already pending approval. Please wait for admin approval or contact support." },
-            { status: 400 }
-          );
-        } else if (existingProfile.approval_status === "approved") {
-          return NextResponse.json(
-            { error: "An account with this email already exists. Please sign in instead." },
-            { status: 400 }
-          );
-        } else if (existingProfile.approval_status === "declined") {
-          return NextResponse.json(
-            { error: "This account was previously declined. Please contact support if you believe this is an error." },
-            { status: 400 }
-          );
-        }
-      } else {
-        return NextResponse.json(
-          { error: "An account with this email already exists. Please sign in instead." },
-          { status: 400 }
-        );
-      }
-    }
-
     // Create Supabase client for auth operations
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
     const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
     let userId: string | null = null;
+    let profileExists = false;
 
-    // Create auth user (disable email confirmation for now - we'll approve manually)
+    // First, try to create auth user
     const { data: authData, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
@@ -93,39 +55,84 @@ export async function POST(req: NextRequest) {
 
     if (signUpError) {
       console.error("Signup error:", signUpError);
+      
       // Handle specific Supabase errors
       if (signUpError.message?.includes("already registered") || signUpError.message?.includes("User already registered")) {
-        // Auth user exists, but profile might not - check if profile exists
-        console.log("Auth user already exists, checking if profile exists...");
+        // Auth user exists, find it and check if profile exists
+        console.log("Auth user already exists, finding user and checking profile...");
         
-        // Try to get the user by email using admin client
-        const { data: authUsers } = await supabaseAdmin.auth.admin.listUsers();
-        const existingAuthUser = authUsers?.users?.find((u: any) => u.email === email);
-        
-        if (existingAuthUser) {
-          userId = existingAuthUser.id;
-          console.log("Found existing auth user:", userId);
+        try {
+          // Try to get the user by email using admin client
+          const { data: authUsers, error: listError } = await supabaseAdmin.auth.admin.listUsers();
           
-          // Check if profile exists for this user
-          const { data: existingUserProfile } = await supabaseAdmin
-            .from("profiles")
-            .select("id, role, approval_status")
-            .eq("id", userId)
-            .maybeSingle();
-          
-          if (existingUserProfile) {
-            // Profile exists - user should sign in
+          if (listError) {
+            console.error("Error listing users:", listError);
             return NextResponse.json(
-              { error: "An account with this email already exists. Please sign in instead." },
+              { error: "Failed to verify account status. Please try again." },
+              { status: 500 }
+            );
+          }
+          
+          const existingAuthUser = authUsers?.users?.find((u: any) => u.email?.toLowerCase() === email.toLowerCase());
+          
+          if (existingAuthUser) {
+            userId = existingAuthUser.id;
+            console.log("Found existing auth user:", userId);
+            
+            // Check if profile exists for this user
+            const { data: existingUserProfile, error: profileCheckError } = await supabaseAdmin
+              .from("profiles")
+              .select("id, email, role, approval_status")
+              .eq("id", userId)
+              .maybeSingle();
+            
+            if (profileCheckError) {
+              console.error("Error checking profile:", profileCheckError);
+            }
+            
+            if (existingUserProfile) {
+              profileExists = true;
+              // Profile exists - check status and return appropriate message
+              if (existingUserProfile.role === "agent") {
+                if (existingUserProfile.approval_status === "pending") {
+                  return NextResponse.json(
+                    { error: "An account with this email is already pending approval. Please wait for admin approval or contact support." },
+                    { status: 400 }
+                  );
+                } else if (existingUserProfile.approval_status === "approved") {
+                  return NextResponse.json(
+                    { error: "An account with this email already exists. Please sign in instead." },
+                    { status: 400 }
+                  );
+                } else if (existingUserProfile.approval_status === "declined") {
+                  return NextResponse.json(
+                    { error: "This account was previously declined. Please contact support if you believe this is an error." },
+                    { status: 400 }
+                  );
+                }
+              } else {
+                return NextResponse.json(
+                  { error: "An account with this email already exists. Please sign in instead." },
+                  { status: 400 }
+                );
+              }
+            } else {
+              // Auth user exists but no profile - we'll create the profile below
+              console.log("Auth user exists but no profile found - will create profile");
+            }
+          } else {
+            // Can't find the user - might be a different error
+            console.error("Auth user error but couldn't find user in list");
+            return NextResponse.json(
+              { error: "An account with this email may already exist. Please try signing in instead." },
               { status: 400 }
             );
           }
-          // Profile doesn't exist - we'll create it below
-        } else {
-          // Can't find the user - might be a different error
+        } catch (error: any) {
+          console.error("Error handling existing auth user:", error);
           return NextResponse.json(
-            { error: "An account with this email already exists. Please sign in instead." },
-            { status: 400 }
+            { error: "Failed to verify account status. Please try again." },
+            { status: 500 }
           );
         }
       } else {
@@ -140,12 +147,14 @@ export async function POST(req: NextRequest) {
     }
 
     if (!userId) {
-      console.error("No user ID available");
+      console.error("No user ID available after auth attempt");
       return NextResponse.json(
         { error: "Failed to create account. Please try again." },
         { status: 400 }
       );
     }
+
+    // If profile already exists, we would have returned above, so we can proceed to create
 
     // Create profile with approval_status = 'pending'
     // Build profile data, only including fields that exist

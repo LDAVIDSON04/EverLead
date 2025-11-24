@@ -256,20 +256,18 @@ export default function AdminDashboardPage() {
   async function loadPendingAgents() {
     setLoadingApprovals(true);
     try {
-      const { data, error } = await supabaseClient
-        .from("profiles")
-        .select("id, email, full_name, phone, funeral_home, licensed_in_province, licensed_funeral_director, approval_status, created_at")
-        .eq("role", "agent")
-        .in("approval_status", ["pending", "declined"])
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        console.error("Error loading pending agents:", error);
+      // Use API route to fetch pending agents (uses service role key, bypasses RLS)
+      const response = await fetch("/api/admin/pending-agents");
+      const result = await response.json();
+      
+      if (!response.ok || result.error) {
+        console.error("Error loading pending agents:", result.error);
         setPendingAgents([]);
-      } else {
-        setPendingAgents(data || []);
-        console.log(`Loaded ${data?.length || 0} pending/declined agents`);
+        return;
       }
+      
+      setPendingAgents(result.agents || []);
+      console.log(`Loaded ${result.agents?.length || 0} pending/declined agents`);
     } catch (err) {
       console.error("Error loading pending agents:", err);
       setPendingAgents([]);
