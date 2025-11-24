@@ -37,10 +37,14 @@ export async function notifyAgentsForLead(lead: any, supabaseAdminClient: any = 
     const leadLat = parseFloat(lead.latitude);
     const leadLon = parseFloat(lead.longitude);
 
+    console.log(`📍 Parsed lead coordinates:`, { leadLat, leadLon, isNaNLat: isNaN(leadLat), isNaNLon: isNaN(leadLon) });
+
     if (isNaN(leadLat) || isNaN(leadLon)) {
-      console.warn('Cannot notify agents: lead has invalid coordinates', { leadId: lead.id, lat: lead.latitude, lon: lead.longitude });
+      console.warn('❌ Cannot notify agents: lead has invalid coordinates', { leadId: lead.id, lat: lead.latitude, lon: lead.longitude });
       return;
     }
+
+    console.log(`🔍 Fetching approved agents with location settings...`);
 
     // Get all approved agents with location settings
     const { data: agents, error: agentsError } = await supabaseAdminClient
@@ -52,8 +56,15 @@ export async function notifyAgentsForLead(lead: any, supabaseAdminClient: any = 
       .not('agent_longitude', 'is', null)
       .not('search_radius_km', 'is', null);
 
+    console.log(`🔍 Agent query result:`, {
+      hasError: !!agentsError,
+      error: agentsError,
+      agentsCount: agents?.length || 0,
+      agents: agents?.map((a: any) => ({ id: a.id, name: a.full_name })) || [],
+    });
+
     if (agentsError) {
-      console.error('Error fetching agents for notification:', agentsError);
+      console.error('❌ Error fetching agents for notification:', agentsError);
       return;
     }
 
