@@ -1,30 +1,42 @@
 // src/lib/notifyAgentsForLead.ts
-// Helper to notify agents when an auction goes live
+// Helper to notify agents when a new lead is created in their area
 
 import { supabaseAdmin } from './supabaseAdmin';
+import { isWithinRadius } from './distance';
 
 /**
- * Find agents whose region matches the lead's location and send notifications
+ * Find agents within the lead's location radius and send email notifications
+ * Only notifies agents who:
+ * 1. Have their location set (agent_latitude, agent_longitude)
+ * 2. Have a search radius set (search_radius_km)
+ * 3. Are within the lead's location radius
+ * 4. Are approved agents
  */
 export async function notifyAgentsForLead(lead: any, supabaseAdminClient: any = supabaseAdmin): Promise<void> {
   try {
-    // Find agents - for now, we'll match by province
-    // In the future, this could be more sophisticated (city, radius, etc.)
-    const province = lead.province?.toLowerCase().trim();
-    
-    if (!province) {
-      console.warn('Cannot notify agents: lead has no province', { leadId: lead.id });
+    // Check if lead has location data
+    if (!lead.latitude || !lead.longitude) {
+      console.warn('Cannot notify agents: lead has no location coordinates', { leadId: lead.id });
       return;
     }
 
-    // Get all agent profiles
-    // Note: In a production system, you might have a more sophisticated matching
-    // (e.g., agents table with service_areas, radius matching, etc.)
+    const leadLat = parseFloat(lead.latitude);
+    const leadLon = parseFloat(lead.longitude);
+
+    if (isNaN(leadLat) || isNaN(leadLon)) {
+      console.warn('Cannot notify agents: lead has invalid coordinates', { leadId: lead.id, lat: lead.latitude, lon: lead.longitude });
+      return;
+    }
+
+    // Get all approved agents with location settings
     const { data: agents, error: agentsError } = await supabaseAdminClient
       .from('profiles')
-      .select('id, email, full_name')
+      .select('id, full_name, agent_latitude, agent_longitude, search_radius_km')
       .eq('role', 'agent')
-      .not('email', 'is', null);
+      .eq('approval_status', 'approved')
+      .not('agent_latitude', 'is', null)
+      .not('agent_longitude', 'is', null)
+      .not('search_radius_km', 'is', null);
 
     if (agentsError) {
       console.error('Error fetching agents for notification:', agentsError);
@@ -32,16 +44,44 @@ export async function notifyAgentsForLead(lead: any, supabaseAdminClient: any = 
     }
 
     if (!agents || agents.length === 0) {
-      console.warn('No agents found to notify');
+      console.log('No agents with location settings found to notify');
       return;
     }
 
-    // For now, notify all agents (in production, you'd filter by region/territory)
-    // This is a simple implementation - can be enhanced with actual region matching
-    const agentsToNotify = agents.filter((agent: any) => agent.email);
+    // Filter agents by distance - only notify those within their search radius
+    const agentsToNotify: Array<{ id: string; full_name: string | null; email: string }> = [];
+
+    for (const agent of agents) {
+      const agentLat = parseFloat(agent.agent_latitude);
+      const agentLon = parseFloat(agent.agent_longitude);
+      const radius = agent.search_radius_km || 50; // Default to 50km if not set
+
+      if (isNaN(agentLat) || isNaN(agentLon)) {
+        continue; // Skip agents with invalid coordinates
+      }
+
+      // Check if lead is within agent's search radius
+      // isWithinRadius(agentLat, agentLon, leadLat, leadLon, radiusKm)
+      if (isWithinRadius(agentLat, agentLon, leadLat, leadLon, radius)) {
+        // Get email from auth.users
+        try {
+          const { data: authUser } = await supabaseAdminClient.auth.admin.getUserById(agent.id);
+          if (authUser?.user?.email) {
+            agentsToNotify.push({
+              id: agent.id,
+              full_name: agent.full_name,
+              email: authUser.user.email,
+            });
+          }
+        } catch (authError) {
+          console.error(`Error fetching email for agent ${agent.id}:`, authError);
+          // Continue with other agents
+        }
+      }
+    }
 
     if (agentsToNotify.length === 0) {
-      console.warn('No agents with email addresses found');
+      console.log(`No agents within radius for lead ${lead.id} in ${lead.city}, ${lead.province}`);
       return;
     }
 
@@ -50,29 +90,34 @@ export async function notifyAgentsForLead(lead: any, supabaseAdminClient: any = 
     const leadUrl = `${baseUrl}/agent/leads/available`;
 
     const city = lead.city || 'your area';
+    const province = lead.province || '';
     const urgency = lead.urgency_level || 'warm';
     const urgencyLabel = urgency.charAt(0).toUpperCase() + urgency.slice(1);
+    const price = lead.lead_price ? `$${lead.lead_price.toFixed(2)}` : 'See pricing';
 
+    let successCount = 0;
     for (const agent of agentsToNotify) {
       try {
         await sendEmailNotification({
           to: agent.email,
           agentName: agent.full_name || 'Agent',
           city,
-          province: lead.province || '',
+          province,
           urgency: urgencyLabel,
+          price,
           leadUrl,
         });
+        successCount++;
       } catch (emailError) {
         console.error(`Failed to send notification to ${agent.email}:`, emailError);
         // Continue with other agents even if one fails
       }
     }
 
-    console.log(`Sent auction notifications to ${agentsToNotify.length} agents for lead ${lead.id}`);
+    console.log(`✅ Sent email notifications to ${successCount}/${agentsToNotify.length} agents for lead ${lead.id} in ${city}, ${province}`);
   } catch (err) {
     console.error('Error in notifyAgentsForLead:', err);
-    // Don't throw - notification failure shouldn't break the auction flow
+    // Don't throw - notification failure shouldn't break lead creation
   }
 }
 
@@ -82,6 +127,7 @@ interface EmailNotificationParams {
   city: string;
   province: string;
   urgency: string;
+  price: string;
   leadUrl: string;
 }
 
@@ -89,7 +135,7 @@ interface EmailNotificationParams {
  * Send email notification using Resend or fallback to console log
  */
 async function sendEmailNotification(params: EmailNotificationParams): Promise<void> {
-  const { to, agentName, city, province, urgency, leadUrl } = params;
+  const { to, agentName, city, province, urgency, price, leadUrl } = params;
 
   // Check if Resend is configured
   const resendApiKey = process.env.RESEND_API_KEY;
@@ -106,20 +152,27 @@ async function sendEmailNotification(params: EmailNotificationParams): Promise<v
         body: JSON.stringify({
           from: process.env.RESEND_FROM_EMAIL || 'Soradin <notifications@soradin.com>',
           to: [to],
-          subject: `New Soradin pre-need lead available in ${city}`,
+          subject: `New Lead Available in ${city}, ${province} - ${urgency} Lead`,
           html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-              <h2 style="color: #2a2a2a;">New Lead Available</h2>
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <h2 style="color: #2a2a2a; margin-bottom: 20px;">New Lead Available in Your Area</h2>
               <p>Hi ${agentName},</p>
-              <p>A new pre-need inquiry has been submitted in <strong>${city}, ${province}</strong> and is now available for bidding.</p>
-              <p><strong>Urgency:</strong> ${urgency}</p>
+              <p>A new pre-need inquiry has been submitted in <strong>${city}, ${province}</strong> and is now available for purchase.</p>
+              <div style="background-color: #f7f4ef; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                <p style="margin: 5px 0;"><strong>Location:</strong> ${city}, ${province}</p>
+                <p style="margin: 5px 0;"><strong>Urgency:</strong> ${urgency}</p>
+                <p style="margin: 5px 0;"><strong>Price:</strong> ${price}</p>
+              </div>
               <p style="margin-top: 30px;">
-                <a href="${leadUrl}" style="background-color: #2a2a2a; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block;">
+                <a href="${leadUrl}" style="background-color: #00A86B; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold;">
                   View Available Leads
                 </a>
               </p>
               <p style="margin-top: 30px; color: #6b6b6b; font-size: 14px;">
-                This is an automated notification from Soradin. You're receiving this because you're a registered agent.
+                This is an automated notification from Soradin. You're receiving this because you're a registered agent and this lead is within your service area.
+              </p>
+              <p style="margin-top: 15px; color: #6b6b6b; font-size: 12px;">
+                To update your notification preferences, log in to your agent portal.
               </p>
             </div>
           `,
@@ -139,16 +192,15 @@ async function sendEmailNotification(params: EmailNotificationParams): Promise<v
   }
 
   // Fallback: log to console (useful for development)
-  if (process.env.NODE_ENV === 'development') {
-    console.log('📧 Email notification (not sent - no RESEND_API_KEY):', {
-      to,
-      subject: `New Soradin pre-need lead available in ${city}`,
-      agentName,
-      city,
-      province,
-      urgency,
-      leadUrl,
-    });
-  }
+  console.log('📧 Email notification (not sent - no RESEND_API_KEY):', {
+    to,
+    subject: `New Soradin pre-need lead available in ${city}`,
+    agentName,
+    city,
+    province,
+    urgency,
+    price,
+    leadUrl,
+  });
 }
 
