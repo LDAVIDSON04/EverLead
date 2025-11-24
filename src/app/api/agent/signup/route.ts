@@ -196,47 +196,87 @@ export async function POST(req: NextRequest) {
       // Check if it's a duplicate key error (profile already exists)
       if (profileError.code === "23505" || profileError.message?.includes("duplicate") || profileError.message?.includes("unique")) {
         // Profile might already exist, check if we can update it
-        const { data: existingProfile } = await supabaseAdmin
+        const { data: existingProfile, error: checkError } = await supabaseAdmin
           .from("profiles")
           .select("id, approval_status")
           .eq("id", userId)
           .maybeSingle();
 
+        if (checkError) {
+          console.error("Error checking existing profile:", checkError);
+        }
+
         if (existingProfile) {
           // Update existing profile instead
-          const { error: updateError } = await supabaseAdmin
+          const updateData: any = {
+            email,
+            full_name,
+            role: "agent",
+            approval_status: "pending",
+          };
+          if (phone) updateData.phone = phone;
+          if (funeral_home) updateData.funeral_home = funeral_home;
+          if (licensed_in_province !== undefined) {
+            updateData.licensed_in_province = licensed_in_province === true || licensed_in_province === "yes";
+          }
+          if (licensed_funeral_director !== undefined) {
+            updateData.licensed_funeral_director = licensed_funeral_director === true || licensed_funeral_director === "yes";
+          }
+
+          const { data: updatedProfile, error: updateError } = await supabaseAdmin
             .from("profiles")
-            .update({
-              email,
-              full_name,
-              phone,
-              funeral_home,
-              licensed_in_province: licensed_in_province === true || licensed_in_province === "yes",
-              licensed_funeral_director: licensed_funeral_director === true || licensed_funeral_director === "yes",
-              role: "agent",
-              approval_status: "pending",
-            })
-            .eq("id", userId);
+            .update(updateData)
+            .eq("id", userId)
+            .select()
+            .single();
 
           if (updateError) {
             console.error("Update profile error:", updateError);
             return NextResponse.json(
-              { error: "Failed to update profile. Please try again." },
+              { 
+                error: "Failed to update profile. Please try again.",
+                details: updateError.message || "Unknown error",
+              },
               { status: 500 }
             );
           }
+          
           // Success - profile updated
-        } else {
+          console.log("✅ Profile updated successfully:", { userId, email, profileId: updatedProfile?.id });
           return NextResponse.json(
-            { error: "Failed to create profile. Please try again." },
+            { 
+              success: true,
+              message: "Account created successfully. Your application is pending approval.",
+              userId,
+            },
+            { status: 201 }
+          );
+        } else {
+          // Duplicate error but profile doesn't exist - might be a race condition
+          console.error("Duplicate key error but profile not found - possible race condition");
+          return NextResponse.json(
+            { 
+              error: "Failed to create profile. Please try again.",
+              details: "Account may already exist. Please try signing in.",
+            },
             { status: 500 }
           );
         }
       } else {
+        // Other database error - return detailed error in development
+        const errorMessage = profileError.message || "Unknown error";
+        const errorDetails = profileError.details || profileError.hint || "";
+        
+        console.error("Profile creation failed:", {
+          code: profileError.code,
+          message: errorMessage,
+          details: errorDetails,
+        });
+        
         return NextResponse.json(
           { 
             error: "Failed to create profile. Please try again.",
-            details: profileError.message || "Unknown error",
+            details: process.env.NODE_ENV === "development" ? `${errorMessage} ${errorDetails}`.trim() : undefined,
           },
           { status: 500 }
         );
@@ -263,8 +303,12 @@ export async function POST(req: NextRequest) {
     );
   } catch (error: any) {
     console.error("Agent signup error:", error);
+    console.error("Error stack:", error?.stack);
     return NextResponse.json(
-      { error: "An unexpected error occurred. Please try again." },
+      { 
+        error: "An unexpected error occurred. Please try again.",
+        details: process.env.NODE_ENV === "development" ? error?.message : undefined,
+      },
       { status: 500 }
     );
   }
