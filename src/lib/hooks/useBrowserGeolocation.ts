@@ -9,18 +9,25 @@ export interface GeolocationResult {
   error?: string;
 }
 
-export function useBrowserGeolocation() {
+export function useBrowserGeolocation(shouldRequest: boolean = false) {
   const [result, setResult] = useState<GeolocationResult | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Only request if explicitly requested
+    if (!shouldRequest) {
+      setLoading(false);
+      return;
+    }
+
     if (!navigator.geolocation) {
       setError("Geolocation is not supported by your browser");
       setLoading(false);
       return;
     }
 
+    setLoading(true);
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         const { latitude, longitude } = position.coords;
@@ -70,10 +77,10 @@ export function useBrowserGeolocation() {
       {
         enableHighAccuracy: false,
         timeout: 10000,
-        maximumAge: 300000, // Cache for 5 minutes
+        maximumAge: 86400000, // Cache for 24 hours (browser will remember permission)
       }
     );
-  }, []);
+  }, [shouldRequest]);
 
   return { result, loading, error };
 }

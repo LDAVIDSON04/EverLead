@@ -53,8 +53,9 @@ export default function AvailableLeadsPage() {
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [locationInitialized, setLocationInitialized] = useState(false);
   
-  // Browser geolocation
-  const { result: geoResult, loading: geoLoading } = useBrowserGeolocation();
+  // Browser geolocation - only request if explicitly requested by user
+  const [requestGeolocation, setRequestGeolocation] = useState(false);
+  const { result: geoResult, loading: geoLoading } = useBrowserGeolocation(requestGeolocation);
 
   // Function to refresh leads (reusable for initial load, polling, and after actions)
   // Memoized with useCallback to prevent recreation on every render
@@ -203,51 +204,58 @@ export default function AvailableLeadsPage() {
   // Track if initial load has completed
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
 
-  // Initialize location on first visit (browser geolocation or profile)
+  // Initialize location on first visit - only use browser geolocation if location is not set
   useEffect(() => {
-    if (locationInitialized || geoLoading) return;
-
-    // If profile has location, use it (already set in refreshLeads)
+    // If profile has location, use it (already set in refreshLeads) - don't request browser location
     if (agentCity && agentProvince && agentLat && agentLng) {
       setLocationInitialized(true);
+      setRequestGeolocation(false); // Don't request if we have location
       return;
     }
 
-    // If browser geolocation is available, use it
-    if (geoResult && geoResult.latitude && geoResult.longitude) {
-      const updateLocation = async () => {
-        if (!userId) return; // Wait for userId to be set
-        
-        try {
-          const response = await fetch("/api/agent/update-location", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              city: geoResult.city || "Unknown",
-              province: geoResult.province || "BC",
-              latitude: geoResult.latitude,
-              longitude: geoResult.longitude,
-              search_radius_km: 50, // Default radius
-              userId, // Send userId from authenticated session
-            }),
-          });
+    // Only request browser geolocation if location is not set and user hasn't been asked yet
+    // We'll make it optional - show a button instead of auto-requesting
+    setLocationInitialized(false);
+  }, [agentCity, agentProvince, agentLat, agentLng]);
 
-          if (response.ok) {
-            setAgentCity(geoResult.city || "Unknown");
-            setAgentProvince(geoResult.province || "BC");
-            setAgentLat(geoResult.latitude);
-            setAgentLng(geoResult.longitude);
-            setSearchRadius(50);
-            setLocationInitialized(true);
-          }
-        } catch (error) {
-          console.error("Failed to save browser location:", error);
+  // Save browser geolocation result if available and location is not set
+  useEffect(() => {
+    // Only save if we don't have location and geolocation was requested and succeeded
+    if (!requestGeolocation || locationInitialized) return;
+    if (!geoResult || !geoResult.latitude || !geoResult.longitude) return;
+    if (!userId) return; // Wait for userId to be set
+
+    const updateLocation = async () => {
+      try {
+        const response = await fetch("/api/agent/update-location", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            city: geoResult.city || "Unknown",
+            province: geoResult.province || "BC",
+            latitude: geoResult.latitude,
+            longitude: geoResult.longitude,
+            search_radius_km: 50, // Default radius
+            userId, // Send userId from authenticated session
+          }),
+        });
+
+        if (response.ok) {
+          setAgentCity(geoResult.city || "Unknown");
+          setAgentProvince(geoResult.province || "BC");
+          setAgentLat(geoResult.latitude);
+          setAgentLng(geoResult.longitude);
+          setSearchRadius(50);
+          setLocationInitialized(true);
+          setRequestGeolocation(false); // Don't request again
         }
-      };
+      } catch (error) {
+        console.error("Failed to save browser location:", error);
+      }
+    };
 
-      updateLocation();
-    }
-  }, [geoResult, geoLoading, locationInitialized, agentCity, agentProvince, agentLat, agentLng, userId]);
+    updateLocation();
+  }, [geoResult, requestGeolocation, locationInitialized, userId]);
 
   // Initial load
   useEffect(() => {
@@ -395,36 +403,58 @@ export default function AvailableLeadsPage() {
         </div>
         
         {/* Location Indicator */}
-        <button
-          onClick={() => setShowLocationModal(true)}
-          className="flex items-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-2 text-sm text-[#2a2a2a] hover:bg-gray-50 transition-colors"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-4 w-4 text-gray-500"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
+        <div className="flex items-center gap-2">
+          {!locationInitialized && !agentCity && (
+            <button
+              onClick={() => setRequestGeolocation(true)}
+              disabled={geoLoading}
+              className="flex items-center gap-2 rounded-full border border-emerald-500 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-100 transition-colors disabled:opacity-50"
+              title="Use your current location to see leads in your area"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              {geoLoading ? "Getting location..." : "Use my location"}
+            </button>
+          )}
+          <button
+            onClick={() => setShowLocationModal(true)}
+            className="flex items-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-2 text-sm text-[#2a2a2a] hover:bg-gray-50 transition-colors"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-            />
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-            />
-          </svg>
-          <span>
-            {agentCity && agentProvince
-              ? `${agentCity}, ${agentProvince} • Within ${searchRadius} km`
-              : "Set location"}
-          </span>
-        </button>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-4 w-4 text-gray-500"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+              />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+              />
+            </svg>
+            <span>
+              {agentCity && agentProvince
+                ? `${agentCity}, ${agentProvince} • Within ${searchRadius} km`
+                : "Set location"}
+            </span>
+          </button>
+        </div>
       </div>
 
       {/* Location Change Modal */}
