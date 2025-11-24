@@ -97,21 +97,42 @@ export async function notifyAgentsForLead(lead: any, supabaseAdminClient: any = 
       });
       
       if (isWithin) {
+        console.log(`✅ Agent ${agent.full_name} is within radius! Fetching email...`);
         // Get email from auth.users
         try {
-          const { data: authUser } = await supabaseAdminClient.auth.admin.getUserById(agent.id);
+          console.log(`📧 Fetching email for agent ${agent.id} (${agent.full_name})...`);
+          const { data: authUser, error: authUserError } = await supabaseAdminClient.auth.admin.getUserById(agent.id);
+          
+          if (authUserError) {
+            console.error(`❌ Error fetching auth user for agent ${agent.id}:`, authUserError);
+            continue;
+          }
+          
+          console.log(`📧 Auth user data for ${agent.id}:`, {
+            hasUser: !!authUser?.user,
+            hasEmail: !!authUser?.user?.email,
+            email: authUser?.user?.email || 'NOT FOUND',
+          });
+          
           if (authUser?.user?.email) {
             agentsToNotify.push({
               id: agent.id,
               full_name: agent.full_name,
               email: authUser.user.email,
             });
-            console.log(`✅ Agent ${agent.full_name} (${authUser.user.email}) is within ${radius}km of lead`);
+            console.log(`✅ Agent ${agent.full_name} (${authUser.user.email}) added to notification list`);
           } else {
-            console.log(`⚠️ Agent ${agent.id} (${agent.full_name}) has no email in auth.users`);
+            console.log(`⚠️ Agent ${agent.id} (${agent.full_name}) has no email in auth.users`, {
+              authUserData: authUser,
+            });
           }
-        } catch (authError) {
+        } catch (authError: any) {
           console.error(`❌ Error fetching email for agent ${agent.id}:`, authError);
+          console.error(`Error details:`, {
+            message: authError?.message,
+            stack: authError?.stack,
+            name: authError?.name,
+          });
           // Continue with other agents
         }
       } else {
