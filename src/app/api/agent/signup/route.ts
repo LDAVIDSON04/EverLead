@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
             // Check if profile exists for this user
             const { data: existingUserProfile, error: profileCheckError } = await supabaseAdmin
               .from("profiles")
-              .select("id, email, role, approval_status")
+              .select("id, role, approval_status")
               .eq("id", userId)
               .maybeSingle();
             
@@ -157,10 +157,10 @@ export async function POST(req: NextRequest) {
     // If profile already exists, we would have returned above, so we can proceed to create
 
     // Create profile with approval_status = 'pending'
+    // Note: email is NOT stored in profiles table - it's in auth.users
     // Build profile data, only including fields that exist
     const profileData: any = {
       id: userId,
-      email,
       full_name,
       role: "agent",
       approval_status: "pending",
@@ -208,8 +208,8 @@ export async function POST(req: NextRequest) {
 
         if (existingProfile) {
           // Update existing profile instead
+          // Note: email is NOT stored in profiles table - it's in auth.users
           const updateData: any = {
-            email,
             full_name,
             role: "agent",
             approval_status: "pending",
