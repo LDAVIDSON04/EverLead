@@ -11,9 +11,10 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const { data, error } = await supabaseAdmin
+    // Get profiles (without email - email is in auth.users)
+    const { data: profiles, error } = await supabaseAdmin
       .from("profiles")
-      .select("id, email, full_name, phone, funeral_home, licensed_in_province, licensed_funeral_director, approval_status, created_at")
+      .select("id, full_name, phone, funeral_home, licensed_in_province, licensed_funeral_director, approval_status, created_at")
       .eq("role", "agent")
       .in("approval_status", ["pending", "declined"])
       .order("created_at", { ascending: false });
@@ -26,8 +27,27 @@ export async function GET(req: NextRequest) {
       );
     }
 
+    // Get emails from auth.users for each profile
+    const agentsWithEmails = await Promise.all(
+      (profiles || []).map(async (profile: any) => {
+        try {
+          const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(profile.id);
+          return {
+            ...profile,
+            email: authUser?.user?.email || null,
+          };
+        } catch (err) {
+          console.error(`Error getting email for profile ${profile.id}:`, err);
+          return {
+            ...profile,
+            email: null,
+          };
+        }
+      })
+    );
+
     return NextResponse.json(
-      { agents: data || [] },
+      { agents: agentsWithEmails },
       { status: 200 }
     );
   } catch (error: any) {
