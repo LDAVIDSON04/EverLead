@@ -303,8 +303,10 @@ export async function POST(req: NextRequest) {
       email: data.email,
     });
 
-    // Notify agents about the new lead (async, don't wait for it)
+    // Notify agents about the new lead
     // Only notify if lead has location coordinates
+    // NOTE: We wait for notifications to complete to ensure they're sent
+    // (Vercel kills async functions after response is sent)
     if (data.latitude && data.longitude) {
       console.log("📧 Triggering agent notifications for new lead", {
         leadId: data.id,
@@ -315,18 +317,17 @@ export async function POST(req: NextRequest) {
       });
       try {
         const { notifyAgentsForLead } = await import("@/lib/notifyAgentsForLead");
-        // Fire and forget - don't block the response
-        // Pass the supabaseAdmin client we created in this route
-        notifyAgentsForLead(data, supabaseAdmin).catch((err) => {
-          console.error("❌ Error notifying agents (non-fatal):", err);
-          console.error("Error details:", {
-            message: err?.message,
-            stack: err?.stack,
-            name: err?.name,
-          });
+        // Wait for notifications to complete (ensures they're sent before Vercel kills the function)
+        await notifyAgentsForLead(data, supabaseAdmin);
+        console.log("✅ Agent notifications completed");
+      } catch (notifyError: any) {
+        console.error("❌ Error notifying agents (non-fatal):", notifyError);
+        console.error("Error details:", {
+          message: notifyError?.message,
+          stack: notifyError?.stack,
+          name: notifyError?.name,
         });
-      } catch (importError) {
-        console.error("❌ Error importing notifyAgentsForLead (non-fatal):", importError);
+        // Don't fail the lead creation if notifications fail
       }
     } else {
       console.log("⚠️ Skipping agent notifications - lead has no location coordinates", {
