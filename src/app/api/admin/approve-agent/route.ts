@@ -97,19 +97,34 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Get agent profile
+    // Get agent profile (email is in auth.users, not profiles)
     const { data: agentProfile, error: agentError } = await supabaseAdmin
       .from("profiles")
-      .select("id, email, full_name, approval_status")
+      .select("id, full_name, approval_status")
       .eq("id", agentId)
       .eq("role", "agent")
       .maybeSingle();
 
     if (agentError || !agentProfile) {
+      console.error("Error fetching agent profile:", agentError);
       return NextResponse.json(
         { error: "Agent not found" },
         { status: 404 }
       );
+    }
+
+    // Get email from auth.users
+    let agentEmail: string | null = null;
+    try {
+      const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(agentId);
+      agentEmail = authUser?.user?.email || null;
+    } catch (authError) {
+      console.error("Error fetching agent email from auth.users:", authError);
+      // Continue without email - we'll skip the email notification
+    }
+
+    if (!agentEmail) {
+      console.warn(`No email found for agent ${agentId} - approval will proceed but no email will be sent`);
     }
 
     // Update approval status
@@ -136,13 +151,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Send email notification
-    await sendApprovalEmail(
-      agentProfile.email!,
-      agentProfile.full_name,
-      action === "approve",
-      notes
-    );
+    // Send email notification (if email is available)
+    if (agentEmail) {
+      await sendApprovalEmail(
+        agentEmail,
+        agentProfile.full_name,
+        action === "approve",
+        notes
+      );
+    } else {
+      console.warn(`Skipping email notification for agent ${agentId} - no email found`);
+    }
 
     return NextResponse.json(
       { success: true, message: `Agent ${action === "approve" ? "approved" : "declined"} successfully` },
