@@ -76,11 +76,16 @@ export async function notifyAgentsForLead(lead: any, supabaseAdminClient: any = 
       return;
     }
 
+    console.log(`🔍 [STEP] About to start distance filtering loop for ${agents.length} agents`);
+
     // Filter agents by distance - only notify those within their search radius
     const agentsToNotify: Array<{ id: string; full_name: string | null; email: string }> = [];
 
-    console.log(`🔍 Checking ${agents.length} agents against lead location (${leadLat}, ${leadLon})`);
+    console.log(`🔍 [LOOP] Starting to check ${agents.length} agents against lead location (${leadLat}, ${leadLon})`);
 
+    // First, filter agents by distance (fast operation)
+    const agentsWithinRadius: Array<{ agent: any; distance: number }> = [];
+    
     for (const agent of agents) {
       console.log(`🔍 Checking agent: ${agent.full_name} (${agent.id})`, {
         agentLat: agent.agent_latitude,
@@ -109,9 +114,28 @@ export async function notifyAgentsForLead(lead: any, supabaseAdminClient: any = 
       });
       
       if (isWithin) {
-        console.log(`✅ Agent ${agent.full_name} is within radius! Fetching email...`);
-        // Get email from auth.users
-        try {
+        const { calculateDistance } = await import('./distance');
+        const distance = calculateDistance(agentLat, agentLon, leadLat, leadLon);
+        agentsWithinRadius.push({ agent, distance });
+        console.log(`✅ [LOOP] Agent ${agent.full_name} is within ${radius}km (distance: ${distance.toFixed(2)}km)`);
+      } else {
+        // Calculate distance for logging
+        const { calculateDistance } = await import('./distance');
+        const distance = calculateDistance(agentLat, agentLon, leadLat, leadLon);
+        console.log(`⏭️ [LOOP] Agent ${agent.full_name} (${agent.id}) is ${distance.toFixed(1)}km away (radius: ${radius}km) - not notifying`, {
+          agentLocation: `${agentLat}, ${agentLon}`,
+          leadLocation: `${leadLat}, ${leadLon}`,
+          calculatedDistance: `${distance.toFixed(2)}km`,
+          agentRadius: `${radius}km`,
+        });
+      }
+    }
+
+    console.log(`📧 [EMAIL] Found ${agentsWithinRadius.length} agents within radius. Fetching emails in batch...`);
+
+    // Batch fetch all emails at once
+    for (const { agent, distance } of agentsWithinRadius) {
+      try {
           console.log(`📧 [EMAIL] Starting getUserById for agent ${agent.id} (${agent.full_name})...`);
           console.log(`📧 [EMAIL] supabaseAdminClient available:`, !!supabaseAdminClient);
           console.log(`📧 [EMAIL] supabaseAdminClient.auth available:`, !!supabaseAdminClient?.auth);
@@ -181,17 +205,6 @@ export async function notifyAgentsForLead(lead: any, supabaseAdminClient: any = 
           });
           // Continue with other agents
         }
-      } else {
-        // Calculate distance for logging
-        const { calculateDistance } = await import('./distance');
-        const distance = calculateDistance(agentLat, agentLon, leadLat, leadLon);
-        console.log(`⏭️ Agent ${agent.full_name} (${agent.id}) is ${distance.toFixed(1)}km away (radius: ${radius}km) - not notifying`, {
-          agentLocation: `${agentLat}, ${agentLon}`,
-          leadLocation: `${leadLat}, ${leadLon}`,
-          calculatedDistance: `${distance.toFixed(2)}km`,
-          agentRadius: `${radius}km`,
-        });
-      }
     }
 
     if (agentsToNotify.length === 0) {
