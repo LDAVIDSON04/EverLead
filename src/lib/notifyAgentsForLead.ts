@@ -43,8 +43,10 @@ export async function notifyAgentsForLead(lead: any, supabaseAdminClient: any = 
       return;
     }
 
+    console.log(`📧 Notification check: Found ${agents?.length || 0} approved agents with location settings for lead ${lead.id}`);
+
     if (!agents || agents.length === 0) {
-      console.log('No agents with location settings found to notify');
+      console.log('⚠️ No agents with location settings found to notify');
       return;
     }
 
@@ -62,7 +64,9 @@ export async function notifyAgentsForLead(lead: any, supabaseAdminClient: any = 
 
       // Check if lead is within agent's search radius
       // isWithinRadius(agentLat, agentLon, leadLat, leadLon, radiusKm)
-      if (isWithinRadius(agentLat, agentLon, leadLat, leadLon, radius)) {
+      const isWithin = isWithinRadius(agentLat, agentLon, leadLat, leadLon, radius);
+      
+      if (isWithin) {
         // Get email from auth.users
         try {
           const { data: authUser } = await supabaseAdminClient.auth.admin.getUserById(agent.id);
@@ -72,18 +76,30 @@ export async function notifyAgentsForLead(lead: any, supabaseAdminClient: any = 
               full_name: agent.full_name,
               email: authUser.user.email,
             });
+            console.log(`✅ Agent ${agent.full_name} (${authUser.user.email}) is within ${radius}km of lead`);
+          } else {
+            console.log(`⚠️ Agent ${agent.id} (${agent.full_name}) has no email in auth.users`);
           }
         } catch (authError) {
-          console.error(`Error fetching email for agent ${agent.id}:`, authError);
+          console.error(`❌ Error fetching email for agent ${agent.id}:`, authError);
           // Continue with other agents
         }
+      } else {
+        // Calculate distance for logging
+        const { calculateDistance } = await import('./distance');
+        const distance = calculateDistance(agentLat, agentLon, leadLat, leadLon);
+        console.log(`⏭️ Agent ${agent.full_name} (${agent.id}) is ${distance.toFixed(1)}km away (radius: ${radius}km) - not notifying`);
       }
     }
 
     if (agentsToNotify.length === 0) {
-      console.log(`No agents within radius for lead ${lead.id} in ${lead.city}, ${lead.province}`);
+      console.log(`⚠️ No agents within radius for lead ${lead.id} in ${lead.city}, ${lead.province}`);
+      console.log(`   Lead location: ${leadLat}, ${leadLon}`);
+      console.log(`   Checked ${agents.length} agents with location settings`);
       return;
     }
+
+    console.log(`📬 Preparing to send notifications to ${agentsToNotify.length} agent(s) for lead ${lead.id}`);
 
     // Send email notifications
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://soradin.com';
@@ -181,9 +197,14 @@ async function sendEmailNotification(params: EmailNotificationParams): Promise<v
 
       if (!resendResponse.ok) {
         const errorText = await resendResponse.text();
+        console.error(`❌ Resend API error for ${to}:`, {
+          status: resendResponse.status,
+          error: errorText,
+        });
         throw new Error(`Resend API error: ${resendResponse.status} - ${errorText}`);
       }
 
+      console.log(`✅ Email sent successfully to ${to}`);
       return;
     } catch (resendError) {
       console.error('Resend API error, falling back to console log:', resendError);
