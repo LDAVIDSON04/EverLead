@@ -364,6 +364,8 @@ export default function AvailableLeadsPage() {
       setFirstFreeAvailable(false);
       // Refresh leads after successful claim
       await refreshLeads(false);
+      // Redirect to success page or dashboard
+      window.location.href = `/agent/leads/success?leadId=${leadId}&free=1`;
     } catch (err) {
       console.error(err);
       setError("Unexpected error claiming free lead.");
@@ -686,7 +688,12 @@ export default function AvailableLeadsPage() {
           return (
             <div className="mt-6">
               {filteredLeads.map((lead: AgentLead) => (
-                <AgentLeadCard key={lead.id} lead={lead} />
+                <AgentLeadCard 
+                  key={lead.id} 
+                  lead={lead} 
+                  firstFreeAvailable={firstFreeAvailable}
+                  onClaimFree={handleClaimFree}
+                />
               ))}
             </div>
           );

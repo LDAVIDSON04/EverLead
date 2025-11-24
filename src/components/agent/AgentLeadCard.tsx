@@ -20,6 +20,8 @@ export type AgentLead = {
 
 type Props = {
   lead: AgentLead;
+  firstFreeAvailable?: boolean;
+  onClaimFree?: (leadId: string) => Promise<void>;
 };
 
 function urgencyLabel(urgency: Urgency) {
@@ -49,8 +51,9 @@ function getServiceTypeLabel(serviceType: string | null): string {
   return `${serviceType} pre-need enquiry`;
 }
 
-export default function AgentLeadCard({ lead }: Props) {
+export default function AgentLeadCard({ lead, firstFreeAvailable = false, onClaimFree }: Props) {
   const [buying, setBuying] = useState(false);
+  const [claiming, setClaiming] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const price = lead.lead_price ?? 0;
@@ -62,7 +65,30 @@ export default function AgentLeadCard({ lead }: Props) {
       : lead.additional_details.trim()
     : null;
 
+  const handleClaimFree = async () => {
+    if (!onClaimFree) return;
+    
+    setClaiming(true);
+    setError(null);
+
+    try {
+      await onClaimFree(lead.id);
+      // onClaimFree will handle success/error and refresh
+    } catch (err) {
+      console.error('Claim free error:', err);
+      setError('Could not claim free lead. Please try again.');
+    } finally {
+      setClaiming(false);
+    }
+  };
+
   const handleBuyNow = async () => {
+    // If free is available, use that instead
+    if (firstFreeAvailable && onClaimFree) {
+      await handleClaimFree();
+      return;
+    }
+
     setBuying(true);
     setError(null);
 
@@ -130,15 +156,21 @@ export default function AgentLeadCard({ lead }: Props) {
               Purchase to reveal full name, phone, and email.
             </p>
 
-            {/* Green pill Buy now button and View details link */}
+            {/* Green pill Buy now / Claim free button and View details link */}
             <div className="flex items-center justify-between">
               <button
                 type="button"
-                onClick={handleBuyNow}
-                disabled={buying}
+                onClick={firstFreeAvailable ? handleClaimFree : handleBuyNow}
+                disabled={buying || claiming}
                 className="inline-flex items-center justify-center rounded-full bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-600 transition-all disabled:cursor-not-allowed disabled:opacity-70"
               >
-                {buying ? 'Starting checkout…' : `Buy now for $${price.toFixed(2)}`}
+                {claiming 
+                  ? 'Claiming free lead…' 
+                  : buying 
+                  ? 'Starting checkout…' 
+                  : firstFreeAvailable 
+                  ? 'Claim free lead ✨' 
+                  : `Buy now for $${price.toFixed(2)}`}
               </button>
 
               {/* View details link - navigates to detail page */}

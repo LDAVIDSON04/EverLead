@@ -15,10 +15,10 @@ export async function POST(req: Request) {
       );
     }
 
-    // 1) Check profile and free flag, get email
+    // 1) Check profile and free flag
     const { data: profile, error: profileError } = await supabaseAdmin
       .from("profiles")
-      .select("first_free_redeemed, email")
+      .select("first_free_redeemed")
       .eq("id", agentId)
       .maybeSingle();
 
@@ -30,7 +30,15 @@ export async function POST(req: Request) {
       );
     }
 
-    const agentEmail = profile.email || null;
+    // Get email from auth.users (email is not in profiles table)
+    let agentEmail: string | null = null;
+    try {
+      const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(agentId);
+      agentEmail = authUser?.user?.email || null;
+    } catch (authError) {
+      console.error("Error fetching agent email from auth.users:", authError);
+      // Continue without email
+    }
 
     if (profile.first_free_redeemed) {
       // Not eligible for free lead anymore
