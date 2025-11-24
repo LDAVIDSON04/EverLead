@@ -118,10 +118,29 @@ export async function notifyAgentsForLead(lead: any, supabaseAdminClient: any = 
           console.log(`📧 [EMAIL] supabaseAdminClient.auth.admin available:`, !!supabaseAdminClient?.auth?.admin);
           
           const getUserStartTime = Date.now();
-          const { data: authUser, error: authUserError } = await supabaseAdminClient.auth.admin.getUserById(agent.id);
-          const getUserDuration = Date.now() - getUserStartTime;
           
-          console.log(`📧 [EMAIL] getUserById completed in ${getUserDuration}ms for agent ${agent.id}`);
+          // Add timeout wrapper to prevent hanging
+          let authUser, authUserError;
+          try {
+            const timeoutId = setTimeout(() => {
+              console.error(`❌ [EMAIL] getUserById timeout after 10 seconds for agent ${agent.id}`);
+            }, 10000);
+            
+            const result = await supabaseAdminClient.auth.admin.getUserById(agent.id);
+            clearTimeout(timeoutId);
+            
+            authUser = result?.data;
+            authUserError = result?.error;
+          } catch (getUserError: any) {
+            console.error(`❌ [EMAIL] Exception in getUserById for agent ${agent.id}:`, getUserError);
+            authUserError = getUserError;
+          }
+          
+          const getUserDuration = Date.now() - getUserStartTime;
+          console.log(`📧 [EMAIL] getUserById completed in ${getUserDuration}ms for agent ${agent.id}`, {
+            hasData: !!authUser,
+            hasError: !!authUserError,
+          });
           
           if (authUserError) {
             console.error(`❌ [EMAIL] Error fetching auth user for agent ${agent.id}:`, authUserError);
