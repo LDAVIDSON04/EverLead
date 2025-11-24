@@ -112,18 +112,32 @@ export async function notifyAgentsForLead(lead: any, supabaseAdminClient: any = 
         console.log(`✅ Agent ${agent.full_name} is within radius! Fetching email...`);
         // Get email from auth.users
         try {
-          console.log(`📧 Fetching email for agent ${agent.id} (${agent.full_name})...`);
+          console.log(`📧 [EMAIL] Starting getUserById for agent ${agent.id} (${agent.full_name})...`);
+          console.log(`📧 [EMAIL] supabaseAdminClient available:`, !!supabaseAdminClient);
+          console.log(`📧 [EMAIL] supabaseAdminClient.auth available:`, !!supabaseAdminClient?.auth);
+          console.log(`📧 [EMAIL] supabaseAdminClient.auth.admin available:`, !!supabaseAdminClient?.auth?.admin);
+          
+          const getUserStartTime = Date.now();
           const { data: authUser, error: authUserError } = await supabaseAdminClient.auth.admin.getUserById(agent.id);
+          const getUserDuration = Date.now() - getUserStartTime;
+          
+          console.log(`📧 [EMAIL] getUserById completed in ${getUserDuration}ms for agent ${agent.id}`);
           
           if (authUserError) {
-            console.error(`❌ Error fetching auth user for agent ${agent.id}:`, authUserError);
+            console.error(`❌ [EMAIL] Error fetching auth user for agent ${agent.id}:`, authUserError);
+            console.error(`❌ [EMAIL] Error details:`, {
+              message: authUserError?.message,
+              status: authUserError?.status,
+              code: authUserError?.code,
+            });
             continue;
           }
           
-          console.log(`📧 Auth user data for ${agent.id}:`, {
+          console.log(`📧 [EMAIL] Auth user data for ${agent.id}:`, {
             hasUser: !!authUser?.user,
             hasEmail: !!authUser?.user?.email,
             email: authUser?.user?.email || 'NOT FOUND',
+            userId: authUser?.user?.id,
           });
           
           if (authUser?.user?.email) {
@@ -132,18 +146,19 @@ export async function notifyAgentsForLead(lead: any, supabaseAdminClient: any = 
               full_name: agent.full_name,
               email: authUser.user.email,
             });
-            console.log(`✅ Agent ${agent.full_name} (${authUser.user.email}) added to notification list`);
+            console.log(`✅ [EMAIL] Agent ${agent.full_name} (${authUser.user.email}) added to notification list`);
           } else {
-            console.log(`⚠️ Agent ${agent.id} (${agent.full_name}) has no email in auth.users`, {
+            console.log(`⚠️ [EMAIL] Agent ${agent.id} (${agent.full_name}) has no email in auth.users`, {
               authUserData: authUser,
             });
           }
         } catch (authError: any) {
-          console.error(`❌ Error fetching email for agent ${agent.id}:`, authError);
-          console.error(`Error details:`, {
+          console.error(`❌ [EMAIL] Exception caught fetching email for agent ${agent.id}:`, authError);
+          console.error(`❌ [EMAIL] Exception details:`, {
             message: authError?.message,
             stack: authError?.stack,
             name: authError?.name,
+            code: authError?.code,
           });
           // Continue with other agents
         }
