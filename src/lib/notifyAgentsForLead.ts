@@ -14,7 +14,7 @@ import { isWithinRadius } from './distance';
  */
 export async function notifyAgentsForLead(lead: any, supabaseAdminClient: any = supabaseAdmin): Promise<void> {
   try {
-    console.log(`📧 Starting notification process for lead ${lead.id}`, {
+    console.log(`📧 [NOTIFY] Starting notification process for lead ${lead.id}`, {
       leadId: lead.id,
       city: lead.city,
       province: lead.province,
@@ -22,6 +22,7 @@ export async function notifyAgentsForLead(lead: any, supabaseAdminClient: any = 
       hasLongitude: !!lead.longitude,
       latitude: lead.latitude,
       longitude: lead.longitude,
+      hasSupabaseClient: !!supabaseAdminClient,
     });
 
     // Check if lead has location data
@@ -197,9 +198,16 @@ export async function notifyAgentsForLead(lead: any, supabaseAdminClient: any = 
       }
     }
 
-    console.log(`✅ Sent email notifications to ${successCount}/${agentsToNotify.length} agents for lead ${lead.id} in ${city}, ${province}`);
-  } catch (err) {
-    console.error('Error in notifyAgentsForLead:', err);
+    console.log(`✅ [NOTIFY] Sent email notifications to ${successCount}/${agentsToNotify.length} agents for lead ${lead.id} in ${city}, ${province}`);
+  } catch (err: any) {
+    console.error('❌ [NOTIFY] Error in notifyAgentsForLead:', err);
+    console.error('❌ [NOTIFY] Error details:', {
+      message: err?.message,
+      stack: err?.stack,
+      name: err?.name,
+      code: err?.code,
+      leadId: lead?.id,
+    });
     // Don't throw - notification failure shouldn't break lead creation
   }
 }
