@@ -316,7 +316,8 @@ export async function POST(req: NextRequest) {
       try {
         const { notifyAgentsForLead } = await import("@/lib/notifyAgentsForLead");
         // Fire and forget - don't block the response
-        notifyAgentsForLead(data).catch((err) => {
+        // Pass the supabaseAdmin client we created in this route
+        notifyAgentsForLead(data, supabaseAdmin).catch((err) => {
           console.error("❌ Error notifying agents (non-fatal):", err);
           console.error("Error details:", {
             message: err?.message,
