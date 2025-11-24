@@ -289,11 +289,23 @@ async function sendEmailNotification(params: EmailNotificationParams): Promise<v
     // Use Resend API
     try {
       // Format from email properly for Resend
-      // If RESEND_FROM_EMAIL doesn't contain <>, wrap it
-      let fromEmail = process.env.RESEND_FROM_EMAIL || 'Soradin <notifications@soradin.com>';
-      if (fromEmail && !fromEmail.includes('<')) {
-        // If it's just an email, wrap it with a name
+      // Resend accepts: "Name <email@verified-domain.com>" or just "email@verified-domain.com"
+      let fromEmail = process.env.RESEND_FROM_EMAIL || 'notifications@soradin.com';
+      
+      // If it's just an email (no < >), try both formats:
+      // 1. First try with name wrapper (preferred format)
+      // 2. If that fails, Resend will tell us
+      if (fromEmail && !fromEmail.includes('<') && fromEmail.includes('@')) {
+        // It's just an email - wrap it with a name for better deliverability
         fromEmail = `Soradin <${fromEmail}>`;
+        console.log(`📧 [RESEND] Wrapped from email: ${fromEmail}`);
+      } else if (fromEmail && fromEmail.includes('<')) {
+        // Already has name wrapper, use as-is
+        console.log(`📧 [RESEND] Using from email with name: ${fromEmail}`);
+      } else {
+        // Fallback
+        fromEmail = 'Soradin <notifications@soradin.com>';
+        console.log(`📧 [RESEND] Using fallback from email: ${fromEmail}`);
       }
 
       const resendResponse = await fetch('https://api.resend.com/emails', {
@@ -349,9 +361,24 @@ async function sendEmailNotification(params: EmailNotificationParams): Promise<v
         
         // If domain not verified, provide helpful error message
         if (resendResponse.status === 403 && errorData?.message?.includes('not verified')) {
-          console.error(`❌ [RESEND] Domain verification required. Please verify your domain in Resend: https://resend.com/domains`);
-          console.error(`❌ [RESEND] Current from email: ${fromEmail}`);
-          throw new Error(`Domain not verified in Resend. Please verify ${fromEmail.split('@')[1]?.split('>')[0] || 'your domain'} at https://resend.com/domains`);
+          // Extract domain from email (handle both "email@domain.com" and "Name <email@domain.com>" formats)
+          const emailMatch = fromEmail.match(/<(.+@(.+))>/);
+          const domain = emailMatch ? emailMatch[2] : fromEmail.split('@')[1]?.split('>')[0] || 'unknown';
+          
+          console.error(`❌ [RESEND] Domain verification error:`, {
+            fromEmail,
+            extractedDomain: domain,
+            domainLowercase: domain.toLowerCase(),
+            errorMessage: errorData?.message,
+          });
+          console.error(`❌ [RESEND] Troubleshooting steps:`);
+          console.error(`   1. Check Resend dashboard: https://resend.com/domains`);
+          console.error(`   2. Verify domain "${domain}" (case-sensitive) is listed and shows "Verified" status`);
+          console.error(`   3. If verified, try using lowercase: "${domain.toLowerCase()}"`);
+          console.error(`   4. Ensure DNS records are still valid and not expired`);
+          console.error(`   5. Check if the from email "${fromEmail}" matches a verified domain`);
+          
+          throw new Error(`Domain "${domain}" appears not verified in Resend. Please check https://resend.com/domains. Error: ${errorData?.message}`);
         }
         
         throw new Error(`Resend API error: ${resendResponse.status} - ${errorText}`);
