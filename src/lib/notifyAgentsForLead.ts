@@ -14,9 +14,23 @@ import { isWithinRadius } from './distance';
  */
 export async function notifyAgentsForLead(lead: any, supabaseAdminClient: any = supabaseAdmin): Promise<void> {
   try {
+    console.log(`📧 Starting notification process for lead ${lead.id}`, {
+      leadId: lead.id,
+      city: lead.city,
+      province: lead.province,
+      hasLatitude: !!lead.latitude,
+      hasLongitude: !!lead.longitude,
+      latitude: lead.latitude,
+      longitude: lead.longitude,
+    });
+
     // Check if lead has location data
     if (!lead.latitude || !lead.longitude) {
-      console.warn('Cannot notify agents: lead has no location coordinates', { leadId: lead.id });
+      console.warn('❌ Cannot notify agents: lead has no location coordinates', { 
+        leadId: lead.id,
+        city: lead.city,
+        province: lead.province,
+      });
       return;
     }
 
@@ -155,6 +169,13 @@ async function sendEmailNotification(params: EmailNotificationParams): Promise<v
 
   // Check if Resend is configured
   const resendApiKey = process.env.RESEND_API_KEY;
+  const resendFromEmail = process.env.RESEND_FROM_EMAIL;
+
+  console.log(`📧 Email send attempt for ${to}:`, {
+    hasResendKey: !!resendApiKey,
+    resendKeyLength: resendApiKey?.length || 0,
+    fromEmail: resendFromEmail || 'Soradin <notifications@soradin.com>',
+  });
 
   if (resendApiKey) {
     // Use Resend API
