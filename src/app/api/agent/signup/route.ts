@@ -80,6 +80,8 @@ export async function POST(req: NextRequest) {
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
     const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
+    let userId: string | null = null;
+
     // Create auth user (disable email confirmation for now - we'll approve manually)
     const { data: authData, error: signUpError } = await supabase.auth.signUp({
       email,
@@ -93,26 +95,57 @@ export async function POST(req: NextRequest) {
       console.error("Signup error:", signUpError);
       // Handle specific Supabase errors
       if (signUpError.message?.includes("already registered") || signUpError.message?.includes("User already registered")) {
+        // Auth user exists, but profile might not - check if profile exists
+        console.log("Auth user already exists, checking if profile exists...");
+        
+        // Try to get the user by email using admin client
+        const { data: authUsers } = await supabaseAdmin.auth.admin.listUsers();
+        const existingAuthUser = authUsers?.users?.find((u: any) => u.email === email);
+        
+        if (existingAuthUser) {
+          userId = existingAuthUser.id;
+          console.log("Found existing auth user:", userId);
+          
+          // Check if profile exists for this user
+          const { data: existingUserProfile } = await supabaseAdmin
+            .from("profiles")
+            .select("id, role, approval_status")
+            .eq("id", userId)
+            .maybeSingle();
+          
+          if (existingUserProfile) {
+            // Profile exists - user should sign in
+            return NextResponse.json(
+              { error: "An account with this email already exists. Please sign in instead." },
+              { status: 400 }
+            );
+          }
+          // Profile doesn't exist - we'll create it below
+        } else {
+          // Can't find the user - might be a different error
+          return NextResponse.json(
+            { error: "An account with this email already exists. Please sign in instead." },
+            { status: 400 }
+          );
+        }
+      } else {
         return NextResponse.json(
-          { error: "An account with this email already exists. Please sign in instead." },
+          { error: signUpError.message || "Failed to create account. Please try again." },
           { status: 400 }
         );
       }
-      return NextResponse.json(
-        { error: signUpError.message || "Failed to create account. Please try again." },
-        { status: 400 }
-      );
+    } else if (authData.user) {
+      userId = authData.user.id;
+      console.log("New auth user created:", userId);
     }
 
-    if (!authData.user) {
-      console.error("No user returned from signup");
+    if (!userId) {
+      console.error("No user ID available");
       return NextResponse.json(
         { error: "Failed to create account. Please try again." },
         { status: 400 }
       );
     }
-
-    const userId = authData.user.id;
 
     // Create profile with approval_status = 'pending'
     // Build profile data, only including fields that exist
