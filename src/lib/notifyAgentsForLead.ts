@@ -334,14 +334,34 @@ async function sendEmailNotification(params: EmailNotificationParams): Promise<v
 
       if (!resendResponse.ok) {
         const errorText = await resendResponse.text();
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+        } catch {
+          errorData = { message: errorText };
+        }
+        
         console.error(`❌ Resend API error for ${to}:`, {
           status: resendResponse.status,
           error: errorText,
+          parsedError: errorData,
         });
+        
+        // If domain not verified, provide helpful error message
+        if (resendResponse.status === 403 && errorData?.message?.includes('not verified')) {
+          console.error(`❌ [RESEND] Domain verification required. Please verify your domain in Resend: https://resend.com/domains`);
+          console.error(`❌ [RESEND] Current from email: ${fromEmail}`);
+          throw new Error(`Domain not verified in Resend. Please verify ${fromEmail.split('@')[1]?.split('>')[0] || 'your domain'} at https://resend.com/domains`);
+        }
+        
         throw new Error(`Resend API error: ${resendResponse.status} - ${errorText}`);
       }
 
-      console.log(`✅ Email sent successfully to ${to}`);
+      const responseData = await resendResponse.json().catch(() => ({}));
+      console.log(`✅ Email sent successfully to ${to}`, {
+        emailId: responseData?.id,
+        status: resendResponse.status,
+      });
       return;
     } catch (resendError) {
       console.error('Resend API error, falling back to console log:', resendError);
