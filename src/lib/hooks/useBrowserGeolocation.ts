@@ -75,9 +75,9 @@ export function useBrowserGeolocation(shouldRequest: boolean = false) {
         setLoading(false);
       },
       {
-        enableHighAccuracy: false,
-        timeout: 10000,
-        maximumAge: 86400000, // Cache for 24 hours (browser will remember permission)
+        enableHighAccuracy: true, // Use high accuracy for better tracking
+        timeout: 15000, // Give more time for high accuracy
+        maximumAge: 0, // Always get fresh location (browser will remember permission)
       }
     );
   }, [shouldRequest]);

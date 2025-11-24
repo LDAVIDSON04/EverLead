@@ -53,9 +53,10 @@ export default function AvailableLeadsPage() {
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [locationInitialized, setLocationInitialized] = useState(false);
   
-  // Browser geolocation - only request if explicitly requested by user
-  const [requestGeolocation, setRequestGeolocation] = useState(false);
-  const { result: geoResult, loading: geoLoading } = useBrowserGeolocation(requestGeolocation);
+  // Browser geolocation - automatically request if location is not set
+  // Only request if agent doesn't have location saved in database
+  const shouldRequestGeo = !agentCity || !agentProvince || !agentLat || !agentLng;
+  const { result: geoResult, loading: geoLoading } = useBrowserGeolocation(shouldRequestGeo);
 
   // Function to refresh leads (reusable for initial load, polling, and after actions)
   // Memoized with useCallback to prevent recreation on every render
@@ -204,24 +205,19 @@ export default function AvailableLeadsPage() {
   // Track if initial load has completed
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
 
-  // Initialize location on first visit - only use browser geolocation if location is not set
+  // Initialize location - if profile has location, use it (already set in refreshLeads)
   useEffect(() => {
-    // If profile has location, use it (already set in refreshLeads) - don't request browser location
     if (agentCity && agentProvince && agentLat && agentLng) {
       setLocationInitialized(true);
-      setRequestGeolocation(false); // Don't request if we have location
       return;
     }
-
-    // Only request browser geolocation if location is not set and user hasn't been asked yet
-    // We'll make it optional - show a button instead of auto-requesting
     setLocationInitialized(false);
   }, [agentCity, agentProvince, agentLat, agentLng]);
 
   // Save browser geolocation result if available and location is not set
   useEffect(() => {
-    // Only save if we don't have location and geolocation was requested and succeeded
-    if (!requestGeolocation || locationInitialized) return;
+    // Only save if we don't have location and geolocation succeeded
+    if (locationInitialized) return; // Already have location
     if (!geoResult || !geoResult.latitude || !geoResult.longitude) return;
     if (!userId) return; // Wait for userId to be set
 
@@ -247,7 +243,6 @@ export default function AvailableLeadsPage() {
           setAgentLng(geoResult.longitude);
           setSearchRadius(50);
           setLocationInitialized(true);
-          setRequestGeolocation(false); // Don't request again
         }
       } catch (error) {
         console.error("Failed to save browser location:", error);
@@ -255,7 +250,7 @@ export default function AvailableLeadsPage() {
     };
 
     updateLocation();
-  }, [geoResult, requestGeolocation, locationInitialized, userId]);
+  }, [geoResult, locationInitialized, userId]);
 
   // Initial load
   useEffect(() => {
@@ -404,25 +399,19 @@ export default function AvailableLeadsPage() {
         
         {/* Location Indicator */}
         <div className="flex items-center gap-2">
-          {!locationInitialized && !agentCity && (
-            <button
-              onClick={() => setRequestGeolocation(true)}
-              disabled={geoLoading}
-              className="flex items-center gap-2 rounded-full border border-emerald-500 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-100 transition-colors disabled:opacity-50"
-              title="Use your current location to see leads in your area"
-            >
+          {!locationInitialized && geoLoading && (
+            <div className="flex items-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-2 text-sm text-gray-500">
               <svg
+                className="animate-spin h-4 w-4"
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4"
                 fill="none"
                 viewBox="0 0 24 24"
-                stroke="currentColor"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
-              {geoLoading ? "Getting location..." : "Use my location"}
-            </button>
+              Getting location...
+            </div>
           )}
           <button
             onClick={() => setShowLocationModal(true)}
