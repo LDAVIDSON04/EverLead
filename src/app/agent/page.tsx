@@ -93,7 +93,9 @@ export default function AgentLandingPage() {
         const data = await response.json();
 
         if (!response.ok) {
-          setError(data.error || "Failed to create account.");
+          // Show user-friendly error message
+          const errorMessage = data.error || "Failed to create account. Please try again.";
+          setError(errorMessage);
           setSubmitting(false);
           return;
         }

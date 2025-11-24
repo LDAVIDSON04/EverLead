@@ -265,11 +265,14 @@ export default function AdminDashboardPage() {
 
       if (error) {
         console.error("Error loading pending agents:", error);
+        setPendingAgents([]);
       } else {
         setPendingAgents(data || []);
+        console.log(`Loaded ${data?.length || 0} pending/declined agents`);
       }
     } catch (err) {
       console.error("Error loading pending agents:", err);
+      setPendingAgents([]);
     } finally {
       setLoadingApprovals(false);
     }
@@ -301,7 +304,7 @@ export default function AdminDashboardPage() {
 
       // Reload pending agents
       await loadPendingAgents();
-      alert("Agent approved successfully. They will receive an email notification.");
+      alert("Agent approved successfully! They now have instant access to the agent portal and will receive an email notification.");
     } catch (err: any) {
       console.error("Error approving agent:", err);
       alert(err.message || "Failed to approve agent. Please try again.");
