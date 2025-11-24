@@ -94,7 +94,20 @@ export default function AgentLandingPage() {
 
         if (!response.ok) {
           // Show user-friendly error message
-          const errorMessage = data.error || "Failed to create account. Please try again.";
+          let errorMessage = data.error || "Failed to create account. Please try again.";
+          
+          // Include details if available (for debugging)
+          if (data.details && process.env.NODE_ENV === "development") {
+            errorMessage += ` (${data.details})`;
+          }
+          
+          console.error("Signup error:", {
+            status: response.status,
+            error: data.error,
+            details: data.details,
+            fullResponse: data,
+          });
+          
           setError(errorMessage);
           setSubmitting(false);
           return;
