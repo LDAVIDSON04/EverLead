@@ -202,7 +202,12 @@ export async function POST(req: NextRequest) {
     console.log("🔐 [FORGOT-PASSWORD] User found:", user.id, "email:", user.email);
 
     // Generate a password reset token
+    // IMPORTANT: Make sure NEXT_PUBLIC_SITE_URL is set correctly in Vercel (not localhost!)
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://soradin.com";
+    
+    if (siteUrl.includes('localhost')) {
+      console.warn("🔐 [FORGOT-PASSWORD] WARNING: NEXT_PUBLIC_SITE_URL contains localhost! This will cause issues. Current value:", siteUrl);
+    }
     
     // Clean siteUrl for redirectTo - Supabase requires exact match in allowed URLs
     let cleanRedirectUrl = (siteUrl || '').trim().replace(/\/+$/, '');
@@ -281,41 +286,77 @@ export async function POST(req: NextRequest) {
 
     console.log("🔐 [FORGOT-PASSWORD] Reset link generated:", {
       hasActionLink: !!resetData.action_link,
-      actionLink: resetData.action_link?.substring(0, 100) + '...',
       hasProperties: !!resetData.properties,
-      properties: resetData.properties,
+      hasPropertiesActionLink: !!resetData.properties?.action_link,
+      actionLink: resetData.action_link?.substring(0, 100) + '...',
+      propertiesActionLink: resetData.properties?.action_link?.substring(0, 100) + '...',
     });
 
-    // Use Supabase's action_link directly - it already has the correct URL and token
-    // Replace the domain with our site URL to ensure it points to our app
-    let resetUrl = resetData.action_link;
+    // Supabase returns action_link in properties, not directly on resetData
+    const actionLink = resetData.action_link || resetData.properties?.action_link;
+    const hashedToken = resetData.properties?.hashed_token;
     
-    if (resetUrl && siteUrl) {
-      // Extract our domain from siteUrl
+    if (!actionLink && !hashedToken) {
+      console.error("🔐 [FORGOT-PASSWORD] No action_link or hashed_token found:", JSON.stringify(resetData, null, 2));
+      return NextResponse.json(
+        { error: "Error generating reset link - missing token" },
+        { status: 500 }
+      );
+    }
+    
+    // Build reset URL - use action_link if available, otherwise construct from token
+    let resetUrl: string;
+    
+    if (actionLink) {
+      // Use Supabase's action_link but replace the redirect_to with our URL
+      try {
+        const actionUrl = new URL(actionLink);
+        // Extract our domain from siteUrl
+        let cleanBaseUrl = (siteUrl || '').trim().replace(/\/+$/, '');
+        if (!cleanBaseUrl.startsWith('http')) {
+          cleanBaseUrl = `https://${cleanBaseUrl}`;
+        }
+        const ourUrl = new URL(cleanBaseUrl);
+        
+        // Build our reset URL with the token from action_link
+        const token = actionUrl.searchParams.get('token');
+        const type = actionUrl.searchParams.get('type') || 'recovery';
+        
+        if (token) {
+          resetUrl = `${ourUrl.origin}/agent/reset-password?token=${encodeURIComponent(token)}`;
+        } else {
+          // Fallback: use action_link as-is but replace redirect_to
+          resetUrl = actionLink.replace(/redirect_to=[^&]*/, `redirect_to=${encodeURIComponent(`${ourUrl.origin}/agent/reset-password`)}`);
+        }
+      } catch (e) {
+        console.error("🔐 [FORGOT-PASSWORD] Error parsing action_link:", e);
+        // Fallback: construct URL from hashed_token
+        if (hashedToken) {
+          let cleanBaseUrl = (siteUrl || '').trim().replace(/\/+$/, '');
+          if (!cleanBaseUrl.startsWith('http')) {
+            cleanBaseUrl = `https://${cleanBaseUrl}`;
+          }
+          resetUrl = `${cleanBaseUrl}/agent/reset-password?token=${encodeURIComponent(hashedToken)}`;
+        } else {
+          resetUrl = actionLink; // Use as-is if we can't parse it
+        }
+      }
+    } else if (hashedToken) {
+      // Construct URL from hashed_token
       let cleanBaseUrl = (siteUrl || '').trim().replace(/\/+$/, '');
       if (!cleanBaseUrl.startsWith('http')) {
         cleanBaseUrl = `https://${cleanBaseUrl}`;
       }
-      
-      // Replace the domain in action_link with our domain
-      try {
-        const actionUrl = new URL(resetUrl);
-        const ourUrl = new URL(cleanBaseUrl);
-        // Replace the hostname and protocol, keep the path and query
-        resetUrl = `${ourUrl.protocol}//${ourUrl.host}${actionUrl.pathname}${actionUrl.search}${actionUrl.hash}`;
-      } catch (e) {
-        console.error("🔐 [FORGOT-PASSWORD] Error parsing action_link, using as-is:", e);
-        // If parsing fails, use action_link as-is
-      }
-    }
-    
-    if (!resetUrl) {
-      console.error("🔐 [FORGOT-PASSWORD] No reset URL available:", JSON.stringify(resetData, null, 2));
+      resetUrl = `${cleanBaseUrl}/agent/reset-password?token=${encodeURIComponent(hashedToken)}`;
+    } else {
+      console.error("🔐 [FORGOT-PASSWORD] No reset URL can be constructed:", JSON.stringify(resetData, null, 2));
       return NextResponse.json(
         { error: "Error generating reset link" },
         { status: 500 }
       );
     }
+    
+    console.log("🔐 [FORGOT-PASSWORD] Constructed reset URL:", resetUrl.substring(0, 100) + '...');
     
     // Clean base URL for logo
     let cleanBaseUrl = (siteUrl || '').trim().replace(/\/+$/, '');
