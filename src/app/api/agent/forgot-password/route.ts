@@ -126,10 +126,17 @@ export async function POST(req: NextRequest) {
     }
 
     console.log("🔐 [FORGOT-PASSWORD] Found", users?.users?.length || 0, "total users");
-    const user = users?.users.find((u: any) => u.email === email);
+    
+    // Check user emails (case-insensitive comparison)
+    const emailLower = email.toLowerCase().trim();
+    const user = users?.users.find((u: any) => {
+      const userEmail = (u.email || "").toLowerCase().trim();
+      return userEmail === emailLower;
+    });
 
     if (!user) {
-      console.log("🔐 [FORGOT-PASSWORD] User not found, returning success (security)");
+      console.log("🔐 [FORGOT-PASSWORD] User not found for email:", email);
+      console.log("🔐 [FORGOT-PASSWORD] Available emails:", users?.users?.map((u: any) => u.email).filter(Boolean));
       // Don't reveal if user exists or not (security best practice)
       return NextResponse.json(
         { success: true, message: "If an account exists with that email, a password reset link has been sent." },
@@ -137,7 +144,7 @@ export async function POST(req: NextRequest) {
       );
     }
     
-    console.log("🔐 [FORGOT-PASSWORD] User found:", user.id);
+    console.log("🔐 [FORGOT-PASSWORD] User found:", user.id, "email:", user.email);
 
     // Generate a password reset token
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://soradin.com";
