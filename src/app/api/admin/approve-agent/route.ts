@@ -19,33 +19,71 @@ async function sendApprovalEmail(email: string, fullName: string | null, approve
       ? "Your Soradin Agent Account Has Been Approved"
       : "Your Soradin Agent Account Application";
 
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://soradin.com";
+    
     const html = approved
       ? `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #2a2a2a;">Account Approved</h2>
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="text-align: center; margin-bottom: 30px;">
+            <h1 style="color: #2a2a2a; font-size: 28px; margin: 0; font-weight: 300;">Soradin</h1>
+            <p style="color: #6b6b6b; font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; margin: 5px 0 0 0;">Pre-Planning</p>
+          </div>
+          <h2 style="color: #2a2a2a; margin-bottom: 20px;">Account Approved</h2>
           <p>Hi ${fullName || "there"},</p>
           <p>Great news! Your Soradin agent account has been approved. You can now log in and start purchasing leads.</p>
           <p style="margin-top: 30px;">
-            <a href="${process.env.NEXT_PUBLIC_SITE_URL || "https://soradin.com"}/agent" style="background-color: #2a2a2a; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block;">
+            <a href="${siteUrl}/agent" style="background-color: #2a2a2a; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: 500;">
               Log In to Agent Portal
             </a>
           </p>
           <p style="margin-top: 30px; color: #6b6b6b; font-size: 14px;">
             If you have any questions, please contact our support team.
           </p>
+          <hr style="border: none; border-top: 1px solid #e5e5e5; margin: 30px 0;" />
+          <p style="color: #6b6b6b; font-size: 12px; margin: 0;">
+            © ${new Date().getFullYear()} Soradin. All rights reserved.
+          </p>
         </div>
       `
       : `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #2a2a2a;">Application Update</h2>
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="text-align: center; margin-bottom: 30px;">
+            <h1 style="color: #2a2a2a; font-size: 28px; margin: 0; font-weight: 300;">Soradin</h1>
+            <p style="color: #6b6b6b; font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; margin: 5px 0 0 0;">Pre-Planning</p>
+          </div>
+          <h2 style="color: #2a2a2a; margin-bottom: 20px;">Application Update</h2>
           <p>Hi ${fullName || "there"},</p>
           <p>Thank you for your interest in Soradin. Unfortunately, we are unable to approve your agent account at this time.</p>
           ${notes ? `<p><strong>Reason:</strong> ${notes}</p>` : ""}
           <p style="margin-top: 30px; color: #6b6b6b; font-size: 14px;">
             If you have any questions or would like to discuss this decision, please contact our support team.
           </p>
+          <hr style="border: none; border-top: 1px solid #e5e5e5; margin: 30px 0;" />
+          <p style="color: #6b6b6b; font-size: 12px; margin: 0;">
+            © ${new Date().getFullYear()} Soradin. All rights reserved.
+          </p>
         </div>
       `;
+
+    // Ensure email is branded as Soradin
+    let fromEmail = process.env.RESEND_FROM_EMAIL || "Soradin <notifications@soradin.com>";
+    
+    // If RESEND_FROM_EMAIL doesn't have the Soradin name, wrap it
+    if (fromEmail && !fromEmail.includes('<')) {
+      // Extract domain if it's just an email address
+      const emailMatch = fromEmail.match(/^(.+@(.+))$/);
+      if (emailMatch) {
+        fromEmail = `Soradin <${fromEmail}>`;
+      } else {
+        fromEmail = "Soradin <notifications@soradin.com>";
+      }
+    } else if (fromEmail && fromEmail.includes('<')) {
+      // If it already has a name, replace it with Soradin
+      const emailMatch = fromEmail.match(/<(.+@.+?)>/);
+      if (emailMatch) {
+        fromEmail = `Soradin <${emailMatch[1]}>`;
+      }
+    }
 
     const resendResponse = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -54,7 +92,7 @@ async function sendApprovalEmail(email: string, fullName: string | null, approve
         Authorization: `Bearer ${resendApiKey}`,
       },
       body: JSON.stringify({
-        from: process.env.RESEND_FROM_EMAIL || "Soradin <notifications@soradin.com>",
+        from: fromEmail,
         to: [email],
         subject,
         html,

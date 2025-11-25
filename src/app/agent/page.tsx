@@ -212,10 +212,12 @@ export default function AgentLandingPage() {
     }
 
     try {
+      // Use production site URL from env, fallback to current origin
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
       const { error: resetError } = await supabaseClient.auth.resetPasswordForEmail(
         forgotPasswordEmail,
         {
-          redirectTo: `${window.location.origin}/agent/reset-password`,
+          redirectTo: `${siteUrl}/agent/reset-password`,
         }
       );
 

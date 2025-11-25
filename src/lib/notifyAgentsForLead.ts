@@ -318,20 +318,21 @@ async function sendEmailNotification(params: EmailNotificationParams): Promise<v
   if (resendApiKey) {
     // Use Resend API
     try {
-      // Format from email properly for Resend
-      // Resend accepts: "Name <email@verified-domain.com>" or just "email@verified-domain.com"
-      let fromEmail = process.env.RESEND_FROM_EMAIL || 'notifications@soradin.com';
+      // Format from email properly for Resend - always brand as Soradin
+      let fromEmail = resendFromEmail || 'Soradin <notifications@soradin.com>';
       
-      // If it's just an email (no < >), try both formats:
-      // 1. First try with name wrapper (preferred format)
-      // 2. If that fails, Resend will tell us
-      if (fromEmail && !fromEmail.includes('<') && fromEmail.includes('@')) {
-        // It's just an email - wrap it with a name for better deliverability
+      // Always ensure email is branded as "Soradin" regardless of what's in RESEND_FROM_EMAIL
+      if (fromEmail && !fromEmail.includes('<')) {
+        // If it's just an email address, wrap it with Soradin name
         fromEmail = `Soradin <${fromEmail}>`;
         console.log(`📧 [RESEND] Wrapped from email: ${fromEmail}`);
       } else if (fromEmail && fromEmail.includes('<')) {
-        // Already has name wrapper, use as-is
-        console.log(`📧 [RESEND] Using from email with name: ${fromEmail}`);
+        // If it already has a name, replace it with Soradin
+        const emailMatch = fromEmail.match(/<(.+@.+?)>/);
+        if (emailMatch) {
+          fromEmail = `Soradin <${emailMatch[1]}>`;
+          console.log(`📧 [RESEND] Replaced name with Soradin: ${fromEmail}`);
+        }
       } else {
         // Fallback
         fromEmail = 'Soradin <notifications@soradin.com>';
@@ -348,29 +349,37 @@ async function sendEmailNotification(params: EmailNotificationParams): Promise<v
           from: fromEmail,
           to: [to],
           subject: `New Lead Available in ${city}, ${province} - ${urgency} Lead`,
-          html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-              <h2 style="color: #2a2a2a; margin-bottom: 20px;">New Lead Available in Your Area</h2>
-              <p>Hi ${agentName},</p>
-              <p>A new pre-need inquiry has been submitted in <strong>${city}, ${province}</strong> and is now available for purchase.</p>
-              <div style="background-color: #f7f4ef; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                <p style="margin: 5px 0;"><strong>Location:</strong> ${city}, ${province}</p>
-                <p style="margin: 5px 0;"><strong>Urgency:</strong> ${urgency}</p>
-                <p style="margin: 5px 0;"><strong>Price:</strong> ${price}</p>
-              </div>
-              <p style="margin-top: 30px;">
-                <a href="${leadUrl}" style="background-color: #00A86B; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold;">
-                  View Available Leads
-                </a>
-              </p>
-              <p style="margin-top: 30px; color: #6b6b6b; font-size: 14px;">
-                This is an automated notification from Soradin. You're receiving this because you're a registered agent and this lead is within your service area.
-              </p>
-              <p style="margin-top: 15px; color: #6b6b6b; font-size: 12px;">
-                To update your notification preferences, log in to your agent portal.
-              </p>
-            </div>
-          `,
+              html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                  <div style="text-align: center; margin-bottom: 30px;">
+                    <h1 style="color: #2a2a2a; font-size: 28px; margin: 0; font-weight: 300;">Soradin</h1>
+                    <p style="color: #6b6b6b; font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; margin: 5px 0 0 0;">Pre-Planning</p>
+                  </div>
+                  <h2 style="color: #2a2a2a; margin-bottom: 20px;">New Lead Available in Your Area</h2>
+                  <p>Hi ${agentName},</p>
+                  <p>A new pre-need inquiry has been submitted in <strong>${city}, ${province}</strong> and is now available for purchase.</p>
+                  <div style="background-color: #f7f4ef; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                    <p style="margin: 5px 0;"><strong>Location:</strong> ${city}, ${province}</p>
+                    <p style="margin: 5px 0;"><strong>Urgency:</strong> ${urgency}</p>
+                    <p style="margin: 5px 0;"><strong>Price:</strong> ${price}</p>
+                  </div>
+                  <p style="margin-top: 30px;">
+                    <a href="${leadUrl}" style="background-color: #00A86B; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold;">
+                      View Available Leads
+                    </a>
+                  </p>
+                  <p style="margin-top: 30px; color: #6b6b6b; font-size: 14px;">
+                    This is an automated notification from Soradin. You're receiving this because you're a registered agent and this lead is within your service area.
+                  </p>
+                  <p style="margin-top: 15px; color: #6b6b6b; font-size: 12px;">
+                    To update your notification preferences, log in to your agent portal.
+                  </p>
+                  <hr style="border: none; border-top: 1px solid #e5e5e5; margin: 30px 0;" />
+                  <p style="color: #6b6b6b; font-size: 12px; margin: 0;">
+                    © ${new Date().getFullYear()} Soradin. All rights reserved.
+                  </p>
+                </div>
+              `,
         }),
       });
 
