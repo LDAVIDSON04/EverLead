@@ -204,7 +204,7 @@ export async function POST(req: NextRequest) {
     // Generate a password reset token
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://soradin.com";
     
-    // Clean siteUrl for redirectTo
+    // Clean siteUrl for redirectTo - Supabase requires exact match in allowed URLs
     let cleanRedirectUrl = (siteUrl || '').trim().replace(/\/+$/, '');
     if (!cleanRedirectUrl.startsWith('http')) {
       cleanRedirectUrl = `https://${cleanRedirectUrl}`;
@@ -215,15 +215,31 @@ export async function POST(req: NextRequest) {
       email: email.substring(0, 3) + "***",
       redirectTo,
       hasSupabaseAdmin: !!supabaseAdmin,
+      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL?.substring(0, 30) + "...",
+      hasServiceRoleKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
     });
     
-    const { data: resetData, error: resetError } = await supabaseAdmin.auth.admin.generateLink({
-      type: "recovery",
-      email: email,
-      options: {
-        redirectTo: redirectTo,
-      },
-    });
+    let resetData, resetError;
+    try {
+      const result = await supabaseAdmin.auth.admin.generateLink({
+        type: "recovery",
+        email: email,
+        options: {
+          redirectTo: redirectTo,
+        },
+      });
+      resetData = result.data;
+      resetError = result.error;
+    } catch (generateError: any) {
+      console.error("🔐 [FORGOT-PASSWORD] Exception during generateLink:", {
+        error: generateError,
+        message: generateError?.message,
+        stack: generateError?.stack,
+        name: generateError?.name,
+      });
+      resetError = generateError;
+      resetData = null;
+    }
 
     if (resetError || !resetData) {
       console.error("🔐 [FORGOT-PASSWORD] Error generating reset link:", {
@@ -231,15 +247,33 @@ export async function POST(req: NextRequest) {
         errorMessage: resetError?.message,
         errorCode: resetError?.code,
         errorStatus: resetError?.status,
+        errorName: resetError?.name,
         hasResetData: !!resetData,
-        resetData: resetData,
-        email: email,
-        siteUrl: siteUrl,
+        resetData: resetData ? {
+          hasActionLink: !!resetData.action_link,
+          hasProperties: !!resetData.properties,
+        } : null,
+        email: email.substring(0, 3) + "***",
+        redirectTo,
+        siteUrl,
       });
+      
+      // Provide more helpful error message
+      let errorMessage = "Error generating reset link";
+      if (resetError?.message?.includes("redirect")) {
+        errorMessage = "The reset URL is not configured. Please contact support.";
+      } else if (resetError?.message) {
+        errorMessage = `Error: ${resetError.message}`;
+      }
+      
       return NextResponse.json(
         { 
-          error: "Error generating reset link",
-          details: process.env.NODE_ENV === "development" ? resetError?.message : undefined
+          error: errorMessage,
+          details: process.env.NODE_ENV === "development" ? {
+            message: resetError?.message,
+            code: resetError?.code,
+            redirectTo,
+          } : undefined
         },
         { status: 500 }
       );
