@@ -368,16 +368,21 @@ export async function POST(req: NextRequest) {
     console.log("🔐 [FORGOT-PASSWORD] Clean base URL for logo:", cleanBaseUrl);
 
     // Ensure email is branded as Soradin
+    // RESEND_FROM_EMAIL should be set in Vercel (e.g., "noreply@soradin.com")
     let fromEmail = process.env.RESEND_FROM_EMAIL || "Soradin <notifications@soradin.com>";
     
+    // If it's just an email address, wrap it with "Soradin" name
     if (fromEmail && !fromEmail.includes('<')) {
       fromEmail = `Soradin <${fromEmail}>`;
     } else if (fromEmail && fromEmail.includes('<')) {
+      // If it already has a name, replace it with "Soradin" to keep branding consistent
       const emailMatch = fromEmail.match(/<(.+@.+?)>/);
       if (emailMatch) {
         fromEmail = `Soradin <${emailMatch[1]}>`;
       }
     }
+    
+    console.log("🔐 [FORGOT-PASSWORD] Using from email:", fromEmail);
 
     // Send email using Resend
     try {
