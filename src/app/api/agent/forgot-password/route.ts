@@ -172,35 +172,21 @@ export async function POST(req: NextRequest) {
     });
 
     // Supabase generateLink returns an action_link with the full URL
-    // Extract the token from the action_link or use the properties
-    let resetUrl: string;
+    // Extract the token from the properties (hashed_token)
+    const props = resetData.properties as any;
+    const resetToken = props?.hashed_token || props?.token_hash || props?.token;
     
-    if (resetData.action_link) {
-      // Extract token from action_link
-      const actionUrl = new URL(resetData.action_link);
-      const token = actionUrl.searchParams.get('token') || actionUrl.hash.split('token=')[1]?.split('&')[0];
-      
-      if (token) {
-        resetUrl = `${siteUrl}/agent/reset-password?token=${token}`;
-      } else {
-        // If no token in URL, try to use the action_link directly but replace domain
-        resetUrl = resetData.action_link.replace(/https?:\/\/[^\/]+/, siteUrl);
-      }
-    } else {
-      // Fallback: try to get token from properties
-      const props = resetData.properties as any;
-      const resetToken = props?.hashed_token || props?.token_hash || props?.token;
-      
-      if (!resetToken) {
-        console.error("No reset token found in resetData:", JSON.stringify(resetData, null, 2));
-        return NextResponse.json(
-          { error: "Error generating reset token" },
-          { status: 500 }
-        );
-      }
-      
-      resetUrl = `${siteUrl}/agent/reset-password?token=${resetToken}`;
+    if (!resetToken) {
+      console.error("🔐 [FORGOT-PASSWORD] No reset token found in resetData:", JSON.stringify(resetData, null, 2));
+      return NextResponse.json(
+        { error: "Error generating reset token" },
+        { status: 500 }
+      );
     }
+    
+    // Build reset URL - ensure no double slashes
+    const baseUrl = siteUrl.replace(/\/$/, ''); // Remove trailing slash
+    const resetUrl = `${baseUrl}/agent/reset-password?token=${resetToken}`;
 
     console.log("Reset URL:", resetUrl);
 
