@@ -195,18 +195,43 @@ export async function POST(req: NextRequest) {
     // Generate a password reset token
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://soradin.com";
     
+    // Clean siteUrl for redirectTo
+    let cleanRedirectUrl = (siteUrl || '').trim().replace(/\/+$/, '');
+    if (!cleanRedirectUrl.startsWith('http')) {
+      cleanRedirectUrl = `https://${cleanRedirectUrl}`;
+    }
+    const redirectTo = `${cleanRedirectUrl}/agent/reset-password`;
+    
+    console.log("🔐 [FORGOT-PASSWORD] Generating reset link with:", {
+      email: email.substring(0, 3) + "***",
+      redirectTo,
+      hasSupabaseAdmin: !!supabaseAdmin,
+    });
+    
     const { data: resetData, error: resetError } = await supabaseAdmin.auth.admin.generateLink({
       type: "recovery",
       email: email,
       options: {
-        redirectTo: `${siteUrl}/agent/reset-password`,
+        redirectTo: redirectTo,
       },
     });
 
     if (resetError || !resetData) {
-      console.error("Error generating reset link:", resetError);
+      console.error("🔐 [FORGOT-PASSWORD] Error generating reset link:", {
+        error: resetError,
+        errorMessage: resetError?.message,
+        errorCode: resetError?.code,
+        errorStatus: resetError?.status,
+        hasResetData: !!resetData,
+        resetData: resetData,
+        email: email,
+        siteUrl: siteUrl,
+      });
       return NextResponse.json(
-        { error: "Error generating reset link" },
+        { 
+          error: "Error generating reset link",
+          details: process.env.NODE_ENV === "development" ? resetError?.message : undefined
+        },
         { status: 500 }
       );
     }
