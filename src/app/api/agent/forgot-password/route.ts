@@ -5,9 +5,16 @@ async function sendResetEmail(email: string, resetUrl: string, siteUrl: string, 
   const resendApiKey = process.env.RESEND_API_KEY;
 
   if (!resendApiKey) {
-    console.log("RESEND_API_KEY not set, skipping email send");
-    return;
+    console.error("RESEND_API_KEY not set - cannot send password reset email");
+    throw new Error("Email service not configured");
   }
+
+  console.log("Sending password reset email:", {
+    to: email,
+    from: fromEmail,
+    resetUrl: resetUrl.substring(0, 50) + "...", // Log partial URL for security
+    hasResendKey: !!resendApiKey,
+  });
 
   try {
     const resendResponse = await fetch("https://api.resend.com/emails", {
@@ -55,11 +62,31 @@ async function sendResetEmail(email: string, resetUrl: string, siteUrl: string, 
 
     if (!resendResponse.ok) {
       const errorText = await resendResponse.text();
-      console.error("Resend API error:", errorText);
-      throw new Error(`Resend API error: ${resendResponse.status}`);
+      let errorData;
+      try {
+        errorData = JSON.parse(errorText);
+      } catch {
+        errorData = { message: errorText };
+      }
+      console.error("Resend API error:", {
+        status: resendResponse.status,
+        error: errorData,
+        fullResponse: errorText,
+      });
+      throw new Error(`Resend API error: ${resendResponse.status} - ${errorData.message || errorText}`);
     }
-  } catch (emailError) {
-    console.error("Error sending password reset email:", emailError);
+
+    const responseData = await resendResponse.json().catch(() => ({}));
+    console.log("Password reset email sent successfully:", {
+      emailId: responseData?.id,
+      to: email,
+    });
+  } catch (emailError: any) {
+    console.error("Error sending password reset email:", {
+      error: emailError.message,
+      stack: emailError.stack,
+      to: email,
+    });
     throw emailError;
   }
 }
@@ -97,9 +124,14 @@ export async function POST(req: NextRequest) {
     }
 
     // Generate a password reset token
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://soradin.com";
+    
     const { data: resetData, error: resetError } = await supabaseAdmin.auth.admin.generateLink({
       type: "recovery",
       email: email,
+      options: {
+        redirectTo: `${siteUrl}/agent/reset-password`,
+      },
     });
 
     if (resetError || !resetData) {
@@ -110,19 +142,44 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Get the reset token from the properties
-    // Supabase generateLink returns the properties with the token
-    const resetToken = (resetData.properties as any)?.hashed_token || (resetData.properties as any)?.token_hash || (resetData.properties as any)?.token;
+    console.log("Reset link generated:", {
+      hasActionLink: !!resetData.action_link,
+      hasProperties: !!resetData.properties,
+      properties: resetData.properties,
+    });
+
+    // Supabase generateLink returns an action_link with the full URL
+    // Extract the token from the action_link or use the properties
+    let resetUrl: string;
     
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://soradin.com";
-    
-    if (!resetToken) {
-      console.error("No reset token found in resetData:", resetData);
-      return NextResponse.json(
-        { error: "Error generating reset token" },
-        { status: 500 }
-      );
+    if (resetData.action_link) {
+      // Extract token from action_link
+      const actionUrl = new URL(resetData.action_link);
+      const token = actionUrl.searchParams.get('token') || actionUrl.hash.split('token=')[1]?.split('&')[0];
+      
+      if (token) {
+        resetUrl = `${siteUrl}/agent/reset-password?token=${token}`;
+      } else {
+        // If no token in URL, try to use the action_link directly but replace domain
+        resetUrl = resetData.action_link.replace(/https?:\/\/[^\/]+/, siteUrl);
+      }
+    } else {
+      // Fallback: try to get token from properties
+      const props = resetData.properties as any;
+      const resetToken = props?.hashed_token || props?.token_hash || props?.token;
+      
+      if (!resetToken) {
+        console.error("No reset token found in resetData:", JSON.stringify(resetData, null, 2));
+        return NextResponse.json(
+          { error: "Error generating reset token" },
+          { status: 500 }
+        );
+      }
+      
+      resetUrl = `${siteUrl}/agent/reset-password?token=${resetToken}`;
     }
+
+    console.log("Reset URL:", resetUrl);
 
     // Ensure email is branded as Soradin
     let fromEmail = process.env.RESEND_FROM_EMAIL || "Soradin <notifications@soradin.com>";
@@ -136,11 +193,15 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Build reset URL with token
-    const resetUrl = `${siteUrl}/agent/reset-password?token=${resetToken}`;
-
     // Send email using Resend
-    await sendResetEmail(email, resetUrl, siteUrl, fromEmail);
+    try {
+      await sendResetEmail(email, resetUrl, siteUrl, fromEmail);
+      console.log("Password reset email sent successfully to:", email);
+    } catch (emailError: any) {
+      console.error("Failed to send password reset email:", emailError);
+      // Don't fail the request - still return success for security
+      // But log the error for debugging
+    }
 
     // Always return success (don't reveal if user exists)
     return NextResponse.json(
