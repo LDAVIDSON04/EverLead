@@ -31,34 +31,80 @@ async function sendResetEmail(email: string, resetUrl: string, siteUrl: string, 
         to: [email],
         subject: "Reset your Soradin password",
         html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <div style="text-align: center; margin-bottom: 30px;">
-              <img src="${siteUrl}/logo.png" alt="Soradin" style="height: 40px; width: auto; margin: 0 auto 10px; display: block;" />
-              <div style="display: none;">
-                <h1 style="color: #2a2a2a; font-size: 28px; margin: 0; font-weight: 300;">Soradin</h1>
-                <p style="color: #6b6b6b; font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; margin: 5px 0 0 0;">Pre-Planning</p>
-              </div>
-            </div>
-            <h2 style="color: #2a2a2a; margin-bottom: 20px;">Reset your password</h2>
-            <p>Hi there,</p>
-            <p>We received a request to reset your password for your Soradin agent account.</p>
-            <p style="margin-top: 30px;">
-              <a href="${resetUrl}" style="background-color: #2a2a2a; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: 500;">
-                Reset Password
-              </a>
-            </p>
-            <p style="margin-top: 30px; color: #6b6b6b; font-size: 14px;">
-              This link will expire in 1 hour. If you didn't request a password reset, you can safely ignore this email.
-            </p>
-            <p style="margin-top: 15px; color: #6b6b6b; font-size: 12px;">
-              If the button doesn't work, copy and paste this link into your browser:<br/>
-              <a href="${resetUrl}" style="color: #2a2a2a; word-break: break-all;">${resetUrl}</a>
-            </p>
-            <hr style="border: none; border-top: 1px solid #e5e5e5; margin: 30px 0;" />
-            <p style="color: #6b6b6b; font-size: 12px; margin: 0;">
-              © ${new Date().getFullYear()} Soradin. All rights reserved.
-            </p>
-          </div>
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          </head>
+          <body style="margin: 0; padding: 0; background-color: #f7f4ef; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+            <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #f7f4ef; padding: 40px 20px;">
+              <tr>
+                <td align="center">
+                  <table role="presentation" style="max-width: 600px; width: 100%; border-collapse: collapse; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); overflow: hidden;">
+                    <!-- Header with Logo -->
+                    <tr>
+                      <td style="padding: 40px 40px 30px; text-align: center; background: linear-gradient(to bottom, #faf8f5, #ffffff);">
+                        <img src="${siteUrl}/logo.png" alt="Soradin" style="height: 48px; width: auto; margin: 0 auto 12px; display: block;" />
+                        <div style="display: none;">
+                          <h1 style="color: #2a2a2a; font-size: 32px; margin: 0; font-weight: 300; letter-spacing: -0.5px;">Soradin</h1>
+                          <p style="color: #6b6b6b; font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; margin: 8px 0 0 0;">Pre-Planning</p>
+                        </div>
+                      </td>
+                    </tr>
+                    
+                    <!-- Main Content -->
+                    <tr>
+                      <td style="padding: 40px;">
+                        <h2 style="color: #2a2a2a; font-size: 24px; font-weight: 400; margin: 0 0 20px; letter-spacing: -0.3px;">Reset your password</h2>
+                        
+                        <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 16px;">Hello,</p>
+                        
+                        <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 32px;">
+                          We received a request to reset your password for your Soradin agent account. Click the button below to create a new password.
+                        </p>
+                        
+                        <!-- CTA Button -->
+                        <table role="presentation" style="width: 100%; border-collapse: collapse; margin: 32px 0;">
+                          <tr>
+                            <td align="center" style="padding: 0;">
+                              <a href="${resetUrl}" style="display: inline-block; background-color: #2a2a2a; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 6px; font-size: 16px; font-weight: 500; letter-spacing: 0.3px;">Reset Password</a>
+                            </td>
+                          </tr>
+                        </table>
+                        
+                        <!-- Info Box -->
+                        <div style="background-color: #f7f4ef; border-left: 3px solid #2a2a2a; padding: 16px 20px; margin: 32px 0; border-radius: 4px;">
+                          <p style="color: #4a4a4a; font-size: 14px; line-height: 1.6; margin: 0;">
+                            <strong style="color: #2a2a2a;">Important:</strong> This link will expire in 1 hour for security reasons. If you didn't request a password reset, you can safely ignore this email.
+                          </p>
+                        </div>
+                        
+                        <!-- Alternative Link -->
+                        <p style="color: #6b6b6b; font-size: 14px; line-height: 1.6; margin: 24px 0 0;">
+                          If the button doesn't work, copy and paste this link into your browser:
+                        </p>
+                        <p style="color: #2a2a2a; font-size: 13px; line-height: 1.6; margin: 8px 0 0; word-break: break-all; font-family: 'Courier New', monospace;">
+                          <a href="${resetUrl}" style="color: #2a2a2a; text-decoration: underline;">${resetUrl}</a>
+                        </p>
+                      </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                      <td style="padding: 30px 40px; background-color: #faf8f5; border-top: 1px solid #e5e5e5;">
+                        <p style="color: #6b6b6b; font-size: 12px; line-height: 1.6; margin: 0; text-align: center;">
+                          © ${new Date().getFullYear()} Soradin. All rights reserved.<br/>
+                          <span style="color: #9b9b9b;">This is an automated message. Please do not reply to this email.</span>
+                        </p>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </body>
+          </html>
         `,
       }),
     });
@@ -185,8 +231,10 @@ export async function POST(req: NextRequest) {
     }
     
     // Build reset URL - ensure no double slashes
-    const baseUrl = siteUrl.replace(/\/$/, ''); // Remove trailing slash
-    const resetUrl = `${baseUrl}/agent/reset-password?token=${resetToken}`;
+    const baseUrl = siteUrl.replace(/\/+$/, ''); // Remove trailing slashes
+    const resetUrl = `${baseUrl}/agent/reset-password?token=${encodeURIComponent(resetToken)}`;
+    
+    console.log("🔐 [FORGOT-PASSWORD] Reset URL constructed:", resetUrl.substring(0, 80) + "...");
 
     console.log("Reset URL:", resetUrl);
 

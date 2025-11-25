@@ -66,21 +66,35 @@ function ResetPasswordForm() {
       const hashParams = new URLSearchParams(window.location.hash.substring(1));
       const accessToken = hashParams.get("access_token");
 
-      // If we have a token in query params, exchange it for a session
+      // If we have a token in query params, we need to exchange it for a session first
       if (token) {
-        // Exchange the token for a session
-        const { data, error: exchangeError } = await supabaseClient.auth.verifyOtp({
+        // For password reset tokens from generateLink, we need to verify and set session
+        // First, verify the token by calling verifyOtp
+        const { data: verifyData, error: verifyError } = await supabaseClient.auth.verifyOtp({
           token_hash: token,
           type: 'recovery',
         });
 
-        if (exchangeError) {
-          setError(exchangeError.message || "Invalid or expired reset link. Please request a new password reset.");
+        if (verifyError) {
+          console.error("Token verification error:", verifyError);
+          setError(verifyError.message || "Invalid or expired reset link. Please request a new password reset.");
+          setSubmitting(false);
+          return;
+        }
+
+        // After verification, update the password
+        const { error: updateError } = await supabaseClient.auth.updateUser({
+          password: password,
+        });
+
+        if (updateError) {
+          console.error("Password update error:", updateError);
+          setError(updateError.message || "Failed to reset password. Please try again.");
           setSubmitting(false);
           return;
         }
       } else if (accessToken) {
-        // Handle Supabase redirect format
+        // Handle Supabase redirect format (from email links)
         const { error: verifyError } = await supabaseClient.auth.verifyOtp({
           token_hash: accessToken,
           type: 'recovery',
@@ -91,23 +105,24 @@ function ResetPasswordForm() {
           setSubmitting(false);
           return;
         }
+
+        // Update password
+        const { error: updateError } = await supabaseClient.auth.updateUser({
+          password: password,
+        });
+
+        if (updateError) {
+          setError(updateError.message || "Failed to reset password. Please try again.");
+          setSubmitting(false);
+          return;
+        }
       } else {
         setError("Invalid reset link. Please request a new password reset.");
         setSubmitting(false);
         return;
       }
 
-      // Update password
-      const { error: updateError } = await supabaseClient.auth.updateUser({
-        password: password,
-      });
-
-      if (updateError) {
-        setError(updateError.message || "Failed to reset password. Please try again.");
-        setSubmitting(false);
-        return;
-      }
-
+      // Password updated successfully
       setSuccess(true);
       
       // Redirect to login after 2 seconds
