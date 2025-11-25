@@ -211,38 +211,52 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    console.log("Reset link generated:", {
+    console.log("🔐 [FORGOT-PASSWORD] Reset link generated:", {
       hasActionLink: !!resetData.action_link,
+      actionLink: resetData.action_link?.substring(0, 100) + '...',
       hasProperties: !!resetData.properties,
       properties: resetData.properties,
     });
 
-    // Supabase generateLink returns an action_link with the full URL
-    // Extract the token from the properties (hashed_token)
-    const props = resetData.properties as any;
-    const resetToken = props?.hashed_token || props?.token_hash || props?.token;
+    // Use Supabase's action_link directly - it already has the correct URL and token
+    // Replace the domain with our site URL to ensure it points to our app
+    let resetUrl = resetData.action_link;
     
-    if (!resetToken) {
-      console.error("🔐 [FORGOT-PASSWORD] No reset token found in resetData:", JSON.stringify(resetData, null, 2));
+    if (resetUrl && siteUrl) {
+      // Extract our domain from siteUrl
+      let cleanBaseUrl = (siteUrl || '').trim().replace(/\/+$/, '');
+      if (!cleanBaseUrl.startsWith('http')) {
+        cleanBaseUrl = `https://${cleanBaseUrl}`;
+      }
+      
+      // Replace the domain in action_link with our domain
+      try {
+        const actionUrl = new URL(resetUrl);
+        const ourUrl = new URL(cleanBaseUrl);
+        // Replace the hostname and protocol, keep the path and query
+        resetUrl = `${ourUrl.protocol}//${ourUrl.host}${actionUrl.pathname}${actionUrl.search}${actionUrl.hash}`;
+      } catch (e) {
+        console.error("🔐 [FORGOT-PASSWORD] Error parsing action_link, using as-is:", e);
+        // If parsing fails, use action_link as-is
+      }
+    }
+    
+    if (!resetUrl) {
+      console.error("🔐 [FORGOT-PASSWORD] No reset URL available:", JSON.stringify(resetData, null, 2));
       return NextResponse.json(
-        { error: "Error generating reset token" },
+        { error: "Error generating reset link" },
         { status: 500 }
       );
     }
     
-    // Build reset URL - ensure no double slashes and proper encoding
-    // Clean siteUrl: remove trailing slashes and ensure it starts with http/https
+    // Clean base URL for logo
     let cleanBaseUrl = (siteUrl || '').trim().replace(/\/+$/, '');
     if (!cleanBaseUrl.startsWith('http')) {
       cleanBaseUrl = `https://${cleanBaseUrl}`;
     }
     
-    const resetUrl = `${cleanBaseUrl}/agent/reset-password?token=${encodeURIComponent(resetToken)}`;
-    
-    console.log("🔐 [FORGOT-PASSWORD] Reset URL constructed:", resetUrl);
-    console.log("🔐 [FORGOT-PASSWORD] Clean base URL:", cleanBaseUrl);
-    console.log("🔐 [FORGOT-PASSWORD] Original siteUrl:", siteUrl);
-    console.log("🔐 [FORGOT-PASSWORD] Token length:", resetToken?.length);
+    console.log("🔐 [FORGOT-PASSWORD] Final reset URL:", resetUrl.substring(0, 100) + '...');
+    console.log("🔐 [FORGOT-PASSWORD] Clean base URL for logo:", cleanBaseUrl);
 
     // Ensure email is branded as Soradin
     let fromEmail = process.env.RESEND_FROM_EMAIL || "Soradin <notifications@soradin.com>";

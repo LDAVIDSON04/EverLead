@@ -15,24 +15,33 @@ function ResetPasswordForm() {
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
-    // Check if we have a valid reset token in the URL (from query params or hash)
+    // Check if we have a valid reset token in the URL
+    // Supabase sends tokens in multiple formats:
+    // 1. Query param: ?token=...
+    // 2. Hash: #access_token=...&type=recovery
+    // 3. Hash: #token=...&type=recovery
+    
     const urlParams = new URLSearchParams(window.location.search);
     const token = urlParams.get("token");
     
-    // Also check hash for Supabase redirects
-    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    // Check hash for Supabase redirects
+    const hash = window.location.hash.substring(1);
+    const hashParams = new URLSearchParams(hash);
     const accessToken = hashParams.get("access_token");
+    const hashToken = hashParams.get("token");
     const type = hashParams.get("type");
 
     console.log("🔐 [RESET-PAGE] Checking for token:", {
       hasToken: !!token,
       hasAccessToken: !!accessToken,
+      hasHashToken: !!hashToken,
       type,
       search: window.location.search,
-      hash: window.location.hash.substring(0, 50),
+      hash: hash.substring(0, 100),
+      fullUrl: window.location.href.substring(0, 150),
     });
 
-    if (token || (type === "recovery" && accessToken)) {
+    if (token || hashToken || (type === "recovery" && accessToken)) {
       // Token is valid, user can reset password
       console.log("🔐 [RESET-PAGE] Token found, allowing password reset");
       setLoading(false);
@@ -69,65 +78,61 @@ function ResetPasswordForm() {
     setSubmitting(true);
 
     try {
-      // Get the token from URL query params or hash
-      const urlParams = new URLSearchParams(window.location.search);
-      const token = urlParams.get("token");
+      // Get tokens from URL (query params or hash)
+      const searchParams = new URLSearchParams(window.location.search);
+      const queryToken = searchParams.get("token");
       
-      const hashParams = new URLSearchParams(window.location.hash.substring(1));
-      const accessToken = hashParams.get("access_token");
+      const hashStr = window.location.hash.substring(1);
+      const hashParams = new URLSearchParams(hashStr);
+      const hashAccessToken = hashParams.get("access_token");
+      const hashToken = hashParams.get("token");
+      const hashType = hashParams.get("type");
 
-      // If we have a token in query params, we need to exchange it for a session first
-      if (token) {
-        // For password reset tokens from generateLink, we need to verify and set session
-        // First, verify the token by calling verifyOtp
-        const { data: verifyData, error: verifyError } = await supabaseClient.auth.verifyOtp({
-          token_hash: token,
+      // Try to verify token and update password
+      let verifyError = null;
+      
+      if (queryToken) {
+        // Token from query params
+        const { error } = await supabaseClient.auth.verifyOtp({
+          token_hash: queryToken,
           type: 'recovery',
         });
-
-        if (verifyError) {
-          console.error("Token verification error:", verifyError);
-          setError(verifyError.message || "Invalid or expired reset link. Please request a new password reset.");
-          setSubmitting(false);
-          return;
-        }
-
-        // After verification, update the password
-        const { error: updateError } = await supabaseClient.auth.updateUser({
-          password: password,
-        });
-
-        if (updateError) {
-          console.error("Password update error:", updateError);
-          setError(updateError.message || "Failed to reset password. Please try again.");
-          setSubmitting(false);
-          return;
-        }
-      } else if (accessToken) {
-        // Handle Supabase redirect format (from email links)
-        const { error: verifyError } = await supabaseClient.auth.verifyOtp({
-          token_hash: accessToken,
+        verifyError = error;
+      } else if (hashToken) {
+        // Token from hash
+        const { error } = await supabaseClient.auth.verifyOtp({
+          token_hash: hashToken,
           type: 'recovery',
         });
-
-        if (verifyError) {
-          setError(verifyError.message || "Invalid or expired reset link. Please request a new password reset.");
-          setSubmitting(false);
-          return;
-        }
-
-        // Update password
-        const { error: updateError } = await supabaseClient.auth.updateUser({
-          password: password,
+        verifyError = error;
+      } else if (hashType === "recovery" && hashAccessToken) {
+        // Access token from hash (Supabase format)
+        const { error } = await supabaseClient.auth.verifyOtp({
+          token_hash: hashAccessToken,
+          type: 'recovery',
         });
-
-        if (updateError) {
-          setError(updateError.message || "Failed to reset password. Please try again.");
-          setSubmitting(false);
-          return;
-        }
+        verifyError = error;
       } else {
         setError("Invalid reset link. Please request a new password reset.");
+        setSubmitting(false);
+        return;
+      }
+
+      if (verifyError) {
+        console.error("Token verification error:", verifyError);
+        setError(verifyError.message || "Invalid or expired reset link. Please request a new password reset.");
+        setSubmitting(false);
+        return;
+      }
+
+      // After verification, update the password
+      const { error: updateError } = await supabaseClient.auth.updateUser({
+        password: password,
+      });
+
+      if (updateError) {
+        console.error("Password update error:", updateError);
+        setError(updateError.message || "Failed to reset password. Please try again.");
         setSubmitting(false);
         return;
       }
