@@ -205,31 +205,34 @@ export default function AgentLandingPage() {
   async function handleForgotPassword(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    setSubmitting(true);
     
     if (!forgotPasswordEmail) {
       setError("Please enter your email address.");
+      setSubmitting(false);
       return;
     }
 
     try {
-      // Use production site URL from env, fallback to current origin
-      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
-      const { error: resetError } = await supabaseClient.auth.resetPasswordForEmail(
-        forgotPasswordEmail,
-        {
-          redirectTo: `${siteUrl}/agent/reset-password`,
-        }
-      );
+      // Use custom API route that sends email via Resend with Soradin branding
+      const response = await fetch("/api/agent/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: forgotPasswordEmail }),
+      });
 
-      if (resetError) {
-        setError(resetError.message || "Failed to send password reset email.");
-        return;
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error || "Failed to send reset email. Please try again.");
+      } else {
+        setForgotPasswordSent(true);
       }
-
-      setForgotPasswordSent(true);
     } catch (err) {
-      console.error(err);
-      setError("Something went wrong. Please try again.");
+      console.error("Forgot password unexpected error:", err);
+      setError("An unexpected error occurred. Please try again.");
+    } finally {
+      setSubmitting(false);
     }
   }
 

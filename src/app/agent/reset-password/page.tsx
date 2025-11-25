@@ -15,17 +15,22 @@ function ResetPasswordForm() {
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
-    // Check if we have a valid reset token in the URL
+    // Check if we have a valid reset token in the URL (from query params or hash)
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get("token");
+    
+    // Also check hash for Supabase redirects
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     const accessToken = hashParams.get("access_token");
     const type = hashParams.get("type");
 
-    if (type === "recovery" && accessToken) {
+    if (token || (type === "recovery" && accessToken)) {
       // Token is valid, user can reset password
       setLoading(false);
     } else {
       // No valid token, redirect to login
       setError("Invalid or expired reset link. Please request a new password reset.");
+      setLoading(false);
       setTimeout(() => {
         router.push("/agent");
       }, 3000);
@@ -54,17 +59,45 @@ function ResetPasswordForm() {
     setSubmitting(true);
 
     try {
-      // Get the access token from the URL hash
+      // Get the token from URL query params or hash
+      const urlParams = new URLSearchParams(window.location.search);
+      const token = urlParams.get("token");
+      
       const hashParams = new URLSearchParams(window.location.hash.substring(1));
       const accessToken = hashParams.get("access_token");
 
-      if (!accessToken) {
+      // If we have a token in query params, exchange it for a session
+      if (token) {
+        // Exchange the token for a session
+        const { data, error: exchangeError } = await supabaseClient.auth.verifyOtp({
+          token_hash: token,
+          type: 'recovery',
+        });
+
+        if (exchangeError) {
+          setError(exchangeError.message || "Invalid or expired reset link. Please request a new password reset.");
+          setSubmitting(false);
+          return;
+        }
+      } else if (accessToken) {
+        // Handle Supabase redirect format
+        const { error: verifyError } = await supabaseClient.auth.verifyOtp({
+          token_hash: accessToken,
+          type: 'recovery',
+        });
+
+        if (verifyError) {
+          setError(verifyError.message || "Invalid or expired reset link. Please request a new password reset.");
+          setSubmitting(false);
+          return;
+        }
+      } else {
         setError("Invalid reset link. Please request a new password reset.");
         setSubmitting(false);
         return;
       }
 
-      // Update password using the access token
+      // Update password
       const { error: updateError } = await supabaseClient.auth.updateUser({
         password: password,
       });
