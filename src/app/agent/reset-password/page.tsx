@@ -24,11 +24,21 @@ function ResetPasswordForm() {
     const accessToken = hashParams.get("access_token");
     const type = hashParams.get("type");
 
+    console.log("🔐 [RESET-PAGE] Checking for token:", {
+      hasToken: !!token,
+      hasAccessToken: !!accessToken,
+      type,
+      search: window.location.search,
+      hash: window.location.hash.substring(0, 50),
+    });
+
     if (token || (type === "recovery" && accessToken)) {
       // Token is valid, user can reset password
+      console.log("🔐 [RESET-PAGE] Token found, allowing password reset");
       setLoading(false);
     } else {
       // No valid token, redirect to login
+      console.log("🔐 [RESET-PAGE] No token found, redirecting to login");
       setError("Invalid or expired reset link. Please request a new password reset.");
       setLoading(false);
       setTimeout(() => {

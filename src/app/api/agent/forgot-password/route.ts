@@ -45,7 +45,7 @@ async function sendResetEmail(email: string, resetUrl: string, siteUrl: string, 
                     <!-- Header with Logo -->
                     <tr>
                       <td style="padding: 40px 40px 30px; text-align: center; background: linear-gradient(to bottom, #faf8f5, #ffffff);">
-                        <img src="${siteUrl}/logo.png" alt="Soradin" style="height: 48px; width: auto; margin: 0 auto 12px; display: block;" />
+                        <img src="${siteUrl}/logo.png" alt="Soradin" style="height: 48px; width: auto; margin: 0 auto 12px; display: block; max-width: 200px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
                         <div style="display: none;">
                           <h1 style="color: #2a2a2a; font-size: 32px; margin: 0; font-weight: 300; letter-spacing: -0.5px;">Soradin</h1>
                           <p style="color: #6b6b6b; font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; margin: 8px 0 0 0;">Pre-Planning</p>
@@ -84,7 +84,7 @@ async function sendResetEmail(email: string, resetUrl: string, siteUrl: string, 
                         <p style="color: #6b6b6b; font-size: 14px; line-height: 1.6; margin: 24px 0 0;">
                           If the button doesn't work, copy and paste this link into your browser:
                         </p>
-                        <p style="color: #2a2a2a; font-size: 13px; line-height: 1.6; margin: 8px 0 0; word-break: break-all; font-family: 'Courier New', monospace;">
+                        <p style="color: #2a2a2a; font-size: 13px; line-height: 1.6; margin: 8px 0 0; word-break: break-all; font-family: 'Courier New', monospace; background-color: #f7f4ef; padding: 12px; border-radius: 4px;">
                           <a href="${resetUrl}" style="color: #2a2a2a; text-decoration: underline;">${resetUrl}</a>
                         </p>
                       </td>
@@ -230,11 +230,13 @@ export async function POST(req: NextRequest) {
       );
     }
     
-    // Build reset URL - ensure no double slashes
+    // Build reset URL - ensure no double slashes and proper encoding
     const baseUrl = siteUrl.replace(/\/+$/, ''); // Remove trailing slashes
     const resetUrl = `${baseUrl}/agent/reset-password?token=${encodeURIComponent(resetToken)}`;
     
-    console.log("🔐 [FORGOT-PASSWORD] Reset URL constructed:", resetUrl.substring(0, 80) + "...");
+    console.log("🔐 [FORGOT-PASSWORD] Reset URL constructed:", resetUrl);
+    console.log("🔐 [FORGOT-PASSWORD] Base URL:", baseUrl);
+    console.log("🔐 [FORGOT-PASSWORD] Token length:", resetToken?.length);
 
     console.log("Reset URL:", resetUrl);
 
@@ -252,7 +254,7 @@ export async function POST(req: NextRequest) {
 
     // Send email using Resend
     try {
-      await sendResetEmail(email, resetUrl, siteUrl, fromEmail);
+      await sendResetEmail(email, resetUrl, baseUrl, fromEmail);
       console.log("Password reset email sent successfully to:", email);
     } catch (emailError: any) {
       console.error("Failed to send password reset email:", emailError);
