@@ -9,11 +9,25 @@ export default function HomePage() {
       <header className="bg-[#1f2933]/95 backdrop-blur-sm text-white border-b border-[#1f2933]/20 sticky top-0 z-50 shadow-sm">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-8 py-5">
           {/* Left: Logo */}
-          <div className="flex items-baseline gap-3">
-            <span className="text-xl font-light tracking-wide text-white">
-              Soradin
-            </span>
-            <span className="text-[10px] uppercase tracking-[0.3em] text-[#e0d5bf]/80 font-light">
+          <div className="flex items-center gap-3">
+            <img
+              src="/logo.png"
+              alt="Soradin"
+              className="h-8 w-auto"
+              onError={(e) => {
+                // Fallback to text if image doesn't exist
+                const target = e.target as HTMLImageElement;
+                target.style.display = 'none';
+                const parent = target.parentElement;
+                if (parent) {
+                  parent.innerHTML = `
+                    <span class="text-xl font-light tracking-wide text-white">Soradin</span>
+                    <span class="text-[10px] uppercase tracking-[0.3em] text-[#e0d5bf]/80 font-light">PRE-PLANNING</span>
+                  `;
+                }
+              }}
+            />
+            <span className="text-[10px] uppercase tracking-[0.3em] text-[#e0d5bf]/80 font-light hidden sm:block">
               PRE-PLANNING
             </span>
           </div>
