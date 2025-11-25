@@ -8,11 +8,42 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const leadId = body.leadId as string | undefined;
+    const agentId = body.agentId as string | undefined;
 
     if (!leadId) {
       return NextResponse.json(
         { error: "Missing leadId" },
         { status: 400 }
+      );
+    }
+
+    // Require agentId from request body
+    if (!agentId) {
+      return NextResponse.json(
+        { error: "Missing agentId" },
+        { status: 400 }
+      );
+    }
+
+    // Get agent profile to check province
+    const { data: agentProfile, error: profileError } = await supabaseAdmin
+      .from("profiles")
+      .select("agent_province, role, approval_status")
+      .eq("id", agentId)
+      .maybeSingle();
+
+    if (profileError || !agentProfile) {
+      return NextResponse.json(
+        { error: "Agent profile not found" },
+        { status: 404 }
+      );
+    }
+
+    // Verify agent is approved
+    if (agentProfile.role !== "agent" || agentProfile.approval_status !== "approved") {
+      return NextResponse.json(
+        { error: "Agent account not approved" },
+        { status: 403 }
       );
     }
 
@@ -39,6 +70,21 @@ export async function POST(req: NextRequest) {
         { error: "This lead is no longer available" },
         { status: 400 }
       );
+    }
+
+    // Validate province match - agents can only purchase leads from their province
+    if (agentProfile.agent_province) {
+      const agentProvinceUpper = (agentProfile.agent_province || '').toUpperCase().trim();
+      const leadProvinceUpper = (finalizedLead.province || '').toUpperCase().trim();
+      
+      if (leadProvinceUpper !== agentProvinceUpper) {
+        return NextResponse.json(
+          { 
+            error: `You can only purchase leads from ${agentProfile.agent_province}. This lead is from ${finalizedLead.province || 'another province'}.` 
+          },
+          { status: 403 }
+        );
+      }
     }
 
     // Get Buy Now price - use lead_price if available, otherwise calculate from urgency

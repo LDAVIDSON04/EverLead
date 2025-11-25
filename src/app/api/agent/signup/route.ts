@@ -194,8 +194,13 @@ export async function POST(req: NextRequest) {
     if (licensed_funeral_director !== undefined) {
       profileData.licensed_funeral_director = licensed_funeral_director === true || licensed_funeral_director === "yes";
     }
-    if (notification_cities && Array.isArray(notification_cities)) {
+    if (notification_cities && Array.isArray(notification_cities) && notification_cities.length > 0) {
       profileData.notification_cities = notification_cities;
+      // Extract province from first notification city (agents are restricted to their province)
+      const firstCity = notification_cities[0];
+      if (firstCity && firstCity.province) {
+        profileData.agent_province = firstCity.province.toUpperCase().trim();
+      }
     }
 
     console.log("Attempting to create profile:", { userId, email, full_name });
@@ -244,8 +249,13 @@ export async function POST(req: NextRequest) {
           if (licensed_funeral_director !== undefined) {
             updateData.licensed_funeral_director = licensed_funeral_director === true || licensed_funeral_director === "yes";
           }
-          if (notification_cities && Array.isArray(notification_cities)) {
+          if (notification_cities && Array.isArray(notification_cities) && notification_cities.length > 0) {
             updateData.notification_cities = notification_cities;
+            // Extract province from first notification city (agents are restricted to their province)
+            const firstCity = notification_cities[0];
+            if (firstCity && firstCity.province) {
+              updateData.agent_province = firstCity.province.toUpperCase().trim();
+            }
           }
 
           const { data: updatedProfile, error: updateError } = await supabaseAdmin

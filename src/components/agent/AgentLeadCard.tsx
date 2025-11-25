@@ -22,6 +22,7 @@ type Props = {
   lead: AgentLead;
   firstFreeAvailable?: boolean;
   onClaimFree?: (leadId: string) => Promise<void>;
+  agentId?: string | null;
 };
 
 function urgencyLabel(urgency: Urgency) {
@@ -51,7 +52,7 @@ function getServiceTypeLabel(serviceType: string | null): string {
   return `${serviceType} pre-need enquiry`;
 }
 
-export default function AgentLeadCard({ lead, firstFreeAvailable = false, onClaimFree }: Props) {
+export default function AgentLeadCard({ lead, firstFreeAvailable = false, onClaimFree, agentId }: Props) {
   const [buying, setBuying] = useState(false);
   const [claiming, setClaiming] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -96,7 +97,7 @@ export default function AgentLeadCard({ lead, firstFreeAvailable = false, onClai
       const res = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ leadId: lead.id }),
+        body: JSON.stringify({ leadId: lead.id, agentId: agentId }),
       });
 
       const body = await res.json();

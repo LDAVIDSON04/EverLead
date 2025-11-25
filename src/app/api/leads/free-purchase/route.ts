@@ -18,7 +18,7 @@ export async function POST(req: Request) {
     // 1) Check profile and free flag
     const { data: profile, error: profileError } = await supabaseAdmin
       .from("profiles")
-      .select("first_free_redeemed")
+      .select("first_free_redeemed, agent_province")
       .eq("id", agentId)
       .maybeSingle();
 
@@ -48,10 +48,10 @@ export async function POST(req: Request) {
       );
     }
 
-    // 2) Check lead is still new
+    // 2) Check lead is still new and validate province match
     const { data: lead, error: leadError } = await supabaseAdmin
       .from("leads")
-      .select("status")
+      .select("status, province")
       .eq("id", leadId)
       .maybeSingle();
 
@@ -68,6 +68,21 @@ export async function POST(req: Request) {
         { error: "LEAD_NOT_AVAILABLE" },
         { status: 400 }
       );
+    }
+
+    // Validate province match - agents can only purchase leads from their province
+    if (profile.agent_province) {
+      const agentProvinceUpper = (profile.agent_province || '').toUpperCase().trim();
+      const leadProvinceUpper = (lead.province || '').toUpperCase().trim();
+      
+      if (leadProvinceUpper !== agentProvinceUpper) {
+        return NextResponse.json(
+          { 
+            error: `You can only purchase leads from ${profile.agent_province}. This lead is from ${lead.province || 'another province'}.` 
+          },
+          { status: 403 }
+        );
+      }
     }
 
     // 3) Mark lead as purchased by this agent, with price 0

@@ -116,6 +116,9 @@ export default function AvailableLeadsPage() {
           setAgentLng(profile.agent_longitude);
           setSearchRadius(profile.search_radius_km || 50);
           setLocationInitialized(true);
+        } else if (profile?.agent_province) {
+          // Even if location isn't set, we need the province for filtering
+          setAgentProvince(profile.agent_province);
         }
       }
 
@@ -140,7 +143,7 @@ export default function AvailableLeadsPage() {
       }
 
       // Map to AgentLead format
-      const newLeads: AgentLead[] = (leadsData || []).map((lead: any) => {
+      let newLeads: AgentLead[] = (leadsData || []).map((lead: any) => {
         const urgency = (lead.urgency_level || "cold").toLowerCase() as 'hot' | 'warm' | 'cold';
         // Use lead_price from database (in dollars), or calculate from urgency if not set
         const leadPrice = lead.lead_price ?? getLeadPriceFromUrgency(lead.urgency_level);
@@ -158,6 +161,15 @@ export default function AvailableLeadsPage() {
           longitude: lead.longitude,
         };
       });
+
+      // Filter by agent's province (strict restriction - agents can only see leads from their province)
+      if (agentProvince) {
+        const agentProvinceUpper = agentProvince.toUpperCase().trim();
+        newLeads = newLeads.filter((lead) => {
+          const leadProvinceUpper = (lead.province || '').toUpperCase().trim();
+          return leadProvinceUpper === agentProvinceUpper;
+        });
+      }
 
       // No auction filtering needed - all unsold leads are available
 
@@ -712,6 +724,7 @@ export default function AvailableLeadsPage() {
                   lead={lead} 
                   firstFreeAvailable={firstFreeAvailable}
                   onClaimFree={handleClaimFree}
+                  agentId={userId}
                 />
               ))}
             </div>
