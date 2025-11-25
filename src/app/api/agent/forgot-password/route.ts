@@ -144,6 +144,15 @@ export async function POST(req: NextRequest) {
   console.log("🔐 [FORGOT-PASSWORD] Request received");
   
   try {
+    // Check if supabaseAdmin is initialized
+    if (!supabaseAdmin) {
+      console.error("🔐 [FORGOT-PASSWORD] Supabase admin client not initialized");
+      return NextResponse.json(
+        { error: "Server configuration error. Please contact support." },
+        { status: 500 }
+      );
+    }
+    
     const body = await req.json();
     const { email } = body;
     
