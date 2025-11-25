@@ -263,8 +263,15 @@ export async function notifyAgentsForLead(lead: any, supabaseAdminClient: any = 
     const price = lead.lead_price ? `$${lead.lead_price.toFixed(2)}` : 'See pricing';
 
     let successCount = 0;
-    for (const agent of agentsToNotify) {
+    for (let i = 0; i < agentsToNotify.length; i++) {
+      const agent = agentsToNotify[i];
       try {
+        // Add delay between emails to respect Resend rate limit (2 requests/second)
+        // Wait 600ms between emails to stay under the limit
+        if (i > 0) {
+          await new Promise(resolve => setTimeout(resolve, 600));
+        }
+        
         await sendEmailNotification({
           to: agent.email,
           agentName: agent.full_name || 'Agent',
@@ -275,8 +282,18 @@ export async function notifyAgentsForLead(lead: any, supabaseAdminClient: any = 
           leadUrl,
         });
         successCount++;
-      } catch (emailError) {
-        console.error(`Failed to send notification to ${agent.email}:`, emailError);
+        console.log(`✅ [NOTIFY] Email sent to ${agent.email} (${i + 1}/${agentsToNotify.length})`);
+      } catch (emailError: any) {
+        console.error(`❌ Failed to send notification to ${agent.email}:`, {
+          error: emailError?.message,
+          status: emailError?.status,
+          code: emailError?.code,
+        });
+        // If it's a rate limit error, wait longer before continuing
+        if (emailError?.status === 429 || emailError?.message?.includes('rate_limit')) {
+          console.log(`⏳ Rate limit hit, waiting 2 seconds before continuing...`);
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        }
         // Continue with other agents even if one fails
       }
     }
