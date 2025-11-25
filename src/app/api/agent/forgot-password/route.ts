@@ -231,14 +231,18 @@ export async function POST(req: NextRequest) {
     }
     
     // Build reset URL - ensure no double slashes and proper encoding
-    const baseUrl = siteUrl.replace(/\/+$/, ''); // Remove trailing slashes
-    const resetUrl = `${baseUrl}/agent/reset-password?token=${encodeURIComponent(resetToken)}`;
+    // Clean siteUrl: remove trailing slashes and ensure it starts with http/https
+    let cleanBaseUrl = (siteUrl || '').trim().replace(/\/+$/, '');
+    if (!cleanBaseUrl.startsWith('http')) {
+      cleanBaseUrl = `https://${cleanBaseUrl}`;
+    }
+    
+    const resetUrl = `${cleanBaseUrl}/agent/reset-password?token=${encodeURIComponent(resetToken)}`;
     
     console.log("🔐 [FORGOT-PASSWORD] Reset URL constructed:", resetUrl);
-    console.log("🔐 [FORGOT-PASSWORD] Base URL:", baseUrl);
+    console.log("🔐 [FORGOT-PASSWORD] Clean base URL:", cleanBaseUrl);
+    console.log("🔐 [FORGOT-PASSWORD] Original siteUrl:", siteUrl);
     console.log("🔐 [FORGOT-PASSWORD] Token length:", resetToken?.length);
-
-    console.log("Reset URL:", resetUrl);
 
     // Ensure email is branded as Soradin
     let fromEmail = process.env.RESEND_FROM_EMAIL || "Soradin <notifications@soradin.com>";
@@ -254,7 +258,7 @@ export async function POST(req: NextRequest) {
 
     // Send email using Resend
     try {
-      await sendResetEmail(email, resetUrl, baseUrl, fromEmail);
+      await sendResetEmail(email, resetUrl, cleanBaseUrl, fromEmail);
       console.log("Password reset email sent successfully to:", email);
     } catch (emailError: any) {
       console.error("Failed to send password reset email:", emailError);
