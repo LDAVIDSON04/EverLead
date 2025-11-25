@@ -15,6 +15,7 @@ export default function AgentLandingPage() {
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [phone, setPhone] = useState("");
   const [funeralHome, setFuneralHome] = useState("");
   const [licensedInProvince, setLicensedInProvince] = useState<"yes" | "no" | "">("");
@@ -75,8 +76,22 @@ export default function AgentLandingPage() {
     try {
       if (mode === "signup") {
         // Validate all required fields
-        if (!fullName || !email || !password || !phone || !funeralHome || !licensedInProvince || !licensedFuneralDirector) {
+        if (!fullName || !email || !password || !confirmPassword || !phone || !funeralHome || !licensedInProvince || !licensedFuneralDirector) {
           setError("Please fill in all required fields.");
+          setSubmitting(false);
+          return;
+        }
+
+        // Validate passwords match
+        if (password !== confirmPassword) {
+          setError("Passwords do not match. Please try again.");
+          setSubmitting(false);
+          return;
+        }
+
+        // Validate password length
+        if (password.length < 6) {
+          setError("Password must be at least 6 characters long.");
           setSubmitting(false);
           return;
         }
@@ -135,6 +150,7 @@ export default function AgentLandingPage() {
         setFullName("");
         setEmail("");
         setPassword("");
+        setConfirmPassword("");
         setPhone("");
         setFuneralHome("");
         setLicensedInProvince("");
@@ -591,6 +607,23 @@ export default function AgentLandingPage() {
                 />
               </div>
 
+              {mode === "signup" && (
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-[#4a4a4a]">
+                    Confirm password *
+                  </label>
+                  <input
+                    type="password"
+                    value={confirmPassword}
+                    minLength={6}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-[#2a2a2a] outline-none focus:border-[#2a2a2a] focus:ring-1 focus:ring-[#2a2a2a]"
+                    placeholder="••••••••"
+                    required
+                  />
+                </div>
+              )}
+
             {error && (
               <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2">
                 <p className="text-xs text-red-600">{error}</p>
@@ -610,19 +643,34 @@ export default function AgentLandingPage() {
             </button>
 
             {mode === "login" && (
-              <p className="text-center text-xs text-[#6b6b6b]">
-                New to Soradin?{" "}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMode("signup");
-                    setError(null);
-                  }}
-                  className="text-[#2a2a2a] hover:underline"
-                >
-                  Create an account
-                </button>
-              </p>
+              <div className="space-y-2">
+                <p className="text-center text-xs text-[#6b6b6b]">
+                  New to Soradin?{" "}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMode("signup");
+                      setError(null);
+                      setShowForgotPassword(false);
+                    }}
+                    className="text-[#2a2a2a] hover:underline"
+                  >
+                    Create an account
+                  </button>
+                </p>
+                <p className="text-center text-xs text-[#6b6b6b]">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowForgotPassword(true);
+                      setError(null);
+                    }}
+                    className="text-[#2a2a2a] hover:underline"
+                  >
+                    Forgot password?
+                  </button>
+                </p>
+              </div>
             )}
 
               {mode === "signup" && (
