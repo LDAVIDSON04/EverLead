@@ -262,41 +262,81 @@ export async function notifyAgentsForLead(lead: any, supabaseAdminClient: any = 
     const urgencyLabel = urgency.charAt(0).toUpperCase() + urgency.slice(1);
     const price = lead.lead_price ? `$${lead.lead_price.toFixed(2)}` : 'See pricing';
 
+    // Process emails in batches to respect Resend rate limits and avoid timeouts
+    // Resend allows 2 requests/second, so we'll send 2 emails per second
+    // Batch size: 2 emails at a time, with 1 second delay between batches
+    const BATCH_SIZE = 2;
+    const BATCH_DELAY_MS = 1000; // 1 second between batches (allows 2 req/sec)
+    
     let successCount = 0;
-    for (let i = 0; i < agentsToNotify.length; i++) {
-      const agent = agentsToNotify[i];
-      try {
-        // Add delay between emails to respect Resend rate limit (2 requests/second)
-        // Wait 600ms between emails to stay under the limit
-        if (i > 0) {
-          await new Promise(resolve => setTimeout(resolve, 600));
+    const totalAgents = agentsToNotify.length;
+    
+    console.log(`📬 Processing ${totalAgents} email notifications in batches of ${BATCH_SIZE}`);
+    console.log(`⏱️ Estimated time: ~${Math.ceil(totalAgents / BATCH_SIZE)} seconds`);
+    
+    // Process agents in batches
+    for (let i = 0; i < agentsToNotify.length; i += BATCH_SIZE) {
+      const batch = agentsToNotify.slice(i, i + BATCH_SIZE);
+      const batchNumber = Math.floor(i / BATCH_SIZE) + 1;
+      const totalBatches = Math.ceil(totalAgents / BATCH_SIZE);
+      
+      // Log progress every 10 batches to avoid log spam for large numbers
+      if (batchNumber % 10 === 0 || batchNumber === 1 || batchNumber === totalBatches) {
+        console.log(`📧 Processing batch ${batchNumber}/${totalBatches} (${batch.length} emails) - ${successCount}/${totalAgents} sent so far`);
+      }
+      
+      // Send emails in current batch concurrently (up to BATCH_SIZE at once)
+      const batchPromises = batch.map(async (agent, batchIndex) => {
+        try {
+          await sendEmailNotification({
+            to: agent.email,
+            agentName: agent.full_name || 'Agent',
+            city,
+            province,
+            urgency: urgencyLabel,
+            price,
+            leadUrl,
+          });
+          successCount++;
+          // Only log individual sends for small batches to avoid log spam
+          if (totalAgents <= 20) {
+            console.log(`✅ [NOTIFY] Email sent to ${agent.email} (${i + batchIndex + 1}/${totalAgents})`);
+          }
+          return { success: true, email: agent.email };
+        } catch (emailError: any) {
+          console.error(`❌ Failed to send notification to ${agent.email}:`, {
+            error: emailError?.message,
+            status: emailError?.status,
+            code: emailError?.code,
+          });
+          
+          // If it's a rate limit error, we'll handle it after the batch
+          return { 
+            success: false, 
+            email: agent.email, 
+            error: emailError,
+            isRateLimit: emailError?.status === 429 || emailError?.message?.includes('rate_limit')
+          };
         }
-        
-        await sendEmailNotification({
-          to: agent.email,
-          agentName: agent.full_name || 'Agent',
-          city,
-          province,
-          urgency: urgencyLabel,
-          price,
-          leadUrl,
-        });
-        successCount++;
-        console.log(`✅ [NOTIFY] Email sent to ${agent.email} (${i + 1}/${agentsToNotify.length})`);
-      } catch (emailError: any) {
-        console.error(`❌ Failed to send notification to ${agent.email}:`, {
-          error: emailError?.message,
-          status: emailError?.status,
-          code: emailError?.code,
-        });
-        // If it's a rate limit error, wait longer before continuing
-        if (emailError?.status === 429 || emailError?.message?.includes('rate_limit')) {
-          console.log(`⏳ Rate limit hit, waiting 2 seconds before continuing...`);
-          await new Promise(resolve => setTimeout(resolve, 2000));
-        }
-        // Continue with other agents even if one fails
+      });
+      
+      // Wait for all emails in batch to complete
+      const batchResults = await Promise.all(batchPromises);
+      
+      // Check if any emails in this batch hit rate limits
+      const rateLimitHit = batchResults.some(r => r.isRateLimit);
+      if (rateLimitHit) {
+        console.log(`⏳ Rate limit detected, waiting 3 seconds before next batch...`);
+        await new Promise(resolve => setTimeout(resolve, 3000));
+      }
+      
+      // Add delay between batches (except after the last batch)
+      if (i + BATCH_SIZE < agentsToNotify.length) {
+        await new Promise(resolve => setTimeout(resolve, BATCH_DELAY_MS));
       }
     }
+    
+    console.log(`📬 Completed processing ${totalAgents} email notifications: ${successCount} successful`);
 
     console.log(`✅ [NOTIFY] Sent email notifications to ${successCount}/${agentsToNotify.length} agents for lead ${lead.id} in ${city}, ${province}`);
   } catch (err: any) {

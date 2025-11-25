@@ -313,10 +313,10 @@ export async function POST(req: NextRequest) {
       email: data.email,
     });
 
-    // Notify agents about the new lead
+    // Notify agents about the new lead (fire-and-forget to avoid timeouts)
     // Only notify if lead has location coordinates
-    // NOTE: We wait for notifications to complete to ensure they're sent
-    // (Vercel kills async functions after response is sent)
+    // NOTE: We don't await this to avoid blocking the response for large numbers of agents
+    // The notification function handles rate limiting and will complete in the background
     console.log("📧 Checking if agent notifications should be sent", {
       leadId: data.id,
       city: data.city,
@@ -328,28 +328,30 @@ export async function POST(req: NextRequest) {
     });
     
     if (data.latitude && data.longitude) {
-      console.log("📧 Triggering agent notifications for new lead", {
+      console.log("📧 Triggering agent notifications for new lead (async, non-blocking)", {
         leadId: data.id,
         city: data.city,
         province: data.province,
         latitude: data.latitude,
         longitude: data.longitude,
       });
-      try {
-        const { notifyAgentsForLead } = await import("@/lib/notifyAgentsForLead");
-        // Wait for notifications to complete (ensures they're sent before Vercel kills the function)
-        await notifyAgentsForLead(data, supabaseAdmin);
-        console.log("✅ Agent notifications completed for lead", data.id);
-      } catch (notifyError: any) {
-        console.error("❌ Error notifying agents (non-fatal):", notifyError);
+      
+      // Fire and forget - don't block the response
+      // For large numbers of agents, this will process in the background
+      // Vercel functions can run up to 60 seconds (Pro) or 10 seconds (Hobby) after response
+      const { notifyAgentsForLead } = await import("@/lib/notifyAgentsForLead");
+      notifyAgentsForLead(data, supabaseAdmin).catch((notifyError: any) => {
+        // Log errors but don't fail the lead creation
+        console.error("❌ Error notifying agents (non-fatal, background):", notifyError);
         console.error("Error details:", {
           message: notifyError?.message,
           stack: notifyError?.stack,
           name: notifyError?.name,
           code: notifyError?.code,
         });
-        // Don't fail the lead creation if notifications fail
-      }
+      });
+      
+      console.log("📧 Agent notifications started in background for lead", data.id);
     } else {
       console.warn("⚠️ Skipping agent notifications - lead has no location coordinates", {
         leadId: data.id,
