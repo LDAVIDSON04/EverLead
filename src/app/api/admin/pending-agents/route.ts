@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
     // Get profiles (without email - email is in auth.users)
     const { data: profiles, error } = await supabaseAdmin
       .from("profiles")
-      .select("id, full_name, phone, funeral_home, licensed_in_province, licensed_funeral_director, approval_status, created_at")
+      .select("id, full_name, phone, funeral_home, licensed_in_province, licensed_funeral_director, approval_status, created_at, notification_cities")
       .eq("role", "agent")
       .in("approval_status", ["pending", "declined"])
       .order("created_at", { ascending: false });

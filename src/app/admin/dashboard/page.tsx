@@ -965,6 +965,21 @@ export default function AdminDashboardPage() {
                           <p><strong>Funeral Home/Agency:</strong> {agent.funeral_home || "-"}</p>
                           <p><strong>Licensed in Province:</strong> {agent.licensed_in_province ? "Yes" : "No"}</p>
                           <p><strong>Licensed Funeral Director:</strong> {agent.licensed_funeral_director ? "Yes" : "No"}</p>
+                          {agent.notification_cities && Array.isArray(agent.notification_cities) && agent.notification_cities.length > 0 && (
+                            <div>
+                              <p><strong>Notification Cities:</strong></p>
+                              <div className="mt-1 flex flex-wrap gap-2">
+                                {agent.notification_cities.map((city: any, idx: number) => (
+                                  <span
+                                    key={idx}
+                                    className="inline-flex items-center rounded-full bg-[#f7f4ef] px-3 py-1 text-xs font-medium text-[#2a2a2a]"
+                                  >
+                                    {city.city}, {city.province}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                           <p><strong>Status:</strong> <span className="font-medium capitalize">{agent.approval_status || "pending"}</span></p>
                           <p><strong>Applied:</strong> {formatDate(agent.created_at)}</p>
                         </div>

@@ -25,6 +25,9 @@ export default function AgentLandingPage() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
+  const [forgotPasswordSent, setForgotPasswordSent] = useState(false);
 
   useEffect(() => {
     async function checkAuth() {
@@ -183,6 +186,35 @@ export default function AgentLandingPage() {
     }
   }
 
+  async function handleForgotPassword(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    
+    if (!forgotPasswordEmail) {
+      setError("Please enter your email address.");
+      return;
+    }
+
+    try {
+      const { error: resetError } = await supabaseClient.auth.resetPasswordForEmail(
+        forgotPasswordEmail,
+        {
+          redirectTo: `${window.location.origin}/agent/reset-password`,
+        }
+      );
+
+      if (resetError) {
+        setError(resetError.message || "Failed to send password reset email.");
+        return;
+      }
+
+      setForgotPasswordSent(true);
+    } catch (err) {
+      console.error(err);
+      setError("Something went wrong. Please try again.");
+    }
+  }
+
   if (loading) {
     return (
       <main className="min-h-screen bg-[#faf8f5] text-[#2a2a2a] flex items-center justify-center">
@@ -264,6 +296,75 @@ export default function AgentLandingPage() {
             </button>
           </div>
 
+          {showForgotPassword ? (
+            <div className="rounded-lg border border-[#ded3c2] bg-white p-6 shadow-sm">
+              {forgotPasswordSent ? (
+                <div className="space-y-4">
+                  <h2 className="text-lg font-semibold text-[#2a2a2a]">Check your email</h2>
+                  <p className="text-sm text-[#4a4a4a]">
+                    We've sent a password reset link to <strong>{forgotPasswordEmail}</strong>. 
+                    Please check your email and click the link to reset your password.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowForgotPassword(false);
+                      setForgotPasswordSent(false);
+                      setForgotPasswordEmail("");
+                    }}
+                    className="w-full rounded-md bg-[#2a2a2a] px-4 py-2 text-sm font-medium text-white hover:bg-[#3a3a3a] transition-colors"
+                  >
+                    Back to login
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleForgotPassword} className="space-y-4">
+                  <h2 className="text-lg font-semibold text-[#2a2a2a]">Reset your password</h2>
+                  <p className="text-sm text-[#4a4a4a]">
+                    Enter your email address and we'll send you a link to reset your password.
+                  </p>
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-[#4a4a4a]">
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      value={forgotPasswordEmail}
+                      onChange={(e) => setForgotPasswordEmail(e.target.value)}
+                      className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-[#2a2a2a] outline-none focus:border-[#2a2a2a] focus:ring-1 focus:ring-[#2a2a2a]"
+                      placeholder="you@example.com"
+                      required
+                    />
+                  </div>
+                  {error && (
+                    <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2">
+                      <p className="text-xs text-red-600">{error}</p>
+                    </div>
+                  )}
+                  <div className="flex gap-2">
+                    <button
+                      type="submit"
+                      disabled={submitting}
+                      className="flex-1 rounded-md bg-[#2a2a2a] px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-[#3a3a3a] disabled:cursor-not-allowed disabled:opacity-70 transition-colors"
+                    >
+                      {submitting ? "Sending..." : "Send reset link"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowForgotPassword(false);
+                        setForgotPasswordEmail("");
+                        setError(null);
+                      }}
+                      className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-[#2a2a2a] hover:bg-gray-50 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          ) : (
           <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border border-[#ded3c2] bg-white p-6 shadow-sm">
               {mode === "signup" && (
                 <>
@@ -540,6 +641,7 @@ export default function AgentLandingPage() {
                 </p>
               )}
             </form>
+          )}
 
           {/* Success Modal */}
           {showSuccessModal && (
