@@ -173,22 +173,32 @@ export async function POST(req: NextRequest) {
 
     // Geocode location to get latitude/longitude for distance filtering
     if (leadData.city && leadData.province) {
+      console.log(`📍 Attempting to geocode lead location: ${leadData.city}, ${leadData.province}`);
       try {
         const { geocodeLocation } = await import("@/lib/geocoding");
         const geocodeResult = await geocodeLocation(leadData.city, leadData.province);
-        if (geocodeResult) {
+        if (geocodeResult && geocodeResult.latitude && geocodeResult.longitude) {
           leadData.latitude = geocodeResult.latitude;
           leadData.longitude = geocodeResult.longitude;
           console.log(`✅ Geocoded lead: ${leadData.city}, ${leadData.province} → ${geocodeResult.latitude}, ${geocodeResult.longitude}`);
         } else {
-          console.warn(`⚠️ Geocoding failed for: ${leadData.city}, ${leadData.province}`);
+          console.warn(`⚠️ Geocoding returned no coordinates for ${leadData.city}, ${leadData.province}`, {
+            geocodeResult,
+            hasApiKey: !!process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY,
+          });
         }
-      } catch (error) {
-        console.error("❌ Geocoding error:", error);
-        // Continue without coordinates - lead will be created but won't show in location filtering
+      } catch (geocodeError: any) {
+        console.error("❌ Geocoding error (non-fatal):", {
+          error: geocodeError,
+          message: geocodeError?.message,
+          city: leadData.city,
+          province: leadData.province,
+          hasApiKey: !!process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY,
+        });
+        // Continue without coordinates - lead will still be created
       }
     } else {
-      console.warn("⚠️ Lead missing city or province, skipping geocoding");
+      console.warn(`⚠️ Cannot geocode lead - missing city or province: city=${leadData.city}, province=${leadData.province}`);
     }
 
     // Clean payload: remove null/undefined/empty
@@ -307,6 +317,16 @@ export async function POST(req: NextRequest) {
     // Only notify if lead has location coordinates
     // NOTE: We wait for notifications to complete to ensure they're sent
     // (Vercel kills async functions after response is sent)
+    console.log("📧 Checking if agent notifications should be sent", {
+      leadId: data.id,
+      city: data.city,
+      province: data.province,
+      hasLatitude: !!data.latitude,
+      hasLongitude: !!data.longitude,
+      latitude: data.latitude,
+      longitude: data.longitude,
+    });
+    
     if (data.latitude && data.longitude) {
       console.log("📧 Triggering agent notifications for new lead", {
         leadId: data.id,
@@ -319,21 +339,24 @@ export async function POST(req: NextRequest) {
         const { notifyAgentsForLead } = await import("@/lib/notifyAgentsForLead");
         // Wait for notifications to complete (ensures they're sent before Vercel kills the function)
         await notifyAgentsForLead(data, supabaseAdmin);
-        console.log("✅ Agent notifications completed");
+        console.log("✅ Agent notifications completed for lead", data.id);
       } catch (notifyError: any) {
         console.error("❌ Error notifying agents (non-fatal):", notifyError);
         console.error("Error details:", {
           message: notifyError?.message,
           stack: notifyError?.stack,
           name: notifyError?.name,
+          code: notifyError?.code,
         });
         // Don't fail the lead creation if notifications fail
       }
     } else {
-      console.log("⚠️ Skipping agent notifications - lead has no location coordinates", {
+      console.warn("⚠️ Skipping agent notifications - lead has no location coordinates", {
         leadId: data.id,
         city: data.city,
         province: data.province,
+        latitude: data.latitude,
+        longitude: data.longitude,
       });
     }
 

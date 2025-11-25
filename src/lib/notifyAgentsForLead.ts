@@ -238,9 +238,15 @@ export async function notifyAgentsForLead(lead: any, supabaseAdminClient: any = 
     }
 
     if (agentsToNotify.length === 0) {
-      console.log(`⚠️ No agents within radius for lead ${lead.id} in ${lead.city}, ${lead.province}`);
+      console.log(`⚠️ No agents eligible for notification for lead ${lead.id} in ${lead.city}, ${lead.province}`);
       console.log(`   Lead location: ${leadLat}, ${leadLon}`);
-      console.log(`   Checked ${agents.length} agents with location settings`);
+      console.log(`   Checked ${agents.length} approved agents`);
+      console.log(`   Agents checked:`, agents.map((a: any) => ({
+        name: a.full_name,
+        hasLocation: !!(a.agent_latitude && a.agent_longitude),
+        hasNotificationCities: !!(a.notification_cities && Array.isArray(a.notification_cities) && a.notification_cities.length > 0),
+        notificationCities: a.notification_cities,
+      })));
       return;
     }
 
