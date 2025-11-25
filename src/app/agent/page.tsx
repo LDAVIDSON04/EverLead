@@ -19,6 +19,9 @@ export default function AgentLandingPage() {
   const [funeralHome, setFuneralHome] = useState("");
   const [licensedInProvince, setLicensedInProvince] = useState<"yes" | "no" | "">("");
   const [licensedFuneralDirector, setLicensedFuneralDirector] = useState<"yes" | "no" | "">("");
+  const [notificationCities, setNotificationCities] = useState<Array<{city: string, province: string}>>([]);
+  const [newCity, setNewCity] = useState("");
+  const [newProvince, setNewProvince] = useState("BC");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -368,6 +371,92 @@ export default function AgentLandingPage() {
                         <span className="text-sm text-[#4a4a4a]">No</span>
                       </label>
                     </div>
+                  </div>
+
+                  <div className="space-y-3 border-t border-[#ded3c2] pt-4">
+                    <label className="block text-sm font-medium text-[#4a4a4a]">
+                      Which cities would you like to receive notifications for? *
+                    </label>
+                    <p className="text-xs text-[#6b6b6b]">
+                      You'll receive email notifications when new leads are posted in these cities. Add multiple cities if you serve multiple areas.
+                    </p>
+                    
+                    {/* Add city form */}
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={newCity}
+                        onChange={(e) => setNewCity(e.target.value)}
+                        placeholder="City name"
+                        className="flex-1 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-[#2a2a2a] outline-none focus:border-[#2a2a2a] focus:ring-1 focus:ring-[#2a2a2a]"
+                      />
+                      <select
+                        value={newProvince}
+                        onChange={(e) => setNewProvince(e.target.value)}
+                        className="w-24 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-[#2a2a2a] outline-none focus:border-[#2a2a2a] focus:ring-1 focus:ring-[#2a2a2a]"
+                      >
+                        <option value="BC">BC</option>
+                        <option value="AB">AB</option>
+                        <option value="SK">SK</option>
+                        <option value="MB">MB</option>
+                        <option value="ON">ON</option>
+                        <option value="QC">QC</option>
+                        <option value="NB">NB</option>
+                        <option value="NS">NS</option>
+                        <option value="PE">PE</option>
+                        <option value="NL">NL</option>
+                        <option value="YT">YT</option>
+                        <option value="NT">NT</option>
+                        <option value="NU">NU</option>
+                      </select>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (newCity.trim()) {
+                            const cityLower = newCity.trim().toLowerCase();
+                            const provinceUpper = newProvince.toUpperCase();
+                            // Check if city already exists
+                            const exists = notificationCities.some(
+                              c => c.city.toLowerCase() === cityLower && c.province.toUpperCase() === provinceUpper
+                            );
+                            if (!exists) {
+                              setNotificationCities([...notificationCities, { city: newCity.trim(), province: newProvince }]);
+                              setNewCity("");
+                            } else {
+                              setError("This city is already in your list.");
+                            }
+                          }
+                        }}
+                        className="rounded-md bg-[#2a2a2a] px-4 py-2 text-sm font-medium text-white hover:bg-[#3a3a3a] transition-colors"
+                      >
+                        Add
+                      </button>
+                    </div>
+
+                    {/* List of added cities */}
+                    {notificationCities.length > 0 && (
+                      <div className="space-y-2">
+                        <div className="flex flex-wrap gap-2">
+                          {notificationCities.map((cityObj, index) => (
+                            <span
+                              key={index}
+                              className="inline-flex items-center gap-1.5 rounded-full bg-[#f7f4ef] px-3 py-1.5 text-xs font-medium text-[#2a2a2a]"
+                            >
+                              {cityObj.city}, {cityObj.province}
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setNotificationCities(notificationCities.filter((_, i) => i !== index));
+                                }}
+                                className="text-[#6b6b6b] hover:text-[#2a2a2a]"
+                              >
+                                ×
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </>
               )}
