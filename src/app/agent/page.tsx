@@ -246,24 +246,11 @@ export default function AgentLandingPage() {
       {/* Public Header - No logout button */}
       <header className="border-b border-[#ded3c2] bg-white">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
-          <div className="flex items-center gap-2">
-            <Link href="/" className="flex items-center">
-              <img
-                src="/logo.png"
-                alt="Soradin"
-                className="h-7 w-auto"
-                onError={(e) => {
-                  // Fallback to text if image doesn't exist
-                  const target = e.target as HTMLImageElement;
-                  target.style.display = 'none';
-                  const parent = target.parentElement;
-                  if (parent) {
-                    parent.innerHTML = '<span class="text-xl font-semibold tracking-tight text-[#2a2a2a]">Soradin</span>';
-                  }
-                }}
-              />
+          <div className="flex flex-col">
+            <Link href="/" className="text-xl font-semibold tracking-tight text-[#2a2a2a]">
+              Soradin
             </Link>
-            <span className="text-[11px] uppercase tracking-[0.18em] text-[#6b6b6b]">
+            <span className="text-[11px] uppercase tracking-[0.18em] text-[#6b6b6b] mt-0.5">
               For professionals
             </span>
           </div>

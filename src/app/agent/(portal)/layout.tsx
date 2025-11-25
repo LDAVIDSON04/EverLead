@@ -101,22 +101,9 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
     <div className="min-h-screen bg-[#f7f4ef] flex flex-col">
       <header className="bg-[#1f2933] text-white border-b border-[#ded3c2]">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-2">
-            <Link href="/agent/dashboard" className="flex items-center">
-              <img
-                src="/logo.png"
-                alt="Soradin"
-                className="h-7 w-auto"
-                onError={(e) => {
-                  // Fallback to text if image doesn't exist
-                  const target = e.target as HTMLImageElement;
-                  target.style.display = 'none';
-                  const parent = target.parentElement;
-                  if (parent) {
-                    parent.innerHTML = '<span class="text-lg font-semibold text-white">Soradin</span>';
-                  }
-                }}
-              />
+          <div className="flex items-baseline gap-2">
+            <Link href="/agent/dashboard" className="text-lg font-semibold text-white">
+              Soradin
             </Link>
             <span className="text-[11px] uppercase tracking-[0.18em] text-[#e0d5bf]">
               AGENT PORTAL
