@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 async function sendResetEmail(email: string, resetUrl: string, siteUrl: string, fromEmail: string) {
   const resendApiKey = process.env.RESEND_API_KEY;
 
