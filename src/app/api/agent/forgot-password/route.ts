@@ -92,36 +92,49 @@ async function sendResetEmail(email: string, resetUrl: string, siteUrl: string, 
 }
 
 export async function POST(req: NextRequest) {
+  console.log("🔐 [FORGOT-PASSWORD] Request received");
+  
   try {
-    const { email } = await req.json();
+    const body = await req.json();
+    const { email } = body;
+    
+    console.log("🔐 [FORGOT-PASSWORD] Email received:", email ? "yes" : "no", email ? email.substring(0, 3) + "***" : "none");
 
     if (!email) {
+      console.error("🔐 [FORGOT-PASSWORD] No email provided");
       return NextResponse.json(
         { error: "Email is required" },
         { status: 400 }
       );
     }
+    
+    console.log("🔐 [FORGOT-PASSWORD] Processing request for:", email);
 
     // Check if user exists
+    console.log("🔐 [FORGOT-PASSWORD] Checking if user exists...");
     const { data: users, error: userError } = await supabaseAdmin.auth.admin.listUsers();
     
     if (userError) {
-      console.error("Error listing users:", userError);
+      console.error("🔐 [FORGOT-PASSWORD] Error listing users:", userError);
       return NextResponse.json(
         { error: "Error checking user" },
         { status: 500 }
       );
     }
 
+    console.log("🔐 [FORGOT-PASSWORD] Found", users?.users?.length || 0, "total users");
     const user = users?.users.find((u: any) => u.email === email);
 
     if (!user) {
+      console.log("🔐 [FORGOT-PASSWORD] User not found, returning success (security)");
       // Don't reveal if user exists or not (security best practice)
       return NextResponse.json(
         { success: true, message: "If an account exists with that email, a password reset link has been sent." },
         { status: 200 }
       );
     }
+    
+    console.log("🔐 [FORGOT-PASSWORD] User found:", user.id);
 
     // Generate a password reset token
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://soradin.com";
@@ -209,7 +222,11 @@ export async function POST(req: NextRequest) {
       { status: 200 }
     );
   } catch (error: any) {
-    console.error("Error in forgot-password route:", error);
+    console.error("🔐 [FORGOT-PASSWORD] Error in route:", {
+      message: error?.message,
+      stack: error?.stack,
+      name: error?.name,
+    });
     return NextResponse.json(
       { error: "An unexpected error occurred" },
       { status: 500 }

@@ -214,6 +214,8 @@ export default function AgentLandingPage() {
     }
 
     try {
+      console.log("🔐 [CLIENT] Requesting password reset for:", forgotPasswordEmail);
+      
       // Use custom API route that sends email via Resend with Soradin branding
       const response = await fetch("/api/agent/forgot-password", {
         method: "POST",
@@ -221,7 +223,9 @@ export default function AgentLandingPage() {
         body: JSON.stringify({ email: forgotPasswordEmail }),
       });
 
+      console.log("🔐 [CLIENT] Response status:", response.status);
       const data = await response.json();
+      console.log("🔐 [CLIENT] Response data:", data);
 
       if (!response.ok) {
         setError(data.error || "Failed to send reset email. Please try again.");
@@ -229,7 +233,7 @@ export default function AgentLandingPage() {
         setForgotPasswordSent(true);
       }
     } catch (err) {
-      console.error("Forgot password unexpected error:", err);
+      console.error("🔐 [CLIENT] Forgot password unexpected error:", err);
       setError("An unexpected error occurred. Please try again.");
     } finally {
       setSubmitting(false);
