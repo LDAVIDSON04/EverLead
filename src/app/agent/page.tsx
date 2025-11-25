@@ -75,11 +75,18 @@ export default function AgentLandingPage() {
           return;
         }
 
+        // Validate notification cities (at least one required)
+        if (notificationCities.length === 0) {
+          setError("Please add at least one city where you'd like to receive notifications.");
+          setSubmitting(false);
+          return;
+        }
+
         // Call API route for signup
         const response = await fetch("/api/agent/signup", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
+            body: JSON.stringify({
             email,
             password,
             full_name: fullName,
@@ -87,6 +94,7 @@ export default function AgentLandingPage() {
             funeral_home: funeralHome,
             licensed_in_province: licensedInProvince === "yes",
             licensed_funeral_director: licensedFuneralDirector === "yes",
+            notification_cities: notificationCities,
           }),
         });
 

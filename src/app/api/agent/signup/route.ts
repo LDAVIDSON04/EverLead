@@ -6,26 +6,45 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const {
-      email,
-      password,
-      full_name,
-      phone,
-      funeral_home,
-      licensed_in_province,
-      licensed_funeral_director,
-    } = body;
+        const {
+          email,
+          password,
+          full_name,
+          phone,
+          funeral_home,
+          licensed_in_province,
+          licensed_funeral_director,
+          notification_cities,
+        } = body;
 
     console.log("Agent signup request received:", { email, full_name, hasPassword: !!password });
 
-    // Validate required fields
-    if (!email || !password || !full_name || !phone || !funeral_home || licensed_in_province === undefined || licensed_funeral_director === undefined) {
-      console.error("Missing required fields:", { email: !!email, password: !!password, full_name: !!full_name, phone: !!phone, funeral_home: !!funeral_home, licensed_in_province, licensed_funeral_director });
-      return NextResponse.json(
-        { error: "All fields are required." },
-        { status: 400 }
-      );
-    }
+        // Validate required fields
+        if (!email || !password || !full_name || !phone || !funeral_home || licensed_in_province === undefined || licensed_funeral_director === undefined) {
+          console.error("Missing required fields:", { email: !!email, password: !!password, full_name: !!full_name, phone: !!phone, funeral_home: !!funeral_home, licensed_in_province, licensed_funeral_director });
+          return NextResponse.json(
+            { error: "All fields are required." },
+            { status: 400 }
+          );
+        }
+
+        // Validate notification_cities
+        if (!notification_cities || !Array.isArray(notification_cities) || notification_cities.length === 0) {
+          return NextResponse.json(
+            { error: "Please add at least one city where you'd like to receive notifications." },
+            { status: 400 }
+          );
+        }
+
+        // Validate each city has city and province
+        for (const cityObj of notification_cities) {
+          if (!cityObj.city || !cityObj.province) {
+            return NextResponse.json(
+              { error: "Each city must have both city name and province." },
+              { status: 400 }
+            );
+          }
+        }
 
     // Validate supabaseAdmin is available
     if (!supabaseAdmin) {
@@ -175,6 +194,9 @@ export async function POST(req: NextRequest) {
     if (licensed_funeral_director !== undefined) {
       profileData.licensed_funeral_director = licensed_funeral_director === true || licensed_funeral_director === "yes";
     }
+    if (notification_cities && Array.isArray(notification_cities)) {
+      profileData.notification_cities = notification_cities;
+    }
 
     console.log("Attempting to create profile:", { userId, email, full_name });
 
@@ -221,6 +243,9 @@ export async function POST(req: NextRequest) {
           }
           if (licensed_funeral_director !== undefined) {
             updateData.licensed_funeral_director = licensed_funeral_director === true || licensed_funeral_director === "yes";
+          }
+          if (notification_cities && Array.isArray(notification_cities)) {
+            updateData.notification_cities = notification_cities;
           }
 
           const { data: updatedProfile, error: updateError } = await supabaseAdmin

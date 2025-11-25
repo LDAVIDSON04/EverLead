@@ -45,17 +45,14 @@ export async function notifyAgentsForLead(lead: any, supabaseAdminClient: any = 
       return;
     }
 
-    console.log(`🔍 Fetching approved agents with location settings...`);
+    console.log(`🔍 Fetching approved agents with location settings or notification cities...`);
 
-    // Get all approved agents with location settings
+    // Get all approved agents - either with location settings OR notification cities
     const { data: agents, error: agentsError } = await supabaseAdminClient
       .from('profiles')
-      .select('id, full_name, agent_latitude, agent_longitude, search_radius_km')
+      .select('id, full_name, agent_latitude, agent_longitude, search_radius_km, notification_cities')
       .eq('role', 'agent')
-      .eq('approval_status', 'approved')
-      .not('agent_latitude', 'is', null)
-      .not('agent_longitude', 'is', null)
-      .not('search_radius_km', 'is', null);
+      .eq('approval_status', 'approved');
 
     console.log(`🔍 Agent query result:`, {
       hasError: !!agentsError,
@@ -83,51 +80,84 @@ export async function notifyAgentsForLead(lead: any, supabaseAdminClient: any = 
 
     console.log(`🔍 [LOOP] Starting to check ${agents.length} agents against lead location (${leadLat}, ${leadLon})`);
 
-    // First, filter agents by distance (fast operation)
-    const agentsWithinRadius: Array<{ agent: any; distance: number }> = [];
+    // First, filter agents by city match or distance (fast operation)
+    const agentsWithinRadius: Array<{ agent: any; distance: number; reason?: string }> = [];
     
     for (const agent of agents) {
       console.log(`🔍 Checking agent: ${agent.full_name} (${agent.id})`, {
         agentLat: agent.agent_latitude,
         agentLon: agent.agent_longitude,
         radius: agent.search_radius_km,
+        notificationCities: agent.notification_cities,
       });
 
-      const agentLat = parseFloat(agent.agent_latitude);
-      const agentLon = parseFloat(agent.agent_longitude);
-      const radius = agent.search_radius_km || 50; // Default to 50km if not set
+      let shouldNotify = false;
+      let notificationReason = '';
 
-      if (isNaN(agentLat) || isNaN(agentLon)) {
-        console.log(`⚠️ Skipping agent ${agent.full_name}: Invalid coordinates (${agent.agent_latitude}, ${agent.agent_longitude})`);
-        continue; // Skip agents with invalid coordinates
+      // First, check if agent has notification cities set
+      if (agent.notification_cities && Array.isArray(agent.notification_cities) && agent.notification_cities.length > 0) {
+        const leadCityLower = (lead.city || '').toLowerCase().trim();
+        const leadProvinceUpper = (lead.province || '').toUpperCase().trim();
+        
+        // Check if lead's city matches any of the agent's notification cities
+        const matchesCity = agent.notification_cities.some((cityObj: any) => {
+          const cityLower = (cityObj.city || '').toLowerCase().trim();
+          const provinceUpper = (cityObj.province || '').toUpperCase().trim();
+          return cityLower === leadCityLower && provinceUpper === leadProvinceUpper;
+        });
+
+        if (matchesCity) {
+          shouldNotify = true;
+          notificationReason = `Lead city "${lead.city}, ${lead.province}" matches notification city`;
+          console.log(`✅ [LOOP] Agent ${agent.full_name} should be notified: ${notificationReason}`);
+        } else {
+          console.log(`⏭️ [LOOP] Agent ${agent.full_name} (${agent.id}) - Lead city "${lead.city}, ${lead.province}" does not match any notification cities`, {
+            agentNotificationCities: agent.notification_cities,
+          });
+        }
       }
 
-      // Check if lead is within agent's search radius
-      // isWithinRadius(agentLat, agentLon, leadLat, leadLon, radiusKm)
-      const isWithin = isWithinRadius(agentLat, agentLon, leadLat, leadLon, radius);
-      
-      console.log(`📍 Distance check for ${agent.full_name}:`, {
-        agentLocation: `${agentLat}, ${agentLon}`,
-        leadLocation: `${leadLat}, ${leadLon}`,
-        radius: `${radius}km`,
-        isWithin,
-      });
-      
-      if (isWithin) {
-        const { calculateDistance } = await import('./distance');
-        const distance = calculateDistance(agentLat, agentLon, leadLat, leadLon);
-        agentsWithinRadius.push({ agent, distance });
-        console.log(`✅ [LOOP] Agent ${agent.full_name} is within ${radius}km (distance: ${distance.toFixed(2)}km)`);
-      } else {
-        // Calculate distance for logging
-        const { calculateDistance } = await import('./distance');
-        const distance = calculateDistance(agentLat, agentLon, leadLat, leadLon);
-        console.log(`⏭️ [LOOP] Agent ${agent.full_name} (${agent.id}) is ${distance.toFixed(1)}km away (radius: ${radius}km) - not notifying`, {
-          agentLocation: `${agentLat}, ${agentLon}`,
-          leadLocation: `${leadLat}, ${leadLon}`,
-          calculatedDistance: `${distance.toFixed(2)}km`,
-          agentRadius: `${radius}km`,
-        });
+      // If not matched by city, check radius-based location (if agent has location set)
+      if (!shouldNotify && agent.agent_latitude && agent.agent_longitude) {
+        const agentLat = parseFloat(agent.agent_latitude);
+        const agentLon = parseFloat(agent.agent_longitude);
+        const radius = agent.search_radius_km || 50; // Default to 50km if not set
+
+        if (!isNaN(agentLat) && !isNaN(agentLon)) {
+          // Check if lead is within agent's search radius
+          const isWithin = isWithinRadius(agentLat, agentLon, leadLat, leadLon, radius);
+          
+          console.log(`📍 Distance check for ${agent.full_name}:`, {
+            agentLocation: `${agentLat}, ${agentLon}`,
+            leadLocation: `${leadLat}, ${leadLon}`,
+            radius: `${radius}km`,
+            isWithin,
+          });
+          
+          if (isWithin) {
+            shouldNotify = true;
+            const { calculateDistance } = await import('./distance');
+            const distance = calculateDistance(agentLat, agentLon, leadLat, leadLon);
+            notificationReason = `Within ${radius}km radius (${distance.toFixed(2)}km away)`;
+            console.log(`✅ [LOOP] Agent ${agent.full_name} is within ${radius}km (distance: ${distance.toFixed(2)}km)`);
+          } else {
+            // Calculate distance for logging
+            const { calculateDistance } = await import('./distance');
+            const distance = calculateDistance(agentLat, agentLon, leadLat, leadLon);
+            console.log(`⏭️ [LOOP] Agent ${agent.full_name} (${agent.id}) is ${distance.toFixed(1)}km away (radius: ${radius}km) - not notifying`, {
+              agentLocation: `${agentLat}, ${agentLon}`,
+              leadLocation: `${leadLat}, ${leadLon}`,
+              calculatedDistance: `${distance.toFixed(2)}km`,
+              agentRadius: `${radius}km`,
+            });
+          }
+        } else {
+          console.log(`⚠️ Skipping agent ${agent.full_name}: Invalid coordinates (${agent.agent_latitude}, ${agent.agent_longitude})`);
+        }
+      }
+
+      if (shouldNotify) {
+        agentsWithinRadius.push({ agent, distance: 0, reason: notificationReason });
       }
     }
 
