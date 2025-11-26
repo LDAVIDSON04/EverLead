@@ -327,10 +327,9 @@ export async function notifyAgentsForLead(lead: any, supabaseAdminClient: any = 
       const batchNumber = Math.floor(i / BATCH_SIZE) + 1;
       const totalBatches = Math.ceil(totalAgents / BATCH_SIZE);
       
-      // Log progress every 10 batches to avoid log spam for large numbers
-      if (batchNumber % 10 === 0 || batchNumber === 1 || batchNumber === totalBatches) {
-        console.log(`📧 Processing batch ${batchNumber}/${totalBatches} (${batch.length} emails) - ${successCount}/${totalAgents} sent so far`);
-      }
+      // Always log batch start for debugging
+      console.log(`📧 [BATCH] Starting batch ${batchNumber}/${totalBatches} (${batch.length} emails) - ${successCount}/${totalAgents} sent so far`);
+      console.log(`📧 [BATCH] Batch ${batchNumber} agents:`, batch.map(a => `${a.full_name} (${a.email})`));
       
       // Send emails in current batch concurrently (up to BATCH_SIZE at once)
       const batchPromises = batch.map(async (agent, batchIndex) => {
@@ -370,16 +369,23 @@ export async function notifyAgentsForLead(lead: any, supabaseAdminClient: any = 
       // Wait for all emails in batch to complete
       const batchResults = await Promise.all(batchPromises);
       
+      const batchSuccessCount = batchResults.filter(r => r.success).length;
+      const batchFailureCount = batchResults.filter(r => !r.success).length;
+      console.log(`📧 [BATCH] Batch ${batchNumber} completed: ${batchSuccessCount} successful, ${batchFailureCount} failed`);
+      
       // Check if any emails in this batch hit rate limits
       const rateLimitHit = batchResults.some(r => r.isRateLimit);
       if (rateLimitHit) {
-        console.log(`⏳ Rate limit detected, waiting 3 seconds before next batch...`);
+        console.log(`⏳ [BATCH] Rate limit detected in batch ${batchNumber}, waiting 3 seconds before next batch...`);
         await new Promise(resolve => setTimeout(resolve, 3000));
       }
       
       // Add delay between batches (except after the last batch)
       if (i + BATCH_SIZE < agentsToNotify.length) {
+        console.log(`⏳ [BATCH] Waiting ${BATCH_DELAY_MS}ms before starting next batch...`);
         await new Promise(resolve => setTimeout(resolve, BATCH_DELAY_MS));
+      } else {
+        console.log(`📧 [BATCH] Last batch completed, no delay needed`);
       }
     }
     
