@@ -459,17 +459,22 @@ async function sendEmailNotification(params: EmailNotificationParams): Promise<v
         console.log(`📧 [RESEND] Using fallback from email: ${fromEmail}`);
       }
 
-      const resendResponse = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${resendApiKey}`,
-        },
-        body: JSON.stringify({
-          from: fromEmail,
-          to: [to],
-          subject: `New Lead Available in ${city}, ${province} - ${urgency} Lead`,
-              html: `
+      console.log(`📧 [RESEND] About to call Resend API for ${to}...`);
+      const fetchStartTime = Date.now();
+      
+      let resendResponse: Response;
+      try {
+        resendResponse = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${resendApiKey}`,
+          },
+          body: JSON.stringify({
+            from: fromEmail,
+            to: [to],
+            subject: `New Lead Available in ${city}, ${province} - ${urgency} Lead`,
+                html: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
                   <div style="text-align: center; margin-bottom: 30px;">
                     <img src="${leadUrl.split('/agent')[0]}/logo.png" alt="Soradin" style="height: 40px; width: auto; margin: 0 auto 10px; display: block;" />
@@ -503,8 +508,24 @@ async function sendEmailNotification(params: EmailNotificationParams): Promise<v
                   </p>
                 </div>
               `,
-        }),
-      });
+          }),
+        });
+        
+        const fetchDuration = Date.now() - fetchStartTime;
+        console.log(`📧 [RESEND] Resend API call completed in ${fetchDuration}ms for ${to}`, {
+          status: resendResponse.status,
+          statusText: resendResponse.statusText,
+          ok: resendResponse.ok,
+        });
+      } catch (fetchError: any) {
+        const fetchDuration = Date.now() - fetchStartTime;
+        console.error(`❌ [RESEND] Fetch error after ${fetchDuration}ms for ${to}:`, {
+          error: fetchError?.message,
+          stack: fetchError?.stack,
+          name: fetchError?.name,
+        });
+        throw fetchError;
+      }
 
       if (!resendResponse.ok) {
         const errorText = await resendResponse.text();
@@ -547,9 +568,10 @@ async function sendEmailNotification(params: EmailNotificationParams): Promise<v
       }
 
       const responseData = await resendResponse.json().catch(() => ({}));
-      console.log(`✅ Email sent successfully to ${to}`, {
+      console.log(`✅ [SEND-EMAIL] Email sent successfully to ${to}`, {
         emailId: responseData?.id,
         status: resendResponse.status,
+        subject: `New Lead Available in ${city}, ${province} - ${urgency} Lead`,
       });
       return;
     } catch (resendError) {
