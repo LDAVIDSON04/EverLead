@@ -309,12 +309,35 @@ export async function notifyAgentsForLead(lead: any, supabaseAdminClient: any = 
     const urgencyLabel = urgency.charAt(0).toUpperCase() + urgency.slice(1);
     const price = lead.lead_price ? `$${lead.lead_price.toFixed(2)}` : 'See pricing';
 
+    // Scalability strategy:
+    // - For 10 or fewer agents: send directly (fast, immediate)
+    // - For more agents: use email queue (scalable, handles thousands)
+    const totalAgents = agentsToNotify.length;
+    
+    if (totalAgents > 10) {
+      // Use queue for large batches to avoid timeouts
+      console.log(`📬 Large batch detected (${totalAgents} agents), using email queue for scalability...`);
+      try {
+        const { queueAgentEmails } = await import('./emailQueue');
+        await queueAgentEmails(lead.id, agentsToNotify, {
+          city,
+          province,
+          urgency_level: urgency,
+          lead_price: lead.lead_price || 0,
+        });
+        console.log(`✅ Queued ${totalAgents} emails for background processing`);
+        return; // Exit early - emails will be processed by queue
+      } catch (queueError: any) {
+        console.error('❌ Error queueing emails, falling back to direct send:', queueError);
+        // Fall through to direct sending if queue fails
+      }
+    }
+
+    // Direct sending for small batches (10 or fewer)
     // Smart email sending strategy:
     // - For 3 or fewer agents: send all concurrently (as requested)
-    // - For more agents: use smart batching (2 per batch, 500ms delay) to respect rate limits
-    // This ensures all agents get notified, but respects Resend's 2 req/sec limit
+    // - For 4-10 agents: use smart batching (2 per batch, 500ms delay) to respect rate limits
     let successCount = 0;
-    const totalAgents = agentsToNotify.length;
     
     if (totalAgents <= 3) {
       // Small batch: send all concurrently at the same time
@@ -478,8 +501,9 @@ interface EmailNotificationParams {
 
 /**
  * Send email notification using Resend or fallback to console log
+ * Exported so it can be used by the email queue processor
  */
-async function sendEmailNotification(params: EmailNotificationParams): Promise<void> {
+export async function sendEmailNotification(params: EmailNotificationParams): Promise<void> {
   const { to, agentName, city, province, urgency, price, leadUrl } = params;
   
   console.log(`📧 [SEND-EMAIL] Starting to send email to ${to} for lead in ${city}, ${province}`);
