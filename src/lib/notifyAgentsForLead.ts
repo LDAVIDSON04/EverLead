@@ -310,13 +310,32 @@ export async function notifyAgentsForLead(lead: any, supabaseAdminClient: any = 
     const price = lead.lead_price ? `$${lead.lead_price.toFixed(2)}` : 'See pricing';
 
     // Scalability strategy:
-    // - For 10 or fewer agents: send directly (fast, immediate)
-    // - For more agents: use email queue (scalable, handles thousands)
+    // - For small batches: send directly (fast, immediate)
+    // - For large batches: use email queue (scalable, handles thousands)
+    // 
+    // CONCURRENCY CONFIGURATION:
+    // - Resend Free: 2 req/sec (BATCH_SIZE = 2, BATCH_DELAY_MS = 500)
+    // - Resend Pro: 10-20 req/sec (BATCH_SIZE = 10, BATCH_DELAY_MS = 100)
+    // - Resend Enterprise: 50+ req/sec (BATCH_SIZE = 25, BATCH_DELAY_MS = 50)
+    // 
+    // Set via environment variable: RESEND_BATCH_SIZE (default: 2)
+    const RESEND_BATCH_SIZE = parseInt(process.env.RESEND_BATCH_SIZE || '2', 10);
+    const RESEND_BATCH_DELAY_MS = parseInt(process.env.RESEND_BATCH_DELAY_MS || '500', 10);
+    const QUEUE_THRESHOLD = parseInt(process.env.EMAIL_QUEUE_THRESHOLD || '50', 10); // Queue if more than this
+    
     const totalAgents = agentsToNotify.length;
     
-    if (totalAgents > 10) {
+    console.log(`📬 Email sending configuration:`, {
+      totalAgents,
+      batchSize: RESEND_BATCH_SIZE,
+      batchDelayMs: RESEND_BATCH_DELAY_MS,
+      queueThreshold: QUEUE_THRESHOLD,
+      willUseQueue: totalAgents > QUEUE_THRESHOLD,
+    });
+    
+    if (totalAgents > QUEUE_THRESHOLD) {
       // Use queue for large batches to avoid timeouts
-      console.log(`📬 Large batch detected (${totalAgents} agents), using email queue for scalability...`);
+      console.log(`📬 Large batch detected (${totalAgents} agents > ${QUEUE_THRESHOLD} threshold), using email queue for scalability...`);
       try {
         const { queueAgentEmails } = await import('./emailQueue');
         await queueAgentEmails(lead.id, agentsToNotify, {
@@ -333,15 +352,15 @@ export async function notifyAgentsForLead(lead: any, supabaseAdminClient: any = 
       }
     }
 
-    // Direct sending for small batches (10 or fewer)
-    // Smart email sending strategy:
-    // - For 3 or fewer agents: send all concurrently (as requested)
-    // - For 4-10 agents: use smart batching (2 per batch, 500ms delay) to respect rate limits
+    // Direct sending for smaller batches
+    // Smart email sending strategy based on Resend plan:
+    // - Small batches (≤RESEND_BATCH_SIZE): send all concurrently
+    // - Larger batches: use batching with configured size and delay
     let successCount = 0;
     
-    if (totalAgents <= 3) {
+    if (totalAgents <= RESEND_BATCH_SIZE) {
       // Small batch: send all concurrently at the same time
-      console.log(`📬 Sending ${totalAgents} email notifications concurrently (all at once)...`);
+      console.log(`📬 Sending ${totalAgents} email notifications concurrently (batch size: ${RESEND_BATCH_SIZE})...`);
       console.log(`📬 Agents to notify:`, agentsToNotify.map(a => `${a.full_name} (${a.email})`));
       
       const emailPromises = agentsToNotify.map(async (agent) => {
@@ -413,8 +432,9 @@ export async function notifyAgentsForLead(lead: any, supabaseAdminClient: any = 
         console.error(`❌ ${otherFailures.length} email(s) failed for non-rate-limit reasons:`, otherFailures.map(f => ({ email: f.email, error: f.error?.message })));
       }
     } else {
-      // Large batch: use smart batching to respect rate limits
-      // Send in batches of 2 with 500ms delay (respects 2 req/sec limit)
+      // Large batch: use smart batching with configured rate limits
+      const BATCH_SIZE = RESEND_BATCH_SIZE;
+      const BATCH_DELAY_MS = RESEND_BATCH_DELAY_MS;
       console.log(`📬 Sending ${totalAgents} email notifications in smart batches (2 per batch, 500ms delay)...`);
       console.log(`📬 This ensures all agents get notified while respecting rate limits`);
       

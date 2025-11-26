@@ -79,8 +79,10 @@ export async function queueAgentEmails(
  * This runs in the background and can handle thousands of emails
  */
 export async function processEmailQueue(): Promise<void> {
-  const BATCH_SIZE = 2; // Respect Resend's 2 req/sec limit
-  const BATCH_DELAY_MS = 500;
+  // Configurable batch size and delay based on Resend plan
+  // Set via environment variables: RESEND_BATCH_SIZE, RESEND_BATCH_DELAY_MS
+  const BATCH_SIZE = parseInt(process.env.RESEND_BATCH_SIZE || '2', 10);
+  const BATCH_DELAY_MS = parseInt(process.env.RESEND_BATCH_DELAY_MS || '500', 10);
   
   try {
     // Fetch pending emails
