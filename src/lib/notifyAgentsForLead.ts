@@ -310,12 +310,12 @@ export async function notifyAgentsForLead(lead: any, supabaseAdminClient: any = 
     const price = lead.lead_price ? `$${lead.lead_price.toFixed(2)}` : 'See pricing';
 
     // Process emails in batches to respect Resend rate limits and avoid timeouts
-    // For small batches (<=3), send all at once to avoid Vercel timeout
-    // For larger batches, use BATCH_SIZE of 2 with minimal delay
+    // Resend allows 2 requests/second, so we must use BATCH_SIZE of 2
+    // For 3 agents: batch 1 (2 emails) -> 500ms delay -> batch 2 (1 email)
     let successCount = 0;
     const totalAgents = agentsToNotify.length;
-    const BATCH_SIZE = totalAgents <= 3 ? totalAgents : 2;
-    const BATCH_DELAY_MS = 50; // Minimal delay to prevent Vercel timeout
+    const BATCH_SIZE = 2; // Always use 2 to respect Resend's rate limit
+    const BATCH_DELAY_MS = 500; // 500ms delay = 2 requests per second (safe margin)
     
     console.log(`📬 Processing ${totalAgents} email notifications in batches of ${BATCH_SIZE}`);
     console.log(`⏱️ Estimated time: ~${Math.ceil(totalAgents / BATCH_SIZE)} seconds`);
@@ -372,18 +372,39 @@ export async function notifyAgentsForLead(lead: any, supabaseAdminClient: any = 
       const batchFailureCount = batchResults.filter(r => !r.success).length;
       console.log(`📧 [BATCH] Batch ${batchNumber} completed: ${batchSuccessCount} successful, ${batchFailureCount} failed`);
       
-      // Check if any emails in this batch hit rate limits
-      const rateLimitHit = batchResults.some(r => r.isRateLimit);
-      if (rateLimitHit) {
-        console.log(`⏳ [BATCH] Rate limit detected in batch ${batchNumber}, waiting 3 seconds before next batch...`);
-        await new Promise(resolve => setTimeout(resolve, 3000));
+      // Check if any emails in this batch hit rate limits - retry them
+      const rateLimitEmails = batchResults.filter(r => r.isRateLimit);
+      if (rateLimitEmails.length > 0) {
+        console.log(`⏳ [BATCH] Rate limit detected for ${rateLimitEmails.length} email(s) in batch ${batchNumber}, retrying after delay...`);
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retry
+        
+        // Retry the rate-limited emails
+        for (const failedEmail of rateLimitEmails) {
+          const agent = agentsToNotify.find(a => a.email === failedEmail.email);
+          if (agent) {
+            try {
+              console.log(`🔄 [RETRY] Retrying email to ${agent.email}...`);
+              await sendEmailNotification({
+                to: agent.email,
+                agentName: agent.full_name || 'Agent',
+                city,
+                province,
+                urgency: urgencyLabel,
+                price,
+                leadUrl,
+              });
+              successCount++;
+              console.log(`✅ [RETRY] Email sent successfully to ${agent.email} after retry`);
+            } catch (retryError: any) {
+              console.error(`❌ [RETRY] Failed to send email to ${agent.email} after retry:`, retryError?.message);
+            }
+          }
+        }
       }
       
-      // Add minimal delay between batches (except after the last batch)
-      // Reduced delay to prevent Vercel from killing the function
+      // Add delay between batches (except after the last batch)
       if (i + BATCH_SIZE < agentsToNotify.length) {
         console.log(`⏳ [BATCH] Waiting ${BATCH_DELAY_MS}ms before starting next batch...`);
-        // Use a shorter delay to prevent Vercel timeout
         await new Promise(resolve => setTimeout(resolve, BATCH_DELAY_MS));
         console.log(`📧 [BATCH] Delay complete, starting next batch...`);
       } else {
@@ -572,6 +593,14 @@ async function sendEmailNotification(params: EmailNotificationParams): Promise<v
           throw new Error(`Domain "${domain}" appears not verified in Resend. Please check https://resend.com/domains. Error: ${errorData?.message}`);
         }
         
+        // Handle rate limit errors specifically
+        if (resendResponse.status === 429) {
+          const rateLimitError = new Error(`Resend rate limit exceeded: ${errorText}`);
+          (rateLimitError as any).status = 429;
+          (rateLimitError as any).isRateLimit = true;
+          throw rateLimitError;
+        }
+        
         throw new Error(`Resend API error: ${resendResponse.status} - ${errorText}`);
       }
 
@@ -582,14 +611,20 @@ async function sendEmailNotification(params: EmailNotificationParams): Promise<v
         subject: `New Lead Available in ${city}, ${province} - ${urgency} Lead`,
       });
       return;
-    } catch (resendError) {
-      console.error('Resend API error, falling back to console log:', resendError);
-      // Fall through to console log
+    } catch (resendError: any) {
+      // Re-throw rate limit errors so they can be retried
+      if (resendError?.status === 429 || resendError?.isRateLimit) {
+        console.error(`❌ [RESEND] Rate limit error for ${to}, will be retried:`, resendError?.message);
+        throw resendError;
+      }
+      
+      console.error('❌ [RESEND] Resend API error (non-rate-limit):', resendError);
+      // For non-rate-limit errors, fall through to console log
     }
   }
 
-  // Fallback: log to console (useful for development)
-  console.log('📧 Email notification (not sent - no RESEND_API_KEY):', {
+  // Fallback: log to console (only if no RESEND_API_KEY or non-rate-limit error)
+  console.log('📧 Email notification (not sent - Resend API error or no API key):', {
     to,
     subject: `New Soradin pre-need lead available in ${city}`,
     agentName,
