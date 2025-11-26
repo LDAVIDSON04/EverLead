@@ -48,9 +48,10 @@ export async function notifyAgentsForLead(lead: any, supabaseAdminClient: any = 
     console.log(`🔍 Fetching approved agents with location settings or notification cities...`);
 
     // Get all approved agents - either with location settings OR notification cities
+    // IMPORTANT: We need to filter by province later, so we fetch agent_province too
     const { data: agents, error: agentsError } = await supabaseAdminClient
       .from('profiles')
-      .select('id, full_name, agent_latitude, agent_longitude, search_radius_km, notification_cities')
+      .select('id, full_name, agent_latitude, agent_longitude, search_radius_km, notification_cities, agent_province')
       .eq('role', 'agent')
       .eq('approval_status', 'approved');
 
@@ -89,7 +90,23 @@ export async function notifyAgentsForLead(lead: any, supabaseAdminClient: any = 
         agentLon: agent.agent_longitude,
         radius: agent.search_radius_km,
         notificationCities: agent.notification_cities,
+        agentProvince: agent.agent_province,
+        leadProvince: lead.province,
       });
+
+      // CRITICAL: Check province match first - agents can only receive notifications for leads in their province
+      if (agent.agent_province) {
+        const agentProvinceUpper = (agent.agent_province || '').toUpperCase().trim();
+        const leadProvinceUpper = (lead.province || '').toUpperCase().trim();
+        
+        if (agentProvinceUpper !== leadProvinceUpper) {
+          console.log(`⏭️ [LOOP] Agent ${agent.full_name} (${agent.id}) - Province mismatch: agent is in ${agent.agent_province}, lead is in ${lead.province} - SKIPPING`);
+          continue; // Skip this agent - province doesn't match
+        }
+        console.log(`✅ [LOOP] Agent ${agent.full_name} (${agent.id}) - Province match: ${agent.agent_province} = ${lead.province}`);
+      } else {
+        console.log(`⚠️ [LOOP] Agent ${agent.full_name} (${agent.id}) - No agent_province set, allowing notification (should set province)`);
+      }
 
       let shouldNotify = false;
       let notificationReason = '';
@@ -158,6 +175,8 @@ export async function notifyAgentsForLead(lead: any, supabaseAdminClient: any = 
 
       if (shouldNotify) {
         agentsWithinRadius.push({ agent, distance: 0, reason: notificationReason });
+      } else {
+        console.log(`⏭️ [LOOP] Agent ${agent.full_name} (${agent.id}) - Not eligible: no city match and not within radius`);
       }
     }
 
