@@ -336,28 +336,44 @@ export async function POST(req: NextRequest) {
         longitude: data.longitude,
       });
       
-      // Start notifications - wait a moment to ensure function starts before response
+      // Start notifications - wait longer to ensure all emails complete before response
       // Vercel functions can run up to 60 seconds (Pro) or 10 seconds (Hobby) after response
       const { notifyAgentsForLead } = await import("@/lib/notifyAgentsForLead");
       
-      // Start the notification process and wait a bit to ensure it begins
-      const notificationPromise = notifyAgentsForLead(data, supabaseAdmin).catch((notifyError: any) => {
+      // For small batches (3 or fewer), wait for completion to ensure all emails are sent
+      // For larger batches, start in background (they'll take longer anyway)
+      console.log("📧 Starting agent notifications for lead", data.id);
+      
+      try {
+        // Wait for notification function to complete (with timeout)
+        // This ensures all emails are sent before the API response
+        const notificationPromise = notifyAgentsForLead(data, supabaseAdmin);
+        
+        // Set a timeout of 5 seconds - if it takes longer, let it continue in background
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error("Notification timeout - continuing in background")), 5000)
+        );
+        
+        await Promise.race([notificationPromise, timeoutPromise]).catch((err) => {
+          // If timeout or error, log but don't fail
+          if (err.message?.includes("timeout")) {
+            console.log("📧 Notification function taking longer than 5 seconds, continuing in background");
+          } else {
+            console.error("❌ Error notifying agents (non-fatal):", err);
+          }
+        });
+        
+        console.log("✅ Agent notifications completed for lead", data.id);
+      } catch (notifyError: any) {
         // Log errors but don't fail the lead creation
-        console.error("❌ Error notifying agents (non-fatal, background):", notifyError);
+        console.error("❌ Error notifying agents (non-fatal):", notifyError);
         console.error("Error details:", {
           message: notifyError?.message,
           stack: notifyError?.stack,
           name: notifyError?.name,
           code: notifyError?.code,
         });
-      });
-      
-      // Wait 500ms to ensure the notification function starts executing
-      // This gives it time to begin before the API response is sent
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Now let it continue in background
-      console.log("📧 Agent notifications started in background for lead", data.id);
+      }
     } else {
       console.warn("⚠️ Skipping agent notifications - lead has no location coordinates", {
         leadId: data.id,

@@ -333,7 +333,7 @@ export async function notifyAgentsForLead(lead: any, supabaseAdminClient: any = 
             leadUrl,
           });
           successCount++;
-          console.log(`✅ [NOTIFY] Email sent to ${agent.email}`);
+          console.log(`✅ [NOTIFY] Email sent to ${agent.email} (${successCount}/${totalAgents})`);
           return { success: true, email: agent.email, agent };
         } catch (emailError: any) {
           const isRateLimit = emailError?.status === 429 || emailError?.message?.includes('rate_limit');
@@ -347,8 +347,15 @@ export async function notifyAgentsForLead(lead: any, supabaseAdminClient: any = 
         }
       });
       
+      console.log(`📬 Waiting for all ${totalAgents} emails to complete...`);
       const results = await Promise.all(emailPromises);
-      const rateLimitResults = results.filter(r => !r.success && r.isRateLimit);
+      console.log(`📬 All email promises completed. Results:`, results.map(r => ({ email: r.email, success: r.success, isRateLimit: r.isRateLimit })));
+      
+      const successResults = results.filter(r => r.success);
+      const failedResults = results.filter(r => !r.success);
+      const rateLimitResults = failedResults.filter(r => r.isRateLimit);
+      
+      console.log(`📬 Initial send summary: ${successResults.length} successful, ${failedResults.length} failed (${rateLimitResults.length} rate-limited)`);
       
       // Retry any rate-limited emails
       if (rateLimitResults.length > 0) {
@@ -358,6 +365,7 @@ export async function notifyAgentsForLead(lead: any, supabaseAdminClient: any = 
         for (const failedResult of rateLimitResults) {
           if (failedResult.agent) {
             try {
+              console.log(`🔄 [RETRY] Retrying email to ${failedResult.agent.email}...`);
               await sendEmailNotification({
                 to: failedResult.agent.email,
                 agentName: failedResult.agent.full_name || 'Agent',
@@ -374,6 +382,12 @@ export async function notifyAgentsForLead(lead: any, supabaseAdminClient: any = 
             }
           }
         }
+      }
+      
+      // Log any non-rate-limit failures
+      const otherFailures = failedResults.filter(r => !r.isRateLimit);
+      if (otherFailures.length > 0) {
+        console.error(`❌ ${otherFailures.length} email(s) failed for non-rate-limit reasons:`, otherFailures.map(f => ({ email: f.email, error: f.error?.message })));
       }
     } else {
       // Large batch: use smart batching to respect rate limits
