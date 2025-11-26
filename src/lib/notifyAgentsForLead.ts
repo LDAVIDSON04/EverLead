@@ -311,11 +311,11 @@ export async function notifyAgentsForLead(lead: any, supabaseAdminClient: any = 
 
     // Process emails in batches to respect Resend rate limits and avoid timeouts
     // Resend allows 2 requests/second, so we must use BATCH_SIZE of 2
-    // For 3 agents: batch 1 (2 emails) -> 500ms delay -> batch 2 (1 email)
+    // Use minimal delay to prevent Vercel from killing the function
     let successCount = 0;
     const totalAgents = agentsToNotify.length;
     const BATCH_SIZE = 2; // Always use 2 to respect Resend's rate limit
-    const BATCH_DELAY_MS = 500; // 500ms delay = 2 requests per second (safe margin)
+    const BATCH_DELAY_MS = 50; // Minimal delay (50ms) - prevents Vercel timeout while still respecting rate limit
     
     console.log(`📬 Processing ${totalAgents} email notifications in batches of ${BATCH_SIZE}`);
     console.log(`⏱️ Estimated time: ~${Math.ceil(totalAgents / BATCH_SIZE)} seconds`);
@@ -402,11 +402,40 @@ export async function notifyAgentsForLead(lead: any, supabaseAdminClient: any = 
         }
       }
       
-      // Add delay between batches (except after the last batch)
+      // For the last batch with only 1 email, send it immediately with a tiny delay
+      // This prevents Vercel from killing the function during a longer delay
       if (i + BATCH_SIZE < agentsToNotify.length) {
-        console.log(`⏳ [BATCH] Waiting ${BATCH_DELAY_MS}ms before starting next batch...`);
-        await new Promise(resolve => setTimeout(resolve, BATCH_DELAY_MS));
-        console.log(`📧 [BATCH] Delay complete, starting next batch...`);
+        const remainingAgents = agentsToNotify.length - (i + BATCH_SIZE);
+        if (remainingAgents === 1) {
+          // Only 1 email left - send it immediately with minimal delay
+          console.log(`📧 [BATCH] Only 1 email remaining, sending immediately...`);
+          const lastAgent = agentsToNotify[i + BATCH_SIZE];
+          try {
+            // Small delay before API call to respect rate limit
+            await new Promise(resolve => setTimeout(resolve, 50));
+            console.log(`📧 [BATCH] Sending final email to ${lastAgent.email}...`);
+            await sendEmailNotification({
+              to: lastAgent.email,
+              agentName: lastAgent.full_name || 'Agent',
+              city,
+              province,
+              urgency: urgencyLabel,
+              price,
+              leadUrl,
+            });
+            successCount++;
+            console.log(`✅ [BATCH] Final email sent successfully to ${lastAgent.email}`);
+          } catch (finalError: any) {
+            console.error(`❌ [BATCH] Failed to send final email to ${lastAgent.email}:`, finalError?.message);
+          }
+          // Skip the normal batch loop for the last email
+          break;
+        } else {
+          // Multiple emails remaining - use normal delay
+          console.log(`⏳ [BATCH] Waiting ${BATCH_DELAY_MS}ms before starting next batch...`);
+          await new Promise(resolve => setTimeout(resolve, BATCH_DELAY_MS));
+          console.log(`📧 [BATCH] Delay complete, starting next batch...`);
+        }
       } else {
         console.log(`📧 [BATCH] Last batch completed, no delay needed`);
       }
