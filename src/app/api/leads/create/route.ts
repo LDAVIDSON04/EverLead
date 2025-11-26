@@ -336,11 +336,12 @@ export async function POST(req: NextRequest) {
         longitude: data.longitude,
       });
       
-      // Fire and forget - don't block the response
-      // For large numbers of agents, this will process in the background
+      // Start notifications - wait a moment to ensure function starts before response
       // Vercel functions can run up to 60 seconds (Pro) or 10 seconds (Hobby) after response
       const { notifyAgentsForLead } = await import("@/lib/notifyAgentsForLead");
-      notifyAgentsForLead(data, supabaseAdmin).catch((notifyError: any) => {
+      
+      // Start the notification process and wait a bit to ensure it begins
+      const notificationPromise = notifyAgentsForLead(data, supabaseAdmin).catch((notifyError: any) => {
         // Log errors but don't fail the lead creation
         console.error("❌ Error notifying agents (non-fatal, background):", notifyError);
         console.error("Error details:", {
@@ -351,6 +352,11 @@ export async function POST(req: NextRequest) {
         });
       });
       
+      // Wait 500ms to ensure the notification function starts executing
+      // This gives it time to begin before the API response is sent
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Now let it continue in background
       console.log("📧 Agent notifications started in background for lead", data.id);
     } else {
       console.warn("⚠️ Skipping agent notifications - lead has no location coordinates", {

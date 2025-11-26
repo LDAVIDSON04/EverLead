@@ -13,6 +13,10 @@ import { isWithinRadius } from './distance';
  * 4. Are approved agents
  */
 export async function notifyAgentsForLead(lead: any, supabaseAdminClient: any = supabaseAdmin): Promise<void> {
+  // Add immediate logging to confirm function is executing
+  console.log(`📧 [NOTIFY] ===== NOTIFICATION FUNCTION CALLED =====`);
+  console.log(`📧 [NOTIFY] Function execution started for lead ${lead.id}`);
+  
   try {
     console.log(`📧 [NOTIFY] Starting notification process for lead ${lead.id}`, {
       leadId: lead.id,
@@ -45,19 +49,40 @@ export async function notifyAgentsForLead(lead: any, supabaseAdminClient: any = 
       return;
     }
 
-    console.log(`🔍 Fetching approved agents with location settings or notification cities...`);
+    console.log(`🔍 [NOTIFY] Fetching approved agents with location settings or notification cities...`);
+    console.log(`🔍 [NOTIFY] About to execute Supabase query...`);
 
     // Get all approved agents - either with location settings OR notification cities
     // IMPORTANT: We need to filter by province later, so we fetch agent_province too
-    const { data: agents, error: agentsError } = await supabaseAdminClient
-      .from('profiles')
-      .select('id, full_name, agent_latitude, agent_longitude, search_radius_km, notification_cities, agent_province')
-      .eq('role', 'agent')
-      .eq('approval_status', 'approved');
+    let agents: any[] | null = null;
+    let agentsError: any = null;
+    
+    try {
+      console.log(`🔍 [NOTIFY] Executing Supabase query...`);
+      const queryResult = await supabaseAdminClient
+        .from('profiles')
+        .select('id, full_name, agent_latitude, agent_longitude, search_radius_km, notification_cities, agent_province')
+        .eq('role', 'agent')
+        .eq('approval_status', 'approved');
+      
+      agents = queryResult.data;
+      agentsError = queryResult.error;
+      
+      console.log(`🔍 [NOTIFY] Supabase query completed`, {
+        hasData: !!agents,
+        dataLength: agents?.length || 0,
+        hasError: !!agentsError,
+      });
+    } catch (queryException: any) {
+      console.error(`❌ [NOTIFY] Exception during Supabase query:`, queryException);
+      agentsError = queryException;
+    }
 
-    console.log(`🔍 Agent query result:`, {
+    console.log(`🔍 [NOTIFY] Agent query result:`, {
       hasError: !!agentsError,
       error: agentsError,
+      errorMessage: agentsError?.message,
+      errorCode: agentsError?.code,
       agentsCount: agents?.length || 0,
       agents: agents?.map((a: any) => ({ id: a.id, name: a.full_name })) || [],
     });
@@ -358,7 +383,9 @@ export async function notifyAgentsForLead(lead: any, supabaseAdminClient: any = 
     console.log(`📬 Completed processing ${totalAgents} email notifications: ${successCount} successful`);
 
     console.log(`✅ [NOTIFY] Sent email notifications to ${successCount}/${agentsToNotify.length} agents for lead ${lead.id} in ${city}, ${province}`);
+    console.log(`✅ [NOTIFY] ===== NOTIFICATION FUNCTION COMPLETED SUCCESSFULLY =====`);
   } catch (err: any) {
+    console.error('❌ [NOTIFY] ===== NOTIFICATION FUNCTION ERROR =====');
     console.error('❌ [NOTIFY] Error in notifyAgentsForLead:', err);
     console.error('❌ [NOTIFY] Error details:', {
       message: err?.message,
@@ -368,6 +395,7 @@ export async function notifyAgentsForLead(lead: any, supabaseAdminClient: any = 
       leadId: lead?.id,
     });
     // Don't throw - notification failure shouldn't break lead creation
+    console.error('❌ [NOTIFY] ===== END ERROR =====');
   }
 }
 
