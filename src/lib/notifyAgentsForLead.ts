@@ -309,114 +309,69 @@ export async function notifyAgentsForLead(lead: any, supabaseAdminClient: any = 
     const urgencyLabel = urgency.charAt(0).toUpperCase() + urgency.slice(1);
     const price = lead.lead_price ? `$${lead.lead_price.toFixed(2)}` : 'See pricing';
 
-    // Process emails in batches to respect Resend rate limits and avoid timeouts
-    // Resend allows 2 requests/second, so we must use BATCH_SIZE of 2
-    // Use minimal delay to prevent Vercel from killing the function
+    // Send ALL emails concurrently (at the same time) as requested
+    // Some may hit rate limits, but we'll retry them automatically
+    console.log(`📬 Sending ${agentsToNotify.length} email notifications concurrently (all at once)...`);
+    console.log(`📬 Agents to notify:`, agentsToNotify.map(a => `${a.full_name} (${a.email})`));
+    
     let successCount = 0;
     const totalAgents = agentsToNotify.length;
-    const BATCH_SIZE = 2; // Always use 2 to respect Resend's rate limit
-    const BATCH_DELAY_MS = 50; // Minimal delay (50ms) - prevents Vercel timeout while still respecting rate limit
     
-    console.log(`📬 Processing ${totalAgents} email notifications in batches of ${BATCH_SIZE}`);
-    console.log(`⏱️ Estimated time: ~${Math.ceil(totalAgents / BATCH_SIZE)} seconds`);
-    
-    // Process agents in batches
-    for (let i = 0; i < agentsToNotify.length; i += BATCH_SIZE) {
-      const batch = agentsToNotify.slice(i, i + BATCH_SIZE);
-      const batchNumber = Math.floor(i / BATCH_SIZE) + 1;
-      const totalBatches = Math.ceil(totalAgents / BATCH_SIZE);
-      
-      // Always log batch start for debugging
-      console.log(`📧 [BATCH] Starting batch ${batchNumber}/${totalBatches} (${batch.length} emails) - ${successCount}/${totalAgents} sent so far`);
-      console.log(`📧 [BATCH] Batch ${batchNumber} agents:`, batch.map(a => `${a.full_name} (${a.email})`));
-      
-      // Send emails in current batch concurrently (up to BATCH_SIZE at once)
-      const batchPromises = batch.map(async (agent, batchIndex) => {
-        try {
-          await sendEmailNotification({
-            to: agent.email,
-            agentName: agent.full_name || 'Agent',
-            city,
-            province,
-            urgency: urgencyLabel,
-            price,
-            leadUrl,
-          });
-          successCount++;
-          // Only log individual sends for small batches to avoid log spam
-          if (totalAgents <= 20) {
-            console.log(`✅ [NOTIFY] Email sent to ${agent.email} (${i + batchIndex + 1}/${totalAgents})`);
-          }
-          return { success: true, email: agent.email };
-        } catch (emailError: any) {
-          console.error(`❌ Failed to send notification to ${agent.email}:`, {
-            error: emailError?.message,
-            status: emailError?.status,
-            code: emailError?.code,
-          });
-          
-          // If it's a rate limit error, we'll handle it after the batch
-          return { 
-            success: false, 
-            email: agent.email, 
-            error: emailError,
-            isRateLimit: emailError?.status === 429 || emailError?.message?.includes('rate_limit')
-          };
-        }
-      });
-      
-      // Wait for all emails in batch to complete
-      const batchResults = await Promise.all(batchPromises);
-      
-      const batchSuccessCount = batchResults.filter(r => r.success).length;
-      const batchFailureCount = batchResults.filter(r => !r.success).length;
-      console.log(`📧 [BATCH] Batch ${batchNumber} completed: ${batchSuccessCount} successful, ${batchFailureCount} failed`);
-      
-      // Check if any emails in this batch hit rate limits - retry them
-      const rateLimitEmails = batchResults.filter(r => r.isRateLimit);
-      if (rateLimitEmails.length > 0) {
-        console.log(`⏳ [BATCH] Rate limit detected for ${rateLimitEmails.length} email(s) in batch ${batchNumber}, retrying after delay...`);
-        await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retry
+    // Send all emails concurrently
+    const emailPromises = agentsToNotify.map(async (agent) => {
+      try {
+        await sendEmailNotification({
+          to: agent.email,
+          agentName: agent.full_name || 'Agent',
+          city,
+          province,
+          urgency: urgencyLabel,
+          price,
+          leadUrl,
+        });
+        successCount++;
+        console.log(`✅ [NOTIFY] Email sent to ${agent.email}`);
+        return { success: true, email: agent.email, agent };
+      } catch (emailError: any) {
+        console.error(`❌ Failed to send notification to ${agent.email}:`, {
+          error: emailError?.message,
+          status: emailError?.status,
+          code: emailError?.code,
+        });
         
-        // Retry the rate-limited emails
-        for (const failedEmail of rateLimitEmails) {
-          const agent = agentsToNotify.find(a => a.email === failedEmail.email);
-          if (agent) {
-            try {
-              console.log(`🔄 [RETRY] Retrying email to ${agent.email}...`);
-              await sendEmailNotification({
-                to: agent.email,
-                agentName: agent.full_name || 'Agent',
-                city,
-                province,
-                urgency: urgencyLabel,
-                price,
-                leadUrl,
-              });
-              successCount++;
-              console.log(`✅ [RETRY] Email sent successfully to ${agent.email} after retry`);
-            } catch (retryError: any) {
-              console.error(`❌ [RETRY] Failed to send email to ${agent.email} after retry:`, retryError?.message);
-            }
-          }
-        }
+        // Check if it's a rate limit error
+        const isRateLimit = emailError?.status === 429 || emailError?.message?.includes('rate_limit');
+        return { 
+          success: false, 
+          email: agent.email, 
+          agent,
+          error: emailError,
+          isRateLimit
+        };
       }
+    });
+    
+    // Wait for all emails to complete (or fail)
+    const results = await Promise.all(emailPromises);
+    
+    const successResults = results.filter(r => r.success);
+    const failedResults = results.filter(r => !r.success);
+    const rateLimitResults = failedResults.filter(r => r.isRateLimit);
+    
+    console.log(`📬 Initial send completed: ${successResults.length} successful, ${failedResults.length} failed (${rateLimitResults.length} rate-limited)`);
+    
+    // Retry any rate-limited emails after a short delay
+    if (rateLimitResults.length > 0) {
+      console.log(`🔄 Retrying ${rateLimitResults.length} rate-limited email(s) after 1 second delay...`);
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // For the last batch with only 1 email, send it immediately with a tiny delay
-      // This prevents Vercel from killing the function during a longer delay
-      if (i + BATCH_SIZE < agentsToNotify.length) {
-        const remainingAgents = agentsToNotify.length - (i + BATCH_SIZE);
-        if (remainingAgents === 1) {
-          // Only 1 email left - send it immediately with minimal delay
-          console.log(`📧 [BATCH] Only 1 email remaining, sending immediately...`);
-          const lastAgent = agentsToNotify[i + BATCH_SIZE];
+      for (const failedResult of rateLimitResults) {
+        if (failedResult.agent) {
           try {
-            // Small delay before API call to respect rate limit
-            await new Promise(resolve => setTimeout(resolve, 50));
-            console.log(`📧 [BATCH] Sending final email to ${lastAgent.email}...`);
+            console.log(`🔄 [RETRY] Retrying email to ${failedResult.agent.email}...`);
             await sendEmailNotification({
-              to: lastAgent.email,
-              agentName: lastAgent.full_name || 'Agent',
+              to: failedResult.agent.email,
+              agentName: failedResult.agent.full_name || 'Agent',
               city,
               province,
               urgency: urgencyLabel,
@@ -424,20 +379,11 @@ export async function notifyAgentsForLead(lead: any, supabaseAdminClient: any = 
               leadUrl,
             });
             successCount++;
-            console.log(`✅ [BATCH] Final email sent successfully to ${lastAgent.email}`);
-          } catch (finalError: any) {
-            console.error(`❌ [BATCH] Failed to send final email to ${lastAgent.email}:`, finalError?.message);
+            console.log(`✅ [RETRY] Email sent successfully to ${failedResult.agent.email} after retry`);
+          } catch (retryError: any) {
+            console.error(`❌ [RETRY] Failed to send email to ${failedResult.agent.email} after retry:`, retryError?.message);
           }
-          // Skip the normal batch loop for the last email
-          break;
-        } else {
-          // Multiple emails remaining - use normal delay
-          console.log(`⏳ [BATCH] Waiting ${BATCH_DELAY_MS}ms before starting next batch...`);
-          await new Promise(resolve => setTimeout(resolve, BATCH_DELAY_MS));
-          console.log(`📧 [BATCH] Delay complete, starting next batch...`);
         }
-      } else {
-        console.log(`📧 [BATCH] Last batch completed, no delay needed`);
       }
     }
     
