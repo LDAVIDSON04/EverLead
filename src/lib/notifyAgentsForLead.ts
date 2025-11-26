@@ -309,69 +309,94 @@ export async function notifyAgentsForLead(lead: any, supabaseAdminClient: any = 
     const urgencyLabel = urgency.charAt(0).toUpperCase() + urgency.slice(1);
     const price = lead.lead_price ? `$${lead.lead_price.toFixed(2)}` : 'See pricing';
 
-    // Send ALL emails concurrently (at the same time) as requested
-    // Some may hit rate limits, but we'll retry them automatically
-    console.log(`📬 Sending ${agentsToNotify.length} email notifications concurrently (all at once)...`);
-    console.log(`📬 Agents to notify:`, agentsToNotify.map(a => `${a.full_name} (${a.email})`));
-    
+    // Smart email sending strategy:
+    // - For 3 or fewer agents: send all concurrently (as requested)
+    // - For more agents: use smart batching (2 per batch, 500ms delay) to respect rate limits
+    // This ensures all agents get notified, but respects Resend's 2 req/sec limit
     let successCount = 0;
     const totalAgents = agentsToNotify.length;
     
-    // Send all emails concurrently
-    const emailPromises = agentsToNotify.map(async (agent) => {
-      try {
-        await sendEmailNotification({
-          to: agent.email,
-          agentName: agent.full_name || 'Agent',
-          city,
-          province,
-          urgency: urgencyLabel,
-          price,
-          leadUrl,
-        });
-        successCount++;
-        console.log(`✅ [NOTIFY] Email sent to ${agent.email}`);
-        return { success: true, email: agent.email, agent };
-      } catch (emailError: any) {
-        console.error(`❌ Failed to send notification to ${agent.email}:`, {
-          error: emailError?.message,
-          status: emailError?.status,
-          code: emailError?.code,
-        });
-        
-        // Check if it's a rate limit error
-        const isRateLimit = emailError?.status === 429 || emailError?.message?.includes('rate_limit');
-        return { 
-          success: false, 
-          email: agent.email, 
-          agent,
-          error: emailError,
-          isRateLimit
-        };
-      }
-    });
-    
-    // Wait for all emails to complete (or fail)
-    const results = await Promise.all(emailPromises);
-    
-    const successResults = results.filter(r => r.success);
-    const failedResults = results.filter(r => !r.success);
-    const rateLimitResults = failedResults.filter(r => r.isRateLimit);
-    
-    console.log(`📬 Initial send completed: ${successResults.length} successful, ${failedResults.length} failed (${rateLimitResults.length} rate-limited)`);
-    
-    // Retry any rate-limited emails after a short delay
-    if (rateLimitResults.length > 0) {
-      console.log(`🔄 Retrying ${rateLimitResults.length} rate-limited email(s) after 1 second delay...`);
-      await new Promise(resolve => setTimeout(resolve, 1000));
+    if (totalAgents <= 3) {
+      // Small batch: send all concurrently at the same time
+      console.log(`📬 Sending ${totalAgents} email notifications concurrently (all at once)...`);
+      console.log(`📬 Agents to notify:`, agentsToNotify.map(a => `${a.full_name} (${a.email})`));
       
-      for (const failedResult of rateLimitResults) {
-        if (failedResult.agent) {
+      const emailPromises = agentsToNotify.map(async (agent) => {
+        try {
+          await sendEmailNotification({
+            to: agent.email,
+            agentName: agent.full_name || 'Agent',
+            city,
+            province,
+            urgency: urgencyLabel,
+            price,
+            leadUrl,
+          });
+          successCount++;
+          console.log(`✅ [NOTIFY] Email sent to ${agent.email}`);
+          return { success: true, email: agent.email, agent };
+        } catch (emailError: any) {
+          const isRateLimit = emailError?.status === 429 || emailError?.message?.includes('rate_limit');
+          return { 
+            success: false, 
+            email: agent.email, 
+            agent,
+            error: emailError,
+            isRateLimit
+          };
+        }
+      });
+      
+      const results = await Promise.all(emailPromises);
+      const rateLimitResults = results.filter(r => !r.success && r.isRateLimit);
+      
+      // Retry any rate-limited emails
+      if (rateLimitResults.length > 0) {
+        console.log(`🔄 Retrying ${rateLimitResults.length} rate-limited email(s)...`);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        for (const failedResult of rateLimitResults) {
+          if (failedResult.agent) {
+            try {
+              await sendEmailNotification({
+                to: failedResult.agent.email,
+                agentName: failedResult.agent.full_name || 'Agent',
+                city,
+                province,
+                urgency: urgencyLabel,
+                price,
+                leadUrl,
+              });
+              successCount++;
+              console.log(`✅ [RETRY] Email sent successfully to ${failedResult.agent.email} after retry`);
+            } catch (retryError: any) {
+              console.error(`❌ [RETRY] Failed to send email to ${failedResult.agent.email} after retry:`, retryError?.message);
+            }
+          }
+        }
+      }
+    } else {
+      // Large batch: use smart batching to respect rate limits
+      // Send in batches of 2 with 500ms delay (respects 2 req/sec limit)
+      console.log(`📬 Sending ${totalAgents} email notifications in smart batches (2 per batch, 500ms delay)...`);
+      console.log(`📬 This ensures all agents get notified while respecting rate limits`);
+      
+      const BATCH_SIZE = 2;
+      const BATCH_DELAY_MS = 500;
+      
+      for (let i = 0; i < agentsToNotify.length; i += BATCH_SIZE) {
+        const batch = agentsToNotify.slice(i, i + BATCH_SIZE);
+        const batchNumber = Math.floor(i / BATCH_SIZE) + 1;
+        const totalBatches = Math.ceil(totalAgents / BATCH_SIZE);
+        
+        console.log(`📧 [BATCH] Processing batch ${batchNumber}/${totalBatches} (${batch.length} emails) - ${successCount}/${totalAgents} sent so far`);
+        
+        // Send emails in current batch concurrently
+        const batchPromises = batch.map(async (agent) => {
           try {
-            console.log(`🔄 [RETRY] Retrying email to ${failedResult.agent.email}...`);
             await sendEmailNotification({
-              to: failedResult.agent.email,
-              agentName: failedResult.agent.full_name || 'Agent',
+              to: agent.email,
+              agentName: agent.full_name || 'Agent',
               city,
               province,
               urgency: urgencyLabel,
@@ -379,10 +404,31 @@ export async function notifyAgentsForLead(lead: any, supabaseAdminClient: any = 
               leadUrl,
             });
             successCount++;
-            console.log(`✅ [RETRY] Email sent successfully to ${failedResult.agent.email} after retry`);
-          } catch (retryError: any) {
-            console.error(`❌ [RETRY] Failed to send email to ${failedResult.agent.email} after retry:`, retryError?.message);
+            if (totalAgents <= 20) {
+              console.log(`✅ [NOTIFY] Email sent to ${agent.email} (${successCount}/${totalAgents})`);
+            }
+            return { success: true, email: agent.email };
+          } catch (emailError: any) {
+            const isRateLimit = emailError?.status === 429 || emailError?.message?.includes('rate_limit');
+            return { 
+              success: false, 
+              email: agent.email, 
+              error: emailError,
+              isRateLimit
+            };
           }
+        });
+        
+        const batchResults = await Promise.all(batchPromises);
+        const batchRateLimit = batchResults.filter(r => r.isRateLimit);
+        
+        // If rate limit hit, wait longer before next batch
+        if (batchRateLimit.length > 0) {
+          console.log(`⏳ [BATCH] Rate limit detected, waiting 2 seconds before next batch...`);
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        } else if (i + BATCH_SIZE < agentsToNotify.length) {
+          // Normal delay between batches
+          await new Promise(resolve => setTimeout(resolve, BATCH_DELAY_MS));
         }
       }
     }
