@@ -280,6 +280,8 @@ export async function notifyAgentsForLead(lead: any, supabaseAdminClient: any = 
           // Continue with other agents
         }
     }
+    
+    console.log(`📧 [EMAIL] Finished fetching emails. Found ${agentsToNotify.length} agents with valid emails out of ${agentsWithinRadius.length} eligible agents.`);
 
     if (agentsToNotify.length === 0) {
       console.log(`⚠️ No agents eligible for notification for lead ${lead.id} in ${lead.city}, ${lead.province}`);
@@ -294,7 +296,8 @@ export async function notifyAgentsForLead(lead: any, supabaseAdminClient: any = 
       return;
     }
 
-    console.log(`📬 Preparing to send notifications to ${agentsToNotify.length} agent(s) for lead ${lead.id}`);
+    console.log(`📬 [SEND] ===== STARTING EMAIL SENDING PROCESS =====`);
+    console.log(`📬 [SEND] Preparing to send notifications to ${agentsToNotify.length} agent(s) for lead ${lead.id}`);
 
     // Send email notifications
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://soradin.com';
@@ -414,10 +417,17 @@ interface EmailNotificationParams {
  */
 async function sendEmailNotification(params: EmailNotificationParams): Promise<void> {
   const { to, agentName, city, province, urgency, price, leadUrl } = params;
+  
+  console.log(`📧 [SEND-EMAIL] Starting to send email to ${to} for lead in ${city}, ${province}`);
 
   // Check if Resend is configured
   const resendApiKey = process.env.RESEND_API_KEY;
   const resendFromEmail = process.env.RESEND_FROM_EMAIL;
+  
+  console.log(`📧 [SEND-EMAIL] Resend configuration check:`, {
+    hasApiKey: !!resendApiKey,
+    fromEmail: resendFromEmail || 'not set',
+  });
 
   console.log(`📧 Email send attempt for ${to}:`, {
     hasResendKey: !!resendApiKey,
