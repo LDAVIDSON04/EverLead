@@ -310,13 +310,12 @@ export async function notifyAgentsForLead(lead: any, supabaseAdminClient: any = 
     const price = lead.lead_price ? `$${lead.lead_price.toFixed(2)}` : 'See pricing';
 
     // Process emails in batches to respect Resend rate limits and avoid timeouts
-    // Resend allows 2 requests/second, so we'll send 2 emails per second
-    // Batch size: 2 emails at a time, with 1 second delay between batches
-    const BATCH_SIZE = 2;
-    const BATCH_DELAY_MS = 1000; // 1 second between batches (allows 2 req/sec)
-    
+    // For small batches (<=3), send all at once to avoid Vercel timeout
+    // For larger batches, use BATCH_SIZE of 2 with minimal delay
     let successCount = 0;
     const totalAgents = agentsToNotify.length;
+    const BATCH_SIZE = totalAgents <= 3 ? totalAgents : 2;
+    const BATCH_DELAY_MS = 50; // Minimal delay to prevent Vercel timeout
     
     console.log(`📬 Processing ${totalAgents} email notifications in batches of ${BATCH_SIZE}`);
     console.log(`⏱️ Estimated time: ~${Math.ceil(totalAgents / BATCH_SIZE)} seconds`);
@@ -380,10 +379,13 @@ export async function notifyAgentsForLead(lead: any, supabaseAdminClient: any = 
         await new Promise(resolve => setTimeout(resolve, 3000));
       }
       
-      // Add delay between batches (except after the last batch)
+      // Add minimal delay between batches (except after the last batch)
+      // Reduced delay to prevent Vercel from killing the function
       if (i + BATCH_SIZE < agentsToNotify.length) {
         console.log(`⏳ [BATCH] Waiting ${BATCH_DELAY_MS}ms before starting next batch...`);
+        // Use a shorter delay to prevent Vercel timeout
         await new Promise(resolve => setTimeout(resolve, BATCH_DELAY_MS));
+        console.log(`📧 [BATCH] Delay complete, starting next batch...`);
       } else {
         console.log(`📧 [BATCH] Last batch completed, no delay needed`);
       }
