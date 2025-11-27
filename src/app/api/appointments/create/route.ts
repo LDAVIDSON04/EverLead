@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { sendConsumerBookingEmail } from "@/lib/emails";
 
 export async function POST(req: NextRequest) {
   if (!supabaseAdmin) {
@@ -36,10 +37,10 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Verify lead exists
+  // Verify lead exists and get email/name for notification
   const { data: lead, error: leadError } = await supabaseAdmin
     .from('leads')
-    .select('id')
+    .select('id, email, full_name, first_name, last_name')
     .eq('id', leadId)
     .single();
 
@@ -75,6 +76,23 @@ export async function POST(req: NextRequest) {
       { error: "Error creating appointment" },
       { status: 500 }
     );
+  }
+
+  // Fire-and-forget consumer email (don't block response)
+  if (lead.email) {
+    const displayName = lead.full_name || 
+      (lead.first_name || lead.last_name 
+        ? [lead.first_name, lead.last_name].filter(Boolean).join(' ')
+        : null);
+
+    sendConsumerBookingEmail({
+      to: lead.email,
+      name: displayName,
+      requestedDate,
+      requestedWindow,
+    }).catch((err) => {
+      console.error('Error sending consumer booking email (non-fatal):', err);
+    });
   }
 
   return NextResponse.json({ appointment: appt }, { status: 200 });

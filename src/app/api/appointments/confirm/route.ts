@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { sendAgentNewAppointmentEmail } from "@/lib/emails";
 
 export async function POST(req: NextRequest) {
   try {
@@ -35,6 +36,39 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Get appointment and lead details for email before updating
+    const { data: apptBeforeUpdate, error: apptFetchError } = await supabaseAdmin
+      .from("appointments")
+      .select(`
+        id,
+        requested_date,
+        requested_window,
+        leads (
+          id,
+          full_name,
+          first_name,
+          last_name,
+          city,
+          province,
+          service_type
+        )
+      `)
+      .eq("id", appointmentId)
+      .single();
+
+    let leadData: any = null;
+    if (apptBeforeUpdate) {
+      // Transform leads data (comes as array from Supabase join)
+      leadData = Array.isArray(apptBeforeUpdate.leads) 
+        ? apptBeforeUpdate.leads[0] 
+        : apptBeforeUpdate.leads;
+    }
+
+    if (apptFetchError) {
+      console.error("Error fetching appointment for email:", apptFetchError);
+      // Continue anyway - email is optional
+    }
+
     // Assign the appointment to this agent (atomic update with status check)
     const { data: updated, error: updateError } = await supabaseAdmin
       .from("appointments")
@@ -55,6 +89,37 @@ export async function POST(req: NextRequest) {
         { error: "Could not assign appointment. It may have been purchased by another agent." },
         { status: 500 }
       );
+    }
+
+    // Get agent email and name for notification
+    const { data: agentAuth, error: agentAuthError } = await supabaseAdmin.auth.admin.getUserById(agentId);
+    const agentEmail = agentAuth?.user?.email;
+    const { data: agentProfile } = await supabaseAdmin
+      .from("profiles")
+      .select("full_name")
+      .eq("id", agentId)
+      .maybeSingle();
+    const agentName = agentProfile?.full_name || null;
+
+    // Fire-and-forget agent email (don't block response)
+    if (agentEmail && apptBeforeUpdate) {
+      const consumerName = leadData?.full_name || 
+        (leadData?.first_name || leadData?.last_name
+          ? [leadData?.first_name, leadData?.last_name].filter(Boolean).join(' ')
+          : null);
+
+      sendAgentNewAppointmentEmail({
+        to: agentEmail,
+        agentName,
+        consumerName,
+        requestedDate: apptBeforeUpdate.requested_date,
+        requestedWindow: apptBeforeUpdate.requested_window,
+        city: leadData?.city || null,
+        province: leadData?.province || null,
+        serviceType: leadData?.service_type || null,
+      }).catch((err) => {
+        console.error('Error sending agent appointment email (non-fatal):', err);
+      });
     }
 
     return NextResponse.json({ appointment: updated, ok: true });
