@@ -48,6 +48,15 @@ type AgentDashboardData = {
     auction_ends_at: string | null;
     is_highest_bidder: boolean;
   }[];
+  roi?: {
+    totalAppointments: number;
+    totalSpend: number;
+    bookedAppointments: number;
+    completedAppointments: number;
+    avgCostPerAppointment: number;
+    costPerBookedAppointment: number;
+    costPerCompletedAppointment: number;
+  };
 };
 
 export async function GET(request: NextRequest) {
