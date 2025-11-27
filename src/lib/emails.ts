@@ -82,17 +82,21 @@ export async function sendConsumerBookingEmail({
     
     // Add timeout to prevent hanging (30 seconds)
     // Use Promise.race to ensure timeout works in server environment
+    let timeoutId: NodeJS.Timeout;
     const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => {
+      timeoutId = setTimeout(() => {
         const duration = Date.now() - fetchStartTime;
         console.error('❌ Resend API request timeout after 30 seconds for consumer booking email', {
           to,
           duration: `${duration}ms`,
+          timestamp: new Date().toISOString(),
         });
         reject(new Error('Request timeout after 30 seconds'));
       }, 30000);
     });
 
+    console.log('📧 Creating fetch promise...', { timestamp: new Date().toISOString() });
+    
     const fetchPromise = fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
@@ -182,7 +186,22 @@ export async function sendConsumerBookingEmail({
       }),
     });
 
-    const resendResponse = await Promise.race([fetchPromise, timeoutPromise]);
+    console.log('📧 Starting Promise.race (fetch vs timeout)...', { timestamp: new Date().toISOString() });
+    
+    let resendResponse: Response;
+    try {
+      resendResponse = await Promise.race([fetchPromise, timeoutPromise]);
+      clearTimeout(timeoutId!);
+    } catch (raceError: any) {
+      clearTimeout(timeoutId!);
+      console.error('❌ Promise.race error:', {
+        error: raceError?.message || raceError,
+        name: raceError?.name,
+        to,
+        timestamp: new Date().toISOString(),
+      });
+      throw raceError;
+    }
     
     const fetchDuration = Date.now() - fetchStartTime;
     console.log('📧 Resend API response received for consumer booking email:', {
@@ -190,6 +209,7 @@ export async function sendConsumerBookingEmail({
       statusText: resendResponse.statusText,
       ok: resendResponse.ok,
       duration: `${fetchDuration}ms`,
+      timestamp: new Date().toISOString(),
     });
 
     if (!resendResponse.ok) {
