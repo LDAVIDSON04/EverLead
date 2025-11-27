@@ -113,7 +113,6 @@ export async function POST(req: NextRequest) {
     // Wait for email or timeout, whichever comes first (AWAIT this!)
     try {
       await Promise.race([emailPromise, emailTimeout]);
-      console.log('✅ Email send completed or timed out, returning response');
     } catch (err: any) {
       console.error('❌ Failed to send consumer booking email (non-fatal - appointment still created):', {
         error: err?.message || err,

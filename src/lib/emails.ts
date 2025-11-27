@@ -72,19 +72,10 @@ export async function sendConsumerBookingEmail({
       cleanSiteUrl = `https://${cleanSiteUrl}`;
     }
 
-    console.log('📧 Sending request to Resend API for consumer booking email...', {
-      to,
-      from: fromEmail,
-      timestamp: new Date().toISOString(),
-    });
-
     const fetchStartTime = Date.now();
-    console.log('📧 Step 1: Starting email send process...', { timestamp: new Date().toISOString() });
     
     // Add timeout to prevent hanging (30 seconds)
     // Use Promise.race to ensure timeout works in server environment
-    console.log('📧 Step 2: Creating timeout promise...', { timestamp: new Date().toISOString() });
-    
     let timeoutId: NodeJS.Timeout | undefined;
     const timeoutPromise = new Promise<never>((_, reject) => {
       timeoutId = setTimeout(() => {
@@ -92,15 +83,12 @@ export async function sendConsumerBookingEmail({
         console.error('❌ Resend API request timeout after 30 seconds for consumer booking email', {
           to,
           duration: `${duration}ms`,
-          timestamp: new Date().toISOString(),
         });
         reject(new Error('Request timeout after 30 seconds'));
       }, 30000);
     });
-
-    console.log('📧 Step 3: Building email body...', { timestamp: new Date().toISOString() });
     
-    // Build email body first
+    // Build email body
     const emailBody = {
       from: fromEmail,
       to: [to],
@@ -183,11 +171,6 @@ export async function sendConsumerBookingEmail({
       ].join('\n'),
     };
     
-    console.log('📧 Step 4: Email body built, creating fetch promise...', { 
-      timestamp: new Date().toISOString(),
-      bodySize: JSON.stringify(emailBody).length,
-    });
-    
     const fetchPromise = fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
@@ -197,38 +180,11 @@ export async function sendConsumerBookingEmail({
       body: JSON.stringify(emailBody),
     });
 
-    console.log('📧 Starting Promise.race (fetch vs timeout)...', { 
-      timestamp: new Date().toISOString(),
-      hasTimeoutId: timeoutId !== undefined,
-    });
-    
-    // Add a heartbeat to verify the function is still running
-    console.log('📧 Setting up heartbeat interval...', { timestamp: new Date().toISOString() });
-    const heartbeatInterval = setInterval(() => {
-      const elapsed = Date.now() - fetchStartTime;
-      console.log('💓 Email send heartbeat:', {
-        elapsed: `${elapsed}ms`,
-        timestamp: new Date().toISOString(),
-        to,
-      });
-    }, 5000); // Every 5 seconds
-    
-    console.log('📧 Heartbeat interval set up, about to await Promise.race...', { 
-      timestamp: new Date().toISOString(),
-      intervalId: heartbeatInterval ? 'set' : 'not set',
-    });
-    
     let resendResponse: Response;
     try {
-      console.log('📧 About to await Promise.race...', { timestamp: new Date().toISOString() });
       resendResponse = await Promise.race([fetchPromise, timeoutPromise]);
-      console.log('📧 Promise.race resolved, cleaning up...', { timestamp: new Date().toISOString() });
-      clearInterval(heartbeatInterval);
       if (timeoutId) clearTimeout(timeoutId);
-      console.log('📧 Promise.race completed successfully', { timestamp: new Date().toISOString() });
     } catch (raceError: any) {
-      console.log('📧 Promise.race rejected, cleaning up...', { timestamp: new Date().toISOString() });
-      clearInterval(heartbeatInterval);
       if (timeoutId) clearTimeout(timeoutId);
       console.error('❌ Promise.race error:', {
         error: raceError?.message || raceError,
@@ -241,13 +197,6 @@ export async function sendConsumerBookingEmail({
     }
     
     const fetchDuration = Date.now() - fetchStartTime;
-    console.log('📧 Resend API response received for consumer booking email:', {
-      status: resendResponse.status,
-      statusText: resendResponse.statusText,
-      ok: resendResponse.ok,
-      duration: `${fetchDuration}ms`,
-      timestamp: new Date().toISOString(),
-    });
 
     if (!resendResponse.ok) {
       const errorText = await resendResponse.text();
