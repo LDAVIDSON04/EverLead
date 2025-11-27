@@ -1,4 +1,10 @@
 {
+  "crons": [
+    {
+      "path": "/api/cron/expire-appointments",
+      "schedule": "0 * * * *"
+    }
+  ],
   "crons": []
 }
 
