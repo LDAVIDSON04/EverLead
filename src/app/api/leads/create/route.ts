@@ -136,29 +136,6 @@ export async function POST(req: NextRequest) {
 
     // Build insert payload
     // IMPORTANT: Ensure new leads are unsold and available
-    // Map city to region - Okanagan includes: Kelowna, Kamloops, Penticton, Osoyoos, Oliver, Vernon, Salmon Arm
-    const city = String(body.city).trim().toLowerCase();
-    const okanaganCities = [
-      'kelowna',
-      'kamloops',
-      'penticton',
-      'osoyoos',
-      'oliver',
-      'vernon',
-      'salmon arm',
-      'salmonarm', // Handle no-space variant
-    ];
-    
-    // Determine region based on city
-    let region = 'okanagan'; // Default to Okanagan for now
-    if (okanaganCities.includes(city)) {
-      region = 'okanagan';
-    }
-    // Future: Add more regions here as you expand
-    // else if (vancouverCities.includes(city)) {
-    //   region = 'vancouver';
-    // }
-    
     const leadData: any = {
       first_name: String(body.first_name).trim(),
       last_name: String(body.last_name).trim(),
@@ -179,7 +156,6 @@ export async function POST(req: NextRequest) {
       service_celebration: body.service_celebration ? String(body.service_celebration).trim() : null,
       family_pre_arranged: body.family_pre_arranged ? String(body.family_pre_arranged).trim() : null,
       additional_notes: additionalNotes,
-      region, // Set region for Okanagan rollout
       // Explicitly set status to "new" and ensure lead is unsold
       status: "new",
       assigned_agent_id: null, // Ensure lead is unsold

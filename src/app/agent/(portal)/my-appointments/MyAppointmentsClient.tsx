@@ -3,35 +3,36 @@
 import { useState } from 'react';
 import { supabaseClient } from '@/lib/supabaseClient';
 
-type LeadInfo = {
+type Lead = {
   id: string;
-  full_name: string | null;
-  first_name: string | null;
-  last_name: string | null;
-  email: string | null;
-  phone: string | null;
-  city: string | null;
-  province: string | null;
-  age: number | null;
-  service_type: string | null;
-  urgency_level: string | null;
-  planning_for: string | null;
-  additional_notes: string | null;
+  full_name?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  city?: string | null;
+  province?: string | null;
+  service_type?: string | null;
 };
 
 type Appointment = {
   id: string;
   requested_date: string;
   requested_window: string;
-  status: string;
-  created_at: string;
-  leads: LeadInfo | null;
+  status: 'booked' | 'completed' | 'no_show' | 'pending' | 'confirmed' | 'cancelled';
+  leads: Lead | null;
+};
+
+type Stats = {
+  total: number;
+  completed: number;
+  noShow: number;
 };
 
 export default function MyAppointmentsClient({
   appointments,
+  stats,
 }: {
   appointments: Appointment[];
+  stats: Stats;
 }) {
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -56,22 +57,10 @@ export default function MyAppointmentsClient({
     setError(null);
 
     try {
-      // Get current user (agent)
-      const {
-        data: { user },
-        error: userError,
-      } = await supabaseClient.auth.getUser();
-
-      if (userError || !user) {
-        setError('You must be logged in to update appointments.');
-        setLoadingId(null);
-        return;
-      }
-
       const res = await fetch('/api/appointments/update-status', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ appointmentId: id, status, agentId: user.id }),
+        body: JSON.stringify({ appointmentId: id, status }),
       });
 
       if (!res.ok) {
@@ -109,12 +98,9 @@ export default function MyAppointmentsClient({
     return status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' ');
   }
 
-  function getDisplayName(lead: LeadInfo | null) {
+  function getDisplayName(lead: Lead | null) {
     if (!lead) return 'Client';
     if (lead.full_name) return lead.full_name;
-    if (lead.first_name || lead.last_name) {
-      return [lead.first_name, lead.last_name].filter(Boolean).join(' ');
-    }
     return 'Client';
   }
 
@@ -142,7 +128,6 @@ export default function MyAppointmentsClient({
       ? `${lead.city || ''}${lead.city && lead.province ? ', ' : ''}${lead.province || ''}`
       : 'Location not specified';
 
-    const isPast = new Date(appt.requested_date) < now;
     const canUpdateStatus = appt.status === 'booked' || appt.status === 'pending';
 
     return (
@@ -220,14 +205,6 @@ export default function MyAppointmentsClient({
               </p>
               <p className="text-sm text-[#2a2a2a]">{location}</p>
             </div>
-            {lead?.age && (
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b] mb-1">
-                  Age
-                </p>
-                <p className="text-sm text-[#2a2a2a]">{lead.age}</p>
-              </div>
-            )}
             {lead?.service_type && (
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b] mb-1">
@@ -238,45 +215,7 @@ export default function MyAppointmentsClient({
                 </p>
               </div>
             )}
-            {lead?.urgency_level && (
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b] mb-1">
-                  Urgency
-                </p>
-                <span
-                  className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
-                    lead.urgency_level === 'hot'
-                      ? 'bg-red-100 text-red-900'
-                      : lead.urgency_level === 'warm'
-                      ? 'bg-amber-100 text-amber-900'
-                      : 'bg-slate-100 text-slate-900'
-                  }`}
-                >
-                  {formatUrgency(lead.urgency_level)}
-                </span>
-              </div>
-            )}
-            {lead?.planning_for && (
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b] mb-1">
-                  Planning For
-                </p>
-                <p className="text-sm text-[#2a2a2a]">{lead.planning_for}</p>
-              </div>
-            )}
           </div>
-
-          {/* Additional Notes */}
-          {lead?.additional_notes && (
-            <div className="border-t border-slate-200 pt-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b] mb-2">
-                Additional Notes
-              </p>
-              <p className="text-sm text-[#2a2a2a] whitespace-pre-wrap">
-                {lead.additional_notes}
-              </p>
-            </div>
-          )}
 
           {/* Status Update Buttons - only show for booked/pending appointments */}
           {canUpdateStatus && (
@@ -302,6 +241,8 @@ export default function MyAppointmentsClient({
     );
   }
 
+  const completionRate = stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
+
   return (
     <div className="w-full">
       <div className="mb-6">
@@ -311,9 +252,25 @@ export default function MyAppointmentsClient({
         >
           My Appointments
         </h1>
-        <p className="text-sm text-[#6b6b6b]">
+        <p className="text-sm text-[#6b6b6b] mb-4">
           View your booked appointments with full contact information.
         </p>
+
+        {/* Performance Stats */}
+        <div className="grid grid-cols-3 gap-3 max-w-md mb-6">
+          <div className="border border-slate-200 rounded-lg p-3 bg-white">
+            <p className="text-xs text-[#6b6b6b] mb-1">Total</p>
+            <p className="text-lg font-semibold text-[#2a2a2a]">{stats.total}</p>
+          </div>
+          <div className="border border-slate-200 rounded-lg p-3 bg-white">
+            <p className="text-xs text-[#6b6b6b] mb-1">Completed</p>
+            <p className="text-lg font-semibold text-[#2a2a2a]">{stats.completed}</p>
+          </div>
+          <div className="border border-slate-200 rounded-lg p-3 bg-white">
+            <p className="text-xs text-[#6b6b6b] mb-1">Completion rate</p>
+            <p className="text-lg font-semibold text-[#2a2a2a]">{completionRate}%</p>
+          </div>
+        </div>
       </div>
 
       {error && (

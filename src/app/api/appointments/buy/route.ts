@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { createClient } from "@supabase/supabase-js";
 
 export async function POST(req: NextRequest) {
   try {
@@ -16,6 +17,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 1) Get agentId from request body (client sends it)
+    // Note: For better security, we could use server-side auth, but keeping current pattern for now
     const agentId = body.agentId as string | undefined;
 
     if (!agentId) {
@@ -25,39 +27,67 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 2) Verify agent is approved
-    const { data: agentProfile, error: profileError } = await supabaseAdmin
+    // 2) Load agent profile + approval + region
+    const { data: profile, error: profileError } = await supabaseAdmin
       .from("profiles")
-      .select("role, approval_status")
+      .select("id, role, approval_status, agent_province")
       .eq("id", agentId)
-      .maybeSingle();
+      .single();
 
-    if (profileError || !agentProfile) {
+    if (profileError || !profile) {
       return NextResponse.json(
-        { error: "Agent profile not found" },
-        { status: 404 }
-      );
-    }
-
-    if (agentProfile.role !== "agent" || agentProfile.approval_status !== "approved") {
-      return NextResponse.json(
-        { error: "Agent account not approved" },
+        { error: "Could not load agent profile" },
         { status: 403 }
       );
     }
 
-    // 3) Fetch the appointment to verify it exists and is still available
+    if (profile.role !== "agent" || profile.approval_status !== "approved") {
+      return NextResponse.json(
+        { error: "Your account is not approved to buy appointments yet" },
+        { status: 403 }
+      );
+    }
+
+    // 3) Fetch appointment + lead summary (for email + region guard)
     const { data: appt, error: apptError } = await supabaseAdmin
       .from("appointments")
-      .select("id, status, agent_id, lead_id, requested_date, requested_window")
+      .select(`
+        id,
+        status,
+        agent_id,
+        lead_id,
+        requested_date,
+        requested_window,
+        leads (
+          id,
+          full_name,
+          city,
+          province,
+          service_type
+        )
+      `)
       .eq("id", appointmentId)
       .single();
 
     if (apptError || !appt) {
-      return NextResponse.json(
-        { error: "Appointment not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Appointment not found" }, { status: 404 });
+    }
+
+    // Extra safety: make sure this appointment is in the agent's region
+    const lead = Array.isArray((appt as any).leads) 
+      ? (appt as any).leads[0] 
+      : (appt as any).leads;
+
+    if (lead?.province && profile.agent_province) {
+      const leadProvinceUpper = (lead.province || '').toUpperCase().trim();
+      const agentProvinceUpper = (profile.agent_province || '').toUpperCase().trim();
+      
+      if (leadProvinceUpper !== agentProvinceUpper) {
+        return NextResponse.json(
+          { error: `You are not licensed/assigned for this region. This appointment is in ${lead.province}, but you are licensed for ${profile.agent_province}.` },
+          { status: 403 }
+        );
+      }
     }
 
     if (appt.status !== "pending" || appt.agent_id !== null) {
@@ -68,12 +98,6 @@ export async function POST(req: NextRequest) {
     }
 
     // 4) Get lead info for Stripe description
-    const { data: lead, error: leadError } = await supabaseAdmin
-      .from("leads")
-      .select("city, province, urgency_level")
-      .eq("id", appt.lead_id)
-      .maybeSingle();
-
     const leadLocation = lead
       ? `${lead.city || ""}${lead.city && lead.province ? ", " : ""}${lead.province || ""}`
       : "your area";
