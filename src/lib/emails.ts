@@ -203,22 +203,31 @@ export async function sendConsumerBookingEmail({
     });
     
     // Add a heartbeat to verify the function is still running
+    console.log('📧 Setting up heartbeat interval...', { timestamp: new Date().toISOString() });
     const heartbeatInterval = setInterval(() => {
       const elapsed = Date.now() - fetchStartTime;
       console.log('💓 Email send heartbeat:', {
         elapsed: `${elapsed}ms`,
         timestamp: new Date().toISOString(),
+        to,
       });
     }, 5000); // Every 5 seconds
+    
+    console.log('📧 Heartbeat interval set up, about to await Promise.race...', { 
+      timestamp: new Date().toISOString(),
+      intervalId: heartbeatInterval ? 'set' : 'not set',
+    });
     
     let resendResponse: Response;
     try {
       console.log('📧 About to await Promise.race...', { timestamp: new Date().toISOString() });
       resendResponse = await Promise.race([fetchPromise, timeoutPromise]);
+      console.log('📧 Promise.race resolved, cleaning up...', { timestamp: new Date().toISOString() });
       clearInterval(heartbeatInterval);
       if (timeoutId) clearTimeout(timeoutId);
       console.log('📧 Promise.race completed successfully', { timestamp: new Date().toISOString() });
     } catch (raceError: any) {
+      console.log('📧 Promise.race rejected, cleaning up...', { timestamp: new Date().toISOString() });
       clearInterval(heartbeatInterval);
       if (timeoutId) clearTimeout(timeoutId);
       console.error('❌ Promise.race error:', {
