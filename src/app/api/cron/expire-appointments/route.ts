@@ -51,7 +51,8 @@ export async function GET() {
     return NextResponse.json({ 
       success: true, 
       expiredCount,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      message: 'Appointments expired successfully'
     });
   } catch (err: any) {
     console.error('Unexpected error in expire-appointments cron:', err);
