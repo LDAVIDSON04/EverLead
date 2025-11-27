@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 
 export default function BookForm({ leadId }: { leadId: string }) {
   const [date, setDate] = useState('');
@@ -42,11 +43,19 @@ export default function BookForm({ leadId }: { leadId: string }) {
 
   if (done) {
     return (
-      <div className="space-y-3">
+      <div className="space-y-4">
         <p className="text-lg font-semibold">You&apos;re all set.</p>
         <p className="text-sm text-gray-600">
           We&apos;ve recorded your request and a specialist will contact you at your chosen time.
         </p>
+        <div className="pt-4">
+          <Link
+            href="/"
+            className="inline-block rounded-md bg-[#2a2a2a] px-4 py-2 text-sm font-medium text-white hover:bg-[#3a3a3a] transition-colors"
+          >
+            Return to homepage
+          </Link>
+        </div>
       </div>
     );
   }
@@ -57,15 +66,18 @@ export default function BookForm({ leadId }: { leadId: string }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div>
-        <label className="block text-sm font-medium mb-1">Choose a day</label>
+        <label className="block text-sm font-medium mb-2">Choose a day</label>
         <input
           type="date"
           value={date}
           min={today}
           onChange={e => setDate(e.target.value)}
           required
-          className="border rounded px-3 py-2 w-full text-sm"
+          className="w-full rounded-md border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 shadow-sm focus:border-[#2a2a2a] focus:ring-1 focus:ring-[#2a2a2a] outline-none cursor-pointer"
         />
+        <p className="mt-1 text-xs text-gray-500">
+          Click the calendar icon to pick a date
+        </p>
       </div>
 
       <div>

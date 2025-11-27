@@ -42,6 +42,14 @@ type LeadNote = {
   agent_id: string;
 };
 
+type Appointment = {
+  id: string;
+  requested_date: string;
+  requested_window: 'morning' | 'afternoon' | 'evening';
+  status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
+  created_at: string;
+};
+
 const STATUS_OPTIONS = [
   { value: "new", label: "New" },
   { value: "contacted", label: "Contacted" },
@@ -67,6 +75,9 @@ export default function LeadDetailsPage() {
   const [notesError, setNotesError] = useState<string | null>(null);
   const [newNote, setNewNote] = useState("");
   const [savingNote, setSavingNote] = useState(false);
+
+  const [appointment, setAppointment] = useState<Appointment | null>(null);
+  const [appointmentLoading, setAppointmentLoading] = useState(true);
 
   const [agentStatus, setAgentStatus] = useState<string>("new");
   const [savingStatus, setSavingStatus] = useState(false);
@@ -188,6 +199,39 @@ export default function LeadDetailsPage() {
     }
 
     loadNotes();
+  }, [id]);
+
+  // Load appointment
+  useEffect(() => {
+    async function loadAppointment() {
+      if (!id) return;
+
+      setAppointmentLoading(true);
+
+      try {
+        const { data, error } = await supabaseClient
+          .from('appointments')
+          .select('*')
+          .eq('lead_id', id)
+          .eq('status', 'pending')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (error) {
+          console.error('Error loading appointment:', error);
+          // Don't show error - appointment might not exist
+        } else {
+          setAppointment(data);
+        }
+      } catch (err) {
+        console.error('Unexpected error loading appointment:', err);
+      } finally {
+        setAppointmentLoading(false);
+      }
+    }
+
+    loadAppointment();
   }, [id]);
 
   async function handleStatusChange(newStatus: string) {
@@ -476,6 +520,46 @@ export default function LeadDetailsPage() {
                     )}
                   </dl>
                 </div>
+
+                {/* Appointment request */}
+                {appointment && (
+                  <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-slate-800 shadow-sm">
+                    <h2
+                      className="mb-3 text-base font-normal text-[#2a2a2a]"
+                      style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+                    >
+                      📅 Appointment Request
+                    </h2>
+                    <dl className="space-y-2 text-sm">
+                      <div>
+                        <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                          Requested Date
+                        </dt>
+                        <dd className="mt-1 text-[#2a2a2a] font-medium">
+                          {formatDate(appointment.requested_date)}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                          Preferred Time
+                        </dt>
+                        <dd className="mt-1 text-[#2a2a2a] capitalize">
+                          {appointment.requested_window}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                          Status
+                        </dt>
+                        <dd className="mt-1">
+                          <span className="inline-block rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-900">
+                            Pending
+                          </span>
+                        </dd>
+                      </div>
+                    </dl>
+                  </div>
+                )}
 
                 {/* Planning details */}
                 <div className="rounded-lg border border-slate-200 bg-white p-4 text-sm text-slate-800 shadow-sm">
