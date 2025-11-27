@@ -1,0 +1,112 @@
+// src/app/api/appointments/update-status/route.ts
+import { NextRequest, NextResponse } from "next/server";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
+
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const appointmentId = body.appointmentId as string | undefined;
+    const status = body.status as "completed" | "no_show" | undefined;
+
+    if (!appointmentId || !status) {
+      return NextResponse.json(
+        { error: "Missing appointmentId or status" },
+        { status: 400 }
+      );
+    }
+
+    if (status !== "completed" && status !== "no_show") {
+      return NextResponse.json(
+        { error: "Invalid status. Must be 'completed' or 'no_show'" },
+        { status: 400 }
+      );
+    }
+
+    // Get agentId from request body (client sends it)
+    const agentId = body.agentId as string | undefined;
+
+    if (!agentId) {
+      return NextResponse.json(
+        { error: "Missing agentId" },
+        { status: 400 }
+      );
+    }
+
+    // Verify agent is approved
+    const { data: agentProfile, error: profileError } = await supabaseAdmin
+      .from("profiles")
+      .select("role, approval_status")
+      .eq("id", agentId)
+      .maybeSingle();
+
+    if (profileError || !agentProfile) {
+      return NextResponse.json(
+        { error: "Agent profile not found" },
+        { status: 404 }
+      );
+    }
+
+    if (agentProfile.role !== "agent" || agentProfile.approval_status !== "approved") {
+      return NextResponse.json(
+        { error: "Agent account not approved" },
+        { status: 403 }
+      );
+    }
+
+    // Only allow agent to update their own appointment
+    const { data: appt, error: apptError } = await supabaseAdmin
+      .from("appointments")
+      .select("id, agent_id, status")
+      .eq("id", appointmentId)
+      .single();
+
+    if (apptError || !appt) {
+      return NextResponse.json(
+        { error: "Appointment not found" },
+        { status: 404 }
+      );
+    }
+
+    if (appt.agent_id !== agentId) {
+      return NextResponse.json(
+        { error: "You do not own this appointment" },
+        { status: 403 }
+      );
+    }
+
+    // Update status and set appropriate timestamp
+    const updateData: any = {
+      status,
+      updated_at: new Date().toISOString(),
+    };
+
+    if (status === "completed") {
+      updateData.completed_at = new Date().toISOString();
+    } else if (status === "no_show") {
+      // For no_show, we can also set cancelled_at or leave it
+      // The schema has cancelled_at, but we'll use status='no_show' instead
+    }
+
+    const { error: updateError } = await supabaseAdmin
+      .from("appointments")
+      .update(updateData)
+      .eq("id", appointmentId);
+
+    if (updateError) {
+      console.error("Error updating appointment:", updateError);
+      return NextResponse.json(
+        { error: "Error updating appointment" },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({ ok: true }, { status: 200 });
+  } catch (err: any) {
+    console.error("Appointment update error:", err);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
+
