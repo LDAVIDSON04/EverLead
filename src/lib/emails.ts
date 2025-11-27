@@ -75,22 +75,30 @@ export async function sendConsumerBookingEmail({
     console.log('📧 Sending request to Resend API for consumer booking email...', {
       to,
       from: fromEmail,
+      timestamp: new Date().toISOString(),
     });
 
+    const fetchStartTime = Date.now();
+    
     // Add timeout to prevent hanging (30 seconds)
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => {
-      controller.abort();
-      console.error('❌ Resend API request timeout after 30 seconds for consumer booking email');
-    }, 30000);
+    // Use Promise.race to ensure timeout works in server environment
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => {
+        const duration = Date.now() - fetchStartTime;
+        console.error('❌ Resend API request timeout after 30 seconds for consumer booking email', {
+          to,
+          duration: `${duration}ms`,
+        });
+        reject(new Error('Request timeout after 30 seconds'));
+      }, 30000);
+    });
 
-    const resendResponse = await fetch('https://api.resend.com/emails', {
+    const fetchPromise = fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${resendApiKey}`,
       },
-      signal: controller.signal,
       body: JSON.stringify({
         from: fromEmail,
         to: [to],
@@ -174,11 +182,14 @@ export async function sendConsumerBookingEmail({
       }),
     });
 
-    clearTimeout(timeoutId);
+    const resendResponse = await Promise.race([fetchPromise, timeoutPromise]);
+    
+    const fetchDuration = Date.now() - fetchStartTime;
     console.log('📧 Resend API response received for consumer booking email:', {
       status: resendResponse.status,
       statusText: resendResponse.statusText,
       ok: resendResponse.ok,
+      duration: `${fetchDuration}ms`,
     });
 
     if (!resendResponse.ok) {
