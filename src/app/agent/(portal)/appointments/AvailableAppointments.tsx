@@ -11,6 +11,7 @@ type LeadSummary = {
   age: number | null;
   service_type: string | null;
   urgency_level: string | null;
+  region: string | null;
 };
 
 type Appointment = {
@@ -148,6 +149,11 @@ export default function AvailableAppointments({
                   </span>
                 </div>
                 <div className="space-y-1">
+                  {lead?.region && (
+                    <p className="text-xs text-[#6b6b6b]">
+                      <strong>Region:</strong> <span className="capitalize">{lead.region}</span>
+                    </p>
+                  )}
                   <p className="text-xs text-[#6b6b6b]">
                     <strong>Location:</strong> {location}
                   </p>

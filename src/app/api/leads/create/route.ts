@@ -136,6 +136,9 @@ export async function POST(req: NextRequest) {
 
     // Build insert payload
     // IMPORTANT: Ensure new leads are unsold and available
+    // Very simple for now – we're starting with Okanagan
+    const region = 'okanagan';
+    
     const leadData: any = {
       first_name: String(body.first_name).trim(),
       last_name: String(body.last_name).trim(),
@@ -156,6 +159,7 @@ export async function POST(req: NextRequest) {
       service_celebration: body.service_celebration ? String(body.service_celebration).trim() : null,
       family_pre_arranged: body.family_pre_arranged ? String(body.family_pre_arranged).trim() : null,
       additional_notes: additionalNotes,
+      region, // Set region for Okanagan rollout
       // Explicitly set status to "new" and ensure lead is unsold
       status: "new",
       assigned_agent_id: null, // Ensure lead is unsold
