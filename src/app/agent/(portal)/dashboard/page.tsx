@@ -336,6 +336,59 @@ export default function AgentDashboardPage() {
               </div>
             </div>
 
+            {/* ROI Section */}
+            {roiStats && (
+              <section className="space-y-4">
+                <h2
+                  className="text-xl font-normal text-[#2a2a2a]"
+                  style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+                >
+                  Your ROI
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm">
+                    <p className="text-xs font-medium uppercase tracking-wide text-[#6b6b6b]">
+                      Total spent
+                    </p>
+                    <p className="mt-2 text-2xl font-semibold text-[#2a2a2a]">
+                      ${roiStats.totalSpend.toFixed(2)}
+                    </p>
+                    <p className="mt-1 text-xs text-[#6b6b6b]">
+                      Across {roiStats.totalAppointments} appointment{roiStats.totalAppointments !== 1 ? 's' : ''} reserved/purchased
+                    </p>
+                  </div>
+
+                  <div className="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm">
+                    <p className="text-xs font-medium uppercase tracking-wide text-[#6b6b6b]">
+                      Cost per booked
+                    </p>
+                    <p className="mt-2 text-2xl font-semibold text-[#2a2a2a]">
+                      {roiStats.bookedAppointments > 0
+                        ? `$${roiStats.costPerBookedAppointment.toFixed(2)}`
+                        : '—'}
+                    </p>
+                    <p className="mt-1 text-xs text-[#6b6b6b]">
+                      {roiStats.bookedAppointments} booked appointment{roiStats.bookedAppointments !== 1 ? 's' : ''}
+                    </p>
+                  </div>
+
+                  <div className="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm">
+                    <p className="text-xs font-medium uppercase tracking-wide text-[#6b6b6b]">
+                      Cost per completed
+                    </p>
+                    <p className="mt-2 text-2xl font-semibold text-[#2a2a2a]">
+                      {roiStats.completedAppointments > 0
+                        ? `$${roiStats.costPerCompletedAppointment.toFixed(2)}`
+                        : '—'}
+                    </p>
+                    <p className="mt-1 text-xs text-[#6b6b6b]">
+                      {roiStats.completedAppointments} completed appointment{roiStats.completedAppointments !== 1 ? 's' : ''}
+                    </p>
+                  </div>
+                </div>
+              </section>
+            )}
+
             {/* Main content grid */}
             <div className="grid gap-6 lg:grid-cols-3">
               {/* Left column */}
