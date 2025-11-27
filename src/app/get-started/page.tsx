@@ -3,10 +3,12 @@
 
 import { FormEvent, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 type FormState = "idle" | "submitting" | "success" | "error";
 
 export default function GetStartedPage() {
+  const router = useRouter();
   const [formState, setFormState] = useState<FormState>("idle");
   const [error, setError] = useState<string | null>(null);
 
@@ -199,6 +201,17 @@ export default function GetStartedPage() {
       }
 
       console.log("Lead submitted successfully:", responseBody.lead);
+      
+      // Get the lead ID from the response and redirect to booking page
+      const leadId = responseBody?.lead?.id;
+      if (leadId) {
+        // Redirect to booking page
+        router.push(`/book/${leadId}`);
+        return;
+      }
+      
+      // Fallback: if no lead ID, show success message
+      setFormState("success");
     } catch (fetchError: any) {
       console.error("Network error submitting questionnaire", {
         message: fetchError?.message,
@@ -209,8 +222,6 @@ export default function GetStartedPage() {
       setFormState("error");
       return;
     }
-
-    setFormState("success");
   }
 
   if (formState === "success") {
