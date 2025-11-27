@@ -16,6 +16,16 @@ type Stats = {
   totalSpent: number;
 };
 
+type RoiStats = {
+  totalAppointments: number;
+  totalSpend: number;
+  bookedAppointments: number;
+  completedAppointments: number;
+  avgCostPerAppointment: number;
+  costPerBookedAppointment: number;
+  costPerCompletedAppointment: number;
+};
+
 type RecentLead = {
   id: string;
   created_at: string | null;
@@ -46,6 +56,7 @@ export default function AgentDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  const [roiStats, setRoiStats] = useState<RoiStats | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -133,6 +144,11 @@ export default function AgentDashboardPage() {
           purchasedThisMonth: data.stats.purchasedThisMonth ?? 0,
           totalSpent: (data.stats.totalSpentCents ?? 0) / 100, // Convert to dollars
         });
+
+        // Update ROI stats
+        if (data.roi) {
+          setRoiStats(data.roi);
+        }
 
         // Update recent leads (map to existing type)
         setRecentLeads(

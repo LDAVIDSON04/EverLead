@@ -266,6 +266,21 @@ export async function GET(request: NextRequest) {
         is_highest_bidder: auction.current_bid_agent_id === agentId,
       }));
 
+    // Calculate appointment ROI stats
+    const { data: appointmentsData } = await supabaseAdmin
+      .from("appointments")
+      .select("id, status, price_cents, agent_id")
+      .eq("agent_id", agentId);
+
+    const appointments = appointmentsData || [];
+    const totalAppointments = appointments.length;
+    const bookedAppointments = appointments.filter((a: any) => a.status === "booked").length;
+    const completedAppointments = appointments.filter((a: any) => a.status === "completed").length;
+    const totalSpend = appointments.reduce((sum: number, a: any) => sum + (a.price_cents || 0), 0);
+    const avgCostPerAppointment = totalAppointments > 0 ? totalSpend / totalAppointments : 0;
+    const costPerBookedAppointment = bookedAppointments > 0 ? totalSpend / bookedAppointments : 0;
+    const costPerCompletedAppointment = completedAppointments > 0 ? totalSpend / completedAppointments : 0;
+
     const response: AgentDashboardData = {
       stats: {
         availableLeads: availableCount ?? 0,
@@ -287,6 +302,15 @@ export async function GET(request: NextRequest) {
       yourBids: yourBidsList,
       recentBids: recentBidsList,
       pendingAuctions: pendingAuctionsList,
+      roi: {
+        totalAppointments,
+        totalSpend: totalSpend / 100, // Convert to dollars
+        bookedAppointments,
+        completedAppointments,
+        avgCostPerAppointment: avgCostPerAppointment / 100,
+        costPerBookedAppointment: costPerBookedAppointment / 100,
+        costPerCompletedAppointment: costPerCompletedAppointment / 100,
+      },
     };
 
     return NextResponse.json(response);
