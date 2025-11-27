@@ -206,9 +206,12 @@ export default function GetStartedPage() {
       const leadId = responseBody?.lead?.id;
       if (leadId) {
         // Redirect to booking page
+        console.log("Redirecting to booking page:", `/book/${leadId}`);
         router.push(`/book/${leadId}`);
         return;
       }
+      
+      console.warn("No lead ID in response, cannot redirect to booking page");
       
       // Fallback: if no lead ID, show success message
       setFormState("success");
