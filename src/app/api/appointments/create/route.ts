@@ -94,25 +94,36 @@ export async function POST(req: NextRequest) {
       resendFromEmail: process.env.RESEND_FROM_EMAIL || 'not set',
     });
 
-    // Send email (non-blocking, but log any errors)
-    sendConsumerBookingEmail({
+  // Send email (wait with timeout to prevent Vercel from killing execution context)
+  // Use Promise.race to ensure we don't wait more than 5 seconds for email
+  const emailPromise = sendConsumerBookingEmail({
+    to: lead.email,
+    name: displayName,
+    requestedDate,
+    requestedWindow,
+  });
+  
+  const emailTimeout = new Promise<void>((resolve) => {
+    setTimeout(() => {
+      console.log('⏱️ Email send timeout (5s) - returning response, email may still be sending in background');
+      resolve();
+    }, 5000); // Wait max 5 seconds for email
+  });
+  
+  // Wait for email or timeout, whichever comes first
+  Promise.race([emailPromise, emailTimeout]).catch((err) => {
+    console.error('❌ Failed to send consumer booking email (non-fatal - appointment still created):', {
+      error: err?.message || err,
+      cause: err?.cause,
+      code: err?.code,
       to: lead.email,
-      name: displayName,
-      requestedDate,
-      requestedWindow,
-    }).catch((err) => {
-      console.error('❌ Failed to send consumer booking email (non-fatal - appointment still created):', {
-        error: err?.message || err,
-        cause: err?.cause,
-        code: err?.code,
-        to: lead.email,
-        hasResendKey: !!process.env.RESEND_API_KEY,
-        suggestion: err?.code === 'ECONNRESET' 
-          ? 'Network connection issue - check firewall/proxy settings or Resend API status'
-          : 'Check Resend API key and domain verification',
-      });
-      // Don't throw - email failure shouldn't break appointment creation
+      hasResendKey: !!process.env.RESEND_API_KEY,
+      suggestion: err?.code === 'ECONNRESET' 
+        ? 'Network connection issue - check firewall/proxy settings or Resend API status'
+        : 'Check Resend API key and domain verification',
     });
+    // Don't throw - email failure shouldn't break appointment creation
+  });
   } else {
     console.warn('⚠️ No email address found for lead, skipping booking confirmation email:', {
       leadId: lead.id,
