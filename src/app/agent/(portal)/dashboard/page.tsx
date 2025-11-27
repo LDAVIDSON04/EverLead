@@ -338,7 +338,7 @@ export default function AgentDashboardPage() {
 
             {/* ROI Section */}
             {roiStats && (
-              <section className="space-y-4">
+              <section id="roi" className="space-y-4">
                 <h2
                   className="text-xl font-normal text-[#2a2a2a]"
                   style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}

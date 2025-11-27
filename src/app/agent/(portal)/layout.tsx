@@ -11,12 +11,10 @@ type AgentLayoutProps = {
 };
 
 const tabs = [
-  { href: '/agent/dashboard', label: 'Dashboard' },
-  { href: '/agent/leads/available', label: 'Available leads' },
-  { href: '/agent/appointments', label: 'Available Appointments' },
-  { href: '/agent/my-appointments', label: 'My Appointments' },
-  { href: '/agent/leads/mine', label: 'My leads' },
-  { href: '/agent/leads/purchased', label: 'Purchased' },
+  { href: '/agent/dashboard', label: 'Home' },
+  { href: '/agent/appointments', label: 'Buy Appointments' },
+  { href: '/agent/leads/mine', label: 'My Pipeline' },
+  { href: '/agent/dashboard#roi', label: 'Performance' },
 ];
 
 export default function AgentLayout({ children }: AgentLayoutProps) {
@@ -128,7 +126,9 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
           <nav className="border-b border-gray-200 mb-6">
             <ul className="flex gap-8 text-sm">
               {tabs.map((tab) => {
-                const isActive = pathname === tab.href;
+                // Handle active state: both Home and Performance are on /agent/dashboard
+                const isActive = pathname === tab.href || 
+                  (tab.href === '/agent/dashboard#roi' && pathname === '/agent/dashboard');
                 return (
                   <li key={tab.href}>
                     <Link
