@@ -83,9 +83,9 @@ export async function sendConsumerBookingEmail({
     
     // Add timeout to prevent hanging (30 seconds)
     // Use Promise.race to ensure timeout works in server environment
-    let timeoutId: NodeJS.Timeout;
     console.log('📧 Step 2: Creating timeout promise...', { timestamp: new Date().toISOString() });
     
+    let timeoutId: NodeJS.Timeout | undefined;
     const timeoutPromise = new Promise<never>((_, reject) => {
       timeoutId = setTimeout(() => {
         const duration = Date.now() - fetchStartTime;
@@ -199,7 +199,7 @@ export async function sendConsumerBookingEmail({
 
     console.log('📧 Starting Promise.race (fetch vs timeout)...', { 
       timestamp: new Date().toISOString(),
-      hasTimeoutId: !!timeoutId,
+      hasTimeoutId: timeoutId !== undefined,
     });
     
     // Add a heartbeat to verify the function is still running
@@ -216,11 +216,11 @@ export async function sendConsumerBookingEmail({
       console.log('📧 About to await Promise.race...', { timestamp: new Date().toISOString() });
       resendResponse = await Promise.race([fetchPromise, timeoutPromise]);
       clearInterval(heartbeatInterval);
-      clearTimeout(timeoutId!);
+      if (timeoutId) clearTimeout(timeoutId);
       console.log('📧 Promise.race completed successfully', { timestamp: new Date().toISOString() });
     } catch (raceError: any) {
       clearInterval(heartbeatInterval);
-      clearTimeout(timeoutId!);
+      if (timeoutId) clearTimeout(timeoutId);
       console.error('❌ Promise.race error:', {
         error: raceError?.message || raceError,
         name: raceError?.name,
