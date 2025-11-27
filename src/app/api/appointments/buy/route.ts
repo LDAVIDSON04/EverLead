@@ -8,10 +8,18 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const appointmentId = body.appointmentId as string | undefined;
+    const acknowledgedTimeWindow = body.acknowledgedTimeWindow as boolean | undefined;
 
     if (!appointmentId) {
       return NextResponse.json(
         { error: "Missing appointmentId" },
+        { status: 400 }
+      );
+    }
+
+    if (!acknowledgedTimeWindow) {
+      return NextResponse.json(
+        { error: "You must acknowledge the time-window policy before purchasing." },
         { status: 400 }
       );
     }

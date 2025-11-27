@@ -30,8 +30,24 @@ export default function AvailableAppointments({
   const router = useRouter();
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [acknowledgedIds, setAcknowledgedIds] = useState<Set<string>>(new Set());
+
+  function toggleAcknowledgment(id: string) {
+    const newSet = new Set(acknowledgedIds);
+    if (newSet.has(id)) {
+      newSet.delete(id);
+    } else {
+      newSet.add(id);
+    }
+    setAcknowledgedIds(newSet);
+  }
 
   async function handleBuy(id: string) {
+    if (!acknowledgedIds.has(id)) {
+      setError('You must acknowledge the time-window policy before purchasing.');
+      return;
+    }
+
     setLoadingId(id);
     setError(null);
 
@@ -54,7 +70,11 @@ export default function AvailableAppointments({
       const res = await fetch('/api/appointments/buy', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ appointmentId: id, agentId }),
+        body: JSON.stringify({ 
+          appointmentId: id, 
+          agentId,
+          acknowledgedTimeWindow: true,
+        }),
       });
 
       if (!res.ok) {
@@ -179,13 +199,32 @@ export default function AvailableAppointments({
                 </div>
               </div>
 
-              <button
-                onClick={() => handleBuy(appt.id)}
-                disabled={loadingId === appt.id}
-                className="rounded-md bg-[#2a2a2a] px-4 py-2 text-sm font-medium text-white hover:bg-[#3a3a3a] disabled:cursor-not-allowed disabled:opacity-60 transition-colors whitespace-nowrap"
-              >
-                {loadingId === appt.id ? 'Processing…' : 'Buy Appointment – $39'}
-              </button>
+              <div className="flex flex-col gap-3 sm:items-end">
+                <label className="flex items-start gap-2 text-xs text-[#6b6b6b] cursor-pointer max-w-xs">
+                  <input
+                    type="checkbox"
+                    checked={acknowledgedIds.has(appt.id)}
+                    onChange={() => toggleAcknowledgment(appt.id)}
+                    className="mt-0.5"
+                  />
+                  <span>
+                    I understand this is a <span className="font-medium">requested time window</span> and
+                    may require confirmation or rescheduling with the family.
+                  </span>
+                </label>
+
+                <button
+                  onClick={() => handleBuy(appt.id)}
+                  disabled={!acknowledgedIds.has(appt.id) || loadingId === appt.id}
+                  className={`rounded-md px-4 py-2 text-sm font-medium text-white transition-colors whitespace-nowrap ${
+                    acknowledgedIds.has(appt.id)
+                      ? 'bg-[#2a2a2a] hover:bg-[#3a3a3a] disabled:opacity-60'
+                      : 'bg-gray-300 text-gray-600 cursor-not-allowed'
+                  }`}
+                >
+                  {loadingId === appt.id ? 'Processing…' : 'Buy Appointment – $39'}
+                </button>
+              </div>
             </div>
           </div>
         );

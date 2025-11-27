@@ -110,6 +110,11 @@ export default function BookForm({ leadId }: { leadId: string }) {
       >
         {loading ? 'Booking…' : 'Confirm my call'}
       </button>
+
+      <p className="mt-3 text-xs text-gray-500 text-center max-w-md mx-auto">
+        This is a <span className="font-medium">requested time window</span>. A licensed
+        specialist will confirm this time or propose a nearby option if needed.
+      </p>
     </form>
   );
 }
