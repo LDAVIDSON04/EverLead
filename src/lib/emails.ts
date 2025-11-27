@@ -79,10 +79,13 @@ export async function sendConsumerBookingEmail({
     });
 
     const fetchStartTime = Date.now();
+    console.log('📧 Step 1: Starting email send process...', { timestamp: new Date().toISOString() });
     
     // Add timeout to prevent hanging (30 seconds)
     // Use Promise.race to ensure timeout works in server environment
     let timeoutId: NodeJS.Timeout;
+    console.log('📧 Step 2: Creating timeout promise...', { timestamp: new Date().toISOString() });
+    
     const timeoutPromise = new Promise<never>((_, reject) => {
       timeoutId = setTimeout(() => {
         const duration = Date.now() - fetchStartTime;
@@ -95,7 +98,95 @@ export async function sendConsumerBookingEmail({
       }, 30000);
     });
 
-    console.log('📧 Creating fetch promise...', { timestamp: new Date().toISOString() });
+    console.log('📧 Step 3: Building email body...', { timestamp: new Date().toISOString() });
+    
+    // Build email body first
+    const emailBody = {
+      from: fromEmail,
+      to: [to],
+      subject: 'Your pre-need planning call is booked',
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="margin: 0; padding: 0; background-color: #f7f4ef; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+          <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #f7f4ef; padding: 40px 20px;">
+            <tr>
+              <td align="center">
+                <table role="presentation" style="max-width: 600px; width: 100%; border-collapse: collapse; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); overflow: hidden;">
+                  <!-- Header with Logo -->
+                  <tr>
+                    <td style="padding: 40px 40px 30px; text-align: center; background: linear-gradient(to bottom, #faf8f5, #ffffff);">
+                      <img src="${cleanSiteUrl}/logo.png" alt="Soradin" style="height: 48px; width: auto; margin: 0 auto 12px; display: block; max-width: 200px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
+                      <div style="display: none;">
+                        <h1 style="color: #2a2a2a; font-size: 32px; font-weight: 300; letter-spacing: -0.5px; margin: 0;">Soradin</h1>
+                        <p style="color: #6b6b6b; font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; margin: 8px 0 0 0;">Pre-Planning</p>
+                      </div>
+                    </td>
+                  </tr>
+                  
+                  <!-- Main Content -->
+                  <tr>
+                    <td style="padding: 40px;">
+                      <h2 style="color: #2a2a2a; font-size: 24px; font-weight: 400; margin: 0 0 20px; letter-spacing: -0.3px;">Your planning call is booked</h2>
+                      
+                      <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 16px;">Hi ${name || 'there'},</p>
+                      
+                      <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 24px;">
+                        Thank you for using Soradin to start your pre-need planning. We've received your request for a call on <strong>${prettyDate}</strong> (${timeWindowLabel}).
+                      </p>
+                      
+                      <div style="background-color: #f7f4ef; padding: 20px; border-radius: 8px; margin: 24px 0;">
+                        <p style="margin: 8px 0; color: #2a2a2a; font-size: 16px;"><strong>Date:</strong> ${prettyDate}</p>
+                        <p style="margin: 8px 0; color: #2a2a2a; font-size: 16px;"><strong>Time:</strong> ${timeWindowLabel}</p>
+                      </div>
+                      
+                      <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 24px 0 16px;">
+                        A licensed specialist will contact you at that time to walk you through options, answer questions, and help you move at your own pace.
+                      </p>
+                      
+                      <p style="color: #6b6b6b; font-size: 14px; line-height: 1.6; margin: 24px 0 0;">
+                        If you didn't request this, you can ignore this email.
+                      </p>
+                    </td>
+                  </tr>
+                  
+                  <!-- Footer -->
+                  <tr>
+                    <td style="padding: 30px 40px; background-color: #faf8f5; border-top: 1px solid #e5e5e5;">
+                      <p style="color: #6b6b6b; font-size: 12px; margin: 0; text-align: center;">
+                        © ${new Date().getFullYear()} Soradin. All rights reserved.
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
+      `,
+      text: [
+        `Hi ${name || 'there'},`,
+        '',
+        `Thank you for using Soradin to start your pre-need planning.`,
+        `We've received your request for a call on ${prettyDate} (${timeWindowLabel}).`,
+        '',
+        'A licensed specialist will contact you at that time to walk you through options, answer questions, and help you move at your own pace.',
+        '',
+        `If you didn't request this, you can ignore this email.`,
+        '',
+        '— Soradin',
+      ].join('\n'),
+    };
+    
+    console.log('📧 Step 4: Email body built, creating fetch promise...', { 
+      timestamp: new Date().toISOString(),
+      bodySize: JSON.stringify(emailBody).length,
+    });
     
     const fetchPromise = fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -103,87 +194,7 @@ export async function sendConsumerBookingEmail({
         'Content-Type': 'application/json',
         Authorization: `Bearer ${resendApiKey}`,
       },
-      body: JSON.stringify({
-        from: fromEmail,
-        to: [to],
-        subject: 'Your pre-need planning call is booked',
-        html: `
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <meta charset="utf-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          </head>
-          <body style="margin: 0; padding: 0; background-color: #f7f4ef; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
-            <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #f7f4ef; padding: 40px 20px;">
-              <tr>
-                <td align="center">
-                  <table role="presentation" style="max-width: 600px; width: 100%; border-collapse: collapse; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); overflow: hidden;">
-                    <!-- Header with Logo -->
-                    <tr>
-                      <td style="padding: 40px 40px 30px; text-align: center; background: linear-gradient(to bottom, #faf8f5, #ffffff);">
-                        <img src="${cleanSiteUrl}/logo.png" alt="Soradin" style="height: 48px; width: auto; margin: 0 auto 12px; display: block; max-width: 200px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
-                        <div style="display: none;">
-                          <h1 style="color: #2a2a2a; font-size: 32px; font-weight: 300; letter-spacing: -0.5px; margin: 0;">Soradin</h1>
-                          <p style="color: #6b6b6b; font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; margin: 8px 0 0 0;">Pre-Planning</p>
-                        </div>
-                      </td>
-                    </tr>
-                    
-                    <!-- Main Content -->
-                    <tr>
-                      <td style="padding: 40px;">
-                        <h2 style="color: #2a2a2a; font-size: 24px; font-weight: 400; margin: 0 0 20px; letter-spacing: -0.3px;">Your planning call is booked</h2>
-                        
-                        <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 16px;">Hi ${name || 'there'},</p>
-                        
-                        <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 24px;">
-                          Thank you for using Soradin to start your pre-need planning. We've received your request for a call on <strong>${prettyDate}</strong> (${timeWindowLabel}).
-                        </p>
-                        
-                        <div style="background-color: #f7f4ef; padding: 20px; border-radius: 8px; margin: 24px 0;">
-                          <p style="margin: 8px 0; color: #2a2a2a; font-size: 16px;"><strong>Date:</strong> ${prettyDate}</p>
-                          <p style="margin: 8px 0; color: #2a2a2a; font-size: 16px;"><strong>Time:</strong> ${timeWindowLabel}</p>
-                        </div>
-                        
-                        <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 24px 0 16px;">
-                          A licensed specialist will contact you at that time to walk you through options, answer questions, and help you move at your own pace.
-                        </p>
-                        
-                        <p style="color: #6b6b6b; font-size: 14px; line-height: 1.6; margin: 24px 0 0;">
-                          If you didn't request this, you can ignore this email.
-                        </p>
-                      </td>
-                    </tr>
-                    
-                    <!-- Footer -->
-                    <tr>
-                      <td style="padding: 30px 40px; background-color: #faf8f5; border-top: 1px solid #e5e5e5;">
-                        <p style="color: #6b6b6b; font-size: 12px; margin: 0; text-align: center;">
-                          © ${new Date().getFullYear()} Soradin. All rights reserved.
-                        </p>
-                      </td>
-                    </tr>
-                  </table>
-                </td>
-              </tr>
-            </table>
-          </body>
-          </html>
-        `,
-        text: [
-          `Hi ${name || 'there'},`,
-          '',
-          `Thank you for using Soradin to start your pre-need planning.`,
-          `We've received your request for a call on ${prettyDate} (${timeWindowLabel}).`,
-          '',
-          'A licensed specialist will contact you at that time to walk you through options, answer questions, and help you move at your own pace.',
-          '',
-          `If you didn't request this, you can ignore this email.`,
-          '',
-          '— Soradin',
-        ].join('\n'),
-      }),
+      body: JSON.stringify(emailBody),
     });
 
     console.log('📧 Starting Promise.race (fetch vs timeout)...', { timestamp: new Date().toISOString() });
