@@ -52,7 +52,8 @@ export async function GET() {
       success: true, 
       expiredCount,
       timestamp: new Date().toISOString(),
-      message: 'Appointments expired successfully'
+      message: 'Appointments expired successfully',
+      version: '0.1.1'
     });
   } catch (err: any) {
     console.error('Unexpected error in expire-appointments cron:', err);
