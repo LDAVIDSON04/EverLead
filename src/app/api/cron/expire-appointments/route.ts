@@ -7,7 +7,8 @@ export async function GET() {
   // Verify this is a cron request (Vercel adds a header or use CRON_SECRET)
   // Note: Vercel Cron Jobs automatically add authentication headers
   const authHeader = process.env.CRON_SECRET;
-  const requestSecret = headers().get('authorization');
+  const headersList = await headers();
+  const requestSecret = headersList.get('authorization');
   
   // Only enforce CRON_SECRET if it's explicitly set (for manual testing)
   if (authHeader && requestSecret !== `Bearer ${authHeader}`) {
