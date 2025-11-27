@@ -470,6 +470,58 @@ export default function AdminDashboardPage() {
         {/* Overview Tab */}
         {activeTab === "overview" && (
           <div className="space-y-8">
+            {/* Funnel Overview */}
+            <div>
+              <h2
+                className="mb-4 text-lg font-normal text-[#2a2a2a]"
+                style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+              >
+                Funnel Overview
+              </h2>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs max-w-3xl mb-6">
+                <div className="border border-slate-200 rounded-lg p-3 bg-white">
+                  <p className="text-[#6b6b6b] mb-1">Leads</p>
+                  <p className="text-lg font-semibold text-[#2a2a2a]">{stats.totalLeads}</p>
+                </div>
+                <div className="border border-slate-200 rounded-lg p-3 bg-white">
+                  <p className="text-[#6b6b6b] mb-1">Appointments</p>
+                  <p className="text-lg font-semibold text-[#2a2a2a]">
+                    {apiData?.appointments?.totalAppointments ?? 0}
+                  </p>
+                </div>
+                <div className="border border-slate-200 rounded-lg p-3 bg-white">
+                  <p className="text-[#6b6b6b] mb-1">Booked</p>
+                  <p className="text-lg font-semibold text-[#2a2a2a]">
+                    {apiData?.appointments?.bookedAppointments ?? 0}
+                  </p>
+                </div>
+                <div className="border border-slate-200 rounded-lg p-3 bg-white">
+                  <p className="text-[#6b6b6b] mb-1">Completed</p>
+                  <p className="text-lg font-semibold text-[#2a2a2a]">
+                    {apiData?.appointments?.completedAppointments ?? 0}
+                  </p>
+                </div>
+                <div className="border border-slate-200 rounded-lg p-3 bg-white">
+                  <p className="text-[#6b6b6b] mb-1">No-shows</p>
+                  <p className="text-lg font-semibold text-[#2a2a2a]">
+                    {apiData?.appointments?.noShowAppointments ?? 0}
+                  </p>
+                </div>
+                <div className="border border-slate-200 rounded-lg p-3 bg-white">
+                  <p className="text-[#6b6b6b] mb-1">Appointment Revenue</p>
+                  <p className="text-lg font-semibold text-[#2a2a2a]">
+                    {formatMoney(apiData?.appointments?.appointmentRevenueCents ?? 0)}
+                  </p>
+                </div>
+                <div className="border border-slate-200 rounded-lg p-3 bg-white">
+                  <p className="text-[#6b6b6b] mb-1">Approved agents</p>
+                  <p className="text-lg font-semibold text-[#2a2a2a]">
+                    {apiData?.approvedAgentsCount ?? 0}
+                  </p>
+                </div>
+              </div>
+            </div>
+
             {/* Top KPIs */}
             <div className="grid gap-4 md:grid-cols-4">
               <StatCard label="Total Leads" value={stats.totalLeads} />
