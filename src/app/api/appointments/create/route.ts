@@ -100,15 +100,18 @@ export async function POST(req: NextRequest) {
       name: displayName,
       requestedDate,
       requestedWindow,
-    }).then(() => {
-      console.log('✅ Booking confirmation email sent successfully to:', lead.email);
     }).catch((err) => {
-      console.error('❌ Error sending consumer booking email (non-fatal):', {
-        error: err,
-        message: err?.message,
+      console.error('❌ Failed to send consumer booking email (non-fatal - appointment still created):', {
+        error: err?.message || err,
+        cause: err?.cause,
+        code: err?.code,
         to: lead.email,
         hasResendKey: !!process.env.RESEND_API_KEY,
+        suggestion: err?.code === 'ECONNRESET' 
+          ? 'Network connection issue - check firewall/proxy settings or Resend API status'
+          : 'Check Resend API key and domain verification',
       });
+      // Don't throw - email failure shouldn't break appointment creation
     });
   } else {
     console.warn('⚠️ No email address found for lead, skipping booking confirmation email:', {

@@ -166,14 +166,26 @@ export async function sendConsumerBookingEmail({
       console.error('❌ Resend API error for consumer booking email:', {
         status: resendResponse.status,
         error: errorText,
+        to,
       });
-      throw new Error(`Resend API error: ${resendResponse.status}`);
+      throw new Error(`Resend API error: ${resendResponse.status} - ${errorText}`);
     }
 
-    console.log(`✅ Consumer booking email sent to ${to}`);
+    const responseData = await resendResponse.json().catch(() => ({}));
+    console.log(`✅ Consumer booking email sent successfully to ${to}`, {
+      emailId: responseData?.id,
+      status: resendResponse.status,
+    });
   } catch (err: any) {
-    console.error('❌ Error sending consumer booking email:', err);
-    // Don't throw - email failure shouldn't break appointment creation
+    console.error('❌ Error sending consumer booking email:', {
+      error: err,
+      message: err?.message,
+      cause: err?.cause,
+      code: err?.code,
+      to,
+    });
+    // Re-throw so the caller knows it failed
+    throw err;
   }
 }
 
