@@ -50,6 +50,47 @@ export default function AgentDashboardPage() {
   useEffect(() => {
     let cancelled = false;
 
+    // Check for appointment purchase success
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionId = urlParams.get("session_id");
+    const purchaseType = urlParams.get("type");
+    const purchaseSuccess = urlParams.get("purchase") === "success";
+    const appointmentId = urlParams.get("appointmentId");
+
+    if (purchaseSuccess && sessionId && purchaseType === "appointment" && appointmentId) {
+      // Handle appointment purchase confirmation
+      const confirmAppointment = async () => {
+        try {
+          const {
+            data: { user },
+          } = await supabaseClient.auth.getUser();
+
+          if (!user) return;
+
+          const res = await fetch("/api/appointments/confirm", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              sessionId,
+              appointmentId,
+              agentId: user.id,
+            }),
+          });
+
+          if (res.ok) {
+            // Clean URL and reload to show updated appointments
+            window.history.replaceState({}, "", "/agent/dashboard");
+            // Optionally show success message or redirect to appointments page
+            router.push("/agent/appointments");
+          }
+        } catch (err) {
+          console.error("Appointment confirmation error:", err);
+        }
+      };
+
+      confirmAppointment();
+    }
+
     async function loadDashboard() {
       setLoading(true);
       try {
