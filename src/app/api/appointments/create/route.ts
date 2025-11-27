@@ -78,20 +78,43 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Fire-and-forget consumer email (don't block response)
+  // Send consumer email (fire-and-forget, but log errors)
   if (lead.email) {
     const displayName = lead.full_name || 
       (lead.first_name || lead.last_name 
         ? [lead.first_name, lead.last_name].filter(Boolean).join(' ')
         : null);
 
+    console.log('📧 Attempting to send booking confirmation email:', {
+      to: lead.email,
+      name: displayName,
+      requestedDate,
+      requestedWindow,
+      hasResendKey: !!process.env.RESEND_API_KEY,
+      resendFromEmail: process.env.RESEND_FROM_EMAIL || 'not set',
+    });
+
+    // Send email (non-blocking, but log any errors)
     sendConsumerBookingEmail({
       to: lead.email,
       name: displayName,
       requestedDate,
       requestedWindow,
+    }).then(() => {
+      console.log('✅ Booking confirmation email sent successfully to:', lead.email);
     }).catch((err) => {
-      console.error('Error sending consumer booking email (non-fatal):', err);
+      console.error('❌ Error sending consumer booking email (non-fatal):', {
+        error: err,
+        message: err?.message,
+        to: lead.email,
+        hasResendKey: !!process.env.RESEND_API_KEY,
+      });
+    });
+  } else {
+    console.warn('⚠️ No email address found for lead, skipping booking confirmation email:', {
+      leadId: lead.id,
+      hasEmail: !!lead.email,
+      emailField: lead.email,
     });
   }
 
