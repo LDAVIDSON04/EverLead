@@ -1,8 +1,16 @@
 // src/app/api/cron/expire-appointments/route.ts
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { headers } from 'next/headers';
 
 export async function GET() {
+  // Verify this is a cron request (Vercel adds a header or use CRON_SECRET)
+  const authHeader = process.env.CRON_SECRET;
+  const requestSecret = headers().get('authorization');
+  
+  if (authHeader && requestSecret !== `Bearer ${authHeader}`) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
   if (!supabaseAdmin) {
     return NextResponse.json(
