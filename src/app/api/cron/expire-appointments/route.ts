@@ -43,11 +43,12 @@ export async function GET() {
     }
 
     const expiredCount = data?.length || 0;
-    console.log(`Expired ${expiredCount} appointment(s) older than 24 hours`);
+    console.log(`✅ Cron job executed: Expired ${expiredCount} appointment(s) older than 24 hours`);
 
     return NextResponse.json({ 
       success: true, 
-      expiredCount 
+      expiredCount,
+      timestamp: new Date().toISOString()
     });
   } catch (err: any) {
     console.error('Unexpected error in expire-appointments cron:', err);
