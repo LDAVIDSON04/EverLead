@@ -2,10 +2,26 @@ import BookForm from './BookForm';
 import { createClient } from '@supabase/supabase-js';
 
 type Props = {
-  params: { leadId: string };
+  params: Promise<{ leadId: string }> | { leadId: string };
 };
 
-export default async function BookPage({ params }: Props) {
+export default async function BookPage(props: Props) {
+  // Handle both Next.js 15+ (Promise) and older versions (object)
+  const params = await (props.params instanceof Promise ? props.params : Promise.resolve(props.params));
+  const leadId = params.leadId;
+
+  if (!leadId) {
+    console.error('Missing leadId in params:', params);
+    return (
+      <div className="max-w-xl mx-auto py-10 px-4">
+        <h1 className="text-2xl font-semibold mb-4">Something went wrong</h1>
+        <p className="text-sm text-gray-600">
+          Invalid booking link. Please check your link and try again.
+        </p>
+      </div>
+    );
+  }
+
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -27,14 +43,17 @@ export default async function BookPage({ params }: Props) {
     },
   });
 
+  console.log('Looking up lead with ID:', leadId);
+
   const { data: lead, error } = await supabaseAdmin
     .from('leads')
     .select('id')
-    .eq('id', params.leadId)
+    .eq('id', leadId)
     .single();
 
   if (error) {
     console.error('Error fetching lead:', error);
+    console.error('Lead ID used:', leadId);
     return (
       <div className="max-w-xl mx-auto py-10 px-4">
         <h1 className="text-2xl font-semibold mb-4">Something went wrong</h1>
@@ -42,14 +61,14 @@ export default async function BookPage({ params }: Props) {
           We couldn&apos;t find your request. Please try again later.
         </p>
         {process.env.NODE_ENV === 'development' && (
-          <p className="text-xs text-red-600 mt-2">Error: {error.message}</p>
+          <p className="text-xs text-red-600 mt-2">Error: {error.message} (Code: {error.code})</p>
         )}
       </div>
     );
   }
 
   if (!lead) {
-    console.error('Lead not found:', params.leadId);
+    console.error('Lead not found:', leadId);
     return (
       <div className="max-w-xl mx-auto py-10 px-4">
         <h1 className="text-2xl font-semibold mb-4">Something went wrong</h1>
