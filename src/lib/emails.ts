@@ -72,12 +72,25 @@ export async function sendConsumerBookingEmail({
       cleanSiteUrl = `https://${cleanSiteUrl}`;
     }
 
+    console.log('📧 Sending request to Resend API for consumer booking email...', {
+      to,
+      from: fromEmail,
+    });
+
+    // Add timeout to prevent hanging (30 seconds)
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      controller.abort();
+      console.error('❌ Resend API request timeout after 30 seconds for consumer booking email');
+    }, 30000);
+
     const resendResponse = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${resendApiKey}`,
       },
+      signal: controller.signal,
       body: JSON.stringify({
         from: fromEmail,
         to: [to],
@@ -161,6 +174,13 @@ export async function sendConsumerBookingEmail({
       }),
     });
 
+    clearTimeout(timeoutId);
+    console.log('📧 Resend API response received for consumer booking email:', {
+      status: resendResponse.status,
+      statusText: resendResponse.statusText,
+      ok: resendResponse.ok,
+    });
+
     if (!resendResponse.ok) {
       const errorText = await resendResponse.text();
       console.error('❌ Resend API error for consumer booking email:', {
@@ -177,13 +197,25 @@ export async function sendConsumerBookingEmail({
       status: resendResponse.status,
     });
   } catch (err: any) {
-    console.error('❌ Error sending consumer booking email:', {
-      error: err,
-      message: err?.message,
-      cause: err?.cause,
-      code: err?.code,
-      to,
-    });
+    // Check if it's an abort error (timeout)
+    if (err?.name === 'AbortError' || err?.code === 'ECONNRESET') {
+      console.error('❌ Resend API request failed (network/timeout):', {
+        error: err?.message || err,
+        code: err?.code,
+        name: err?.name,
+        to,
+        suggestion: 'Check network connectivity, firewall settings, or Resend API status',
+      });
+    } else {
+      console.error('❌ Error sending consumer booking email:', {
+        error: err?.message || err,
+        cause: err?.cause,
+        code: err?.code,
+        name: err?.name,
+        stack: err?.stack,
+        to,
+      });
+    }
     // Re-throw so the caller knows it failed
     throw err;
   }
