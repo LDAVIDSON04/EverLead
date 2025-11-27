@@ -277,6 +277,38 @@ export async function GET(_req: NextRequest) {
       (a, b) => b.totalLeads - a.totalLeads
     );
 
+    // Appointment metrics
+    const { data: appointments, error: appointmentsError } = await supabaseAdmin
+      .from("appointments")
+      .select("id, status, price_cents, agent_id, requested_date");
+
+    let appointmentStats = {
+      totalAppointments: 0,
+      bookedAppointments: 0,
+      completedAppointments: 0,
+      noShowAppointments: 0,
+      appointmentRevenueCents: 0,
+    };
+
+    if (!appointmentsError && appointments) {
+      appointmentStats = {
+        totalAppointments: appointments.length,
+        bookedAppointments: appointments.filter((a: any) => a.status === "booked").length,
+        completedAppointments: appointments.filter((a: any) => a.status === "completed").length,
+        noShowAppointments: appointments.filter((a: any) => a.status === "no_show").length,
+        appointmentRevenueCents: appointments
+          .filter((a: any) => a.price_cents && a.agent_id)
+          .reduce((sum: number, a: any) => sum + (a.price_cents || 0), 0),
+      };
+    }
+
+    // Approved agents count
+    const { count: approvedAgentsCount } = await supabaseAdmin
+      .from("profiles")
+      .select("id", { count: "exact", head: true })
+      .eq("role", "agent")
+      .eq("approval_status", "approved");
+
     return NextResponse.json(
       {
         ok: true,
@@ -288,6 +320,8 @@ export async function GET(_req: NextRequest) {
         topAgents,
         totalAgentsCount: totalAgentsCount ?? 0,
         geography,
+        appointments: appointmentStats,
+        approvedAgentsCount: approvedAgentsCount ?? 0,
       },
       { status: 200 }
     );

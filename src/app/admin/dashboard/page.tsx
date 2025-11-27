@@ -44,6 +44,14 @@ type ApiStatsResponse = {
   }>;
   totalAgentsCount?: number;
   geography?: GeoStat[];
+  appointments?: {
+    totalAppointments: number;
+    bookedAppointments: number;
+    completedAppointments: number;
+    noShowAppointments: number;
+    appointmentRevenueCents: number;
+  };
+  approvedAgentsCount?: number;
   error?: string;
 };
 

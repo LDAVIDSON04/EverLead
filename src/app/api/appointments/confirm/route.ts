@@ -69,12 +69,15 @@ export async function POST(req: NextRequest) {
       // Continue anyway - email is optional
     }
 
-    // Assign the appointment to this agent (atomic update with status check)
+    // Assign the appointment to this agent and set price (atomic update with status check)
+    const APPOINTMENT_PRICE_CENTS = 39_00; // $39.00
+    
     const { data: updated, error: updateError } = await supabaseAdmin
       .from("appointments")
       .update({
         agent_id: agentId,
         status: "booked",
+        price_cents: APPOINTMENT_PRICE_CENTS,
         updated_at: new Date().toISOString(),
       })
       .eq("id", appointmentId)
