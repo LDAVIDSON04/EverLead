@@ -1,9 +1,4 @@
 {
-  "crons": [
-    {
-      "path": "/api/admin/process-email-queue",
-      "schedule": "*/1 * * * *"
-    }
-  ]
+  "crons": []
 }
 
