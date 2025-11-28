@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabaseClient } from '@/lib/supabaseClient';
+import { maskName, maskEmail, maskPhone } from '@/lib/masking';
 
 type LeadSummary = {
   id: string;
@@ -22,6 +23,26 @@ type Appointment = {
   leads: LeadSummary | null;
 };
 
+type FullLead = {
+  id: string;
+  full_name: string | null;
+  first_name: string | null;
+  last_name: string | null;
+  email: string | null;
+  phone: string | null;
+  city: string | null;
+  province: string | null;
+  age: number | null;
+  service_type: string | null;
+  urgency_level: string | null;
+  planning_for: string | null;
+  timeline_intent: string | null;
+  remains_disposition: string | null;
+  service_celebration: string | null;
+  family_pre_arranged: string | null;
+  additional_notes: string | null;
+};
+
 export default function AvailableAppointments({
   appointments,
 }: {
@@ -31,6 +52,9 @@ export default function AvailableAppointments({
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [acknowledgedIds, setAcknowledgedIds] = useState<Set<string>>(new Set());
+  const [viewingAppointmentId, setViewingAppointmentId] = useState<string | null>(null);
+  const [fullLead, setFullLead] = useState<FullLead | null>(null);
+  const [loadingLead, setLoadingLead] = useState(false);
 
   function toggleAcknowledgment(id: string) {
     const newSet = new Set(acknowledgedIds);
@@ -127,6 +151,72 @@ export default function AvailableAppointments({
     return service;
   }
 
+  async function handleViewDetails(appointmentId: string, leadId: string) {
+    setViewingAppointmentId(appointmentId);
+    setLoadingLead(true);
+    setFullLead(null);
+
+    try {
+      const { data, error: fetchError } = await supabaseClient
+        .from('leads')
+        .select('*')
+        .eq('id', leadId)
+        .single();
+
+      if (fetchError) {
+        console.error('Error loading lead details:', fetchError);
+        setError('Failed to load lead details.');
+        setLoadingLead(false);
+        return;
+      }
+
+      setFullLead(data as FullLead);
+    } catch (err) {
+      console.error('Error loading lead:', err);
+      setError('Failed to load lead details.');
+    } finally {
+      setLoadingLead(false);
+    }
+  }
+
+  function closeModal() {
+    setViewingAppointmentId(null);
+    setFullLead(null);
+  }
+
+  function formatTimelineIntent(intent: string | null) {
+    if (!intent) return 'Not specified';
+    if (intent === 'ready_now') return "I'm ready to plan soon";
+    if (intent === 'speak_with_family') return "I need to speak with my family first";
+    if (intent === 'collecting_info_need_done') return "I'm gathering information right now";
+    if (intent === 'collecting_info_unsure') return "I'm planning for the future";
+    if (intent === 'unsure') return 'Not sure yet';
+    return intent;
+  }
+
+  function formatPlanningFor(planning: string | null) {
+    if (!planning) return 'Not specified';
+    if (planning === 'myself') return 'Myself';
+    if (planning === 'spouse') return 'Spouse';
+    if (planning === 'parent') return 'Parent';
+    if (planning === 'other') return 'Other';
+    return planning;
+  }
+
+  // Close modal on Escape key
+  useEffect(() => {
+    if (!viewingAppointmentId) return;
+
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        closeModal();
+      }
+    };
+
+    document.addEventListener('keydown', handleEsc);
+    return () => document.removeEventListener('keydown', handleEsc);
+  }, [viewingAppointmentId]);
+
   if (!appointments.length) {
     return (
       <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
@@ -200,6 +290,13 @@ export default function AvailableAppointments({
               </div>
 
               <div className="flex flex-col gap-3 sm:items-end">
+                <button
+                  onClick={() => handleViewDetails(appt.id, appt.lead_id)}
+                  className="text-xs text-[#6b6b6b] hover:text-[#2a2a2a] underline transition-colors"
+                >
+                  View details →
+                </button>
+
                 <label className="flex items-start gap-2 text-xs text-[#6b6b6b] cursor-pointer max-w-xs">
                   <input
                     type="checkbox"
@@ -229,6 +326,223 @@ export default function AvailableAppointments({
           </div>
         );
       })}
+
+      {/* View Details Modal */}
+      {viewingAppointmentId && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 px-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              closeModal();
+            }
+          }}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white shadow-2xl">
+            <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-[#2a2a2a]">Appointment Details</h2>
+              <button
+                type="button"
+                onClick={closeModal}
+                className="text-slate-400 hover:text-slate-600 text-2xl leading-none transition-colors"
+                aria-label="Close modal"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {loadingLead ? (
+                <p className="text-sm text-[#6b6b6b]">Loading details…</p>
+              ) : fullLead ? (
+                <>
+                  {/* Appointment Info */}
+                  <div className="rounded-lg border border-slate-200 bg-white p-4">
+                    <h3 className="mb-3 text-base font-semibold text-[#2a2a2a]">Appointment Request</h3>
+                    <dl className="space-y-2 text-sm">
+                      <div>
+                        <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                          Date
+                        </dt>
+                        <dd className="mt-1 text-[#2a2a2a]">
+                          {formatDate(
+                            appointments.find((a) => a.id === viewingAppointmentId)?.requested_date || ''
+                          )}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                          Time Window
+                        </dt>
+                        <dd className="mt-1 text-[#2a2a2a] capitalize">
+                          {appointments
+                            .find((a) => a.id === viewingAppointmentId)
+                            ?.requested_window.charAt(0)
+                            .toUpperCase() +
+                            appointments
+                              .find((a) => a.id === viewingAppointmentId)
+                              ?.requested_window.slice(1)}
+                        </dd>
+                      </div>
+                    </dl>
+                  </div>
+
+                  {/* Contact Information (Blurred) */}
+                  <div className="rounded-lg border border-slate-200 bg-white p-4">
+                    <h3 className="mb-3 text-base font-semibold text-[#2a2a2a]">Contact Information</h3>
+                    <dl className="space-y-2 text-sm">
+                      {fullLead.full_name || fullLead.first_name || fullLead.last_name ? (
+                        <div>
+                          <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                            Name
+                          </dt>
+                          <dd className="mt-1 text-[#2a2a2a]">
+                            {maskName(
+                              fullLead.full_name ||
+                                (fullLead.first_name || fullLead.last_name
+                                  ? [fullLead.first_name, fullLead.last_name].filter(Boolean).join(' ')
+                                  : null)
+                            )}
+                          </dd>
+                        </div>
+                      ) : null}
+                      {fullLead.email && (
+                        <div>
+                          <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                            Email
+                          </dt>
+                          <dd className="mt-1 break-all text-[#2a2a2a]">{maskEmail(fullLead.email)}</dd>
+                        </div>
+                      )}
+                      {fullLead.phone && (
+                        <div>
+                          <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                            Phone
+                          </dt>
+                          <dd className="mt-1 text-[#2a2a2a]">{maskPhone(fullLead.phone)}</dd>
+                        </div>
+                      )}
+                      <div className="mt-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2">
+                        <p className="text-[11px] text-amber-900">
+                          🔒 Purchase this appointment to reveal full contact details.
+                        </p>
+                      </div>
+                    </dl>
+                  </div>
+
+                  {/* Lead Details */}
+                  <div className="rounded-lg border border-slate-200 bg-white p-4">
+                    <h3 className="mb-3 text-base font-semibold text-[#2a2a2a]">Lead Information</h3>
+                    <dl className="space-y-2 text-sm">
+                      {(fullLead.city || fullLead.province) && (
+                        <div>
+                          <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                            Location
+                          </dt>
+                          <dd className="mt-1 text-[#2a2a2a]">
+                            {fullLead.city || ''}
+                            {fullLead.city && fullLead.province ? ', ' : ''}
+                            {fullLead.province || ''}
+                          </dd>
+                        </div>
+                      )}
+                      {fullLead.age && (
+                        <div>
+                          <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                            Age
+                          </dt>
+                          <dd className="mt-1 text-[#2a2a2a]">{fullLead.age}</dd>
+                        </div>
+                      )}
+                      {fullLead.service_type && (
+                        <div>
+                          <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                            Service Type
+                          </dt>
+                          <dd className="mt-1 text-[#2a2a2a]">{formatServiceType(fullLead.service_type)}</dd>
+                        </div>
+                      )}
+                      {fullLead.urgency_level && (
+                        <div>
+                          <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                            Urgency
+                          </dt>
+                          <dd className="mt-1">
+                            <span
+                              className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
+                                fullLead.urgency_level === 'hot'
+                                  ? 'bg-red-100 text-red-900'
+                                  : fullLead.urgency_level === 'warm'
+                                  ? 'bg-amber-100 text-amber-900'
+                                  : 'bg-slate-100 text-slate-900'
+                              }`}
+                            >
+                              {formatUrgency(fullLead.urgency_level)}
+                            </span>
+                          </dd>
+                        </div>
+                      )}
+                      {fullLead.planning_for && (
+                        <div>
+                          <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                            Planning For
+                          </dt>
+                          <dd className="mt-1 text-[#2a2a2a]">{formatPlanningFor(fullLead.planning_for)}</dd>
+                        </div>
+                      )}
+                      {fullLead.timeline_intent && (
+                        <div>
+                          <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                            Timeline Intent
+                          </dt>
+                          <dd className="mt-1 text-[#2a2a2a]">{formatTimelineIntent(fullLead.timeline_intent)}</dd>
+                        </div>
+                      )}
+                      {fullLead.remains_disposition && (
+                        <div>
+                          <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                            Remains Disposition
+                          </dt>
+                          <dd className="mt-1 text-[#2a2a2a] capitalize">
+                            {fullLead.remains_disposition.replace(/_/g, ' ')}
+                          </dd>
+                        </div>
+                      )}
+                      {fullLead.service_celebration && (
+                        <div>
+                          <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                            Service Celebration
+                          </dt>
+                          <dd className="mt-1 text-[#2a2a2a] capitalize">{fullLead.service_celebration}</dd>
+                        </div>
+                      )}
+                      {fullLead.family_pre_arranged && (
+                        <div>
+                          <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                            Family Pre-arranged
+                          </dt>
+                          <dd className="mt-1 text-[#2a2a2a] capitalize">{fullLead.family_pre_arranged}</dd>
+                        </div>
+                      )}
+                      {fullLead.additional_notes && (
+                        <div>
+                          <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                            Additional Notes
+                          </dt>
+                          <dd className="mt-1 text-[#2a2a2a] whitespace-pre-wrap">{fullLead.additional_notes}</dd>
+                        </div>
+                      )}
+                    </dl>
+                  </div>
+                </>
+              ) : (
+                <p className="text-sm text-red-600">Failed to load lead details.</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
