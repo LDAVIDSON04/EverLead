@@ -122,7 +122,10 @@ export default function AvailableAppointments({
 
   function formatDate(dateString: string) {
     try {
-      const date = new Date(dateString);
+      // Parse date as local date (YYYY-MM-DD format from database)
+      // Don't use new Date() directly as it interprets as UTC and can shift the day
+      const [year, month, day] = dateString.split('-').map(Number);
+      const date = new Date(year, month - 1, day); // month is 0-indexed
       return date.toLocaleDateString('en-US', {
         weekday: 'short',
         year: 'numeric',
@@ -395,7 +398,16 @@ export default function AvailableAppointments({
                         <dd className="mt-1 text-[#2a2a2a]">
                           {(() => {
                             const appt = appointments.find((a) => a.id === viewingAppointmentId);
-                            return appt ? formatDate(appt.requested_date) : 'N/A';
+                            if (!appt) return 'N/A';
+                            // Parse date as local date to avoid timezone shift
+                            const [year, month, day] = appt.requested_date.split('-').map(Number);
+                            const date = new Date(year, month - 1, day);
+                            return date.toLocaleDateString('en-US', {
+                              weekday: 'long',
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                            });
                           })()}
                         </dd>
                       </div>
