@@ -366,9 +366,10 @@ export default function AvailableAppointments({
                           Date
                         </dt>
                         <dd className="mt-1 text-[#2a2a2a]">
-                          {formatDate(
-                            appointments.find((a) => a.id === viewingAppointmentId)?.requested_date || ''
-                          )}
+                          {(() => {
+                            const appt = appointments.find((a) => a.id === viewingAppointmentId);
+                            return appt ? formatDate(appt.requested_date) : 'N/A';
+                          })()}
                         </dd>
                       </div>
                       <div>
@@ -376,13 +377,11 @@ export default function AvailableAppointments({
                           Time Window
                         </dt>
                         <dd className="mt-1 text-[#2a2a2a] capitalize">
-                          {appointments
-                            .find((a) => a.id === viewingAppointmentId)
-                            ?.requested_window.charAt(0)
-                            .toUpperCase() +
-                            appointments
-                              .find((a) => a.id === viewingAppointmentId)
-                              ?.requested_window.slice(1)}
+                          {(() => {
+                            const appt = appointments.find((a) => a.id === viewingAppointmentId);
+                            if (!appt?.requested_window) return 'N/A';
+                            return appt.requested_window.charAt(0).toUpperCase() + appt.requested_window.slice(1);
+                          })()}
                         </dd>
                       </div>
                     </dl>
