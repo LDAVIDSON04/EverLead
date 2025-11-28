@@ -42,12 +42,16 @@ export async function sendConsumerBookingEmail({
     return;
   }
 
-  const prettyDate = new Date(requestedDate).toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
+      // Parse date as local date to avoid timezone shift
+      // requestedDate is in YYYY-MM-DD format from database
+      const [year, month, day] = requestedDate.split('-').map(Number);
+      const date = new Date(year, month - 1, day); // month is 0-indexed
+      const prettyDate = date.toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      });
 
   const timeWindowLabel = requestedWindow.charAt(0).toUpperCase() + requestedWindow.slice(1);
 
@@ -265,12 +269,16 @@ export async function sendAgentNewAppointmentEmail({
     return;
   }
 
-  const prettyDate = new Date(requestedDate).toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
+      // Parse date as local date to avoid timezone shift
+      // requestedDate is in YYYY-MM-DD format from database
+      const [year, month, day] = requestedDate.split('-').map(Number);
+      const date = new Date(year, month - 1, day); // month is 0-indexed
+      const prettyDate = date.toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      });
 
   const timeWindowLabel = requestedWindow.charAt(0).toUpperCase() + requestedWindow.slice(1);
   const location = city && province ? `${city}, ${province}` : city || province || 'Location not specified';
