@@ -197,10 +197,37 @@ export default function AvailableAppointments({
   function formatPlanningFor(planning: string | null) {
     if (!planning) return 'Not specified';
     if (planning === 'myself') return 'Myself';
+    if (planning === 'spouse_partner') return 'Spouse / Partner';
     if (planning === 'spouse') return 'Spouse';
     if (planning === 'parent') return 'Parent';
+    if (planning === 'other_family') return 'Other family member';
     if (planning === 'other') return 'Other';
     return planning;
+  }
+
+  function formatRemainsDisposition(disposition: string | null) {
+    if (!disposition) return 'Not specified';
+    if (disposition === 'scatter_cremated_remains') return 'Scatter cremated remains';
+    if (disposition === 'keep_remains') return 'Keep remains';
+    if (disposition === 'burial_at_cemetery') return 'Burial at cemetery';
+    if (disposition === 'unsure') return 'Unsure';
+    return disposition.replace(/_/g, ' ');
+  }
+
+  function formatServiceCelebration(celebration: string | null) {
+    if (!celebration) return 'Not specified';
+    if (celebration === 'yes') return 'Yes';
+    if (celebration === 'no') return 'No';
+    if (celebration === 'unsure') return 'Unsure';
+    return celebration;
+  }
+
+  function formatFamilyPreArranged(preArranged: string | null) {
+    if (!preArranged) return 'Not specified';
+    if (preArranged === 'yes') return 'Yes';
+    if (preArranged === 'no') return 'No';
+    if (preArranged === 'unsure') return 'Unsure';
+    return preArranged;
   }
 
   // Close modal on Escape key
@@ -286,16 +313,16 @@ export default function AvailableAppointments({
                       </span>
                     )}
                   </div>
+                  <button
+                    onClick={() => handleViewDetails(appt.id, appt.lead_id)}
+                    className="text-xs text-[#6b6b6b] hover:text-[#2a2a2a] underline transition-colors mt-1"
+                  >
+                    View lead details →
+                  </button>
                 </div>
               </div>
 
               <div className="flex flex-col gap-3 sm:items-end">
-                <button
-                  onClick={() => handleViewDetails(appt.id, appt.lead_id)}
-                  className="text-xs text-[#6b6b6b] hover:text-[#2a2a2a] underline transition-colors"
-                >
-                  View details →
-                </button>
 
                 <label className="flex items-start gap-2 text-xs text-[#6b6b6b] cursor-pointer max-w-xs">
                   <input
@@ -457,7 +484,7 @@ export default function AvailableAppointments({
                       {fullLead.service_type && (
                         <div>
                           <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
-                            Service Type
+                            Service type
                           </dt>
                           <dd className="mt-1 text-[#2a2a2a]">{formatServiceType(fullLead.service_type)}</dd>
                         </div>
@@ -485,7 +512,7 @@ export default function AvailableAppointments({
                       {fullLead.planning_for && (
                         <div>
                           <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
-                            Planning For
+                            Planning for
                           </dt>
                           <dd className="mt-1 text-[#2a2a2a]">{formatPlanningFor(fullLead.planning_for)}</dd>
                         </div>
@@ -493,7 +520,7 @@ export default function AvailableAppointments({
                       {fullLead.timeline_intent && (
                         <div>
                           <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
-                            Timeline Intent
+                            How soon do you expect to move forward after learning your options?
                           </dt>
                           <dd className="mt-1 text-[#2a2a2a]">{formatTimelineIntent(fullLead.timeline_intent)}</dd>
                         </div>
@@ -501,7 +528,7 @@ export default function AvailableAppointments({
                       {fullLead.remains_disposition && (
                         <div>
                           <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
-                            Remains Disposition
+                            What will the family do with the remains?
                           </dt>
                           <dd className="mt-1 text-[#2a2a2a] capitalize">
                             {fullLead.remains_disposition.replace(/_/g, ' ')}
@@ -511,7 +538,7 @@ export default function AvailableAppointments({
                       {fullLead.service_celebration && (
                         <div>
                           <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
-                            Service Celebration
+                            Would there be a service celebration of life, memorial event?
                           </dt>
                           <dd className="mt-1 text-[#2a2a2a] capitalize">{fullLead.service_celebration}</dd>
                         </div>
@@ -519,7 +546,7 @@ export default function AvailableAppointments({
                       {fullLead.family_pre_arranged && (
                         <div>
                           <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
-                            Family Pre-arranged
+                            Has anyone else in your family had a pre-arranged funeral plan?
                           </dt>
                           <dd className="mt-1 text-[#2a2a2a] capitalize">{fullLead.family_pre_arranged}</dd>
                         </div>
@@ -527,7 +554,7 @@ export default function AvailableAppointments({
                       {fullLead.additional_notes && (
                         <div>
                           <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
-                            Additional Notes
+                            Additional details
                           </dt>
                           <dd className="mt-1 text-[#2a2a2a] whitespace-pre-wrap">{fullLead.additional_notes}</dd>
                         </div>
