@@ -530,8 +530,8 @@ export default function AvailableAppointments({
                           <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
                             What will the family do with the remains?
                           </dt>
-                          <dd className="mt-1 text-[#2a2a2a] capitalize">
-                            {fullLead.remains_disposition.replace(/_/g, ' ')}
+                          <dd className="mt-1 text-[#2a2a2a]">
+                            {formatRemainsDisposition(fullLead.remains_disposition)}
                           </dd>
                         </div>
                       )}
@@ -540,7 +540,9 @@ export default function AvailableAppointments({
                           <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
                             Would there be a service celebration of life, memorial event?
                           </dt>
-                          <dd className="mt-1 text-[#2a2a2a] capitalize">{fullLead.service_celebration}</dd>
+                          <dd className="mt-1 text-[#2a2a2a]">
+                            {formatServiceCelebration(fullLead.service_celebration)}
+                          </dd>
                         </div>
                       )}
                       {fullLead.family_pre_arranged && (
@@ -548,7 +550,9 @@ export default function AvailableAppointments({
                           <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
                             Has anyone else in your family had a pre-arranged funeral plan?
                           </dt>
-                          <dd className="mt-1 text-[#2a2a2a] capitalize">{fullLead.family_pre_arranged}</dd>
+                          <dd className="mt-1 text-[#2a2a2a]">
+                            {formatFamilyPreArranged(fullLead.family_pre_arranged)}
+                          </dd>
                         </div>
                       )}
                       {fullLead.additional_notes && (
