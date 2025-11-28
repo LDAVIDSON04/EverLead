@@ -327,11 +327,11 @@ export default function LeadDetailsPage() {
 
   function formatTimelineIntent(intent: string | null) {
     if (!intent) return "Not specified";
-    if (intent === "ready_now") return "We are ready to make our plan now and make things easier for our loved ones.";
-    if (intent === "speak_with_family") return "We will need to speak with other family member first.";
-    if (intent === "collecting_info_unsure") return "We are just collecting information and not sure if we want to pre plan.";
-    if (intent === "collecting_info_need_done") return "We are just collecting information but we know we need to get this done.";
-    if (intent === "unsure") return "Unsure";
+    if (intent === "ready_now") return "I'm ready to plan soon";
+    if (intent === "speak_with_family") return "I need to speak with my family first";
+    if (intent === "collecting_info_need_done") return "I'm gathering information right now";
+    if (intent === "collecting_info_unsure") return "I'm planning for the future";
+    if (intent === "unsure") return "Not sure yet";
     // Legacy values for backward compatibility
     if (intent === "purchase_now") return "Ready to purchase now";
     if (intent === "talk_to_someone") return "Wants to talk to someone";

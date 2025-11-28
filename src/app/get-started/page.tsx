@@ -533,7 +533,7 @@ export default function GetStartedPage() {
               <div className="space-y-4">
                 <div>
                   <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
-                    How soon after you have more information do you expect to put your plan in place? *
+                    How soon do you expect to move forward after learning your options? *
                   </label>
                   <select
                     name="timeline_intent"
@@ -542,18 +542,18 @@ export default function GetStartedPage() {
                   >
                     <option value="">Select...</option>
                     <option value="ready_now">
-                      We are ready to make our plan now and make things easier for our loved ones.
+                      I&apos;m ready to plan soon
                     </option>
                     <option value="speak_with_family">
-                      We will need to speak with other family member first.
-                    </option>
-                    <option value="collecting_info_unsure">
-                      We are just collecting information and not sure if we want to pre plan.
+                      I need to speak with my family first
                     </option>
                     <option value="collecting_info_need_done">
-                      We are just collecting information but we know we need to get this done.
+                      I&apos;m gathering information right now
                     </option>
-                    <option value="unsure">Unsure</option>
+                    <option value="collecting_info_unsure">
+                      I&apos;m planning for the future
+                    </option>
+                    <option value="unsure">Not sure yet</option>
                   </select>
                 </div>
 
