@@ -26,20 +26,7 @@ type RoiStats = {
   costPerCompletedAppointment: number;
 };
 
-type RecentLead = {
-  id: string;
-  created_at: string | null;
-  full_name: string | null;
-  first_name: string | null;
-  last_name: string | null;
-  city: string | null;
-  province: string | null;
-  urgency_level: string | null;
-  service_type: string | null;
-  status: string | null;
-  agent_status: string | null;
-  assigned_agent_id: string | null;
-};
+// Removed RecentLead type - no longer using recent leads section
 
 
 export default function AgentDashboardPage() {
@@ -52,7 +39,7 @@ export default function AgentDashboardPage() {
     purchasedThisMonth: 0,
     totalSpent: 0,
   });
-  const [recentLeads, setRecentLeads] = useState<RecentLead[]>([]);
+  // Removed recentLeads state - no longer displaying recent leads section
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
@@ -150,23 +137,7 @@ export default function AgentDashboardPage() {
           setRoiStats(data.roi);
         }
 
-        // Update recent leads (map to existing type)
-        setRecentLeads(
-          (data.recentLeads || []).map((lead: any) => ({
-            id: lead.id,
-            created_at: lead.created_at,
-            full_name: null,
-            first_name: null,
-            last_name: null,
-            city: lead.city,
-            province: lead.province,
-            urgency_level: lead.urgency_level,
-            service_type: lead.service_type,
-            status: lead.status,
-            agent_status: lead.agent_status,
-            assigned_agent_id: agentId,
-          }))
-        );
+        // Removed recent leads - no longer displaying this section
 
         // No auction data needed - buy-now-only
 
@@ -192,48 +163,8 @@ export default function AgentDashboardPage() {
 
 
 
-  function formatUrgency(urgency: string | null) {
-    if (!urgency) return "Unknown";
-    const lower = urgency.toLowerCase();
-    if (lower === "hot") return "Hot";
-    if (lower === "warm") return "Warm";
-    if (lower === "cold") return "Cold";
-    return urgency;
-  }
-
-  function getUrgencyColor(urgency: string | null) {
-    if (!urgency) return "bg-slate-100 text-slate-900";
-    const lower = urgency.toLowerCase();
-    if (lower === "hot") return "bg-red-100 text-red-900";
-    if (lower === "warm") return "bg-amber-100 text-amber-900";
-    return "bg-slate-100 text-slate-900";
-  }
-
-  function formatDate(dateString: string | null) {
-    if (!dateString) return "Unknown";
-    try {
-      return new Date(dateString).toLocaleDateString();
-    } catch {
-      return dateString;
-    }
-  }
-
-  function formatStatus(status: string | null) {
-    if (!status) return "New";
-    if (status === "purchased_by_agent") return "Purchased";
-    return status;
-  }
-
-
-  function getStatusColors(status: string | null): { bg: string; text: string } {
-    const s = (status ?? "new").toLowerCase();
-    if (s === "new") return { bg: "bg-blue-100", text: "text-blue-700" };
-    if (s === "contacted") return { bg: "bg-slate-100", text: "text-slate-700" };
-    if (s.includes("follow")) return { bg: "bg-amber-100", text: "text-amber-700" };
-    if (s.includes("won")) return { bg: "bg-emerald-100", text: "text-emerald-700" };
-    if (s.includes("lost")) return { bg: "bg-rose-100", text: "text-rose-700" };
-    return { bg: "bg-slate-100", text: "text-slate-700" };
-  }
+  // Removed formatUrgency, getUrgencyColor, formatDate, formatStatus, getStatusColors functions
+  // These were only used for the recent leads section which has been removed
 
   return (
     <>
@@ -391,90 +322,30 @@ export default function AgentDashboardPage() {
 
             {/* Main content grid */}
             <div className="grid gap-6 lg:grid-cols-3">
-              {/* Left column */}
+              {/* Left column - removed Recent leads section */}
               <div className="space-y-6 lg:col-span-2">
-                {/* Recent Leads Card */}
+                {/* Available Appointments Card */}
                 <div className="rounded-xl border border-slate-200 bg-white/70 shadow-sm">
                   <div className="border-b border-slate-200 px-6 py-4">
                     <h2
                       className="text-lg font-normal text-[#2a2a2a]"
                       style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
                     >
-                      Recent leads
+                      Available Appointments
                     </h2>
                   </div>
                   <div className="px-6 py-4">
-                    {recentLeads.length === 0 ? (
-                      <div className="py-8 text-center">
-                        <p className="mb-4 text-sm text-[#6b6b6b]">
-                          You don&apos;t have any leads assigned yet. Purchase or claim a lead to see it here.
-                        </p>
-                        <Link
-                          href="/agent/leads/available"
-                          className="inline-block rounded-full bg-[#2a2a2a] px-4 py-2 text-xs font-semibold text-white hover:bg-black transition-colors"
-                        >
-                          Browse available leads
-                        </Link>
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        {recentLeads.map((lead) => {
-                              const { bg: statusBg, text: statusText } = getStatusColors(lead.agent_status || lead.status);
-                              
-                              // Format location: "City, Province" or just "City"
-                              const locationStr = lead.city
-                                ? lead.province
-                                  ? `${lead.city}, ${lead.province}`
-                                  : lead.city
-                                : "Unknown location";
-                              
-                              // Format service type
-                              const serviceType = lead.service_type || "Pre-need planning";
-                              
-                              return (
-                                <div
-                                  key={lead.id}
-                                  className="flex items-center justify-between border-b border-slate-100 pb-2 last:border-0 last:pb-0 cursor-pointer hover:bg-slate-50 -mx-3 px-3 py-2 rounded"
-                                  onClick={() => router.push(`/agent/leads/${lead.id}`)}
-                                >
-                                  <div className="flex items-center gap-2 flex-1 min-w-0">
-                                    {lead.urgency_level && (
-                                      <span
-                                        className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${getUrgencyColor(
-                                          lead.urgency_level
-                                        )}`}
-                                      >
-                                        {formatUrgency(lead.urgency_level)}
-                                      </span>
-                                    )}
-                                    <div className="flex-1 min-w-0">
-                                      <div className="text-sm text-slate-900">
-                                        {locationStr}
-                                      </div>
-                                      <div className="text-xs text-slate-500">
-                                        {serviceType}
-                                      </div>
-                                    </div>
-                                  </div>
-                                  <div className="flex items-center gap-3 ml-4">
-                                    <span
-                                      className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${statusBg} ${statusText}`}
-                                    >
-                                      {formatStatus(lead.agent_status || lead.status)}
-                                    </span>
-                                    <Link
-                                      href={`/agent/leads/${lead.id}`}
-                                      className="text-xs font-medium text-[#6b6b6b] hover:text-[#2a2a2a] transition-colors whitespace-nowrap"
-                                      onClick={(e) => e.stopPropagation()}
-                                    >
-                                      View details →
-                                    </Link>
-                                  </div>
-                                </div>
-                              );
-                            })}
-                      </div>
-                    )}
+                    <div className="py-8 text-center">
+                      <p className="mb-4 text-sm text-[#6b6b6b]">
+                        Browse and purchase planning call appointments with families.
+                      </p>
+                      <Link
+                        href="/agent/appointments"
+                        className="inline-block rounded-full bg-[#2a2a2a] px-4 py-2 text-xs font-semibold text-white hover:bg-black transition-colors"
+                      >
+                        View Available Appointments
+                      </Link>
+                    </div>
                   </div>
                 </div>
 
