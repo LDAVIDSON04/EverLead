@@ -21,6 +21,9 @@ type Appointment = {
   status: string;
   lead_id: string;
   price_cents: number | null;
+  price: number | null;
+  is_discounted: boolean;
+  is_hidden: boolean;
   leads: LeadSummary | null;
 };
 
@@ -37,7 +40,7 @@ export default function AgentAppointmentsPage() {
       setError(null);
 
       try {
-        // Fetch available appointments (pending, unassigned) with lead info
+        // Fetch available appointments (pending, unassigned, not hidden) with lead info
         const { data, error: fetchError } = await supabaseClient
           .from('appointments')
           .select(`
@@ -47,6 +50,9 @@ export default function AgentAppointmentsPage() {
             status,
             lead_id,
             price_cents,
+            price,
+            is_discounted,
+            is_hidden,
             leads (
               id,
               city,
@@ -57,8 +63,9 @@ export default function AgentAppointmentsPage() {
             )
           `)
           .eq('status', 'pending')
+          .eq('is_hidden', false)
           .is('agent_id', null)
-          .order('requested_date', { ascending: true });
+          .order('created_at', { ascending: true });
 
         if (fetchError) {
           console.error('Error loading appointments:', fetchError);
