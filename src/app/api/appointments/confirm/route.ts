@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Assign the appointment to this agent and set price (atomic update with status check)
-    const APPOINTMENT_PRICE_CENTS = 39_00; // $39.00
+    const APPOINTMENT_PRICE_CENTS = 29_00; // $29.00
     
     const { data: updated, error: updateError } = await supabaseAdmin
       .from("appointments")

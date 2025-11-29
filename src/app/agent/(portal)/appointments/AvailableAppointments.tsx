@@ -349,7 +349,7 @@ export default function AvailableAppointments({
                       : 'bg-gray-300 text-gray-600 cursor-not-allowed'
                   }`}
                 >
-                  {loadingId === appt.id ? 'Processing…' : 'Buy Appointment – $39'}
+                  {loadingId === appt.id ? 'Processing…' : 'Buy Appointment – $29'}
                 </button>
               </div>
             </div>

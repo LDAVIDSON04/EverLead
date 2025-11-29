@@ -110,8 +110,8 @@ export async function POST(req: NextRequest) {
       ? `${lead.city || ""}${lead.city && lead.province ? ", " : ""}${lead.province || ""}`
       : "your area";
 
-    // 5) Create Stripe checkout session for $39
-    const appointmentPriceCents = 3900; // $39.00
+    // 5) Create Stripe checkout session for $29
+    const appointmentPriceCents = 2900; // $29.00
 
     const baseUrl =
       process.env.NEXT_PUBLIC_SITE_URL ??
