@@ -20,6 +20,7 @@ type Appointment = {
   requested_window: string;
   status: string;
   lead_id: string;
+  price_cents: number | null;
   leads: LeadSummary | null;
 };
 
@@ -45,6 +46,7 @@ export default function AgentAppointmentsPage() {
             requested_window,
             status,
             lead_id,
+            price_cents,
             leads (
               id,
               city,

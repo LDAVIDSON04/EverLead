@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/expire-appointments",
       "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron/unsold-appointments",
+      "schedule": "0 * * * *"
     }
   ]
 }

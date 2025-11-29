@@ -69,15 +69,25 @@ export async function POST(req: NextRequest) {
       // Continue anyway - email is optional
     }
 
-    // Assign the appointment to this agent and set price (atomic update with status check)
-    const APPOINTMENT_PRICE_CENTS = 29_00; // $29.00
+    // Assign the appointment to this agent and preserve price (atomic update with status check)
+    // Get the current price_cents from the appointment (may be discounted)
+    const { data: currentAppt } = await supabaseAdmin
+      .from("appointments")
+      .select("price_cents")
+      .eq("id", appointmentId)
+      .single();
+    
+    // Use existing price_cents if set, otherwise default to $29
+    const finalPriceCents = currentAppt?.price_cents && currentAppt.price_cents > 0
+      ? Number(currentAppt.price_cents)
+      : 29_00; // Default $29.00
     
     const { data: updated, error: updateError } = await supabaseAdmin
       .from("appointments")
       .update({
         agent_id: agentId,
         status: "booked",
-        price_cents: APPOINTMENT_PRICE_CENTS,
+        price_cents: finalPriceCents,
         updated_at: new Date().toISOString(),
       })
       .eq("id", appointmentId)

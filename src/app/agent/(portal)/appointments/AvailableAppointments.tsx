@@ -15,13 +15,14 @@ type LeadSummary = {
 };
 
 type Appointment = {
-  id: string;
-  requested_date: string;
-  requested_window: string;
-  status: string;
-  lead_id: string;
-  leads: LeadSummary | null;
-};
+      id: string;
+      requested_date: string;
+      requested_window: string;
+      status: string;
+      lead_id: string;
+      price_cents: number | null;
+      leads: LeadSummary | null;
+    };
 
 type FullLead = {
   id: string;
@@ -349,7 +350,9 @@ export default function AvailableAppointments({
                       : 'bg-gray-300 text-gray-600 cursor-not-allowed'
                   }`}
                 >
-                  {loadingId === appt.id ? 'Processing…' : 'Buy Appointment – $29'}
+                  {loadingId === appt.id 
+                    ? 'Processing…' 
+                    : `Buy Appointment – $${((appt.price_cents || 2900) / 100).toFixed(0)}`}
                 </button>
               </div>
             </div>

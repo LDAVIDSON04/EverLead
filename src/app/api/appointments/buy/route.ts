@@ -66,6 +66,7 @@ export async function POST(req: NextRequest) {
         lead_id,
         requested_date,
         requested_window,
+        price_cents,
         leads (
           id,
           full_name,
@@ -110,8 +111,10 @@ export async function POST(req: NextRequest) {
       ? `${lead.city || ""}${lead.city && lead.province ? ", " : ""}${lead.province || ""}`
       : "your area";
 
-    // 5) Create Stripe checkout session for $29
-    const appointmentPriceCents = 2900; // $29.00
+    // 5) Use appointment's price_cents if set (for discounted appointments), otherwise default to $29
+    const appointmentPriceCents = appt.price_cents && appt.price_cents > 0 
+      ? Number(appt.price_cents) 
+      : 2900; // Default $29.00
 
     const baseUrl =
       process.env.NEXT_PUBLIC_SITE_URL ??
