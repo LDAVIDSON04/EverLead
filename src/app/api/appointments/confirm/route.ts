@@ -3,8 +3,18 @@ import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { sendAgentNewAppointmentEmail } from "@/lib/emails";
+import { checkBotId } from 'botid/server';
 
 export async function POST(req: NextRequest) {
+  // Check for bots
+  const verification = await checkBotId();
+  if (verification.isBot) {
+    return NextResponse.json(
+      { error: 'Bot detected. Access denied.' },
+      { status: 403 }
+    );
+  }
+
   try {
     const body = await req.json();
     const sessionId = body.sessionId as string | undefined;

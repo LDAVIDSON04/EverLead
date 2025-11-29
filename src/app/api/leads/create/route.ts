@@ -2,11 +2,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { getLeadPriceFromUrgency } from "@/lib/leads/pricing";
+import { checkBotId } from 'botid/server';
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
+  // Check for bots
+  const verification = await checkBotId();
+  if (verification.isBot) {
+    return NextResponse.json(
+      { error: 'Bot detected. Access denied.' },
+      { status: 403 }
+    );
+  }
+
   try {
     // Validate environment variables
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;

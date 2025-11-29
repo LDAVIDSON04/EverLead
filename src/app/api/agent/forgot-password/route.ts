@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { checkBotId } from 'botid/server';
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -142,6 +143,15 @@ async function sendResetEmail(email: string, resetUrl: string, siteUrl: string, 
 
 export async function POST(req: NextRequest) {
   console.log("🔐 [FORGOT-PASSWORD] Request received");
+  
+  // Check for bots
+  const verification = await checkBotId();
+  if (verification.isBot) {
+    return NextResponse.json(
+      { error: 'Bot detected. Access denied.' },
+      { status: 403 }
+    );
+  }
   
   try {
     // Check if supabaseAdmin is initialized
