@@ -38,12 +38,13 @@ export async function GET() {
       .gte('created_at', cutoff72);
 
     let discountedCount = 0;
-    let discountError = fetchDiscountError;
+    let discountError: any = fetchDiscountError;
 
     if (!fetchDiscountError && appointmentsToDiscount) {
       // Filter to only those that need discounting (price_cents is null or 2900)
-      const needsDiscount = appointmentsToDiscount.filter(
-        (apt: { id: string; price_cents: number | null }) => apt.price_cents === null || apt.price_cents === 2900
+      type AppointmentRow = { id: string; price_cents: number | null };
+      const needsDiscount = (appointmentsToDiscount as AppointmentRow[]).filter(
+        (apt: AppointmentRow) => apt.price_cents === null || apt.price_cents === 2900
       );
 
       if (needsDiscount.length > 0) {
