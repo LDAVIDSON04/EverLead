@@ -2,6 +2,7 @@
 import "./globals.css";
 import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 export const metadata: Metadata = {
   title: "Soradin | Gentle funeral pre-planning, online.",
@@ -22,6 +23,7 @@ export default function RootLayout({
       <body className="min-h-screen bg-slate-50 text-slate-900">
         {children}
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
