@@ -43,10 +43,6 @@ export async function GET() {
       .or('price_cents.is.null,price_cents.eq.2900') // Only update if not already discounted
       .select('id');
 
-    if (discountError) {
-      console.error('Error discounting appointments:', discountError);
-    }
-
     const discountedCount = discountData?.length || 0;
 
     // 2) Hide logic: still visible (even if discounted), older than 72h, status = pending
@@ -62,18 +58,25 @@ export async function GET() {
       .lt('created_at', cutoff72)
       .select('id');
 
-    if (hideError) {
-      console.error('Error hiding appointments:', hideError);
-    }
-
     const hiddenCount = hideData?.length || 0;
 
-    console.log(`✅ Unsold appointments cron: Discounted ${discountedCount}, Hidden ${hiddenCount}`);
+    const success = !discountError && !hideError;
+
+    if (success) {
+      console.log(`✅ Unsold appointments cron: Discounted ${discountedCount}, Hidden ${hiddenCount}`);
+    } else {
+      console.error('❌ Unsold appointments cron errors:', {
+        discountError: discountError?.message || discountError,
+        hideError: hideError?.message || hideError,
+      });
+    }
 
     return NextResponse.json({
-      success: !discountError && !hideError,
+      success,
       discountedCount,
       hiddenCount,
+      discountError: discountError ? (discountError.message || JSON.stringify(discountError)) : null,
+      hideError: hideError ? (hideError.message || JSON.stringify(hideError)) : null,
       timestamp: new Date().toISOString(),
     });
   } catch (err: any) {
