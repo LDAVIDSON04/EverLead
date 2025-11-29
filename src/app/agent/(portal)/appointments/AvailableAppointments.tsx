@@ -341,19 +341,29 @@ export default function AvailableAppointments({
                   </span>
                 </label>
 
-                <button
-                  onClick={() => handleBuy(appt.id)}
-                  disabled={!acknowledgedIds.has(appt.id) || loadingId === appt.id}
-                  className={`rounded-md px-4 py-2 text-sm font-medium text-white transition-colors whitespace-nowrap ${
-                    acknowledgedIds.has(appt.id)
-                      ? 'bg-[#2a2a2a] hover:bg-[#3a3a3a] disabled:opacity-60'
-                      : 'bg-gray-300 text-gray-600 cursor-not-allowed'
-                  }`}
-                >
-                  {loadingId === appt.id 
-                    ? 'Processing…' 
-                    : `Buy Appointment – $${((appt.price_cents || 2900) / 100).toFixed(0)}`}
-                </button>
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-semibold text-[#2a2a2a]">
+                      ${((appt.price_cents || 2900) / 100).toFixed(0)}
+                    </span>
+                    {appt.price_cents === 1900 && (
+                      <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+                        48+ hours – last chance
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => handleBuy(appt.id)}
+                    disabled={!acknowledgedIds.has(appt.id) || loadingId === appt.id}
+                    className={`rounded-md px-4 py-2 text-sm font-medium text-white transition-colors whitespace-nowrap ${
+                      acknowledgedIds.has(appt.id)
+                        ? 'bg-[#2a2a2a] hover:bg-[#3a3a3a] disabled:opacity-60'
+                        : 'bg-gray-300 text-gray-600 cursor-not-allowed'
+                    }`}
+                  >
+                    {loadingId === appt.id ? 'Processing…' : 'Buy Appointment'}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
