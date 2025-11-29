@@ -100,45 +100,46 @@ export async function GET(request: NextRequest) {
     const thirtyDaysAgoISO = thirtyDaysAgo.toISOString();
     const nowISO = new Date().toISOString();
 
-    // 1. Stats: Available leads
-    const { count: availableCount } = await supabaseAdmin
-      .from("leads")
+    // 1. Stats: Available appointments (pending, not hidden, not assigned)
+    const { count: availableAppointmentsCount } = await supabaseAdmin
+      .from("appointments")
       .select("id", { count: "exact", head: true })
-      .eq("status", "new");
+      .eq("status", "pending")
+      .eq("is_hidden", false)
+      .is("agent_id", null);
 
-    // 2. Stats: My leads
-    const { count: myLeadsCount } = await supabaseAdmin
-      .from("leads")
+    // 2. Stats: My appointments (assigned to this agent)
+    const { count: myAppointmentsCount } = await supabaseAdmin
+      .from("appointments")
       .select("id", { count: "exact", head: true })
-      .eq("assigned_agent_id", agentId);
+      .eq("agent_id", agentId);
 
-    // 3. Stats: Purchased this month
+    // 3. Stats: Purchased this month (appointments purchased in last 30 days)
     const { count: purchasedThisMonthCount } = await supabaseAdmin
-      .from("leads")
+      .from("appointments")
       .select("id", { count: "exact", head: true })
-      .eq("assigned_agent_id", agentId)
-      .eq("status", "purchased_by_agent")
+      .eq("agent_id", agentId)
       .gte("created_at", thirtyDaysAgoISO);
 
-    // 4. Stats: Total spent
-    const { data: purchasedLeads } = await supabaseAdmin
-      .from("leads")
-      .select("price_charged_cents")
-      .eq("assigned_agent_id", agentId)
-      .eq("status", "purchased_by_agent");
+    // 4. Stats: Total spent on appointments
+    const { data: purchasedAppointments } = await supabaseAdmin
+      .from("appointments")
+      .select("price_cents")
+      .eq("agent_id", agentId)
+      .not("price_cents", "is", null);
 
     const totalSpentCents =
-      purchasedLeads?.reduce(
-        (sum: number, lead: any) => sum + (lead.price_charged_cents || 0),
+      purchasedAppointments?.reduce(
+        (sum: number, appt: any) => sum + (appt.price_cents || 0),
         0
       ) || 0;
 
-    // 5. Stats: New leads needing attention
-    const { count: newLeadsCount } = await supabaseAdmin
-      .from("leads")
+    // 5. Stats: New appointments needing attention (booked but not completed/no-show)
+    const { count: newAppointmentsCount } = await supabaseAdmin
+      .from("appointments")
       .select("id", { count: "exact", head: true })
-      .eq("assigned_agent_id", agentId)
-      .ilike("agent_status", "new");
+      .eq("agent_id", agentId)
+      .eq("status", "booked");
 
     // 6. Recent leads (last 5)
     const { data: recentLeadsData } = await supabaseAdmin
@@ -290,14 +291,14 @@ export async function GET(request: NextRequest) {
     const costPerBookedAppointment = bookedAppointments > 0 ? totalSpend / bookedAppointments : 0;
     const costPerCompletedAppointment = completedAppointments > 0 ? totalSpend / completedAppointments : 0;
 
-    const response: AgentDashboardData = {
-      stats: {
-        availableLeads: availableCount ?? 0,
-        myLeads: myLeadsCount ?? 0,
-        purchasedThisMonth: purchasedThisMonthCount ?? 0,
-        totalSpentCents: totalSpentCents,
-        newLeadsNeedingAttention: newLeadsCount ?? 0,
-      },
+        const response: AgentDashboardData = {
+          stats: {
+            availableLeads: availableAppointmentsCount ?? 0, // Using appointments count
+            myLeads: myAppointmentsCount ?? 0, // Using appointments count
+            purchasedThisMonth: purchasedThisMonthCount ?? 0,
+            totalSpentCents: totalSpentCents,
+            newLeadsNeedingAttention: newAppointmentsCount ?? 0, // Using appointments count
+          },
       recentLeads: (recentLeadsData || []).map((lead: any) => ({
         id: lead.id,
         created_at: lead.created_at || "",

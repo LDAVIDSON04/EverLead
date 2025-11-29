@@ -179,7 +179,7 @@ export default function AgentDashboardPage() {
             Agent dashboard
           </h1>
           <p className="text-sm text-[#6b6b6b]">
-            Your pre-need leads and results at a glance.
+            Your appointments and results at a glance.
           </p>
         </div>
 
@@ -205,42 +205,42 @@ export default function AgentDashboardPage() {
             {/* Stat cards row */}
             <div className="grid gap-4 md:grid-cols-4">
               <Link
-                href="/agent/leads/available"
+                href="/agent/appointments"
                 className="rounded-xl border border-slate-200 bg-white/80 px-4 py-3 shadow-sm flex flex-col gap-1 transition hover:shadow-md"
               >
                 <span className="text-xs font-medium uppercase tracking-wide text-slate-500">
-                  Available leads
+                  Available appointments
                 </span>
                 <span className="text-2xl font-semibold text-slate-900">
                   {stats.available}
                 </span>
                 <span className="text-[11px] text-slate-500">
-                  New leads you can buy or bid on
+                  Appointments you can purchase
                 </span>
               </Link>
 
               <Link
-                href="/agent/leads/mine"
+                href="/agent/my-appointments"
                 className="rounded-xl border border-slate-200 bg-white/80 px-4 py-3 shadow-sm flex flex-col gap-1 transition hover:shadow-md"
               >
                 <span className="text-xs font-medium uppercase tracking-wide text-slate-500">
-                  My leads
+                  My appointments
                 </span>
                 <span className="text-2xl font-semibold text-slate-900">
                   {stats.myLeads}
                 </span>
                 <span className="text-[11px] text-slate-500">
-                  Leads currently assigned to you
+                  Appointments assigned to you
                 </span>
                 <p className="mt-1 text-xs text-slate-500">
                   {stats.newLeads === 0
-                    ? "No new leads needing attention"
-                    : `${stats.newLeads} new lead${stats.newLeads === 1 ? "" : "s"} need attention`}
+                    ? "No new appointments needing attention"
+                    : `${stats.newLeads} new appointment${stats.newLeads === 1 ? "" : "s"} need attention`}
                 </p>
               </Link>
 
               <Link
-                href="/agent/leads/purchased"
+                href="/agent/my-appointments"
                 className="rounded-xl border border-slate-200 bg-white/80 px-4 py-3 shadow-sm flex flex-col gap-1 transition hover:shadow-md"
               >
                 <span className="text-xs font-medium uppercase tracking-wide text-slate-500">
@@ -250,7 +250,7 @@ export default function AgentDashboardPage() {
                   {stats.purchasedThisMonth}
                 </span>
                 <span className="text-[11px] text-slate-500">
-                  Leads purchased in last 30 days
+                  Appointments purchased in last 30 days
                 </span>
               </Link>
 
@@ -262,7 +262,7 @@ export default function AgentDashboardPage() {
                   ${stats.totalSpent.toFixed(2)}
                 </span>
                 <span className="text-[11px] text-slate-500">
-                  All-time lead purchases
+                  All-time appointment purchases
                 </span>
               </div>
             </div>
@@ -365,22 +365,16 @@ export default function AgentDashboardPage() {
                   </div>
                   <div className="px-6 py-4 space-y-3">
                     <Link
-                      href="/agent/leads/available"
+                      href="/agent/appointments"
                       className="block rounded-md border border-slate-200 bg-[#faf8f5] px-4 py-2 text-sm text-[#2a2a2a] hover:bg-[#f7f4ef] transition-colors"
                     >
-                      Browse available leads
+                      Browse available appointments
                     </Link>
                     <Link
-                      href="/agent/leads/purchased"
+                      href="/agent/my-appointments"
                       className="block rounded-md border border-slate-200 bg-[#faf8f5] px-4 py-2 text-sm text-[#2a2a2a] hover:bg-[#f7f4ef] transition-colors"
                     >
-                      View my purchased leads
-                    </Link>
-                    <Link
-                      href="/agent/leads/mine"
-                      className="block rounded-md border border-slate-200 bg-[#faf8f5] px-4 py-2 text-sm text-[#2a2a2a] hover:bg-[#f7f4ef] transition-colors"
-                    >
-                      View all my leads
+                      View my appointments
                     </Link>
                   </div>
                 </div>
@@ -393,7 +387,7 @@ export default function AgentDashboardPage() {
                       className="text-lg font-normal text-[#2a2a2a]"
                       style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
                     >
-                      Tips for working EverLead leads
+                      Tips for working appointments
                     </h2>
                   </div>
                   <div className="px-6 py-4">
@@ -401,19 +395,19 @@ export default function AgentDashboardPage() {
                       <li className="flex items-start gap-2">
                         <span className="text-[#6b6b6b]">•</span>
                         <span>
-                          Contact HOT leads within 24 hours for best conversion rates
+                          Contact families within their requested time window
                         </span>
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="text-[#6b6b6b]">•</span>
                         <span>
-                          Use notes to track every touchpoint and follow-up
+                          Mark appointments as completed or no-show after the call
                         </span>
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="text-[#6b6b6b]">•</span>
                         <span>
-                          Update lead status as you progress through your workflow
+                          Review lead details before calling to prepare
                         </span>
                       </li>
                     </ul>

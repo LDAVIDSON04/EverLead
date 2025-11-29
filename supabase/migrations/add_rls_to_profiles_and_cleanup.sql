@@ -39,15 +39,16 @@ WITH CHECK (
 );
 
 -- Policy: Admins can view all profiles (for admin dashboard)
+-- Note: This uses a function to avoid recursive policy checks
 CREATE POLICY "Admins can view all profiles"
 ON public.profiles
 FOR SELECT
 TO authenticated
 USING (
   EXISTS (
-    SELECT 1 FROM profiles
-    WHERE profiles.id = auth.uid()
-    AND profiles.role = 'admin'
+    SELECT 1 FROM public.profiles p
+    WHERE p.id = auth.uid()
+    AND p.role = 'admin'
   )
 );
 
