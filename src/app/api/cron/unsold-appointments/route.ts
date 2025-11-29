@@ -27,26 +27,42 @@ export async function GET() {
     const cutoff48 = new Date(now - 48 * 60 * 60 * 1000).toISOString();
     const cutoff72 = new Date(now - 72 * 60 * 60 * 1000).toISOString();
 
-    // 1) Discount logic: still visible, not discounted, older than 48h, status = pending
-    // Update price_cents to 1900 ($19) for appointments older than 48h that are still pending
-    // Only discount if price is still at full price (2900) or null, and between 48h-72h old
-    const { data: discountData, error: discountError } = await supabaseAdmin
+    // 1) Discount logic: appointments between 48h-72h old, still pending and unsold
+    // First, get appointments that need discounting (between 48h-72h, not already discounted)
+    const { data: appointmentsToDiscount, error: fetchDiscountError } = await supabaseAdmin
       .from('appointments')
-      .update({
-        price_cents: 1900, // $19.00 discounted price
-        updated_at: new Date().toISOString(),
-      })
+      .select('id, price_cents')
       .eq('status', 'pending')
       .is('agent_id', null)
       .lt('created_at', cutoff48)
-      .gte('created_at', cutoff72) // Between 48h and 72h (not yet hidden)
-      .or('price_cents.is.null,price_cents.eq.2900') // Only update if not already discounted
-      .select('id');
+      .gte('created_at', cutoff72);
 
-    const discountedCount = discountData?.length || 0;
+    let discountedCount = 0;
+    let discountError = fetchDiscountError;
 
-    // 2) Hide logic: still visible (even if discounted), older than 72h, status = pending
-    // Mark as expired to hide them (they won't show in available appointments query)
+    if (!fetchDiscountError && appointmentsToDiscount) {
+      // Filter to only those that need discounting (price_cents is null or 2900)
+      const needsDiscount = appointmentsToDiscount.filter(
+        (apt) => apt.price_cents === null || apt.price_cents === 2900
+      );
+
+      if (needsDiscount.length > 0) {
+        const idsToDiscount = needsDiscount.map((apt) => apt.id);
+        const { data: discountData, error: updateDiscountError } = await supabaseAdmin
+          .from('appointments')
+          .update({
+            price_cents: 1900, // $19.00 discounted price
+            updated_at: new Date().toISOString(),
+          })
+          .in('id', idsToDiscount)
+          .select('id');
+
+        discountError = updateDiscountError;
+        discountedCount = discountData?.length || 0;
+      }
+    }
+
+    // 2) Hide logic: appointments older than 72h, still pending and unsold
     const { data: hideData, error: hideError } = await supabaseAdmin
       .from('appointments')
       .update({
