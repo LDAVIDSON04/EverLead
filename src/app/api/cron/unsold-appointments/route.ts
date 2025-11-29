@@ -43,7 +43,7 @@ export async function GET() {
     if (!fetchDiscountError && appointmentsToDiscount) {
       // Filter to only those that need discounting (price_cents is null or 2900)
       const needsDiscount = appointmentsToDiscount.filter(
-        (apt) => apt.price_cents === null || apt.price_cents === 2900
+        (apt: { id: string; price_cents: number | null }) => apt.price_cents === null || apt.price_cents === 2900
       );
 
       if (needsDiscount.length > 0) {
