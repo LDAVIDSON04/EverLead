@@ -283,7 +283,7 @@ export default function AgentLandingPage() {
             Soradin for funeral professionals
           </h1>
           <p className="mx-auto max-w-2xl text-base leading-relaxed text-[#4a4a4a] md:text-lg">
-            Soradin helps you connect with pre-need families in your area through high-quality, exclusive leads.
+            Soradin connects you with exclusive pre-need planning appointments from families actively seeking guidance.
           </p>
         </div>
 
