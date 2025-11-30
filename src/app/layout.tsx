@@ -45,7 +45,10 @@ export const metadata: Metadata = {
   title: "Soradin | Gentle funeral pre-planning, online.",
   description: "Soradin helps families thoughtfully plan funeral wishes in advance and connects them with trusted local professionals when they're ready.",
   icons: {
-    icon: '/logo.png',
+    icon: [
+      { url: '/logo.png', sizes: 'any' },
+      { url: '/logo.png', type: 'image/png' },
+    ],
     apple: '/logo.png',
   },
 };
