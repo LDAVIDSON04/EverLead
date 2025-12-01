@@ -242,44 +242,50 @@ export default function HomePage() {
               Soradin helps you by collecting some important information and linking you with our network of experts.
             </p>
           </div>
-          <div className="grid gap-8 md:grid-cols-2">
-            {/* Burial or Cremation options */}
-            <div className="group rounded-2xl border border-[#e5ddd0]/60 bg-white/40 backdrop-blur-sm p-8 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-[#d4c9b8] transition-all duration-500">
-              <h3
-                className="mb-3 text-xl font-light text-[#1a1a1a] tracking-tight"
-                style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-              >
-                Burial or Cremation options
-              </h3>
-              <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
-                Understanding your options with clear explanations and local knowledge.
-              </p>
+          <div className="space-y-8">
+            {/* Top row: two cards */}
+            <div className="grid gap-8 md:grid-cols-2">
+              {/* Burial or Cremation options */}
+              <div className="group rounded-2xl border border-[#e5ddd0]/60 bg-white/40 backdrop-blur-sm p-8 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-[#d4c9b8] transition-all duration-500">
+                <h3
+                  className="mb-3 text-xl font-light text-[#1a1a1a] tracking-tight"
+                  style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+                >
+                  Burial or Cremation options
+                </h3>
+                <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
+                  Understanding your options with clear explanations and local knowledge.
+                </p>
+              </div>
+
+              {/* Service Preferences */}
+              <div className="group rounded-2xl border border-[#e5ddd0]/60 bg-white/40 backdrop-blur-sm p-8 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-[#d4c9b8] transition-all duration-500">
+                <h3
+                  className="mb-3 text-xl font-light text-[#1a1a1a] tracking-tight"
+                  style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+                >
+                  Service Preferences
+                </h3>
+                <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
+                  Decide on what kind of service, gathering, memorial or lack of formal service suits you best.
+                </p>
+              </div>
             </div>
 
-            {/* Service Preferences */}
-            <div className="group rounded-2xl border border-[#e5ddd0]/60 bg-white/40 backdrop-blur-sm p-8 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-[#d4c9b8] transition-all duration-500">
-              <h3
-                className="mb-3 text-xl font-light text-[#1a1a1a] tracking-tight"
-                style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-              >
-                Service Preferences
-              </h3>
-              <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
-                Decide on what kind of service, gathering, memorial or lack of formal service suits you best.
-              </p>
-            </div>
-
-            {/* Personal Wishes */}
-            <div className="group rounded-2xl border border-[#e5ddd0]/60 bg-white/40 backdrop-blur-sm p-8 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-[#d4c9b8] transition-all duration-500">
-              <h3
-                className="mb-3 text-xl font-light text-[#1a1a1a] tracking-tight"
-                style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-              >
-                Personal Wishes
-              </h3>
-              <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
-                From no service to a full traditional, the logistics matter and preplanning helps to remove uncertainty.
-              </p>
+            {/* Bottom row: one centered card */}
+            <div className="flex justify-center">
+              {/* Personal Wishes */}
+              <div className="group rounded-2xl border border-[#e5ddd0]/60 bg-white/40 backdrop-blur-sm p-8 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-[#d4c9b8] transition-all duration-500 md:w-2/3 lg:w-1/2">
+                <h3
+                  className="mb-3 text-xl font-light text-[#1a1a1a] tracking-tight"
+                  style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+                >
+                  Personal Wishes
+                </h3>
+                <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
+                  From no service to a full traditional, the logistics matter and preplanning helps to remove uncertainty.
+                </p>
+              </div>
             </div>
           </div>
           <p className="text-center text-sm text-[#7a7a7a] mt-12 font-light tracking-wide">
