@@ -347,9 +347,12 @@ export default function AvailableAppointments({
 
                 <div className="flex items-center gap-2">
                   <span className="text-lg font-bold text-[#2a2a2a]">
-                    {appt.is_discounted ? '$19' : '$29'}
+                    {appt.price_cents === 0 || appt.price_cents === null
+                      ? 'Free'
+                      : `$${((appt.price_cents || 0) / 100).toFixed(0)}`
+                    }
                   </span>
-                  {appt.is_discounted && (
+                  {appt.is_discounted && appt.price_cents !== 0 && (
                     <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">
                       48+ hrs · Last Chance
                     </span>
