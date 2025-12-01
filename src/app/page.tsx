@@ -14,8 +14,8 @@ export default function HomePage() {
             <Image
               src="/logo - white.png"
               alt="Soradin"
-              width={40}
-              height={40}
+              width={50}
+              height={50}
               className="object-contain"
             />
             <div className="flex items-baseline gap-3">
