@@ -163,21 +163,18 @@ export default function MyAppointmentsClient({
                 {formatDate(appt.requested_date)} • {formatTimeWindow(appt.requested_window)}
               </p>
             </div>
-            <span
-              className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${
-                appt.status === 'booked'
-                  ? 'bg-blue-100 text-blue-900'
-                  : appt.status === 'completed'
-                  ? 'bg-emerald-100 text-emerald-900'
-                  : appt.status === 'no_show'
-                  ? 'bg-red-100 text-red-900'
-                  : appt.status === 'confirmed'
-                  ? 'bg-amber-100 text-amber-900'
-                  : 'bg-slate-100 text-slate-900'
-              }`}
-            >
-              {formatStatus(appt.status)}
-            </span>
+            {/* Only show status badge for completed or no_show */}
+            {(appt.status === 'completed' || appt.status === 'no_show') && (
+              <span
+                className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${
+                  appt.status === 'completed'
+                    ? 'bg-emerald-100 text-emerald-900'
+                    : 'bg-red-100 text-red-900'
+                }`}
+              >
+                {formatStatus(appt.status)}
+              </span>
+            )}
           </div>
 
           {/* Contact Information */}
