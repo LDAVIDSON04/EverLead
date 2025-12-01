@@ -54,6 +54,8 @@ export default function MyAppointmentsPage() {
           .from('appointments')
           .select(`
             id,
+            created_at,
+            updated_at,
             requested_date,
             requested_window,
             status,
@@ -68,7 +70,8 @@ export default function MyAppointmentsPage() {
             )
           `)
           .eq('agent_id', agentId)
-          .order('requested_date', { ascending: true });
+          // Show most recently claimed/updated appointments first
+          .order('updated_at', { ascending: false });
 
         if (fetchError) {
           console.error('Error loading appointments:', fetchError);
@@ -77,10 +80,13 @@ export default function MyAppointmentsPage() {
         }
 
         // Transform data to match Appointment type (leads comes as array from Supabase join)
-        const transformed = (data || []).map((item: any) => ({
-          ...item,
-          leads: Array.isArray(item.leads) ? item.leads[0] || null : item.leads || null,
-        }));
+        const transformed = (data || []).map((item: any) => {
+          const { created_at, updated_at, ...rest } = item;
+          return {
+            ...rest,
+            leads: Array.isArray(item.leads) ? item.leads[0] || null : item.leads || null,
+          };
+        });
 
         setAppointments(transformed as Appointment[]);
       } catch (err) {
