@@ -96,7 +96,7 @@ export default function HomePage() {
               How Soradin works
             </p>
           </div>
-          <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-3">
             <div className="text-center space-y-4">
               <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-full bg-white/60 backdrop-blur-sm border border-[#e5ddd0]/40 text-xl font-light text-[#1a1a1a] shadow-sm">
                 1
@@ -122,7 +122,7 @@ export default function HomePage() {
                 Review your personalized plan
               </h3>
               <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
-                We summarize your wishes clearly and send them to you for your planning file.
+                We summarize your wishes clearly and send them to a specialist in your area to review.
               </p>
             </div>
             <div className="text-center space-y-4">
@@ -137,20 +137,6 @@ export default function HomePage() {
               </h3>
               <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
                 We match you with a trusted prearrangement specialist in your area to help you finalize your plan and answer any further questions.
-              </p>
-            </div>
-            <div className="text-center space-y-4">
-              <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-full bg-white/60 backdrop-blur-sm border border-[#e5ddd0]/40 text-xl font-light text-[#1a1a1a] shadow-sm">
-                4
-              </div>
-              <h3
-                className="text-lg font-light text-[#1a1a1a] tracking-tight"
-                style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-              >
-                Access and Download your plan anytime
-              </h3>
-              <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
-                Update or add details whenever life changes with your planning profile.
               </p>
             </div>
           </div>
