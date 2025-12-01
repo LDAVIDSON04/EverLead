@@ -40,6 +40,8 @@ type FullLead = {
   service_type: string | null;
   urgency_level: string | null;
   planning_for: string | null;
+  planning_for_name: string | null;
+  planning_for_age: number | null;
   timeline_intent: string | null;
   remains_disposition: string | null;
   service_celebration: string | null;
@@ -531,7 +533,37 @@ export default function AvailableAppointments({
                           <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
                             Planning for
                           </dt>
-                          <dd className="mt-1 text-[#2a2a2a]">{formatPlanningFor(fullLead.planning_for)}</dd>
+                          <dd className="mt-1 text-[#2a2a2a]">
+                            {formatPlanningFor(fullLead.planning_for)}
+                            {/* Show name and age if planning for someone else */}
+                            {(fullLead.planning_for === 'spouse_partner' || 
+                              fullLead.planning_for === 'parent' || 
+                              fullLead.planning_for === 'other_family') && 
+                              (fullLead.planning_for_name || fullLead.planning_for_age) && (
+                              <div className="mt-2 pl-4 border-l-2 border-slate-200 space-y-1">
+                                {fullLead.planning_for_name && (
+                                  <div>
+                                    <dt className="text-xs font-medium text-[#6b6b6b]">
+                                      Name
+                                    </dt>
+                                    <dd className="mt-0.5 text-sm text-[#2a2a2a]">
+                                      {fullLead.planning_for_name}
+                                    </dd>
+                                  </div>
+                                )}
+                                {fullLead.planning_for_age !== null && fullLead.planning_for_age !== undefined && (
+                                  <div>
+                                    <dt className="text-xs font-medium text-[#6b6b6b]">
+                                      Age
+                                    </dt>
+                                    <dd className="mt-0.5 text-sm text-[#2a2a2a]">
+                                      {fullLead.planning_for_age}
+                                    </dd>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </dd>
                         </div>
                       )}
                       {fullLead.timeline_intent && (
