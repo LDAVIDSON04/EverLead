@@ -159,6 +159,8 @@ export async function POST(req: NextRequest) {
       age: age,
       sex: String(body.sex).trim(),
       planning_for: String(body.planning_for).trim(),
+      planning_for_name: body.planning_for_name ? String(body.planning_for_name).trim() : null,
+      planning_for_age: body.planning_for_age ? Number(body.planning_for_age) : null,
       service_type: String(body.service_type).trim(),
       timeline_intent: String(body.timeline_intent).trim(),
       urgency_level: body.urgency_level || "warm",
@@ -220,7 +222,7 @@ export async function POST(req: NextRequest) {
     }
 
     // List of new optional fields that might not exist in database yet
-    const optionalNewFields = ['remains_disposition', 'service_celebration', 'family_pre_arranged'];
+    const optionalNewFields = ['remains_disposition', 'service_celebration', 'family_pre_arranged', 'planning_for_name', 'planning_for_age'];
     
     // Create payload without optional new fields first (in case migration hasn't run)
     const safePayload: any = {};
@@ -255,7 +257,7 @@ export async function POST(req: NextRequest) {
       
       // Log a warning that migration should be run
       if (!insertResult.error) {
-        console.warn("Lead created successfully but new fields (remains_disposition, service_celebration, family_pre_arranged) were not saved. Please run migration to enable these fields.");
+        console.warn("Lead created successfully but new fields (remains_disposition, service_celebration, family_pre_arranged, planning_for_name, planning_for_age) were not saved. Please run migration to enable these fields.");
       }
     }
 

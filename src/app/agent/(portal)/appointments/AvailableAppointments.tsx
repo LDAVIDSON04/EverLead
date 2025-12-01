@@ -188,6 +188,8 @@ export default function AvailableAppointments({
         planning_for_age: data?.planning_for_age,
         hasPlanningForName: !!data?.planning_for_name,
         hasPlanningForAge: data?.planning_for_age !== null && data?.planning_for_age !== undefined,
+        allKeys: Object.keys(data || {}),
+        fullData: data,
       });
 
       setFullLead(data as FullLead);
@@ -550,7 +552,7 @@ export default function AvailableAppointments({
                               fullLead.planning_for === 'parent' || 
                               fullLead.planning_for === 'other_family') && (
                               <div className="mt-2 pl-4 border-l-2 border-slate-200 space-y-1">
-                                {fullLead.planning_for_name ? (
+                                {(fullLead.planning_for_name && fullLead.planning_for_name.trim()) ? (
                                   <div>
                                     <dt className="text-xs font-medium text-[#6b6b6b]">
                                       Name
@@ -560,7 +562,7 @@ export default function AvailableAppointments({
                                     </dd>
                                   </div>
                                 ) : null}
-                                {fullLead.planning_for_age !== null && fullLead.planning_for_age !== undefined ? (
+                                {(fullLead.planning_for_age !== null && fullLead.planning_for_age !== undefined && fullLead.planning_for_age > 0) ? (
                                   <div>
                                     <dt className="text-xs font-medium text-[#6b6b6b]">
                                       Age
@@ -570,7 +572,8 @@ export default function AvailableAppointments({
                                     </dd>
                                   </div>
                                 ) : null}
-                                {!fullLead.planning_for_name && (fullLead.planning_for_age === null || fullLead.planning_for_age === undefined) && (
+                                {(!fullLead.planning_for_name || !fullLead.planning_for_name.trim()) && 
+                                 (fullLead.planning_for_age === null || fullLead.planning_for_age === undefined || fullLead.planning_for_age <= 0) && (
                                   <p className="text-xs text-[#6b6b6b] italic">
                                     Details not provided
                                   </p>
