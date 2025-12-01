@@ -101,7 +101,7 @@ export default function AgentAppointmentsPage() {
           Available Appointments
         </h1>
         <p className="text-sm text-[#6b6b6b]">
-          Purchase planning call appointments with families who have requested a consultation.
+          Claim planning call appointments with families who have requested a consultation.
         </p>
       </div>
 

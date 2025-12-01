@@ -72,7 +72,7 @@ export default function AvailableAppointments({
 
   async function handleBuy(id: string) {
     if (!acknowledgedIds.has(id)) {
-      setError('You must acknowledge the time-window policy before purchasing.');
+      setError('You must acknowledge the time-window policy before claiming.');
       return;
     }
 
@@ -87,14 +87,14 @@ export default function AvailableAppointments({
       } = await supabaseClient.auth.getUser();
 
       if (userError || !user) {
-        setError('You must be logged in to purchase appointments.');
+        setError('You must be logged in to claim appointments.');
         setLoadingId(null);
         return;
       }
 
       const agentId = user.id;
 
-      // Create Stripe checkout session
+      // Claim the appointment (no Stripe - direct assignment)
       const res = await fetch('/api/appointments/buy', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -107,18 +107,18 @@ export default function AvailableAppointments({
 
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        throw new Error(body.error || 'Failed to start checkout');
+        throw new Error(body.error || 'Failed to claim appointment');
       }
 
-      const { url, free } = await res.json();
+      const data = await res.json();
 
-      if (!url) {
-        throw new Error('No checkout URL received');
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to claim appointment');
       }
 
-      // If free, redirect directly to success page (no Stripe checkout)
-      // Otherwise, redirect to Stripe checkout
-      window.location.href = url;
+      // Success! Reload the page to show updated appointments
+      // The claimed appointment will be removed from available and appear in My Pipeline/My Appointments
+      window.location.reload();
     } catch (err: any) {
       setError(err.message || 'Something went wrong');
       setLoadingId(null);
@@ -345,19 +345,6 @@ export default function AvailableAppointments({
                   </span>
                 </label>
 
-                <div className="flex items-center gap-2">
-                  <span className="text-lg font-bold text-[#2a2a2a]">
-                    {appt.price_cents === 0 || appt.price_cents === null
-                      ? 'Free'
-                      : `$${((appt.price_cents || 0) / 100).toFixed(0)}`
-                    }
-                  </span>
-                  {appt.is_discounted && appt.price_cents !== 0 && (
-                    <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">
-                      48+ hrs · Last Chance
-                    </span>
-                  )}
-                </div>
                 <button
                   onClick={() => handleBuy(appt.id)}
                   disabled={!acknowledgedIds.has(appt.id) || loadingId === appt.id}
@@ -367,7 +354,7 @@ export default function AvailableAppointments({
                       : 'bg-gray-300 text-gray-600 cursor-not-allowed'
                   }`}
                 >
-                  {loadingId === appt.id ? 'Processing…' : 'Buy Appointment'}
+                  {loadingId === appt.id ? 'Claiming…' : 'Claim Now'}
                 </button>
               </div>
             </div>

@@ -1,8 +1,6 @@
 // src/app/api/appointments/buy/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { stripe } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { createClient } from "@supabase/supabase-js";
 import { checkBotId } from 'botid/server';
 
 export async function POST(req: NextRequest) {
@@ -29,7 +27,7 @@ export async function POST(req: NextRequest) {
 
     if (!acknowledgedTimeWindow) {
       return NextResponse.json(
-        { error: "You must acknowledge the time-window policy before purchasing." },
+        { error: "You must acknowledge the time-window policy before claiming." },
         { status: 400 }
       );
     }
@@ -61,7 +59,7 @@ export async function POST(req: NextRequest) {
 
     if (profile.role !== "agent" || profile.approval_status !== "approved") {
       return NextResponse.json(
-        { error: "Your account is not approved to buy appointments yet" },
+        { error: "Your account is not approved to claim appointments yet" },
         { status: 403 }
       );
     }
@@ -121,94 +119,65 @@ export async function POST(req: NextRequest) {
       ? `${lead.city || ""}${lead.city && lead.province ? ", " : ""}${lead.province || ""}`
       : "your area";
 
-    // 5) Use appointment's price_cents if set, otherwise default to 1 cent (for testing)
-    const appointmentPriceCents = appt.price_cents !== null && appt.price_cents !== undefined
-      ? Number(appt.price_cents) 
-      : 1; // Default $0.01 (1 cent for testing)
+    // Directly assign the appointment to the agent (no Stripe - claim now flow)
+    const { data: updated, error: updateError } = await supabaseAdmin
+      .from("appointments")
+      .update({
+        agent_id: agentId,
+        status: "booked",
+        price_cents: 0, // Free claim
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", appointmentId)
+      .eq("status", "pending")
+      .is("agent_id", null)
+      .select()
+      .single();
 
-    // If price is $0 or less, directly assign the appointment without Stripe
-    if (appointmentPriceCents <= 0) {
-      const { data: updated, error: updateError } = await supabaseAdmin
-        .from("appointments")
-        .update({
-          agent_id: agentId,
-          status: "booked",
-          price_cents: 0,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", appointmentId)
-        .eq("status", "pending")
-        .is("agent_id", null)
-        .select()
-        .single();
-
-      if (updateError || !updated) {
-        console.error("Free appointment assignment error:", updateError);
-        return NextResponse.json(
-          { error: "Could not assign appointment. It may have been purchased by another agent." },
-          { status: 500 }
-        );
-      }
-
-      // Also assign the lead to this agent so it shows in "My Pipeline"
-      if (updated.lead_id) {
-        await supabaseAdmin
-          .from("leads")
-          .update({
-            assigned_agent_id: agentId,
-            status: "purchased_by_agent",
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", updated.lead_id)
-          .is("assigned_agent_id", null); // Only update if not already assigned
-      }
-
-      // Return success URL for free appointment
-      const baseUrl =
-        process.env.NEXT_PUBLIC_SITE_URL ??
-        `${req.nextUrl.protocol}//${req.nextUrl.host}`;
-      
-      return NextResponse.json({ 
-        url: `${baseUrl}/agent/dashboard?purchase=success&type=appointment&appointmentId=${appointmentId}&free=true`,
-        free: true 
-      });
+    if (updateError || !updated) {
+      console.error("Appointment claim error:", updateError);
+      return NextResponse.json(
+        { error: "Could not claim appointment. It may have been claimed by another agent." },
+        { status: 500 }
+      );
     }
 
-    // For paid appointments, use Stripe checkout
-    const baseUrl =
-      process.env.NEXT_PUBLIC_SITE_URL ??
-      `${req.nextUrl.protocol}//${req.nextUrl.host}`;
+    // Also assign the lead to this agent so it shows in "My Pipeline"
+    if (updated.lead_id) {
+      const { error: leadUpdateError } = await supabaseAdmin
+        .from("leads")
+        .update({
+          assigned_agent_id: agentId,
+          status: "purchased_by_agent",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", updated.lead_id)
+        .is("assigned_agent_id", null); // Only update if not already assigned
 
-    const successUrl = `${baseUrl}/agent/dashboard?purchase=success&session_id={CHECKOUT_SESSION_ID}&type=appointment&appointmentId=${appointmentId}`;
-    const cancelUrl = `${baseUrl}/agent/appointments?purchase=cancelled`;
+      if (leadUpdateError) {
+        console.error("⚠️ Failed to assign lead to agent (non-fatal):", leadUpdateError);
+        // Don't fail the whole request - appointment is already assigned
+      } else {
+        console.log("✅ Lead also assigned to agent:", {
+          lead_id: updated.lead_id,
+          agentId,
+        });
+      }
+    }
 
-    const session = await stripe.checkout.sessions.create({
-      mode: "payment",
-      payment_method_types: ["card"],
-      line_items: [
-        {
-          quantity: 1,
-          price_data: {
-            currency: "cad",
-            unit_amount: appointmentPriceCents,
-            product_data: {
-              name: "Planning Call Appointment",
-              description: `Appointment in ${leadLocation} - ${appt.requested_date} (${appt.requested_window})`,
-            },
-          },
-        },
-      ],
-      success_url: successUrl,
-      cancel_url: cancelUrl,
-      metadata: {
-        appointmentId: appointmentId,
-        leadId: appt.lead_id || "",
-        agentId: agentId,
-        priceCents: String(appointmentPriceCents),
-      },
+    console.log("✅ Appointment successfully claimed:", {
+      appointmentId,
+      agentId,
+      status: updated.status,
+      lead_id: updated.lead_id,
     });
 
-    return NextResponse.json({ url: session.url });
+    // Return success - no redirect needed, client will handle
+    return NextResponse.json({ 
+      success: true,
+      appointment: updated,
+      message: "Appointment claimed successfully"
+    });
   } catch (err: any) {
     console.error("Appointment buy error:", err);
     return NextResponse.json(
