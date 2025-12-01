@@ -121,10 +121,10 @@ export async function POST(req: NextRequest) {
       ? `${lead.city || ""}${lead.city && lead.province ? ", " : ""}${lead.province || ""}`
       : "your area";
 
-    // 5) Use appointment's price_cents if set, otherwise default to $1 (for testing)
+    // 5) Use appointment's price_cents if set, otherwise default to 1 cent (for testing)
     const appointmentPriceCents = appt.price_cents !== null && appt.price_cents !== undefined
       ? Number(appt.price_cents) 
-      : 100; // Default $1.00 (for testing)
+      : 1; // Default $0.01 (1 cent for testing)
 
     // If price is $0 or less, directly assign the appointment without Stripe
     if (appointmentPriceCents <= 0) {
@@ -148,6 +148,19 @@ export async function POST(req: NextRequest) {
           { error: "Could not assign appointment. It may have been purchased by another agent." },
           { status: 500 }
         );
+      }
+
+      // Also assign the lead to this agent so it shows in "My Pipeline"
+      if (updated.lead_id) {
+        await supabaseAdmin
+          .from("leads")
+          .update({
+            assigned_agent_id: agentId,
+            status: "purchased_by_agent",
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", updated.lead_id)
+          .is("assigned_agent_id", null); // Only update if not already assigned
       }
 
       // Return success URL for free appointment

@@ -87,10 +87,10 @@ export async function POST(req: NextRequest) {
       .eq("id", appointmentId)
       .single();
     
-    // Use existing price_cents if set, otherwise default to $1 (for testing)
+    // Use existing price_cents if set, otherwise default to 1 cent (for testing)
     const finalPriceCents = currentAppt?.price_cents !== null && currentAppt?.price_cents !== undefined
       ? Number(currentAppt.price_cents)
-      : 100; // Default $1.00 (for testing)
+      : 1; // Default $0.01 (1 cent for testing)
     
     const { data: updated, error: updateError } = await supabaseAdmin
       .from("appointments")
@@ -128,7 +128,31 @@ export async function POST(req: NextRequest) {
       agentId,
       status: updated.status,
       price_cents: updated.price_cents,
+      lead_id: updated.lead_id,
     });
+
+    // Also assign the lead to this agent so it shows in "My Pipeline"
+    if (updated.lead_id) {
+      const { error: leadUpdateError } = await supabaseAdmin
+        .from("leads")
+        .update({
+          assigned_agent_id: agentId,
+          status: "purchased_by_agent",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", updated.lead_id)
+        .is("assigned_agent_id", null); // Only update if not already assigned
+
+      if (leadUpdateError) {
+        console.error("⚠️ Failed to assign lead to agent (non-fatal):", leadUpdateError);
+        // Don't fail the whole request - appointment is already assigned
+      } else {
+        console.log("✅ Lead also assigned to agent:", {
+          lead_id: updated.lead_id,
+          agentId,
+        });
+      }
+    }
 
     // Get agent email and name for notification
     const { data: agentAuth, error: agentAuthError } = await supabaseAdmin.auth.admin.getUserById(agentId);
