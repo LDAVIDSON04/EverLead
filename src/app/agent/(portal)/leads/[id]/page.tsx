@@ -23,6 +23,8 @@ type Lead = {
   phone: string | null;
   age: number | null;
   planning_for: string | null;
+  planning_for_name: string | null;
+  planning_for_age: number | null;
   ceremony_preferences: string | null;
   timeline_intent: string | null;
   preferred_contact_time: string | null;
@@ -653,6 +655,47 @@ export default function LeadDetailsPage() {
                         </dt>
                         <dd className="mt-1 text-[#2a2a2a]">
                           {formatPlanningFor(lead.planning_for)}
+                          {/* Show name and age if planning for someone else and agent owns the lead */}
+                          {owns && (lead.planning_for === 'spouse_partner' || 
+                            lead.planning_for === 'parent' || 
+                            lead.planning_for === 'other_family') && (
+                            <div className="mt-2 pl-4 border-l-2 border-slate-200 space-y-1">
+                              {lead.planning_for_name ? (
+                                <div>
+                                  <dt className="text-xs font-medium text-[#6b6b6b]">
+                                    Name
+                                  </dt>
+                                  <dd className="mt-0.5 text-sm text-[#2a2a2a]">
+                                    {lead.planning_for_name}
+                                  </dd>
+                                </div>
+                              ) : (
+                                <div>
+                                  <dt className="text-xs font-medium text-[#6b6b6b]">
+                                    Name
+                                  </dt>
+                                  <dd className="mt-0.5 text-sm text-[#6b6b6b]">Details not provided</dd>
+                                </div>
+                              )}
+                              {lead.planning_for_age !== null && lead.planning_for_age !== undefined ? (
+                                <div>
+                                  <dt className="text-xs font-medium text-[#6b6b6b]">
+                                    Age
+                                  </dt>
+                                  <dd className="mt-0.5 text-sm text-[#2a2a2a]">
+                                    {lead.planning_for_age}
+                                  </dd>
+                                </div>
+                              ) : (
+                                <div>
+                                  <dt className="text-xs font-medium text-[#6b6b6b]">
+                                    Age
+                                  </dt>
+                                  <dd className="mt-0.5 text-sm text-[#6b6b6b]">Details not provided</dd>
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </dd>
                       </div>
                     )}

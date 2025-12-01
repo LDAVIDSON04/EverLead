@@ -558,7 +558,7 @@ export default function AvailableAppointments({
                                       Name
                                     </dt>
                                     <dd className="mt-0.5 text-sm text-[#2a2a2a]">
-                                      {fullLead.planning_for_name}
+                                      {maskName(fullLead.planning_for_name)}
                                     </dd>
                                   </div>
                                 ) : null}
@@ -568,7 +568,7 @@ export default function AvailableAppointments({
                                       Age
                                     </dt>
                                     <dd className="mt-0.5 text-sm text-[#2a2a2a]">
-                                      {fullLead.planning_for_age}
+                                      ••
                                     </dd>
                                   </div>
                                 ) : null}
@@ -578,6 +578,11 @@ export default function AvailableAppointments({
                                     Details not provided
                                   </p>
                                 )}
+                                <div className="mt-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2">
+                                  <p className="text-[11px] text-amber-900">
+                                    🔒 Claim this appointment to reveal full details.
+                                  </p>
+                                </div>
                               </div>
                             )}
                           </dd>
