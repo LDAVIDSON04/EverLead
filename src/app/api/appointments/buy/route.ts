@@ -121,13 +121,13 @@ export async function POST(req: NextRequest) {
       ? `${lead.city || ""}${lead.city && lead.province ? ", " : ""}${lead.province || ""}`
       : "your area";
 
-    // 5) Use appointment's price_cents if set, otherwise default to $0 (free for testing)
+    // 5) Use appointment's price_cents if set, otherwise default to $1 (for testing)
     const appointmentPriceCents = appt.price_cents !== null && appt.price_cents !== undefined
       ? Number(appt.price_cents) 
-      : 0; // Default $0.00 (free for testing)
+      : 100; // Default $1.00 (for testing)
 
-    // If price is $0, directly assign the appointment without Stripe
-    if (appointmentPriceCents === 0) {
+    // If price is $0 or less, directly assign the appointment without Stripe
+    if (appointmentPriceCents <= 0) {
       const { data: updated, error: updateError } = await supabaseAdmin
         .from("appointments")
         .update({
