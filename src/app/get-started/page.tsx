@@ -286,15 +286,13 @@ export default function GetStartedPage() {
       <header className="bg-[#1f2933]/95 backdrop-blur-sm text-white border-b border-[#1f2933]/20">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-8 py-5">
           <div className="flex items-center gap-3">
-            <div className="bg-[#1f2933] p-1 rounded">
-              <Image
-                src="/logo - white.png"
-                alt="Soradin"
-                width={40}
-                height={40}
-                className="object-contain"
-              />
-            </div>
+            <Image
+              src="/logo - white.png"
+              alt="Soradin"
+              width={40}
+              height={40}
+              className="object-contain"
+            />
             <div className="flex items-baseline gap-3">
               <span className="text-xl font-light tracking-wide text-white">
                 Soradin

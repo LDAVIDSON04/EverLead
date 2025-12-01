@@ -103,15 +103,13 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
       <header className="bg-[#1f2933] text-white border-b border-[#ded3c2]">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-3">
-            <div className="bg-[#1f2933] p-1 rounded">
-              <Image
-                src="/logo - white.png"
-                alt="Soradin"
-                width={40}
-                height={40}
-                className="object-contain"
-              />
-            </div>
+            <Image
+              src="/logo - white.png"
+              alt="Soradin"
+              width={40}
+              height={40}
+              className="object-contain"
+            />
             <div className="flex items-baseline gap-2">
               <Link href="/agent/dashboard" className="text-lg font-semibold text-white">
                 Soradin
