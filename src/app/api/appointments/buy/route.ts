@@ -144,7 +144,8 @@ export async function POST(req: NextRequest) {
 
     // Also assign the lead to this agent so it shows in "My Pipeline"
     if (updated.lead_id) {
-      const { error: leadUpdateError } = await supabaseAdmin
+      // Try to assign lead - update even if already assigned (in case of race condition)
+      const { error: leadUpdateError, data: leadUpdateData } = await supabaseAdmin
         .from("leads")
         .update({
           assigned_agent_id: agentId,
@@ -152,15 +153,23 @@ export async function POST(req: NextRequest) {
           updated_at: new Date().toISOString(),
         })
         .eq("id", updated.lead_id)
-        .is("assigned_agent_id", null); // Only update if not already assigned
+        .select()
+        .single();
 
       if (leadUpdateError) {
-        console.error("⚠️ Failed to assign lead to agent (non-fatal):", leadUpdateError);
+        console.error("⚠️ Failed to assign lead to agent (non-fatal):", {
+          error: leadUpdateError,
+          lead_id: updated.lead_id,
+          agentId,
+          errorCode: leadUpdateError.code,
+          errorMessage: leadUpdateError.message,
+        });
         // Don't fail the whole request - appointment is already assigned
       } else {
         console.log("✅ Lead also assigned to agent:", {
           lead_id: updated.lead_id,
           agentId,
+          leadData: leadUpdateData,
         });
       }
     }

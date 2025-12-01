@@ -1,113 +1,125 @@
-import { supabaseAdmin } from '@/lib/supabaseAdmin';
+'use client';
+
+import { useEffect, useState } from 'react';
+import { supabaseClient } from '@/lib/supabaseClient';
+import { useRequireRole } from '@/lib/hooks/useRequireRole';
 import MyAppointmentsClient from './MyAppointmentsClient';
-import { createClient } from '@supabase/supabase-js';
-import { cookies } from 'next/headers';
 
-export default async function MyAppointmentsPage() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+type Lead = {
+  id: string;
+  full_name: string | null;
+  email: string | null;
+  phone: string | null;
+  city: string | null;
+  province: string | null;
+  service_type: string | null;
+};
 
-  if (!supabaseUrl || !supabaseAnonKey) {
-    return (
-      <div className="p-6">
-        <h1 className="text-xl font-semibold mb-4">My Appointments</h1>
-        <p className="text-sm text-red-600">Server configuration error.</p>
-      </div>
-    );
-  }
+type Appointment = {
+  id: string;
+  requested_date: string;
+  requested_window: string;
+  status: 'booked' | 'completed' | 'no_show' | 'pending' | 'confirmed' | 'cancelled';
+  leads: Lead | null;
+};
 
-  // Get user from cookies using Supabase client
-  const cookieStore = await cookies();
-  const allCookies = cookieStore.getAll();
+export default function MyAppointmentsPage() {
+  useRequireRole('agent');
   
-  // Create Supabase client with cookie-based auth
-  const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-    auth: {
-      storage: {
-        getItem: (key: string) => {
-          // Try to find the cookie
-          const cookie = cookieStore.get(key);
-          if (cookie) return cookie.value;
-          
-          // Try common Supabase cookie patterns
-          for (const c of allCookies) {
-            if (c.name.includes(key) || key.includes(c.name)) {
-              return c.value;
-            }
-          }
-          return null;
-        },
-        setItem: () => {},
-        removeItem: () => {},
-      },
-    },
-  });
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
+  useEffect(() => {
+    async function loadAppointments() {
+      setLoading(true);
+      setError(null);
 
-  if (userError || !user) {
+      try {
+        // Get current user
+        const {
+          data: { user },
+        } = await supabaseClient.auth.getUser();
+
+        if (!user) {
+          setError('You must be logged in as an agent.');
+          setLoading(false);
+          return;
+        }
+
+        const agentId = user.id;
+
+        // Fetch appointments assigned to this agent
+        const { data, error: fetchError } = await supabaseClient
+          .from('appointments')
+          .select(`
+            id,
+            requested_date,
+            requested_window,
+            status,
+            leads (
+              id,
+              full_name,
+              email,
+              phone,
+              city,
+              province,
+              service_type
+            )
+          `)
+          .eq('agent_id', agentId)
+          .order('requested_date', { ascending: true });
+
+        if (fetchError) {
+          console.error('Error loading appointments:', fetchError);
+          setError('Failed to load appointments. Please try again later.');
+          return;
+        }
+
+        // Transform data to match Appointment type (leads comes as array from Supabase join)
+        const transformed = (data || []).map((item: any) => ({
+          ...item,
+          leads: Array.isArray(item.leads) ? item.leads[0] || null : item.leads || null,
+        }));
+
+        setAppointments(transformed as Appointment[]);
+      } catch (err) {
+        console.error('Unexpected error loading appointments:', err);
+        setError('An unexpected error occurred. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadAppointments();
+  }, []);
+
+  if (loading) {
     return (
       <div className="p-6">
         <h1 className="text-xl font-semibold mb-4">My Appointments</h1>
-        <p className="text-sm text-gray-600">You must be logged in as an agent.</p>
+        <p className="text-sm text-[#6b6b6b]">Loading appointments…</p>
       </div>
     );
   }
-
-  const agentId = user.id;
-
-  // Use admin client to bypass RLS for agent's own appointments
-  const { data, error } = await supabaseAdmin
-    .from('appointments')
-    .select(`
-      id,
-      requested_date,
-      requested_window,
-      status,
-      leads (
-        id,
-        full_name,
-        email,
-        phone,
-        city,
-        province,
-        service_type
-      )
-    `)
-    .eq('agent_id', agentId)
-    .order('requested_date', { ascending: true });
 
   if (error) {
-    console.error(error);
     return (
       <div className="p-6">
         <h1 className="text-xl font-semibold mb-4">My Appointments</h1>
-        <p className="text-sm text-red-600">
-          Error loading your appointments. Please try again later.
-        </p>
+        <p className="text-sm text-red-600">{error}</p>
       </div>
     );
   }
 
-  const appointments = (data || []) as any[];
-
-  // Transform leads data (comes as array from Supabase join)
-  const transformed = appointments.map((item: any) => ({
-    ...item,
-    leads: Array.isArray(item.leads) ? item.leads[0] || null : item.leads || null,
-  }));
-
-  const total = transformed.length;
-  const completed = transformed.filter((a: any) => a.status === 'completed').length;
-  const noShow = transformed.filter((a: any) => a.status === 'no_show').length;
+  const total = appointments.length;
+  const completed = appointments.filter((a) => a.status === 'completed').length;
+  const noShow = appointments.filter((a) => a.status === 'no_show').length;
 
   return (
     <div className="p-6">
       <MyAppointmentsClient
-        appointments={transformed}
+        appointments={appointments}
         stats={{ total, completed, noShow }}
       />
     </div>
