@@ -209,18 +209,6 @@ export default function HomePage() {
                 className="mb-4 text-xl font-light text-[#1a1a1a] tracking-tight"
                 style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
               >
-                Keep everything organized
-              </h3>
-              <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
-                All your wishes stored in a private and secure place.
-              </p>
-            </div>
-
-            <div className="group rounded-2xl border border-[#e5ddd0]/60 bg-white/40 backdrop-blur-sm p-10 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-[#d4c9b8] transition-all duration-500">
-              <h3
-                className="mb-4 text-xl font-light text-[#1a1a1a] tracking-tight"
-                style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-              >
                 Remove uncertainty
               </h3>
               <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
