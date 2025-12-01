@@ -22,6 +22,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Note: The database schema must allow 'no_show' status
+    // If you get a constraint violation, run the migration: add_no_show_status_to_appointments.sql
+
     // Get agentId from request body (client sends it)
     const agentId = body.agentId as string | undefined;
 
@@ -87,24 +90,44 @@ export async function POST(req: NextRequest) {
       // The schema has cancelled_at, but we'll use status='no_show' instead
     }
 
-    const { error: updateError } = await supabaseAdmin
+    const { error: updateError, data: updateDataResult } = await supabaseAdmin
       .from("appointments")
       .update(updateData)
-      .eq("id", appointmentId);
+      .eq("id", appointmentId)
+      .select();
 
     if (updateError) {
-      console.error("Error updating appointment:", updateError);
+      console.error("Error updating appointment:", {
+        error: updateError,
+        updateData,
+        appointmentId,
+        errorCode: updateError.code,
+        errorMessage: updateError.message,
+        errorDetails: updateError.details,
+        errorHint: updateError.hint,
+      });
       return NextResponse.json(
-        { error: "Error updating appointment" },
+        { 
+          error: "Error updating appointment",
+          details: updateError.message || "Unknown database error"
+        },
         { status: 500 }
       );
     }
 
     return NextResponse.json({ ok: true }, { status: 200 });
   } catch (err: any) {
-    console.error("Appointment update error:", err);
+    console.error("Appointment update error:", {
+      error: err,
+      message: err?.message,
+      stack: err?.stack,
+      name: err?.name,
+    });
     return NextResponse.json(
-      { error: "Internal server error" },
+      { 
+        error: "Internal server error",
+        details: err?.message || "Unknown error occurred"
+      },
       { status: 500 }
     );
   }
