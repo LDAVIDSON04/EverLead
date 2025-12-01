@@ -108,7 +108,7 @@ export default function HomePage() {
               How Soradin works
             </p>
           </div>
-          <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-9 md:grid-cols-2 lg:grid-cols-3">
             <div className="text-center space-y-4">
               <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-full bg-white/60 backdrop-blur-sm border border-[#e5ddd0]/40 text-xl font-light text-[#1a1a1a] shadow-sm">
                 1
@@ -169,7 +169,7 @@ export default function HomePage() {
 
           <div className="space-y-8">
             {/* Top row: three benefits */}
-            <div className="grid gap-8 md:grid-cols-3">
+            <div className="grid gap-6 md:grid-cols-3">
               <div className="group rounded-2xl border border-[#e5ddd0]/60 bg-white/40 backdrop-blur-sm p-10 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-[#d4c9b8] transition-all duration-500">
                 <h3
                   className="mb-4 text-xl font-light text-[#1a1a1a] tracking-tight"
@@ -208,7 +208,7 @@ export default function HomePage() {
             </div>
 
             {/* Bottom row: two benefits centered */}
-            <div className="flex flex-col items-stretch gap-8 md:flex-row md:justify-center">
+            <div className="flex flex-col items-stretch gap-6 md:flex-row md:justify-center">
               <div className="group rounded-2xl border border-[#e5ddd0]/60 bg-white/40 backdrop-blur-sm p-10 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-[#d4c9b8] transition-all duration-500 md:w-80">
                 <h3
                   className="mb-4 text-xl font-light text-[#1a1a1a] tracking-tight"
@@ -256,7 +256,7 @@ export default function HomePage() {
           </div>
           <div className="space-y-8">
             {/* Top row: two cards */}
-            <div className="grid gap-8 md:grid-cols-2">
+            <div className="grid gap-6 md:grid-cols-2">
               {/* Burial or Cremation options */}
               <div className="group rounded-2xl border border-[#e5ddd0]/60 bg-white/40 backdrop-blur-sm p-8 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-[#d4c9b8] transition-all duration-500">
                 <h3
