@@ -11,6 +11,7 @@ export default function GetStartedPage() {
   const router = useRouter();
   const [formState, setFormState] = useState<FormState>("idle");
   const [error, setError] = useState<string | null>(null);
+  const [planningFor, setPlanningFor] = useState<string>("");
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -92,6 +93,27 @@ export default function GetStartedPage() {
       return;
     }
 
+    // Get planning_for related fields if applicable
+    const planningForValue = (formData.get("planning_for") as string)?.trim() || null;
+    const planningForName = (formData.get("planning_for_name") as string)?.trim() || null;
+    const planningForAgeValue = formData.get("planning_for_age");
+    const planningForAgeStr = planningForAgeValue ? String(planningForAgeValue).trim() : "";
+    const planningForAgeParsed = planningForAgeStr ? Number(planningForAgeStr) : null;
+
+    // Validate planning_for fields if required
+    if (planningForValue && (planningForValue === "spouse_partner" || planningForValue === "parent" || planningForValue === "other_family")) {
+      if (!planningForName || planningForName.length === 0) {
+        setError("Please enter the name of the person you're planning for.");
+        setFormState("error");
+        return;
+      }
+      if (!planningForAgeParsed || isNaN(planningForAgeParsed) || planningForAgeParsed < 0 || planningForAgeParsed > 120) {
+        setError("Please enter a valid age (0-120) for the person you're planning for.");
+        setFormState("error");
+        return;
+      }
+    }
+
     // Build the insert payload - ensure types are correct
     const leadData: any = {
       first_name: (formData.get("first_name") as string)?.trim() || null,
@@ -104,7 +126,9 @@ export default function GetStartedPage() {
       postal_code: (formData.get("postal_code") as string)?.trim() || null,
       age: ageParsed, // Number type (validated above)
       sex: sexValue?.trim() || null,
-      planning_for: (formData.get("planning_for") as string)?.trim() || null,
+      planning_for: planningForValue,
+      planning_for_name: planningForName, // Name of person being planned for
+      planning_for_age: planningForAgeParsed, // Age of person being planned for
       service_type: (formData.get("service_type") as string)?.trim() || null,
       timeline_intent: timeline_intent.trim(),
       urgency_level,
@@ -424,6 +448,8 @@ export default function GetStartedPage() {
                   <select
                     name="planning_for"
                     required
+                    value={planningFor}
+                    onChange={(e) => setPlanningFor(e.target.value)}
                     className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
                   >
                     <option value="">Select...</option>
@@ -432,6 +458,37 @@ export default function GetStartedPage() {
                     <option value="parent">Parent</option>
                     <option value="other_family">Other family member</option>
                   </select>
+                  
+                  {/* Conditional fields for spouse/partner, parent, or other family */}
+                  {(planningFor === "spouse_partner" || planningFor === "parent" || planningFor === "other_family") && (
+                    <div className="mt-4 rounded-md border border-slate-200 bg-slate-50 p-4 space-y-4">
+                      <div>
+                        <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
+                          Name of the person you're planning for *
+                        </label>
+                        <input
+                          name="planning_for_name"
+                          required
+                          className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
+                          placeholder="Enter their full name"
+                        />
+                      </div>
+                      <div>
+                        <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
+                          Age of the person you're planning for *
+                        </label>
+                        <input
+                          type="number"
+                          name="planning_for_age"
+                          min={0}
+                          max={120}
+                          required
+                          className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
+                          placeholder="Enter their age"
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
