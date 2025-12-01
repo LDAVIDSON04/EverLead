@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
     .eq('lead_id', leadId)
     .eq('status', 'pending');
 
-  // Create new appointment
+  // Create new appointment (set price_cents to 0 for free testing)
   const { data: appt, error: apptError } = await supabaseAdmin
     .from('appointments')
     .insert({
@@ -66,6 +66,7 @@ export async function POST(req: NextRequest) {
       requested_date: requestedDate,
       requested_window: requestedWindow,
       status: 'pending',
+      price_cents: 0, // Free for testing
     })
     .select()
     .single();
