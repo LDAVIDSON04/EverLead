@@ -54,8 +54,9 @@ export default function AgentDashboardPage() {
     const purchaseType = urlParams.get("type");
     const purchaseSuccess = urlParams.get("purchase") === "success";
     const appointmentId = urlParams.get("appointmentId");
+    const isFree = urlParams.get("free") === "true";
 
-    if (purchaseSuccess && sessionId && purchaseType === "appointment" && appointmentId) {
+    if (purchaseSuccess && purchaseType === "appointment" && appointmentId) {
       // Handle appointment purchase confirmation
       const confirmAppointment = async () => {
         try {
@@ -64,6 +65,20 @@ export default function AgentDashboardPage() {
           } = await supabaseClient.auth.getUser();
 
           if (!user) return;
+
+          // If free appointment, skip Stripe confirmation
+          if (isFree) {
+            // Clean URL and reload to show updated appointments
+            window.history.replaceState({}, "", "/agent/dashboard");
+            router.push("/agent/appointments");
+            return;
+          }
+
+          // For paid appointments, confirm with Stripe
+          if (!sessionId) {
+            console.error("Missing sessionId for paid appointment");
+            return;
+          }
 
           const res = await fetch("/api/appointments/confirm", {
             method: "POST",

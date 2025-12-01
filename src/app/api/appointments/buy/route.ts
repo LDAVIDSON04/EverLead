@@ -121,11 +121,47 @@ export async function POST(req: NextRequest) {
       ? `${lead.city || ""}${lead.city && lead.province ? ", " : ""}${lead.province || ""}`
       : "your area";
 
-    // 5) Use appointment's price_cents if set (for discounted appointments), otherwise default to $29
-    const appointmentPriceCents = appt.price_cents && appt.price_cents > 0 
+    // 5) Use appointment's price_cents if set, otherwise default to $0 (free for testing)
+    const appointmentPriceCents = appt.price_cents !== null && appt.price_cents !== undefined
       ? Number(appt.price_cents) 
-      : 2900; // Default $29.00
+      : 0; // Default $0.00 (free for testing)
 
+    // If price is $0, directly assign the appointment without Stripe
+    if (appointmentPriceCents === 0) {
+      const { data: updated, error: updateError } = await supabaseAdmin
+        .from("appointments")
+        .update({
+          agent_id: agentId,
+          status: "booked",
+          price_cents: 0,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", appointmentId)
+        .eq("status", "pending")
+        .is("agent_id", null)
+        .select()
+        .single();
+
+      if (updateError || !updated) {
+        console.error("Free appointment assignment error:", updateError);
+        return NextResponse.json(
+          { error: "Could not assign appointment. It may have been purchased by another agent." },
+          { status: 500 }
+        );
+      }
+
+      // Return success URL for free appointment
+      const baseUrl =
+        process.env.NEXT_PUBLIC_SITE_URL ??
+        `${req.nextUrl.protocol}//${req.nextUrl.host}`;
+      
+      return NextResponse.json({ 
+        url: `${baseUrl}/agent/dashboard?purchase=success&type=appointment&appointmentId=${appointmentId}&free=true`,
+        free: true 
+      });
+    }
+
+    // For paid appointments, use Stripe checkout
     const baseUrl =
       process.env.NEXT_PUBLIC_SITE_URL ??
       `${req.nextUrl.protocol}//${req.nextUrl.host}`;

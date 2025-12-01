@@ -110,13 +110,14 @@ export default function AvailableAppointments({
         throw new Error(body.error || 'Failed to start checkout');
       }
 
-      const { url } = await res.json();
+      const { url, free } = await res.json();
 
       if (!url) {
         throw new Error('No checkout URL received');
       }
 
-      // Redirect to Stripe checkout
+      // If free, redirect directly to success page (no Stripe checkout)
+      // Otherwise, redirect to Stripe checkout
       window.location.href = url;
     } catch (err: any) {
       setError(err.message || 'Something went wrong');

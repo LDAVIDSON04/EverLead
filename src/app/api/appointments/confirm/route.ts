@@ -87,10 +87,10 @@ export async function POST(req: NextRequest) {
       .eq("id", appointmentId)
       .single();
     
-    // Use existing price_cents if set, otherwise default to $29
-    const finalPriceCents = currentAppt?.price_cents && currentAppt.price_cents > 0
+    // Use existing price_cents if set, otherwise default to $0 (free for testing)
+    const finalPriceCents = currentAppt?.price_cents !== null && currentAppt?.price_cents !== undefined
       ? Number(currentAppt.price_cents)
-      : 29_00; // Default $29.00
+      : 0; // Default $0.00 (free for testing)
     
     const { data: updated, error: updateError } = await supabaseAdmin
       .from("appointments")
