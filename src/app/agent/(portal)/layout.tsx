@@ -2,6 +2,7 @@
 
 import { ReactNode, useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import { supabaseClient } from '@/lib/supabaseClient';
 import clsx from 'clsx';
@@ -101,13 +102,24 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
     <div className="min-h-screen bg-[#f7f4ef] flex flex-col">
       <header className="bg-[#1f2933] text-white border-b border-[#ded3c2]">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <div className="flex items-baseline gap-2">
-            <Link href="/agent/dashboard" className="text-lg font-semibold text-white">
-              Soradin
-            </Link>
-            <span className="text-[11px] uppercase tracking-[0.18em] text-[#e0d5bf]">
-              AGENT PORTAL
-            </span>
+          <div className="flex items-center gap-3">
+            <div className="bg-[#1f2933] p-1 rounded">
+              <Image
+                src="/logo - white.png"
+                alt="Soradin"
+                width={40}
+                height={40}
+                className="object-contain"
+              />
+            </div>
+            <div className="flex items-baseline gap-2">
+              <Link href="/agent/dashboard" className="text-lg font-semibold text-white">
+                Soradin
+              </Link>
+              <span className="text-[11px] uppercase tracking-[0.18em] text-[#e0d5bf]">
+                AGENT PORTAL
+              </span>
+            </div>
           </div>
 
           <button

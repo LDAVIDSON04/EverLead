@@ -112,7 +112,7 @@ export async function sendConsumerBookingEmail({
                   <!-- Header with Logo -->
                   <tr>
                     <td style="padding: 40px 40px 30px; text-align: center; background: linear-gradient(to bottom, #faf8f5, #ffffff);">
-                      <img src="${cleanSiteUrl}/logo.png" alt="Soradin" style="height: 48px; width: auto; margin: 0 auto 12px; display: block; max-width: 200px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
+                      <img src="${cleanSiteUrl}/logo%20-%20white.png" alt="Soradin" style="height: 48px; width: auto; margin: 0 auto 12px; display: block; max-width: 200px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
                       <div style="display: none;">
                         <h1 style="color: #2a2a2a; font-size: 32px; font-weight: 300; letter-spacing: -0.5px; margin: 0;">Soradin</h1>
                         <p style="color: #6b6b6b; font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; margin: 8px 0 0 0;">Pre-Planning</p>
@@ -328,7 +328,7 @@ export async function sendAgentNewAppointmentEmail({
                     <!-- Header with Logo -->
                     <tr>
                       <td style="padding: 40px 40px 30px; text-align: center; background: linear-gradient(to bottom, #faf8f5, #ffffff);">
-                        <img src="${cleanSiteUrl}/logo.png" alt="Soradin" style="height: 48px; width: auto; margin: 0 auto 12px; display: block; max-width: 200px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
+                        <img src="${cleanSiteUrl}/logo%20-%20white.png" alt="Soradin" style="height: 48px; width: auto; margin: 0 auto 12px; display: block; max-width: 200px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
                         <div style="display: none;">
                           <h1 style="color: #2a2a2a; font-size: 32px; font-weight: 300; letter-spacing: -0.5px; margin: 0;">Soradin</h1>
                           <p style="color: #6b6b6b; font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; margin: 8px 0 0 0;">Pre-Planning</p>

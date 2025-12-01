@@ -288,7 +288,7 @@ export default function GetStartedPage() {
           <div className="flex items-center gap-3">
             <div className="bg-[#1f2933] p-1 rounded">
               <Image
-                src="/logo.png"
+                src="/logo - white.png"
                 alt="Soradin"
                 width={40}
                 height={40}

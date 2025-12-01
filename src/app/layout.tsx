@@ -46,10 +46,10 @@ export const metadata: Metadata = {
   description: "Soradin helps families thoughtfully plan funeral wishes in advance and connects them with trusted local professionals when they're ready.",
   icons: {
     icon: [
-      { url: '/logo.png', sizes: 'any' },
-      { url: '/logo.png', type: 'image/png' },
+      { url: '/logo%20-%20white.png', sizes: 'any' },
+      { url: '/logo%20-%20white.png', type: 'image/png' },
     ],
-    apple: '/logo.png',
+    apple: '/logo%20-%20white.png',
   },
 };
 
@@ -62,9 +62,9 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <BotIdClient protect={protectedRoutes} />
-        <link rel="icon" href="/logo.png" type="image/png" />
-        <link rel="shortcut icon" href="/logo.png" type="image/png" />
-        <link rel="apple-touch-icon" href="/logo.png" />
+        <link rel="icon" href="/logo%20-%20white.png" type="image/png" />
+        <link rel="shortcut icon" href="/logo%20-%20white.png" type="image/png" />
+        <link rel="apple-touch-icon" href="/logo%20-%20white.png" />
       </head>
       <body className="min-h-screen bg-slate-50 text-slate-900">
         {children}

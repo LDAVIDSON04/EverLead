@@ -25,7 +25,7 @@ async function sendApprovalEmail(email: string, fullName: string | null, approve
       ? `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="text-align: center; margin-bottom: 30px;">
-            <img src="${siteUrl}/logo.png" alt="Soradin" style="height: 40px; width: auto; margin: 0 auto 10px; display: block;" />
+            <img src="${siteUrl}/logo%20-%20white.png" alt="Soradin" style="height: 40px; width: auto; margin: 0 auto 10px; display: block;" />
             <div style="display: none;">
               <h1 style="color: #2a2a2a; font-size: 28px; margin: 0; font-weight: 300;">Soradin</h1>
               <p style="color: #6b6b6b; font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; margin: 5px 0 0 0;">Pre-Planning</p>
@@ -51,7 +51,7 @@ async function sendApprovalEmail(email: string, fullName: string | null, approve
       : `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="text-align: center; margin-bottom: 30px;">
-            <img src="${siteUrl}/logo.png" alt="Soradin" style="height: 40px; width: auto; margin: 0 auto 10px; display: block;" />
+            <img src="${siteUrl}/logo%20-%20white.png" alt="Soradin" style="height: 40px; width: auto; margin: 0 auto 10px; display: block;" />
             <div style="display: none;">
               <h1 style="color: #2a2a2a; font-size: 28px; margin: 0; font-weight: 300;">Soradin</h1>
               <p style="color: #6b6b6b; font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; margin: 5px 0 0 0;">Pre-Planning</p>
