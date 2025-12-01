@@ -64,7 +64,7 @@ export default function HomePage() {
                   <span className="text-[#4a4a4a]">with care, clarity, and confidence.</span>
                 </h1>
                 <p className="mx-auto max-w-2xl text-lg leading-relaxed text-[#5a5a5a] sm:text-xl md:text-xl font-light">
-                  Planning ahead doesn&apos;t have to feel overwhelming. Soradin will help to guide you through the various options available to you for your legacy planning. Connecting you to experts in your area with the local knowledge you desire, the compassion you need and the experience to make the entire process a little bit easier. By taking the time now to make your arrangements, we ensure the people you love are supported later.
+                  Funeral planning doesn&apos;t have to feel overwhelming. Soradin will help to guide you through the various options available to you for your legacy planning. Connecting you to experts in your area with the local knowledge you desire, the compassion you need and the experience to make the entire process a little bit easier. By taking the time now to make your arrangements, we ensure the people you love are supported later.
                 </p>
               </div>
               <div className="flex flex-col items-center justify-center pt-6">
