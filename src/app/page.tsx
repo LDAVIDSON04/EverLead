@@ -145,10 +145,10 @@ export default function HomePage() {
                 className="text-lg font-light text-[#1a1a1a] tracking-tight"
                 style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
               >
-                Review your personalized plan
+                Finalize your plan
               </h3>
               <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
-                We summarize your wishes clearly and send them to a specialist in your area to review.
+                Prearrangement specialist will be in touch to review your options and formalize your plan.
               </p>
             </div>
           </div>
