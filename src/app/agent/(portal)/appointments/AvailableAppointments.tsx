@@ -169,7 +169,7 @@ export default function AvailableAppointments({
     try {
       const { data, error: fetchError } = await supabaseClient
         .from('leads')
-        .select('*')
+        .select('*, planning_for_name, planning_for_age')
         .eq('id', leadId)
         .single();
 
@@ -179,6 +179,16 @@ export default function AvailableAppointments({
         setLoadingLead(false);
         return;
       }
+
+      // Debug: Log the data to see if planning_for fields are present
+      console.log('Loaded lead data:', {
+        id: data?.id,
+        planning_for: data?.planning_for,
+        planning_for_name: data?.planning_for_name,
+        planning_for_age: data?.planning_for_age,
+        hasPlanningForName: !!data?.planning_for_name,
+        hasPlanningForAge: data?.planning_for_age !== null && data?.planning_for_age !== undefined,
+      });
 
       setFullLead(data as FullLead);
     } catch (err) {
@@ -538,10 +548,9 @@ export default function AvailableAppointments({
                             {/* Show name and age if planning for someone else */}
                             {(fullLead.planning_for === 'spouse_partner' || 
                               fullLead.planning_for === 'parent' || 
-                              fullLead.planning_for === 'other_family') && 
-                              (fullLead.planning_for_name || fullLead.planning_for_age) && (
+                              fullLead.planning_for === 'other_family') && (
                               <div className="mt-2 pl-4 border-l-2 border-slate-200 space-y-1">
-                                {fullLead.planning_for_name && (
+                                {fullLead.planning_for_name ? (
                                   <div>
                                     <dt className="text-xs font-medium text-[#6b6b6b]">
                                       Name
@@ -550,8 +559,8 @@ export default function AvailableAppointments({
                                       {fullLead.planning_for_name}
                                     </dd>
                                   </div>
-                                )}
-                                {fullLead.planning_for_age !== null && fullLead.planning_for_age !== undefined && (
+                                ) : null}
+                                {fullLead.planning_for_age !== null && fullLead.planning_for_age !== undefined ? (
                                   <div>
                                     <dt className="text-xs font-medium text-[#6b6b6b]">
                                       Age
@@ -560,6 +569,11 @@ export default function AvailableAppointments({
                                       {fullLead.planning_for_age}
                                     </dd>
                                   </div>
+                                ) : null}
+                                {!fullLead.planning_for_name && (fullLead.planning_for_age === null || fullLead.planning_for_age === undefined) && (
+                                  <p className="text-xs text-[#6b6b6b] italic">
+                                    Details not provided
+                                  </p>
                                 )}
                               </div>
                             )}
