@@ -131,10 +131,10 @@ export default function HomePage() {
                 className="text-lg font-light text-[#1a1a1a] tracking-tight"
                 style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
               >
-                Connect with a trusted specialist
+                Finalize your plan
               </h3>
               <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
-                We match you with a trusted prearrangement specialist in your area to help you finalize your plan.
+                Prearrangement specialist will be in touch to review your options and formalize your plan.
               </p>
             </div>
             <div className="text-center space-y-4">
