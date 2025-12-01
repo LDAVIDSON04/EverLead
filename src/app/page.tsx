@@ -11,14 +11,15 @@ export default function HomePage() {
         <div className="mx-auto flex max-w-7xl items-center justify-between px-8 py-5">
           {/* Left: Logo */}
           <div className="flex items-center gap-3">
-            <Image
-              src="/logo.png"
-              alt="Soradin"
-              width={40}
-              height={40}
-              className="object-contain"
-              style={{ mixBlendMode: 'lighten', filter: 'brightness(0) invert(1)' }}
-            />
+            <div className="bg-[#1f2933] p-1 rounded">
+              <Image
+                src="/logo.png"
+                alt="Soradin"
+                width={40}
+                height={40}
+                className="object-contain"
+              />
+            </div>
             <div className="flex items-baseline gap-3">
               <span className="text-xl font-light tracking-wide text-white">
                 Soradin
