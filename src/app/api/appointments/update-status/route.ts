@@ -84,6 +84,8 @@ export async function POST(req: NextRequest) {
     };
 
     if (status === "completed") {
+      // Only add completed_at if the column exists (check via safe update)
+      // If column doesn't exist, we'll catch the error and retry without it
       updateData.completed_at = new Date().toISOString();
     } else if (status === "no_show") {
       // For no_show, we can also set cancelled_at or leave it
@@ -97,11 +99,39 @@ export async function POST(req: NextRequest) {
       updateData,
     });
 
-    const { error: updateError, data: updateDataResult } = await supabaseAdmin
+    let { error: updateError, data: updateDataResult } = await supabaseAdmin
       .from("appointments")
       .update(updateData)
       .eq("id", appointmentId)
       .select();
+
+    // If error is due to missing column (PGRST204), retry without that column
+    if (updateError && updateError.code === 'PGRST204') {
+      console.warn("⚠️ Column missing error detected, retrying without optional timestamp column:", {
+        errorMessage: updateError.message,
+        updateData,
+      });
+      
+      // Remove completed_at if it was included and caused the error
+      const retryData: any = {
+        status: updateData.status,
+        updated_at: updateData.updated_at,
+      };
+      
+      // Only retry with status and updated_at
+      const retryResult = await supabaseAdmin
+        .from("appointments")
+        .update(retryData)
+        .eq("id", appointmentId)
+        .select();
+      
+      updateError = retryResult.error;
+      updateDataResult = retryResult.data;
+      
+      if (!updateError) {
+        console.log("✅ Successfully updated appointment (without optional timestamp column)");
+      }
+    }
 
     if (updateError) {
       console.error("❌ Error updating appointment:", {
@@ -123,7 +153,7 @@ export async function POST(req: NextRequest) {
           error: "Error updating appointment",
           details: updateError.message || "Unknown database error",
           code: updateError.code,
-          hint: updateError.hint,
+          hint: updateError.hint || "Please run migration: add_completed_at_to_appointments.sql",
         },
         { status: 500 }
       );
