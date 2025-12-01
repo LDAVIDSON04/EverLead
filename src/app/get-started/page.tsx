@@ -3,6 +3,7 @@
 
 import { FormEvent, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 type FormState = "idle" | "submitting" | "success" | "error";
@@ -281,6 +282,36 @@ export default function GetStartedPage() {
 
   return (
     <main className="min-h-screen bg-[#f7f4ef] py-12 md:py-16">
+      {/* Header with Logo */}
+      <header className="bg-[#1f2933]/95 backdrop-blur-sm text-white border-b border-[#1f2933]/20 mb-8">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-8 py-5">
+          <div className="flex items-center gap-3">
+            <Image
+              src="/logo.png"
+              alt="Soradin"
+              width={40}
+              height={40}
+              className="object-contain"
+              style={{ mixBlendMode: 'lighten', filter: 'brightness(0) invert(1)' }}
+            />
+            <div className="flex items-baseline gap-3">
+              <span className="text-xl font-light tracking-wide text-white">
+                Soradin
+              </span>
+              <span className="text-[10px] uppercase tracking-[0.3em] text-[#e0d5bf]/80 font-light">
+                PRE-PLANNING
+              </span>
+            </div>
+          </div>
+          <Link
+            href="/"
+            className="text-xs text-[#e0d5bf]/80 hover:text-white transition-colors font-light tracking-wide"
+          >
+            Back to home
+          </Link>
+        </div>
+      </header>
+      
       <div className="mx-auto max-w-4xl px-6">
         {/* Header */}
         <div className="mb-8">

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 
 export default function HomePage() {
   return (
@@ -9,13 +10,23 @@ export default function HomePage() {
       <header className="bg-[#1f2933]/95 backdrop-blur-sm text-white border-b border-[#1f2933]/20 sticky top-0 z-50 shadow-sm">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-8 py-5">
           {/* Left: Logo */}
-          <div className="flex items-baseline gap-3">
-            <span className="text-xl font-light tracking-wide text-white">
-              Soradin
-            </span>
-            <span className="text-[10px] uppercase tracking-[0.3em] text-[#e0d5bf]/80 font-light">
-              PRE-PLANNING
-            </span>
+          <div className="flex items-center gap-3">
+            <Image
+              src="/logo.png"
+              alt="Soradin"
+              width={40}
+              height={40}
+              className="object-contain"
+              style={{ mixBlendMode: 'lighten', filter: 'brightness(0) invert(1)' }}
+            />
+            <div className="flex items-baseline gap-3">
+              <span className="text-xl font-light tracking-wide text-white">
+                Soradin
+              </span>
+              <span className="text-[10px] uppercase tracking-[0.3em] text-[#e0d5bf]/80 font-light">
+                PRE-PLANNING
+              </span>
+            </div>
           </div>
 
           {/* Right: Actions */}
@@ -151,7 +162,7 @@ export default function HomePage() {
               className="text-4xl font-light text-[#1a1a1a] md:text-5xl tracking-tight"
               style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
             >
-              Making taking the next step more supportive for your peace of mind
+              Making the next step more supportive for your peace of mind
             </h2>
           </div>
 
@@ -288,9 +299,6 @@ export default function HomePage() {
               </div>
             </div>
           </div>
-          <p className="text-center text-sm text-[#7a7a7a] mt-12 font-light tracking-wide">
-            Your decisions are saved safely and shared only when you choose.
-          </p>
         </div>
       </section>
 
@@ -332,16 +340,6 @@ export default function HomePage() {
             </div>
 
             {/* FAQ 3 */}
-            <div className="group rounded-2xl border border-[#e5ddd0]/60 bg-white/40 backdrop-blur-sm p-8 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-[#d4c9b8] transition-all duration-500">
-              <h3 className="mb-3 text-lg font-light text-[#1a1a1a] tracking-tight">
-                Can I download my profile?
-              </h3>
-              <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
-                Yes, you can download your profile and add it the print out to your Estate Planning paperwork.
-              </p>
-            </div>
-
-            {/* FAQ 4 */}
             <div className="group rounded-2xl border border-[#e5ddd0]/60 bg-white/40 backdrop-blur-sm p-8 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-[#d4c9b8] transition-all duration-500">
               <h3 className="mb-3 text-lg font-light text-[#1a1a1a] tracking-tight">
                 Is my information secure?
