@@ -117,7 +117,7 @@ export default function AvailableAppointments({
       }
 
       // Success! Reload the page to show updated appointments
-      // The claimed appointment will be removed from available and appear in My Pipeline/My Appointments
+      // The claimed appointment will be removed from available and appear in My Appointments
       window.location.reload();
     } catch (err: any) {
       setError(err.message || 'Something went wrong');
