@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { supabaseClient } from '@/lib/supabaseClient';
 
 type Lead = {
@@ -216,6 +217,18 @@ export default function MyAppointmentsClient({
               </div>
             )}
           </div>
+
+          {/* View Details Link */}
+          {lead?.id && (
+            <div className="border-t border-slate-200 pt-4">
+              <Link
+                href={`/agent/leads/${lead.id}`}
+                className="text-sm font-medium text-[#2a2a2a] hover:text-[#6b6b6b] transition-colors inline-flex items-center gap-1"
+              >
+                View full lead details →
+              </Link>
+            </div>
+          )}
 
           {/* Status Update Buttons - only show for booked/pending appointments */}
           {canUpdateStatus && (

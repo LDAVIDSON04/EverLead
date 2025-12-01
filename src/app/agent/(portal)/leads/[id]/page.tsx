@@ -145,10 +145,26 @@ export default function LeadDetailsPage() {
           all_keys: Object.keys(data),
         });
 
-        // Optional: basic access check (only owner or new)
+        // Access check: allow if lead is assigned to this agent OR if agent has an appointment for this lead
+        const isAssignedToAgent = data.assigned_agent_id === user.id;
+        
+        // Check if agent has an appointment for this lead
+        let hasAppointment = false;
+        if (!isAssignedToAgent) {
+          const { data: appointmentData } = await supabaseClient
+            .from('appointments')
+            .select('id')
+            .eq('lead_id', id)
+            .eq('agent_id', user.id)
+            .maybeSingle();
+          
+          hasAppointment = !!appointmentData;
+        }
+
         if (
           data.assigned_agent_id &&
-          data.assigned_agent_id !== user.id
+          data.assigned_agent_id !== user.id &&
+          !hasAppointment
         ) {
           setLeadError("This lead is assigned to another agent.");
           setLeadLoading(false);

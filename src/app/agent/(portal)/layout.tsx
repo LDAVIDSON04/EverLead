@@ -13,7 +13,7 @@ type AgentLayoutProps = {
 const tabs = [
   { href: '/agent/dashboard', label: 'Home' },
   { href: '/agent/appointments', label: 'Buy Appointments' },
-  { href: '/agent/leads/mine', label: 'My Pipeline' },
+  { href: '/agent/my-appointments', label: 'My Appointments' },
   { href: '/agent/dashboard#roi', label: 'Performance' },
 ];
 
