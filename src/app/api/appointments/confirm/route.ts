@@ -107,12 +107,28 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (updateError || !updated) {
-      console.error("Appointment assignment error:", updateError);
+      console.error("Appointment assignment error:", {
+        error: updateError,
+        appointmentId,
+        agentId,
+        updateErrorCode: updateError?.code,
+        updateErrorMessage: updateError?.message,
+      });
       return NextResponse.json(
-        { error: "Could not assign appointment. It may have been purchased by another agent." },
+        { 
+          error: "Could not assign appointment. It may have been purchased by another agent.",
+          details: updateError?.message 
+        },
         { status: 500 }
       );
     }
+
+    console.log("✅ Appointment successfully assigned:", {
+      appointmentId,
+      agentId,
+      status: updated.status,
+      price_cents: updated.price_cents,
+    });
 
     // Get agent email and name for notification
     const { data: agentAuth, error: agentAuthError } = await supabaseAdmin.auth.admin.getUserById(agentId);

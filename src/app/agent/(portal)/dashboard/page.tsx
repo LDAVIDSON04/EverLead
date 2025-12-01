@@ -70,7 +70,7 @@ export default function AgentDashboardPage() {
           if (isFree) {
             // Clean URL and reload to show updated appointments
             window.history.replaceState({}, "", "/agent/dashboard");
-            router.push("/agent/appointments");
+            router.push("/agent/my-appointments");
             return;
           }
 
@@ -93,8 +93,12 @@ export default function AgentDashboardPage() {
           if (res.ok) {
             // Clean URL and reload to show updated appointments
             window.history.replaceState({}, "", "/agent/dashboard");
-            // Optionally show success message or redirect to appointments page
-            router.push("/agent/appointments");
+            // Redirect to my appointments page to see the purchased appointment
+            router.push("/agent/my-appointments");
+          } else {
+            // Log error for debugging
+            const errorData = await res.json().catch(() => ({}));
+            console.error("Failed to confirm appointment:", errorData);
           }
         } catch (err) {
           console.error("Appointment confirmation error:", err);
