@@ -220,16 +220,17 @@ export default function LeadDetailsPage() {
   // Load appointment
   useEffect(() => {
     async function loadAppointment() {
-      if (!id) return;
+      if (!id || !userId) return;
 
       setAppointmentLoading(true);
 
       try {
+        // Check if current agent has an appointment for this lead (any status)
         const { data, error } = await supabaseClient
           .from('appointments')
           .select('*')
           .eq('lead_id', id)
-          .eq('status', 'pending')
+          .eq('agent_id', userId)
           .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle();
@@ -247,8 +248,10 @@ export default function LeadDetailsPage() {
       }
     }
 
-    loadAppointment();
-  }, [id]);
+    if (userId) {
+      loadAppointment();
+    }
+  }, [id, userId]);
 
   async function handleStatusChange(newStatus: string) {
     if (!id || !userId) return;
@@ -389,8 +392,9 @@ export default function LeadDetailsPage() {
     return planning;
   }
 
-  // Determine if agent owns this lead
-  const owns = lead && userId ? agentOwnsLead(lead, userId) : false;
+  // Determine if agent owns this lead or has an appointment for it
+  const owns = lead && userId ? (agentOwnsLead(lead, userId) || !!appointment) : false;
+  const hasAppointment = !!appointment;
 
   // Apply masking if agent doesn't own the lead
   const rawDisplayName =
@@ -409,10 +413,10 @@ export default function LeadDetailsPage() {
       <section className="mx-auto max-w-5xl px-4 py-8">
         {/* Breadcrumb */}
         <Link
-          href={owns ? "/agent/leads/mine" : "/agent/leads/available"}
+          href={hasAppointment ? "/agent/my-appointments" : (owns ? "/agent/leads/mine" : "/agent/leads/available")}
           className="mb-4 inline-flex items-center gap-1 text-xs text-[#6b6b6b] hover:text-[#2a2a2a] transition-colors"
         >
-          ← Back to {owns ? "my leads" : "available leads"}
+          ← Back to {hasAppointment ? "my appointments" : (owns ? "my leads" : "available leads")}
         </Link>
 
         {leadLoading ? (

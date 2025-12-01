@@ -58,10 +58,26 @@ export default function MyAppointmentsClient({
     setError(null);
 
     try {
+      // Get current user (agent)
+      const {
+        data: { user },
+        error: userError,
+      } = await supabaseClient.auth.getUser();
+
+      if (userError || !user) {
+        throw new Error('You must be logged in to update appointments.');
+      }
+
+      const agentId = user.id;
+
       const res = await fetch('/api/appointments/update-status', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ appointmentId: id, status }),
+        body: JSON.stringify({ 
+          appointmentId: id, 
+          status,
+          agentId,
+        }),
       });
 
       if (!res.ok) {
