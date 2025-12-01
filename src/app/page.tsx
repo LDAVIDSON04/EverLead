@@ -155,65 +155,71 @@ export default function HomePage() {
             </h2>
           </div>
 
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-            <div className="group rounded-2xl border border-[#e5ddd0]/60 bg-white/40 backdrop-blur-sm p-10 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-[#d4c9b8] transition-all duration-500">
-              <h3
-                className="mb-4 text-xl font-light text-[#1a1a1a] tracking-tight"
-                style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-              >
-                Remove financial burdens
-              </h3>
-              <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
-                Preplanning helps to remove the financial burden from your loved ones at a time when making financial decisions can be difficult.
-              </p>
+          <div className="space-y-8">
+            {/* Top row: three benefits */}
+            <div className="grid gap-8 md:grid-cols-3">
+              <div className="group rounded-2xl border border-[#e5ddd0]/60 bg-white/40 backdrop-blur-sm p-10 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-[#d4c9b8] transition-all duration-500">
+                <h3
+                  className="mb-4 text-xl font-light text-[#1a1a1a] tracking-tight"
+                  style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+                >
+                  Remove financial burdens
+                </h3>
+                <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
+                  Preplanning helps to remove the financial burden from your loved ones at a time when making financial decisions can be difficult.
+                </p>
+              </div>
+
+              <div className="group rounded-2xl border border-[#e5ddd0]/60 bg-white/40 backdrop-blur-sm p-10 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-[#d4c9b8] transition-all duration-500">
+                <h3
+                  className="mb-4 text-xl font-light text-[#1a1a1a] tracking-tight"
+                  style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+                >
+                  Avoid unexpected costs
+                </h3>
+                <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
+                  Understanding your options helps you make informed decisions.
+                </p>
+              </div>
+
+              <div className="group rounded-2xl border border-[#e5ddd0]/60 bg-white/40 backdrop-blur-sm p-10 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-[#d4c9b8] transition-all duration-500">
+                <h3
+                  className="mb-4 text-xl font-light text-[#1a1a1a] tracking-tight"
+                  style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+                >
+                  Having time to breath
+                </h3>
+                <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
+                  Being prepared ahead of time allows your family to step back, take a breath and move through the process with clarity.
+                </p>
+              </div>
             </div>
 
-            <div className="group rounded-2xl border border-[#e5ddd0]/60 bg-white/40 backdrop-blur-sm p-10 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-[#d4c9b8] transition-all duration-500">
-              <h3
-                className="mb-4 text-xl font-light text-[#1a1a1a] tracking-tight"
-                style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-              >
-                Avoid unexpected costs
-              </h3>
-              <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
-                Understanding your options helps you make informed decisions.
-              </p>
-            </div>
+            {/* Bottom row: two benefits centered */}
+            <div className="flex flex-col items-stretch gap-8 md:flex-row md:justify-center">
+              <div className="group rounded-2xl border border-[#e5ddd0]/60 bg-white/40 backdrop-blur-sm p-10 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-[#d4c9b8] transition-all duration-500 md:w-80">
+                <h3
+                  className="mb-4 text-xl font-light text-[#1a1a1a] tracking-tight"
+                  style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+                >
+                  Fulfilling your duty
+                </h3>
+                <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
+                  Taking responsibility for your estate plan and ensuring your loved ones are not left in a tough situation.
+                </p>
+              </div>
 
-            <div className="group rounded-2xl border border-[#e5ddd0]/60 bg-white/40 backdrop-blur-sm p-10 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-[#d4c9b8] transition-all duration-500">
-              <h3
-                className="mb-4 text-xl font-light text-[#1a1a1a] tracking-tight"
-                style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-              >
-                Having time to breath
-              </h3>
-              <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
-                Being prepared ahead of time allows your family to step back, take a breath and move through the process with clarity.
-              </p>
-            </div>
-
-            <div className="group rounded-2xl border border-[#e5ddd0]/60 bg-white/40 backdrop-blur-sm p-10 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-[#d4c9b8] transition-all duration-500">
-              <h3
-                className="mb-4 text-xl font-light text-[#1a1a1a] tracking-tight"
-                style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-              >
-                Fulfilling your duty
-              </h3>
-              <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
-                Taking responsibility for your estate plan and ensuring your loved ones are not left in a tough situation.
-              </p>
-            </div>
-
-            <div className="group rounded-2xl border border-[#e5ddd0]/60 bg-white/40 backdrop-blur-sm p-10 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-[#d4c9b8] transition-all duration-500">
-              <h3
-                className="mb-4 text-xl font-light text-[#1a1a1a] tracking-tight"
-                style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-              >
-                Remove uncertainty
-              </h3>
-              <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
-                Your choices are recorded clearly and your plan helps to ensure your family and loved ones understand your wishes.
-              </p>
+              <div className="group rounded-2xl border border-[#e5ddd0]/60 bg-white/40 backdrop-blur-sm p-10 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-[#d4c9b8] transition-all duration-500 md:w-80">
+                <h3
+                  className="mb-4 text-xl font-light text-[#1a1a1a] tracking-tight"
+                  style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+                >
+                  Remove uncertainty
+                </h3>
+                <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
+                  Your choices are recorded clearly and your plan helps to ensure your family and loved ones understand your wishes.
+                </p>
+              </div>
             </div>
           </div>
         </div>
