@@ -385,9 +385,9 @@ export default function HomePage() {
             <p>Questions or need help?</p>
             <p>We&apos;re here if you need us.</p>
           </div>
-          <div className="flex flex-col items-center justify-center gap-8 text-center text-[12px] text-[#5a5a5a] sm:flex-row sm:gap-16">
+          <div className="flex items-center justify-center">
             {/* Email */}
-            <div className="space-y-2">
+            <div className="space-y-2 text-center text-[12px] text-[#5a5a5a]">
               <div className="flex items-center justify-center">
                 {/* Simple chat/message icon */}
                 <div className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-300 text-slate-700">
@@ -400,24 +400,6 @@ export default function HomePage() {
                 </p>
                 <p className="text-[12px] text-[#4a4a4a]">
                   support@soradin.com
-                </p>
-              </div>
-            </div>
-
-            {/* Phone */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-center">
-                {/* Simple phone icon */}
-                <div className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-300 text-slate-700">
-                  <span className="text-xl leading-none">📞</span>
-                </div>
-              </div>
-              <div className="space-y-0.5">
-                <p className="text-[11px] uppercase tracking-[0.16em] text-[#7a7a7a]">
-                  Call us
-                </p>
-                <p className="text-[12px] text-[#4a4a4a]">
-                  (250)-486-2520
                 </p>
               </div>
             </div>
