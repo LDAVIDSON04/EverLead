@@ -48,39 +48,38 @@ export default function HomePage() {
 
       {/* Hero Section */}
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#faf8f5] via-[#f7f4ef] to-[#f5f1eb]"></div>
-        <div className="relative w-full">
-          {/* Hero Image - Full Width */}
-          <div className="relative w-full h-[380px] md:h-[480px] lg:h-[520px] overflow-hidden bg-[#e5ddd0]">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#faf8f5] via-[#f7f4ef] to-[#f5f1eb]" />
+
+        <div className="relative mx-auto flex max-w-6xl flex-col items-stretch gap-10 px-6 py-10 md:flex-row md:py-12 lg:py-16">
+          {/* Left: Hero Image (takes left half on desktop) */}
+          <div className="relative h-64 overflow-hidden rounded-2xl bg-[#e5ddd0] shadow-sm md:h-[420px] lg:h-[460px] md:w-1/2">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/hero.jpg"
               alt=""
-              className="w-full h-full object-cover"
+              className="h-full w-full object-cover object-left"
             />
-            <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/20 pointer-events-none"></div>
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/20" />
           </div>
-          
-          {/* Content Below Image */}
-          <div className="relative mx-auto max-w-5xl px-6 py-16 md:py-20">
-            <div className="flex flex-col gap-8 text-center">
-              <div className="space-y-6">
-                <h1
-                  className="text-5xl font-light text-[#1a1a1a] leading-[1.1] tracking-tight sm:text-6xl md:text-7xl"
-                  style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-                >
-                  A gentle way to plan ahead
-                  <br />
-                  <span className="text-[#4a4a4a]">with care, clarity, and confidence.</span>
-                </h1>
-                <p className="mx-auto max-w-2xl text-lg leading-relaxed text-[#5a5a5a] sm:text-xl md:text-xl font-light">
-                  Funeral planning doesn&apos;t have to feel overwhelming. Soradin will help to guide you through the various options available to you for your legacy planning. Connecting you to experts in your area with the local knowledge you desire, the compassion you need and the experience to make the entire process a little bit easier. By taking the time now to make your arrangements, we ensure the people you love are supported later.
-                </p>
-              </div>
-              <div className="flex flex-col items-center justify-center pt-6">
+
+          {/* Right: Hero Copy */}
+          <div className="flex items-center md:w-1/2">
+            <div className="flex flex-col gap-6 text-center md:text-left">
+              <h1
+                className="text-4xl font-light text-[#1a1a1a] leading-tight tracking-tight sm:text-5xl md:text-5xl lg:text-6xl"
+                style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+              >
+                A gentle way to plan ahead
+                <br />
+                <span className="text-[#4a4a4a]">with care, clarity, and confidence.</span>
+              </h1>
+              <p className="text-base leading-relaxed text-[#5a5a5a] sm:text-lg md:text-base lg:text-lg">
+                Funeral planning doesn&apos;t have to feel overwhelming. Soradin will help to guide you through the various options available to you for your legacy planning. Connecting you to experts in your area with the local knowledge you desire, the compassion you need and the experience to make the entire process a little bit easier. By taking the time now to make your arrangements, we ensure the people you love are supported later.
+              </p>
+              <div className="pt-2 md:pt-4">
                 <Link
                   href="/get-started"
-                  className="group w-full max-w-md rounded-full bg-[#1a1a1a] px-10 py-5 text-lg font-medium tracking-wide text-white shadow-xl shadow-black/10 hover:bg-[#2a2a2a] hover:shadow-2xl hover:shadow-black/15 transition-all duration-300"
+                  className="group inline-flex w-full max-w-md items-center justify-center rounded-full bg-[#1a1a1a] px-10 py-4 text-base font-medium tracking-wide text-white shadow-xl shadow-black/10 hover:bg-[#2a2a2a] hover:shadow-2xl hover:shadow-black/15 transition-all duration-300 md:w-auto"
                 >
                   Start planning online
                 </Link>
