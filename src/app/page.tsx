@@ -50,21 +50,24 @@ export default function HomePage() {
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-[#faf8f5] via-[#f7f4ef] to-[#f5f1eb]" />
 
-        <div className="relative mx-auto flex max-w-6xl flex-col items-stretch gap-10 px-6 py-8 md:flex-row md:py-0 lg:py-0 md:h-[520px] lg:h-[560px]">
-          {/* Left: Hero Image (takes left half on desktop) */}
-          <div className="relative h-64 overflow-hidden bg-[#e5ddd0] md:h-full md:w-1/2">
+        <div className="relative flex flex-col md:flex-row min-h-[420px] md:min-h-[520px] lg:min-h-[560px]">
+          {/* Left: Hero Image fills full left half */}
+          <div className="relative w-full md:w-1/2 min-h-[320px] md:min-h-0">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/hero.jpg"
               alt=""
-              className="h-full w-full object-cover object-center"
+              className="absolute inset-0 h-full w-full object-cover object-center"
             />
+            {/* Maintain aspect ratio on small screens */}
+            <div className="block pb-[65%] md:hidden" />
+            <div className="hidden md:block h-full" />
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/20" />
           </div>
 
           {/* Right: Hero Copy */}
-          <div className="flex items-center md:w-1/2">
-            <div className="flex flex-col gap-6 text-center md:text-left">
+          <div className="flex items-center w-full md:w-1/2 px-6 md:px-10 lg:px-16 py-10 md:py-16">
+            <div className="flex flex-col gap-6 text-center md:text-left max-w-xl">
               <h1
                 className="text-4xl font-light text-[#1a1a1a] leading-tight tracking-tight sm:text-5xl md:text-5xl lg:text-6xl"
                 style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
