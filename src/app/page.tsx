@@ -385,14 +385,12 @@ export default function HomePage() {
       </section>
 
       {/* Micro contact block */}
-      <section className="border-t border-[#e5ddd0]/60 bg-[#f7f4ef]">
-        <div className="mx-auto max-w-6xl px-6 py-8 text-center md:text-left md:flex md:items-center md:justify-between gap-4">
+      <section className="border-top border-[#e5ddd0]/60 bg-[#f7f4ef]">
+        <div className="mx-auto max-w-6xl px-6 py-8 text-center">
           <div className="space-y-1 text-[13px] text-[#7a7a7a]">
             <p>Questions or need help?</p>
             <p>We&apos;re here if you need us.</p>
-          </div>
-          <div className="mt-4 md:mt-0 space-y-1 text-[13px] text-[#7a7a7a]">
-            <p>📞 (250)-486-2520</p>
+            <p className="mt-3">📞 (250)-486-2520</p>
             <p>✉️ support@soradin.com</p>
           </div>
         </div>
