@@ -50,14 +50,14 @@ export default function HomePage() {
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-[#faf8f5] via-[#f7f4ef] to-[#f5f1eb]" />
 
-        <div className="relative mx-auto flex max-w-6xl flex-col items-stretch gap-10 px-6 py-10 md:flex-row md:py-12 lg:py-16">
+        <div className="relative mx-auto flex max-w-6xl flex-col items-stretch gap-10 px-6 py-8 md:flex-row md:py-10 lg:py-14">
           {/* Left: Hero Image (takes left half on desktop) */}
-          <div className="relative h-64 overflow-hidden rounded-2xl bg-[#e5ddd0] shadow-sm md:h-[420px] lg:h-[460px] md:w-1/2">
+          <div className="relative h-64 overflow-hidden bg-[#e5ddd0] md:h-[460px] lg:h-[520px] md:w-1/2">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/hero.jpg"
               alt=""
-              className="h-full w-full object-cover object-left"
+              className="h-full w-full object-cover object-center"
             />
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/20" />
           </div>
