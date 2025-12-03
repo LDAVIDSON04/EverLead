@@ -8,32 +8,32 @@ export default function HomePage() {
     <main className="min-h-screen bg-gradient-to-b from-[#faf8f5] via-[#f7f4ef] to-[#f5f1eb] text-[#2a2a2a]">
       {/* Header */}
       <header className="bg-[#1f2933]/95 backdrop-blur-sm text-white border-b border-[#1f2933]/20 sticky top-0 z-50 shadow-sm">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-8 py-5">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 md:px-8 py-3 md:py-5">
           {/* Left: Logo */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 md:gap-3 flex-shrink-0 min-w-0">
             <Image
               src="/logo - white.png"
               alt="Soradin"
               width={70}
               height={70}
-              className="object-contain"
+              className="object-contain w-12 h-12 md:w-[70px] md:h-[70px]"
             />
-            <span className="text-xl font-light tracking-wide text-white">
+            <span className="text-lg md:text-xl font-light tracking-wide text-white whitespace-nowrap">
               Soradin
             </span>
           </div>
 
           {/* Right: Actions */}
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2 md:gap-6 flex-shrink-0">
             <Link
               href="/get-started"
-              className="rounded-full border border-[#e5d7b5]/40 bg-white/5 backdrop-blur-sm px-5 py-2 text-xs font-light tracking-wide text-[#e0d5bf] hover:bg-white/10 hover:border-[#e5d7b5]/60 transition-all duration-300"
+              className="rounded-full border border-[#e5d7b5]/40 bg-white/5 backdrop-blur-sm px-3 md:px-5 py-1.5 md:py-2 text-[10px] md:text-xs font-light tracking-wide text-[#e0d5bf] hover:bg-white/10 hover:border-[#e5d7b5]/60 transition-all duration-300 whitespace-nowrap"
             >
               Get started
             </Link>
             <Link
               href="/agent"
-              className="text-xs text-[#e0d5bf]/80 hover:text-white transition-colors font-light tracking-wide"
+              className="text-[10px] md:text-xs text-[#e0d5bf]/80 hover:text-white transition-colors font-light tracking-wide whitespace-nowrap hidden sm:inline-block"
             >
               For professionals
             </Link>
