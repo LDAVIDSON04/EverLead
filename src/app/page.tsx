@@ -72,8 +72,7 @@ export default function HomePage() {
                 className="text-4xl font-light text-[#1a1a1a] leading-tight tracking-tight sm:text-5xl md:text-5xl lg:text-6xl"
                 style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
               >
-                A gentle way to plan ahead
-                <br />
+                A gentle way to plan ahead{" "}
                 <span className="text-[#4a4a4a]">with care, clarity, and confidence.</span>
               </h1>
               <p className="text-base leading-relaxed text-[#5a5a5a] sm:text-lg md:text-base lg:text-lg">
