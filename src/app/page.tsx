@@ -73,7 +73,7 @@ export default function HomePage() {
                 style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
               >
                 A gentle way to plan ahead{" "}
-                <span className="text-[#4a4a4a]">with care, clarity, and confidence.</span>
+                <span>with care, clarity, and confidence.</span>
               </h1>
               <p className="text-base leading-relaxed text-[#5a5a5a] sm:text-lg md:text-base lg:text-lg">
                 Funeral planning doesn&apos;t have to feel overwhelming. Soradin will help to guide you through the various options available to you for your legacy planning. Connecting you to experts in your area with the local knowledge you desire, the compassion you need and the experience to make the entire process a little bit easier. By taking the time now to make your arrangements, we ensure the people you love are supported later.
