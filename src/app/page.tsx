@@ -384,6 +384,20 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Micro contact block */}
+      <section className="border-t border-[#e5ddd0]/60 bg-[#f7f4ef]">
+        <div className="mx-auto max-w-6xl px-6 py-8 text-center md:text-left md:flex md:items-center md:justify-between gap-4">
+          <div className="space-y-1 text-[13px] text-[#7a7a7a]">
+            <p>Questions or need help?</p>
+            <p>We&apos;re here if you need us.</p>
+          </div>
+          <div className="mt-4 md:mt-0 space-y-1 text-[13px] text-[#7a7a7a]">
+            <p>📞 (250)-486-2520</p>
+            <p>✉️ support@soradin.com</p>
+          </div>
+        </div>
+      </section>
+
       {/* Footer */}
       <footer className="relative border-t border-[#e5ddd0]/30 py-12">
         <div className="mx-auto flex max-w-7xl flex-col items-center gap-6 px-8 text-center text-xs text-[#7a7a7a] md:flex-row md:justify-between md:text-left font-light tracking-wide">
