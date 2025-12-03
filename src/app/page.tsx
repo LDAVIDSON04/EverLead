@@ -18,14 +18,9 @@ export default function HomePage() {
               height={70}
               className="object-contain"
             />
-            <div className="flex items-baseline gap-3">
-              <span className="text-xl font-light tracking-wide text-white">
-                Soradin
-              </span>
-              <span className="text-[10px] uppercase tracking-[0.3em] text-[#e0d5bf]/80 font-light">
-                PRE-PLANNING
-              </span>
-            </div>
+            <span className="text-xl font-light tracking-wide text-white">
+              Soradin
+            </span>
           </div>
 
           {/* Right: Actions */}
