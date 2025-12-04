@@ -1,7 +1,7 @@
 // src/app/get-started/page.tsx
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -12,12 +12,94 @@ export default function GetStartedPage() {
   const router = useRouter();
   const [formState, setFormState] = useState<FormState>("idle");
   const [error, setError] = useState<string | null>(null);
+  const [currentStep, setCurrentStep] = useState<number>(1);
   const [planningFor, setPlanningFor] = useState<string>("");
+  const formRef = useRef<HTMLFormElement>(null);
+
+  // Lock scrolling to prevent skipping steps
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, []);
+
+  // Validate current step before proceeding
+  function validateStep(step: number): boolean {
+    if (!formRef.current) return false;
+
+    const formData = new FormData(formRef.current);
+
+    if (step === 1) {
+      const planning_for = formData.get("planning_for");
+      const service_type = formData.get("service_type");
+      const remains_disposition = formData.get("remains_disposition");
+      const family_pre_arranged = formData.get("family_pre_arranged");
+
+      if (!planning_for || !service_type || !remains_disposition || !family_pre_arranged) {
+        setError("Please fill in all required fields.");
+        return false;
+      }
+
+      // Validate planning_for conditional fields
+      if (planning_for === "spouse_partner" || planning_for === "parent" || planning_for === "other_family") {
+        const planning_for_name = formData.get("planning_for_name");
+        const planning_for_age = formData.get("planning_for_age");
+        if (!planning_for_name || !planning_for_age) {
+          setError("Please fill in the name and age of the person you're planning for.");
+          return false;
+        }
+      }
+    } else if (step === 2) {
+      const service_celebration = formData.get("service_celebration");
+      const timeline_intent = formData.get("timeline_intent");
+      if (!service_celebration || !timeline_intent) {
+        setError("Please fill in all required fields.");
+        return false;
+      }
+    } else if (step === 3) {
+      const first_name = formData.get("first_name");
+      const last_name = formData.get("last_name");
+      const email = formData.get("email");
+      const phone = formData.get("phone");
+      const city = formData.get("city");
+      const province = formData.get("province");
+
+      if (!first_name || !last_name || !email || !phone || !city || !province) {
+        setError("Please fill in all required fields.");
+        return false;
+      }
+
+      // Validate email format
+      const emailValue = (email as string)?.trim() || "";
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(emailValue)) {
+        setError("Please enter a valid email address.");
+        return false;
+      }
+    }
+
+    setError(null);
+    return true;
+  }
+
+  function handleNextStep() {
+    if (validateStep(currentStep)) {
+      setCurrentStep((prev) => Math.min(prev + 1, 3));
+      // Scroll to top of form
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setFormState("submitting");
     setError(null);
+
+    if (!validateStep(3)) {
+      setFormState("error");
+      return;
+    }
 
     const formData = new FormData(e.currentTarget);
 
@@ -29,95 +111,49 @@ export default function GetStartedPage() {
 
     // Simple default pricing logic for MVP
     const buy_now_price_cents =
-      urgency_level === "hot" ? 100 : urgency_level === "warm" ? 100 : null; // $1 for testing
+      urgency_level === "hot" ? 100 : urgency_level === "warm" ? 100 : null;
     const auction_min_price_cents =
-      urgency_level === "hot" ? 50 : urgency_level === "warm" ? 50 : null; // $0.50 for testing
+      urgency_level === "hot" ? 50 : urgency_level === "warm" ? 50 : null;
 
-    // Validate required fields (client-side mirror of API requirements)
-    const requiredFields = [
-      "first_name",
-      "last_name",
-      "email",
-      "phone",
-      "timeline_intent",
-      "service_type",
-      "planning_for",
-      "remains_disposition",
-      "service_celebration",
-      "family_pre_arranged",
-    ];
-
-    for (const field of requiredFields) {
-      const value = formData.get(field);
-      if (!value || (typeof value === "string" && value.trim() === "")) {
-        setError(`Please fill in all required fields. Missing: ${field.replace("_", " ")}`);
-        setFormState("error");
-        return;
-      }
-    }
-
-    // Validate email format
-    const emailValue = (formData.get("email") as string)?.trim() || "";
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(emailValue)) {
-      setError("Please enter a valid email address.");
-      setFormState("error");
-      return;
-    }
-
-    // Get form values (optional fields)
+    // Get form values
     const additionalNotesValue = formData.get("additional_notes");
     const additionalNotes = typeof additionalNotesValue === "string" ? additionalNotesValue.trim() : "";
 
-    // Get planning_for related fields if applicable
     const planningForValue = (formData.get("planning_for") as string)?.trim() || null;
     const planningForName = (formData.get("planning_for_name") as string)?.trim() || null;
     const planningForAgeValue = formData.get("planning_for_age");
     const planningForAgeStr = planningForAgeValue ? String(planningForAgeValue).trim() : "";
     const planningForAgeParsed = planningForAgeStr ? Number(planningForAgeStr) : null;
 
-    // Validate planning_for fields if required
-    if (planningForValue && (planningForValue === "spouse_partner" || planningForValue === "parent" || planningForValue === "other_family")) {
-      if (!planningForName || planningForName.length === 0) {
-        setError("Please enter the name of the person you're planning for.");
-        setFormState("error");
-        return;
-      }
-      if (!planningForAgeParsed || isNaN(planningForAgeParsed) || planningForAgeParsed < 0 || planningForAgeParsed > 120) {
-        setError("Please enter a valid age (0-120) for the person you're planning for.");
-        setFormState("error");
-        return;
-      }
-    }
-
-    // Build the insert payload - ensure types are correct
+    // Build the insert payload
     const leadData: any = {
       first_name: (formData.get("first_name") as string)?.trim() || null,
       last_name: (formData.get("last_name") as string)?.trim() || null,
-      email: emailValue.trim(),
-      phone: (formData.get("phone") as string)?.trim() || null, // Optional
+      email: (formData.get("email") as string)?.trim() || null,
+      phone: (formData.get("phone") as string)?.trim() || null,
+      city: (formData.get("city") as string)?.trim() || null,
+      province: (formData.get("province") as string)?.trim() || null,
       planning_for: planningForValue,
-      planning_for_name: planningForName, // Name of person being planned for
-      planning_for_age: planningForAgeParsed, // Age of person being planned for
+      planning_for_name: planningForName,
+      planning_for_age: planningForAgeParsed,
       service_type: (formData.get("service_type") as string)?.trim() || null,
-      timeline_intent: timeline_intent.trim(),
-      urgency_level,
       remains_disposition: (formData.get("remains_disposition") as string)?.trim() || null,
       service_celebration: (formData.get("service_celebration") as string)?.trim() || null,
       family_pre_arranged: (formData.get("family_pre_arranged") as string)?.trim() || null,
-      additional_notes: additionalNotes || null, // Optional
+      timeline_intent: timeline_intent.trim(),
+      urgency_level,
+      additional_notes: additionalNotes || null,
       status: urgency_level === "cold" ? "cold_unassigned" : "new",
       buy_now_price_cents,
       auction_min_price_cents,
     };
 
-    // Always include full_name for backward compatibility
     const insertPayload = {
       ...leadData,
       full_name: `${leadData.first_name} ${leadData.last_name}`.trim(),
     };
 
-    // Clean payload: only include fields that exist, remove null/undefined/empty strings
+    // Clean payload
     const cleanPayload: any = {};
     for (const [key, value] of Object.entries(insertPayload)) {
       if (value !== null && value !== undefined && value !== "") {
@@ -125,14 +161,12 @@ export default function GetStartedPage() {
       }
     }
 
-    // Ensure full_name exists for backward compatibility (even if other fields were filtered)
     if (!cleanPayload.full_name && leadData.first_name && leadData.last_name) {
       cleanPayload.full_name = `${leadData.first_name} ${leadData.last_name}`.trim();
     }
 
     console.log("Submitting lead with payload:", cleanPayload);
 
-    // Call API route instead of direct Supabase insert (uses service role key)
     try {
       const response = await fetch("/api/leads/create", {
         method: "POST",
@@ -142,14 +176,12 @@ export default function GetStartedPage() {
         body: JSON.stringify(cleanPayload),
       });
 
-      // Get response text first (can only read once)
       const responseText = await response.text();
       let responseBody: any = null;
       try {
         responseBody = JSON.parse(responseText);
       } catch (e) {
         console.error("Failed to parse error JSON", e);
-        console.error("Response text:", responseText);
         responseBody = { error: "Failed to parse server response", raw: responseText };
       }
 
@@ -159,27 +191,8 @@ export default function GetStartedPage() {
           statusText: response.statusText,
           body: responseBody,
         });
-        // Log the full error details
-        console.error("Full API Error Response:", JSON.stringify(responseBody, null, 2));
-        if (responseBody?.details) {
-          console.error("API Error Details:", responseBody.details);
-        }
-        if (responseBody?.code) {
-          console.error("API Error Code:", responseBody.code);
-        }
-
-        // Show specific error messages from API, including details if available
         if (responseBody?.error) {
-          let errorMessage = responseBody.error;
-          // Include details in console for debugging, but show user-friendly message
-          if (responseBody.details) {
-            console.error("Error details:", responseBody.details);
-            // For development, show more details
-            if (process.env.NODE_ENV === "development") {
-              errorMessage = `${responseBody.error}: ${responseBody.details}`;
-            }
-          }
-          setError(errorMessage);
+          setError(responseBody.error);
         } else {
           setError("Something went wrong submitting your information. Please check all fields and try again.");
         }
@@ -196,25 +209,15 @@ export default function GetStartedPage() {
 
       console.log("Lead submitted successfully:", responseBody.lead);
       
-      // Get the lead ID from the response and redirect to booking page
       const leadId = responseBody?.lead?.id;
       if (leadId) {
-        // Redirect to booking page
-        console.log("Redirecting to booking page:", `/book/${leadId}`);
         router.push(`/book/${leadId}`);
         return;
       }
       
-      console.warn("No lead ID in response, cannot redirect to booking page");
-      
-      // Fallback: if no lead ID, show success message
       setFormState("success");
     } catch (fetchError: any) {
-      console.error("Network error submitting questionnaire", {
-        message: fetchError?.message,
-        stack: fetchError?.stack,
-        fullError: fetchError,
-      });
+      console.error("Network error submitting questionnaire", fetchError);
       setError("Network error. Please check your connection and try again.");
       setFormState("error");
       return;
@@ -250,7 +253,7 @@ export default function GetStartedPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f7f4ef]">
+    <main className="min-h-screen bg-[#f7f4ef] overflow-hidden">
       {/* Header with Logo */}
       <header className="bg-[#1f2933]/95 backdrop-blur-sm text-white border-b border-[#1f2933]/20">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-8 py-5">
@@ -280,7 +283,7 @@ export default function GetStartedPage() {
         </div>
       </header>
       
-      <div className="mx-auto max-w-4xl px-6 py-12 md:py-16">
+      <div className="mx-auto max-w-4xl px-6 py-12 md:py-16 overflow-y-auto" style={{ maxHeight: "calc(100vh - 80px)" }}>
         {/* Optional Reassurance Text */}
         <div className="mb-6 text-center">
           <p className="text-base leading-relaxed text-[#4a4a4a] italic">
@@ -303,73 +306,31 @@ export default function GetStartedPage() {
           </p>
         </div>
 
+        {/* Progress Indicator */}
+        <div className="mb-6 flex items-center justify-center gap-2">
+          <div className={`h-2 w-16 rounded-full ${currentStep >= 1 ? "bg-[#2a2a2a]" : "bg-slate-300"}`} />
+          <div className={`h-2 w-16 rounded-full ${currentStep >= 2 ? "bg-[#2a2a2a]" : "bg-slate-300"}`} />
+          <div className={`h-2 w-16 rounded-full ${currentStep >= 3 ? "bg-[#2a2a2a]" : "bg-slate-300"}`} />
+        </div>
+        <div className="mb-6 text-center">
+          <span className="text-xs font-medium uppercase tracking-[0.15em] text-[#6b6b6b]">
+            Step {currentStep} of 3
+          </span>
+        </div>
+
         {/* Form Card */}
         <div className="rounded-xl border border-[#ded3c2] bg-white p-8 shadow-sm">
-          <form onSubmit={handleSubmit} className="space-y-8">
-            {/* Section 1: About You */}
-            <div>
-              <div className="mb-4 flex items-center gap-2">
-                <span className="text-xs font-medium uppercase tracking-[0.15em] text-[#6b6b6b]">
-                  Step 1 of 3
-                </span>
+          <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
+            {/* Error Message */}
+            {error && (
+              <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3">
+                <p className="text-xs text-red-600">{error}</p>
               </div>
-              <h2
-                className="mb-2 text-xl font-normal text-[#2a2a2a]"
-                style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-              >
-                Let&apos;s start with something simple
-              </h2>
-              <p className="mb-4 text-sm leading-relaxed text-[#4a4a4a]">
-                This helps us match you with the right pre-planning specialist in your area. There is no obligation to purchase anything.
-              </p>
+            )}
+
+            {/* STEP 1: Intent only */}
+            {currentStep === 1 && (
               <div className="space-y-4">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div>
-                    <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
-                      First name *
-                    </label>
-                    <input
-                      name="first_name"
-                      required
-                      className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
-                      Last name *
-                    </label>
-                    <input
-                      name="last_name"
-                      required
-                      className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
-                    Email *
-                  </label>
-                  <input
-                    type="email"
-                    name="email"
-                    required
-                    className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
-                    Phone *
-                  </label>
-                  <input
-                    name="phone"
-                    type="tel"
-                    required
-                    className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
-                  />
-                </div>
-
                 <div>
                   <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
                     Who are you planning for? *
@@ -420,7 +381,56 @@ export default function GetStartedPage() {
                   )}
                 </div>
 
-                {/* Trust text under Step 1 */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
+                    What type of service would you like to explore? *
+                  </label>
+                  <select
+                    name="service_type"
+                    required
+                    className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
+                  >
+                    <option value="">Select...</option>
+                    <option value="cremation">Cremation</option>
+                    <option value="burial">Burial</option>
+                    <option value="unsure">Unsure</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
+                    Burial or cremation? *
+                  </label>
+                  <select
+                    name="remains_disposition"
+                    required
+                    className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
+                  >
+                    <option value="">Select...</option>
+                    <option value="scatter_cremated_remains">Scatter cremated remains</option>
+                    <option value="keep_remains">Keep remains</option>
+                    <option value="burial_at_cemetery">Burial at cemetery</option>
+                    <option value="unsure">Unsure</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
+                    Has anyone close to you planned before? *
+                  </label>
+                  <select
+                    name="family_pre_arranged"
+                    required
+                    className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
+                  >
+                    <option value="">Select...</option>
+                    <option value="yes">Yes</option>
+                    <option value="no">No</option>
+                    <option value="unsure">Unsure</option>
+                  </select>
+                </div>
+
+                {/* Trust text */}
                 <div className="mt-6 pt-4 border-t border-slate-200">
                   <div className="space-y-1.5 text-xs text-[#5a5a5a]">
                     <p className="flex items-center gap-2">
@@ -442,73 +452,22 @@ export default function GetStartedPage() {
                   </div>
                 </div>
 
-                {/* Continue Button for Step 1 */}
+                {/* Continue Button */}
                 <div className="flex justify-end pt-4">
                   <button
                     type="button"
-                    onClick={() => {
-                      // Scroll to Step 2
-                      const step2 = document.querySelector('[data-step="2"]');
-                      step2?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }}
+                    onClick={handleNextStep}
                     className="rounded-full bg-[#2a2a2a] px-5 py-2.5 text-sm font-semibold text-white hover:bg-black transition-colors"
                   >
                     Continue
                   </button>
                 </div>
               </div>
-            </div>
+            )}
 
-            {/* Section 2: Service Preferences */}
-            <div className="border-t border-[#ded3c2] pt-8" data-step="2">
-              <div className="mb-4 flex items-center gap-2">
-                <span className="text-xs font-medium uppercase tracking-[0.15em] text-[#6b6b6b]">
-                  Step 2 of 3
-                </span>
-              </div>
-              <h2
-                className="mb-2 text-xl font-normal text-[#2a2a2a]"
-                style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-              >
-                Your general preferences
-              </h2>
-              <p className="mb-4 text-sm leading-relaxed text-[#4a4a4a]">
-                These answers help us understand what kind of guidance may be helpful for you. You can always change your mind later.
-              </p>
+            {/* STEP 2: Preferences & timing */}
+            {currentStep === 2 && (
               <div className="space-y-4">
-                <div>
-                  <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
-                    What type of service would you like to explore? *
-                  </label>
-                  <select
-                    name="service_type"
-                    required
-                    className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
-                  >
-                    <option value="">Select...</option>
-                    <option value="cremation">Cremation</option>
-                    <option value="burial">Burial</option>
-                    <option value="unsure">Unsure</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
-                    Have you given any thought to burial or cremation? *
-                  </label>
-                  <select
-                    name="remains_disposition"
-                    required
-                    className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
-                  >
-                    <option value="">Select...</option>
-                    <option value="scatter_cremated_remains">Scatter cremated remains</option>
-                    <option value="keep_remains">Keep remains</option>
-                    <option value="burial_at_cemetery">Burial at cemetery</option>
-                    <option value="unsure">Unsure</option>
-                  </select>
-                </div>
-
                 <div>
                   <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
                     Would you want a memorial or celebration of life? *
@@ -525,56 +484,6 @@ export default function GetStartedPage() {
                   </select>
                 </div>
 
-                <div>
-                  <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
-                    Has anyone close to you ever planned in advance like this? *
-                  </label>
-                  <select
-                    name="family_pre_arranged"
-                    required
-                    className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
-                  >
-                    <option value="">Select...</option>
-                    <option value="yes">Yes</option>
-                    <option value="no">No</option>
-                    <option value="unsure">Unsure</option>
-                  </select>
-                </div>
-
-                {/* Continue Button for Step 2 */}
-                <div className="flex justify-end pt-4">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      // Scroll to Step 3
-                      const step3 = document.querySelector('[data-step="3"]');
-                      step3?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }}
-                    className="rounded-full bg-[#2a2a2a] px-5 py-2.5 text-sm font-semibold text-white hover:bg-black transition-colors"
-                  >
-                    Continue
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Section 3: Contact & Timing */}
-            <div className="border-t border-[#ded3c2] pt-8" data-step="3">
-              <div className="mb-4 flex items-center gap-2">
-                <span className="text-xs font-medium uppercase tracking-[0.15em] text-[#6b6b6b]">
-                  Step 3 of 3
-                </span>
-              </div>
-              <h2
-                className="mb-2 text-xl font-normal text-[#2a2a2a]"
-                style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-              >
-                Next steps
-              </h2>
-              <p className="mb-4 text-sm leading-relaxed text-[#4a4a4a]">
-                This lets us understand when and how you&apos;d prefer to be contacted.
-              </p>
-              <div className="space-y-4">
                 <div>
                   <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
                     When would you like to learn more about your options? *
@@ -612,29 +521,111 @@ export default function GetStartedPage() {
                     placeholder="Preferences, concerns, religious considerations, family wishes, or anything else you'd like us to be aware of."
                   />
                 </div>
-              </div>
-            </div>
 
-            {/* Error Message */}
-            {error && (
-              <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3">
-                <p className="text-xs text-red-600">{error}</p>
+                {/* Continue Button */}
+                <div className="flex justify-end pt-4">
+                  <button
+                    type="button"
+                    onClick={handleNextStep}
+                    className="rounded-full bg-[#2a2a2a] px-5 py-2.5 text-sm font-semibold text-white hover:bg-black transition-colors"
+                  >
+                    Continue
+                  </button>
+                </div>
               </div>
             )}
 
-            {/* Submit Button */}
-            <div className="flex flex-col items-end border-t border-[#ded3c2] pt-6 space-y-4">
-              <button
-                type="submit"
-                disabled={formState === "submitting"}
-                className="w-full rounded-full bg-[#2a2a2a] px-5 py-2.5 text-sm font-semibold text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-70 transition-colors md:w-auto"
-              >
-                {formState === "submitting" ? "Submitting..." : "Get matched with a specialist"}
-              </button>
-              <p className="text-xs text-[#5a5a5a] text-center md:text-right max-w-md">
-                We will never sell your information. A local specialist may reach out to help answer your questions — there is no obligation to move forward.
-              </p>
-            </div>
+            {/* STEP 3: Contact info */}
+            {currentStep === 3 && (
+              <div className="space-y-4">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
+                      First name *
+                    </label>
+                    <input
+                      name="first_name"
+                      required
+                      className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
+                      Last name *
+                    </label>
+                    <input
+                      name="last_name"
+                      required
+                      className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
+                    Email *
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    required
+                    className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
+                    Phone *
+                  </label>
+                  <input
+                    name="phone"
+                    type="tel"
+                    required
+                    className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
+                  />
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
+                      City *
+                    </label>
+                    <input
+                      name="city"
+                      required
+                      className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
+                      Province / State *
+                    </label>
+                    <input
+                      name="province"
+                      defaultValue="BC"
+                      required
+                      className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
+                    />
+                  </div>
+                </div>
+
+                {/* Final CTA Button */}
+                <div className="flex flex-col items-end pt-4 space-y-4">
+                  <button
+                    type="submit"
+                    disabled={formState === "submitting"}
+                    className="w-full rounded-full bg-[#2a2a2a] px-5 py-2.5 text-sm font-semibold text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-70 transition-colors md:w-auto"
+                  >
+                    {formState === "submitting" ? "Submitting..." : "Get matched with a specialist"}
+                  </button>
+                  <div className="text-xs text-[#5a5a5a] text-center md:text-right max-w-md space-y-1">
+                    <p>We will never sell your information.</p>
+                    <p>A local specialist may reach out</p>
+                    <p>No obligation to move forward</p>
+                  </div>
+                </div>
+              </div>
+            )}
           </form>
         </div>
       </div>
