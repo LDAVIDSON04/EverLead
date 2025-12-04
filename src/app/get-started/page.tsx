@@ -298,7 +298,7 @@ export default function GetStartedPage() {
             Tell us a little about your wishes
           </h1>
           <p className="text-base leading-relaxed text-[#4a4a4a]">
-            This helps us match you with a licensed local specialist. There is no obligation to purchase.
+            This helps us match you with a licensed local specialist.
           </p>
         </div>
 
