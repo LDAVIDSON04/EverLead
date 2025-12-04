@@ -284,13 +284,6 @@ export default function GetStartedPage() {
       </header>
       
       <div className="mx-auto max-w-4xl px-6 py-12 md:py-16 overflow-y-auto" style={{ maxHeight: "calc(100vh - 80px)" }}>
-        {/* Optional Reassurance Text */}
-        <div className="mb-6 text-center">
-          <p className="text-base leading-relaxed text-[#4a4a4a] italic">
-            Most people who plan ahead say they feel an immediate sense of relief once they understand their options.
-          </p>
-        </div>
-
         {/* Header */}
         <div className="mb-8">
           <h1
@@ -620,8 +613,10 @@ export default function GetStartedPage() {
                   </button>
                   <div className="text-xs text-[#5a5a5a] text-center md:text-right max-w-md space-y-1">
                     <p>We will never sell your information.</p>
-                    <p>A local specialist may reach out</p>
-                    <p>No obligation to move forward</p>
+                    <p>
+                      A licensed local specialist WILL reach out to guide you through your options.
+                    </p>
+                    <p>There is no obligation to move forward.</p>
                   </div>
                 </div>
               </div>
