@@ -101,9 +101,13 @@ export default function GetStartedPage() {
     setFormState("submitting");
     setError(null);
 
-    if (!validateStep(3)) {
-      setFormState("error");
-      return;
+    // Validate all steps before final submit to avoid API 400s
+    for (let step = 1; step <= 3; step++) {
+      if (!validateStep(step)) {
+        setCurrentStep(step);
+        setFormState("error");
+        return;
+      }
     }
 
     const formData = new FormData(e.currentTarget);
