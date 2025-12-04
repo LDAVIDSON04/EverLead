@@ -346,7 +346,7 @@ export default function GetStartedPage() {
             )}
 
             {/* STEP 1: Intent only */}
-            <div className={currentStep === 1 ? "space-y-4" : "space-y-4 hidden"}>
+            <div className={`space-y-4 ${currentStep === 1 ? "" : "hidden"}`}>
                 <div>
                   <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
                     Who are you planning for? *
@@ -482,7 +482,7 @@ export default function GetStartedPage() {
             </div>
 
             {/* STEP 2: Preferences & timing */}
-            <div className={currentStep === 2 ? "space-y-4" : "space-y-4 hidden"}>
+            <div className={`space-y-4 ${currentStep === 2 ? "" : "hidden"}`}>
                 <div>
                   <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
                     Would you want a memorial or celebration of life? *
@@ -551,7 +551,7 @@ export default function GetStartedPage() {
             </div>
 
             {/* STEP 3: Contact info */}
-            <div className={currentStep === 3 ? "space-y-4" : "space-y-4 hidden"}>
+            <div className={`space-y-4 ${currentStep === 3 ? "" : "hidden"}`}>
                 <div className="grid gap-4 md:grid-cols-2">
                   <div>
                     <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
