@@ -33,11 +33,12 @@ export default function GetStartedPage() {
     const auction_min_price_cents =
       urgency_level === "hot" ? 50 : urgency_level === "warm" ? 50 : null; // $0.50 for testing
 
-    // Validate required fields
+    // Validate required fields (client-side mirror of API requirements)
     const requiredFields = [
       "first_name",
       "last_name",
       "email",
+      "phone",
       "timeline_intent",
       "service_type",
       "planning_for",
@@ -359,11 +360,12 @@ export default function GetStartedPage() {
 
                 <div>
                   <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
-                    Phone (optional — only if you&apos;d like a call)
+                    Phone *
                   </label>
                   <input
                     name="phone"
                     type="tel"
+                    required
                     className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
                   />
                 </div>

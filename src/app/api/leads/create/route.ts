@@ -80,29 +80,23 @@ export async function POST(req: NextRequest) {
       hasFirstName: !!body.first_name,
       hasLastName: !!body.last_name,
       hasEmail: !!body.email,
-      hasAge: !!body.age,
+      hasPhone: !!body.phone,
       keys: Object.keys(body),
     });
 
     // Validate required fields
+    // These should mirror the client-side list in `get-started/page.tsx`
     const requiredFields = [
       "first_name",
       "last_name",
       "email",
       "phone",
-      "address_line1",
-      "city",
-      "province",
-      "postal_code",
-      "age",
-      "sex",
       "timeline_intent",
       "service_type",
       "planning_for",
       "remains_disposition",
       "service_celebration",
       "family_pre_arranged",
-      "additional_notes",
     ];
 
     const missingFields = requiredFields.filter((field) => {
@@ -119,30 +113,10 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
-    
-    // Validate additional_notes is not empty
-    const additionalNotes = body.additional_notes ? String(body.additional_notes).trim() : "";
-    if (!additionalNotes || additionalNotes.length === 0) {
-      return NextResponse.json(
-        {
-          error: "Additional notes is required",
-          details: "Please provide additional details about your preferences and needs.",
-        },
-        { status: 400 }
-      );
-    }
-
-    // Validate age
-    const age = Number(body.age);
-    if (isNaN(age) || age < 18 || age > 120) {
-      return NextResponse.json(
-        {
-          error: "Invalid age",
-          details: "Age must be between 18 and 120",
-        },
-        { status: 400 }
-      );
-    }
+    // Additional notes are now optional but still stored when provided
+    const additionalNotes = body.additional_notes
+      ? String(body.additional_notes).trim()
+      : "";
 
     // Build insert payload
     // IMPORTANT: Ensure new leads are unsold and available
@@ -152,12 +126,13 @@ export async function POST(req: NextRequest) {
       full_name: `${body.first_name} ${body.last_name}`.trim(),
       email: String(body.email).trim(),
       phone: String(body.phone).trim(),
-      address_line1: String(body.address_line1).trim(),
-      city: String(body.city).trim(),
-      province: String(body.province).trim(),
-      postal_code: String(body.postal_code).trim(),
-      age: age,
-      sex: String(body.sex).trim(),
+      // Identity/location fields are now optional and may be null
+      address_line1: body.address_line1 ? String(body.address_line1).trim() : null,
+      city: body.city ? String(body.city).trim() : null,
+      province: body.province ? String(body.province).trim() : null,
+      postal_code: body.postal_code ? String(body.postal_code).trim() : null,
+      age: body.age ? Number(body.age) : null,
+      sex: body.sex ? String(body.sex).trim() : null,
       planning_for: String(body.planning_for).trim(),
       planning_for_name: body.planning_for_name ? String(body.planning_for_name).trim() : null,
       planning_for_age: body.planning_for_age ? Number(body.planning_for_age) : null,
@@ -167,7 +142,7 @@ export async function POST(req: NextRequest) {
       remains_disposition: body.remains_disposition ? String(body.remains_disposition).trim() : null,
       service_celebration: body.service_celebration ? String(body.service_celebration).trim() : null,
       family_pre_arranged: body.family_pre_arranged ? String(body.family_pre_arranged).trim() : null,
-      additional_notes: additionalNotes,
+      additional_notes: additionalNotes || null,
       // Explicitly set status to "new" and ensure lead is unsold
       status: "new",
       assigned_agent_id: null, // Ensure lead is unsold
