@@ -547,7 +547,6 @@ export default function GetStartedPage() {
                   </button>
                 </div>
               </div>
-            </div>
 
             {/* STEP 3: Contact info */}
             <div className={currentStep === 3 ? "space-y-4" : "space-y-4 hidden"}>
