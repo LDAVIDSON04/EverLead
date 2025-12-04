@@ -13,6 +13,7 @@ export default function GetStartedPage() {
   const [formState, setFormState] = useState<FormState>("idle");
   const [error, setError] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState<number>(1);
+  const [maxStepReached, setMaxStepReached] = useState<number>(1);
   const [planningFor, setPlanningFor] = useState<string>("");
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -85,7 +86,11 @@ export default function GetStartedPage() {
 
   function handleNextStep() {
     if (validateStep(currentStep)) {
-      setCurrentStep((prev) => Math.min(prev + 1, 3));
+      setCurrentStep((prev) => {
+        const next = Math.min(prev + 1, 3);
+        setMaxStepReached((prevMax) => Math.max(prevMax, next));
+        return next;
+      });
       // Scroll to top of form
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
@@ -297,11 +302,28 @@ export default function GetStartedPage() {
           </p>
         </div>
 
-        {/* Progress Indicator */}
+        {/* Progress Indicator (clickable steps for back/forward navigation) */}
         <div className="mb-6 flex items-center justify-center gap-2">
-          <div className={`h-2 w-16 rounded-full ${currentStep >= 1 ? "bg-[#2a2a2a]" : "bg-slate-300"}`} />
-          <div className={`h-2 w-16 rounded-full ${currentStep >= 2 ? "bg-[#2a2a2a]" : "bg-slate-300"}`} />
-          <div className={`h-2 w-16 rounded-full ${currentStep >= 3 ? "bg-[#2a2a2a]" : "bg-slate-300"}`} />
+          {[1, 2, 3].map((step) => (
+            <button
+              key={step}
+              type="button"
+              onClick={() => {
+                if (step <= maxStepReached) {
+                  setCurrentStep(step);
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }
+              }}
+              className={`h-2 w-16 rounded-full transition-colors ${
+                currentStep === step
+                  ? "bg-[#2a2a2a]"
+                  : step <= maxStepReached
+                  ? "bg-slate-500"
+                  : "bg-slate-300"
+              }`}
+              aria-label={`Go to step ${step}`}
+            />
+          ))}
         </div>
         <div className="mb-6 text-center">
           <span className="text-xs font-medium uppercase tracking-[0.15em] text-[#6b6b6b]">
@@ -610,7 +632,7 @@ export default function GetStartedPage() {
                     {formState === "submitting" ? "Submitting..." : "Get matched with a specialist"}
                   </button>
                   <p className="text-xs text-[#5a5a5a] text-center md:text-right max-w-md">
-                    A licensed local specialist WILL reach out to guide you through your options. No obligation to proceed.
+                    A licensed local specialist will reach out to guide you through your options.
                   </p>
                 </div>
               </div>
