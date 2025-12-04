@@ -38,20 +38,12 @@ export default function GetStartedPage() {
       "first_name",
       "last_name",
       "email",
-      "phone",
-      "address_line1",
-      "city",
-      "province",
-      "postal_code",
-      "age",
-      "sex",
       "timeline_intent",
       "service_type",
       "planning_for",
       "remains_disposition",
       "service_celebration",
       "family_pre_arranged",
-      "additional_notes",
     ];
 
     for (const field of requiredFields) {
@@ -63,16 +55,6 @@ export default function GetStartedPage() {
       }
     }
 
-    // Validate age
-    const ageValue = formData.get("age");
-    const ageStr = ageValue ? String(ageValue).trim() : "";
-    const ageParsed = ageStr ? Number(ageStr) : null;
-    if (!ageParsed || isNaN(ageParsed) || ageParsed < 18 || ageParsed > 120) {
-      setError("Please enter a valid age between 18 and 120.");
-      setFormState("error");
-      return;
-    }
-
     // Validate email format
     const emailValue = (formData.get("email") as string)?.trim() || "";
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -82,17 +64,9 @@ export default function GetStartedPage() {
       return;
     }
 
-    // Get form values
-    const sexValue = (formData.get("sex") as string) || "";
+    // Get form values (optional fields)
     const additionalNotesValue = formData.get("additional_notes");
     const additionalNotes = typeof additionalNotesValue === "string" ? additionalNotesValue.trim() : "";
-    
-    // Validate additional_notes is not empty
-    if (!additionalNotes || additionalNotes.length === 0) {
-      setError("Please provide additional details about your preferences and needs.");
-      setFormState("error");
-      return;
-    }
 
     // Get planning_for related fields if applicable
     const planningForValue = (formData.get("planning_for") as string)?.trim() || null;
@@ -120,13 +94,7 @@ export default function GetStartedPage() {
       first_name: (formData.get("first_name") as string)?.trim() || null,
       last_name: (formData.get("last_name") as string)?.trim() || null,
       email: emailValue.trim(),
-      phone: (formData.get("phone") as string)?.trim() || null,
-      address_line1: (formData.get("address_line1") as string)?.trim() || null,
-      city: (formData.get("city") as string)?.trim() || null,
-      province: (formData.get("province") as string)?.trim() || null,
-      postal_code: (formData.get("postal_code") as string)?.trim() || null,
-      age: ageParsed, // Number type (validated above)
-      sex: sexValue?.trim() || null,
+      phone: (formData.get("phone") as string)?.trim() || null, // Optional
       planning_for: planningForValue,
       planning_for_name: planningForName, // Name of person being planned for
       planning_for_age: planningForAgeParsed, // Age of person being planned for
@@ -136,7 +104,7 @@ export default function GetStartedPage() {
       remains_disposition: (formData.get("remains_disposition") as string)?.trim() || null,
       service_celebration: (formData.get("service_celebration") as string)?.trim() || null,
       family_pre_arranged: (formData.get("family_pre_arranged") as string)?.trim() || null,
-      additional_notes: additionalNotes,
+      additional_notes: additionalNotes || null, // Optional
       status: urgency_level === "cold" ? "cold_unassigned" : "new",
       buy_now_price_cents,
       auction_min_price_cents,
@@ -312,6 +280,13 @@ export default function GetStartedPage() {
       </header>
       
       <div className="mx-auto max-w-4xl px-6 py-12 md:py-16">
+        {/* Optional Reassurance Text */}
+        <div className="mb-6 text-center">
+          <p className="text-base leading-relaxed text-[#4a4a4a] italic">
+            Most people who plan ahead say they feel an immediate sense of relief once they understand their options.
+          </p>
+        </div>
+
         {/* Header */}
         <div className="mb-8">
           <h1
@@ -338,11 +313,14 @@ export default function GetStartedPage() {
                 </span>
               </div>
               <h2
-                className="mb-4 text-xl font-normal text-[#2a2a2a]"
+                className="mb-2 text-xl font-normal text-[#2a2a2a]"
                 style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
               >
-                About you
+                Let&apos;s start with something simple
               </h2>
+              <p className="mb-4 text-sm leading-relaxed text-[#4a4a4a]">
+                This helps us match you with the right pre-planning specialist in your area. There is no obligation to purchase anything.
+              </p>
               <div className="space-y-4">
                 <div className="grid gap-4 md:grid-cols-2">
                   <div>
@@ -381,94 +359,13 @@ export default function GetStartedPage() {
 
                 <div>
                   <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
-                    Phone *
+                    Phone (optional — only if you&apos;d like a call)
                   </label>
                   <input
                     name="phone"
                     type="tel"
-                    required
                     className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
                   />
-                </div>
-
-                <div>
-                  <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
-                    Address Line 1 *
-                  </label>
-                  <input
-                    name="address_line1"
-                    required
-                    className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
-                  />
-                </div>
-
-                <div className="grid gap-4 md:grid-cols-3">
-                  <div>
-                    <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
-                      City *
-                    </label>
-                    <input
-                      name="city"
-                      required
-                      className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
-                      Province / State *
-                    </label>
-                    <input
-                      name="province"
-                      defaultValue="BC"
-                      required
-                      className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
-                      Postal code *
-                    </label>
-                    <input
-                      name="postal_code"
-                      required
-                      className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div>
-                    <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
-                      Age *
-                    </label>
-                    <input
-                      type="number"
-                      name="age"
-                      min={18}
-                      max={120}
-                      required
-                      className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
-                      Sex *
-                    </label>
-                    <select
-                      name="sex"
-                      required
-                      className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
-                    >
-                      <option value="">Select...</option>
-                      <option value="Male">Male</option>
-                      <option value="Female">Female</option>
-                      <option value="Other">Other</option>
-                      <option value="Prefer not to say">Prefer not to say</option>
-                    </select>
-                  </div>
                 </div>
 
                 <div>
@@ -520,26 +417,66 @@ export default function GetStartedPage() {
                     </div>
                   )}
                 </div>
+
+                {/* Trust text under Step 1 */}
+                <div className="mt-6 pt-4 border-t border-slate-200">
+                  <div className="space-y-1.5 text-xs text-[#5a5a5a]">
+                    <p className="flex items-center gap-2">
+                      <span className="text-green-600">✓</span>
+                      <span>No obligation</span>
+                    </p>
+                    <p className="flex items-center gap-2">
+                      <span className="text-green-600">✓</span>
+                      <span>Takes under 60 seconds</span>
+                    </p>
+                    <p className="flex items-center gap-2">
+                      <span className="text-green-600">✓</span>
+                      <span>Your information is never sold</span>
+                    </p>
+                    <p className="flex items-center gap-2">
+                      <span className="text-green-600">✓</span>
+                      <span>You&apos;ll speak with a real local specialist</span>
+                    </p>
+                  </div>
+                </div>
+
+                {/* Continue Button for Step 1 */}
+                <div className="flex justify-end pt-4">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      // Scroll to Step 2
+                      const step2 = document.querySelector('[data-step="2"]');
+                      step2?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }}
+                    className="rounded-full bg-[#2a2a2a] px-5 py-2.5 text-sm font-semibold text-white hover:bg-black transition-colors"
+                  >
+                    Continue
+                  </button>
+                </div>
               </div>
             </div>
 
             {/* Section 2: Service Preferences */}
-            <div className="border-t border-[#ded3c2] pt-8">
+            <div className="border-t border-[#ded3c2] pt-8" data-step="2">
               <div className="mb-4 flex items-center gap-2">
                 <span className="text-xs font-medium uppercase tracking-[0.15em] text-[#6b6b6b]">
                   Step 2 of 3
                 </span>
               </div>
               <h2
-                className="mb-4 text-xl font-normal text-[#2a2a2a]"
+                className="mb-2 text-xl font-normal text-[#2a2a2a]"
                 style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
               >
-                Service preferences
+                Your general preferences
               </h2>
+              <p className="mb-4 text-sm leading-relaxed text-[#4a4a4a]">
+                These answers help us understand what kind of guidance may be helpful for you. You can always change your mind later.
+              </p>
               <div className="space-y-4">
                 <div>
                   <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
-                    Service type *
+                    What type of service would you like to explore? *
                   </label>
                   <select
                     name="service_type"
@@ -555,7 +492,7 @@ export default function GetStartedPage() {
 
                 <div>
                   <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
-                    What will the family do with the remains? *
+                    Have you given any thought to burial or cremation? *
                   </label>
                   <select
                     name="remains_disposition"
@@ -572,7 +509,7 @@ export default function GetStartedPage() {
 
                 <div>
                   <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
-                    Would there be a service celebration of life, memorial event? *
+                    Would you want a memorial or celebration of life? *
                   </label>
                   <select
                     name="service_celebration"
@@ -588,7 +525,7 @@ export default function GetStartedPage() {
 
                 <div>
                   <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
-                    Has anyone else in your family had a pre-arranged funeral plan? *
+                    Has anyone close to you ever planned in advance like this? *
                   </label>
                   <select
                     name="family_pre_arranged"
@@ -601,26 +538,44 @@ export default function GetStartedPage() {
                     <option value="unsure">Unsure</option>
                   </select>
                 </div>
+
+                {/* Continue Button for Step 2 */}
+                <div className="flex justify-end pt-4">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      // Scroll to Step 3
+                      const step3 = document.querySelector('[data-step="3"]');
+                      step3?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }}
+                    className="rounded-full bg-[#2a2a2a] px-5 py-2.5 text-sm font-semibold text-white hover:bg-black transition-colors"
+                  >
+                    Continue
+                  </button>
+                </div>
               </div>
             </div>
 
             {/* Section 3: Contact & Timing */}
-            <div className="border-t border-[#ded3c2] pt-8">
+            <div className="border-t border-[#ded3c2] pt-8" data-step="3">
               <div className="mb-4 flex items-center gap-2">
                 <span className="text-xs font-medium uppercase tracking-[0.15em] text-[#6b6b6b]">
                   Step 3 of 3
                 </span>
               </div>
               <h2
-                className="mb-4 text-xl font-normal text-[#2a2a2a]"
+                className="mb-2 text-xl font-normal text-[#2a2a2a]"
                 style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
               >
-                Contact &amp; timing
+                Next steps
               </h2>
+              <p className="mb-4 text-sm leading-relaxed text-[#4a4a4a]">
+                This lets us understand when and how you&apos;d prefer to be contacted.
+              </p>
               <div className="space-y-4">
                 <div>
                   <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
-                    How soon do you expect to move forward after learning your options? *
+                    When would you like to learn more about your options? *
                   </label>
                   <select
                     name="timeline_intent"
@@ -646,18 +601,14 @@ export default function GetStartedPage() {
 
                 <div>
                   <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
-                    Additional details *
+                    Anything you&apos;d like us to know? (optional)
                   </label>
                   <textarea
                     name="additional_notes"
                     rows={4}
-                    required
                     className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
-                    placeholder="Please add any additional details you think the specialist should know — for example, preferences, concerns, or what kind of guidance you're looking for. This makes sure you're matched with the best possible pre-need specialist."
+                    placeholder="Preferences, concerns, religious considerations, family wishes, or anything else you'd like us to be aware of."
                   />
-                  <p className="mt-1 text-[11px] text-slate-500">
-                    Please add any additional details you think the specialist should know — for example, preferences, concerns, or what kind of guidance you're looking for. This makes sure you're matched with the best possible pre-need specialist.
-                  </p>
                 </div>
               </div>
             </div>
@@ -670,14 +621,17 @@ export default function GetStartedPage() {
             )}
 
             {/* Submit Button */}
-            <div className="flex justify-end border-t border-[#ded3c2] pt-6">
+            <div className="flex flex-col items-end border-t border-[#ded3c2] pt-6 space-y-4">
               <button
                 type="submit"
                 disabled={formState === "submitting"}
                 className="w-full rounded-full bg-[#2a2a2a] px-5 py-2.5 text-sm font-semibold text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-70 transition-colors md:w-auto"
               >
-                {formState === "submitting" ? "Submitting..." : "Submit"}
+                {formState === "submitting" ? "Submitting..." : "Get matched with a specialist"}
               </button>
+              <p className="text-xs text-[#5a5a5a] text-center md:text-right max-w-md">
+                We will never sell your information. A local specialist may reach out to help answer your questions — there is no obligation to move forward.
+              </p>
             </div>
           </form>
         </div>
