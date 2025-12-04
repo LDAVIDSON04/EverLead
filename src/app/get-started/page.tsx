@@ -479,7 +479,6 @@ export default function GetStartedPage() {
                   </button>
                 </div>
               </div>
-            </div>
 
             {/* STEP 2: Preferences & timing */}
             <div className={`space-y-4 ${currentStep === 2 ? "" : "hidden"}`}>
