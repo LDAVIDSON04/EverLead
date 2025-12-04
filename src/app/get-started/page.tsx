@@ -347,210 +347,212 @@ export default function GetStartedPage() {
 
             {/* STEP 1: Intent only */}
             <div className={currentStep === 1 ? "space-y-4" : "space-y-4 hidden"}>
-                <div>
-                  <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
-                    Who are you planning for? *
-                  </label>
-                  <select
-                    name="planning_for"
-                    required
-                    value={planningFor}
-                    onChange={(e) => setPlanningFor(e.target.value)}
-                    className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
-                  >
-                    <option value="">Select...</option>
-                    <option value="myself">Myself</option>
-                    <option value="spouse_partner">Spouse / Partner</option>
-                    <option value="parent">Parent</option>
-                    <option value="other_family">Other family member</option>
-                  </select>
-                  
-                  {/* Conditional fields for spouse/partner, parent, or other family */}
-                  {(planningFor === "spouse_partner" || planningFor === "parent" || planningFor === "other_family") && (
-                    <div className="mt-4 rounded-md border border-slate-200 bg-slate-50 p-4 space-y-4">
-                      <div>
-                        <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
-                          Name of the person you're planning for *
-                        </label>
-                        <input
-                          name="planning_for_name"
-                          required
-                          className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
-                          placeholder="Enter their full name"
-                        />
-                      </div>
-                      <div>
-                        <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
-                          Age of the person you're planning for *
-                        </label>
-                        <input
-                          type="number"
-                          name="planning_for_age"
-                          min={0}
-                          max={120}
-                          required
-                          className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
-                          placeholder="Enter their age"
-                        />
-                      </div>
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
+                  Who are you planning for? *
+                </label>
+                <select
+                  name="planning_for"
+                  required
+                  value={planningFor}
+                  onChange={(e) => setPlanningFor(e.target.value)}
+                  className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
+                >
+                  <option value="">Select...</option>
+                  <option value="myself">Myself</option>
+                  <option value="spouse_partner">Spouse / Partner</option>
+                  <option value="parent">Parent</option>
+                  <option value="other_family">Other family member</option>
+                </select>
+
+                {/* Conditional fields for spouse/partner, parent, or other family */}
+                {(planningFor === "spouse_partner" ||
+                  planningFor === "parent" ||
+                  planningFor === "other_family") && (
+                  <div className="mt-4 rounded-md border border-slate-200 bg-slate-50 p-4 space-y-4">
+                    <div>
+                      <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
+                        Name of the person you're planning for *
+                      </label>
+                      <input
+                        name="planning_for_name"
+                        required
+                        className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
+                        placeholder="Enter their full name"
+                      />
                     </div>
-                  )}
-                </div>
-
-                <div>
-                  <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
-                    What type of service would you like to explore? *
-                  </label>
-                  <select
-                    name="service_type"
-                    required
-                    className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
-                  >
-                    <option value="">Select...</option>
-                    <option value="cremation">Cremation</option>
-                    <option value="burial">Burial</option>
-                    <option value="unsure">Unsure</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
-                    Burial or cremation? *
-                  </label>
-                  <select
-                    name="remains_disposition"
-                    required
-                    className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
-                  >
-                    <option value="">Select...</option>
-                    <option value="scatter_cremated_remains">Scatter cremated remains</option>
-                    <option value="keep_remains">Keep remains</option>
-                    <option value="burial_at_cemetery">Burial at cemetery</option>
-                    <option value="unsure">Unsure</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
-                    Has anyone close to you planned before? *
-                  </label>
-                  <select
-                    name="family_pre_arranged"
-                    required
-                    className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
-                  >
-                    <option value="">Select...</option>
-                    <option value="yes">Yes</option>
-                    <option value="no">No</option>
-                    <option value="unsure">Unsure</option>
-                  </select>
-                </div>
-
-                {/* Trust text */}
-                <div className="mt-6 pt-4 border-t border-slate-200">
-                  <div className="space-y-1.5 text-xs text-[#5a5a5a]">
-                    <p className="flex items-center gap-2">
-                      <span className="text-green-600">✓</span>
-                      <span>No obligation</span>
-                    </p>
-                    <p className="flex items-center gap-2">
-                      <span className="text-green-600">✓</span>
-                      <span>Takes under 60 seconds</span>
-                    </p>
-                    <p className="flex items-center gap-2">
-                      <span className="text-green-600">✓</span>
-                      <span>Your information is never sold</span>
-                    </p>
-                    <p className="flex items-center gap-2">
-                      <span className="text-green-600">✓</span>
-                      <span>You&apos;ll speak with a real local specialist</span>
-                    </p>
+                    <div>
+                      <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
+                        Age of the person you're planning for *
+                      </label>
+                      <input
+                        type="number"
+                        name="planning_for_age"
+                        min={0}
+                        max={120}
+                        required
+                        className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
+                        placeholder="Enter their age"
+                      />
+                    </div>
                   </div>
-                </div>
+                )}
+              </div>
 
-                {/* Continue Button */}
-                <div className="flex justify-end pt-4">
-                  <button
-                    type="button"
-                    onClick={handleNextStep}
-                    className="rounded-full bg-[#2a2a2a] px-5 py-2.5 text-sm font-semibold text-white hover:bg-black transition-colors"
-                  >
-                    Continue
-                  </button>
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
+                  What type of service would you like to explore? *
+                </label>
+                <select
+                  name="service_type"
+                  required
+                  className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
+                >
+                  <option value="">Select...</option>
+                  <option value="cremation">Cremation</option>
+                  <option value="burial">Burial</option>
+                  <option value="unsure">Unsure</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
+                  Burial or cremation? *
+                </label>
+                <select
+                  name="remains_disposition"
+                  required
+                  className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
+                >
+                  <option value="">Select...</option>
+                  <option value="scatter_cremated_remains">
+                    Scatter cremated remains
+                  </option>
+                  <option value="keep_remains">Keep remains</option>
+                  <option value="burial_at_cemetery">Burial at cemetery</option>
+                  <option value="unsure">Unsure</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
+                  Has anyone close to you planned before? *
+                </label>
+                <select
+                  name="family_pre_arranged"
+                  required
+                  className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
+                >
+                  <option value="">Select...</option>
+                  <option value="yes">Yes</option>
+                  <option value="no">No</option>
+                  <option value="unsure">Unsure</option>
+                </select>
+              </div>
+
+              {/* Trust text */}
+              <div className="mt-6 pt-4 border-t border-slate-200">
+                <div className="space-y-1.5 text-xs text-[#5a5a5a]">
+                  <p className="flex items-center gap-2">
+                    <span className="text-green-600">✓</span>
+                    <span>No obligation</span>
+                  </p>
+                  <p className="flex items-center gap-2">
+                    <span className="text-green-600">✓</span>
+                    <span>Takes under 60 seconds</span>
+                  </p>
+                  <p className="flex items-center gap-2">
+                    <span className="text-green-600">✓</span>
+                    <span>Your information is never sold</span>
+                  </p>
+                  <p className="flex items-center gap-2">
+                    <span className="text-green-600">✓</span>
+                    <span>You&apos;ll speak with a real local specialist</span>
+                  </p>
                 </div>
               </div>
+
+              {/* Continue Button */}
+              <div className="flex justify-end pt-4">
+                <button
+                  type="button"
+                  onClick={handleNextStep}
+                  className="rounded-full bg-[#2a2a2a] px-5 py-2.5 text-sm font-semibold text-white hover:bg-black transition-colors"
+                >
+                  Continue
+                </button>
+              </div>
+            </div>
 
             {/* STEP 2: Preferences & timing */}
             <div className={currentStep === 2 ? "space-y-4" : "space-y-4 hidden"}>
-                <div>
-                  <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
-                    Would you want a memorial or celebration of life? *
-                  </label>
-                  <select
-                    name="service_celebration"
-                    required
-                    className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
-                  >
-                    <option value="">Select...</option>
-                    <option value="yes">Yes</option>
-                    <option value="no">No</option>
-                    <option value="unsure">Unsure</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
-                    When would you like to learn more about your options? *
-                  </label>
-                  <select
-                    name="timeline_intent"
-                    required
-                    className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
-                  >
-                    <option value="">Select...</option>
-                    <option value="ready_now">
-                      I&apos;m ready to plan soon
-                    </option>
-                    <option value="speak_with_family">
-                      I need to speak with my family first
-                    </option>
-                    <option value="collecting_info_need_done">
-                      I&apos;m gathering information right now
-                    </option>
-                    <option value="collecting_info_unsure">
-                      I&apos;m planning for the future
-                    </option>
-                    <option value="unsure">Not sure yet</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
-                    Anything you&apos;d like us to know? (optional)
-                  </label>
-                  <textarea
-                    name="additional_notes"
-                    rows={4}
-                    className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
-                    placeholder="Preferences, concerns, religious considerations, family wishes, or anything else you'd like us to be aware of."
-                  />
-                </div>
-
-                {/* Continue Button */}
-                <div className="flex justify-end pt-4">
-                  <button
-                    type="button"
-                    onClick={handleNextStep}
-                    className="rounded-full bg-[#2a2a2a] px-5 py-2.5 text-sm font-semibold text-white hover:bg-black transition-colors"
-                  >
-                    Continue
-                  </button>
-                </div>
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
+                  Would you want a memorial or celebration of life? *
+                </label>
+                <select
+                  name="service_celebration"
+                  required
+                  className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
+                >
+                  <option value="">Select...</option>
+                  <option value="yes">Yes</option>
+                  <option value="no">No</option>
+                  <option value="unsure">Unsure</option>
+                </select>
               </div>
+
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
+                  When would you like to learn more about your options? *
+                </label>
+                <select
+                  name="timeline_intent"
+                  required
+                  className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
+                >
+                  <option value="">Select...</option>
+                  <option value="ready_now">I&apos;m ready to plan soon</option>
+                  <option value="speak_with_family">
+                    I need to speak with my family first
+                  </option>
+                  <option value="collecting_info_need_done">
+                    I&apos;m gathering information right now
+                  </option>
+                  <option value="collecting_info_unsure">
+                    I&apos;m planning for the future
+                  </option>
+                  <option value="unsure">Not sure yet</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
+                  Anything you&apos;d like us to know? (optional)
+                </label>
+                <textarea
+                  name="additional_notes"
+                  rows={4}
+                  className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
+                  placeholder="Preferences, concerns, religious considerations, family wishes, or anything else you'd like us to be aware of."
+                />
+              </div>
+
+              {/* Continue Button */}
+              <div className="flex justify-end pt-4">
+                <button
+                  type="button"
+                  onClick={handleNextStep}
+                  className="rounded-full bg-[#2a2a2a] px-5 py-2.5 text-sm font-semibold text-white hover:bg-black transition-colors"
+                >
+                  Continue
+                </button>
+              </div>
+            </div>
 
             {/* STEP 3: Contact info */}
             <div className={currentStep === 3 ? "space-y-4" : "space-y-4 hidden"}>
-                <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-4 md:grid-cols-2">
                   <div>
                     <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
                       First name *
