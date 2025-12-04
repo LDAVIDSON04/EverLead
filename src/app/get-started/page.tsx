@@ -293,9 +293,7 @@ export default function GetStartedPage() {
             Tell us a little about your wishes
           </h1>
           <p className="text-base leading-relaxed text-[#4a4a4a]">
-            This helps us connect you with the right specialist. There&apos;s no
-            obligation to purchase anything, and you can save your answers to
-            revisit later.
+            This helps us match you with a licensed local specialist. There is no obligation to purchase.
           </p>
         </div>
 
@@ -611,13 +609,9 @@ export default function GetStartedPage() {
                   >
                     {formState === "submitting" ? "Submitting..." : "Get matched with a specialist"}
                   </button>
-                  <div className="text-xs text-[#5a5a5a] text-center md:text-right max-w-md space-y-1">
-                    <p>We will never sell your information.</p>
-                    <p>
-                      A licensed local specialist WILL reach out to guide you through your options.
-                    </p>
-                    <p>There is no obligation to move forward.</p>
-                  </div>
+                  <p className="text-xs text-[#5a5a5a] text-center md:text-right max-w-md">
+                    A licensed local specialist WILL reach out to guide you through your options. No obligation to proceed.
+                  </p>
                 </div>
               </div>
             )}
