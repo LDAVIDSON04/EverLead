@@ -1,78 +1,123 @@
 // src/app/get-started/page.tsx
 "use client";
 
-import { FormEvent, useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 type FormState = "idle" | "submitting" | "success" | "error";
 
+type Step = 1 | 2 | 3;
+
+type FormDataShape = {
+  planning_for: string;
+  planning_for_name: string;
+  planning_for_age: string;
+  service_type: string;
+  remains_disposition: string;
+  family_pre_arranged: string;
+  service_celebration: string;
+  timeline_intent: string;
+  additional_notes: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  city: string;
+  province: string;
+};
+
+const initialForm: FormDataShape = {
+  planning_for: "",
+  planning_for_name: "",
+  planning_for_age: "",
+  service_type: "",
+  remains_disposition: "",
+  family_pre_arranged: "",
+  service_celebration: "",
+  timeline_intent: "",
+  additional_notes: "",
+  first_name: "",
+  last_name: "",
+  email: "",
+  phone: "",
+  city: "",
+  province: "BC",
+};
+
 export default function GetStartedPage() {
   const router = useRouter();
   const [formState, setFormState] = useState<FormState>("idle");
   const [error, setError] = useState<string | null>(null);
-  const [currentStep, setCurrentStep] = useState<number>(1);
-  const [maxStepReached, setMaxStepReached] = useState<number>(1);
-  const [planningFor, setPlanningFor] = useState<string>("");
-  const formRef = useRef<HTMLFormElement>(null);
+  const [currentStep, setCurrentStep] = useState<Step>(1);
+  const [maxStepReached, setMaxStepReached] = useState<Step>(1);
+  const [form, setForm] = useState<FormDataShape>(initialForm);
 
-  // Lock scrolling to prevent skipping steps
+  // Lock scrolling to keep focus on the flow
   useEffect(() => {
+    const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
-      document.body.style.overflow = "unset";
+      document.body.style.overflow = prev;
     };
   }, []);
 
-  // Validate current step before proceeding
-  function validateStep(step: number): boolean {
-    if (!formRef.current) return false;
+  function updateField<K extends keyof FormDataShape>(key: K, value: string) {
+    setForm((prev) => ({ ...prev, [key]: value }));
+  }
 
-    const formData = new FormData(formRef.current);
+  function validateStep(step: Step): boolean {
+    // Clear old error first
+    setError(null);
 
     if (step === 1) {
-      const planning_for = formData.get("planning_for");
-      const service_type = formData.get("service_type");
-      const remains_disposition = formData.get("remains_disposition");
-      const family_pre_arranged = formData.get("family_pre_arranged");
+      const required = [
+        "planning_for",
+        "service_type",
+        "remains_disposition",
+        "family_pre_arranged",
+      ] as const;
 
-      if (!planning_for || !service_type || !remains_disposition || !family_pre_arranged) {
-        setError("Please fill in all required fields.");
-        return false;
+      for (const key of required) {
+        if (!form[key] || form[key].trim() === "") {
+          setError("Please fill in all required fields.");
+          return false;
+        }
       }
 
-      // Validate planning_for conditional fields
-      if (planning_for === "spouse_partner" || planning_for === "parent" || planning_for === "other_family") {
-        const planning_for_name = formData.get("planning_for_name");
-        const planning_for_age = formData.get("planning_for_age");
-        if (!planning_for_name || !planning_for_age) {
+      if (
+        form.planning_for === "spouse_partner" ||
+        form.planning_for === "parent" ||
+        form.planning_for === "other_family"
+      ) {
+        if (!form.planning_for_name.trim() || !form.planning_for_age.trim()) {
           setError("Please fill in the name and age of the person you're planning for.");
           return false;
         }
       }
-    } else if (step === 2) {
-      const service_celebration = formData.get("service_celebration");
-      const timeline_intent = formData.get("timeline_intent");
-      if (!service_celebration || !timeline_intent) {
-        setError("Please fill in all required fields.");
-        return false;
-      }
-    } else if (step === 3) {
-      const first_name = formData.get("first_name");
-      const last_name = formData.get("last_name");
-      const email = formData.get("email");
-      const phone = formData.get("phone");
-      const city = formData.get("city");
-      const province = formData.get("province");
+    }
 
-      if (!first_name || !last_name || !email || !phone || !city || !province) {
-        setError("Please fill in all required fields.");
-        return false;
+    if (step === 2) {
+      const required = ["service_celebration", "timeline_intent"] as const;
+      for (const key of required) {
+        if (!form[key] || form[key].trim() === "") {
+          setError("Please fill in all required fields.");
+          return false;
+        }
+      }
+    }
+
+    if (step === 3) {
+      const required = ["first_name", "last_name", "email", "phone", "city", "province"] as const;
+      for (const key of required) {
+        if (!form[key] || form[key].trim() === "") {
+          setError("Please fill in all required fields.");
+          return false;
+        }
       }
 
-      // Validate email format
-      const emailValue = (email as string)?.trim() || "";
+      const emailValue = form.email.trim();
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(emailValue)) {
         setError("Please enter a valid email address.");
@@ -80,29 +125,31 @@ export default function GetStartedPage() {
       }
     }
 
-    setError(null);
     return true;
   }
 
-  function handleNextStep() {
-    if (validateStep(currentStep)) {
-      setCurrentStep((prev) => {
-        const next = Math.min(prev + 1, 3);
-        setMaxStepReached((prevMax) => Math.max(prevMax, next));
-        return next;
-      });
-      // Scroll to top of form
+  function goToStep(step: Step) {
+    if (step <= maxStepReached) {
+      setCurrentStep(step);
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
   }
 
-  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
+  function handleNextStep() {
+    if (!validateStep(currentStep)) return;
+    const next = (currentStep + 1) as Step;
+    setCurrentStep(next);
+    setMaxStepReached((prev) => (next > prev ? next : prev));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setFormState("submitting");
     setError(null);
 
-    // Validate all steps before final submit to avoid API 400s
-    for (let step = 1; step <= 3; step++) {
+    // Validate all steps before sending to API
+    for (const step of [1, 2, 3] as Step[]) {
       if (!validateStep(step)) {
         setCurrentStep(step);
         setFormState("error");
@@ -110,126 +157,73 @@ export default function GetStartedPage() {
       }
     }
 
-    const formData = new FormData(e.currentTarget);
-
-    const timeline_intent = (formData.get("timeline_intent") as string) || "";
-
+    // Derive urgency from timeline_intent
     let urgency_level: "hot" | "warm" | "cold" = "cold";
-    if (timeline_intent === "ready_now") urgency_level = "hot";
-    else if (timeline_intent === "speak_with_family" || timeline_intent === "collecting_info_need_done") urgency_level = "warm";
+    if (form.timeline_intent === "ready_now") urgency_level = "hot";
+    else if (
+      form.timeline_intent === "speak_with_family" ||
+      form.timeline_intent === "collecting_info_need_done"
+    )
+      urgency_level = "warm";
 
-    // Simple default pricing logic for MVP
     const buy_now_price_cents =
       urgency_level === "hot" ? 100 : urgency_level === "warm" ? 100 : null;
     const auction_min_price_cents =
       urgency_level === "hot" ? 50 : urgency_level === "warm" ? 50 : null;
 
-    // Get form values
-    const additionalNotesValue = formData.get("additional_notes");
-    const additionalNotes = typeof additionalNotesValue === "string" ? additionalNotesValue.trim() : "";
-
-    const planningForValue = (formData.get("planning_for") as string)?.trim() || null;
-    const planningForName = (formData.get("planning_for_name") as string)?.trim() || null;
-    const planningForAgeValue = formData.get("planning_for_age");
-    const planningForAgeStr = planningForAgeValue ? String(planningForAgeValue).trim() : "";
-    const planningForAgeParsed = planningForAgeStr ? Number(planningForAgeStr) : null;
-
-    // Build the insert payload
-    const leadData: any = {
-      first_name: (formData.get("first_name") as string)?.trim() || null,
-      last_name: (formData.get("last_name") as string)?.trim() || null,
-      email: (formData.get("email") as string)?.trim() || null,
-      phone: (formData.get("phone") as string)?.trim() || null,
-      city: (formData.get("city") as string)?.trim() || null,
-      province: (formData.get("province") as string)?.trim() || null,
-      planning_for: planningForValue,
-      planning_for_name: planningForName,
-      planning_for_age: planningForAgeParsed,
-      service_type: (formData.get("service_type") as string)?.trim() || null,
-      remains_disposition: (formData.get("remains_disposition") as string)?.trim() || null,
-      service_celebration: (formData.get("service_celebration") as string)?.trim() || null,
-      family_pre_arranged: (formData.get("family_pre_arranged") as string)?.trim() || null,
-      timeline_intent: timeline_intent.trim(),
+    const payload: any = {
+      first_name: form.first_name.trim(),
+      last_name: form.last_name.trim(),
+      email: form.email.trim(),
+      phone: form.phone.trim(),
+      city: form.city.trim(),
+      province: form.province.trim(),
+      planning_for: form.planning_for || null,
+      planning_for_name: form.planning_for_name || null,
+      planning_for_age: form.planning_for_age ? Number(form.planning_for_age) : null,
+      service_type: form.service_type || null,
+      remains_disposition: form.remains_disposition || null,
+      family_pre_arranged: form.family_pre_arranged || null,
+      service_celebration: form.service_celebration || null,
+      timeline_intent: form.timeline_intent.trim(),
       urgency_level,
-      additional_notes: additionalNotes || null,
+      additional_notes: form.additional_notes || null,
       status: urgency_level === "cold" ? "cold_unassigned" : "new",
       buy_now_price_cents,
       auction_min_price_cents,
     };
 
-    const insertPayload = {
-      ...leadData,
-      full_name: `${leadData.first_name} ${leadData.last_name}`.trim(),
-    };
-
-    // Clean payload
-    const cleanPayload: any = {};
-    for (const [key, value] of Object.entries(insertPayload)) {
-      if (value !== null && value !== undefined && value !== "") {
-        cleanPayload[key] = value;
-      }
-    }
-
-    if (!cleanPayload.full_name && leadData.first_name && leadData.last_name) {
-      cleanPayload.full_name = `${leadData.first_name} ${leadData.last_name}`.trim();
-    }
-
-    console.log("Submitting lead with payload:", cleanPayload);
-
     try {
-      const response = await fetch("/api/leads/create", {
+      const res = await fetch("/api/leads/create", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(cleanPayload),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
 
-      const responseText = await response.text();
-      let responseBody: any = null;
+      const text = await res.text();
+      let body: any;
       try {
-        responseBody = JSON.parse(responseText);
-      } catch (e) {
-        console.error("Failed to parse error JSON", e);
-        responseBody = { error: "Failed to parse server response", raw: responseText };
+        body = JSON.parse(text);
+      } catch {
+        body = { error: "Failed to parse server response", raw: text };
       }
 
-      if (!response.ok) {
-        console.error("Questionnaire submit failed", {
-          status: response.status,
-          statusText: response.statusText,
-          body: responseBody,
-        });
-        if (responseBody?.error) {
-          setError(responseBody.error);
-        } else {
-          setError("Something went wrong submitting your information. Please check all fields and try again.");
-        }
+      if (!res.ok || !body?.success) {
+        setError(body?.error || "Something went wrong submitting your information.");
         setFormState("error");
         return;
       }
 
-      if (!responseBody?.success) {
-        console.error("API returned success=false", responseBody);
-        setError("Something went wrong submitting your information. Please check all fields and try again.");
-        setFormState("error");
-        return;
-      }
-
-      console.log("Lead submitted successfully:", responseBody.lead);
-      
-      const leadId = responseBody?.lead?.id;
+      const leadId = body?.lead?.id;
       if (leadId) {
         router.push(`/book/${leadId}`);
         return;
       }
-      
+
       setFormState("success");
-    } catch (fetchError: any) {
-      console.error("Network error submitting questionnaire", fetchError);
+    } catch (err: any) {
       setError("Network error. Please check your connection and try again.");
       setFormState("error");
-      return;
     }
   }
 
@@ -246,8 +240,7 @@ export default function GetStartedPage() {
             </h1>
             <p className="mb-6 text-lg leading-relaxed text-[#4a4a4a]">
               We&apos;ve received your information. A licensed pre-arrangement
-              specialist may contact you to discuss options that match what
-              you&apos;ve shared.
+              specialist will reach out to help guide you through your options.
             </p>
             <Link
               href="/"
@@ -262,7 +255,7 @@ export default function GetStartedPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f7f4ef] overflow-hidden">
+    <main className="min-h-screen bg-[#f7f4ef]">
       {/* Header with Logo */}
       <header className="bg-[#1f2933]/95 backdrop-blur-sm text-white border-b border-[#1f2933]/20">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-8 py-5">
@@ -275,9 +268,7 @@ export default function GetStartedPage() {
               className="object-contain"
             />
             <div className="flex items-baseline gap-3">
-              <span className="text-xl font-light tracking-wide text-white">
-                Soradin
-              </span>
+              <span className="text-xl font-light tracking-wide text-white">Soradin</span>
               <span className="text-[10px] uppercase tracking-[0.3em] text-[#e0d5bf]/80 font-light">
                 PRE-PLANNING
               </span>
@@ -291,8 +282,11 @@ export default function GetStartedPage() {
           </Link>
         </div>
       </header>
-      
-      <div className="mx-auto max-w-4xl px-6 py-12 md:py-16 overflow-y-auto" style={{ maxHeight: "calc(100vh - 80px)" }}>
+
+      <div
+        className="mx-auto max-w-4xl px-6 py-12 md:py-16 overflow-y-auto"
+        style={{ maxHeight: "calc(100vh - 80px)" }}
+      >
         {/* Header */}
         <div className="mb-8">
           <h1
@@ -306,18 +300,14 @@ export default function GetStartedPage() {
           </p>
         </div>
 
-        {/* Progress Indicator (clickable steps for back/forward navigation) */}
+        {/* Progress Indicator */}
         <div className="mb-6 flex items-center justify-center gap-2">
           {[1, 2, 3].map((step) => (
             <button
               key={step}
               type="button"
-              onClick={() => {
-                if (step <= maxStepReached) {
-                  setCurrentStep(step);
-                  window.scrollTo({ top: 0, behavior: "smooth" });
-                }
-              }}
+              onClick={() => goToStep(step as Step)}
+              disabled={step > maxStepReached}
               className={`h-2 w-16 rounded-full transition-colors ${
                 currentStep === step
                   ? "bg-[#2a2a2a]"
@@ -337,7 +327,7 @@ export default function GetStartedPage() {
 
         {/* Form Card */}
         <div className="rounded-xl border border-[#ded3c2] bg-white p-8 shadow-sm">
-          <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
             {/* Error Message */}
             {error && (
               <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3">
@@ -345,221 +335,218 @@ export default function GetStartedPage() {
               </div>
             )}
 
-            {/* STEP 1: Intent only */}
-            <div className={currentStep === 1 ? "space-y-4" : "space-y-4 hidden"}>
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
-                  Who are you planning for? *
-                </label>
-                <select
-                  name="planning_for"
-                  required
-                  value={planningFor}
-                  onChange={(e) => setPlanningFor(e.target.value)}
-                  className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
-                >
-                  <option value="">Select...</option>
-                  <option value="myself">Myself</option>
-                  <option value="spouse_partner">Spouse / Partner</option>
-                  <option value="parent">Parent</option>
-                  <option value="other_family">Other family member</option>
-                </select>
+            {/* STEP 1 */}
+            {currentStep === 1 && (
+              <div className="space-y-4">
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
+                    Who are you planning for? *
+                  </label>
+                  <select
+                    value={form.planning_for}
+                    onChange={(e) => updateField("planning_for", e.target.value)}
+                    className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
+                  >
+                    <option value="">Select...</option>
+                    <option value="myself">Myself</option>
+                    <option value="spouse_partner">Spouse / Partner</option>
+                    <option value="parent">Parent</option>
+                    <option value="other_family">Other family member</option>
+                  </select>
 
-                {/* Conditional fields for spouse/partner, parent, or other family */}
-                {(planningFor === "spouse_partner" ||
-                  planningFor === "parent" ||
-                  planningFor === "other_family") && (
-                  <div className="mt-4 rounded-md border border-slate-200 bg-slate-50 p-4 space-y-4">
-                    <div>
-                      <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
-                        Name of the person you're planning for *
-                      </label>
-                      <input
-                        name="planning_for_name"
-                        required
-                        className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
-                        placeholder="Enter their full name"
-                      />
+                  {(form.planning_for === "spouse_partner" ||
+                    form.planning_for === "parent" ||
+                    form.planning_for === "other_family") && (
+                    <div className="mt-4 rounded-md border border-slate-200 bg-slate-50 p-4 space-y-4">
+                      <div>
+                        <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
+                          Name of the person you&apos;re planning for *
+                        </label>
+                        <input
+                          value={form.planning_for_name}
+                          onChange={(e) => updateField("planning_for_name", e.target.value)}
+                          className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
+                          placeholder="Enter their full name"
+                        />
+                      </div>
+                      <div>
+                        <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
+                          Age of the person you&apos;re planning for *
+                        </label>
+                        <input
+                          type="number"
+                          value={form.planning_for_age}
+                          onChange={(e) => updateField("planning_for_age", e.target.value)}
+                          min={0}
+                          max={120}
+                          className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
+                          placeholder="Enter their age"
+                        />
+                      </div>
                     </div>
-                    <div>
-                      <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
-                        Age of the person you're planning for *
-                      </label>
-                      <input
-                        type="number"
-                        name="planning_for_age"
-                        min={0}
-                        max={120}
-                        required
-                        className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
-                        placeholder="Enter their age"
-                      />
-                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
+                    What type of service would you like to explore? *
+                  </label>
+                  <select
+                    value={form.service_type}
+                    onChange={(e) => updateField("service_type", e.target.value)}
+                    className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
+                  >
+                    <option value="">Select...</option>
+                    <option value="cremation">Cremation</option>
+                    <option value="burial">Burial</option>
+                    <option value="unsure">Unsure</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
+                    Burial or cremation? *
+                  </label>
+                  <select
+                    value={form.remains_disposition}
+                    onChange={(e) => updateField("remains_disposition", e.target.value)}
+                    className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
+                  >
+                    <option value="">Select...</option>
+                    <option value="scatter_cremated_remains">Scatter cremated remains</option>
+                    <option value="keep_remains">Keep remains</option>
+                    <option value="burial_at_cemetery">Burial at cemetery</option>
+                    <option value="unsure">Unsure</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
+                    Has anyone close to you planned before? *
+                  </label>
+                  <select
+                    value={form.family_pre_arranged}
+                    onChange={(e) => updateField("family_pre_arranged", e.target.value)}
+                    className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
+                  >
+                    <option value="">Select...</option>
+                    <option value="yes">Yes</option>
+                    <option value="no">No</option>
+                    <option value="unsure">Unsure</option>
+                  </select>
+                </div>
+
+                {/* Trust text */}
+                <div className="mt-6 pt-4 border-t border-slate-200">
+                  <div className="space-y-1.5 text-xs text-[#5a5a5a]">
+                    <p className="flex items-center gap-2">
+                      <span className="text-green-600">✓</span>
+                      <span>No obligation</span>
+                    </p>
+                    <p className="flex items-center gap-2">
+                      <span className="text-green-600">✓</span>
+                      <span>Takes under 60 seconds</span>
+                    </p>
+                    <p className="flex items-center gap-2">
+                      <span className="text-green-600">✓</span>
+                      <span>Your information is never sold</span>
+                    </p>
+                    <p className="flex items-center gap-2">
+                      <span className="text-green-600">✓</span>
+                      <span>You&apos;ll speak with a real local specialist</span>
+                    </p>
                   </div>
-                )}
-              </div>
+                </div>
 
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
-                  What type of service would you like to explore? *
-                </label>
-                <select
-                  name="service_type"
-                  required
-                  className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
-                >
-                  <option value="">Select...</option>
-                  <option value="cremation">Cremation</option>
-                  <option value="burial">Burial</option>
-                  <option value="unsure">Unsure</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
-                  Burial or cremation? *
-                </label>
-                <select
-                  name="remains_disposition"
-                  required
-                  className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
-                >
-                  <option value="">Select...</option>
-                  <option value="scatter_cremated_remains">
-                    Scatter cremated remains
-                  </option>
-                  <option value="keep_remains">Keep remains</option>
-                  <option value="burial_at_cemetery">Burial at cemetery</option>
-                  <option value="unsure">Unsure</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
-                  Has anyone close to you planned before? *
-                </label>
-                <select
-                  name="family_pre_arranged"
-                  required
-                  className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
-                >
-                  <option value="">Select...</option>
-                  <option value="yes">Yes</option>
-                  <option value="no">No</option>
-                  <option value="unsure">Unsure</option>
-                </select>
-              </div>
-
-              {/* Trust text */}
-              <div className="mt-6 pt-4 border-t border-slate-200">
-                <div className="space-y-1.5 text-xs text-[#5a5a5a]">
-                  <p className="flex items-center gap-2">
-                    <span className="text-green-600">✓</span>
-                    <span>No obligation</span>
-                  </p>
-                  <p className="flex items-center gap-2">
-                    <span className="text-green-600">✓</span>
-                    <span>Takes under 60 seconds</span>
-                  </p>
-                  <p className="flex items-center gap-2">
-                    <span className="text-green-600">✓</span>
-                    <span>Your information is never sold</span>
-                  </p>
-                  <p className="flex items-center gap-2">
-                    <span className="text-green-600">✓</span>
-                    <span>You&apos;ll speak with a real local specialist</span>
-                  </p>
+                {/* Continue Button */}
+                <div className="flex justify-end pt-4">
+                  <button
+                    type="button"
+                    onClick={handleNextStep}
+                    className="rounded-full bg-[#2a2a2a] px-5 py-2.5 text-sm font-semibold text-white hover:bg-black transition-colors"
+                  >
+                    Continue
+                  </button>
                 </div>
               </div>
+            )}
 
-              {/* Continue Button */}
-              <div className="flex justify-end pt-4">
-                <button
-                  type="button"
-                  onClick={handleNextStep}
-                  className="rounded-full bg-[#2a2a2a] px-5 py-2.5 text-sm font-semibold text-white hover:bg-black transition-colors"
-                >
-                  Continue
-                </button>
+            {/* STEP 2 */}
+            {currentStep === 2 && (
+              <div className="space-y-4">
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
+                    Would you want a memorial or celebration of life? *
+                  </label>
+                  <select
+                    value={form.service_celebration}
+                    onChange={(e) => updateField("service_celebration", e.target.value)}
+                    className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
+                  >
+                    <option value="">Select...</option>
+                    <option value="yes">Yes</option>
+                    <option value="no">No</option>
+                    <option value="unsure">Unsure</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
+                    When would you like to learn more about your options? *
+                  </label>
+                  <select
+                    value={form.timeline_intent}
+                    onChange={(e) => updateField("timeline_intent", e.target.value)}
+                    className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
+                  >
+                    <option value="">Select...</option>
+                    <option value="ready_now">I&apos;m ready to plan soon</option>
+                    <option value="speak_with_family">I need to speak with my family first</option>
+                    <option value="collecting_info_need_done">
+                      I&apos;m gathering information right now
+                    </option>
+                    <option value="collecting_info_unsure">I&apos;m planning for the future</option>
+                    <option value="unsure">Not sure yet</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
+                    Anything you&apos;d like us to know? (optional)
+                  </label>
+                  <textarea
+                    value={form.additional_notes}
+                    onChange={(e) => updateField("additional_notes", e.target.value)}
+                    rows={4}
+                    className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
+                    placeholder="Preferences, concerns, religious considerations, family wishes, or anything else you'd like us to be aware of."
+                  />
+                </div>
+
+                {/* Continue Button */}
+                <div className="flex justify-end pt-4">
+                  <button
+                    type="button"
+                    onClick={handleNextStep}
+                    className="rounded-full bg-[#2a2a2a] px-5 py-2.5 text-sm font-semibold text-white hover:bg-black transition-colors"
+                  >
+                    Continue
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
 
-            {/* STEP 2: Preferences & timing */}
-            <div className={currentStep === 2 ? "space-y-4" : "space-y-4 hidden"}>
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
-                  Would you want a memorial or celebration of life? *
-                </label>
-                <select
-                  name="service_celebration"
-                  required
-                  className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
-                >
-                  <option value="">Select...</option>
-                  <option value="yes">Yes</option>
-                  <option value="no">No</option>
-                  <option value="unsure">Unsure</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
-                  When would you like to learn more about your options? *
-                </label>
-                <select
-                  name="timeline_intent"
-                  required
-                  className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
-                >
-                  <option value="">Select...</option>
-                  <option value="ready_now">I&apos;m ready to plan soon</option>
-                  <option value="speak_with_family">
-                    I need to speak with my family first
-                  </option>
-                  <option value="collecting_info_need_done">
-                    I&apos;m gathering information right now
-                  </option>
-                  <option value="collecting_info_unsure">
-                    I&apos;m planning for the future
-                  </option>
-                  <option value="unsure">Not sure yet</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
-                  Anything you&apos;d like us to know? (optional)
-                </label>
-                <textarea
-                  name="additional_notes"
-                  rows={4}
-                  className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
-                  placeholder="Preferences, concerns, religious considerations, family wishes, or anything else you'd like us to be aware of."
-                />
-              </div>
-
-              {/* Continue Button */}
-              <div className="flex justify-end pt-4">
-                <button
-                  type="button"
-                  onClick={handleNextStep}
-                  className="rounded-full bg-[#2a2a2a] px-5 py-2.5 text-sm font-semibold text-white hover:bg-black transition-colors"
-                >
-                  Continue
-                </button>
-              </div>
-            </div>
-
-            {/* STEP 3: Contact info */}
-            <div className={currentStep === 3 ? "space-y-4" : "space-y-4 hidden"}>
-              <div className="grid gap-4 md:grid-cols-2">
+            {/* STEP 3 */}
+            {currentStep === 3 && (
+              <div className="space-y-4">
+                <div className="grid gap-4 md:grid-cols-2">
                   <div>
                     <label className="mb-1.5 block text-xs font-medium text-[#4a4a4a]">
                       First name *
                     </label>
                     <input
-                      name="first_name"
-                      required
+                      value={form.first_name}
+                      onChange={(e) => updateField("first_name", e.target.value)}
                       className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
                     />
                   </div>
@@ -568,8 +555,8 @@ export default function GetStartedPage() {
                       Last name *
                     </label>
                     <input
-                      name="last_name"
-                      required
+                      value={form.last_name}
+                      onChange={(e) => updateField("last_name", e.target.value)}
                       className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
                     />
                   </div>
@@ -581,8 +568,8 @@ export default function GetStartedPage() {
                   </label>
                   <input
                     type="email"
-                    name="email"
-                    required
+                    value={form.email}
+                    onChange={(e) => updateField("email", e.target.value)}
                     className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
                   />
                 </div>
@@ -592,9 +579,8 @@ export default function GetStartedPage() {
                     Phone *
                   </label>
                   <input
-                    name="phone"
-                    type="tel"
-                    required
+                    value={form.phone}
+                    onChange={(e) => updateField("phone", e.target.value)}
                     className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
                   />
                 </div>
@@ -605,8 +591,8 @@ export default function GetStartedPage() {
                       City *
                     </label>
                     <input
-                      name="city"
-                      required
+                      value={form.city}
+                      onChange={(e) => updateField("city", e.target.value)}
                       className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
                     />
                   </div>
@@ -615,9 +601,8 @@ export default function GetStartedPage() {
                       Province / State *
                     </label>
                     <input
-                      name="province"
-                      defaultValue="BC"
-                      required
+                      value={form.province}
+                      onChange={(e) => updateField("province", e.target.value)}
                       className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
                     />
                   </div>
@@ -637,10 +622,12 @@ export default function GetStartedPage() {
                   </p>
                 </div>
               </div>
-            </div>
+            )}
           </form>
         </div>
       </div>
     </main>
   );
 }
+
+
