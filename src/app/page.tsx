@@ -2,12 +2,36 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 export default function HomePage() {
+  const router = useRouter();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [location, setLocation] = useState("Calgary, AB");
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const params = new URLSearchParams({
+      q: searchTerm,
+      location: location,
+    });
+    router.push(`/search?${params.toString()}`);
+  };
+
+  const topServices = [
+    "Planning for myself",
+    "Planning for parents",
+    "Planning for a partner",
+    "Planning for another relative",
+    "Cremation pre-planning",
+    "Burial & cemetery pre-planning",
+  ];
+
   return (
-    <main className="min-h-screen bg-gradient-to-b from-[#faf8f5] via-[#f7f4ef] to-[#f5f1eb] text-[#2a2a2a]">
+    <main className="min-h-screen bg-[#fffaf1]">
       {/* Header */}
-      <header className="bg-[#1f2933]/95 backdrop-blur-sm text-white border-b border-[#1f2933]/20 sticky top-0 z-50 shadow-sm">
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 md:px-8 py-3 md:py-5">
           {/* Left: Logo */}
           <div className="flex items-center gap-2 md:gap-3 flex-shrink-0 min-w-0">
@@ -18,7 +42,7 @@ export default function HomePage() {
               height={70}
               className="object-contain w-12 h-12 md:w-[70px] md:h-[70px]"
             />
-            <span className="text-lg md:text-xl font-light tracking-wide text-white whitespace-nowrap">
+            <span className="text-lg md:text-xl font-light tracking-wide text-gray-900 whitespace-nowrap">
               Soradin
             </span>
           </div>
@@ -27,13 +51,13 @@ export default function HomePage() {
           <div className="flex items-center gap-2 md:gap-6 flex-shrink-0">
             <Link
               href="/get-started"
-              className="rounded-full border border-[#e5d7b5]/40 bg-white/5 backdrop-blur-sm px-3 md:px-5 py-1.5 md:py-2 text-[10px] md:text-xs font-light tracking-wide text-[#e0d5bf] hover:bg-white/10 hover:border-[#e5d7b5]/60 transition-all duration-300 whitespace-nowrap"
+              className="rounded-full border border-gray-300 bg-white px-3 md:px-5 py-1.5 md:py-2 text-[10px] md:text-xs font-medium tracking-wide text-gray-700 hover:bg-gray-50 transition-all duration-300 whitespace-nowrap"
             >
               Get started
             </Link>
             <Link
               href="/agent"
-              className="text-[10px] md:text-xs text-[#e0d5bf]/80 hover:text-white transition-colors font-light tracking-wide whitespace-nowrap hidden sm:inline-block"
+              className="text-[10px] md:text-xs text-gray-600 hover:text-gray-900 transition-colors font-medium tracking-wide whitespace-nowrap hidden sm:inline-block"
             >
               For professionals
             </Link>
@@ -42,388 +66,323 @@ export default function HomePage() {
       </header>
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#faf8f5] via-[#f7f4ef] to-[#f5f1eb]" />
+      <section className="bg-gradient-to-b from-[#fffaf1] to-[#fcf7ed] py-8 md:py-16 lg:py-24">
+        <div className="mx-auto max-w-7xl px-4 md:px-8">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+            {/* Left: Content */}
+            <div className="space-y-6">
+              {/* Pill */}
+              <div className="inline-block">
+                <span className="inline-flex items-center rounded-full bg-yellow-100 px-4 py-1.5 text-xs font-medium text-gray-800">
+                  Book trusted pre-need advisors in Calgary & Edmonton
+                </span>
+              </div>
 
-        <div className="relative flex flex-col md:flex-row min-h-[420px] md:min-h-[520px] lg:min-h-[560px]">
-          {/* Left: Hero Image fills full left half */}
-          <div className="relative w-full md:w-1/2 min-h-[320px] md:min-h-0">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/hero.jpg"
-              alt=""
-              className="absolute inset-0 h-full w-full object-cover object-center"
-            />
-            {/* Maintain aspect ratio on small screens */}
-            <div className="block pb-[65%] md:hidden" />
-            <div className="hidden md:block h-full" />
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/20" />
-          </div>
-
-          {/* Right: Hero Copy */}
-          <div className="flex items-center w-full md:w-1/2 px-6 md:px-10 lg:px-16 py-10 md:py-16">
-            <div className="flex flex-col gap-6 text-center md:text-left max-w-xl">
-              <h1
-                className="text-4xl font-light text-[#1a1a1a] leading-tight tracking-tight sm:text-5xl md:text-5xl lg:text-6xl"
-                style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-              >
-                A gentle way to plan ahead{" "}
-                <span>with care, clarity, and confidence.</span>
+              {/* Headline */}
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
+                Book local pre-need advisors
+                <br />
+                <span className="text-gray-700">Plan ahead with one trusted specialist.</span>
               </h1>
-              <p className="text-base leading-relaxed text-[#5a5a5a] sm:text-lg md:text-base lg:text-lg">
-                Funeral planning doesn&apos;t have to feel overwhelming. Soradin will help to guide you through the various options available to you for your legacy planning. Connecting you to experts in your area with the local knowledge you desire, the compassion you need and the experience to make the entire process a little bit easier. By taking the time now to make your arrangements, we ensure the people you love are supported later.
+
+              {/* Description */}
+              <p className="text-lg text-gray-600 leading-relaxed max-w-xl">
+                Families can compare local pre-need and funeral planning specialists in Calgary and Edmonton. They pick a time that works. Their details are shared securely with one advisor once they book.
               </p>
-              <div className="pt-2 md:pt-4">
-                <Link
-                  href="/get-started"
-                  className="group inline-flex w-full max-w-md items-center justify-center rounded-full bg-[#1a1a1a] px-10 py-4 text-base font-medium tracking-wide text-white shadow-xl shadow-black/10 hover:bg-[#2a2a2a] hover:shadow-2xl hover:shadow-black/15 transition-all duration-300 md:w-auto"
-                >
-                  Start planning online
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
-      {/* How Soradin Works Section */}
-      <section className="relative py-24 md:py-32">
-        <div className="mx-auto max-w-6xl px-6">
-          <div className="text-center mb-16 space-y-4">
-            <h2
-              className="text-4xl font-light text-[#1a1a1a] sm:text-5xl md:text-5xl tracking-tight"
-              style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-            >
-              Simple, supportive, and designed
-              <br />
-              <span className="text-[#4a4a4a]">for peace of mind.</span>
-            </h2>
-            <p className="text-sm text-[#7a7a7a] font-light tracking-[0.2em] uppercase">
-              How Soradin works
-            </p>
-          </div>
-          <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-3">
-            <div className="text-center space-y-4">
-              <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-full bg-white/60 backdrop-blur-sm border border-[#e5ddd0]/40 text-xl font-light text-[#1a1a1a] shadow-sm">
-                1
-              </div>
-              <h3
-                className="text-lg font-light text-[#1a1a1a] tracking-tight"
-                style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-              >
-                Start with a guided questionnaire
-              </h3>
-              <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
-                Our step-by-step helps guide you through the common questions to begin to outline your wishes.
-              </p>
-            </div>
-            <div className="text-center space-y-4">
-              <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-full bg-white/60 backdrop-blur-sm border border-[#e5ddd0]/40 text-xl font-light text-[#1a1a1a] shadow-sm">
-                2
-              </div>
-              <h3
-                className="text-lg font-light text-[#1a1a1a] tracking-tight"
-                style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-              >
-                Connect with a trusted specialist
-              </h3>
-              <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
-                We match you with a trusted prearrangement specialist in your area to help you finalize your plan.
-              </p>
-            </div>
-            <div className="text-center space-y-4">
-              <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-full bg-white/60 backdrop-blur-sm border border-[#e5ddd0]/40 text-xl font-light text-[#1a1a1a] shadow-sm">
-                3
-              </div>
-              <h3
-                className="text-lg font-light text-[#1a1a1a] tracking-tight"
-                style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-              >
-                Finalize your plan
-              </h3>
-              <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
-                Prearrangement specialist will be in touch to review your options and formalize your plan.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Making taking the next step more supportive for your peace of mind */}
-      <section className="relative py-24 md:py-32">
-        <div className="mx-auto max-w-6xl px-6">
-          <div className="text-center mb-16 space-y-6">
-            <h2
-              className="text-4xl font-light text-[#1a1a1a] md:text-5xl tracking-tight"
-              style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-            >
-              Making the next step more supportive for your peace of mind
-            </h2>
-          </div>
-
-          <div className="space-y-8">
-            {/* Top row: three benefits */}
-            <div className="grid gap-8 md:grid-cols-3">
-              <div className="group rounded-2xl border border-[#e5ddd0]/60 bg-white/40 backdrop-blur-sm p-10 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-[#d4c9b8] transition-all duration-500">
-                <h3
-                  className="mb-4 text-xl font-light text-[#1a1a1a] tracking-tight"
-                  style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-                >
-                  Remove financial burdens
-                </h3>
-                <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
-                  Preplanning helps to remove the financial burden from your loved ones at a time when making financial decisions can be difficult.
-                </p>
-              </div>
-
-              <div className="group rounded-2xl border border-[#e5ddd0]/60 bg-white/40 backdrop-blur-sm p-10 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-[#d4c9b8] transition-all duration-500">
-                <h3
-                  className="mb-4 text-xl font-light text-[#1a1a1a] tracking-tight"
-                  style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-                >
-                  Avoid unexpected costs
-                </h3>
-                <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
-                  Understanding your options helps you make informed decisions.
-                </p>
-              </div>
-
-              <div className="group rounded-2xl border border-[#e5ddd0]/60 bg-white/40 backdrop-blur-sm p-10 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-[#d4c9b8] transition-all duration-500">
-                <h3
-                  className="mb-4 text-xl font-light text-[#1a1a1a] tracking-tight"
-                  style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-                >
-                  Having time to breath
-                </h3>
-                <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
-                  Being prepared ahead of time allows your family to step back, take a breath and move through the process with clarity.
-                </p>
-              </div>
+              {/* Search Form - Desktop */}
+              <form onSubmit={handleSearch} className="hidden md:block mt-8">
+                <div className="bg-white rounded-xl shadow-lg p-2 flex gap-2">
+                  <div className="flex-1">
+                    <label htmlFor="search-desktop" className="sr-only">Search</label>
+                    <input
+                      id="search-desktop"
+                      type="text"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      placeholder="Reason for your visit or advisor name"
+                      className="w-full px-4 py-3 border-0 focus:outline-none focus:ring-0 text-gray-900 placeholder-gray-400"
+                    />
+                  </div>
+                  <div className="w-48">
+                    <label htmlFor="location-desktop" className="sr-only">Location</label>
+                    <select
+                      id="location-desktop"
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
+                      className="w-full px-4 py-3 border-0 border-l border-gray-200 focus:outline-none focus:ring-0 text-gray-900 bg-white"
+                    >
+                      <option value="Calgary, AB">Calgary, AB</option>
+                      <option value="Edmonton, AB">Edmonton, AB</option>
+                    </select>
+                  </div>
+                  <button
+                    type="submit"
+                    className="bg-[#ffd54b] hover:bg-[#ffcc00] text-gray-900 font-semibold px-8 py-3 rounded-lg transition-colors whitespace-nowrap"
+                  >
+                    Find pre-need advisors
+                  </button>
+                </div>
+              </form>
             </div>
 
-            {/* Bottom row: two benefits centered */}
-            <div className="flex flex-col items-stretch gap-8 md:flex-row md:justify-center">
-              <div className="group rounded-2xl border border-[#e5ddd0]/60 bg-white/40 backdrop-blur-sm p-10 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-[#d4c9b8] transition-all duration-500 md:w-80">
-                <h3
-                  className="mb-4 text-xl font-light text-[#1a1a1a] tracking-tight"
-                  style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-                >
-                  Fulfilling your duty
-                </h3>
-                <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
-                  Taking responsibility for your estate plan and ensuring your loved ones are not left in a tough situation.
-                </p>
-              </div>
-
-              <div className="group rounded-2xl border border-[#e5ddd0]/60 bg-white/40 backdrop-blur-sm p-10 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-[#d4c9b8] transition-all duration-500 md:w-80">
-                <h3
-                  className="mb-4 text-xl font-light text-[#1a1a1a] tracking-tight"
-                  style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-                >
-                  Remove uncertainty
-                </h3>
-                <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
-                  Your choices are recorded clearly and your plan helps to ensure your family and loved ones understand your wishes.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Practical. Efficient. Simplified. */}
-      <section
-        id="planning-options"
-        className="relative py-24 md:py-32"
-      >
-        <div className="mx-auto max-w-6xl px-6">
-          <div className="text-center mb-16 space-y-4">
-            <h2
-              className="text-4xl font-light text-[#1a1a1a] sm:text-5xl md:text-5xl tracking-tight"
-              style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-            >
-              Practical. Efficient. Simplified.
-            </h2>
-            <p className="text-base text-[#6b6b6b] font-light max-w-2xl mx-auto">
-              Soradin helps you by collecting some important information and linking you with our network of experts.
-            </p>
-          </div>
-          <div className="space-y-8">
-            {/* Top row: two cards */}
-            <div className="grid gap-8 md:grid-cols-2">
-              {/* Burial or Cremation options */}
-              <div className="group rounded-2xl border border-[#e5ddd0]/60 bg-white/40 backdrop-blur-sm p-8 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-[#d4c9b8] transition-all duration-500">
-                <h3
-                  className="mb-3 text-xl font-light text-[#1a1a1a] tracking-tight"
-                  style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-                >
-                  Burial or Cremation options
-                </h3>
-                <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
-                  Understanding your options with clear explanations and local knowledge.
-                </p>
-              </div>
-
-              {/* Service Preferences */}
-              <div className="group rounded-2xl border border-[#e5ddd0]/60 bg-white/40 backdrop-blur-sm p-8 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-[#d4c9b8] transition-all duration-500">
-                <h3
-                  className="mb-3 text-xl font-light text-[#1a1a1a] tracking-tight"
-                  style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-                >
-                  Service Preferences
-                </h3>
-                <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
-                  Decide on what kind of service, gathering, memorial or lack of formal service suits you best.
-                </p>
-              </div>
-            </div>
-
-            {/* Bottom row: one centered card */}
-            <div className="flex justify-center">
-              {/* Personal Wishes */}
-              <div className="group rounded-2xl border border-[#e5ddd0]/60 bg-white/40 backdrop-blur-sm p-8 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-[#d4c9b8] transition-all duration-500 md:w-2/3 lg:w-1/2">
-                <h3
-                  className="mb-3 text-xl font-light text-[#1a1a1a] tracking-tight"
-                  style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-                >
-                  Personal Wishes
-                </h3>
-                <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
-                  From no service to a full traditional, the logistics matter and preplanning helps to remove uncertainty.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials - Removed per document note: "What families are saying... remove this for now until we have reviews, then it should go on the bottom" */}
-
-      {/* FAQ Section */}
-      <section
-        id="resources"
-        className="relative py-24 md:py-32"
-      >
-        <div className="mx-auto max-w-4xl px-6">
-          <div className="text-center mb-16">
-            <h2
-              className="text-4xl font-light text-[#1a1a1a] md:text-5xl tracking-tight"
-              style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-            >
-              FAQ Common Questions
-            </h2>
-          </div>
-          <div className="space-y-6">
-            {/* FAQ 1 */}
-            <div className="group rounded-2xl border border-[#e5ddd0]/60 bg-white/40 backdrop-blur-sm p-8 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-[#d4c9b8] transition-all duration-500">
-              <h3 className="mb-3 text-lg font-light text-[#1a1a1a] tracking-tight">
-                I have filled out the form, what happens next?
-              </h3>
-              <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
-                A prearrangement agent in your area will follow up with you to help you understand the various options to you and further discuss your plan.
-              </p>
-            </div>
-
-            {/* FAQ 2 */}
-            <div className="group rounded-2xl border border-[#e5ddd0]/60 bg-white/40 backdrop-blur-sm p-8 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-[#d4c9b8] transition-all duration-500">
-              <h3 className="mb-3 text-lg font-light text-[#1a1a1a] tracking-tight">
-                Do I need to make a decision now?
-              </h3>
-              <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
-                No, Soradin connects you with an agent in your area so you can begin the process of Funeral Planning, there is no obligation to finalize your plan now and you can move at your own pace.
-              </p>
-            </div>
-
-            {/* FAQ 3 */}
-            <div className="group rounded-2xl border border-[#e5ddd0]/60 bg-white/40 backdrop-blur-sm p-8 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-[#d4c9b8] transition-all duration-500">
-              <h3 className="mb-3 text-lg font-light text-[#1a1a1a] tracking-tight">
-                Is my information secure?
-              </h3>
-              <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
-                Yes, Soradin uses encrypted storage and only shares your information with our network of vetted prearrangement specialists.
-              </p>
-            </div>
-
-            {/* FAQ 5 */}
-            <div className="group rounded-2xl border border-[#e5ddd0]/60 bg-white/40 backdrop-blur-sm p-8 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-[#d4c9b8] transition-all duration-500">
-              <h3 className="mb-3 text-lg font-light text-[#1a1a1a] tracking-tight">
-                Does this commit me to anything?
-              </h3>
-              <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
-                No, filling out the information form is free and comes with no obligation.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Final CTA Section */}
-      <section className="relative py-32 md:py-40">
-        <div className="mx-auto max-w-3xl px-6 text-center space-y-8">
-          <h2
-            className="text-4xl font-light text-[#1a1a1a] md:text-5xl tracking-tight"
-            style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-          >
-            Start planning with Soradin today
-          </h2>
-          <p className="text-lg leading-relaxed text-[#5a5a5a] font-light max-w-xl mx-auto">
-            A few guided questions now can make a world of difference later.
-          </p>
-          <Link
-            href="/get-started"
-            className="inline-block rounded-full bg-[#1a1a1a] px-10 py-4 text-base font-light tracking-wide text-white shadow-lg shadow-black/5 hover:bg-[#2a2a2a] hover:shadow-xl hover:shadow-black/10 transition-all duration-300"
-          >
-            Begin your plan
-          </Link>
-        </div>
-      </section>
-
-      {/* Micro contact block */}
-      <section className="border-t border-[#e5ddd0]/60 bg-[#f7f4ef]">
-        <div className="mx-auto max-w-4xl px-6 py-10">
-          <div className="mb-4 text-center space-y-1 text-[12px] text-[#7a7a7a]">
-            <p>Questions or need help?</p>
-            <p>We&apos;re here if you need us.</p>
-          </div>
-          <div className="flex items-center justify-center">
-            {/* Email */}
-            <div className="space-y-2 text-center text-[12px] text-[#5a5a5a]">
-              <div className="flex items-center justify-center">
-                {/* Simple chat/message icon */}
-                <div className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-300 text-slate-700">
-                  <span className="text-xl leading-none">💬</span>
+            {/* Right: Placeholder Illustration */}
+            <div className="hidden lg:block">
+              <div className="bg-gray-100 rounded-2xl aspect-[4/5] flex items-center justify-center">
+                <div className="text-center text-gray-400">
+                  <p className="text-sm font-medium">Future Soradin artwork</p>
                 </div>
               </div>
-              <div className="space-y-0.5">
-                <p className="text-[11px] uppercase tracking-[0.16em] text-[#7a7a7a]">
-                  Chat with us
-                </p>
-                <p className="text-[12px] text-[#4a4a4a]">
-                  support@soradin.com
-                </p>
-              </div>
             </div>
+          </div>
+
+          {/* Search Form - Mobile */}
+          <form onSubmit={handleSearch} className="md:hidden mt-8">
+            <div className="bg-white rounded-xl shadow-lg p-4 space-y-4">
+              <div>
+                <label htmlFor="search-mobile" className="block text-sm font-medium text-gray-700 mb-2">
+                  Search
+                </label>
+                <input
+                  id="search-mobile"
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Reason for your visit or advisor name"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ffd54b] focus:border-transparent text-gray-900"
+                />
+              </div>
+              <div>
+                <label htmlFor="location-mobile" className="block text-sm font-medium text-gray-700 mb-2">
+                  Location
+                </label>
+                <select
+                  id="location-mobile"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ffd54b] focus:border-transparent text-gray-900 bg-white"
+                >
+                  <option value="Calgary, AB">Calgary, AB</option>
+                  <option value="Edmonton, AB">Edmonton, AB</option>
+                </select>
+              </div>
+              <button
+                type="submit"
+                className="w-full bg-[#ffd54b] hover:bg-[#ffcc00] text-gray-900 font-semibold px-6 py-3 rounded-lg transition-colors"
+              >
+                Find pre-need advisors
+              </button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      {/* Find pre-need specialists section */}
+      <section className="py-16 md:py-24 bg-white">
+        <div className="mx-auto max-w-7xl px-4 md:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Find pre-need specialists in Calgary & Edmonton
+            </h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Work with local funeral homes, cemeteries, and pre-need advisors in your area.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+            <div className="bg-gray-50 rounded-xl p-6 text-center">
+              <h3 className="font-semibold text-gray-900">Funeral home pre-planning</h3>
+            </div>
+            <div className="bg-gray-50 rounded-xl p-6 text-center">
+              <h3 className="font-semibold text-gray-900">Cremation pre-planning</h3>
+            </div>
+            <div className="bg-gray-50 rounded-xl p-6 text-center">
+              <h3 className="font-semibold text-gray-900">Burial & cemetery pre-planning</h3>
+            </div>
+            <div className="bg-gray-50 rounded-xl p-6 text-center">
+              <h3 className="font-semibold text-gray-900">Pre-need insurance specialists</h3>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Top-searched pre-need services */}
+      <section className="py-16 md:py-24 bg-[#fffaf1]">
+        <div className="mx-auto max-w-7xl px-4 md:px-8">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-12 text-center">
+            Top-searched pre-need services
+          </h2>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6">
+            {topServices.map((service, index) => (
+              <div
+                key={index}
+                className="bg-[#ffd54b]/20 rounded-xl p-6 text-center hover:bg-[#ffd54b]/30 transition-colors cursor-pointer"
+              >
+                <div className="w-12 h-12 rounded-full bg-[#ffd54b] flex items-center justify-center mx-auto mb-4 text-gray-900 font-bold text-lg">
+                  {service.charAt(0)}
+                </div>
+                <h3 className="font-semibold text-gray-900 text-sm md:text-base">{service}</h3>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* How Soradin works */}
+      <section className="py-16 md:py-24 bg-[#ffd54b]/10">
+        <div className="mx-auto max-w-7xl px-4 md:px-8">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-12 text-center">
+            How Soradin works
+          </h2>
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="bg-white rounded-xl p-8 shadow-sm">
+              <h3 className="text-xl font-bold text-gray-900 mb-3">
+                Browse local pre-need specialists
+              </h3>
+              <p className="text-gray-600 mb-6">
+                View advisors in Calgary & Edmonton and learn about their expertise.
+              </p>
+              <button className="text-[#ffd54b] font-semibold hover:underline">
+                See specialists →
+              </button>
+            </div>
+            <div className="bg-white rounded-xl p-8 shadow-sm">
+              <h3 className="text-xl font-bold text-gray-900 mb-3">
+                Learn about their expertise
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Read bios, experience, and focus areas to find the right match.
+              </p>
+              <button className="text-[#ffd54b] font-semibold hover:underline">
+                See profiles →
+              </button>
+            </div>
+            <div className="bg-white rounded-xl p-8 shadow-sm">
+              <h3 className="text-xl font-bold text-gray-900 mb-3">
+                Book an appointment online
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Pick a time that works and share your details with one advisor.
+              </p>
+              <button className="text-[#ffd54b] font-semibold hover:underline">
+                See availability →
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Pre-need advisors by city */}
+      <section className="py-16 md:py-24 bg-white">
+        <div className="mx-auto max-w-7xl px-4 md:px-8">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-12 text-center">
+            Find pre-need advisors by city
+          </h2>
+          <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+            <Link
+              href="/search?location=Calgary%2C%20AB"
+              className="bg-gray-50 hover:bg-gray-100 rounded-xl p-8 text-center transition-colors"
+            >
+              <h3 className="text-xl font-semibold text-gray-900">Calgary, AB</h3>
+            </Link>
+            <Link
+              href="/search?location=Edmonton%2C%20AB"
+              className="bg-gray-50 hover:bg-gray-100 rounded-xl p-8 text-center transition-colors"
+            >
+              <h3 className="text-xl font-semibold text-gray-900">Edmonton, AB</h3>
+            </Link>
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="relative border-t border-[#e5ddd0]/30 py-12">
-        <div className="mx-auto flex max-w-7xl flex-col items-center gap-6 px-8 text-center text-xs text-[#7a7a7a] md:flex-row md:justify-between md:text-left font-light tracking-wide">
-          <div>
-            © {new Date().getFullYear()} Soradin. All rights reserved.
+      <footer className="bg-gray-900 text-gray-300 py-12 md:py-16">
+        <div className="mx-auto max-w-7xl px-4 md:px-8">
+          <div className="grid md:grid-cols-4 gap-8 mb-8">
+            {/* Soradin */}
+            <div>
+              <h3 className="font-semibold text-white mb-4">Soradin</h3>
+              <ul className="space-y-2 text-sm">
+                <li>
+                  <Link href="/" className="hover:text-white transition-colors">
+                    Home
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/about" className="hover:text-white transition-colors">
+                    About
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/contact" className="hover:text-white transition-colors">
+                    Contact
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/faq" className="hover:text-white transition-colors">
+                    FAQ
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            {/* For Advisors */}
+            <div>
+              <h3 className="font-semibold text-white mb-4">For Advisors</h3>
+              <ul className="space-y-2 text-sm">
+                <li>
+                  <Link href="/agent" className="hover:text-white transition-colors">
+                    List your pre-need practice
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/agent/resources" className="hover:text-white transition-colors">
+                    Advisor resources
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/agent/pricing" className="hover:text-white transition-colors">
+                    Pricing
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            {/* Legal */}
+            <div>
+              <h3 className="font-semibold text-white mb-4">Legal</h3>
+              <ul className="space-y-2 text-sm">
+                <li>
+                  <Link href="/terms" className="hover:text-white transition-colors">
+                    Terms
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/privacy" className="hover:text-white transition-colors">
+                    Privacy
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            {/* Callout */}
+            <div>
+              <h3 className="font-semibold text-white mb-4">
+                Are you a pre-need specialist in Calgary or Edmonton?
+              </h3>
+              <Link
+                href="/agent"
+                className="inline-block border-2 border-[#ffd54b] text-[#ffd54b] hover:bg-[#ffd54b] hover:text-gray-900 font-semibold px-6 py-2 rounded-lg transition-colors"
+              >
+                Get started
+              </Link>
+            </div>
           </div>
-          <div className="flex flex-wrap items-center justify-center gap-6">
-            <Link href="/privacy" className="hover:text-[#1a1a1a] transition-colors">
-              Privacy
-            </Link>
-            <Link href="/terms" className="hover:text-[#1a1a1a] transition-colors">
-              Terms
-            </Link>
+
+          <div className="border-t border-gray-800 pt-8 text-center text-sm text-gray-500">
+            © {new Date().getFullYear()} Soradin. All rights reserved.
           </div>
         </div>
       </footer>
-
     </main>
   );
 }
