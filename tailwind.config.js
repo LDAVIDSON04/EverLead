@@ -20,6 +20,12 @@ module.exports = {
           800: "#1e40af",
           900: "#1e3a8a",
         },
+        soradin: {
+          green: '#0B7A3A',
+          greenDark: '#06351B',
+          bg: '#F4F4F1',
+          text: '#111827',
+        },
       },
     },
   },

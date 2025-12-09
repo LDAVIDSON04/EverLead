@@ -5,13 +5,13 @@ export default function HomePage() {
   const year = new Date().getFullYear();
 
   return (
-    <main className="min-h-screen bg-[#fff7e2] text-slate-900">
+    <main className="min-h-screen bg-soradin-bg text-soradin-text">
       {/* Top nav */}
-      <header className="w-full border-b border-[#f0e2b5] bg-[#fff7e2]">
+      <header className="w-full border-b border-gray-200 bg-soradin-bg">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-900 text-xs font-semibold text-[#fff7e2]">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-soradin-text text-xs font-semibold text-soradin-bg">
               S
             </div>
             <span className="text-lg font-semibold tracking-tight">
@@ -21,25 +21,25 @@ export default function HomePage() {
 
           {/* Nav */}
           <nav className="flex items-center gap-6 text-sm">
-            <button className="hidden items-center gap-1 text-slate-700 hover:text-slate-900 sm:flex">
+            <button className="hidden items-center gap-1 text-gray-700 hover:text-soradin-text sm:flex">
               <span>Browse</span>
               <span className="text-xs">▾</span>
             </button>
-            <Link href="/help" className="hidden text-slate-700 hover:text-slate-900 sm:inline">
+            <Link href="/help" className="hidden text-gray-700 hover:text-soradin-text sm:inline">
               Help
             </Link>
             <Link
               href="/for-professionals"
-              className="hidden text-slate-700 hover:text-slate-900 md:inline"
+              className="hidden text-gray-700 hover:text-soradin-text md:inline"
             >
               List your practice on Soradin
             </Link>
-            <Link href="/login" className="hidden text-slate-700 hover:text-slate-900 sm:inline">
+            <Link href="/login" className="hidden text-gray-700 hover:text-soradin-text sm:inline">
               Log in
             </Link>
             <Link
               href="/signup"
-              className="rounded-full bg-[#ffd94a] px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm hover:bg-[#ffcf1d]"
+              className="rounded-full bg-soradin-green px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-soradin-greenDark"
             >
               Sign up
             </Link>
@@ -48,40 +48,43 @@ export default function HomePage() {
       </header>
 
       {/* HERO — match Zocdoc spacing/layout */}
-      <section className="border-b border-[#f0e2b5] bg-[#fff7e2]">
+      <section className="border-b border-gray-200 bg-soradin-bg">
         <div className="mx-auto flex max-w-6xl flex-col px-6 pt-16 pb-20">
           {/* Heading block */}
           <div className="max-w-3xl">
-            <h1 className="text-4xl font-semibold leading-tight tracking-tight text-slate-900 md:text-5xl">
+            <h1 className="text-4xl font-semibold leading-tight tracking-tight text-soradin-text md:text-5xl">
               Book local funeral professionals near you.
             </h1>
+            <p className="mt-4 text-lg text-gray-600 max-w-xl">
+              Compare trusted funeral homes, cemeteries, and pre-need advisors in your area.
+            </p>
           </div>
 
-          {/* Search bar */}
+          {/* Search bar - Zocdoc style */}
           <div className="mt-8 w-full max-w-5xl">
-            <div className="rounded-[999px] bg-white shadow-lg shadow-slate-900/5">
+            <div className="rounded-full bg-white shadow-md flex flex-col md:flex-row md:items-stretch overflow-hidden">
               <form
                 method="GET"
                 action="/search"
-                className="flex flex-col gap-3 px-4 py-4 md:flex-row md:items-center"
+                className="flex flex-col w-full md:flex-row md:items-stretch"
               >
-                {/* Search column */}
-                <div className="flex-1 min-w-[180px]">
-                  <div className="text-xs font-medium text-slate-500">Search</div>
+                {/* Service column */}
+                <div className="flex-1 border-b md:border-b-0 md:border-r border-gray-200 px-4 py-3">
+                  <label className="text-xs font-medium text-gray-500">Service</label>
                   <input
                     name="q"
-                    placeholder="Reason for your visit or advisor name"
-                    className="mt-1 h-10 w-full rounded-md border border-transparent bg-[#f7f5f0] px-3 text-sm text-slate-900 outline-none focus:border-[#ffd94a] focus:bg-white"
+                    className="w-full border-none p-0 mt-1 text-sm text-soradin-text focus:outline-none focus:ring-0"
+                    placeholder="Funeral home, cemetery, insurance..."
                   />
                 </div>
 
                 {/* Location column */}
-                <div className="w-full min-w-[180px] md:w-52">
-                  <div className="text-xs font-medium text-slate-500">Location</div>
+                <div className="flex-1 border-b md:border-b-0 md:border-r border-gray-200 px-4 py-3">
+                  <label className="text-xs font-medium text-gray-500">Location</label>
                   <select
                     name="location"
                     defaultValue="Calgary, AB"
-                    className="mt-1 h-10 w-full rounded-md border border-transparent bg-[#f7f5f0] px-3 text-sm text-slate-900 outline-none focus:border-[#ffd94a] focus:bg-white"
+                    className="w-full border-none p-0 mt-1 text-sm text-soradin-text bg-transparent focus:outline-none focus:ring-0"
                   >
                     <option value="Calgary, AB">Calgary, AB</option>
                     <option value="Edmonton, AB">Edmonton, AB</option>
@@ -89,13 +92,13 @@ export default function HomePage() {
                 </div>
 
                 {/* Planning for column */}
-                <div className="w-full min-w-[200px] md:w-64">
-                  <div className="text-xs font-medium text-slate-500">Planning for</div>
+                <div className="flex-1 border-b md:border-b-0 md:border-r border-gray-200 px-4 py-3">
+                  <label className="text-xs font-medium text-gray-500">Planning for</label>
                   <select
                     name="reason"
-                    className="mt-1 h-10 w-full rounded-md border border-transparent bg-[#f7f5f0] px-3 text-sm text-slate-900 outline-none focus:border-[#ffd94a] focus:bg-white"
+                    className="w-full border-none p-0 mt-1 text-sm text-soradin-text bg-transparent focus:outline-none focus:ring-0"
                   >
-                    <option value="">Select a reason (optional)</option>
+                    <option value="">Myself, parent, partner...</option>
                     <option value="self">Myself</option>
                     <option value="parent">Parent</option>
                     <option value="partner">Partner</option>
@@ -104,15 +107,12 @@ export default function HomePage() {
                 </div>
 
                 {/* Button column */}
-                <div className="flex w-full justify-end md:w-40">
-                  <button
-                    type="submit"
-                    className="mt-2 inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[#ffd94a] px-6 text-sm font-semibold text-slate-900 shadow-sm hover:bg-[#ffcf1d] md:mt-6"
-                  >
-                    <span className="text-sm">🔍</span>
-                    <span>Find advisors</span>
-                  </button>
-                </div>
+                <button
+                  type="submit"
+                  className="md:w-40 px-6 py-3 bg-soradin-green text-white text-sm font-semibold hover:bg-soradin-greenDark"
+                >
+                  Find advisors
+                </button>
               </form>
             </div>
           </div>
@@ -122,10 +122,10 @@ export default function HomePage() {
       {/* BAND: Find advisors from trusted providers */}
       <section className="bg-white py-14">
         <div className="mx-auto max-w-6xl px-6">
-          <h2 className="text-xl font-semibold text-slate-900">
+          <h2 className="text-xl font-semibold text-soradin-text">
             Find pre-need advisors from trusted providers
           </h2>
-          <p className="mt-1 text-sm text-slate-700">
+          <p className="mt-1 text-sm text-gray-700">
             Connect with local funeral homes, cemeteries, and pre-need specialists in
             Calgary and Edmonton.
           </p>
@@ -135,7 +135,7 @@ export default function HomePage() {
               (label) => (
                 <button
                   key={label}
-                  className="flex items-center justify-center rounded-2xl border border-[#f2e5b2] bg-[#fff9e5] px-4 py-5 text-center text-sm font-medium text-slate-900 hover:border-slate-800"
+                  className="flex items-center justify-center rounded-2xl border border-gray-200 bg-soradin-bg px-4 py-5 text-center text-sm font-medium text-soradin-text hover:border-soradin-green"
                 >
                   {label}
                 </button>
@@ -146,9 +146,9 @@ export default function HomePage() {
       </section>
 
       {/* Top-searched pre-need services */}
-      <section className="border-t border-[#f0e2b5] bg-[#fff7e2] py-14">
+      <section className="border-t border-gray-200 bg-soradin-bg py-14">
         <div className="mx-auto max-w-6xl px-6">
-          <h2 className="text-xl font-semibold text-slate-900">
+          <h2 className="text-xl font-semibold text-soradin-text">
             Top-searched pre-need services
           </h2>
 
@@ -163,9 +163,9 @@ export default function HomePage() {
             ].map((service) => (
               <div
                 key={service}
-                className="flex flex-col items-center rounded-2xl bg-[#ffeeb8] px-4 py-6 text-center text-sm text-slate-900"
+                className="flex flex-col items-center rounded-2xl bg-white px-4 py-6 text-center text-sm text-soradin-text shadow-sm"
               >
-                <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-white text-xs font-semibold text-slate-900">
+                <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-soradin-green text-xs font-semibold text-white">
                   {service[0]}
                 </div>
                 <span>{service}</span>
@@ -176,9 +176,9 @@ export default function HomePage() {
       </section>
 
       {/* Find advisors by city */}
-      <section className="bg-[#fff7e2] py-14">
+      <section className="bg-soradin-bg py-14">
         <div className="mx-auto max-w-6xl px-6">
-          <h2 className="mb-4 text-xl font-semibold text-slate-900">
+          <h2 className="mb-4 text-xl font-semibold text-soradin-text">
             Find pre-need advisors by city
           </h2>
 
@@ -186,10 +186,10 @@ export default function HomePage() {
             {["Calgary, AB", "Edmonton, AB"].map((city) => (
               <button
                 key={city}
-                className="flex items-center justify-between border-b border-[#f0e2b5] py-3 text-sm text-slate-900"
+                className="flex items-center justify-between border-b border-gray-200 py-3 text-sm text-soradin-text hover:text-soradin-green"
               >
                 <span>{city}</span>
-                <span className="text-xs text-slate-500">▾</span>
+                <span className="text-xs text-gray-500">▾</span>
               </button>
             ))}
           </div>
@@ -272,7 +272,7 @@ export default function HomePage() {
               </p>
               <Link
                 href="/signup"
-                className="inline-flex items-center rounded-full bg-[#ffd94a] px-4 py-2 text-xs font-semibold text-slate-900 hover:bg-[#ffcf1d]"
+                className="inline-flex items-center rounded-full bg-soradin-green px-4 py-2 text-xs font-semibold text-white hover:bg-soradin-greenDark"
               >
                 Get started
               </Link>
