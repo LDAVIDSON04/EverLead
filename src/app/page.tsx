@@ -51,88 +51,78 @@ export default function HomePage() {
 
       {/* Hero section */}
       <section className="border-b border-[#f0e2b5] bg-[#fff7e2] pb-14 pt-10">
-        <div className="mx-auto flex max-w-6xl flex-col gap-10 px-6 md:flex-row md:items-center">
-          {/* Left: heading + search bar */}
-          <div className="max-w-xl space-y-6">
+        <div className="mx-auto max-w-6xl px-6">
+          {/* Heading */}
+          <div className="mb-8">
             <h1 className="text-4xl font-semibold leading-tight tracking-tight text-slate-900 md:text-5xl">
-              Book local
-              <br />
-              pre-need advisors
-              <br />
-              who understand your plans.
+              Book local funeral professionals near you.
             </h1>
-
-            <p className="text-sm text-slate-700 md:text-base">
-              Soradin helps families in Calgary and Edmonton find trusted
-              pre-need and funeral planning specialists. Compare advisors, pick a
-              time that works, and share your details securely with one advisor.
-            </p>
-
-            {/* Search bar */}
-            <div className="mt-4 rounded-[999px] bg-white shadow-lg shadow-slate-900/5">
-              <form
-                method="GET"
-                action="/search"
-                className="flex flex-col gap-3 px-4 py-3 md:flex-row md:items-center"
-              >
-                {/* Column 1: reason */}
-                <div className="flex-1">
-                  <div className="text-xs font-medium text-slate-500">Search</div>
-                  <input
-                    name="q"
-                    placeholder="Reason for your visit or advisor name"
-                    className="mt-1 h-10 w-full rounded-md border border-transparent bg-[#f7f5f0] px-3 text-sm text-slate-900 outline-none focus:border-[#ffd94a] focus:bg-white"
-                  />
-                </div>
-
-                {/* Column 2: location */}
-                <div className="w-full md:w-56">
-                  <div className="text-xs font-medium text-slate-500">Location</div>
-                  <select
-                    name="location"
-                    className="mt-1 h-10 w-full rounded-md border border-transparent bg-[#f7f5f0] px-3 text-sm text-slate-900 outline-none focus:border-[#ffd94a] focus:bg-white"
-                    defaultValue="Calgary, AB"
-                  >
-                    <option value="Calgary, AB">Calgary, AB</option>
-                    <option value="Edmonton, AB">Edmonton, AB</option>
-                  </select>
-                </div>
-
-                {/* Column 3: visit type (to mimic "Add insurance") */}
-                <div className="w-full md:w-64">
-                  <div className="text-xs font-medium text-slate-500">
-                    Planning for
-                  </div>
-                  <select
-                    name="reason"
-                    className="mt-1 h-10 w-full rounded-md border border-transparent bg-[#f7f5f0] px-3 text-sm text-slate-900 outline-none focus:border-[#ffd94a] focus:bg-white"
-                  >
-                    <option value="">Select a reason (optional)</option>
-                    <option value="self">Myself</option>
-                    <option value="parent">Parent</option>
-                    <option value="partner">Partner</option>
-                    <option value="relative">Another relative</option>
-                  </select>
-                </div>
-
-                {/* Button */}
-                <div className="flex w-full justify-end md:w-auto">
-                  <button
-                    type="submit"
-                    className="mt-2 inline-flex h-11 w-full items-center justify-center rounded-full bg-[#ffd94a] px-6 text-sm font-semibold text-slate-900 shadow-sm hover:bg-[#ffcf1d] md:mt-6 md:w-32"
-                  >
-                    Find advisors
-                  </button>
-                </div>
-              </form>
-            </div>
           </div>
 
-          {/* Right: illustration placeholder */}
-          <div className="flex flex-1 items-center justify-center">
-            <div className="flex aspect-[4/3] w-full max-w-sm items-center justify-center rounded-3xl bg-[#fff0bf] text-xs text-slate-500">
-              Future Soradin artwork
-            </div>
+          {/* Search bar - full width like Zocdoc */}
+          <div className="w-full rounded-2xl bg-white shadow-lg shadow-slate-900/5 p-6">
+            <form
+              method="GET"
+              action="/search"
+              className="flex flex-col gap-4 md:flex-row md:items-end"
+            >
+              {/* Column 1: Search */}
+              <div className="flex-1">
+                <label className="mb-2 block text-xs font-medium text-slate-500">
+                  Search
+                </label>
+                <input
+                  name="q"
+                  placeholder="Reason for your visit or advisor name"
+                  className="h-11 w-full rounded-lg border border-gray-200 bg-white px-4 text-sm text-slate-900 outline-none focus:border-[#ffd94a] focus:ring-1 focus:ring-[#ffd94a]"
+                />
+              </div>
+
+              {/* Column 2: Location */}
+              <div className="w-full md:w-56">
+                <label className="mb-2 block text-xs font-medium text-slate-500">
+                  Location
+                </label>
+                <select
+                  name="location"
+                  className="h-11 w-full rounded-lg border border-gray-200 bg-white px-4 text-sm text-slate-900 outline-none focus:border-[#ffd94a] focus:ring-1 focus:ring-[#ffd94a]"
+                  defaultValue="Calgary, AB"
+                >
+                  <option value="Calgary, AB">Calgary, AB</option>
+                  <option value="Edmonton, AB">Edmonton, AB</option>
+                </select>
+              </div>
+
+              {/* Column 3: Planning for */}
+              <div className="w-full md:w-64">
+                <label className="mb-2 block text-xs font-medium text-slate-500">
+                  Planning for
+                </label>
+                <select
+                  name="reason"
+                  className="h-11 w-full rounded-lg border border-gray-200 bg-white px-4 text-sm text-slate-900 outline-none focus:border-[#ffd94a] focus:ring-1 focus:ring-[#ffd94a]"
+                >
+                  <option value="">Select a reason (optional)</option>
+                  <option value="self">Myself</option>
+                  <option value="parent">Parent</option>
+                  <option value="partner">Partner</option>
+                  <option value="relative">Another relative</option>
+                </select>
+              </div>
+
+              {/* Button */}
+              <div className="w-full md:w-auto">
+                <button
+                  type="submit"
+                  className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-[#ffd94a] px-6 text-sm font-semibold text-slate-900 shadow-sm hover:bg-[#ffcf1d] md:w-36"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  Find advisors
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       </section>
