@@ -39,18 +39,18 @@ export default function Home() {
         </div>
       </header>
 
-      {/* HERO - Above the fold */}
-      <section className="bg-white">
-        <div className="mx-auto max-w-7xl px-4 py-12 md:px-6 md:py-16">
-          {/* Subtitle on left */}
-          <div className="mb-8">
+      {/* HERO - Above the fold - Only heading and search */}
+      <section className="bg-white min-h-screen flex items-center">
+        <div className="mx-auto w-full max-w-7xl px-4 py-8 md:px-6 md:py-12">
+          {/* Heading */}
+          <div className="mb-8 text-center">
             <h1 className="text-4xl font-bold tracking-tight text-[#111111] sm:text-5xl md:text-6xl">
               Book funeral specialist
             </h1>
           </div>
 
           {/* 3-box search bar - Zocdoc style pill */}
-          <div className="rounded-[999px] bg-white p-2 shadow-lg md:p-3">
+          <div className="mx-auto max-w-5xl rounded-[999px] bg-white p-2 shadow-lg md:p-3">
             <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-0">
               {/* Search box */}
               <div className="flex-1 px-4 py-3 md:px-6 md:py-4">
@@ -93,9 +93,9 @@ export default function Home() {
         </div>
       </section>
 
-      {/* TWO BOXES SECTION - Its own page */}
-      <section className="border-b border-gray-200 bg-white">
-        <div className="mx-auto max-w-7xl px-4 py-24 md:px-6 md:py-32">
+      {/* TWO BOXES SECTION - Its own separate page */}
+      <section className="min-h-screen border-b border-gray-200 bg-white flex items-center">
+        <div className="mx-auto w-full max-w-7xl px-4 py-24 md:px-6 md:py-32">
           <div className="grid gap-12 md:grid-cols-2">
             {/* Read reviews box */}
             <div className="flex flex-col rounded-2xl border border-gray-200 bg-white p-8 shadow-sm transition hover:shadow-md">
