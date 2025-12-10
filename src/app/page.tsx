@@ -11,9 +11,9 @@ export default function Home() {
   ];
 
   return (
-    <main className="min-h-screen bg-white text-[#111111]">
+    <main className="min-h-screen bg-[#fff7e2] text-[#111111]">
       {/* HEADER */}
-      <header className="sticky top-0 z-20 border-b border-gray-100 bg-white/90 backdrop-blur">
+      <header className="sticky top-0 z-20 border-b border-gray-200 bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 md:px-6 md:py-5">
           {/* Logo + Soradin */}
           <Link href="/" className="flex items-center gap-3">
@@ -24,7 +24,7 @@ export default function Home() {
               height={40}
               className="h-10 w-10 object-contain"
             />
-            <span className="text-xl font-semibold tracking-tight text-soradin-text">Soradin</span>
+            <span className="text-xl font-semibold tracking-tight text-[#111111]">Soradin</span>
           </Link>
 
           {/* Right side nav */}
@@ -32,7 +32,7 @@ export default function Home() {
             <button className="text-sm font-medium text-gray-700 hover:text-soradin-green md:text-base">
               List your service
             </button>
-            <button className="rounded-full border-2 border-soradin-green px-4 py-2 text-sm font-semibold text-soradin-green hover:bg-soradin-green hover:text-white md:px-6 md:py-2.5 md:text-base">
+            <button className="rounded-full border-2 border-soradin-green px-4 py-2 text-sm font-semibold text-soradin-green hover:bg-soradin-green hover:text-white transition md:px-6 md:py-2.5 md:text-base">
               Log In
             </button>
           </nav>
@@ -40,45 +40,51 @@ export default function Home() {
       </header>
 
       {/* HERO - Above the fold */}
-      <section className="border-b border-gray-100 bg-soradin-bg">
-        <div className="mx-auto max-w-7xl px-4 py-16 md:px-6 md:py-24">
+      <section className="bg-[#fff7e2]">
+        <div className="mx-auto max-w-7xl px-4 py-12 md:px-6 md:py-16">
           {/* Subtitle on left */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold tracking-tight text-soradin-text sm:text-4xl md:text-5xl lg:text-6xl">
+            <h1 className="text-4xl font-bold tracking-tight text-[#111111] sm:text-5xl md:text-6xl">
               Book local funeral specialists
             </h1>
           </div>
 
-          {/* 3-box search bar */}
-          <div className="rounded-2xl bg-white p-4 shadow-lg md:p-6">
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:gap-0">
+          {/* 3-box search bar - Zocdoc style pill */}
+          <div className="rounded-[999px] bg-white p-2 shadow-lg md:p-3">
+            <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-0">
               {/* Search box */}
-              <div className="flex-1 border-b border-gray-200 pb-4 md:border-b-0 md:border-r md:pb-0 md:pr-6">
-                <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-gray-500">
+              <div className="flex-1 px-4 py-3 md:px-6 md:py-4">
+                <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500">
                   Search
                 </label>
                 <input
                   type="text"
                   placeholder="What are you looking for?"
-                  className="w-full border-none bg-transparent text-base text-soradin-text outline-none placeholder:text-gray-400 focus:ring-0 md:text-lg"
+                  className="w-full border-none bg-transparent text-base text-[#111111] outline-none placeholder:text-gray-400 focus:ring-0 md:text-lg"
                 />
               </div>
 
+              {/* Divider */}
+              <div className="hidden h-12 w-px bg-gray-200 md:block" />
+
               {/* Location box */}
-              <div className="flex-1 border-b border-gray-200 pb-4 md:border-b-0 md:border-r md:pb-0 md:px-6">
-                <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-gray-500">
+              <div className="flex-1 px-4 py-3 md:px-6 md:py-4">
+                <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500">
                   Location
                 </label>
                 <input
                   type="text"
                   placeholder="Enter your city"
-                  className="w-full border-none bg-transparent text-base text-soradin-text outline-none placeholder:text-gray-400 focus:ring-0 md:text-lg"
+                  className="w-full border-none bg-transparent text-base text-[#111111] outline-none placeholder:text-gray-400 focus:ring-0 md:text-lg"
                 />
               </div>
 
+              {/* Divider */}
+              <div className="hidden h-12 w-px bg-gray-200 md:block" />
+
               {/* Find Care button */}
-              <div className="pt-2 md:pl-6 md:pt-0">
-                <button className="w-full rounded-full border-2 border-soradin-green bg-soradin-green px-8 py-4 text-base font-semibold text-white shadow-sm transition hover:bg-soradin-greenDark hover:border-soradin-greenDark md:w-auto md:px-10 md:py-4">
+              <div className="px-2 py-2 md:px-4 md:py-2">
+                <button className="w-full rounded-full border-2 border-soradin-green bg-white px-6 py-3 text-base font-semibold text-soradin-green shadow-sm transition hover:bg-soradin-green hover:text-white md:w-auto md:px-8 md:py-3">
                   Find Care
                 </button>
               </div>
@@ -87,91 +93,100 @@ export default function Home() {
         </div>
       </section>
 
-      {/* TWO BOXES SECTION */}
-      <section className="border-b border-gray-100 bg-white">
+      {/* TWO BOXES SECTION - Zocdoc style */}
+      <section className="border-b border-gray-200 bg-white">
         <div className="mx-auto max-w-7xl px-4 py-16 md:px-6 md:py-20">
-          <h2 className="mb-10 text-center text-3xl font-bold tracking-tight text-soradin-text md:text-4xl">
-            Why choose Soradin?
-          </h2>
-
           <div className="grid gap-8 md:grid-cols-2">
             {/* Read reviews box */}
-            <div className="flex flex-col rounded-2xl border border-gray-200 bg-white p-8 shadow-sm transition hover:shadow-md">
-              <div className="mb-4 h-48 rounded-xl bg-soradin-bg">
+            <div className="flex flex-col rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition hover:shadow-md">
+              <div className="mb-4 h-48 w-full rounded-xl bg-[#f5f5f5]">
                 {/* Placeholder for illustrated image */}
                 <div className="flex h-full items-center justify-center text-gray-400">
                   <span className="text-sm">Illustration placeholder</span>
                 </div>
               </div>
-              <h3 className="text-xl font-semibold text-soradin-text">Read reviews from families</h3>
-              <p className="mt-2 text-gray-600">
+              <h3 className="text-lg font-semibold text-[#111111]">Read reviews from families</h3>
+              <p className="mt-2 text-sm text-gray-600">
                 See what other families have to say about their experience with our trusted specialists.
               </p>
+              <button className="mt-4 w-fit rounded-full border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-[#111111] hover:border-gray-400">
+                See reviews
+              </button>
             </div>
 
             {/* Book appointment box */}
-            <div className="flex flex-col rounded-2xl border border-gray-200 bg-white p-8 shadow-sm transition hover:shadow-md">
-              <div className="mb-4 h-48 rounded-xl bg-soradin-bg">
+            <div className="flex flex-col rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition hover:shadow-md">
+              <div className="mb-4 h-48 w-full rounded-xl bg-[#f5f5f5]">
                 {/* Placeholder for illustrated image */}
                 <div className="flex h-full items-center justify-center text-gray-400">
                   <span className="text-sm">Illustration placeholder</span>
                 </div>
               </div>
-              <h3 className="text-xl font-semibold text-soradin-text">Book an appointment today</h3>
-              <p className="mt-2 text-gray-600">
+              <h3 className="text-lg font-semibold text-[#111111]">Book an appointment today</h3>
+              <p className="mt-2 text-sm text-gray-600">
                 Easily schedule a consultation with a specialist that fits your schedule and needs.
               </p>
+              <button className="mt-4 w-fit rounded-full border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-[#111111] hover:border-gray-400">
+                See availability
+              </button>
             </div>
           </div>
         </div>
       </section>
 
-      {/* SORADIN FOR SPECIALISTS */}
-      <section className="border-b border-gray-100 bg-soradin-bg">
+      {/* SORADIN FOR SPECIALISTS - Zocdoc style two-column */}
+      <section className="border-b border-gray-200 bg-white">
         <div className="mx-auto max-w-7xl px-4 py-16 md:px-6 md:py-20">
-          <div className="mx-auto max-w-3xl text-center">
-            <h2 className="text-3xl font-bold tracking-tight text-soradin-text md:text-4xl">
-              Soradin for specialists
-            </h2>
-            <p className="mt-4 text-lg text-gray-700 md:text-xl">
-              Are you interested in filling out your calendar?
-            </p>
+          <div className="grid gap-12 md:grid-cols-2 md:items-center">
+            {/* Left: Image placeholder */}
+            <div className="h-64 rounded-2xl bg-[#f5f5f5] md:h-80">
+              <div className="flex h-full items-center justify-center text-gray-400">
+                <span className="text-sm">Image placeholder</span>
+              </div>
+            </div>
 
-            <ul className="mt-8 space-y-4 text-left md:mx-auto md:max-w-md">
-              <li className="flex items-start gap-3">
-                <span className="mt-1 text-soradin-green">•</span>
-                <span className="text-base text-gray-700 md:text-lg">
-                  Reach thousands of families with us
-                </span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="mt-1 text-soradin-green">•</span>
-                <span className="text-base text-gray-700 md:text-lg">
-                  Make it easy for families to book with you
-                </span>
-              </li>
-            </ul>
-
-            <button className="mt-10 rounded-full border-2 border-soradin-green bg-white px-8 py-3 text-base font-semibold text-soradin-green shadow-sm transition hover:bg-soradin-green hover:text-white md:px-10 md:py-4 md:text-lg">
-              Learn more about starting with Soradin
-            </button>
+            {/* Right: Text content */}
+            <div>
+              <p className="text-sm font-medium text-gray-600">Soradin for specialists</p>
+              <h2 className="mt-2 text-3xl font-bold tracking-tight text-[#111111] md:text-4xl">
+                Are you interested in filling out your calendar?
+              </h2>
+              <ul className="mt-6 space-y-4">
+                <li className="flex items-start gap-3">
+                  <span className="mt-1 text-soradin-green">•</span>
+                  <span className="text-base text-gray-700">
+                    Reach thousands of families with us
+                  </span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="mt-1 text-soradin-green">•</span>
+                  <span className="text-base text-gray-700">
+                    Make it easy for families to book with you
+                  </span>
+                </li>
+              </ul>
+              <button className="mt-8 rounded-full bg-soradin-green px-6 py-3 text-base font-semibold text-white shadow-sm transition hover:bg-soradin-greenDark md:px-8 md:py-4">
+                Learn more about starting with Soradin
+              </button>
+            </div>
           </div>
         </div>
       </section>
 
       {/* TRUSTED BY TOP FUNERAL HOMES */}
-      <section className="border-b border-gray-100 bg-white">
+      <section className="border-b border-gray-200 bg-white">
         <div className="mx-auto max-w-7xl px-4 py-16 md:px-6 md:py-20">
-          <h2 className="mb-12 text-center text-3xl font-bold tracking-tight text-soradin-text md:text-4xl">
+          <p className="text-center text-sm font-medium text-gray-600">Soradin for funeral homes</p>
+          <h2 className="mt-2 text-center text-3xl font-bold tracking-tight text-[#111111] md:text-4xl">
             Trusted by top funeral homes
           </h2>
 
-          <div className="flex flex-wrap items-center justify-center gap-8 md:gap-12">
+          <div className="mt-12 flex flex-wrap items-center justify-center gap-8 md:gap-12">
             {/* Logo placeholders */}
             {[1, 2, 3, 4, 5].map((i) => (
               <div
                 key={i}
-                className="flex h-16 w-32 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 md:h-20 md:w-40"
+                className="flex h-16 w-32 items-center justify-center rounded-lg border border-gray-200 bg-white md:h-20 md:w-40"
               >
                 <span className="text-xs text-gray-400">Logo {i}</span>
               </div>
@@ -180,32 +195,45 @@ export default function Home() {
         </div>
       </section>
 
-      {/* FIND SPECIALIST BY CITY */}
-      <section className="border-b border-gray-100 bg-soradin-bg">
+      {/* FIND SPECIALIST BY CITY - Zocdoc style */}
+      <section className="border-b border-gray-200 bg-[#fff7e2]">
         <div className="mx-auto max-w-7xl px-4 py-16 md:px-6 md:py-20">
-          <h2 className="mb-10 text-center text-3xl font-bold tracking-tight text-soradin-text md:text-4xl">
+          <h2 className="mb-8 text-3xl font-bold tracking-tight text-[#111111] md:text-4xl">
             Find Specialist by city
           </h2>
 
-          <div className="flex flex-wrap justify-center gap-4 md:gap-6">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             {cities.map((city) => (
               <Link
                 key={city}
                 href={`/search?location=${city}`}
-                className="rounded-full border-2 border-soradin-green bg-white px-6 py-3 text-base font-semibold text-soradin-green transition hover:bg-soradin-green hover:text-white md:px-8 md:py-3.5"
+                className="flex items-center justify-between rounded-lg border-b border-gray-300 py-3 text-base font-medium text-[#111111] hover:text-soradin-green transition"
               >
-                {city}
+                <span>{city}</span>
+                <svg
+                  className="h-4 w-4 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
               </Link>
             ))}
           </div>
         </div>
       </section>
 
-      {/* FOOTER */}
+      {/* FOOTER - Zocdoc style */}
       <footer className="border-t border-gray-200 bg-[#111111]">
         <div className="mx-auto max-w-7xl px-4 py-12 text-sm text-gray-300 md:px-6 md:py-16">
           <div className="grid gap-8 md:grid-cols-4">
-            {/* Brand column */}
+            {/* Soradin column */}
             <div>
               <div className="flex items-center gap-2">
                 <Image
@@ -217,31 +245,26 @@ export default function Home() {
                 />
                 <span className="text-base font-semibold text-white">Soradin</span>
               </div>
-              <p className="mt-3 text-xs text-gray-400">
-                Connecting families with trusted funeral pre-need specialists.
-              </p>
-            </div>
-
-            {/* Company column */}
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Company</p>
-              <ul className="mt-3 space-y-2 text-xs text-gray-300">
+              <ul className="mt-4 space-y-2 text-xs text-gray-300">
                 <li>
-                  <button className="hover:text-white">About</button>
+                  <button className="hover:text-white">Home</button>
                 </li>
                 <li>
-                  <button className="hover:text-white">Contact</button>
+                  <button className="hover:text-white">About us</button>
                 </li>
                 <li>
-                  <button className="hover:text-white">Careers</button>
+                  <button className="hover:text-white">Contact us</button>
+                </li>
+                <li>
+                  <button className="hover:text-white">Help</button>
                 </li>
               </ul>
             </div>
 
-            {/* Services column */}
+            {/* Discover column */}
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Services</p>
-              <ul className="mt-3 space-y-2 text-xs text-gray-300">
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Discover</p>
+              <ul className="mt-4 space-y-2 text-xs text-gray-300">
                 <li>
                   <button className="hover:text-white">For Families</button>
                 </li>
@@ -251,30 +274,58 @@ export default function Home() {
                 <li>
                   <button className="hover:text-white">How It Works</button>
                 </li>
+                <li>
+                  <button className="hover:text-white">Verified reviews</button>
+                </li>
               </ul>
             </div>
 
-            {/* Legal column */}
+            {/* Services column */}
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Legal</p>
-              <ul className="mt-3 space-y-2 text-xs text-gray-300">
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Services</p>
+              <ul className="mt-4 space-y-2 text-xs text-gray-300">
                 <li>
-                  <button className="hover:text-white">Terms of Service</button>
+                  <button className="hover:text-white">Pre-need planning</button>
                 </li>
                 <li>
-                  <button className="hover:text-white">Privacy Policy</button>
+                  <button className="hover:text-white">Funeral homes</button>
                 </li>
                 <li>
-                  <button className="hover:text-white">Cookie Policy</button>
+                  <button className="hover:text-white">Cremation services</button>
+                </li>
+                <li>
+                  <button className="hover:text-white">Cemetery planning</button>
+                </li>
+              </ul>
+            </div>
+
+            {/* Are you a specialist column */}
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+                Are you a funeral specialist?
+              </p>
+              <ul className="mt-4 space-y-2 text-xs text-gray-300">
+                <li>
+                  <button className="hover:text-white">List your service on Soradin</button>
+                </li>
+                <li>
+                  <button className="hover:text-white">Learn about Soradin for specialists</button>
                 </li>
               </ul>
             </div>
           </div>
 
-          <div className="mt-8 border-t border-gray-800 pt-8">
-            <p className="text-center text-xs text-gray-500">
-              © {new Date().getFullYear()} Soradin. All rights reserved.
-            </p>
+          <div className="mt-12 border-t border-gray-800 pt-8">
+            <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
+              <p className="text-xs text-gray-500">
+                © {new Date().getFullYear()} Soradin. All rights reserved.
+              </p>
+              <div className="flex gap-6 text-xs text-gray-500">
+                <button className="hover:text-gray-300">Terms</button>
+                <button className="hover:text-gray-300">Privacy</button>
+                <button className="hover:text-gray-300">Site map</button>
+              </div>
+            </div>
           </div>
         </div>
       </footer>
