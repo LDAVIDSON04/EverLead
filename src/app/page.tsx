@@ -1,440 +1,281 @@
-// app/page.tsx
+import Image from "next/image";
+import Link from "next/link";
+
 export default function Home() {
-  const advisors = [
-    {
-      name: "Sarah Thompson",
-      title: "Pre-Need Specialist",
-      location: "Calgary, AB",
-      rating: "4.9",
-    },
-    {
-      name: "Michael Chen",
-      title: "Funeral Pre-Planning Advisor",
-      location: "Edmonton, AB",
-      rating: "4.8",
-    },
-    {
-      name: "Linda Garcia",
-      title: "Cremation & Pre-Need Consultant",
-      location: "Calgary, AB",
-      rating: "5.0",
-    },
-  ];
-
-  const articles = [
-    {
-      title: "What Is Pre-Need Planning?",
-      summary: "Learn what pre-need planning is and how it can ease emotional and financial stress for your family.",
-    },
-    {
-      title: "How to Choose a Funeral Home Before You Need One",
-      summary: "Key questions to ask when comparing funeral homes and service providers ahead of time.",
-    },
-    {
-      title: "Cremation vs. Burial: Planning the Financial Side",
-      summary: "Understand cost differences and payment options when planning ahead.",
-    },
-  ];
-
-  const faqs = [
-    {
-      question: "What is pre-need planning?",
-      answer:
-        "Pre-need planning means making funeral, cremation, or cemetery arrangements in advance so your wishes and budget are clearly documented.",
-    },
-    {
-      question: "How does Soradin work?",
-      answer:
-        "Tell us what you're planning for, browse trusted advisors in Calgary and Edmonton, then book a consultation at a time that works for you.",
-    },
-    {
-      question: "Are advisors licensed?",
-      answer:
-        "Soradin only lists licensed funeral and pre-need professionals or staff working with licensed providers.",
-    },
-    {
-      question: "Are consultations free?",
-      answer:
-        "Most initial consultations are free or low-cost. Advisors clearly indicate any fees before you confirm an appointment.",
-    },
-    {
-      question: "Is my information secure?",
-      answer:
-        "Your information is encrypted and only shared with the advisor you choose to contact. Soradin never sells your personal details.",
-    },
+  const cities = [
+    "Calgary",
+    "Edmonton",
+    "Kelowna",
+    "Penticton",
+    "Salmon Arm",
   ];
 
   return (
     <main className="min-h-screen bg-white text-[#111111]">
       {/* HEADER */}
       <header className="sticky top-0 z-20 border-b border-gray-100 bg-white/90 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 md:px-6 md:py-4">
-          {/* Logo */}
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#0A5C36] text-sm font-semibold text-white">
-              S
-            </div>
-            <span className="text-lg font-semibold tracking-tight">Soradin</span>
-          </div>
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 md:px-6 md:py-5">
+          {/* Logo + Soradin */}
+          <Link href="/" className="flex items-center gap-3">
+            <Image
+              src="/logo - white.png"
+              alt="Soradin Logo"
+              width={40}
+              height={40}
+              className="h-10 w-10 object-contain"
+            />
+            <span className="text-xl font-semibold tracking-tight text-soradin-text">Soradin</span>
+          </Link>
 
-          {/* Nav */}
-          <nav className="hidden items-center gap-6 text-sm text-gray-700 md:flex">
-            <button className="hover:text-[#0A5C36]">How it works</button>
-            <button className="hover:text-[#0A5C36]">Services</button>
-            <button className="hover:text-[#0A5C36]">FAQ</button>
-            <button className="hover:text-[#0A5C36]">For advisors</button>
-
-            <div className="ml-4 flex items-center gap-3">
-              <button className="text-gray-700 hover:text-[#0A5C36]">Log in</button>
-              <button className="rounded-full bg-[#0A5C36] px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[#084328]">
-                Get started
-              </button>
-            </div>
+          {/* Right side nav */}
+          <nav className="flex items-center gap-4 md:gap-6">
+            <button className="text-sm font-medium text-gray-700 hover:text-soradin-green md:text-base">
+              List your service
+            </button>
+            <button className="rounded-full border-2 border-soradin-green px-4 py-2 text-sm font-semibold text-soradin-green hover:bg-soradin-green hover:text-white md:px-6 md:py-2.5 md:text-base">
+              Log In
+            </button>
           </nav>
-
-          {/* Mobile menu placeholder */}
-          <button className="md:hidden" aria-label="Open menu">
-            <span className="block h-0.5 w-5 bg-gray-800" />
-            <span className="mt-1 block h-0.5 w-5 bg-gray-800" />
-          </button>
         </div>
       </header>
 
-      {/* HERO */}
-      <section className="border-b border-gray-100 bg-[#F7F7F7]">
-        <div className="mx-auto flex max-w-6xl flex-col gap-10 px-4 py-12 md:px-6 md:py-20 lg:flex-row lg:items-center">
-          {/* Left: text + search */}
-          <div className="max-w-xl">
-            <h1 className="text-3xl font-bold tracking-tight text-[#111111] sm:text-4xl lg:text-5xl">
-              Book trusted pre-need advisors near you.
+      {/* HERO - Above the fold */}
+      <section className="border-b border-gray-100 bg-soradin-bg">
+        <div className="mx-auto max-w-7xl px-4 py-16 md:px-6 md:py-24">
+          {/* Subtitle on left */}
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold tracking-tight text-soradin-text sm:text-4xl md:text-5xl lg:text-6xl">
+              Book local funeral specialists
             </h1>
-            <p className="mt-4 text-base text-gray-700 sm:text-lg">
-              Plan ahead with licensed funeral and pre-need specialists in Calgary and Edmonton. Compare options,
-              understand costs, and book a time that works for you.
-            </p>
+          </div>
 
-            {/* Search bar */}
-            <div className="mt-8 rounded-2xl bg-white p-3 shadow-md">
-              <div className="flex flex-col gap-3 md:flex-row md:items-center">
-                {/* Service type */}
-                <div className="flex-1 border-b border-gray-200 pb-3 md:border-b-0 md:border-r md:pb-0 md:pr-3">
-                  <label className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                    Service type
-                  </label>
-                  <select className="mt-1 w-full border-none bg-transparent text-sm text-[#111111] outline-none focus:ring-0">
-                    <option>Pre-need consultation</option>
-                    <option>Funeral home</option>
-                    <option>Cremation services</option>
-                    <option>Cemetery planning</option>
-                    <option>Pre-need insurance</option>
-                  </select>
-                </div>
-
-                {/* Location */}
-                <div className="flex-1 border-b border-gray-200 pb-3 md:border-b-0 md:border-r md:pb-0 md:px-3">
-                  <label className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                    Location
-                  </label>
-                  <select className="mt-1 w-full border-none bg-transparent text-sm text-[#111111] outline-none focus:ring-0">
-                    <option>Calgary, AB</option>
-                    <option>Edmonton, AB</option>
-                  </select>
-                </div>
-
-                {/* Button */}
-                <div className="pt-2 md:pl-3 md:pt-0">
-                  <button className="w-full rounded-full bg-[#0A5C36] px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-[#084328] md:w-auto">
-                    Find advisors
-                  </button>
-                </div>
+          {/* 3-box search bar */}
+          <div className="rounded-2xl bg-white p-4 shadow-lg md:p-6">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:gap-0">
+              {/* Search box */}
+              <div className="flex-1 border-b border-gray-200 pb-4 md:border-b-0 md:border-r md:pb-0 md:pr-6">
+                <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-gray-500">
+                  Search
+                </label>
+                <input
+                  type="text"
+                  placeholder="What are you looking for?"
+                  className="w-full border-none bg-transparent text-base text-soradin-text outline-none placeholder:text-gray-400 focus:ring-0 md:text-lg"
+                />
               </div>
 
-              <p className="mt-3 text-xs text-gray-500">
-                No obligation. Your details are only shared with the advisor you choose.
+              {/* Location box */}
+              <div className="flex-1 border-b border-gray-200 pb-4 md:border-b-0 md:border-r md:pb-0 md:px-6">
+                <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-gray-500">
+                  Location
+                </label>
+                <input
+                  type="text"
+                  placeholder="Enter your city"
+                  className="w-full border-none bg-transparent text-base text-soradin-text outline-none placeholder:text-gray-400 focus:ring-0 md:text-lg"
+                />
+              </div>
+
+              {/* Find Care button */}
+              <div className="pt-2 md:pl-6 md:pt-0">
+                <button className="w-full rounded-full border-2 border-soradin-green bg-soradin-green px-8 py-4 text-base font-semibold text-white shadow-sm transition hover:bg-soradin-greenDark hover:border-soradin-greenDark md:w-auto md:px-10 md:py-4">
+                  Find Care
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* TWO BOXES SECTION */}
+      <section className="border-b border-gray-100 bg-white">
+        <div className="mx-auto max-w-7xl px-4 py-16 md:px-6 md:py-20">
+          <h2 className="mb-10 text-center text-3xl font-bold tracking-tight text-soradin-text md:text-4xl">
+            Why choose Soradin?
+          </h2>
+
+          <div className="grid gap-8 md:grid-cols-2">
+            {/* Read reviews box */}
+            <div className="flex flex-col rounded-2xl border border-gray-200 bg-white p-8 shadow-sm transition hover:shadow-md">
+              <div className="mb-4 h-48 rounded-xl bg-soradin-bg">
+                {/* Placeholder for illustrated image */}
+                <div className="flex h-full items-center justify-center text-gray-400">
+                  <span className="text-sm">Illustration placeholder</span>
+                </div>
+              </div>
+              <h3 className="text-xl font-semibold text-soradin-text">Read reviews from families</h3>
+              <p className="mt-2 text-gray-600">
+                See what other families have to say about their experience with our trusted specialists.
+              </p>
+            </div>
+
+            {/* Book appointment box */}
+            <div className="flex flex-col rounded-2xl border border-gray-200 bg-white p-8 shadow-sm transition hover:shadow-md">
+              <div className="mb-4 h-48 rounded-xl bg-soradin-bg">
+                {/* Placeholder for illustrated image */}
+                <div className="flex h-full items-center justify-center text-gray-400">
+                  <span className="text-sm">Illustration placeholder</span>
+                </div>
+              </div>
+              <h3 className="text-xl font-semibold text-soradin-text">Book an appointment today</h3>
+              <p className="mt-2 text-gray-600">
+                Easily schedule a consultation with a specialist that fits your schedule and needs.
               </p>
             </div>
           </div>
-
-          {/* Right: simple "trust / reassurance" panel */}
-          <div className="flex-1">
-            <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
-              <h2 className="text-sm font-semibold text-gray-900">
-                Why plan ahead with Soradin?
-              </h2>
-              <ul className="mt-4 space-y-3 text-sm text-gray-700">
-                <li>• Compare multiple trusted providers in Calgary & Edmonton.</li>
-                <li>• Understand pricing and options before you&apos;re in crisis.</li>
-                <li>• Book a time to talk that fits your schedule.</li>
-                <li>• Make decisions with clarity and less pressure on your family.</li>
-              </ul>
-              <div className="mt-6 rounded-2xl bg-[#F7F7F7] p-4 text-xs text-gray-600">
-                "We created Soradin so families could plan ahead with confidence, instead of trying to make every
-                decision in a single, stressful moment."
-              </div>
-            </div>
-          </div>
         </div>
       </section>
 
-      {/* POPULAR SERVICES */}
-      <section className="border-b border-gray-100 bg-white">
-        <div className="mx-auto max-w-6xl px-4 py-12 md:px-6 md:py-16">
-          <div className="text-center">
-            <h2 className="text-2xl font-semibold tracking-tight text-[#111111]">
-              Popular services
+      {/* SORADIN FOR SPECIALISTS */}
+      <section className="border-b border-gray-100 bg-soradin-bg">
+        <div className="mx-auto max-w-7xl px-4 py-16 md:px-6 md:py-20">
+          <div className="mx-auto max-w-3xl text-center">
+            <h2 className="text-3xl font-bold tracking-tight text-soradin-text md:text-4xl">
+              Soradin for specialists
             </h2>
-            <p className="mt-2 text-sm text-gray-600">
-              Start with the type of planning that matters most to you.
+            <p className="mt-4 text-lg text-gray-700 md:text-xl">
+              Are you interested in filling out your calendar?
             </p>
-          </div>
 
-          <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {[
-              {
-                title: "Funeral homes",
-                desc: "Meet with licensed funeral directors to discuss full-service arrangements.",
-              },
-              {
-                title: "Cemeteries",
-                desc: "Plan burial plots, mausoleums, and memorial options in advance.",
-              },
-              {
-                title: "Cremation services",
-                desc: "Explore direct cremation and memorial service options.",
-              },
-              {
-                title: "Pre-need insurance",
-                desc: "Lock in today's prices and protect your family from surprise costs.",
-              },
-            ].map((item) => (
-              <div
-                key={item.title}
-                className="flex flex-col rounded-2xl border border-gray-100 bg-[#FDFDFD] p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-              >
-                <div className="mb-3 h-9 w-9 rounded-full bg-[#E5F4ED]" />
-                <h3 className="text-sm font-semibold text-[#111111]">{item.title}</h3>
-                <p className="mt-2 text-sm text-gray-600">{item.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+            <ul className="mt-8 space-y-4 text-left md:mx-auto md:max-w-md">
+              <li className="flex items-start gap-3">
+                <span className="mt-1 text-soradin-green">•</span>
+                <span className="text-base text-gray-700 md:text-lg">
+                  Reach thousands of families with us
+                </span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="mt-1 text-soradin-green">•</span>
+                <span className="text-base text-gray-700 md:text-lg">
+                  Make it easy for families to book with you
+                </span>
+              </li>
+            </ul>
 
-      {/* HOW IT WORKS */}
-      <section className="border-b border-gray-100 bg-[#F7F7F7]">
-        <div className="mx-auto max-w-6xl px-4 py-12 md:px-6 md:py-16">
-          <div className="text-center">
-            <h2 className="text-2xl font-semibold tracking-tight text-[#111111]">
-              How Soradin works
-            </h2>
-            <p className="mt-2 text-sm text-gray-600">
-              A simple, calm process to help you plan ahead on your terms.
-            </p>
-          </div>
-
-          <div className="mt-10 grid gap-8 md:grid-cols-3">
-            {[
-              {
-                step: "1",
-                title: "Tell us what you need",
-                desc: "Share whether you're planning for yourself, a partner, or a family member, and what type of service you're considering.",
-              },
-              {
-                step: "2",
-                title: "Compare trusted advisors",
-                desc: "Browse licensed advisors in Calgary and Edmonton, see their services, and understand the basics of pricing.",
-              },
-              {
-                step: "3",
-                title: "Book a calm conversation",
-                desc: "Choose a time that works for you to talk through options, ask questions, and make a plan that feels right.",
-              },
-            ].map((item) => (
-              <div key={item.step} className="rounded-2xl bg-white p-6 shadow-sm">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#0A5C36] text-xs font-semibold text-white">
-                  {item.step}
-                </div>
-                <h3 className="mt-4 text-sm font-semibold text-[#111111]">{item.title}</h3>
-                <p className="mt-2 text-sm text-gray-600">{item.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* FEATURED ADVISORS */}
-      <section className="border-b border-gray-100 bg-white">
-        <div className="mx-auto max-w-6xl px-4 py-12 md:px-6 md:py-16">
-          <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-end">
-            <div>
-              <h2 className="text-2xl font-semibold tracking-tight text-[#111111]">
-                Featured advisors
-              </h2>
-              <p className="mt-2 text-sm text-gray-600">
-                Example profiles to show how Soradin will help you compare options.
-              </p>
-            </div>
-            <button className="text-sm font-semibold text-[#0A5C36] hover:text-[#084328]">
-              View all advisors
+            <button className="mt-10 rounded-full border-2 border-soradin-green bg-white px-8 py-3 text-base font-semibold text-soradin-green shadow-sm transition hover:bg-soradin-green hover:text-white md:px-10 md:py-4 md:text-lg">
+              Learn more about starting with Soradin
             </button>
           </div>
+        </div>
+      </section>
 
-          <div className="mt-8 grid gap-6 md:grid-cols-3">
-            {advisors.map((advisor) => (
+      {/* TRUSTED BY TOP FUNERAL HOMES */}
+      <section className="border-b border-gray-100 bg-white">
+        <div className="mx-auto max-w-7xl px-4 py-16 md:px-6 md:py-20">
+          <h2 className="mb-12 text-center text-3xl font-bold tracking-tight text-soradin-text md:text-4xl">
+            Trusted by top funeral homes
+          </h2>
+
+          <div className="flex flex-wrap items-center justify-center gap-8 md:gap-12">
+            {/* Logo placeholders */}
+            {[1, 2, 3, 4, 5].map((i) => (
               <div
-                key={advisor.name}
-                className="flex flex-col rounded-2xl border border-gray-100 bg-[#FDFDFD] p-5 shadow-sm"
+                key={i}
+                className="flex h-16 w-32 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 md:h-20 md:w-40"
               >
-                <div className="flex items-center gap-3">
-                  <div className="h-12 w-12 rounded-full bg-[#E5F4ED]" />
-                  <div>
-                    <p className="text-sm font-semibold text-[#111111]">{advisor.name}</p>
-                    <p className="text-xs text-gray-600">{advisor.title}</p>
-                    <p className="text-xs text-gray-500">{advisor.location}</p>
-                  </div>
-                </div>
-                <div className="mt-4 flex items-center justify-between text-xs text-gray-600">
-                  <span>⭐ {advisor.rating} rating</span>
-                  <span>Licensed provider</span>
-                </div>
-                <button className="mt-4 rounded-full border border-gray-200 px-3 py-2 text-xs font-semibold text-[#0A5C36] hover:border-[#0A5C36]">
-                  View profile
-                </button>
+                <span className="text-xs text-gray-400">Logo {i}</span>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* RESOURCES */}
-      <section className="border-b border-gray-100 bg-[#F7F7F7]">
-        <div className="mx-auto max-w-6xl px-4 py-12 md:px-6 md:py-16">
-          <div className="text-center">
-            <h2 className="text-2xl font-semibold tracking-tight text-[#111111]">
-              Planning resources
-            </h2>
-            <p className="mt-2 text-sm text-gray-600">
-              Short guides to help you understand your options before you speak to anyone.
-            </p>
-          </div>
+      {/* FIND SPECIALIST BY CITY */}
+      <section className="border-b border-gray-100 bg-soradin-bg">
+        <div className="mx-auto max-w-7xl px-4 py-16 md:px-6 md:py-20">
+          <h2 className="mb-10 text-center text-3xl font-bold tracking-tight text-soradin-text md:text-4xl">
+            Find Specialist by city
+          </h2>
 
-          <div className="mt-8 grid gap-6 md:grid-cols-3">
-            {articles.map((article) => (
-              <article
-                key={article.title}
-                className="flex h-full flex-col rounded-2xl bg-white p-5 shadow-sm"
+          <div className="flex flex-wrap justify-center gap-4 md:gap-6">
+            {cities.map((city) => (
+              <Link
+                key={city}
+                href={`/search?location=${city}`}
+                className="rounded-full border-2 border-soradin-green bg-white px-6 py-3 text-base font-semibold text-soradin-green transition hover:bg-soradin-green hover:text-white md:px-8 md:py-3.5"
               >
-                <div className="h-28 rounded-xl bg-[#E5F4ED]" />
-                <h3 className="mt-4 text-sm font-semibold text-[#111111]">{article.title}</h3>
-                <p className="mt-2 flex-1 text-sm text-gray-600">{article.summary}</p>
-                <button className="mt-3 text-xs font-semibold text-[#0A5C36] hover:text-[#084328]">
-                  Read more →
-                </button>
-              </article>
+                {city}
+              </Link>
             ))}
           </div>
-        </div>
-      </section>
-
-      {/* FAQ */}
-      <section className="border-b border-gray-100 bg-white">
-        <div className="mx-auto max-w-6xl px-4 py-12 md:px-6 md:py-16">
-          <div className="grid gap-10 md:grid-cols-[minmax(0,1.2fr)_minmax(0,2fr)]">
-            <div>
-              <h2 className="text-2xl font-semibold tracking-tight text-[#111111]">
-                Common questions
-              </h2>
-              <p className="mt-2 text-sm text-gray-600">
-                Pre-need planning can feel unfamiliar. Here are answers to some of the most common
-                questions families ask.
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              {faqs.map((faq) => (
-                <div
-                  key={faq.question}
-                  className="rounded-2xl border border-gray-100 bg-[#FDFDFD] p-4"
-                >
-                  <p className="text-sm font-semibold text-[#111111]">{faq.question}</p>
-                  <p className="mt-2 text-sm text-gray-600">{faq.answer}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="bg-[#0A5C36]">
-        <div className="mx-auto max-w-6xl px-4 py-12 text-center text-white md:px-6 md:py-16">
-          <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-            Start planning with confidence.
-          </h2>
-          <p className="mx-auto mt-3 max-w-xl text-sm text-[#E4F3EB]">
-            Take one small step today. Share a few details, compare advisors, and choose a calm time
-            to talk through your options.
-          </p>
-          <button className="mt-6 rounded-full bg-white px-6 py-3 text-sm font-semibold text-[#0A5C36] shadow-sm hover:bg-[#F6F6F6]">
-            Get started with Soradin
-          </button>
         </div>
       </section>
 
       {/* FOOTER */}
       <footer className="border-t border-gray-200 bg-[#111111]">
-        <div className="mx-auto max-w-6xl px-4 py-10 text-sm text-gray-300 md:px-6">
+        <div className="mx-auto max-w-7xl px-4 py-12 text-sm text-gray-300 md:px-6 md:py-16">
           <div className="grid gap-8 md:grid-cols-4">
+            {/* Brand column */}
             <div>
               <div className="flex items-center gap-2">
-                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#0A5C36] text-xs font-semibold text-white">
-                  S
-                </div>
+                <Image
+                  src="/logo - white.png"
+                  alt="Soradin Logo"
+                  width={32}
+                  height={32}
+                  className="h-8 w-8 object-contain"
+                />
                 <span className="text-base font-semibold text-white">Soradin</span>
               </div>
               <p className="mt-3 text-xs text-gray-400">
-                Helping families in Calgary and Edmonton plan ahead with clarity, calm, and care.
+                Connecting families with trusted funeral pre-need specialists.
               </p>
             </div>
 
+            {/* Company column */}
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
-                Soradin
-              </p>
-              <ul className="mt-3 space-y-1 text-xs text-gray-300">
-                <li>About</li>
-                <li>Contact</li>
-                <li>For advisors</li>
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Company</p>
+              <ul className="mt-3 space-y-2 text-xs text-gray-300">
+                <li>
+                  <button className="hover:text-white">About</button>
+                </li>
+                <li>
+                  <button className="hover:text-white">Contact</button>
+                </li>
+                <li>
+                  <button className="hover:text-white">Careers</button>
+                </li>
               </ul>
             </div>
 
+            {/* Services column */}
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
-                Services
-              </p>
-              <ul className="mt-3 space-y-1 text-xs text-gray-300">
-                <li>Funeral homes</li>
-                <li>Cemeteries</li>
-                <li>Cremation services</li>
-                <li>Pre-need planning</li>
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Services</p>
+              <ul className="mt-3 space-y-2 text-xs text-gray-300">
+                <li>
+                  <button className="hover:text-white">For Families</button>
+                </li>
+                <li>
+                  <button className="hover:text-white">For Specialists</button>
+                </li>
+                <li>
+                  <button className="hover:text-white">How It Works</button>
+                </li>
               </ul>
             </div>
 
+            {/* Legal column */}
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
-                Legal
-              </p>
-              <ul className="mt-3 space-y-1 text-xs text-gray-300">
-                <li>Terms</li>
-                <li>Privacy</li>
-                <li>Security</li>
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Legal</p>
+              <ul className="mt-3 space-y-2 text-xs text-gray-300">
+                <li>
+                  <button className="hover:text-white">Terms of Service</button>
+                </li>
+                <li>
+                  <button className="hover:text-white">Privacy Policy</button>
+                </li>
+                <li>
+                  <button className="hover:text-white">Cookie Policy</button>
+                </li>
               </ul>
             </div>
           </div>
 
-          <p className="mt-8 text-xs text-gray-500">
-            © {new Date().getFullYear()} Soradin. All rights reserved.
-          </p>
+          <div className="mt-8 border-t border-gray-800 pt-8">
+            <p className="text-center text-xs text-gray-500">
+              © {new Date().getFullYear()} Soradin. All rights reserved.
+            </p>
+          </div>
         </div>
       </footer>
     </main>
