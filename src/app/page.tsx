@@ -11,7 +11,7 @@ export default function Home() {
   ];
 
   return (
-    <main className="min-h-screen bg-[#fff7e2] text-[#111111]">
+    <main className="min-h-screen bg-white text-[#111111]">
       {/* HEADER */}
       <header className="sticky top-0 z-20 border-b border-gray-200 bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 md:px-6 md:py-5">
@@ -29,7 +29,7 @@ export default function Home() {
 
           {/* Right side nav */}
           <nav className="flex items-center gap-4 md:gap-6">
-            <button className="text-sm font-medium text-gray-700 hover:text-soradin-green md:text-base">
+            <button className="text-sm font-medium text-[#111111] hover:text-soradin-green md:text-base">
               List your service
             </button>
             <button className="rounded-full border-2 border-soradin-green px-4 py-2 text-sm font-semibold text-soradin-green hover:bg-soradin-green hover:text-white transition md:px-6 md:py-2.5 md:text-base">
@@ -40,12 +40,12 @@ export default function Home() {
       </header>
 
       {/* HERO - Above the fold */}
-      <section className="bg-[#fff7e2]">
+      <section className="bg-white">
         <div className="mx-auto max-w-7xl px-4 py-12 md:px-6 md:py-16">
           {/* Subtitle on left */}
           <div className="mb-8">
             <h1 className="text-4xl font-bold tracking-tight text-[#111111] sm:text-5xl md:text-6xl">
-              Book local funeral specialists
+              Book funeral specialist
             </h1>
           </div>
 
@@ -106,10 +106,10 @@ export default function Home() {
                 </div>
               </div>
               <h3 className="text-lg font-semibold text-[#111111]">Read reviews from families</h3>
-              <p className="mt-2 text-sm text-gray-600">
+              <p className="mt-2 text-sm text-[#111111]">
                 See what other families have to say about their experience with our trusted specialists.
               </p>
-              <button className="mt-4 w-fit rounded-full border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-[#111111] hover:border-gray-400">
+              <button className="mt-4 w-fit rounded-full border-2 border-[#111111] bg-white px-4 py-2 text-sm font-semibold text-[#111111] hover:bg-[#111111] hover:text-white transition">
                 See reviews
               </button>
             </div>
@@ -123,10 +123,10 @@ export default function Home() {
                 </div>
               </div>
               <h3 className="text-lg font-semibold text-[#111111]">Book an appointment today</h3>
-              <p className="mt-2 text-sm text-gray-600">
+              <p className="mt-2 text-sm text-[#111111]">
                 Easily schedule a consultation with a specialist that fits your schedule and needs.
               </p>
-              <button className="mt-4 w-fit rounded-full border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-[#111111] hover:border-gray-400">
+              <button className="mt-4 w-fit rounded-full border-2 border-[#111111] bg-white px-4 py-2 text-sm font-semibold text-[#111111] hover:bg-[#111111] hover:text-white transition">
                 See availability
               </button>
             </div>
@@ -147,20 +147,20 @@ export default function Home() {
 
             {/* Right: Text content */}
             <div>
-              <p className="text-sm font-medium text-gray-600">Soradin for specialists</p>
+              <p className="text-sm font-medium text-[#111111]">Soradin for specialists</p>
               <h2 className="mt-2 text-3xl font-bold tracking-tight text-[#111111] md:text-4xl">
                 Are you interested in filling out your calendar?
               </h2>
               <ul className="mt-6 space-y-4">
                 <li className="flex items-start gap-3">
                   <span className="mt-1 text-soradin-green">•</span>
-                  <span className="text-base text-gray-700">
+                  <span className="text-base text-[#111111]">
                     Reach thousands of families with us
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="mt-1 text-soradin-green">•</span>
-                  <span className="text-base text-gray-700">
+                  <span className="text-base text-[#111111]">
                     Make it easy for families to book with you
                   </span>
                 </li>
@@ -176,7 +176,7 @@ export default function Home() {
       {/* TRUSTED BY TOP FUNERAL HOMES */}
       <section className="border-b border-gray-200 bg-white">
         <div className="mx-auto max-w-7xl px-4 py-16 md:px-6 md:py-20">
-          <p className="text-center text-sm font-medium text-gray-600">Soradin for funeral homes</p>
+          <p className="text-center text-sm font-medium text-[#111111]">Soradin for funeral homes</p>
           <h2 className="mt-2 text-center text-3xl font-bold tracking-tight text-[#111111] md:text-4xl">
             Trusted by top funeral homes
           </h2>
@@ -196,7 +196,7 @@ export default function Home() {
       </section>
 
       {/* FIND SPECIALIST BY CITY - Zocdoc style */}
-      <section className="border-b border-gray-200 bg-[#fff7e2]">
+      <section className="border-b border-gray-200 bg-white">
         <div className="mx-auto max-w-7xl px-4 py-16 md:px-6 md:py-20">
           <h2 className="mb-8 text-3xl font-bold tracking-tight text-[#111111] md:text-4xl">
             Find Specialist by city
@@ -211,7 +211,7 @@ export default function Home() {
               >
                 <span>{city}</span>
                 <svg
-                  className="h-4 w-4 text-gray-400"
+                  className="h-4 w-4 text-[#111111]"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
