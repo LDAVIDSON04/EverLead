@@ -93,40 +93,40 @@ export default function Home() {
         </div>
       </section>
 
-      {/* TWO BOXES SECTION - Zocdoc style */}
+      {/* TWO BOXES SECTION - Its own page */}
       <section className="border-b border-gray-200 bg-white">
-        <div className="mx-auto max-w-7xl px-4 py-16 md:px-6 md:py-20">
-          <div className="grid gap-8 md:grid-cols-2">
+        <div className="mx-auto max-w-7xl px-4 py-24 md:px-6 md:py-32">
+          <div className="grid gap-12 md:grid-cols-2">
             {/* Read reviews box */}
-            <div className="flex flex-col rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition hover:shadow-md">
-              <div className="mb-4 h-48 w-full rounded-xl bg-[#f5f5f5]">
+            <div className="flex flex-col rounded-2xl border border-gray-200 bg-white p-8 shadow-sm transition hover:shadow-md">
+              <div className="mb-6 h-56 w-full rounded-xl bg-[#f5f5f5]">
                 {/* Placeholder for illustrated image */}
                 <div className="flex h-full items-center justify-center text-gray-400">
                   <span className="text-sm">Illustration placeholder</span>
                 </div>
               </div>
-              <h3 className="text-lg font-semibold text-[#111111]">Read reviews from families</h3>
-              <p className="mt-2 text-sm text-[#111111]">
+              <h3 className="text-xl font-semibold text-[#111111]">Read reviews from families</h3>
+              <p className="mt-3 text-base text-[#111111]">
                 See what other families have to say about their experience with our trusted specialists.
               </p>
-              <button className="mt-4 w-fit rounded-full border-2 border-[#111111] bg-white px-4 py-2 text-sm font-semibold text-[#111111] hover:bg-[#111111] hover:text-white transition">
+              <button className="mt-6 w-fit rounded-full border-2 border-[#111111] bg-white px-6 py-3 text-sm font-semibold text-[#111111] hover:bg-[#111111] hover:text-white transition">
                 See reviews
               </button>
             </div>
 
             {/* Book appointment box */}
-            <div className="flex flex-col rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition hover:shadow-md">
-              <div className="mb-4 h-48 w-full rounded-xl bg-[#f5f5f5]">
+            <div className="flex flex-col rounded-2xl border border-gray-200 bg-white p-8 shadow-sm transition hover:shadow-md">
+              <div className="mb-6 h-56 w-full rounded-xl bg-[#f5f5f5]">
                 {/* Placeholder for illustrated image */}
                 <div className="flex h-full items-center justify-center text-gray-400">
                   <span className="text-sm">Illustration placeholder</span>
                 </div>
               </div>
-              <h3 className="text-lg font-semibold text-[#111111]">Book an appointment today</h3>
-              <p className="mt-2 text-sm text-[#111111]">
+              <h3 className="text-xl font-semibold text-[#111111]">Book an appointment today</h3>
+              <p className="mt-3 text-base text-[#111111]">
                 Easily schedule a consultation with a specialist that fits your schedule and needs.
               </p>
-              <button className="mt-4 w-fit rounded-full border-2 border-[#111111] bg-white px-4 py-2 text-sm font-semibold text-[#111111] hover:bg-[#111111] hover:text-white transition">
+              <button className="mt-6 w-fit rounded-full border-2 border-[#111111] bg-white px-6 py-3 text-sm font-semibold text-[#111111] hover:bg-[#111111] hover:text-white transition">
                 See availability
               </button>
             </div>
