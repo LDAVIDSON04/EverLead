@@ -18,9 +18,9 @@ export default function HomePage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#FAF9F6]">
+    <main className="min-h-screen bg-[#FFFBDF]">
       {/* HEADER */}
-      <header className="bg-[#FAF9F6] py-5 px-4">
+      <header className="bg-[#FFFBDF] py-5 px-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           {/* Logo and Name */}
           <Link href="/" className="flex items-center gap-3">
@@ -31,15 +31,15 @@ export default function HomePage() {
               height={40}
               className="h-10 w-10 object-contain"
             />
-            <span className="text-2xl font-semibold text-[#1A1A1A]">Soradin</span>
+            <span className="text-2xl font-semibold text-black">Soradin</span>
           </Link>
 
           {/* Right Side Navigation */}
           <div className="flex items-center gap-6">
-            <button className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors">
+            <button className="text-black hover:text-[#30382F] transition-colors">
               List your Specialty
             </button>
-            <button className="bg-[#0C6F3C] text-white px-6 py-2.5 rounded-xl hover:bg-[#0C6F3C]/90 transition-all shadow-sm">
+            <button className="bg-[#30382F] text-white px-6 py-2.5 rounded-xl hover:bg-[#30382F]/90 transition-all shadow-sm">
               Log in
             </button>
           </div>
@@ -47,11 +47,11 @@ export default function HomePage() {
       </header>
 
       {/* HERO */}
-      <div className="relative bg-[#FAF9F6] py-20 px-4 overflow-hidden min-h-[calc(100vh-80px)] flex items-center">
+      <div className="relative bg-[#FFFBDF] py-20 px-4 overflow-hidden min-h-[calc(100vh-80px)] flex items-center">
         {/* Abstract background shapes */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-20 right-10 w-96 h-96 bg-[#0C6F3C]/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-10 w-80 h-80 bg-[#D9C7A3]/30 rounded-full blur-3xl" />
+          <div className="absolute top-20 right-10 w-96 h-96 bg-[#30382F]/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-10 w-80 h-80 bg-[#30382F]/20 rounded-full blur-3xl" />
         </div>
 
         {/* Illustration - positioned absolutely on the right */}
@@ -65,15 +65,16 @@ export default function HomePage() {
                   {/* Hand shape */}
                   <path
                     d="M100 180 C80 190, 60 180, 50 160 L40 120 L50 100 L60 90 L70 100 L75 110 L80 100 L85 90 L90 100 L95 110 L100 100 L105 90 L110 100 L120 120 Z"
-                    fill="#D9C7A3"
+                    fill="#30382F"
+                    opacity="0.3"
                   />
                   {/* Card */}
-                  <rect x="80" y="40" width="80" height="50" rx="4" fill="white" stroke="#0C6F3C" strokeWidth="2" />
-                  <rect x="88" y="52" width="24" height="4" rx="2" fill="#0C6F3C" opacity="0.3" />
-                  <rect x="88" y="62" width="40" height="3" rx="1.5" fill="#0C6F3C" opacity="0.2" />
-                  <rect x="88" y="70" width="32" height="3" rx="1.5" fill="#0C6F3C" opacity="0.2" />
+                  <rect x="80" y="40" width="80" height="50" rx="4" fill="white" stroke="#30382F" strokeWidth="2" />
+                  <rect x="88" y="52" width="24" height="4" rx="2" fill="#30382F" opacity="0.3" />
+                  <rect x="88" y="62" width="40" height="3" rx="1.5" fill="#30382F" opacity="0.2" />
+                  <rect x="88" y="70" width="32" height="3" rx="1.5" fill="#30382F" opacity="0.2" />
                   {/* Plus symbol */}
-                  <circle cx="144" cy="65" r="12" fill="#0C6F3C" />
+                  <circle cx="144" cy="65" r="12" fill="#30382F" />
                   <path d="M144 60 L144 70 M139 65 L149 65" stroke="white" strokeWidth="2" strokeLinecap="round" />
                 </svg>
               </div>
@@ -84,23 +85,25 @@ export default function HomePage() {
                   {/* Hand shape - pointing */}
                   <path
                     d="M80 120 L90 80 L100 70 L110 75 L115 90 L120 100 L130 90 L140 95 L145 110 L150 120 L155 140 L150 160 L140 180 L120 190 L100 185 L85 170 L78 150 Z"
-                    fill="#D9C7A3"
+                    fill="#30382F"
+                    opacity="0.3"
                   />
-                  {/* Yellow accent rectangle */}
+                  {/* Accent rectangle */}
                   <rect
                     x="160"
                     y="10"
                     width="40"
                     height="100"
                     rx="4"
-                    fill="#D9C7A3"
+                    fill="#30382F"
+                    opacity="0.3"
                     transform="rotate(25 180 60)"
                   />
                 </svg>
               </div>
 
               {/* Background circle */}
-              <div className="w-80 h-80 rounded-full bg-gradient-to-br from-[#D9C7A3]/20 to-transparent" />
+              <div className="w-80 h-80 rounded-full bg-gradient-to-br from-[#30382F]/20 to-transparent" />
             </div>
           </div>
         </div>
@@ -108,22 +111,22 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto relative z-10 w-full">
           {/* Headline and Search Bar - Full Width */}
           <div className="max-w-4xl">
-            <h1 className="text-6xl mb-8 text-[#1A1A1A] font-semibold tracking-tight leading-tight">
+            <h1 className="text-6xl mb-8 text-black font-semibold tracking-tight leading-tight">
               Book local funeral specialists
             </h1>
 
             {/* Horizontal search bar */}
-            <div className="bg-white rounded-2xl p-3 shadow-lg border border-[#1A1A1A]/5">
+            <div className="bg-white rounded-2xl p-3 shadow-lg border border-black/5">
               <div className="flex flex-col lg:flex-row items-stretch gap-0">
                 {/* Search field */}
-                <div className="flex-1 relative border-b border-[#1A1A1A]/10 lg:border-b-0 lg:border-r lg:border-[#1A1A1A]/10">
-                  <label className="absolute left-4 top-2 text-xs text-[#1A1A1A]/60">Search</label>
+                <div className="flex-1 relative border-b border-black/10 lg:border-b-0 lg:border-r lg:border-black/10">
+                  <label className="absolute left-4 top-2 text-xs text-black/60">Search</label>
                   <div className="relative pt-6">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#1A1A1A]/40" />
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-black/40" />
                     <input
                       type="text"
                       placeholder="Service or specialist"
-                      className="w-full pl-12 pr-4 py-3 bg-transparent border-none focus:outline-none text-[#1A1A1A] placeholder:text-[#1A1A1A]/40"
+                      className="w-full pl-12 pr-4 py-3 bg-transparent border-none focus:outline-none text-black placeholder:text-black/40"
                       value={specialty}
                       onChange={(e) => setSpecialty(e.target.value)}
                     />
@@ -131,14 +134,14 @@ export default function HomePage() {
                 </div>
 
                 {/* Location field */}
-                <div className="flex-1 relative border-b border-[#1A1A1A]/10 lg:border-b-0 lg:border-r lg:border-[#1A1A1A]/10">
-                  <label className="absolute left-4 top-2 text-xs text-[#1A1A1A]/60">Location</label>
+                <div className="flex-1 relative border-b border-black/10 lg:border-b-0 lg:border-r lg:border-black/10">
+                  <label className="absolute left-4 top-2 text-xs text-black/60">Location</label>
                   <div className="relative pt-6">
-                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#1A1A1A]/40" />
+                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-black/40" />
                     <input
                       type="text"
                       placeholder="City, state, or zip"
-                      className="w-full pl-12 pr-4 py-3 bg-transparent border-none focus:outline-none text-[#1A1A1A] placeholder:text-[#1A1A1A]/40"
+                      className="w-full pl-12 pr-4 py-3 bg-transparent border-none focus:outline-none text-black placeholder:text-black/40"
                       value={location}
                       onChange={(e) => setLocation(e.target.value)}
                     />
@@ -147,13 +150,13 @@ export default function HomePage() {
 
                 {/* Service Type field */}
                 <div className="flex-1 relative">
-                  <label className="absolute left-4 top-2 text-xs text-[#1A1A1A]/60">Service Type</label>
+                  <label className="absolute left-4 top-2 text-xs text-black/60">Service Type</label>
                   <div className="relative pt-6">
-                    <FileText className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#1A1A1A]/40" />
+                    <FileText className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-black/40" />
                     <input
                       type="text"
                       placeholder="Any service"
-                      className="w-full pl-12 pr-4 py-3 bg-transparent border-none focus:outline-none text-[#1A1A1A] placeholder:text-[#1A1A1A]/40"
+                      className="w-full pl-12 pr-4 py-3 bg-transparent border-none focus:outline-none text-black placeholder:text-black/40"
                       value={service}
                       onChange={(e) => setService(e.target.value)}
                     />
@@ -164,7 +167,7 @@ export default function HomePage() {
                 <div className="flex items-center lg:pl-2">
                   <button
                     onClick={handleSearch}
-                    className="w-full lg:w-auto bg-[#0C6F3C] text-white px-8 py-3 rounded-xl hover:bg-[#0C6F3C]/90 transition-all shadow-sm"
+                    className="w-full lg:w-auto bg-[#30382F] text-white px-8 py-3 rounded-xl hover:bg-[#30382F]/90 transition-all shadow-sm"
                   >
                     Find care
                   </button>
@@ -178,66 +181,66 @@ export default function HomePage() {
       {/* TWO BOXES SECTION */}
       <section className="py-24 px-4 bg-white">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-5xl mb-16 text-[#1A1A1A] font-semibold tracking-tight text-center">
+          <h2 className="text-5xl mb-16 text-black font-semibold tracking-tight text-center">
             Let&apos;s connect you with the right specialist
           </h2>
 
           <div className="grid md:grid-cols-2 gap-8">
             {/* Left Box - Read Reviews */}
-            <div className="bg-[#FAF9F6] rounded-3xl p-12 border border-[#1A1A1A]/5 relative overflow-hidden group hover:shadow-xl hover:shadow-black/5 transition-all">
+            <div className="bg-[#FFFBDF] rounded-3xl p-12 border border-black/5 relative overflow-hidden group hover:shadow-xl hover:shadow-black/5 transition-all">
               {/* Illustration element built into the box */}
               <div className="absolute -bottom-8 -right-8 w-48 h-48 opacity-20 group-hover:opacity-30 transition-opacity">
                 <div className="relative w-full h-full">
-                  <div className="absolute inset-0 rounded-full bg-[#D9C7A3]" />
+                  <div className="absolute inset-0 rounded-full bg-[#30382F]/30" />
                   <div className="absolute top-8 left-8 w-32 h-32 rounded-lg bg-white flex items-center justify-center rotate-12">
                     <div className="space-y-2">
                       <div className="flex gap-1">
                         {[...Array(5)].map((_, i) => (
-                          <Star key={i} className="w-4 h-4 fill-[#D9C7A3] text-[#D9C7A3]" />
+                          <Star key={i} className="w-4 h-4 fill-[#30382F] text-[#30382F]" opacity="0.5" />
                         ))}
                       </div>
-                      <div className="h-2 bg-[#1A1A1A]/10 rounded" />
-                      <div className="h-2 bg-[#1A1A1A]/10 rounded w-3/4" />
+                      <div className="h-2 bg-black/10 rounded" />
+                      <div className="h-2 bg-black/10 rounded w-3/4" />
                     </div>
                   </div>
                 </div>
               </div>
 
               <div className="relative z-10">
-                <div className="w-16 h-16 rounded-2xl bg-[#0C6F3C]/10 flex items-center justify-center mb-6">
-                  <Star className="w-8 h-8 text-[#0C6F3C]" />
+                <div className="w-16 h-16 rounded-2xl bg-[#30382F]/10 flex items-center justify-center mb-6">
+                  <Star className="w-8 h-8 text-[#30382F]" />
                 </div>
-                <h3 className="text-3xl mb-4 text-[#1A1A1A] font-semibold">Read reviews from families</h3>
-                <p className="text-[#1A1A1A]/60 text-lg leading-relaxed mb-8">
+                <h3 className="text-3xl mb-4 text-black font-semibold">Read reviews from families</h3>
+                <p className="text-black/60 text-lg leading-relaxed mb-8">
                   Discover what families are saying about specialists in your area
                 </p>
-                <button className="bg-white text-[#1A1A1A] px-6 py-3 rounded-xl hover:bg-[#0C6F3C]/5 transition-all border border-[#1A1A1A]/10">
+                <button className="bg-white text-black px-6 py-3 rounded-xl hover:bg-[#30382F]/5 transition-all border border-black/10">
                   See reviews
                 </button>
               </div>
             </div>
 
             {/* Right Box - Book Appointment */}
-            <div className="bg-[#FAF9F6] rounded-3xl p-12 border border-[#1A1A1A]/5 relative overflow-hidden group hover:shadow-xl hover:shadow-black/5 transition-all">
+            <div className="bg-[#FFFBDF] rounded-3xl p-12 border border-black/5 relative overflow-hidden group hover:shadow-xl hover:shadow-black/5 transition-all">
               {/* Illustration element built into the box */}
               <div className="absolute -bottom-8 -right-8 w-48 h-48 opacity-20 group-hover:opacity-30 transition-opacity">
                 <div className="relative w-full h-full">
-                  <div className="absolute inset-0 rounded-full bg-[#0C6F3C]/30" />
+                  <div className="absolute inset-0 rounded-full bg-[#30382F]/30" />
                   <div className="absolute top-8 left-8 w-32 h-32 rounded-2xl bg-white flex items-center justify-center rotate-12">
-                    <Calendar className="w-16 h-16 text-[#0C6F3C]/60" />
+                    <Calendar className="w-16 h-16 text-[#30382F]/60" />
                   </div>
                 </div>
               </div>
 
               <div className="relative z-10">
-                <div className="w-16 h-16 rounded-2xl bg-[#0C6F3C]/10 flex items-center justify-center mb-6">
-                  <Calendar className="w-8 h-8 text-[#0C6F3C]" />
+                <div className="w-16 h-16 rounded-2xl bg-[#30382F]/10 flex items-center justify-center mb-6">
+                  <Calendar className="w-8 h-8 text-[#30382F]" />
                 </div>
-                <h3 className="text-3xl mb-4 text-[#1A1A1A] font-semibold">Book an appointment today</h3>
-                <p className="text-[#1A1A1A]/60 text-lg leading-relaxed mb-8">
+                <h3 className="text-3xl mb-4 text-black font-semibold">Book an appointment today</h3>
+                <p className="text-black/60 text-lg leading-relaxed mb-8">
                   Schedule consultations with trusted funeral specialists online
                 </p>
-                <button className="bg-[#0C6F3C] text-white px-6 py-3 rounded-xl hover:bg-[#0C6F3C]/90 transition-all shadow-sm">
+                <button className="bg-[#30382F] text-white px-6 py-3 rounded-xl hover:bg-[#30382F]/90 transition-all shadow-sm">
                   See availability
                 </button>
               </div>
@@ -247,48 +250,48 @@ export default function HomePage() {
       </section>
 
       {/* FOR SPECIALISTS SECTION */}
-      <section className="py-24 px-4 bg-[#FAF9F6]">
+      <section className="py-24 px-4 bg-[#FFFBDF]">
         <div className="max-w-5xl mx-auto">
           <div className="grid md:grid-cols-2 gap-16 items-center">
             {/* Left side - Abstract illustration */}
             <div className="relative">
-              <div className="w-full aspect-square rounded-3xl bg-gradient-to-br from-[#0C6F3C]/10 to-[#D9C7A3]/20 flex items-center justify-center">
-                <div className="w-4/5 h-4/5 rounded-full bg-white/60 backdrop-blur-sm border border-[#0C6F3C]/20 flex items-center justify-center">
-                  <div className="w-3/5 h-3/5 rounded-full bg-[#0C6F3C]/20" />
+              <div className="w-full aspect-square rounded-3xl bg-gradient-to-br from-[#30382F]/10 to-[#30382F]/20 flex items-center justify-center">
+                <div className="w-4/5 h-4/5 rounded-full bg-white/60 backdrop-blur-sm border border-[#30382F]/20 flex items-center justify-center">
+                  <div className="w-3/5 h-3/5 rounded-full bg-[#30382F]/20" />
                 </div>
               </div>
-              <div className="absolute -bottom-6 -right-6 w-32 h-32 rounded-full bg-[#D9C7A3]/30" />
-              <div className="absolute -top-6 -left-6 w-24 h-24 rounded-full bg-[#0C6F3C]/10" />
+              <div className="absolute -bottom-6 -right-6 w-32 h-32 rounded-full bg-[#30382F]/30" />
+              <div className="absolute -top-6 -left-6 w-24 h-24 rounded-full bg-[#30382F]/10" />
             </div>
 
             {/* Right side - Content */}
             <div>
-              <h2 className="text-5xl mb-6 text-[#1A1A1A] font-semibold tracking-tight">
+              <h2 className="text-5xl mb-6 text-black font-semibold tracking-tight">
                 Soradin for Specialists
               </h2>
 
-              <p className="text-2xl text-[#1A1A1A]/80 mb-8 leading-relaxed">
+              <p className="text-2xl text-black/80 mb-8 leading-relaxed">
                 Are you interested in filling out your calendar?
               </p>
 
               <div className="space-y-5 mb-10">
                 <div className="flex items-start gap-4">
-                  <div className="w-6 h-6 rounded-full bg-[#0C6F3C] flex items-center justify-center flex-shrink-0 mt-1">
+                  <div className="w-6 h-6 rounded-full bg-[#30382F] flex items-center justify-center flex-shrink-0 mt-1">
                     <Check className="w-4 h-4 text-white" />
                   </div>
-                  <p className="text-xl text-[#1A1A1A]/70">Reach thousands of families with Soradin</p>
+                  <p className="text-xl text-black/70">Reach thousands of families with Soradin</p>
                 </div>
 
                 <div className="flex items-start gap-4">
-                  <div className="w-6 h-6 rounded-full bg-[#0C6F3C] flex items-center justify-center flex-shrink-0 mt-1">
+                  <div className="w-6 h-6 rounded-full bg-[#30382F] flex items-center justify-center flex-shrink-0 mt-1">
                     <Check className="w-4 h-4 text-white" />
                   </div>
-                  <p className="text-xl text-[#1A1A1A]/70">Make it easy for families to book with you</p>
+                  <p className="text-xl text-black/70">Make it easy for families to book with you</p>
                 </div>
               </div>
 
               <div>
-                <button className="bg-[#0C6F3C] text-white px-8 py-4 rounded-2xl hover:bg-[#0C6F3C]/90 transition-all text-lg shadow-sm">
+                <button className="bg-[#30382F] text-white px-8 py-4 rounded-2xl hover:bg-[#30382F]/90 transition-all text-lg shadow-sm">
                   Learn more about starting with us
                 </button>
               </div>
@@ -298,12 +301,12 @@ export default function HomePage() {
       </section>
 
       {/* TRUSTED PARTNERS */}
-      <section className="py-24 px-4 bg-[#FAF9F6]">
+      <section className="py-24 px-4 bg-[#FFFBDF]">
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             {/* Left side - Content */}
             <div>
-              <h2 className="text-5xl mb-8 text-[#1A1A1A] font-semibold tracking-tight leading-tight">
+              <h2 className="text-5xl mb-8 text-black font-semibold tracking-tight leading-tight">
                 Trusted by top funeral homes
               </h2>
             </div>
@@ -313,8 +316,8 @@ export default function HomePage() {
               {[1, 2, 3, 4, 5, 6].map((index) => (
                 <div key={index} className="flex items-center justify-center">
                   {/* Empty bubble logo placeholder */}
-                  <div className="w-24 h-24 rounded-full bg-white border-2 border-[#1A1A1A]/10 shadow-sm flex items-center justify-center">
-                    <span className="text-xs text-[#1A1A1A]/30">Logo {index}</span>
+                  <div className="w-24 h-24 rounded-full bg-white border-2 border-black/10 shadow-sm flex items-center justify-center">
+                    <span className="text-xs text-black/30">Logo {index}</span>
                   </div>
                 </div>
               ))}
@@ -324,9 +327,9 @@ export default function HomePage() {
       </section>
 
       {/* CITIES LIST */}
-      <section className="py-24 px-4 bg-[#D9C7A3]/20">
+      <section className="py-24 px-4 bg-[#30382F]/20">
         <div className="max-w-7xl mx-auto">
-          <h2 className="text-4xl mb-12 text-[#1A1A1A] font-medium tracking-tight">
+          <h2 className="text-4xl mb-12 text-black font-medium tracking-tight">
             Find funeral specialists by city
           </h2>
 
@@ -335,12 +338,12 @@ export default function HomePage() {
               <Link
                 key={city}
                 href={`/search?location=${city}`}
-                className="bg-transparent border-b-2 border-[#1A1A1A]/20 hover:border-[#0C6F3C] py-4 text-left transition-all group flex items-center justify-between"
+                className="bg-transparent border-b-2 border-black/20 hover:border-[#30382F] py-4 text-left transition-all group flex items-center justify-between"
               >
-                <span className="text-[#1A1A1A] text-lg group-hover:text-[#0C6F3C] transition-colors">
+                <span className="text-black text-lg group-hover:text-[#30382F] transition-colors">
                   {city}
                 </span>
-                <ChevronDown className="w-5 h-5 text-[#1A1A1A]/40 group-hover:text-[#0C6F3C] transition-colors" />
+                <ChevronDown className="w-5 h-5 text-black/40 group-hover:text-[#30382F] transition-colors" />
               </Link>
             ))}
           </div>
@@ -348,7 +351,7 @@ export default function HomePage() {
       </section>
 
       {/* FOOTER */}
-      <footer className="bg-[#1A1A1A] text-white">
+      <footer className="bg-black text-white">
         {/* Main Footer */}
         <div className="py-16 px-4">
           <div className="max-w-7xl mx-auto">
