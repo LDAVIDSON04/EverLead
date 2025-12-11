@@ -18,9 +18,9 @@ export default function HomePage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#F1ECDA]">
+    <main className="min-h-screen bg-[#FAF9F6]">
       {/* HEADER */}
-      <header className="bg-[#F1ECDA] py-5 px-4">
+      <header className="bg-[#FAF9F6] py-5 px-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           {/* Logo and Name */}
           <Link href="/" className="flex items-center gap-3">
@@ -36,10 +36,10 @@ export default function HomePage() {
 
           {/* Right Side Navigation */}
           <div className="flex items-center gap-6">
-            <button className="text-black hover:text-[#758695] transition-colors">
+            <button className="text-black hover:text-[#0C6F3C] transition-colors">
               List your Specialty
             </button>
-            <button className="bg-[#758695] text-white px-6 py-2.5 rounded-xl hover:bg-[#758695]/90 transition-all shadow-sm">
+            <button className="bg-[#0C6F3C] text-white px-6 py-2.5 rounded-xl hover:bg-[#0C6F3C]/90 transition-all shadow-sm">
               Log in
             </button>
           </div>
@@ -47,11 +47,11 @@ export default function HomePage() {
       </header>
 
       {/* HERO */}
-      <div className="relative bg-[#F1ECDA] py-20 px-4 overflow-hidden min-h-[calc(100vh-80px)] flex items-center">
+      <div className="relative bg-[#FAF9F6] py-20 px-4 overflow-hidden min-h-[calc(100vh-80px)] flex items-center">
         {/* Abstract background shapes */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-20 right-10 w-96 h-96 bg-[#758695]/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-10 w-80 h-80 bg-[#758695]/20 rounded-full blur-3xl" />
+          <div className="absolute top-20 right-10 w-96 h-96 bg-[#0C6F3C]/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-10 w-80 h-80 bg-[#0C6F3C]/20 rounded-full blur-3xl" />
         </div>
 
         {/* Illustration - positioned absolutely on the right */}
@@ -65,16 +65,16 @@ export default function HomePage() {
                   {/* Hand shape */}
                   <path
                     d="M100 180 C80 190, 60 180, 50 160 L40 120 L50 100 L60 90 L70 100 L75 110 L80 100 L85 90 L90 100 L95 110 L100 100 L105 90 L110 100 L120 120 Z"
-                    fill="#758695"
+                    fill="#0C6F3C"
                     opacity="0.3"
                   />
                   {/* Card */}
-                  <rect x="80" y="40" width="80" height="50" rx="4" fill="white" stroke="#758695" strokeWidth="2" />
-                  <rect x="88" y="52" width="24" height="4" rx="2" fill="#758695" opacity="0.3" />
-                  <rect x="88" y="62" width="40" height="3" rx="1.5" fill="#758695" opacity="0.2" />
-                  <rect x="88" y="70" width="32" height="3" rx="1.5" fill="#758695" opacity="0.2" />
+                  <rect x="80" y="40" width="80" height="50" rx="4" fill="white" stroke="#0C6F3C" strokeWidth="2" />
+                  <rect x="88" y="52" width="24" height="4" rx="2" fill="#0C6F3C" opacity="0.3" />
+                  <rect x="88" y="62" width="40" height="3" rx="1.5" fill="#0C6F3C" opacity="0.2" />
+                  <rect x="88" y="70" width="32" height="3" rx="1.5" fill="#0C6F3C" opacity="0.2" />
                   {/* Plus symbol */}
-                  <circle cx="144" cy="65" r="12" fill="#758695" />
+                  <circle cx="144" cy="65" r="12" fill="#0C6F3C" />
                   <path d="M144 60 L144 70 M139 65 L149 65" stroke="white" strokeWidth="2" strokeLinecap="round" />
                 </svg>
               </div>
@@ -85,7 +85,7 @@ export default function HomePage() {
                   {/* Hand shape - pointing */}
                   <path
                     d="M80 120 L90 80 L100 70 L110 75 L115 90 L120 100 L130 90 L140 95 L145 110 L150 120 L155 140 L150 160 L140 180 L120 190 L100 185 L85 170 L78 150 Z"
-                    fill="#758695"
+                    fill="#0C6F3C"
                     opacity="0.3"
                   />
                   {/* Accent rectangle */}
@@ -95,7 +95,7 @@ export default function HomePage() {
                     width="40"
                     height="100"
                     rx="4"
-                    fill="#758695"
+                    fill="#0C6F3C"
                     opacity="0.3"
                     transform="rotate(25 180 60)"
                   />
@@ -103,7 +103,7 @@ export default function HomePage() {
               </div>
 
               {/* Background circle */}
-              <div className="w-80 h-80 rounded-full bg-gradient-to-br from-[#758695]/20 to-transparent" />
+              <div className="w-80 h-80 rounded-full bg-gradient-to-br from-[#0C6F3C]/20 to-transparent" />
             </div>
           </div>
         </div>
@@ -167,7 +167,7 @@ export default function HomePage() {
                 <div className="flex items-center lg:pl-2">
                   <button
                     onClick={handleSearch}
-                    className="w-full lg:w-auto bg-[#758695] text-white px-8 py-3 rounded-xl hover:bg-[#758695]/90 transition-all shadow-sm"
+                    className="w-full lg:w-auto bg-[#0C6F3C] text-white px-8 py-3 rounded-xl hover:bg-[#0C6F3C]/90 transition-all shadow-sm"
                   >
                     Find care
                   </button>
@@ -187,16 +187,16 @@ export default function HomePage() {
 
           <div className="grid md:grid-cols-2 gap-8">
             {/* Left Box - Read Reviews */}
-            <div className="bg-[#F1ECDA] rounded-3xl p-12 border border-black/5 relative overflow-hidden group hover:shadow-xl hover:shadow-black/5 transition-all">
+            <div className="bg-[#FAF9F6] rounded-3xl p-12 border border-black/5 relative overflow-hidden group hover:shadow-xl hover:shadow-black/5 transition-all">
               {/* Illustration element built into the box */}
               <div className="absolute -bottom-8 -right-8 w-48 h-48 opacity-20 group-hover:opacity-30 transition-opacity">
                 <div className="relative w-full h-full">
-                  <div className="absolute inset-0 rounded-full bg-[#758695]/30" />
+                  <div className="absolute inset-0 rounded-full bg-[#0C6F3C]/30" />
                   <div className="absolute top-8 left-8 w-32 h-32 rounded-lg bg-white flex items-center justify-center rotate-12">
                     <div className="space-y-2">
                       <div className="flex gap-1">
                         {[...Array(5)].map((_, i) => (
-                          <Star key={i} className="w-4 h-4 fill-[#758695] text-[#758695]" opacity="0.5" />
+                          <Star key={i} className="w-4 h-4 fill-[#0C6F3C] text-[#0C6F3C]" opacity="0.5" />
                         ))}
                       </div>
                       <div className="h-2 bg-black/10 rounded" />
@@ -207,40 +207,40 @@ export default function HomePage() {
               </div>
 
               <div className="relative z-10">
-                <div className="w-16 h-16 rounded-2xl bg-[#758695]/10 flex items-center justify-center mb-6">
-                  <Star className="w-8 h-8 text-[#758695]" />
+                <div className="w-16 h-16 rounded-2xl bg-[#0C6F3C]/10 flex items-center justify-center mb-6">
+                  <Star className="w-8 h-8 text-[#0C6F3C]" />
                 </div>
                 <h3 className="text-3xl mb-4 text-black font-semibold">Read reviews from families</h3>
                 <p className="text-black/60 text-lg leading-relaxed mb-8">
                   Discover what families are saying about specialists in your area
                 </p>
-                <button className="bg-white text-black px-6 py-3 rounded-xl hover:bg-[#758695]/5 transition-all border border-black/10">
+                <button className="bg-white text-black px-6 py-3 rounded-xl hover:bg-[#0C6F3C]/5 transition-all border border-black/10">
                   See reviews
                 </button>
               </div>
             </div>
 
             {/* Right Box - Book Appointment */}
-            <div className="bg-[#F1ECDA] rounded-3xl p-12 border border-black/5 relative overflow-hidden group hover:shadow-xl hover:shadow-black/5 transition-all">
+            <div className="bg-[#FAF9F6] rounded-3xl p-12 border border-black/5 relative overflow-hidden group hover:shadow-xl hover:shadow-black/5 transition-all">
               {/* Illustration element built into the box */}
               <div className="absolute -bottom-8 -right-8 w-48 h-48 opacity-20 group-hover:opacity-30 transition-opacity">
                 <div className="relative w-full h-full">
-                  <div className="absolute inset-0 rounded-full bg-[#758695]/30" />
+                  <div className="absolute inset-0 rounded-full bg-[#0C6F3C]/30" />
                   <div className="absolute top-8 left-8 w-32 h-32 rounded-2xl bg-white flex items-center justify-center rotate-12">
-                    <Calendar className="w-16 h-16 text-[#758695]/60" />
+                    <Calendar className="w-16 h-16 text-[#0C6F3C]/60" />
                   </div>
                 </div>
               </div>
 
               <div className="relative z-10">
-                <div className="w-16 h-16 rounded-2xl bg-[#758695]/10 flex items-center justify-center mb-6">
-                  <Calendar className="w-8 h-8 text-[#758695]" />
+                <div className="w-16 h-16 rounded-2xl bg-[#0C6F3C]/10 flex items-center justify-center mb-6">
+                  <Calendar className="w-8 h-8 text-[#0C6F3C]" />
                 </div>
                 <h3 className="text-3xl mb-4 text-black font-semibold">Book an appointment today</h3>
                 <p className="text-black/60 text-lg leading-relaxed mb-8">
                   Schedule consultations with trusted funeral specialists online
                 </p>
-                <button className="bg-[#758695] text-white px-6 py-3 rounded-xl hover:bg-[#758695]/90 transition-all shadow-sm">
+                <button className="bg-[#0C6F3C] text-white px-6 py-3 rounded-xl hover:bg-[#0C6F3C]/90 transition-all shadow-sm">
                   See availability
                 </button>
               </div>
@@ -250,18 +250,18 @@ export default function HomePage() {
       </section>
 
       {/* FOR SPECIALISTS SECTION */}
-      <section className="py-24 px-4 bg-[#F1ECDA]">
+      <section className="py-24 px-4 bg-[#FAF9F6]">
         <div className="max-w-5xl mx-auto">
           <div className="grid md:grid-cols-2 gap-16 items-center">
             {/* Left side - Abstract illustration */}
             <div className="relative">
-              <div className="w-full aspect-square rounded-3xl bg-gradient-to-br from-[#758695]/10 to-[#758695]/20 flex items-center justify-center">
-                <div className="w-4/5 h-4/5 rounded-full bg-white/60 backdrop-blur-sm border border-[#758695]/20 flex items-center justify-center">
-                  <div className="w-3/5 h-3/5 rounded-full bg-[#758695]/20" />
+              <div className="w-full aspect-square rounded-3xl bg-gradient-to-br from-[#0C6F3C]/10 to-[#0C6F3C]/20 flex items-center justify-center">
+                <div className="w-4/5 h-4/5 rounded-full bg-white/60 backdrop-blur-sm border border-[#0C6F3C]/20 flex items-center justify-center">
+                  <div className="w-3/5 h-3/5 rounded-full bg-[#0C6F3C]/20" />
                 </div>
               </div>
-              <div className="absolute -bottom-6 -right-6 w-32 h-32 rounded-full bg-[#758695]/30" />
-              <div className="absolute -top-6 -left-6 w-24 h-24 rounded-full bg-[#758695]/10" />
+              <div className="absolute -bottom-6 -right-6 w-32 h-32 rounded-full bg-[#0C6F3C]/30" />
+              <div className="absolute -top-6 -left-6 w-24 h-24 rounded-full bg-[#0C6F3C]/10" />
             </div>
 
             {/* Right side - Content */}
@@ -276,14 +276,14 @@ export default function HomePage() {
 
               <div className="space-y-5 mb-10">
                 <div className="flex items-start gap-4">
-                  <div className="w-6 h-6 rounded-full bg-[#758695] flex items-center justify-center flex-shrink-0 mt-1">
+                  <div className="w-6 h-6 rounded-full bg-[#0C6F3C] flex items-center justify-center flex-shrink-0 mt-1">
                     <Check className="w-4 h-4 text-white" />
                   </div>
                   <p className="text-xl text-black/70">Reach thousands of families with Soradin</p>
                 </div>
 
                 <div className="flex items-start gap-4">
-                  <div className="w-6 h-6 rounded-full bg-[#758695] flex items-center justify-center flex-shrink-0 mt-1">
+                  <div className="w-6 h-6 rounded-full bg-[#0C6F3C] flex items-center justify-center flex-shrink-0 mt-1">
                     <Check className="w-4 h-4 text-white" />
                   </div>
                   <p className="text-xl text-black/70">Make it easy for families to book with you</p>
@@ -291,7 +291,7 @@ export default function HomePage() {
               </div>
 
               <div>
-                <button className="bg-[#758695] text-white px-8 py-4 rounded-2xl hover:bg-[#758695]/90 transition-all text-lg shadow-sm">
+                <button className="bg-[#0C6F3C] text-white px-8 py-4 rounded-2xl hover:bg-[#0C6F3C]/90 transition-all text-lg shadow-sm">
                   Learn more about starting with us
                 </button>
               </div>
@@ -301,7 +301,7 @@ export default function HomePage() {
       </section>
 
       {/* TRUSTED PARTNERS */}
-      <section className="py-24 px-4 bg-[#F1ECDA]">
+      <section className="py-24 px-4 bg-[#FAF9F6]">
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             {/* Left side - Content */}
@@ -327,7 +327,7 @@ export default function HomePage() {
       </section>
 
       {/* CITIES LIST */}
-      <section className="py-24 px-4 bg-[#758695]/20">
+      <section className="py-24 px-4 bg-[#0C6F3C]/20">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-4xl mb-12 text-black font-medium tracking-tight">
             Find funeral specialists by city
@@ -338,12 +338,12 @@ export default function HomePage() {
               <Link
                 key={city}
                 href={`/search?location=${city}`}
-                className="bg-transparent border-b-2 border-black/20 hover:border-[#758695] py-4 text-left transition-all group flex items-center justify-between"
+                className="bg-transparent border-b-2 border-black/20 hover:border-[#0C6F3C] py-4 text-left transition-all group flex items-center justify-between"
               >
-                <span className="text-black text-lg group-hover:text-[#758695] transition-colors">
+                <span className="text-black text-lg group-hover:text-[#0C6F3C] transition-colors">
                   {city}
                 </span>
-                <ChevronDown className="w-5 h-5 text-black/40 group-hover:text-[#758695] transition-colors" />
+                <ChevronDown className="w-5 h-5 text-black/40 group-hover:text-[#0C6F3C] transition-colors" />
               </Link>
             ))}
           </div>
