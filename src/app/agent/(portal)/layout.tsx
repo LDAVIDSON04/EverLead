@@ -5,17 +5,18 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import { supabaseClient } from '@/lib/supabaseClient';
-import clsx from 'clsx';
+import { Home, Calendar, File, Mail, FileText, User } from 'lucide-react';
 
 type AgentLayoutProps = {
   children: ReactNode;
 };
 
-const tabs = [
-  { href: '/agent/dashboard', label: 'Home' },
-  { href: '/agent/appointments', label: 'Buy Appointments' },
-  { href: '/agent/my-appointments', label: 'My Appointments' },
-  { href: '/agent/dashboard#roi', label: 'Performance' },
+const menuItems = [
+  { href: '/agent/dashboard', label: 'Home', icon: Home },
+  { href: '/agent/appointments', label: 'Schedule', icon: Calendar },
+  { href: '/agent/my-appointments', label: 'Files', icon: File },
+  { href: '#', label: 'Email', icon: Mail },
+  { href: '/agent/dashboard#roi', label: 'Report', icon: FileText },
 ];
 
 export default function AgentLayout({ children }: AgentLayoutProps) {
@@ -23,6 +24,7 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
   const pathname = usePathname();
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [approvalStatus, setApprovalStatus] = useState<string | null>(null);
+  const [userName, setUserName] = useState<string>('');
 
   useEffect(() => {
     async function checkApproval() {
@@ -36,7 +38,7 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
 
         const { data: profile } = await supabaseClient
           .from('profiles')
-          .select('role, approval_status')
+          .select('role, approval_status, full_name')
           .eq('id', user.id)
           .maybeSingle();
 
@@ -49,6 +51,7 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
           setApprovalStatus(profile.approval_status || 'pending');
         }
 
+        setUserName(profile.full_name || 'Agent');
         setCheckingAuth(false);
       } catch (error) {
         console.error('Error checking approval:', error);
@@ -61,20 +64,20 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
 
   const handleLogout = async () => {
     await supabaseClient.auth.signOut();
-    router.push('/agent'); // send back to the agent landing/login
+    router.push('/agent');
   };
 
   if (checkingAuth) {
     return (
-      <div className="min-h-screen bg-[#f7f4ef] flex items-center justify-center">
-        <p className="text-sm text-[#6b6b6b]">Loading...</p>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <p className="text-sm text-gray-600">Loading...</p>
       </div>
     );
   }
 
   if (approvalStatus && approvalStatus !== 'approved') {
     return (
-      <div className="min-h-screen bg-[#f7f4ef] flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="max-w-md mx-auto px-6">
           <div className="rounded-lg border border-amber-200 bg-amber-50 p-6 shadow-sm">
             <h2 className="mb-2 text-lg font-semibold text-amber-900">Account Pending Approval</h2>
@@ -88,7 +91,7 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
             <button
               type="button"
               onClick={handleLogout}
-              className="rounded-md bg-[#2a2a2a] px-4 py-2 text-sm font-medium text-white hover:bg-[#3a3a3a] transition-colors"
+              className="rounded-md bg-black px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 transition-colors"
             >
               Sign Out
             </button>
@@ -99,69 +102,64 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
   }
 
   return (
-    <div className="min-h-screen bg-[#f7f4ef] flex flex-col">
-      <header className="bg-[#1f2933] text-white border-b border-[#ded3c2]">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-3">
+    <div className="flex h-screen bg-gray-50">
+      {/* Sidebar */}
+      <div className="w-64 bg-black flex flex-col">
+        {/* Logo - Top Left */}
+        <div className="px-4 py-6">
+          <Link href="/agent/dashboard" className="flex items-center gap-2">
             <Image
-              src="/logo - white.png"
-              alt="Soradin"
-              width={70}
-              height={70}
-              className="object-contain"
+              src="/Soradin.png"
+              alt="Soradin Logo"
+              width={40}
+              height={40}
+              className="h-10 w-10 object-contain bg-white rounded-lg p-1"
             />
-            <div className="flex items-baseline gap-2">
-              <Link href="/agent/dashboard" className="text-lg font-semibold text-white">
-                Soradin
-              </Link>
-              <span className="text-[11px] uppercase tracking-[0.18em] text-[#e0d5bf]">
-                AGENT PORTAL
-              </span>
+          </Link>
+        </div>
+        
+        {/* Menu Items */}
+        <nav className="flex-1 px-4">
+          <div className="flex flex-col gap-1">
+            {menuItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = pathname === item.href || 
+                (item.href === '/agent/dashboard#roi' && pathname === '/agent/dashboard');
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-left ${
+                    isActive 
+                      ? 'bg-green-900/30 text-white' 
+                      : 'text-white/60 hover:bg-white/5 hover:text-white'
+                  }`}
+                >
+                  <Icon size={18} />
+                  <span className="text-sm">{item.label}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </nav>
+        
+        {/* User Profile */}
+        <div className="px-4 pb-6">
+          <div className="flex items-center gap-3 px-3 py-3">
+            <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-400 rounded-full flex items-center justify-center">
+              <User size={16} className="text-white" />
+            </div>
+            <div>
+              <div className="text-white text-sm">{userName}</div>
             </div>
           </div>
-
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="rounded-md border border-[#e5d7b5] bg-transparent px-3 py-1 text-[11px] font-medium text-[#e0d5bf] hover:bg-white/10 transition-colors"
-          >
-            Log out
-          </button>
         </div>
-      </header>
+      </div>
 
-      <main className="mx-auto flex w-full max-w-6xl flex-1 px-6 py-10">
-        <div className="w-full">
-          {/* Horizontal tab navigation at top of content */}
-          <nav className="border-b border-gray-200 mb-6">
-            <ul className="flex gap-8 text-sm">
-              {tabs.map((tab) => {
-                // Handle active state: both Home and Performance are on /agent/dashboard
-                const isActive = pathname === tab.href || 
-                  (tab.href === '/agent/dashboard#roi' && pathname === '/agent/dashboard');
-                return (
-                  <li key={tab.href}>
-                    <Link
-                      href={tab.href}
-                      className={clsx(
-                        'pb-3 inline-block',
-                        isActive
-                          ? 'border-b-2 border-gray-900 font-semibold text-gray-900'
-                          : 'text-gray-500 hover:text-gray-900'
-                      )}
-                    >
-                      {tab.label}
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          </nav>
-
-          {/* Page content */}
-          {children}
-        </div>
-      </main>
+      {/* Main Content */}
+      <div className="flex-1 overflow-auto">
+        {children}
+      </div>
     </div>
   );
 }
