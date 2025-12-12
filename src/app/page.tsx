@@ -3,14 +3,13 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search, MapPin, FileText, Star, Calendar, Check, ChevronDown, Heart, Facebook, Twitter, Instagram, Linkedin } from "lucide-react";
+import { Search, MapPin, Star, Calendar, Check, ChevronDown, Heart, Facebook, Twitter, Instagram, Linkedin } from "lucide-react";
 import { useState } from "react";
 
 export default function HomePage() {
   const router = useRouter();
   const [specialty, setSpecialty] = useState("");
   const [location, setLocation] = useState("");
-  const [service, setService] = useState("");
 
   const cities = ["Calgary", "Edmonton", "Kelowna", "Penticton", "Salmon Arm"];
 
@@ -19,7 +18,6 @@ export default function HomePage() {
     const params = new URLSearchParams();
     if (specialty) params.set("q", specialty);
     if (location) params.set("location", location);
-    if (service) params.set("service", service);
     router.push(`/search?${params.toString()}`);
   };
 
@@ -117,7 +115,7 @@ export default function HomePage() {
                 </div>
 
                 {/* Location field */}
-                <div className="flex-1 relative border-b border-[#1A1A1A]/10 lg:border-b-0 lg:border-r lg:border-[#1A1A1A]/10">
+                <div className="flex-1 relative border-b border-[#1A1A1A]/10 lg:border-b-0 lg:border-r lg:border-[#1A1A1A]/10 lg:pr-2">
                   <label className="absolute left-4 top-2 text-xs text-[#1A1A1A]/60">Location</label>
                   <div className="relative pt-6">
                     <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#1A1A1A]/40" />
@@ -127,21 +125,6 @@ export default function HomePage() {
                       className="w-full pl-12 pr-4 py-3 bg-transparent border-none focus:outline-none text-[#1A1A1A] placeholder:text-[#1A1A1A]/40"
                       value={location}
                       onChange={(e) => setLocation(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                {/* Service Type field */}
-                <div className="flex-1 relative">
-                  <label className="absolute left-4 top-2 text-xs text-[#1A1A1A]/60">Service Type</label>
-                  <div className="relative pt-6">
-                    <FileText className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#1A1A1A]/40" />
-                    <input
-                      type="text"
-                      placeholder="Any service"
-                      className="w-full pl-12 pr-4 py-3 bg-transparent border-none focus:outline-none text-[#1A1A1A] placeholder:text-[#1A1A1A]/40"
-                      value={service}
-                      onChange={(e) => setService(e.target.value)}
                     />
                   </div>
                 </div>
