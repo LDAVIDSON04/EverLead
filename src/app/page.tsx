@@ -47,7 +47,7 @@ export default function HomePage() {
       </header>
 
       {/* HERO */}
-      <div className="relative bg-[#FAF9F6] py-12 px-4 overflow-hidden min-h-[calc(100vh-80px)] flex items-start pt-32">
+      <div className="relative bg-[#FAF9F6] py-16 px-4 overflow-hidden min-h-[calc(100vh-80px)] flex items-start pt-24">
         {/* Abstract background shapes */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-20 right-10 w-96 h-96 bg-[#0C6F3C]/10 rounded-full blur-3xl" />
@@ -55,7 +55,7 @@ export default function HomePage() {
         </div>
 
         {/* Hero illustration - positioned absolutely on the right, above title */}
-        <div className="absolute right-10 top-10 hidden lg:block z-10">
+        <div className="absolute right-8 top-8 hidden lg:block z-10">
           <Image
             src="/hero-image.png"
             alt="Book a specialist"
@@ -88,7 +88,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto relative z-10 w-full">
           {/* Headline and Search Bar - Full Width */}
           <div className="max-w-4xl">
-            <h1 className="text-6xl mb-8 text-[#1A1A1A] font-semibold tracking-tight leading-tight text-left">
+            <h1 className="text-6xl mb-10 text-[#1A1A1A] font-semibold tracking-tight leading-tight text-left">
               Book local funeral specialists
             </h1>
 
@@ -156,22 +156,22 @@ export default function HomePage() {
       </div>
 
       {/* TWO BOXES SECTION */}
-      <section className="py-24 px-4 bg-white">
+      <section className="py-20 px-4 bg-white">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-5xl mb-16 text-[#1A1A1A] font-semibold tracking-tight text-center">
+          <h2 className="text-5xl mb-20 text-[#1A1A1A] font-semibold tracking-tight text-center">
             Let&apos;s connect you with the right specialist
           </h2>
 
-          <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-10 max-w-3xl mx-auto">
             {/* Left Box - Read Reviews */}
-            <div className="bg-[#FAF9F6] rounded-3xl p-6 pt-24 border border-[#1A1A1A]/5 relative overflow-visible group hover:shadow-xl hover:shadow-black/5 transition-all flex flex-col">
+            <div className="bg-[#FAF9F6] rounded-3xl p-8 border border-[#1A1A1A]/5 relative overflow-visible group hover:shadow-xl hover:shadow-black/5 transition-all flex flex-col">
               {/* Image overlapping the top */}
-              <div className="absolute -top-48 left-1/2 -translate-x-1/2 w-96 h-96 flex items-center justify-center">
+              <div className="absolute -top-52 left-1/2 -translate-x-1/2 w-[400px] h-[400px] flex items-center justify-center z-20">
                 <Image
                   src="/review-image.png"
                   alt="Person holding review card"
-                  width={384}
-                  height={384}
+                  width={400}
+                  height={400}
                   className="w-full h-full object-contain"
                   style={{
                     filter: "brightness(1.1) contrast(1.05)",
@@ -180,9 +180,9 @@ export default function HomePage() {
                 />
               </div>
 
-              <div className="relative z-10 flex flex-col items-center text-center mt-48">
-                <h3 className="text-xl mb-2 text-[#1A1A1A] font-semibold">Read reviews from families</h3>
-                <p className="text-[#1A1A1A]/60 text-sm leading-relaxed mb-4">
+              <div className="relative z-10 flex flex-col items-center text-center mt-64">
+                <h3 className="text-xl mb-3 text-[#1A1A1A] font-semibold">Read reviews from families</h3>
+                <p className="text-[#1A1A1A]/60 text-sm leading-relaxed mb-6">
                   Discover what families are saying about specialists in your area
                 </p>
                 <button className="bg-[#0C6F3C] text-white px-5 py-2.5 rounded-xl hover:bg-[#0C6F3C]/90 transition-all shadow-sm text-sm">
@@ -192,14 +192,14 @@ export default function HomePage() {
             </div>
 
             {/* Right Box - Book Appointment */}
-            <div className="bg-[#FAF9F6] rounded-3xl p-6 pt-24 border border-[#1A1A1A]/5 relative overflow-visible group hover:shadow-xl hover:shadow-black/5 transition-all flex flex-col">
+            <div className="bg-[#FAF9F6] rounded-3xl p-8 border border-[#1A1A1A]/5 relative overflow-visible group hover:shadow-xl hover:shadow-black/5 transition-all flex flex-col">
               {/* Image overlapping the top */}
-              <div className="absolute -top-48 left-1/2 -translate-x-1/2 w-96 h-96 flex items-center justify-center">
+              <div className="absolute -top-52 left-1/2 -translate-x-1/2 w-[400px] h-[400px] flex items-center justify-center z-20">
                 <Image
                   src="/booking-image.png"
                   alt="Person holding book now sign"
-                  width={384}
-                  height={384}
+                  width={400}
+                  height={400}
                   className="w-full h-full object-contain"
                   style={{
                     filter: "brightness(1.1) contrast(1.05)",
@@ -208,9 +208,9 @@ export default function HomePage() {
                 />
               </div>
 
-              <div className="relative z-10 flex flex-col items-center text-center mt-48">
-                <h3 className="text-xl mb-2 text-[#1A1A1A] font-semibold">Book an appointment today</h3>
-                <p className="text-[#1A1A1A]/60 text-sm leading-relaxed mb-4">
+              <div className="relative z-10 flex flex-col items-center text-center mt-64">
+                <h3 className="text-xl mb-3 text-[#1A1A1A] font-semibold">Book an appointment today</h3>
+                <p className="text-[#1A1A1A]/60 text-sm leading-relaxed mb-6">
                   Schedule consultations with trusted funeral specialists online
                 </p>
                 <button className="bg-[#0C6F3C] text-white px-5 py-2.5 rounded-xl hover:bg-[#0C6F3C]/90 transition-all shadow-sm text-sm">
@@ -223,9 +223,9 @@ export default function HomePage() {
       </section>
 
       {/* FOR SPECIALISTS SECTION */}
-      <section className="py-24 px-4 bg-[#FAF9F6]">
+      <section className="py-20 px-4 bg-[#FAF9F6]">
         <div className="max-w-5xl mx-auto">
-          <div className="grid md:grid-cols-2 gap-16 items-center">
+          <div className="grid md:grid-cols-2 gap-20 items-center">
             {/* Left side - Image */}
             <div className="relative">
               <Image
@@ -243,11 +243,11 @@ export default function HomePage() {
                 Soradin for Specialists
               </h2>
 
-              <p className="text-2xl text-[#1A1A1A]/80 mb-8 leading-relaxed">
+              <p className="text-2xl text-[#1A1A1A]/80 mb-10 leading-relaxed">
                 Are you interested in filling out your calendar?
               </p>
 
-              <div className="space-y-5 mb-10">
+              <div className="space-y-6 mb-12">
                 <div className="flex items-start gap-4">
                   <div className="w-6 h-6 rounded-full bg-[#0C6F3C] flex items-center justify-center flex-shrink-0 mt-1">
                     <Check className="w-4 h-4 text-white" />
@@ -274,18 +274,18 @@ export default function HomePage() {
       </section>
 
       {/* TRUSTED PARTNERS */}
-      <section className="py-24 px-4 bg-[#FAF9F6]">
+      <section className="py-20 px-4 bg-[#FAF9F6]">
         <div className="max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
+          <div className="grid lg:grid-cols-2 gap-20 items-center">
             {/* Left side - Content */}
             <div>
-              <h2 className="text-5xl mb-8 text-[#1A1A1A] font-semibold tracking-tight leading-tight">
+              <h2 className="text-5xl mb-0 text-[#1A1A1A] font-semibold tracking-tight leading-tight">
                 Trusted by top funeral homes
               </h2>
             </div>
 
             {/* Right side - Logo Grid */}
-            <div className="grid grid-cols-3 gap-8">
+            <div className="grid grid-cols-3 gap-10">
               {[1, 2, 3, 4, 5, 6].map((index) => (
                 <div key={index} className="flex items-center justify-center">
                   {/* Empty bubble logo placeholder */}
@@ -300,13 +300,13 @@ export default function HomePage() {
       </section>
 
       {/* CITIES LIST */}
-      <section className="py-24 px-4 bg-[#D9C7A3]/20">
+      <section className="py-20 px-4 bg-[#D9C7A3]/20">
         <div className="max-w-7xl mx-auto">
-          <h2 className="text-4xl mb-12 text-[#1A1A1A] font-medium tracking-tight">
+          <h2 className="text-4xl mb-14 text-[#1A1A1A] font-medium tracking-tight">
             Find funeral specialists by city
           </h2>
 
-          <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
             {cities.map((city) => (
               <Link
                 key={city}
