@@ -55,18 +55,27 @@ function SearchResults() {
   const searchParams = useSearchParams();
   const query = searchParams.get("q") || "";
   const location = searchParams.get("location") || "";
+  const service = searchParams.get("service") || "";
   
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState(query);
   const [searchLocation, setSearchLocation] = useState(location);
+  const [searchService, setSearchService] = useState(service);
+
+  // Sync state with URL params when they change
+  useEffect(() => {
+    setSearchQuery(query);
+    setSearchLocation(location);
+    setSearchService(service);
+  }, [query, location, service]);
 
   useEffect(() => {
     async function loadAppointments() {
       setLoading(true);
       try {
-        // Fetch available appointments (pending, not hidden, not assigned)
-        const { data, error } = await supabaseClient
+        // Build query with filters
+        let query = supabaseClient
           .from("appointments")
           .select(`
             id,
@@ -86,7 +95,25 @@ function SearchResults() {
           `)
           .eq("status", "pending")
           .eq("is_hidden", false)
-          .is("agent_id", null)
+          .is("agent_id", null);
+
+        // Apply location filter at database level if provided
+        if (searchLocation) {
+          const locationLower = searchLocation.toLowerCase();
+          query = query.or(`city.ilike.%${locationLower}%,province.ilike.%${locationLower}%`);
+        }
+
+        // Apply service filter at database level if provided
+        if (searchService) {
+          query = query.ilike("service_type", `%${searchService}%`);
+        }
+
+        // Apply search query filter at database level if provided
+        if (searchQuery) {
+          query = query.ilike("service_type", `%${searchQuery}%`);
+        }
+
+        const { data, error } = await query
           .order("created_at", { ascending: false })
           .limit(50);
 
@@ -95,22 +122,40 @@ function SearchResults() {
           return;
         }
 
-        // Filter by search query and location if provided
+        // Filter by search query, location, and service if provided
         let filtered = (data || []) as AppointmentData[];
+        
         if (searchQuery) {
           filtered = filtered.filter((apt) => {
             const lead = Array.isArray(apt.leads) ? apt.leads[0] : apt.leads;
+            const queryLower = searchQuery.toLowerCase();
             return (
-              apt.service_type?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-              lead?.first_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-              lead?.last_name?.toLowerCase().includes(searchQuery.toLowerCase())
+              apt.service_type?.toLowerCase().includes(queryLower) ||
+              lead?.first_name?.toLowerCase().includes(queryLower) ||
+              lead?.last_name?.toLowerCase().includes(queryLower) ||
+              apt.city?.toLowerCase().includes(queryLower) ||
+              apt.province?.toLowerCase().includes(queryLower)
             );
           });
         }
+        
         if (searchLocation) {
+          const locationLower = searchLocation.toLowerCase();
+          filtered = filtered.filter((apt) => {
+            const lead = Array.isArray(apt.leads) ? apt.leads[0] : apt.leads;
+            return (
+              apt.city?.toLowerCase().includes(locationLower) ||
+              apt.province?.toLowerCase().includes(locationLower) ||
+              lead?.city?.toLowerCase().includes(locationLower) ||
+              lead?.province?.toLowerCase().includes(locationLower)
+            );
+          });
+        }
+        
+        if (searchService) {
+          const serviceLower = searchService.toLowerCase();
           filtered = filtered.filter((apt) => 
-            apt.city?.toLowerCase().includes(searchLocation.toLowerCase()) ||
-            apt.province?.toLowerCase().includes(searchLocation.toLowerCase())
+            apt.service_type?.toLowerCase().includes(serviceLower)
           );
         }
 
@@ -144,15 +189,20 @@ function SearchResults() {
     }
 
     loadAppointments();
-  }, [searchQuery, searchLocation]);
+  }, [searchQuery, searchLocation, searchService]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    // Update URL with new search params
+    // Update URL with new search params and reload
     const params = new URLSearchParams();
     if (searchQuery) params.set("q", searchQuery);
     if (searchLocation) params.set("location", searchLocation);
+    if (searchService) params.set("service", searchService);
     window.history.pushState({}, "", `/search?${params.toString()}`);
+    // Trigger reload by updating state
+    setSearchQuery(searchQuery);
+    setSearchLocation(searchLocation);
+    setSearchService(searchService);
   };
 
   // Generate availability slots for the next 8 days
@@ -228,6 +278,13 @@ function SearchResults() {
                   placeholder="Location"
                   value={searchLocation}
                   onChange={(e) => setSearchLocation(e.target.value)}
+                  className="w-32 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800"
+                />
+                <input
+                  type="text"
+                  placeholder="Service type"
+                  value={searchService}
+                  onChange={(e) => setSearchService(e.target.value)}
                   className="w-32 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800"
                 />
                 <button 
