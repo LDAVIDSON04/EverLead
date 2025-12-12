@@ -166,13 +166,22 @@ export default function HomePage() {
                       placeholder="Service or specialist"
                       className="w-full pl-12 pr-4 py-3 bg-transparent border-none focus:outline-none text-[#1A1A1A] placeholder:text-[#1A1A1A]/40"
                       value={specialty}
-                      onChange={(e) => setSpecialty(e.target.value)}
+                      onChange={(e) => {
+                        setSpecialty(e.target.value);
+                        setShowSpecialtyDropdown(true);
+                      }}
                       onFocus={() => setShowSpecialtyDropdown(true)}
-                      onBlur={() => setTimeout(() => setShowSpecialtyDropdown(false), 200)}
+                      onBlur={(e) => {
+                        // Delay closing to allow dropdown clicks
+                        const relatedTarget = e.relatedTarget as HTMLElement;
+                        if (!relatedTarget || !relatedTarget.closest('.dropdown-menu')) {
+                          setTimeout(() => setShowSpecialtyDropdown(false), 200);
+                        }
+                      }}
                     />
                     {/* Specialty Dropdown */}
                     {showSpecialtyDropdown && (
-                      <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto">
+                      <div className="dropdown-menu absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto">
                         <div className="p-2">
                           <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide px-3 py-2">
                             Popular specialties
@@ -181,7 +190,10 @@ export default function HomePage() {
                             <button
                               key={index}
                               type="button"
-                              onClick={() => handleSpecialtyChange(suggestion)}
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                handleSpecialtyChange(suggestion);
+                              }}
                               className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded text-sm text-[#1A1A1A]"
                             >
                               {suggestion}
@@ -213,17 +225,26 @@ export default function HomePage() {
                           setShowLocationDropdown(true);
                         }
                       }}
-                      onBlur={() => setTimeout(() => setShowLocationDropdown(false), 200)}
+                      onBlur={(e) => {
+                        // Delay closing to allow dropdown clicks
+                        const relatedTarget = e.relatedTarget as HTMLElement;
+                        if (!relatedTarget || !relatedTarget.closest('.location-dropdown')) {
+                          setTimeout(() => setShowLocationDropdown(false), 200);
+                        }
+                      }}
                     />
                     {/* Location Autocomplete Dropdown */}
                     {showLocationDropdown && locationSuggestions.length > 0 && (
-                      <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto">
+                      <div className="location-dropdown absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto">
                         <div className="p-2">
                           {locationSuggestions.map((city, index) => (
                             <button
                               key={index}
                               type="button"
-                              onClick={() => handleLocationSelect(city)}
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                handleLocationSelect(city);
+                              }}
                               className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded text-sm text-[#1A1A1A]"
                             >
                               {city}
