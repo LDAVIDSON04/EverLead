@@ -254,7 +254,12 @@ export default function AgentLandingPage() {
                   width={1200}
                   height={1800}
                   className="w-full h-auto max-w-4xl"
-                  style={{ imageRendering: 'crisp-edges', transform: 'scale(3) translateX(15%)' }}
+                  quality={100}
+                  priority
+                  style={{ 
+                    imageRendering: '-webkit-optimize-contrast', 
+                    transform: 'scale(3) translateX(15%) translateY(1cm)'
+                  }}
                 />
               </div>
             </div>
