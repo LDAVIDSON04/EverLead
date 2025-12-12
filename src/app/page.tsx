@@ -69,7 +69,7 @@ export default function HomePage() {
         </div>
 
         {/* Arm pointing illustration - positioned to point at Find care button */}
-        <div className="absolute hidden lg:block z-50" style={{ left: "-80px", bottom: "8%", width: "1500px", height: "auto" }}>
+        <div className="absolute hidden lg:block z-50" style={{ left: "-50px", bottom: "-50px", width: "1500px", height: "auto" }}>
           <Image
             src="/arm-image.png"
             alt=""
@@ -79,8 +79,7 @@ export default function HomePage() {
             style={{
               mixBlendMode: "multiply",
               imageRendering: "-webkit-optimize-contrast",
-              transform: "translateZ(0) rotate(15deg)",
-              transformOrigin: "bottom left",
+              transform: "translateZ(0)",
               backfaceVisibility: "hidden",
             }}
           />
