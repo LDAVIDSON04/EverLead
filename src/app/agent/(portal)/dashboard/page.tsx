@@ -150,7 +150,7 @@ export default function AgentDashboardPage() {
   const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   const today = new Date();
   const currentDay = today.getDay();
-  const calendarDates = [];
+  const calendarDates: number[] = [];
   
   // Get dates for current week
   for (let i = 0; i < 7; i++) {
