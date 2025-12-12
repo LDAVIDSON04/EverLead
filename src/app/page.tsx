@@ -42,9 +42,9 @@ export default function HomePage() {
 
           {/* Right Side Navigation */}
           <div className="flex items-center gap-6">
-            <button className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors">
+            <Link href="/create-account" className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors">
               List your Specialty
-            </button>
+            </Link>
             <Link href="/agent" className="bg-[#0C6F3C] text-white px-6 py-2.5 rounded-xl hover:bg-[#0C6F3C]/90 transition-all shadow-sm">
               Log in
             </Link>

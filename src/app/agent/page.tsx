@@ -36,6 +36,23 @@ export default function AgentLandingPage() {
   const [rememberMe, setRememberMe] = useState(false);
 
   useEffect(() => {
+    // Check for pre-filled signup data from create-account page
+    if (typeof window !== 'undefined') {
+      const signupData = sessionStorage.getItem('signupData');
+      if (signupData) {
+        try {
+          const data = JSON.parse(signupData);
+          setEmail(data.email || '');
+          setFullName(data.fullName || '');
+          setPassword(data.password || '');
+          setMode('signup');
+          sessionStorage.removeItem('signupData');
+        } catch (e) {
+          console.error('Error parsing signup data:', e);
+        }
+      }
+    }
+
     async function checkAuth() {
       try {
         const {
