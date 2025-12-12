@@ -4,7 +4,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Suspense, useState, useEffect } from "react";
-import { Search, Star, MapPin, Calendar, Clock, Stethoscope, Video, SlidersHorizontal, ChevronRight } from "lucide-react";
+import { Search, Star, MapPin, Calendar, Clock, Stethoscope, Video, SlidersHorizontal, ChevronRight, X } from "lucide-react";
 import { supabaseClient } from "@/lib/supabaseClient";
 
 type Appointment = {
@@ -62,6 +62,11 @@ function SearchResults() {
   const [searchQuery, setSearchQuery] = useState(query);
   const [searchLocation, setSearchLocation] = useState(location);
   const [searchService, setSearchService] = useState(service);
+  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+  const [selectedAppointmentIndex, setSelectedAppointmentIndex] = useState<number>(0);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [selectedTime, setSelectedTime] = useState<string | null>(null);
+  const [showMoreAvailability, setShowMoreAvailability] = useState(false);
 
   // Sync state with URL params when they change
   useEffect(() => {
@@ -230,6 +235,38 @@ function SearchResults() {
     return slots;
   };
 
+  // Generate time slots for a selected date
+  const generateTimeSlots = (dateString: string): string[] => {
+    // Generate time slots (9 AM to 5 PM, every hour)
+    const times = [];
+    for (let hour = 9; hour <= 17; hour++) {
+      const time = hour <= 12 
+        ? `${hour === 12 ? 12 : hour}:00 ${hour < 12 ? 'AM' : 'PM'}`
+        : `${hour - 12}:00 PM`;
+      times.push(time);
+    }
+    
+    // Randomly remove some times to simulate availability (keep 60-80% of slots)
+    return times.filter(() => Math.random() > 0.25);
+  };
+
+  const handleDayClick = (appointment: Appointment, slot: AvailabilitySlot, index: number) => {
+    if (slot.spots > 0) {
+      setSelectedAppointment(appointment);
+      setSelectedAppointmentIndex(index);
+      setSelectedDate(slot.date);
+      setShowMoreAvailability(false);
+    }
+  };
+
+  const closeModal = () => {
+    setSelectedAppointment(null);
+    setSelectedAppointmentIndex(0);
+    setSelectedDate(null);
+    setSelectedTime(null);
+    setShowMoreAvailability(false);
+  };
+
   const filters = [
     { icon: Calendar, label: "I'm flexible" },
     { icon: Clock, label: "Time of day" },
@@ -247,6 +284,133 @@ function SearchResults() {
 
   return (
     <div className="min-h-screen bg-white">
+      {/* Appointment Booking Modal */}
+      {selectedAppointment && selectedDate && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+          onClick={closeModal}
+        >
+          <div 
+            className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <h2 className="text-black text-xl font-semibold">Book an appointment</h2>
+              <button 
+                onClick={closeModal}
+                className="text-gray-500 hover:text-black transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Specialist Info */}
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-start gap-4">
+                <div className={`w-16 h-16 ${avatarColors[selectedAppointmentIndex % avatarColors.length]} rounded-full flex items-center justify-center flex-shrink-0`}>
+                  <span className="text-white text-2xl">
+                    {selectedAppointment.leads 
+                      ? `${selectedAppointment.leads.first_name || ''} ${selectedAppointment.leads.last_name || ''}`.trim()[0]?.toUpperCase() || 'S'
+                      : 'S'}
+                  </span>
+                </div>
+                
+                <div className="flex-1">
+                  <h3 className="text-black mb-1 text-lg font-semibold">
+                    {selectedAppointment.leads 
+                      ? `${selectedAppointment.leads.first_name || ''} ${selectedAppointment.leads.last_name || ''}`.trim() || 'Pre-need Specialist'
+                      : 'Pre-need Specialist'}
+                  </h3>
+                  <p className="text-gray-600 text-sm mb-2">
+                    {selectedAppointment.service_type || 'Pre-need Planning Specialist'}
+                  </p>
+                  
+                  <div className="flex items-center gap-1">
+                    <Star className="w-4 h-4 fill-green-600 text-green-600" />
+                    <span className="text-sm text-black">4.9</span>
+                    <span className="text-sm text-gray-500">· {Math.floor(Math.random() * 200 + 50)} reviews</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Available Appointments */}
+            <div className="p-6">
+              <h3 className="text-black mb-4 font-semibold">Available appointments</h3>
+              
+              {/* Selected Date */}
+              <div className="mb-6">
+                <p className="text-black mb-3 font-medium">{selectedDate.replace('\n', ', ')}</p>
+                <div className="flex flex-wrap gap-2">
+                  {generateTimeSlots(selectedDate).map((time, timeIdx) => {
+                    const isSelected = selectedTime === `${selectedDate}-${time}`;
+                    return (
+                      <button
+                        key={timeIdx}
+                        onClick={() => setSelectedTime(`${selectedDate}-${time}`)}
+                        className={`px-4 py-2 rounded-md text-sm transition-colors ${
+                          isSelected
+                            ? 'bg-green-600 text-white'
+                            : 'bg-green-100 text-black hover:bg-green-200'
+                        }`}
+                      >
+                        {time}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* More Availability */}
+              {!showMoreAvailability ? (
+                <button 
+                  onClick={() => setShowMoreAvailability(true)}
+                  className="text-black underline hover:no-underline text-sm"
+                >
+                  More availability
+                </button>
+              ) : (
+                <>
+                  {generateAvailability(selectedAppointment).slice(1).map((slot, idx) => {
+                    if (slot.date === selectedDate) return null;
+                    const times = generateTimeSlots(slot.date);
+                    if (times.length === 0) return null;
+                    
+                    return (
+                      <div key={idx} className="mb-6">
+                        <p className="text-black mb-3 font-medium">{slot.date.replace('\n', ', ')}</p>
+                        <div className="flex flex-wrap gap-2">
+                          {times.map((time, timeIdx) => {
+                            const isSelected = selectedTime === `${slot.date}-${time}`;
+                            return (
+                              <button
+                                key={timeIdx}
+                                onClick={() => setSelectedTime(`${slot.date}-${time}`)}
+                                className={`px-4 py-2 rounded-md text-sm transition-colors ${
+                                  isSelected
+                                    ? 'bg-green-600 text-white'
+                                    : 'bg-green-100 text-black hover:bg-green-200'
+                                }`}
+                              >
+                                {time}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  
+                  <button className="w-full py-3 px-4 border border-gray-300 rounded-md text-black hover:bg-gray-50 transition-colors mt-4">
+                    Show more availability
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
       {/* Header */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
         <div className="max-w-[1200px] mx-auto px-4 py-4">
@@ -395,10 +559,11 @@ function SearchResults() {
                             return (
                               <button
                                 key={slotIndex}
+                                onClick={() => hasSpots && handleDayClick(appointment, slot, index)}
                                 className={`
-                                  px-3 py-2 rounded-lg border text-center text-sm
+                                  px-3 py-2 rounded-lg border text-center text-sm transition-colors
                                   ${hasSpots 
-                                    ? 'bg-green-800 text-white border-green-800 hover:bg-green-900' 
+                                    ? 'bg-green-800 text-white border-green-800 hover:bg-green-900 cursor-pointer' 
                                     : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'}
                                 `}
                                 disabled={!hasSpots}
