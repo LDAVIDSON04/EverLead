@@ -69,7 +69,7 @@ export default function HomePage() {
         </div>
 
         {/* Arm pointing illustration - positioned to point at Find care button */}
-        <div className="absolute hidden lg:block z-50" style={{ left: "-150px", bottom: "15%", width: "1500px", height: "auto" }}>
+        <div className="absolute hidden lg:block z-50" style={{ left: "-50px", bottom: "-50px", width: "1500px", height: "auto" }}>
           <Image
             src="/arm-image.png"
             alt=""
@@ -79,7 +79,7 @@ export default function HomePage() {
             style={{
               mixBlendMode: "multiply",
               imageRendering: "-webkit-optimize-contrast",
-              transform: "translateZ(0) rotate(25deg)",
+              transform: "translateZ(0)",
               backfaceVisibility: "hidden",
             }}
           />
@@ -180,7 +180,7 @@ export default function HomePage() {
                 />
               </div>
 
-              <div className="relative z-10 flex flex-col items-center text-center mt-32">
+              <div className="relative z-10 flex flex-col items-center text-center mt-20">
                 <h3 className="text-xl mb-2 text-[#1A1A1A] font-semibold">
                   Read reviews from families
                 </h3>
@@ -210,7 +210,7 @@ export default function HomePage() {
                 />
               </div>
 
-              <div className="relative z-10 flex flex-col items-center text-center mt-32">
+              <div className="relative z-10 flex flex-col items-center text-center mt-20">
                 <h3 className="text-xl mb-2 text-[#1A1A1A] font-semibold">
                   Book an appointment today
                 </h3>
