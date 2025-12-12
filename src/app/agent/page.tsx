@@ -237,9 +237,9 @@ export default function AgentLandingPage() {
               <Image
                 src="/Soradin.png"
                 alt="Soradin Logo"
-                width={48}
-                height={48}
-                className="h-12 w-12 object-contain bg-emerald-700 rounded-lg p-2"
+                width={96}
+                height={96}
+                className="h-24 w-24 object-contain"
               />
             </Link>
           </div>
@@ -251,10 +251,10 @@ export default function AgentLandingPage() {
                 <Image
                   src="/login-illustration.png"
                   alt="Login Illustration"
-                  width={400}
-                  height={600}
-                  className="w-full h-auto max-w-md"
-                  style={{ imageRendering: 'crisp-edges' }}
+                  width={1200}
+                  height={1800}
+                  className="w-full h-auto max-w-4xl"
+                  style={{ imageRendering: 'crisp-edges', transform: 'scale(3)' }}
                 />
               </div>
             </div>
