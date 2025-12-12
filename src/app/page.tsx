@@ -25,7 +25,7 @@ export default function HomePage() {
           {/* Logo and Name */}
           <Link href="/" className="flex items-center gap-3">
             <Image
-              src="/logo - white.png"
+              src="/Soradin.png"
               alt="Soradin Logo"
               width={40}
               height={40}
