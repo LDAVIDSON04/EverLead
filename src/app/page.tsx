@@ -69,7 +69,7 @@ export default function HomePage() {
         </div>
 
         {/* Arm pointing illustration - positioned to point at Find care button */}
-        <div className="absolute hidden lg:block z-50" style={{ left: "-50px", bottom: "-50px", width: "1500px", height: "auto" }}>
+        <div className="absolute hidden lg:block z-50" style={{ left: "-50px", bottom: "-12px", width: "1500px", height: "auto" }}>
           <Image
             src="/arm-image.png"
             alt=""
