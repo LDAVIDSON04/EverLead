@@ -340,34 +340,34 @@ export default function HomePage() {
               {/* Column 1 - Soradin */}
               <div>
                 <h4 className="mb-6 text-lg font-medium">Soradin</h4>
-                <ul className="space-y-3 text-white/60">
+                <ul className="space-y-3">
                   <li>
-                    <Link href="#" className="hover:text-white transition-colors">
+                    <Link href="#" className="text-white/60 hover:text-white transition-colors">
                       Home
                     </Link>
                   </li>
                   <li>
-                    <Link href="#" className="hover:text-white transition-colors">
+                    <Link href="#" className="text-white/60 hover:text-white transition-colors">
                       About us
                     </Link>
                   </li>
                   <li>
-                    <Link href="#" className="hover:text-white transition-colors">
+                    <Link href="#" className="text-white/60 hover:text-white transition-colors">
                       Press
                     </Link>
                   </li>
                   <li>
-                    <Link href="#" className="hover:text-white transition-colors">
+                    <Link href="#" className="text-white/60 hover:text-white transition-colors">
                       Careers
                     </Link>
                   </li>
                   <li>
-                    <Link href="#" className="hover:text-white transition-colors">
+                    <Link href="#" className="text-white/60 hover:text-white transition-colors">
                       Contact us
                     </Link>
                   </li>
                   <li>
-                    <Link href="#" className="hover:text-white transition-colors">
+                    <Link href="#" className="text-white/60 hover:text-white transition-colors">
                       Help
                     </Link>
                   </li>
@@ -377,29 +377,29 @@ export default function HomePage() {
               {/* Column 2 - Discover */}
               <div>
                 <h4 className="mb-6 text-lg font-medium">Discover</h4>
-                <ul className="space-y-3 text-white/60">
+                <ul className="space-y-3">
                   <li>
-                    <Link href="#" className="hover:text-white transition-colors">
+                    <Link href="#" className="text-white/60 hover:text-white transition-colors">
                       Stories for families
                     </Link>
                   </li>
                   <li>
-                    <Link href="#" className="hover:text-white transition-colors">
+                    <Link href="#" className="text-white/60 hover:text-white transition-colors">
                       Resources for specialists
                     </Link>
                   </li>
                   <li>
-                    <Link href="#" className="hover:text-white transition-colors">
+                    <Link href="#" className="text-white/60 hover:text-white transition-colors">
                       Community Standards
                     </Link>
                   </li>
                   <li>
-                    <Link href="#" className="hover:text-white transition-colors">
+                    <Link href="#" className="text-white/60 hover:text-white transition-colors">
                       Data and privacy
                     </Link>
                   </li>
                   <li>
-                    <Link href="#" className="hover:text-white transition-colors">
+                    <Link href="#" className="text-white/60 hover:text-white transition-colors">
                       Verified reviews
                     </Link>
                   </li>
@@ -409,19 +409,19 @@ export default function HomePage() {
               {/* Column 3 - For Specialists */}
               <div>
                 <h4 className="mb-6 text-lg font-medium">For Specialists</h4>
-                <ul className="space-y-3 text-white/60">
+                <ul className="space-y-3">
                   <li>
-                    <Link href="#" className="hover:text-white transition-colors">
+                    <Link href="#" className="text-white/60 hover:text-white transition-colors">
                       List your practice
                     </Link>
                   </li>
                   <li>
-                    <Link href="#" className="hover:text-white transition-colors">
+                    <Link href="#" className="text-white/60 hover:text-white transition-colors">
                       Pricing
                     </Link>
                   </li>
                   <li>
-                    <Link href="#" className="hover:text-white transition-colors">
+                    <Link href="#" className="text-white/60 hover:text-white transition-colors">
                       Partner resources
                     </Link>
                   </li>
@@ -431,24 +431,24 @@ export default function HomePage() {
               {/* Column 4 - Services */}
               <div>
                 <h4 className="mb-6 text-lg font-medium">Services</h4>
-                <ul className="space-y-3 text-white/60">
+                <ul className="space-y-3">
                   <li>
-                    <Link href="#" className="hover:text-white transition-colors">
+                    <Link href="#" className="text-white/60 hover:text-white transition-colors">
                       Funeral Planning
                     </Link>
                   </li>
                   <li>
-                    <Link href="#" className="hover:text-white transition-colors">
+                    <Link href="#" className="text-white/60 hover:text-white transition-colors">
                       Estate Planning
                     </Link>
                   </li>
                   <li>
-                    <Link href="#" className="hover:text-white transition-colors">
+                    <Link href="#" className="text-white/60 hover:text-white transition-colors">
                       Grief Counseling
                     </Link>
                   </li>
                   <li>
-                    <Link href="#" className="hover:text-white transition-colors">
+                    <Link href="#" className="text-white/60 hover:text-white transition-colors">
                       Memorial Services
                     </Link>
                   </li>
@@ -458,19 +458,19 @@ export default function HomePage() {
               {/* Column 5 - Are you a specialist */}
               <div>
                 <h4 className="mb-6 text-lg font-medium">Are you a funeral specialist?</h4>
-                <ul className="space-y-3 text-white/60">
+                <ul className="space-y-3">
                   <li>
-                    <Link href="#" className="hover:text-white transition-colors">
+                    <Link href="#" className="text-white/60 hover:text-white transition-colors">
                       List your practice on Soradin
                     </Link>
                   </li>
                   <li>
-                    <Link href="#" className="hover:text-white transition-colors">
+                    <Link href="#" className="text-white/60 hover:text-white transition-colors">
                       Become a partner
                     </Link>
                   </li>
                   <li>
-                    <Link href="#" className="hover:text-white transition-colors">
+                    <Link href="#" className="text-white/60 hover:text-white transition-colors">
                       Learn about solutions
                     </Link>
                   </li>
