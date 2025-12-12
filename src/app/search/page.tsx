@@ -24,6 +24,28 @@ type Appointment = {
   } | null;
 };
 
+type AppointmentData = {
+  id: any;
+  requested_date: any;
+  requested_window: any;
+  status: any;
+  city: any;
+  province: any;
+  service_type: any;
+  price_cents: any;
+  leads: {
+    first_name: any;
+    last_name: any;
+    city: any;
+    province: any;
+  } | null | Array<{
+    first_name: any;
+    last_name: any;
+    city: any;
+    province: any;
+  }>;
+};
+
 type AvailabilitySlot = {
   date: string;
   spots: number;
@@ -74,22 +96,46 @@ function SearchResults() {
         }
 
         // Filter by search query and location if provided
-        let filtered = data || [];
+        let filtered = (data || []) as AppointmentData[];
         if (searchQuery) {
-          filtered = filtered.filter((apt: Appointment) => 
-            apt.service_type?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            apt.leads?.first_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            apt.leads?.last_name?.toLowerCase().includes(searchQuery.toLowerCase())
-          );
+          filtered = filtered.filter((apt) => {
+            const lead = Array.isArray(apt.leads) ? apt.leads[0] : apt.leads;
+            return (
+              apt.service_type?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+              lead?.first_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+              lead?.last_name?.toLowerCase().includes(searchQuery.toLowerCase())
+            );
+          });
         }
         if (searchLocation) {
-          filtered = filtered.filter((apt: Appointment) => 
+          filtered = filtered.filter((apt) => 
             apt.city?.toLowerCase().includes(searchLocation.toLowerCase()) ||
             apt.province?.toLowerCase().includes(searchLocation.toLowerCase())
           );
         }
 
-        setAppointments(filtered as Appointment[]);
+        // Map to Appointment type, handling array or single object for leads
+        const mappedAppointments: Appointment[] = filtered.map((apt) => {
+          const lead = Array.isArray(apt.leads) ? apt.leads[0] : apt.leads;
+          return {
+            id: apt.id,
+            requested_date: apt.requested_date,
+            requested_window: apt.requested_window,
+            status: apt.status,
+            city: apt.city,
+            province: apt.province,
+            service_type: apt.service_type,
+            price_cents: apt.price_cents,
+            leads: lead ? {
+              first_name: lead.first_name,
+              last_name: lead.last_name,
+              city: lead.city,
+              province: lead.province,
+            } : null,
+          };
+        });
+
+        setAppointments(mappedAppointments);
       } catch (err) {
         console.error("Error:", err);
       } finally {
