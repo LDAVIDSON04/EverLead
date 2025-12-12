@@ -2,9 +2,11 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabaseClient } from "@/lib/supabaseClient";
+import { Lock, User, Eye, EyeOff } from "lucide-react";
 
 type Mode = "login" | "signup";
 
@@ -29,6 +31,9 @@ export default function AgentLandingPage() {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
   const [forgotPasswordSent, setForgotPasswordSent] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
 
   useEffect(() => {
     async function checkAuth() {
@@ -38,7 +43,6 @@ export default function AgentLandingPage() {
         } = await supabaseClient.auth.getUser();
 
         if (user) {
-          // User is authenticated, check if they're an agent
           const { data: profile } = await supabaseClient
             .from("profiles")
             .select("role")
@@ -47,7 +51,6 @@ export default function AgentLandingPage() {
 
           const role = profile?.role;
 
-          // If agent, redirect to dashboard; if admin, redirect to admin dashboard
           if (role === "agent") {
             router.push("/agent/dashboard");
             return;
@@ -57,7 +60,6 @@ export default function AgentLandingPage() {
           }
         }
 
-        // Not authenticated or not an agent/admin, show the portal page
         setLoading(false);
       } catch (error) {
         console.error("Error checking auth:", error);
@@ -75,39 +77,34 @@ export default function AgentLandingPage() {
 
     try {
       if (mode === "signup") {
-        // Validate all required fields
         if (!fullName || !email || !password || !confirmPassword || !phone || !funeralHome || !licensedInProvince || !licensedFuneralDirector) {
           setError("Please fill in all required fields.");
           setSubmitting(false);
           return;
         }
 
-        // Validate passwords match
         if (password !== confirmPassword) {
           setError("Passwords do not match. Please try again.");
           setSubmitting(false);
           return;
         }
 
-        // Validate password length
         if (password.length < 6) {
           setError("Password must be at least 6 characters long.");
           setSubmitting(false);
           return;
         }
 
-        // Validate notification cities (at least one required)
         if (notificationCities.length === 0) {
           setError("Please add at least one city where you'd like to receive notifications.");
           setSubmitting(false);
           return;
         }
 
-        // Call API route for signup
         const response = await fetch("/api/agent/signup", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
+          body: JSON.stringify({
             email,
             password,
             full_name: fullName,
@@ -122,31 +119,18 @@ export default function AgentLandingPage() {
         const data = await response.json();
 
         if (!response.ok) {
-          // Show user-friendly error message
           let errorMessage = data.error || "Failed to create account. Please try again.";
-          
-          // Include details if available (for debugging)
           if (data.details && process.env.NODE_ENV === "development") {
             errorMessage += ` (${data.details})`;
           }
-          
-          console.error("Signup error:", {
-            status: response.status,
-            error: data.error,
-            details: data.details,
-            fullResponse: data,
-          });
-          
           setError(errorMessage);
           setSubmitting(false);
           return;
         }
 
-        // Show success modal
         setShowSuccessModal(true);
         setSubmitting(false);
         
-        // Reset form
         setFullName("");
         setEmail("");
         setPassword("");
@@ -182,7 +166,6 @@ export default function AgentLandingPage() {
           return;
         }
 
-        // Check approval status for agents
         if (profile.role === "agent" && profile.approval_status !== "approved") {
           setError("Your account is pending approval. You will receive an email when your account is approved.");
           setSubmitting(false);
@@ -214,18 +197,13 @@ export default function AgentLandingPage() {
     }
 
     try {
-      console.log("🔐 [CLIENT] Requesting password reset for:", forgotPasswordEmail);
-      
-      // Use custom API route that sends email via Resend with Soradin branding
       const response = await fetch("/api/agent/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: forgotPasswordEmail }),
       });
 
-      console.log("🔐 [CLIENT] Response status:", response.status);
       const data = await response.json();
-      console.log("🔐 [CLIENT] Response data:", data);
 
       if (!response.ok) {
         setError(data.error || "Failed to send reset email. Please try again.");
@@ -233,7 +211,7 @@ export default function AgentLandingPage() {
         setForgotPasswordSent(true);
       }
     } catch (err) {
-      console.error("🔐 [CLIENT] Forgot password unexpected error:", err);
+      console.error("Forgot password error:", err);
       setError("An unexpected error occurred. Please try again.");
     } finally {
       setSubmitting(false);
@@ -242,514 +220,494 @@ export default function AgentLandingPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-[#faf8f5] text-[#2a2a2a] flex items-center justify-center">
-        <p className="text-sm text-[#6b6b6b]">Loading...</p>
+      <main className="min-h-screen bg-zinc-200 flex items-center justify-center">
+        <p className="text-sm text-zinc-600">Loading...</p>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-[#faf8f5] text-[#2a2a2a]">
-      {/* Public Header - No logout button */}
-      <header className="border-b border-[#ded3c2] bg-white">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
-          <div className="flex flex-col">
-            <Link href="/" className="text-xl font-semibold tracking-tight text-[#2a2a2a]">
-              Soradin
+    <main className="min-h-screen flex items-center justify-center bg-zinc-200 p-8">
+      <div className="w-full max-w-6xl">
+        {/* Login Card */}
+        <div className="bg-white rounded-3xl shadow-lg overflow-hidden relative">
+          {/* Logo at top left */}
+          <div className="absolute top-8 left-8 z-10">
+            <Link href="/">
+              <Image
+                src="/Soradin.png"
+                alt="Soradin Logo"
+                width={48}
+                height={48}
+                className="h-12 w-12 object-contain bg-emerald-700 rounded-lg p-2"
+              />
             </Link>
-            <span className="text-[11px] uppercase tracking-[0.18em] text-[#6b6b6b] mt-0.5">
-              For professionals
-            </span>
           </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2">
+            {/* Left Side - Illustration */}
+            <div className="hidden lg:flex items-center justify-center p-12 bg-gradient-to-br from-emerald-50 to-green-50">
+              <div className="w-full h-full min-h-[600px] flex items-center justify-center">
+                <Image
+                  src="/login-illustration.png"
+                  alt="Login Illustration"
+                  width={400}
+                  height={600}
+                  className="w-full h-auto max-w-md"
+                  style={{ imageRendering: 'crisp-edges' }}
+                />
+              </div>
+            </div>
 
-          <nav className="flex items-center gap-5 text-sm">
-            <Link
-              href="/"
-              className="text-xs text-[#6b6b6b] hover:text-[#2a2a2a] transition-colors"
-            >
-              For families
-            </Link>
-          </nav>
-        </div>
-      </header>
+            {/* Right Side - Form */}
+            <div className="flex flex-col p-8 lg:p-16">
+              <h1 className="text-black mb-8 lg:mb-12 text-4xl lg:text-5xl font-bold">
+                {mode === "login" ? "Log In" : "Create Account"}
+              </h1>
 
-      {/* Main Content */}
-      <section className="mx-auto max-w-4xl px-6 py-16 md:py-24">
-        <div className="mb-12 text-center">
-          <h1
-            className="mb-4 text-4xl font-normal leading-tight text-[#2a2a2a] md:text-5xl"
-            style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-          >
-            Soradin for funeral professionals
-          </h1>
-          <p className="mx-auto max-w-2xl text-base leading-relaxed text-[#4a4a4a] md:text-lg">
-            Soradin connects you with exclusive pre-need planning appointments from families actively seeking guidance.
-          </p>
-        </div>
-
-        {/* Login/Signup Form */}
-        <div className="mx-auto max-w-md">
-          <div className="mb-6 flex rounded-full bg-[#f7f4ef] p-1 text-sm font-medium">
-            <button
-              type="button"
-              onClick={() => {
-                setMode("login");
-                setError(null);
-              }}
-              className={`flex-1 rounded-full px-4 py-2 transition-colors ${
-                mode === "login"
-                  ? "bg-white text-[#2a2a2a] shadow-sm"
-                  : "text-[#6b6b6b] hover:text-[#2a2a2a]"
-              }`}
-            >
-              Sign in
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setMode("signup");
-                setError(null);
-                setShowSuccessModal(false);
-              }}
-              className={`flex-1 rounded-full px-4 py-2 transition-colors ${
-                mode === "signup"
-                  ? "bg-white text-[#2a2a2a] shadow-sm"
-                  : "text-[#6b6b6b] hover:text-[#2a2a2a]"
-              }`}
-            >
-              Create account
-            </button>
-          </div>
-
-          {showForgotPassword ? (
-            <div className="rounded-lg border border-[#ded3c2] bg-white p-6 shadow-sm">
-              {forgotPasswordSent ? (
-                <div className="space-y-4">
-                  <h2 className="text-lg font-semibold text-[#2a2a2a]">Check your email</h2>
-                  <p className="text-sm text-[#4a4a4a]">
-                    We've sent a password reset link to <strong>{forgotPasswordEmail}</strong>. 
-                    Please check your email and click the link to reset your password.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowForgotPassword(false);
-                      setForgotPasswordSent(false);
-                      setForgotPasswordEmail("");
-                    }}
-                    className="w-full rounded-md bg-[#2a2a2a] px-4 py-2 text-sm font-medium text-white hover:bg-[#3a3a3a] transition-colors"
-                  >
-                    Back to login
-                  </button>
-                </div>
+              {showForgotPassword ? (
+                <form onSubmit={handleForgotPassword} className="space-y-6">
+                  {forgotPasswordSent ? (
+                    <div className="space-y-4">
+                      <h2 className="text-xl font-semibold text-black">Check your email</h2>
+                      <p className="text-sm text-zinc-600">
+                        We've sent a password reset link to <strong>{forgotPasswordEmail}</strong>. 
+                        Please check your email and click the link to reset your password.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowForgotPassword(false);
+                          setForgotPasswordSent(false);
+                          setForgotPasswordEmail("");
+                        }}
+                        className="bg-emerald-700 hover:bg-emerald-800 text-white px-14 py-3 rounded-lg transition-all shadow-md hover:shadow-lg"
+                      >
+                        Back to login
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <h2 className="text-xl font-semibold text-black">Reset your password</h2>
+                      <p className="text-sm text-zinc-600">
+                        Enter your email address and we'll send you a link to reset your password.
+                      </p>
+                      <div className="relative">
+                        <div className="absolute left-0 top-1/2 -translate-y-1/2">
+                          <User className="h-5 w-5 text-zinc-600" />
+                        </div>
+                        <input
+                          type="email"
+                          value={forgotPasswordEmail}
+                          onChange={(e) => setForgotPasswordEmail(e.target.value)}
+                          className="w-full pl-8 pr-4 py-3 bg-transparent border-b-2 border-zinc-300 text-black focus:outline-none focus:border-emerald-700 transition-colors placeholder:text-zinc-400"
+                          placeholder="Email"
+                          required
+                        />
+                      </div>
+                      {error && (
+                        <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2">
+                          <p className="text-xs text-red-600">{error}</p>
+                        </div>
+                      )}
+                      <div className="pt-6 flex gap-2">
+                        <button
+                          type="submit"
+                          disabled={submitting}
+                          className="bg-emerald-700 hover:bg-emerald-800 text-white px-14 py-3 rounded-lg transition-all shadow-md hover:shadow-lg disabled:opacity-70 disabled:cursor-not-allowed"
+                        >
+                          {submitting ? "Sending..." : "Send reset link"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowForgotPassword(false);
+                            setForgotPasswordEmail("");
+                            setError(null);
+                          }}
+                          className="px-6 py-3 border-2 border-zinc-300 text-zinc-700 rounded-lg hover:bg-zinc-50 transition-colors"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </form>
               ) : (
-                <form onSubmit={handleForgotPassword} className="space-y-4">
-                  <h2 className="text-lg font-semibold text-[#2a2a2a]">Reset your password</h2>
-                  <p className="text-sm text-[#4a4a4a]">
-                    Enter your email address and we'll send you a link to reset your password.
-                  </p>
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-[#4a4a4a]">
-                      Email
-                    </label>
+                <form onSubmit={handleSubmit} className="space-y-6 lg:space-y-8">
+                  {mode === "signup" && (
+                    <>
+                      <div className="relative">
+                        <div className="absolute left-0 top-1/2 -translate-y-1/2">
+                          <User className="h-5 w-5 text-zinc-600" />
+                        </div>
+                        <input
+                          type="text"
+                          value={fullName}
+                          onChange={(e) => setFullName(e.target.value)}
+                          className="w-full pl-8 pr-4 py-3 bg-transparent border-b-2 border-zinc-300 text-black focus:outline-none focus:border-emerald-700 transition-colors placeholder:text-zinc-400"
+                          placeholder="Full name"
+                          required
+                        />
+                      </div>
+
+                      <div className="relative">
+                        <div className="absolute left-0 top-1/2 -translate-y-1/2">
+                          <User className="h-5 w-5 text-zinc-600" />
+                        </div>
+                        <input
+                          type="tel"
+                          value={phone}
+                          onChange={(e) => setPhone(e.target.value)}
+                          className="w-full pl-8 pr-4 py-3 bg-transparent border-b-2 border-zinc-300 text-black focus:outline-none focus:border-emerald-700 transition-colors placeholder:text-zinc-400"
+                          placeholder="Phone number"
+                          required
+                        />
+                      </div>
+
+                      <div className="relative">
+                        <div className="absolute left-0 top-1/2 -translate-y-1/2">
+                          <User className="h-5 w-5 text-zinc-600" />
+                        </div>
+                        <input
+                          type="text"
+                          value={funeralHome}
+                          onChange={(e) => setFuneralHome(e.target.value)}
+                          className="w-full pl-8 pr-4 py-3 bg-transparent border-b-2 border-zinc-300 text-black focus:outline-none focus:border-emerald-700 transition-colors placeholder:text-zinc-400"
+                          placeholder="Funeral home or agency"
+                          required
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="block text-sm text-zinc-700">Are you licensed in your province? *</label>
+                        <div className="flex gap-4">
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="radio"
+                              name="licensed_in_province"
+                              value="yes"
+                              checked={licensedInProvince === "yes"}
+                              onChange={(e) => setLicensedInProvince(e.target.value as "yes" | "no")}
+                              className="w-4 h-4 text-emerald-700"
+                              required
+                            />
+                            <span className="text-sm text-zinc-700">Yes</span>
+                          </label>
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="radio"
+                              name="licensed_in_province"
+                              value="no"
+                              checked={licensedInProvince === "no"}
+                              onChange={(e) => setLicensedInProvince(e.target.value as "yes" | "no")}
+                              className="w-4 h-4 text-emerald-700"
+                              required
+                            />
+                            <span className="text-sm text-zinc-700">No</span>
+                          </label>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="block text-sm text-zinc-700">Are you a licensed funeral director? *</label>
+                        <div className="flex gap-4">
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="radio"
+                              name="licensed_funeral_director"
+                              value="yes"
+                              checked={licensedFuneralDirector === "yes"}
+                              onChange={(e) => setLicensedFuneralDirector(e.target.value as "yes" | "no")}
+                              className="w-4 h-4 text-emerald-700"
+                              required
+                            />
+                            <span className="text-sm text-zinc-700">Yes</span>
+                          </label>
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="radio"
+                              name="licensed_funeral_director"
+                              value="no"
+                              checked={licensedFuneralDirector === "no"}
+                              onChange={(e) => setLicensedFuneralDirector(e.target.value as "yes" | "no")}
+                              className="w-4 h-4 text-emerald-700"
+                              required
+                            />
+                            <span className="text-sm text-zinc-700">No</span>
+                          </label>
+                        </div>
+                      </div>
+
+                      <div className="space-y-3 border-t border-zinc-200 pt-4">
+                        <label className="block text-sm text-zinc-700">Which cities would you like to receive notifications for? *</label>
+                        <p className="text-xs text-zinc-500">
+                          You'll receive email notifications when new leads are posted in these cities.
+                        </p>
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={newCity}
+                            onChange={(e) => setNewCity(e.target.value)}
+                            placeholder="City name"
+                            className="flex-1 px-3 py-2 border-b-2 border-zinc-300 bg-transparent text-black focus:outline-none focus:border-emerald-700 placeholder:text-zinc-400"
+                          />
+                          <select
+                            value={newProvince}
+                            onChange={(e) => setNewProvince(e.target.value)}
+                            className="w-24 px-3 py-2 border-b-2 border-zinc-300 bg-transparent text-black focus:outline-none focus:border-emerald-700"
+                          >
+                            <option value="BC">BC</option>
+                            <option value="AB">AB</option>
+                            <option value="SK">SK</option>
+                            <option value="MB">MB</option>
+                            <option value="ON">ON</option>
+                            <option value="QC">QC</option>
+                            <option value="NB">NB</option>
+                            <option value="NS">NS</option>
+                            <option value="PE">PE</option>
+                            <option value="NL">NL</option>
+                            <option value="YT">YT</option>
+                            <option value="NT">NT</option>
+                            <option value="NU">NU</option>
+                          </select>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (newCity.trim()) {
+                                const cityLower = newCity.trim().toLowerCase();
+                                const provinceUpper = newProvince.toUpperCase();
+                                const exists = notificationCities.some(
+                                  c => c.city.toLowerCase() === cityLower && c.province.toUpperCase() === provinceUpper
+                                );
+                                if (!exists) {
+                                  setNotificationCities([...notificationCities, { city: newCity.trim(), province: newProvince }]);
+                                  setNewCity("");
+                                } else {
+                                  setError("This city is already in your list.");
+                                }
+                              }
+                            }}
+                            className="bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-2 rounded-lg transition-all"
+                          >
+                            Add
+                          </button>
+                        </div>
+                        {notificationCities.length > 0 && (
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            {notificationCities.map((cityObj, index) => (
+                              <span
+                                key={index}
+                                className="inline-flex items-center gap-1.5 rounded-full bg-zinc-100 px-3 py-1.5 text-xs font-medium text-zinc-700"
+                              >
+                                {cityObj.city}, {cityObj.province}
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setNotificationCities(notificationCities.filter((_, i) => i !== index));
+                                  }}
+                                  className="text-zinc-500 hover:text-zinc-700"
+                                >
+                                  ×
+                                </button>
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
+
+                  {/* Email Field */}
+                  <div className="relative">
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2">
+                      <User className="h-5 w-5 text-zinc-600" />
+                    </div>
                     <input
                       type="email"
-                      value={forgotPasswordEmail}
-                      onChange={(e) => setForgotPasswordEmail(e.target.value)}
-                      className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-[#2a2a2a] outline-none focus:border-[#2a2a2a] focus:ring-1 focus:ring-[#2a2a2a]"
-                      placeholder="you@example.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full pl-8 pr-4 py-3 bg-transparent border-b-2 border-zinc-300 text-black focus:outline-none focus:border-emerald-700 transition-colors placeholder:text-zinc-400"
+                      placeholder="Email"
                       required
                     />
                   </div>
+
+                  {/* Password Field */}
+                  <div className="relative">
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2">
+                      <Lock className="h-5 w-5 text-zinc-600" />
+                    </div>
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full pl-8 pr-12 py-3 bg-transparent border-b-2 border-zinc-300 text-black focus:outline-none focus:border-emerald-700 transition-colors placeholder:text-zinc-400"
+                      placeholder="Password"
+                      required
+                      minLength={6}
+                    />
+                    <div
+                      className="absolute right-0 top-1/2 -translate-y-1/2 cursor-pointer"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-5 w-5 text-zinc-600" />
+                      ) : (
+                        <Eye className="h-5 w-5 text-zinc-600" />
+                      )}
+                    </div>
+                  </div>
+
+                  {mode === "signup" && (
+                    <div className="relative">
+                      <div className="absolute left-0 top-1/2 -translate-y-1/2">
+                        <Lock className="h-5 w-5 text-zinc-600" />
+                      </div>
+                      <input
+                        type={showConfirmPassword ? 'text' : 'password'}
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        className="w-full pl-8 pr-12 py-3 bg-transparent border-b-2 border-zinc-300 text-black focus:outline-none focus:border-emerald-700 transition-colors placeholder:text-zinc-400"
+                        placeholder="Confirm password"
+                        required
+                        minLength={6}
+                      />
+                      <div
+                        className="absolute right-0 top-1/2 -translate-y-1/2 cursor-pointer"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      >
+                        {showConfirmPassword ? (
+                          <EyeOff className="h-5 w-5 text-zinc-600" />
+                        ) : (
+                          <Eye className="h-5 w-5 text-zinc-600" />
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {mode === "login" && (
+                    <div className="flex items-center pt-2">
+                      <input
+                        type="checkbox"
+                        id="remember"
+                        checked={rememberMe}
+                        onChange={(e) => setRememberMe(e.target.checked)}
+                        className="w-5 h-5 text-emerald-700 bg-white border-2 border-zinc-400 rounded cursor-pointer appearance-none checked:bg-emerald-700 checked:border-emerald-700"
+                      />
+                      <label htmlFor="remember" className="ml-3 text-zinc-700 cursor-pointer">
+                        Remember me
+                      </label>
+                    </div>
+                  )}
+
                   {error && (
                     <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2">
                       <p className="text-xs text-red-600">{error}</p>
                     </div>
                   )}
-                  <div className="flex gap-2">
+
+                  {/* Submit Button */}
+                  <div className="pt-6">
                     <button
                       type="submit"
                       disabled={submitting}
-                      className="flex-1 rounded-md bg-[#2a2a2a] px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-[#3a3a3a] disabled:cursor-not-allowed disabled:opacity-70 transition-colors"
+                      className="bg-emerald-700 hover:bg-emerald-800 text-white px-14 py-3 rounded-lg transition-all shadow-md hover:shadow-lg disabled:opacity-70 disabled:cursor-not-allowed"
                     >
-                      {submitting ? "Sending..." : "Send reset link"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowForgotPassword(false);
-                        setForgotPasswordEmail("");
-                        setError(null);
-                      }}
-                      className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-[#2a2a2a] hover:bg-gray-50 transition-colors"
-                    >
-                      Cancel
+                      {submitting
+                        ? "Please wait..."
+                        : mode === "login"
+                        ? "Log in"
+                        : "Submit for approval"}
                     </button>
                   </div>
                 </form>
               )}
-            </div>
-          ) : (
-          <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border border-[#ded3c2] bg-white p-6 shadow-sm">
-              {mode === "signup" && (
-                <>
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-[#4a4a4a]">
-                      Full name *
-                    </label>
-                    <input
-                      type="text"
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-[#2a2a2a] outline-none focus:border-[#2a2a2a] focus:ring-1 focus:ring-[#2a2a2a]"
-                      placeholder="Jane Doe"
-                      required
-                    />
-                  </div>
 
+              {/* Bottom Section */}
+              <div className="pt-8">
+                {mode === "login" && !showForgotPassword && (
                   <div className="space-y-2">
-                    <label className="block text-sm font-medium text-[#4a4a4a]">
-                      Phone number *
-                    </label>
-                    <input
-                      type="tel"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-[#2a2a2a] outline-none focus:border-[#2a2a2a] focus:ring-1 focus:ring-[#2a2a2a]"
-                      placeholder="(555) 123-4567"
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-[#4a4a4a]">
-                      Funeral home or agency *
-                    </label>
-                    <input
-                      type="text"
-                      value={funeralHome}
-                      onChange={(e) => setFuneralHome(e.target.value)}
-                      className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-[#2a2a2a] outline-none focus:border-[#2a2a2a] focus:ring-1 focus:ring-[#2a2a2a]"
-                      placeholder="Smith Funeral Home"
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-[#4a4a4a]">
-                      Are you licensed in your province? *
-                    </label>
-                    <div className="flex gap-4">
-                      <label className="flex items-center gap-2">
-                        <input
-                          type="radio"
-                          name="licensed_in_province"
-                          value="yes"
-                          checked={licensedInProvince === "yes"}
-                          onChange={(e) => setLicensedInProvince(e.target.value as "yes" | "no")}
-                          className="text-[#2a2a2a]"
-                          required
-                        />
-                        <span className="text-sm text-[#4a4a4a]">Yes</span>
-                      </label>
-                      <label className="flex items-center gap-2">
-                        <input
-                          type="radio"
-                          name="licensed_in_province"
-                          value="no"
-                          checked={licensedInProvince === "no"}
-                          onChange={(e) => setLicensedInProvince(e.target.value as "yes" | "no")}
-                          className="text-[#2a2a2a]"
-                          required
-                        />
-                        <span className="text-sm text-[#4a4a4a]">No</span>
-                      </label>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-[#4a4a4a]">
-                      Are you a licensed funeral director? *
-                    </label>
-                    <div className="flex gap-4">
-                      <label className="flex items-center gap-2">
-                        <input
-                          type="radio"
-                          name="licensed_funeral_director"
-                          value="yes"
-                          checked={licensedFuneralDirector === "yes"}
-                          onChange={(e) => setLicensedFuneralDirector(e.target.value as "yes" | "no")}
-                          className="text-[#2a2a2a]"
-                          required
-                        />
-                        <span className="text-sm text-[#4a4a4a]">Yes</span>
-                      </label>
-                      <label className="flex items-center gap-2">
-                        <input
-                          type="radio"
-                          name="licensed_funeral_director"
-                          value="no"
-                          checked={licensedFuneralDirector === "no"}
-                          onChange={(e) => setLicensedFuneralDirector(e.target.value as "yes" | "no")}
-                          className="text-[#2a2a2a]"
-                          required
-                        />
-                        <span className="text-sm text-[#4a4a4a]">No</span>
-                      </label>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3 border-t border-[#ded3c2] pt-4">
-                    <label className="block text-sm font-medium text-[#4a4a4a]">
-                      Which cities would you like to receive notifications for? *
-                    </label>
-                    <p className="text-xs text-[#6b6b6b]">
-                      You'll receive email notifications when new leads are posted in these cities. Add multiple cities if you serve multiple areas.
-                    </p>
-                    
-                    {/* Add city form */}
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={newCity}
-                        onChange={(e) => setNewCity(e.target.value)}
-                        placeholder="City name"
-                        className="flex-1 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-[#2a2a2a] outline-none focus:border-[#2a2a2a] focus:ring-1 focus:ring-[#2a2a2a]"
-                      />
-                      <select
-                        value={newProvince}
-                        onChange={(e) => setNewProvince(e.target.value)}
-                        className="w-24 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-[#2a2a2a] outline-none focus:border-[#2a2a2a] focus:ring-1 focus:ring-[#2a2a2a]"
-                      >
-                        <option value="BC">BC</option>
-                        <option value="AB">AB</option>
-                        <option value="SK">SK</option>
-                        <option value="MB">MB</option>
-                        <option value="ON">ON</option>
-                        <option value="QC">QC</option>
-                        <option value="NB">NB</option>
-                        <option value="NS">NS</option>
-                        <option value="PE">PE</option>
-                        <option value="NL">NL</option>
-                        <option value="YT">YT</option>
-                        <option value="NT">NT</option>
-                        <option value="NU">NU</option>
-                      </select>
+                    <p className="text-zinc-700 text-center">
+                      Don't have an account?{' '}
                       <button
                         type="button"
                         onClick={() => {
-                          if (newCity.trim()) {
-                            const cityLower = newCity.trim().toLowerCase();
-                            const provinceUpper = newProvince.toUpperCase();
-                            // Check if city already exists
-                            const exists = notificationCities.some(
-                              c => c.city.toLowerCase() === cityLower && c.province.toUpperCase() === provinceUpper
-                            );
-                            if (!exists) {
-                              setNotificationCities([...notificationCities, { city: newCity.trim(), province: newProvince }]);
-                              setNewCity("");
-                            } else {
-                              setError("This city is already in your list.");
-                            }
-                          }
+                          setMode("signup");
+                          setError(null);
+                          setShowForgotPassword(false);
                         }}
-                        className="rounded-md bg-[#2a2a2a] px-4 py-2 text-sm font-medium text-white hover:bg-[#3a3a3a] transition-colors"
+                        className="text-emerald-700 hover:text-emerald-800 transition-colors underline"
                       >
-                        Add
+                        create one now
                       </button>
-                    </div>
-
-                    {/* List of added cities */}
-                    {notificationCities.length > 0 && (
-                      <div className="space-y-2">
-                        <div className="flex flex-wrap gap-2">
-                          {notificationCities.map((cityObj, index) => (
-                            <span
-                              key={index}
-                              className="inline-flex items-center gap-1.5 rounded-full bg-[#f7f4ef] px-3 py-1.5 text-xs font-medium text-[#2a2a2a]"
-                            >
-                              {cityObj.city}, {cityObj.province}
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setNotificationCities(notificationCities.filter((_, i) => i !== index));
-                                }}
-                                className="text-[#6b6b6b] hover:text-[#2a2a2a]"
-                              >
-                                ×
-                              </button>
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
+                    </p>
+                    <p className="text-zinc-700 text-center">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowForgotPassword(true);
+                          setError(null);
+                        }}
+                        className="text-emerald-700 hover:text-emerald-800 transition-colors underline"
+                      >
+                        Forgot password?
+                      </button>
+                    </p>
                   </div>
-                </>
-              )}
-
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-[#4a4a4a]">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-[#2a2a2a] outline-none focus:border-[#2a2a2a] focus:ring-1 focus:ring-[#2a2a2a]"
-                  placeholder="you@example.com"
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-[#4a4a4a]">
-                  Password
-                </label>
-                <input
-                  type="password"
-                  value={password}
-                  minLength={6}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-[#2a2a2a] outline-none focus:border-[#2a2a2a] focus:ring-1 focus:ring-[#2a2a2a]"
-                  placeholder="••••••••"
-                  required
-                />
-              </div>
-
-              {mode === "signup" && (
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-[#4a4a4a]">
-                    Confirm password *
-                  </label>
-                  <input
-                    type="password"
-                    value={confirmPassword}
-                    minLength={6}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-[#2a2a2a] outline-none focus:border-[#2a2a2a] focus:ring-1 focus:ring-[#2a2a2a]"
-                    placeholder="••••••••"
-                    required
-                  />
-                </div>
-              )}
-
-            {error && (
-              <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2">
-                <p className="text-xs text-red-600">{error}</p>
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={submitting}
-              className="w-full rounded-md bg-[#2a2a2a] px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-[#3a3a3a] disabled:cursor-not-allowed disabled:opacity-70 transition-colors"
-            >
-              {submitting
-                ? "Please wait..."
-                : mode === "login"
-                ? "Sign in"
-                : "Submit for approval"}
-            </button>
-
-            {mode === "login" && (
-              <div className="space-y-2">
-                <p className="text-center text-xs text-[#6b6b6b]">
-                  New to Soradin?{" "}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMode("signup");
-                      setError(null);
-                      setShowForgotPassword(false);
-                    }}
-                    className="text-[#2a2a2a] hover:underline"
-                  >
-                    Create an account
-                  </button>
-                </p>
-                <p className="text-center text-xs text-[#6b6b6b]">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowForgotPassword(true);
-                      setError(null);
-                    }}
-                    className="text-[#2a2a2a] hover:underline"
-                  >
-                    Forgot password?
-                  </button>
-                </p>
-              </div>
-            )}
-
-              {mode === "signup" && (
-                <p className="text-center text-xs text-[#6b6b6b]">
-                  Already have an account?{" "}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMode("login");
-                      setError(null);
-                    }}
-                    className="text-[#2a2a2a] hover:underline"
-                  >
-                    Sign in
-                  </button>
-                </p>
-              )}
-            </form>
-          )}
-
-          {/* Success Modal */}
-          {showSuccessModal && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-              <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
-                <div className="text-center">
-                  <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
-                    <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  <h3 className="text-lg font-semibold text-[#2a2a2a] mb-2">
-                    Thank you for your request
-                  </h3>
-                  <p className="text-sm text-[#4a4a4a] mb-6">
-                    We will get back to you soon. Your account has been submitted for review. 
-                    Our team will review your application and you will receive an email notification once 
-                    your account has been approved. This typically takes 1-2 business days.
+                )}
+                {mode === "signup" && (
+                  <p className="text-zinc-700 text-center">
+                    Already have an account?{' '}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMode("login");
+                        setError(null);
+                      }}
+                      className="text-emerald-700 hover:text-emerald-800 transition-colors underline"
+                    >
+                      Log in
+                    </button>
                   </p>
-                  <button
-                    onClick={() => {
-                      setShowSuccessModal(false);
-                      setMode("login");
-                    }}
-                    className="w-full rounded-md bg-[#2a2a2a] px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-[#3a3a3a] transition-colors"
-                  >
-                    Close
-                  </button>
-                </div>
+                )}
               </div>
             </div>
-          )}
+          </div>
         </div>
-      </section>
 
-      {/* Footer */}
-      <footer className="border-t border-[#ded3c2] bg-white py-8">
-        <div className="mx-auto flex max-w-6xl flex-col gap-4 px-6 text-xs text-[#6b6b6b] md:flex-row md:items-center md:justify-between">
-          <div>
-            © {new Date().getFullYear()} Soradin. Tools for funeral professionals.
+        {/* Success Modal */}
+        {showSuccessModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+            <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+              <div className="text-center">
+                <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
+                  <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-black mb-2">
+                  Thank you for your request
+                </h3>
+                <p className="text-sm text-zinc-600 mb-6">
+                  We will get back to you soon. Your account has been submitted for review. 
+                  Our team will review your application and you will receive an email notification once 
+                  your account has been approved. This typically takes 1-2 business days.
+                </p>
+                <button
+                  onClick={() => {
+                    setShowSuccessModal(false);
+                    setMode("login");
+                  }}
+                  className="w-full bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-2 rounded-lg transition-all shadow-md"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
           </div>
-          <div className="flex flex-wrap items-center gap-4">
-            <Link href="/privacy" className="hover:text-[#2a2a2a] transition-colors">
-              Privacy
-            </Link>
-            <Link href="/terms" className="hover:text-[#2a2a2a] transition-colors">
-              Terms
-            </Link>
-          </div>
-        </div>
-      </footer>
+        )}
+      </div>
     </main>
   );
 }
