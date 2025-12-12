@@ -27,9 +27,9 @@ export default function HomePage() {
             <Image
               src="/Soradin.png"
               alt="Soradin Logo"
-              width={40}
-              height={40}
-              className="h-10 w-10 object-contain"
+              width={80}
+              height={80}
+              className="h-20 w-20 object-contain"
             />
             <span className="text-2xl font-semibold text-[#1A1A1A]">Soradin</span>
           </Link>
