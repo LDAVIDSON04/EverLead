@@ -2,19 +2,25 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Search, MapPin, FileText, Star, Calendar, Check, ChevronDown, Heart, Facebook, Twitter, Instagram, Linkedin } from "lucide-react";
 import { useState } from "react";
 
 export default function HomePage() {
+  const router = useRouter();
   const [specialty, setSpecialty] = useState("");
   const [location, setLocation] = useState("");
   const [service, setService] = useState("");
 
   const cities = ["Calgary", "Edmonton", "Kelowna", "Penticton", "Salmon Arm"];
 
-  const handleSearch = () => {
-    // Search functionality can be implemented later
-    console.log("Searching for:", { specialty, location, service });
+  const handleSearch = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const params = new URLSearchParams();
+    if (specialty) params.set("q", specialty);
+    if (location) params.set("location", location);
+    if (service) params.set("service", service);
+    router.push(`/search?${params.toString()}`);
   };
 
   return (
@@ -93,7 +99,7 @@ export default function HomePage() {
             </h1>
 
             {/* Horizontal search bar */}
-            <div className="bg-white rounded-2xl p-3 shadow-lg border border-[#1A1A1A]/5">
+            <form onSubmit={handleSearch} className="bg-white rounded-2xl p-3 shadow-lg border border-[#1A1A1A]/5">
               <div className="flex flex-col lg:flex-row items-stretch gap-0">
                 {/* Search field */}
                 <div className="flex-1 relative border-b border-[#1A1A1A]/10 lg:border-b-0 lg:border-r lg:border-[#1A1A1A]/10">
@@ -143,14 +149,14 @@ export default function HomePage() {
                 {/* Button */}
                 <div className="flex items-center lg:pl-2">
                   <button
-                    onClick={handleSearch}
+                    type="submit"
                     className="w-full lg:w-auto bg-[#0C6F3C] text-white px-8 py-3 rounded-xl hover:bg-[#0C6F3C]/90 transition-all shadow-sm"
                   >
                     Find care
                   </button>
                 </div>
               </div>
-            </div>
+            </form>
           </div>
         </div>
       </div>
