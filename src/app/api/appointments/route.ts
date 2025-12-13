@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { supabaseServer } from "@/lib/supabaseServer";
+import { syncAppointmentToCalendars } from "@/lib/calendarSync";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -170,6 +171,14 @@ export async function POST(req: NextRequest) {
         console.error("Error creating payment:", paymentError);
         // Don't fail the appointment creation, just log the error
       }
+    }
+
+    // Sync to external calendars (non-blocking)
+    try {
+      await syncAppointmentToCalendars(appointment.id);
+    } catch (syncError) {
+      console.error("Error syncing appointment to calendars:", syncError);
+      // Don't fail the appointment creation if sync fails
     }
 
     return NextResponse.json(appointment, { status: 201 });

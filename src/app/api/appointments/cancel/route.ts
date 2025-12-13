@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { supabaseServer } from "@/lib/supabaseServer";
+import { deleteExternalEventsForAppointment } from "@/lib/calendarSync";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -64,6 +65,14 @@ export async function POST(req: NextRequest) {
         { error: "Failed to cancel appointment" },
         { status: 500 }
       );
+    }
+
+    // Delete from external calendars (non-blocking)
+    try {
+      await deleteExternalEventsForAppointment(appointmentId);
+    } catch (syncError) {
+      console.error("Error deleting appointment from calendars:", syncError);
+      // Don't fail the cancellation if sync deletion fails
     }
 
     return NextResponse.json(updatedAppointment);
