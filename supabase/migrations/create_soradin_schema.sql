@@ -226,19 +226,30 @@ BEGIN
   END IF;
 END $$;
 
--- Payments
-CREATE TABLE IF NOT EXISTS payments (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  appointment_id uuid NOT NULL REFERENCES appointments(id) ON DELETE CASCADE,
-  stripe_payment_intent_id text UNIQUE,
-  amount_cents int NOT NULL,
-  currency text NOT NULL DEFAULT 'CAD',
-  status text NOT NULL CHECK (status IN ('requires_payment', 'succeeded', 'refunded', 'failed')),
-  created_at timestamptz NOT NULL DEFAULT now(),
-  updated_at timestamptz NOT NULL DEFAULT now()
-);
+-- Payments (only create if new appointments structure exists)
+DO $$ 
+BEGIN
+  -- Only create payments table if appointments table has specialist_id (new structure)
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_schema = 'public' 
+      AND table_name = 'appointments' 
+      AND column_name = 'specialist_id'
+  ) THEN
+    CREATE TABLE IF NOT EXISTS public.payments (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      appointment_id uuid NOT NULL REFERENCES public.appointments(id) ON DELETE CASCADE,
+      stripe_payment_intent_id text UNIQUE,
+      amount_cents int NOT NULL,
+      currency text NOT NULL DEFAULT 'CAD',
+      status text NOT NULL CHECK (status IN ('requires_payment', 'succeeded', 'refunded', 'failed')),
+      created_at timestamptz NOT NULL DEFAULT now(),
+      updated_at timestamptz NOT NULL DEFAULT now()
+    );
 
-COMMENT ON TABLE payments IS 'Payment records for appointments via Stripe';
+    COMMENT ON TABLE public.payments IS 'Payment records for appointments via Stripe';
+  END IF;
+END $$;
 
 -- Indexes for performance (only create if new appointments table structure exists)
 DO $$ 
@@ -298,8 +309,20 @@ CREATE TRIGGER update_specialist_availability_updated_at BEFORE UPDATE ON specia
 CREATE TRIGGER update_specialist_time_off_updated_at BEFORE UPDATE ON specialist_time_off
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_appointments_updated_at BEFORE UPDATE ON appointments
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+-- Only create appointments trigger if new structure exists
+DO $$ 
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_schema = 'public' 
+      AND table_name = 'appointments' 
+      AND column_name = 'specialist_id'
+  ) THEN
+    DROP TRIGGER IF EXISTS update_appointments_updated_at ON public.appointments;
+    CREATE TRIGGER update_appointments_updated_at BEFORE UPDATE ON public.appointments
+      FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+  END IF;
+END $$;
 
 CREATE TRIGGER update_calendar_connections_updated_at BEFORE UPDATE ON calendar_connections
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
@@ -307,6 +330,17 @@ CREATE TRIGGER update_calendar_connections_updated_at BEFORE UPDATE ON calendar_
 CREATE TRIGGER update_external_events_updated_at BEFORE UPDATE ON external_events
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_payments_updated_at BEFORE UPDATE ON payments
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+-- Only create payments trigger if payments table exists
+DO $$ 
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables 
+    WHERE table_schema = 'public' 
+      AND table_name = 'payments'
+  ) THEN
+    DROP TRIGGER IF EXISTS update_payments_updated_at ON public.payments;
+    CREATE TRIGGER update_payments_updated_at BEFORE UPDATE ON public.payments
+      FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+  END IF;
+END $$;
 
