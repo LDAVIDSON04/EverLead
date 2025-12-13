@@ -122,35 +122,40 @@ COMMENT ON COLUMN calendar_connections.sync_enabled IS 'Whether two-way sync is 
 -- Check if appointments table exists with old structure (lead_id) or new structure (specialist_id)
 DO $$ 
 BEGIN
-  -- Only create new appointments table if it doesn't exist at all
-  -- OR if it exists but doesn't have the old lead_id column
+  -- Only create new appointments table if:
+  -- 1. Table doesn't exist at all, OR
+  -- 2. Table exists but has specialist_id (new structure already exists)
   IF NOT EXISTS (
     SELECT 1 FROM information_schema.tables 
     WHERE table_schema = 'public' AND table_name = 'appointments'
-  ) OR NOT EXISTS (
-    SELECT 1 FROM information_schema.columns 
-    WHERE table_schema = 'public' 
-      AND table_name = 'appointments' 
-      AND column_name = 'lead_id'
   ) THEN
-    -- Table doesn't exist or has new structure, create it
-    CREATE TABLE IF NOT EXISTS public.appointments (
+    -- Table doesn't exist, create it with new structure
+    EXECUTE '
+    CREATE TABLE public.appointments (
       id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-      specialist_id uuid NOT NULL REFERENCES specialists(id) ON DELETE CASCADE,
-      family_id uuid NOT NULL REFERENCES families(id) ON DELETE CASCADE,
-      appointment_type_id uuid NOT NULL REFERENCES appointment_types(id) ON DELETE RESTRICT,
+      specialist_id uuid NOT NULL REFERENCES public.specialists(id) ON DELETE CASCADE,
+      family_id uuid NOT NULL REFERENCES public.families(id) ON DELETE CASCADE,
+      appointment_type_id uuid NOT NULL REFERENCES public.appointment_types(id) ON DELETE RESTRICT,
       starts_at timestamptz NOT NULL,
       ends_at timestamptz NOT NULL,
-      status appointment_status NOT NULL DEFAULT 'pending',
+      status appointment_status NOT NULL DEFAULT ''pending'',
       notes text,
       external_event_id uuid,
       created_at timestamptz NOT NULL DEFAULT now(),
       updated_at timestamptz NOT NULL DEFAULT now(),
       CHECK (ends_at > starts_at)
-    );
-
+    )';
+    
     COMMENT ON TABLE public.appointments IS 'Booked appointments between families and specialists';
     COMMENT ON COLUMN public.appointments.external_event_id IS 'FK to external_events.id when this appointment is synced to an external calendar';
+  ELSIF EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_schema = 'public' 
+      AND table_name = 'appointments' 
+      AND column_name = 'lead_id'
+  ) THEN
+    -- Table exists with old structure (lead_id), skip creating new structure
+    RAISE NOTICE 'Appointments table already exists with old structure (lead_id), skipping new structure creation';
   END IF;
 END $$;
 
