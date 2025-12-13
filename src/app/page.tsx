@@ -439,16 +439,17 @@ export default function HomePage() {
 
       {/* FOR SPECIALISTS SECTION */}
       <section className="py-24 px-4 bg-[#FAF9F6]">
-        <div className="max-w-5xl mx-auto">
-          <div className="grid md:grid-cols-2 gap-16 items-center">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid md:grid-cols-[1.4fr_1fr] gap-12 items-center">
             {/* Left side - Image */}
-            <div className="relative">
+            <div className="relative w-full">
               <Image
                 src="/specialist-image.png"
                 alt="Professional funeral specialist"
-                width={600}
-                height={600}
-                className="w-full aspect-square object-cover"
+                width={900}
+                height={700}
+                className="w-full h-auto object-cover rounded-lg"
+                priority
               />
             </div>
 
