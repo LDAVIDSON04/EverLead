@@ -2,7 +2,6 @@
 // Helper functions for managing calendar connections
 
 import { supabaseServer } from "@/lib/supabaseServer";
-import { randomBytes } from "crypto";
 
 /**
  * Ensures an ICS connection exists for a specialist and returns the ICS URL
@@ -26,8 +25,20 @@ export async function ensureIcsConnectionForSpecialist(
     // Reuse existing secret
     icsSecret = existing.ics_secret;
   } else {
-    // Generate new secret
-    icsSecret = randomBytes(32).toString("hex");
+    // Generate new secret (cryptographically random)
+    // Using Web Crypto API which works in Node.js
+    const array = new Uint8Array(32);
+    if (typeof crypto !== "undefined" && crypto.getRandomValues) {
+      crypto.getRandomValues(array);
+    } else {
+      // Fallback for environments without crypto
+      for (let i = 0; i < array.length; i++) {
+        array[i] = Math.floor(Math.random() * 256);
+      }
+    }
+    icsSecret = Array.from(array, (byte) =>
+      byte.toString(16).padStart(2, "0")
+    ).join("");
 
     // Create or update the connection
     const { error: upsertError } = await supabaseServer
