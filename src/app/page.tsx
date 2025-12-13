@@ -10,8 +10,31 @@ export default function HomePage() {
   const router = useRouter();
   const [specialty, setSpecialty] = useState("");
   const [location, setLocation] = useState("");
+  const [showSpecialtyDropdown, setShowSpecialtyDropdown] = useState(false);
+  const [showLocationDropdown, setShowLocationDropdown] = useState(false);
+  const [locationSuggestions, setLocationSuggestions] = useState<string[]>([]);
 
-  const cities = ["Calgary", "Edmonton", "Kelowna", "Penticton", "Salmon Arm"];
+  const cities = [
+    "Calgary, AB",
+    "Edmonton, AB",
+    "Vancouver, BC",
+    "Kelowna, BC",
+    "Penticton, BC",
+    "Salmon Arm, BC",
+    "Victoria, BC",
+    "Vernon, BC",
+    "Kamloops, BC",
+    "Prince George, BC",
+    "Red Deer, AB",
+    "Lethbridge, AB",
+    "Medicine Hat, AB",
+    "Grande Prairie, AB",
+    "Fort McMurray, AB",
+  ];
+
+  const specialtySuggestions = [
+    "Funeral Pre need Specialist",
+  ];
 
   const handleSearch = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -19,6 +42,33 @@ export default function HomePage() {
     if (specialty) params.set("q", specialty);
     if (location) params.set("location", location);
     router.push(`/search?${params.toString()}`);
+  };
+
+  const handleSpecialtyChange = (value: string) => {
+    setSpecialty(value);
+    setShowSpecialtyDropdown(false);
+  };
+
+  const handleLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setLocation(value);
+    
+    if (value.length > 0) {
+      const filtered = cities.filter(city => 
+        city.toLowerCase().includes(value.toLowerCase())
+      );
+      setLocationSuggestions(filtered);
+      setShowLocationDropdown(true);
+    } else {
+      setLocationSuggestions([]);
+      setShowLocationDropdown(false);
+    }
+  };
+
+  const handleLocationSelect = (city: string) => {
+    setLocation(city);
+    setShowLocationDropdown(false);
+    setLocationSuggestions([]);
   };
 
   return (
@@ -103,14 +153,45 @@ export default function HomePage() {
                 <div className="flex-1 relative border-b border-[#1A1A1A]/10 lg:border-b-0 lg:border-r lg:border-[#1A1A1A]/10">
                   <label className="absolute left-4 top-2 text-xs text-[#1A1A1A]/60">Search</label>
                   <div className="relative pt-6">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#1A1A1A]/40" />
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#1A1A1A]/40 z-10" />
                     <input
                       type="text"
                       placeholder="Service or specialist"
-                      className="w-full pl-12 pr-4 py-3 bg-transparent border-none focus:outline-none text-[#1A1A1A] placeholder:text-[#1A1A1A]/40"
+                      className="w-full pl-12 pr-4 py-3 bg-transparent border-none focus:outline-none text-[#1A1A1A] placeholder:text-[#1A1A1A]/40 relative z-10"
                       value={specialty}
                       onChange={(e) => setSpecialty(e.target.value)}
+                      onFocus={() => setShowSpecialtyDropdown(true)}
+                      onBlur={() => {
+                        // Delay to allow clicking on dropdown
+                        setTimeout(() => setShowSpecialtyDropdown(false), 200);
+                      }}
                     />
+                    {/* Specialty Dropdown */}
+                    {showSpecialtyDropdown && (
+                      <div 
+                        className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto"
+                        onMouseDown={(e) => e.preventDefault()}
+                      >
+                        <div className="p-2">
+                          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide px-3 py-2">
+                            Popular specialties
+                          </div>
+                          {specialtySuggestions.map((suggestion, index) => (
+                            <button
+                              key={index}
+                              type="button"
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                handleSpecialtyChange(suggestion);
+                              }}
+                              className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded text-sm text-[#1A1A1A]"
+                            >
+                              {suggestion}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -118,14 +199,50 @@ export default function HomePage() {
                 <div className="flex-1 relative border-b border-[#1A1A1A]/10 lg:border-b-0 lg:border-r lg:border-[#1A1A1A]/10 lg:pr-2">
                   <label className="absolute left-4 top-2 text-xs text-[#1A1A1A]/60">Location</label>
                   <div className="relative pt-6">
-                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#1A1A1A]/40" />
+                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#1A1A1A]/40 z-10" />
                     <input
                       type="text"
-                      placeholder="City, state, or zip"
-                      className="w-full pl-12 pr-4 py-3 bg-transparent border-none focus:outline-none text-[#1A1A1A] placeholder:text-[#1A1A1A]/40"
+                      placeholder="City, Province or zip"
+                      className="w-full pl-12 pr-4 py-3 bg-transparent border-none focus:outline-none text-[#1A1A1A] placeholder:text-[#1A1A1A]/40 relative z-10"
                       value={location}
-                      onChange={(e) => setLocation(e.target.value)}
+                      onChange={handleLocationChange}
+                      onFocus={() => {
+                        if (location.length > 0) {
+                          const filtered = cities.filter(city => 
+                            city.toLowerCase().includes(location.toLowerCase())
+                          );
+                          setLocationSuggestions(filtered);
+                          setShowLocationDropdown(true);
+                        }
+                      }}
+                      onBlur={() => {
+                        // Delay to allow clicking on dropdown
+                        setTimeout(() => setShowLocationDropdown(false), 200);
+                      }}
                     />
+                    {/* Location Autocomplete Dropdown */}
+                    {showLocationDropdown && locationSuggestions.length > 0 && (
+                      <div 
+                        className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto"
+                        onMouseDown={(e) => e.preventDefault()}
+                      >
+                        <div className="p-2">
+                          {locationSuggestions.map((city, index) => (
+                            <button
+                              key={index}
+                              type="button"
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                handleLocationSelect(city);
+                              }}
+                              className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded text-sm text-[#1A1A1A]"
+                            >
+                              {city}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
