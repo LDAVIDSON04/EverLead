@@ -465,23 +465,6 @@ function SearchResults() {
 
       {/* Main Content */}
       <main className="max-w-[1200px] mx-auto px-4 py-6">
-        {/* Filter Bar */}
-        <div className="mb-6">
-          <div className="flex gap-3 flex-wrap">
-            {filters.map((filter, index) => {
-              const Icon = filter.icon;
-              return (
-                <button
-                  key={index}
-                  className="px-4 py-2 border border-gray-300 rounded-full hover:border-black hover:bg-gray-50 transition-colors flex items-center gap-2 text-gray-700 text-sm"
-                >
-                  <Icon className="w-4 h-4" />
-                  <span>{filter.label}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
 
         {/* Results Header */}
         <div className="flex items-center justify-between mb-6">
