@@ -235,6 +235,11 @@ BEGIN
         UNIQUE(specialist_id, provider, provider_event_id),
         CHECK (ends_at > starts_at)
       )';
+      
+      EXECUTE 'COMMENT ON TABLE public.external_events IS ''Events from external calendars (Google/Microsoft) used for busy-time detection and two-way sync''';
+      EXECUTE 'COMMENT ON COLUMN public.external_events.is_soradin_created IS ''True if this event was created by Soradin from an appointment''';
+      EXECUTE 'COMMENT ON COLUMN public.external_events.appointment_id IS ''Links to appointments table when this external event mirrors a Soradin appointment''';
+      EXECUTE 'COMMENT ON COLUMN public.external_events.raw_payload IS ''Full event JSON from provider API for debugging and future use''';
     ELSE
       -- Old structure or no appointments table, create without appointment_id foreign key
       EXECUTE '
@@ -255,8 +260,7 @@ BEGIN
         UNIQUE(specialist_id, provider, provider_event_id),
         CHECK (ends_at > starts_at)
       )';
-    END IF;
-    
+      
       EXECUTE 'COMMENT ON TABLE public.external_events IS ''Events from external calendars (Google/Microsoft) used for busy-time detection and two-way sync''';
       EXECUTE 'COMMENT ON COLUMN public.external_events.is_soradin_created IS ''True if this event was created by Soradin from an appointment''';
       EXECUTE 'COMMENT ON COLUMN public.external_events.appointment_id IS ''Links to appointments table when this external event mirrors a Soradin appointment''';
