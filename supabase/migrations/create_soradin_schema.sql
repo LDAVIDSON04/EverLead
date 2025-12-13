@@ -282,17 +282,22 @@ BEGIN
     WHERE table_schema = 'public' 
       AND table_name = 'appointments' 
       AND column_name = 'specialist_id'
+  ) AND NOT EXISTS (
+    SELECT 1 FROM information_schema.tables 
+    WHERE table_schema = 'public' AND table_name = 'payments'
   ) THEN
-    CREATE TABLE IF NOT EXISTS public.payments (
+    -- Use EXECUTE to defer foreign key validation
+    EXECUTE '
+    CREATE TABLE public.payments (
       id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
       appointment_id uuid NOT NULL REFERENCES public.appointments(id) ON DELETE CASCADE,
       stripe_payment_intent_id text UNIQUE,
       amount_cents int NOT NULL,
-      currency text NOT NULL DEFAULT 'CAD',
-      status text NOT NULL CHECK (status IN ('requires_payment', 'succeeded', 'refunded', 'failed')),
+      currency text NOT NULL DEFAULT ''CAD'',
+      status text NOT NULL CHECK (status IN (''requires_payment'', ''succeeded'', ''refunded'', ''failed'')),
       created_at timestamptz NOT NULL DEFAULT now(),
       updated_at timestamptz NOT NULL DEFAULT now()
-    );
+    )';
 
     COMMENT ON TABLE public.payments IS 'Payment records for appointments via Stripe';
   END IF;
