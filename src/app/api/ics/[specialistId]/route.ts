@@ -9,11 +9,12 @@ export const runtime = "nodejs";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { specialistId: string } }
+  context: { params: Promise<{ specialistId: string }> }
 ) {
   try {
     const { searchParams } = new URL(req.url);
     const token = searchParams.get("token");
+    const params = await context.params;
     const { specialistId } = params;
 
     if (!token) {
