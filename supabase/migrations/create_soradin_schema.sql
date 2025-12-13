@@ -1,19 +1,27 @@
 -- Soradin Database Schema
 -- Supports appointments, availability, and external calendar sync (Google, Microsoft, ICS)
 
--- Enums
-CREATE TYPE appointment_status AS ENUM (
-  'pending',
-  'confirmed',
-  'cancelled',
-  'completed'
-);
+-- Enums (only create if they don't exist)
+DO $$ BEGIN
+  CREATE TYPE appointment_status AS ENUM (
+    'pending',
+    'confirmed',
+    'cancelled',
+    'completed'
+  );
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
-CREATE TYPE calendar_provider AS ENUM (
-  'google',
-  'microsoft',
-  'ics'
-);
+DO $$ BEGIN
+  CREATE TYPE calendar_provider AS ENUM (
+    'google',
+    'microsoft',
+    'ics'
+  );
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
 -- Specialists
 CREATE TABLE specialists (
