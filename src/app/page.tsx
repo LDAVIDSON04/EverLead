@@ -329,7 +329,7 @@ export default function HomePage() {
                     {showLocationDropdown && locationSuggestions.length > 0 && (
                       <div 
                         className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto"
-                        style={{ zIndex: 1000 }}
+                        style={{ zIndex: 9999, position: 'relative' }}
                         onMouseDown={(e) => e.preventDefault()}
                       >
                         <div className="p-2">
