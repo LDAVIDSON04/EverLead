@@ -12,7 +12,9 @@ type Appointment = {
   status: string;
   families?: {
     full_name: string | null;
-  } | null;
+  } | null | Array<{
+    full_name: string | null;
+  }>;
 };
 
 type CalendarConnection = {
@@ -113,7 +115,11 @@ async function syncToGoogleCalendar(
     return;
   }
 
-  const familyName = appointment.families?.full_name || "Soradin client";
+  // Handle families as array or object
+  const familiesData = Array.isArray(appointment.families)
+    ? appointment.families[0]
+    : appointment.families;
+  const familyName = familiesData?.full_name || "Soradin client";
   const summary = `Soradin appointment with ${familyName}`;
   const description = `Funeral planning appointment scheduled through Soradin.`;
 
@@ -204,7 +210,11 @@ async function syncToMicrosoftCalendar(
     return;
   }
 
-  const familyName = appointment.families?.full_name || "Soradin client";
+  // Handle families as array or object
+  const familiesData = Array.isArray(appointment.families)
+    ? appointment.families[0]
+    : appointment.families;
+  const familyName = familiesData?.full_name || "Soradin client";
   const subject = `Soradin appointment with ${familyName}`;
   const body = {
     contentType: "HTML",
