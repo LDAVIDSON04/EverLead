@@ -109,11 +109,11 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
         <div className="px-4 py-6">
           <Link href="/agent/dashboard" className="flex items-center gap-2">
             <Image
-              src="/Soradin.png"
+              src="/logo - white.png"
               alt="Soradin Logo"
-              width={40}
-              height={40}
-              className="h-10 w-10 object-contain bg-white rounded-lg p-1"
+              width={80}
+              height={80}
+              className="h-20 w-20 object-contain"
             />
           </Link>
         </div>
