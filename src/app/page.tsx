@@ -370,7 +370,7 @@ export default function HomePage() {
       <section className="py-24 px-4 bg-white">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-5xl mb-16 text-[#1A1A1A] font-semibold tracking-tight text-center">
-            Let&apos;s connect you with the right specialist
+            Let&apos;s connect you with the right person
           </h2>
 
           <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
