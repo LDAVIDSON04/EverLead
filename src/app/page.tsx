@@ -328,7 +328,7 @@ export default function HomePage() {
                     {/* Location Autocomplete Dropdown */}
                     {showLocationDropdown && locationSuggestions.length > 0 && (
                       <div 
-                        className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-[60] max-h-64 overflow-y-auto"
+                        className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-[100] max-h-64 overflow-y-auto"
                         onMouseDown={(e) => e.preventDefault()}
                       >
                         <div className="p-2">
