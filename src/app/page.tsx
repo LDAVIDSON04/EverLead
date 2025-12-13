@@ -228,7 +228,7 @@ export default function HomePage() {
         </div>
 
         {/* Arm pointing illustration - positioned to point at Find care button */}
-        <div className="absolute hidden lg:block z-[35] pointer-events-none" style={{ left: "-50px", bottom: "-12px", width: "1500px", height: "auto" }}>
+        <div className="absolute hidden lg:block z-10 pointer-events-none" style={{ left: "-50px", bottom: "-12px", width: "1500px", height: "auto" }}>
           <Image
             src="/arm-image.png"
             alt=""
@@ -252,7 +252,7 @@ export default function HomePage() {
             </h1>
 
             {/* Horizontal search bar */}
-            <form onSubmit={handleSearch} className="bg-white rounded-2xl p-3 shadow-lg border border-[#1A1A1A]/5 relative" style={{ zIndex: 50 }}>
+            <form onSubmit={handleSearch} className="bg-white rounded-2xl p-3 shadow-lg border border-[#1A1A1A]/5 relative z-30">
               <div className="flex flex-col lg:flex-row items-stretch gap-0">
                 {/* Search field */}
                 <div className="flex-1 relative border-b border-[#1A1A1A]/10 lg:border-b-0 lg:border-r lg:border-[#1A1A1A]/10">
@@ -301,7 +301,7 @@ export default function HomePage() {
                 </div>
 
                 {/* Location field */}
-                <div className="flex-1 relative border-b border-[#1A1A1A]/10 lg:border-b-0 lg:border-r lg:border-[#1A1A1A]/10 lg:pr-2" style={{ zIndex: 9999 }}>
+                <div className="flex-1 relative border-b border-[#1A1A1A]/10 lg:border-b-0 lg:border-r lg:border-[#1A1A1A]/10 lg:pr-2">
                   <label className="absolute left-4 top-2 text-xs text-[#1A1A1A]/60">Location</label>
                   <div className="relative pt-6">
                     <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#1A1A1A]/40 z-10" />
@@ -328,8 +328,7 @@ export default function HomePage() {
                     {/* Location Autocomplete Dropdown */}
                     {showLocationDropdown && locationSuggestions.length > 0 && (
                       <div 
-                        className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto"
-                        style={{ zIndex: 9999, position: 'relative' }}
+                        className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto"
                         onMouseDown={(e) => e.preventDefault()}
                       >
                         <div className="p-2">
