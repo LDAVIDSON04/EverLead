@@ -1,0 +1,231 @@
+-- Soradin Database Schema
+-- Supports appointments, availability, and external calendar sync (Google, Microsoft, ICS)
+
+-- Enums
+CREATE TYPE appointment_status AS ENUM (
+  'pending',
+  'confirmed',
+  'cancelled',
+  'completed'
+);
+
+CREATE TYPE calendar_provider AS ENUM (
+  'google',
+  'microsoft',
+  'ics'
+);
+
+-- Specialists
+CREATE TABLE specialists (
+  id uuid PRIMARY KEY REFERENCES profiles(id) ON DELETE CASCADE,
+  display_name text NOT NULL,
+  bio text,
+  location_city text,
+  location_region text,
+  timezone text NOT NULL DEFAULT 'America/Edmonton',
+  is_active boolean NOT NULL DEFAULT true,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+COMMENT ON TABLE specialists IS 'Funeral specialists who can be booked by families';
+COMMENT ON COLUMN specialists.timezone IS 'IANA timezone identifier (e.g., America/Edmonton)';
+
+-- Families
+CREATE TABLE families (
+  id uuid PRIMARY KEY REFERENCES profiles(id) ON DELETE CASCADE,
+  full_name text NOT NULL,
+  email text NOT NULL,
+  phone text,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+COMMENT ON TABLE families IS 'Families seeking pre-need funeral planning services';
+
+-- Appointment Types
+CREATE TABLE appointment_types (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  specialist_id uuid NOT NULL REFERENCES specialists(id) ON DELETE CASCADE,
+  name text NOT NULL,
+  duration_minutes int NOT NULL,
+  price_cents int NOT NULL DEFAULT 0,
+  currency text NOT NULL DEFAULT 'CAD',
+  is_active boolean NOT NULL DEFAULT true,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+COMMENT ON TABLE appointment_types IS 'Types of appointments a specialist offers (e.g., consultation, planning session)';
+
+-- Specialist Availability
+CREATE TABLE specialist_availability (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  specialist_id uuid NOT NULL REFERENCES specialists(id) ON DELETE CASCADE,
+  weekday smallint NOT NULL CHECK (weekday >= 0 AND weekday <= 6),
+  start_time time without time zone NOT NULL,
+  end_time time without time zone NOT NULL,
+  slot_interval_minutes int NOT NULL DEFAULT 30,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE(specialist_id, weekday)
+);
+
+COMMENT ON TABLE specialist_availability IS 'Weekly recurring availability templates (0=Sunday, 6=Saturday)';
+COMMENT ON COLUMN specialist_availability.weekday IS '0=Sunday, 1=Monday, ..., 6=Saturday';
+COMMENT ON COLUMN specialist_availability.slot_interval_minutes IS 'Time slot granularity (e.g., 30 for 30-minute slots)';
+
+-- Specialist Time Off
+CREATE TABLE specialist_time_off (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  specialist_id uuid NOT NULL REFERENCES specialists(id) ON DELETE CASCADE,
+  start_at timestamptz NOT NULL,
+  end_at timestamptz NOT NULL,
+  reason text,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  CHECK (end_at > start_at)
+);
+
+COMMENT ON TABLE specialist_time_off IS 'Blocked time periods (vacations, holidays, personal time)';
+
+-- Calendar Connections
+CREATE TABLE calendar_connections (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  specialist_id uuid NOT NULL REFERENCES specialists(id) ON DELETE CASCADE,
+  provider calendar_provider NOT NULL,
+  external_calendar_id text,
+  access_token text,
+  refresh_token text,
+  expires_at timestamptz,
+  ics_secret text,
+  sync_enabled boolean NOT NULL DEFAULT true,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE(specialist_id, provider)
+);
+
+COMMENT ON TABLE calendar_connections IS 'OAuth connections to external calendars (Google, Microsoft) or ICS feed configs';
+COMMENT ON COLUMN calendar_connections.external_calendar_id IS 'Google Calendar ID or Microsoft Calendar ID';
+COMMENT ON COLUMN calendar_connections.ics_secret IS 'Secret token for read-only ICS feed URL (provider=ics)';
+COMMENT ON COLUMN calendar_connections.sync_enabled IS 'Whether two-way sync is active for this connection';
+
+-- Appointments
+CREATE TABLE appointments (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  specialist_id uuid NOT NULL REFERENCES specialists(id) ON DELETE CASCADE,
+  family_id uuid NOT NULL REFERENCES families(id) ON DELETE CASCADE,
+  appointment_type_id uuid NOT NULL REFERENCES appointment_types(id) ON DELETE RESTRICT,
+  starts_at timestamptz NOT NULL,
+  ends_at timestamptz NOT NULL,
+  status appointment_status NOT NULL DEFAULT 'pending',
+  notes text,
+  external_event_id uuid,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  CHECK (ends_at > starts_at)
+);
+
+COMMENT ON TABLE appointments IS 'Booked appointments between families and specialists';
+COMMENT ON COLUMN appointments.external_event_id IS 'FK to external_events.id when this appointment is synced to an external calendar';
+
+-- External Events
+CREATE TABLE external_events (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  specialist_id uuid NOT NULL REFERENCES specialists(id) ON DELETE CASCADE,
+  provider calendar_provider NOT NULL CHECK (provider IN ('google', 'microsoft')),
+  provider_event_id text NOT NULL,
+  starts_at timestamptz NOT NULL,
+  ends_at timestamptz NOT NULL,
+  is_all_day boolean NOT NULL DEFAULT false,
+  status text,
+  is_soradin_created boolean NOT NULL DEFAULT false,
+  appointment_id uuid REFERENCES appointments(id) ON DELETE SET NULL,
+  raw_payload jsonb,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE(specialist_id, provider, provider_event_id),
+  CHECK (ends_at > starts_at)
+);
+
+COMMENT ON TABLE external_events IS 'Events from external calendars (Google/Microsoft) used for busy-time detection and two-way sync';
+COMMENT ON COLUMN external_events.is_soradin_created IS 'True if this event was created by Soradin from an appointment';
+COMMENT ON COLUMN external_events.appointment_id IS 'Links to appointments table when this external event mirrors a Soradin appointment';
+COMMENT ON COLUMN external_events.raw_payload IS 'Full event JSON from provider API for debugging and future use';
+
+-- Add foreign key from appointments to external_events
+ALTER TABLE appointments 
+  ADD CONSTRAINT appointments_external_event_id_fkey 
+  FOREIGN KEY (external_event_id) REFERENCES external_events(id) ON DELETE SET NULL;
+
+-- Payments
+CREATE TABLE payments (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  appointment_id uuid NOT NULL REFERENCES appointments(id) ON DELETE CASCADE,
+  stripe_payment_intent_id text UNIQUE,
+  amount_cents int NOT NULL,
+  currency text NOT NULL DEFAULT 'CAD',
+  status text NOT NULL CHECK (status IN ('requires_payment', 'succeeded', 'refunded', 'failed')),
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+COMMENT ON TABLE payments IS 'Payment records for appointments via Stripe';
+
+-- Indexes for performance
+CREATE INDEX idx_appointments_specialist_id ON appointments(specialist_id);
+CREATE INDEX idx_appointments_specialist_starts_at ON appointments(specialist_id, starts_at);
+CREATE INDEX idx_appointments_family_id ON appointments(family_id);
+CREATE INDEX idx_appointments_status ON appointments(status);
+CREATE INDEX idx_appointments_starts_at ON appointments(starts_at);
+
+CREATE INDEX idx_external_events_specialist_id ON external_events(specialist_id);
+CREATE INDEX idx_external_events_specialist_starts_at ON external_events(specialist_id, starts_at);
+CREATE INDEX idx_external_events_provider_event_id ON external_events(provider, provider_event_id);
+CREATE INDEX idx_external_events_appointment_id ON external_events(appointment_id);
+
+CREATE INDEX idx_calendar_connections_specialist_id ON calendar_connections(specialist_id);
+CREATE INDEX idx_calendar_connections_specialist_provider ON calendar_connections(specialist_id, provider);
+
+CREATE INDEX idx_specialist_availability_specialist_id ON specialist_availability(specialist_id);
+CREATE INDEX idx_specialist_time_off_specialist_id ON specialist_time_off(specialist_id);
+CREATE INDEX idx_specialist_time_off_dates ON specialist_time_off(specialist_id, start_at, end_at);
+
+CREATE INDEX idx_appointment_types_specialist_id ON appointment_types(specialist_id);
+
+-- Updated_at triggers
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = now();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER update_specialists_updated_at BEFORE UPDATE ON specialists
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_families_updated_at BEFORE UPDATE ON families
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_appointment_types_updated_at BEFORE UPDATE ON appointment_types
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_specialist_availability_updated_at BEFORE UPDATE ON specialist_availability
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_specialist_time_off_updated_at BEFORE UPDATE ON specialist_time_off
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_appointments_updated_at BEFORE UPDATE ON appointments
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_calendar_connections_updated_at BEFORE UPDATE ON calendar_connections
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_external_events_updated_at BEFORE UPDATE ON external_events
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_payments_updated_at BEFORE UPDATE ON payments
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
