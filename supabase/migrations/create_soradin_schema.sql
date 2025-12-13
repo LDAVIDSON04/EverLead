@@ -118,24 +118,41 @@ COMMENT ON COLUMN calendar_connections.external_calendar_id IS 'Google Calendar 
 COMMENT ON COLUMN calendar_connections.ics_secret IS 'Secret token for read-only ICS feed URL (provider=ics)';
 COMMENT ON COLUMN calendar_connections.sync_enabled IS 'Whether two-way sync is active for this connection';
 
--- Appointments
-CREATE TABLE IF NOT EXISTS appointments (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  specialist_id uuid NOT NULL REFERENCES specialists(id) ON DELETE CASCADE,
-  family_id uuid NOT NULL REFERENCES families(id) ON DELETE CASCADE,
-  appointment_type_id uuid NOT NULL REFERENCES appointment_types(id) ON DELETE RESTRICT,
-  starts_at timestamptz NOT NULL,
-  ends_at timestamptz NOT NULL,
-  status appointment_status NOT NULL DEFAULT 'pending',
-  notes text,
-  external_event_id uuid,
-  created_at timestamptz NOT NULL DEFAULT now(),
-  updated_at timestamptz NOT NULL DEFAULT now(),
-  CHECK (ends_at > starts_at)
-);
+-- Appointments (only create if table doesn't exist with old structure)
+-- Check if appointments table exists with old structure (lead_id) or new structure (specialist_id)
+DO $$ 
+BEGIN
+  -- Only create new appointments table if it doesn't exist at all
+  -- OR if it exists but doesn't have the old lead_id column
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.tables 
+    WHERE table_schema = 'public' AND table_name = 'appointments'
+  ) OR NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_schema = 'public' 
+      AND table_name = 'appointments' 
+      AND column_name = 'lead_id'
+  ) THEN
+    -- Table doesn't exist or has new structure, create it
+    CREATE TABLE IF NOT EXISTS public.appointments (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      specialist_id uuid NOT NULL REFERENCES specialists(id) ON DELETE CASCADE,
+      family_id uuid NOT NULL REFERENCES families(id) ON DELETE CASCADE,
+      appointment_type_id uuid NOT NULL REFERENCES appointment_types(id) ON DELETE RESTRICT,
+      starts_at timestamptz NOT NULL,
+      ends_at timestamptz NOT NULL,
+      status appointment_status NOT NULL DEFAULT 'pending',
+      notes text,
+      external_event_id uuid,
+      created_at timestamptz NOT NULL DEFAULT now(),
+      updated_at timestamptz NOT NULL DEFAULT now(),
+      CHECK (ends_at > starts_at)
+    );
 
-COMMENT ON TABLE appointments IS 'Booked appointments between families and specialists';
-COMMENT ON COLUMN appointments.external_event_id IS 'FK to external_events.id when this appointment is synced to an external calendar';
+    COMMENT ON TABLE public.appointments IS 'Booked appointments between families and specialists';
+    COMMENT ON COLUMN public.appointments.external_event_id IS 'FK to external_events.id when this appointment is synced to an external calendar';
+  END IF;
+END $$;
 
 -- External Events
 CREATE TABLE IF NOT EXISTS external_events (
@@ -223,12 +240,25 @@ CREATE TABLE IF NOT EXISTS payments (
 
 COMMENT ON TABLE payments IS 'Payment records for appointments via Stripe';
 
--- Indexes for performance (only create if they don't exist)
-CREATE INDEX IF NOT EXISTS idx_appointments_specialist_id ON appointments(specialist_id);
-CREATE INDEX IF NOT EXISTS idx_appointments_specialist_starts_at ON appointments(specialist_id, starts_at);
-CREATE INDEX IF NOT EXISTS idx_appointments_family_id ON appointments(family_id);
-CREATE INDEX IF NOT EXISTS idx_appointments_status ON appointments(status);
-CREATE INDEX IF NOT EXISTS idx_appointments_starts_at ON appointments(starts_at);
+-- Indexes for performance (only create if new appointments table structure exists)
+DO $$ 
+BEGIN
+  -- Only create indexes if appointments table has specialist_id (new structure)
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_schema = 'public' 
+      AND table_name = 'appointments' 
+      AND column_name = 'specialist_id'
+  ) THEN
+    CREATE INDEX IF NOT EXISTS idx_appointments_specialist_id ON public.appointments(specialist_id);
+    CREATE INDEX IF NOT EXISTS idx_appointments_specialist_starts_at ON public.appointments(specialist_id, starts_at);
+    CREATE INDEX IF NOT EXISTS idx_appointments_family_id ON public.appointments(family_id);
+    CREATE INDEX IF NOT EXISTS idx_appointments_starts_at ON public.appointments(starts_at);
+  END IF;
+  
+  -- Status index can be created for both old and new structures
+  CREATE INDEX IF NOT EXISTS idx_appointments_status ON public.appointments(status);
+END $$;
 
 CREATE INDEX IF NOT EXISTS idx_external_events_specialist_id ON external_events(specialist_id);
 CREATE INDEX IF NOT EXISTS idx_external_events_specialist_starts_at ON external_events(specialist_id, starts_at);
