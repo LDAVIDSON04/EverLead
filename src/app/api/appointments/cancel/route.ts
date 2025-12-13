@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
     // Check if appointment exists
     const { data: appointment, error: fetchError } = await supabaseServer
       .from("appointments")
-      .select("id, status")
+      .select("id, status, notes")
       .eq("id", appointmentId)
       .single();
 
