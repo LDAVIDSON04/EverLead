@@ -159,29 +159,67 @@ BEGIN
   END IF;
 END $$;
 
--- External Events
-CREATE TABLE IF NOT EXISTS external_events (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  specialist_id uuid NOT NULL REFERENCES specialists(id) ON DELETE CASCADE,
-  provider calendar_provider NOT NULL CHECK (provider IN ('google', 'microsoft')),
-  provider_event_id text NOT NULL,
-  starts_at timestamptz NOT NULL,
-  ends_at timestamptz NOT NULL,
-  is_all_day boolean NOT NULL DEFAULT false,
-  status text,
-  is_soradin_created boolean NOT NULL DEFAULT false,
-  appointment_id uuid REFERENCES appointments(id) ON DELETE SET NULL,
-  raw_payload jsonb,
-  created_at timestamptz NOT NULL DEFAULT now(),
-  updated_at timestamptz NOT NULL DEFAULT now(),
-  UNIQUE(specialist_id, provider, provider_event_id),
-  CHECK (ends_at > starts_at)
-);
-
-COMMENT ON TABLE external_events IS 'Events from external calendars (Google/Microsoft) used for busy-time detection and two-way sync';
-COMMENT ON COLUMN external_events.is_soradin_created IS 'True if this event was created by Soradin from an appointment';
-COMMENT ON COLUMN external_events.appointment_id IS 'Links to appointments table when this external event mirrors a Soradin appointment';
-COMMENT ON COLUMN external_events.raw_payload IS 'Full event JSON from provider API for debugging and future use';
+-- External Events (create with conditional appointment_id reference)
+DO $$ 
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.tables 
+    WHERE table_schema = 'public' AND table_name = 'external_events'
+  ) THEN
+    -- Check if appointments table has new structure (specialist_id) or old structure (lead_id)
+    IF EXISTS (
+      SELECT 1 FROM information_schema.columns 
+      WHERE table_schema = 'public' 
+        AND table_name = 'appointments' 
+        AND column_name = 'specialist_id'
+    ) THEN
+      -- New structure exists, create with appointment_id foreign key
+      EXECUTE '
+      CREATE TABLE public.external_events (
+        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        specialist_id uuid NOT NULL REFERENCES public.specialists(id) ON DELETE CASCADE,
+        provider calendar_provider NOT NULL CHECK (provider IN (''google'', ''microsoft'')),
+        provider_event_id text NOT NULL,
+        starts_at timestamptz NOT NULL,
+        ends_at timestamptz NOT NULL,
+        is_all_day boolean NOT NULL DEFAULT false,
+        status text,
+        is_soradin_created boolean NOT NULL DEFAULT false,
+        appointment_id uuid REFERENCES public.appointments(id) ON DELETE SET NULL,
+        raw_payload jsonb,
+        created_at timestamptz NOT NULL DEFAULT now(),
+        updated_at timestamptz NOT NULL DEFAULT now(),
+        UNIQUE(specialist_id, provider, provider_event_id),
+        CHECK (ends_at > starts_at)
+      )';
+    ELSE
+      -- Old structure or no appointments table, create without appointment_id foreign key
+      EXECUTE '
+      CREATE TABLE public.external_events (
+        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        specialist_id uuid NOT NULL REFERENCES public.specialists(id) ON DELETE CASCADE,
+        provider calendar_provider NOT NULL CHECK (provider IN (''google'', ''microsoft'')),
+        provider_event_id text NOT NULL,
+        starts_at timestamptz NOT NULL,
+        ends_at timestamptz NOT NULL,
+        is_all_day boolean NOT NULL DEFAULT false,
+        status text,
+        is_soradin_created boolean NOT NULL DEFAULT false,
+        appointment_id uuid,
+        raw_payload jsonb,
+        created_at timestamptz NOT NULL DEFAULT now(),
+        updated_at timestamptz NOT NULL DEFAULT now(),
+        UNIQUE(specialist_id, provider, provider_event_id),
+        CHECK (ends_at > starts_at)
+      )';
+    END IF;
+    
+    COMMENT ON TABLE public.external_events IS 'Events from external calendars (Google/Microsoft) used for busy-time detection and two-way sync';
+    COMMENT ON COLUMN public.external_events.is_soradin_created IS 'True if this event was created by Soradin from an appointment';
+    COMMENT ON COLUMN public.external_events.appointment_id IS 'Links to appointments table when this external event mirrors a Soradin appointment';
+    COMMENT ON COLUMN public.external_events.raw_payload IS 'Full event JSON from provider API for debugging and future use';
+  END IF;
+END $$;
 
 -- Add external_event_id column to appointments if it doesn't exist
 DO $$ 
