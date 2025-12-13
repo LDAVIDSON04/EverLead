@@ -162,22 +162,51 @@ COMMENT ON COLUMN external_events.appointment_id IS 'Links to appointments table
 COMMENT ON COLUMN external_events.raw_payload IS 'Full event JSON from provider API for debugging and future use';
 
 -- Add external_event_id column to appointments if it doesn't exist
-DO $$ BEGIN
+DO $$ 
+BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM information_schema.columns 
-    WHERE table_name = 'appointments' AND column_name = 'external_event_id'
+    WHERE table_schema = 'public' 
+      AND table_name = 'appointments' 
+      AND column_name = 'external_event_id'
   ) THEN
-    ALTER TABLE appointments ADD COLUMN external_event_id uuid;
+    ALTER TABLE public.appointments ADD COLUMN external_event_id uuid;
   END IF;
+EXCEPTION
+  WHEN OTHERS THEN
+    -- Column might already exist or table might not exist, ignore
+    NULL;
 END $$;
 
 -- Add foreign key from appointments to external_events (only if constraint doesn't exist)
-DO $$ BEGIN
-  ALTER TABLE appointments 
-    ADD CONSTRAINT appointments_external_event_id_fkey 
-    FOREIGN KEY (external_event_id) REFERENCES external_events(id) ON DELETE SET NULL;
-EXCEPTION
-  WHEN duplicate_object THEN null;
+-- First ensure the column exists and external_events table exists
+DO $$ 
+BEGIN
+  -- Check if column exists and external_events table exists
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_schema = 'public' 
+      AND table_name = 'appointments' 
+      AND column_name = 'external_event_id'
+  ) AND EXISTS (
+    SELECT 1 FROM information_schema.tables 
+    WHERE table_schema = 'public' 
+      AND table_name = 'external_events'
+  ) THEN
+    -- Try to add the constraint
+    BEGIN
+      ALTER TABLE public.appointments 
+        ADD CONSTRAINT appointments_external_event_id_fkey 
+        FOREIGN KEY (external_event_id) REFERENCES public.external_events(id) ON DELETE SET NULL;
+    EXCEPTION
+      WHEN duplicate_object THEN
+        -- Constraint already exists, that's fine
+        NULL;
+      WHEN OTHERS THEN
+        -- Other errors, re-raise
+        RAISE;
+    END;
+  END IF;
 END $$;
 
 -- Payments
