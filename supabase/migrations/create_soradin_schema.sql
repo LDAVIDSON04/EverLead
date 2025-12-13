@@ -136,54 +136,80 @@ COMMENT ON COLUMN calendar_connections.ics_secret IS 'Secret token for read-only
 COMMENT ON COLUMN calendar_connections.sync_enabled IS 'Whether two-way sync is active for this connection';
 
 -- Appointments (only create if table doesn't exist with old structure)
--- Check if appointments table exists with old structure (lead_id) or new structure (specialist_id)
+-- Skip entirely if old structure exists
 DO $$ 
+DECLARE
+  has_old_structure boolean;
 BEGIN
-  -- Only create new appointments table if:
-  -- 1. Table doesn't exist at all, OR
-  -- 2. Table exists but has specialist_id (new structure already exists)
-  IF NOT EXISTS (
-    SELECT 1 FROM information_schema.tables 
-    WHERE table_schema = 'public' AND table_name = 'appointments'
-  ) THEN
-    -- Table doesn't exist, create it with new structure
-    EXECUTE '
-    CREATE TABLE public.appointments (
-      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-      specialist_id uuid NOT NULL REFERENCES public.specialists(id) ON DELETE CASCADE,
-      family_id uuid NOT NULL REFERENCES public.families(id) ON DELETE CASCADE,
-      appointment_type_id uuid NOT NULL REFERENCES public.appointment_types(id) ON DELETE RESTRICT,
-      starts_at timestamptz NOT NULL,
-      ends_at timestamptz NOT NULL,
-      status appointment_status NOT NULL DEFAULT ''pending'',
-      notes text,
-      external_event_id uuid,
-      created_at timestamptz NOT NULL DEFAULT now(),
-      updated_at timestamptz NOT NULL DEFAULT now(),
-      CHECK (ends_at > starts_at)
-    )';
-    
-    COMMENT ON TABLE public.appointments IS 'Booked appointments between families and specialists';
-    COMMENT ON COLUMN public.appointments.external_event_id IS 'FK to external_events.id when this appointment is synced to an external calendar';
-  ELSIF EXISTS (
+  -- Check if appointments table exists with old structure (lead_id)
+  SELECT EXISTS (
     SELECT 1 FROM information_schema.columns 
     WHERE table_schema = 'public' 
       AND table_name = 'appointments' 
       AND column_name = 'lead_id'
-  ) THEN
-    -- Table exists with old structure (lead_id), skip creating new structure
-    RAISE NOTICE 'Appointments table already exists with old structure (lead_id), skipping new structure creation';
+  ) INTO has_old_structure;
+  
+  -- Only proceed if old structure doesn't exist
+  IF NOT has_old_structure THEN
+    -- Check if table doesn't exist at all
+    IF NOT EXISTS (
+      SELECT 1 FROM information_schema.tables 
+      WHERE table_schema = 'public' AND table_name = 'appointments'
+    ) THEN
+      -- Table doesn't exist, create it with new structure
+      EXECUTE '
+      CREATE TABLE public.appointments (
+        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        specialist_id uuid NOT NULL REFERENCES public.specialists(id) ON DELETE CASCADE,
+        family_id uuid NOT NULL REFERENCES public.families(id) ON DELETE CASCADE,
+        appointment_type_id uuid NOT NULL REFERENCES public.appointment_types(id) ON DELETE RESTRICT,
+        starts_at timestamptz NOT NULL,
+        ends_at timestamptz NOT NULL,
+        status appointment_status NOT NULL DEFAULT ''pending'',
+        notes text,
+        external_event_id uuid,
+        created_at timestamptz NOT NULL DEFAULT now(),
+        updated_at timestamptz NOT NULL DEFAULT now(),
+        CHECK (ends_at > starts_at)
+      )';
+      
+      EXECUTE 'COMMENT ON TABLE public.appointments IS ''Booked appointments between families and specialists''';
+      EXECUTE 'COMMENT ON COLUMN public.appointments.external_event_id IS ''FK to external_events.id when this appointment is synced to an external calendar''';
+    ELSE
+      -- Table exists but doesn't have lead_id, check if it has specialist_id
+      IF EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_schema = 'public' 
+          AND table_name = 'appointments' 
+          AND column_name = 'specialist_id'
+      ) THEN
+        RAISE NOTICE 'Appointments table already exists with new structure (specialist_id)';
+      END IF;
+    END IF;
+  ELSE
+    RAISE NOTICE 'Appointments table has old structure (lead_id). Skipping all new appointments-related operations.';
   END IF;
 END $$;
 
 -- External Events (create with conditional appointment_id reference)
 DO $$ 
+DECLARE
+  has_old_appointments_structure boolean;
 BEGIN
-  IF NOT EXISTS (
+  -- Check if appointments table has old structure
+  SELECT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_schema = 'public' 
+      AND table_name = 'appointments' 
+      AND column_name = 'lead_id'
+  ) INTO has_old_appointments_structure;
+  
+  -- Skip if old structure exists
+  IF NOT has_old_appointments_structure AND NOT EXISTS (
     SELECT 1 FROM information_schema.tables 
     WHERE table_schema = 'public' AND table_name = 'external_events'
   ) THEN
-    -- Check if appointments table has new structure (specialist_id) or old structure (lead_id)
+    -- Check if appointments table has new structure (specialist_id)
     IF EXISTS (
       SELECT 1 FROM information_schema.columns 
       WHERE table_schema = 'public' 
@@ -231,18 +257,30 @@ BEGIN
       )';
     END IF;
     
-    COMMENT ON TABLE public.external_events IS 'Events from external calendars (Google/Microsoft) used for busy-time detection and two-way sync';
-    COMMENT ON COLUMN public.external_events.is_soradin_created IS 'True if this event was created by Soradin from an appointment';
-    COMMENT ON COLUMN public.external_events.appointment_id IS 'Links to appointments table when this external event mirrors a Soradin appointment';
-    COMMENT ON COLUMN public.external_events.raw_payload IS 'Full event JSON from provider API for debugging and future use';
+      EXECUTE 'COMMENT ON TABLE public.external_events IS ''Events from external calendars (Google/Microsoft) used for busy-time detection and two-way sync''';
+      EXECUTE 'COMMENT ON COLUMN public.external_events.is_soradin_created IS ''True if this event was created by Soradin from an appointment''';
+      EXECUTE 'COMMENT ON COLUMN public.external_events.appointment_id IS ''Links to appointments table when this external event mirrors a Soradin appointment''';
+      EXECUTE 'COMMENT ON COLUMN public.external_events.raw_payload IS ''Full event JSON from provider API for debugging and future use''';
+    END IF;
   END IF;
 END $$;
 
 -- Add external_event_id column to appointments if it doesn't exist
--- Only if appointments table exists (either structure)
+-- Only if appointments table exists with new structure (not old structure)
 DO $$ 
+DECLARE
+  has_old_structure boolean;
 BEGIN
-  IF EXISTS (
+  -- Check if old structure exists
+  SELECT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_schema = 'public' 
+      AND table_name = 'appointments' 
+      AND column_name = 'lead_id'
+  ) INTO has_old_structure;
+  
+  -- Only proceed if old structure doesn't exist
+  IF NOT has_old_structure AND EXISTS (
     SELECT 1 FROM information_schema.tables 
     WHERE table_schema = 'public' AND table_name = 'appointments'
   ) AND NOT EXISTS (
@@ -292,9 +330,19 @@ END $$;
 
 -- Payments (only create if new appointments structure exists)
 DO $$ 
+DECLARE
+  has_old_structure boolean;
 BEGIN
-  -- Only create payments table if appointments table has specialist_id (new structure)
-  IF EXISTS (
+  -- Check if old structure exists first
+  SELECT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_schema = 'public' 
+      AND table_name = 'appointments' 
+      AND column_name = 'lead_id'
+  ) INTO has_old_structure;
+  
+  -- Only create payments table if old structure doesn't exist AND new structure exists
+  IF NOT has_old_structure AND EXISTS (
     SELECT 1 FROM information_schema.columns 
     WHERE table_schema = 'public' 
       AND table_name = 'appointments' 
@@ -316,15 +364,25 @@ BEGIN
       updated_at timestamptz NOT NULL DEFAULT now()
     )';
 
-    COMMENT ON TABLE public.payments IS 'Payment records for appointments via Stripe';
+    EXECUTE 'COMMENT ON TABLE public.payments IS ''Payment records for appointments via Stripe''';
   END IF;
 END $$;
 
 -- Indexes for performance (only create if new appointments table structure exists)
 DO $$ 
+DECLARE
+  has_old_structure boolean;
 BEGIN
-  -- Only create indexes if appointments table has specialist_id (new structure)
-  IF EXISTS (
+  -- Check if old structure exists first
+  SELECT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_schema = 'public' 
+      AND table_name = 'appointments' 
+      AND column_name = 'lead_id'
+  ) INTO has_old_structure;
+  
+  -- Only create indexes if old structure doesn't exist AND new structure exists
+  IF NOT has_old_structure AND EXISTS (
     SELECT 1 FROM information_schema.columns 
     WHERE table_schema = 'public' 
       AND table_name = 'appointments' 
@@ -386,8 +444,19 @@ CREATE TRIGGER update_specialist_time_off_updated_at BEFORE UPDATE ON specialist
 
 -- Only create appointments trigger if new structure exists
 DO $$ 
+DECLARE
+  has_old_structure boolean;
 BEGIN
-  IF EXISTS (
+  -- Check if old structure exists first
+  SELECT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_schema = 'public' 
+      AND table_name = 'appointments' 
+      AND column_name = 'lead_id'
+  ) INTO has_old_structure;
+  
+  -- Only create trigger if old structure doesn't exist AND new structure exists
+  IF NOT has_old_structure AND EXISTS (
     SELECT 1 FROM information_schema.columns 
     WHERE table_schema = 'public' 
       AND table_name = 'appointments' 
