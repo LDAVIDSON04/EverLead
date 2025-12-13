@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
     const validation = querySchema.safeParse(params);
     if (!validation.success) {
       return NextResponse.json(
-        { error: "Invalid query parameters", details: validation.error.errors },
+        { error: "Invalid query parameters", details: validation.error.issues },
         { status: 400 }
       );
     }
