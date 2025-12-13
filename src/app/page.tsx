@@ -301,7 +301,7 @@ export default function HomePage() {
                 </div>
 
                 {/* Location field */}
-                <div className="flex-1 relative border-b border-[#1A1A1A]/10 lg:border-b-0 lg:border-r lg:border-[#1A1A1A]/10 lg:pr-2">
+                <div className="flex-1 relative border-b border-[#1A1A1A]/10 lg:border-b-0 lg:border-r lg:border-[#1A1A1A]/10 lg:pr-2" style={{ zIndex: 100 }}>
                   <label className="absolute left-4 top-2 text-xs text-[#1A1A1A]/60">Location</label>
                   <div className="relative pt-6">
                     <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#1A1A1A]/40 z-10" />
@@ -328,7 +328,8 @@ export default function HomePage() {
                     {/* Location Autocomplete Dropdown */}
                     {showLocationDropdown && locationSuggestions.length > 0 && (
                       <div 
-                        className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-[100] max-h-64 overflow-y-auto"
+                        className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto"
+                        style={{ zIndex: 1000 }}
                         onMouseDown={(e) => e.preventDefault()}
                       >
                         <div className="p-2">
