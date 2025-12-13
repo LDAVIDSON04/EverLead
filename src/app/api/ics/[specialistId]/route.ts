@@ -74,7 +74,17 @@ export async function GET(
     }
 
     // Generate ICS feed
-    const icsContent = buildIcsFeed(specialistId, appointments || []);
+    // Map appointments to match expected type (families can be array from Supabase)
+    const mappedAppointments = (appointments || []).map((apt: any) => ({
+      id: apt.id,
+      starts_at: apt.starts_at,
+      ends_at: apt.ends_at,
+      status: apt.status,
+      families: Array.isArray(apt.families) && apt.families.length > 0
+        ? apt.families[0]
+        : apt.families || null,
+    }));
+    const icsContent = buildIcsFeed(specialistId, mappedAppointments);
 
     // Return as text/calendar
     return new NextResponse(icsContent, {
