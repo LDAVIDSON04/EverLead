@@ -99,10 +99,11 @@ export async function GET(req: NextRequest) {
       console.error("Error loading appointments:", appointmentsError);
     }
 
-    // Load external events (not cancelled)
+    // Load external events (not cancelled) for busy-time blocking
+    // This includes both Soradin-created events and external busy blocks
     const { data: externalEvents, error: eventsError } = await supabaseServer
       .from("external_events")
-      .select("starts_at, ends_at, status")
+      .select("starts_at, ends_at, status, is_all_day")
       .eq("specialist_id", specialistId)
       .neq("status", "cancelled")
       .gte("ends_at", new Date(startDate).toISOString())
@@ -250,19 +251,30 @@ export async function GET(req: NextRequest) {
           }
         }
 
-        // Check external events
+        // Check external events (busy-time blocking)
+        // This prevents double-booking when specialist has events in their external calendar
         if (!hasConflict && externalEvents) {
           for (const event of externalEvents) {
-            if (
-              overlaps(
-                slotStart,
-                slotEnd,
-                new Date(event.starts_at),
-                new Date(event.ends_at)
-              )
-            ) {
-              hasConflict = true;
-              break;
+            // For all-day events, block the entire day
+            if (event.is_all_day) {
+              const eventDate = new Date(event.starts_at).toISOString().split("T")[0];
+              if (dateStr === eventDate) {
+                hasConflict = true;
+                break;
+              }
+            } else {
+              // For timed events, check for overlap
+              if (
+                overlaps(
+                  slotStart,
+                  slotEnd,
+                  new Date(event.starts_at),
+                  new Date(event.ends_at)
+                )
+              ) {
+                hasConflict = true;
+                break;
+              }
             }
           }
         }
