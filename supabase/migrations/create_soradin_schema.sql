@@ -24,7 +24,7 @@ EXCEPTION
 END $$;
 
 -- Specialists
-CREATE TABLE specialists (
+CREATE TABLE IF NOT EXISTS specialists (
   id uuid PRIMARY KEY REFERENCES profiles(id) ON DELETE CASCADE,
   display_name text NOT NULL,
   bio text,
@@ -40,7 +40,7 @@ COMMENT ON TABLE specialists IS 'Funeral specialists who can be booked by famili
 COMMENT ON COLUMN specialists.timezone IS 'IANA timezone identifier (e.g., America/Edmonton)';
 
 -- Families
-CREATE TABLE families (
+CREATE TABLE IF NOT EXISTS families (
   id uuid PRIMARY KEY REFERENCES profiles(id) ON DELETE CASCADE,
   full_name text NOT NULL,
   email text NOT NULL,
@@ -52,7 +52,7 @@ CREATE TABLE families (
 COMMENT ON TABLE families IS 'Families seeking pre-need funeral planning services';
 
 -- Appointment Types
-CREATE TABLE appointment_types (
+CREATE TABLE IF NOT EXISTS appointment_types (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   specialist_id uuid NOT NULL REFERENCES specialists(id) ON DELETE CASCADE,
   name text NOT NULL,
@@ -67,7 +67,7 @@ CREATE TABLE appointment_types (
 COMMENT ON TABLE appointment_types IS 'Types of appointments a specialist offers (e.g., consultation, planning session)';
 
 -- Specialist Availability
-CREATE TABLE specialist_availability (
+CREATE TABLE IF NOT EXISTS specialist_availability (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   specialist_id uuid NOT NULL REFERENCES specialists(id) ON DELETE CASCADE,
   weekday smallint NOT NULL CHECK (weekday >= 0 AND weekday <= 6),
@@ -84,7 +84,7 @@ COMMENT ON COLUMN specialist_availability.weekday IS '0=Sunday, 1=Monday, ..., 6
 COMMENT ON COLUMN specialist_availability.slot_interval_minutes IS 'Time slot granularity (e.g., 30 for 30-minute slots)';
 
 -- Specialist Time Off
-CREATE TABLE specialist_time_off (
+CREATE TABLE IF NOT EXISTS specialist_time_off (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   specialist_id uuid NOT NULL REFERENCES specialists(id) ON DELETE CASCADE,
   start_at timestamptz NOT NULL,
@@ -98,7 +98,7 @@ CREATE TABLE specialist_time_off (
 COMMENT ON TABLE specialist_time_off IS 'Blocked time periods (vacations, holidays, personal time)';
 
 -- Calendar Connections
-CREATE TABLE calendar_connections (
+CREATE TABLE IF NOT EXISTS calendar_connections (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   specialist_id uuid NOT NULL REFERENCES specialists(id) ON DELETE CASCADE,
   provider calendar_provider NOT NULL,
@@ -119,7 +119,7 @@ COMMENT ON COLUMN calendar_connections.ics_secret IS 'Secret token for read-only
 COMMENT ON COLUMN calendar_connections.sync_enabled IS 'Whether two-way sync is active for this connection';
 
 -- Appointments
-CREATE TABLE appointments (
+CREATE TABLE IF NOT EXISTS appointments (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   specialist_id uuid NOT NULL REFERENCES specialists(id) ON DELETE CASCADE,
   family_id uuid NOT NULL REFERENCES families(id) ON DELETE CASCADE,
@@ -138,7 +138,7 @@ COMMENT ON TABLE appointments IS 'Booked appointments between families and speci
 COMMENT ON COLUMN appointments.external_event_id IS 'FK to external_events.id when this appointment is synced to an external calendar';
 
 -- External Events
-CREATE TABLE external_events (
+CREATE TABLE IF NOT EXISTS external_events (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   specialist_id uuid NOT NULL REFERENCES specialists(id) ON DELETE CASCADE,
   provider calendar_provider NOT NULL CHECK (provider IN ('google', 'microsoft')),
@@ -161,13 +161,17 @@ COMMENT ON COLUMN external_events.is_soradin_created IS 'True if this event was 
 COMMENT ON COLUMN external_events.appointment_id IS 'Links to appointments table when this external event mirrors a Soradin appointment';
 COMMENT ON COLUMN external_events.raw_payload IS 'Full event JSON from provider API for debugging and future use';
 
--- Add foreign key from appointments to external_events
-ALTER TABLE appointments 
-  ADD CONSTRAINT appointments_external_event_id_fkey 
-  FOREIGN KEY (external_event_id) REFERENCES external_events(id) ON DELETE SET NULL;
+-- Add foreign key from appointments to external_events (only if constraint doesn't exist)
+DO $$ BEGIN
+  ALTER TABLE appointments 
+    ADD CONSTRAINT appointments_external_event_id_fkey 
+    FOREIGN KEY (external_event_id) REFERENCES external_events(id) ON DELETE SET NULL;
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
 -- Payments
-CREATE TABLE payments (
+CREATE TABLE IF NOT EXISTS payments (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   appointment_id uuid NOT NULL REFERENCES appointments(id) ON DELETE CASCADE,
   stripe_payment_intent_id text UNIQUE,
@@ -180,26 +184,26 @@ CREATE TABLE payments (
 
 COMMENT ON TABLE payments IS 'Payment records for appointments via Stripe';
 
--- Indexes for performance
-CREATE INDEX idx_appointments_specialist_id ON appointments(specialist_id);
-CREATE INDEX idx_appointments_specialist_starts_at ON appointments(specialist_id, starts_at);
-CREATE INDEX idx_appointments_family_id ON appointments(family_id);
-CREATE INDEX idx_appointments_status ON appointments(status);
-CREATE INDEX idx_appointments_starts_at ON appointments(starts_at);
+-- Indexes for performance (only create if they don't exist)
+CREATE INDEX IF NOT EXISTS idx_appointments_specialist_id ON appointments(specialist_id);
+CREATE INDEX IF NOT EXISTS idx_appointments_specialist_starts_at ON appointments(specialist_id, starts_at);
+CREATE INDEX IF NOT EXISTS idx_appointments_family_id ON appointments(family_id);
+CREATE INDEX IF NOT EXISTS idx_appointments_status ON appointments(status);
+CREATE INDEX IF NOT EXISTS idx_appointments_starts_at ON appointments(starts_at);
 
-CREATE INDEX idx_external_events_specialist_id ON external_events(specialist_id);
-CREATE INDEX idx_external_events_specialist_starts_at ON external_events(specialist_id, starts_at);
-CREATE INDEX idx_external_events_provider_event_id ON external_events(provider, provider_event_id);
-CREATE INDEX idx_external_events_appointment_id ON external_events(appointment_id);
+CREATE INDEX IF NOT EXISTS idx_external_events_specialist_id ON external_events(specialist_id);
+CREATE INDEX IF NOT EXISTS idx_external_events_specialist_starts_at ON external_events(specialist_id, starts_at);
+CREATE INDEX IF NOT EXISTS idx_external_events_provider_event_id ON external_events(provider, provider_event_id);
+CREATE INDEX IF NOT EXISTS idx_external_events_appointment_id ON external_events(appointment_id);
 
-CREATE INDEX idx_calendar_connections_specialist_id ON calendar_connections(specialist_id);
-CREATE INDEX idx_calendar_connections_specialist_provider ON calendar_connections(specialist_id, provider);
+CREATE INDEX IF NOT EXISTS idx_calendar_connections_specialist_id ON calendar_connections(specialist_id);
+CREATE INDEX IF NOT EXISTS idx_calendar_connections_specialist_provider ON calendar_connections(specialist_id, provider);
 
-CREATE INDEX idx_specialist_availability_specialist_id ON specialist_availability(specialist_id);
-CREATE INDEX idx_specialist_time_off_specialist_id ON specialist_time_off(specialist_id);
-CREATE INDEX idx_specialist_time_off_dates ON specialist_time_off(specialist_id, start_at, end_at);
+CREATE INDEX IF NOT EXISTS idx_specialist_availability_specialist_id ON specialist_availability(specialist_id);
+CREATE INDEX IF NOT EXISTS idx_specialist_time_off_specialist_id ON specialist_time_off(specialist_id);
+CREATE INDEX IF NOT EXISTS idx_specialist_time_off_dates ON specialist_time_off(specialist_id, start_at, end_at);
 
-CREATE INDEX idx_appointment_types_specialist_id ON appointment_types(specialist_id);
+CREATE INDEX IF NOT EXISTS idx_appointment_types_specialist_id ON appointment_types(specialist_id);
 
 -- Updated_at triggers
 CREATE OR REPLACE FUNCTION update_updated_at_column()
