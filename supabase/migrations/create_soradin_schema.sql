@@ -304,14 +304,20 @@ BEGIN
       AND table_name = 'appointments' 
       AND column_name = 'specialist_id'
   ) THEN
-    CREATE INDEX IF NOT EXISTS idx_appointments_specialist_id ON public.appointments(specialist_id);
-    CREATE INDEX IF NOT EXISTS idx_appointments_specialist_starts_at ON public.appointments(specialist_id, starts_at);
-    CREATE INDEX IF NOT EXISTS idx_appointments_family_id ON public.appointments(family_id);
-    CREATE INDEX IF NOT EXISTS idx_appointments_starts_at ON public.appointments(starts_at);
+    -- Use EXECUTE to defer validation until runtime
+    EXECUTE 'CREATE INDEX IF NOT EXISTS idx_appointments_specialist_id ON public.appointments(specialist_id)';
+    EXECUTE 'CREATE INDEX IF NOT EXISTS idx_appointments_specialist_starts_at ON public.appointments(specialist_id, starts_at)';
+    EXECUTE 'CREATE INDEX IF NOT EXISTS idx_appointments_family_id ON public.appointments(family_id)';
+    EXECUTE 'CREATE INDEX IF NOT EXISTS idx_appointments_starts_at ON public.appointments(starts_at)';
   END IF;
   
-  -- Status index can be created for both old and new structures
-  CREATE INDEX IF NOT EXISTS idx_appointments_status ON public.appointments(status);
+  -- Status index can be created for both old and new structures (both have status column)
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables 
+    WHERE table_schema = 'public' AND table_name = 'appointments'
+  ) THEN
+    EXECUTE 'CREATE INDEX IF NOT EXISTS idx_appointments_status ON public.appointments(status)';
+  END IF;
 END $$;
 
 CREATE INDEX IF NOT EXISTS idx_external_events_specialist_id ON external_events(specialist_id);
