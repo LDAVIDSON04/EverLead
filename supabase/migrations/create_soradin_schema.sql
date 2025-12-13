@@ -408,10 +408,19 @@ BEGIN
   END IF;
 END $$;
 
-CREATE INDEX IF NOT EXISTS idx_external_events_specialist_id ON external_events(specialist_id);
-CREATE INDEX IF NOT EXISTS idx_external_events_specialist_starts_at ON external_events(specialist_id, starts_at);
-CREATE INDEX IF NOT EXISTS idx_external_events_provider_event_id ON external_events(provider, provider_event_id);
-CREATE INDEX IF NOT EXISTS idx_external_events_appointment_id ON external_events(appointment_id);
+-- Indexes for external_events (only create if table exists)
+DO $$ 
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables 
+    WHERE table_schema = 'public' AND table_name = 'external_events'
+  ) THEN
+    EXECUTE 'CREATE INDEX IF NOT EXISTS idx_external_events_specialist_id ON public.external_events(specialist_id)';
+    EXECUTE 'CREATE INDEX IF NOT EXISTS idx_external_events_specialist_starts_at ON public.external_events(specialist_id, starts_at)';
+    EXECUTE 'CREATE INDEX IF NOT EXISTS idx_external_events_provider_event_id ON public.external_events(provider, provider_event_id)';
+    EXECUTE 'CREATE INDEX IF NOT EXISTS idx_external_events_appointment_id ON public.external_events(appointment_id)';
+  END IF;
+END $$;
 
 CREATE INDEX IF NOT EXISTS idx_calendar_connections_specialist_id ON calendar_connections(specialist_id);
 CREATE INDEX IF NOT EXISTS idx_calendar_connections_specialist_provider ON calendar_connections(specialist_id, provider);
