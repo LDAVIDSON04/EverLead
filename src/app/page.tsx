@@ -73,7 +73,7 @@ export default function HomePage() {
         </div>
 
         {/* Arm pointing illustration - positioned to point at Find care button */}
-        <div className="absolute hidden lg:block z-50" style={{ left: "-50px", bottom: "-12px", width: "1500px", height: "auto" }}>
+        <div className="absolute hidden lg:block z-10 pointer-events-none" style={{ left: "-50px", bottom: "-12px", width: "1500px", height: "auto" }}>
           <Image
             src="/arm-image.png"
             alt=""
@@ -89,7 +89,7 @@ export default function HomePage() {
           />
         </div>
 
-        <div className="max-w-7xl mx-auto relative z-10 w-full">
+        <div className="max-w-7xl mx-auto relative z-20 w-full">
           {/* Headline and Search Bar - Full Width */}
           <div className="max-w-4xl">
             <h1 className="text-6xl mb-8 text-[#1A1A1A] font-semibold tracking-tight leading-tight text-left">
@@ -97,7 +97,7 @@ export default function HomePage() {
             </h1>
 
             {/* Horizontal search bar */}
-            <form onSubmit={handleSearch} className="bg-white rounded-2xl p-3 shadow-lg border border-[#1A1A1A]/5">
+            <form onSubmit={handleSearch} className="bg-white rounded-2xl p-3 shadow-lg border border-[#1A1A1A]/5 relative z-30">
               <div className="flex flex-col lg:flex-row items-stretch gap-0">
                 {/* Search field */}
                 <div className="flex-1 relative border-b border-[#1A1A1A]/10 lg:border-b-0 lg:border-r lg:border-[#1A1A1A]/10">
