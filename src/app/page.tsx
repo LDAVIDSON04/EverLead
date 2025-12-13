@@ -248,7 +248,7 @@ export default function HomePage() {
           {/* Headline and Search Bar - Full Width */}
           <div className="max-w-4xl">
             <h1 className="text-6xl mb-8 text-[#1A1A1A] font-semibold tracking-tight leading-tight text-left">
-              Book local funeral specialists
+              Book local funeral professionals
             </h1>
 
             {/* Horizontal search bar */}
@@ -523,7 +523,7 @@ export default function HomePage() {
       <section className="py-24 px-4 bg-[#D9C7A3]/20">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-4xl mb-12 text-[#1A1A1A] font-medium tracking-tight">
-            Find funeral specialists by city
+            Find funeral professionals by city
           </h2>
 
           <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
