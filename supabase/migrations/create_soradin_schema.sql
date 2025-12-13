@@ -161,6 +161,16 @@ COMMENT ON COLUMN external_events.is_soradin_created IS 'True if this event was 
 COMMENT ON COLUMN external_events.appointment_id IS 'Links to appointments table when this external event mirrors a Soradin appointment';
 COMMENT ON COLUMN external_events.raw_payload IS 'Full event JSON from provider API for debugging and future use';
 
+-- Add external_event_id column to appointments if it doesn't exist
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'appointments' AND column_name = 'external_event_id'
+  ) THEN
+    ALTER TABLE appointments ADD COLUMN external_event_id uuid;
+  END IF;
+END $$;
+
 -- Add foreign key from appointments to external_events (only if constraint doesn't exist)
 DO $$ BEGIN
   ALTER TABLE appointments 
