@@ -484,8 +484,18 @@ END $$;
 CREATE TRIGGER update_calendar_connections_updated_at BEFORE UPDATE ON calendar_connections
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_external_events_updated_at BEFORE UPDATE ON external_events
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+-- Only create external_events trigger if table exists
+DO $$ 
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables 
+    WHERE table_schema = 'public' AND table_name = 'external_events'
+  ) THEN
+    DROP TRIGGER IF EXISTS update_external_events_updated_at ON public.external_events;
+    CREATE TRIGGER update_external_events_updated_at BEFORE UPDATE ON public.external_events
+      FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+  END IF;
+END $$;
 
 -- Only create payments trigger if payments table exists
 DO $$ 
