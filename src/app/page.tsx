@@ -228,7 +228,7 @@ export default function HomePage() {
         </div>
 
         {/* Arm pointing illustration - positioned to point at Find care button */}
-        <div className="absolute hidden lg:block z-[35] pointer-events-none" style={{ left: "-50px", bottom: "-12px", width: "1500px", height: "auto" }}>
+        <div className="absolute hidden lg:block z-10 pointer-events-none" style={{ left: "-50px", bottom: "-12px", width: "1500px", height: "auto" }}>
           <Image
             src="/arm-image.png"
             alt=""
@@ -301,7 +301,7 @@ export default function HomePage() {
                 </div>
 
                 {/* Location field */}
-                <div className="flex-1 relative border-b border-[#1A1A1A]/10 lg:border-b-0 lg:border-r lg:border-[#1A1A1A]/10 lg:pr-2" style={{ zIndex: 40 }}>
+                <div className="flex-1 relative border-b border-[#1A1A1A]/10 lg:border-b-0 lg:border-r lg:border-[#1A1A1A]/10 lg:pr-2">
                   <label className="absolute left-4 top-2 text-xs text-[#1A1A1A]/60">Location</label>
                   <div className="relative pt-6">
                     <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#1A1A1A]/40 z-10" />
