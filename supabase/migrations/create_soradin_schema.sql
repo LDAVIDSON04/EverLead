@@ -222,9 +222,13 @@ BEGIN
 END $$;
 
 -- Add external_event_id column to appointments if it doesn't exist
+-- Only if appointments table exists (either structure)
 DO $$ 
 BEGIN
-  IF NOT EXISTS (
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables 
+    WHERE table_schema = 'public' AND table_name = 'appointments'
+  ) AND NOT EXISTS (
     SELECT 1 FROM information_schema.columns 
     WHERE table_schema = 'public' 
       AND table_name = 'appointments' 
