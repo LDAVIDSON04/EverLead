@@ -1,6 +1,23 @@
 -- Soradin Database Schema
 -- Supports appointments, availability, and external calendar sync (Google, Microsoft, ICS)
 
+-- Check if appointments table has old structure and set a flag to skip new structure creation
+DO $$ 
+DECLARE
+  has_old_structure boolean := false;
+BEGIN
+  -- Check if appointments table exists with old structure (lead_id)
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_schema = 'public' 
+      AND table_name = 'appointments' 
+      AND column_name = 'lead_id'
+  ) THEN
+    has_old_structure := true;
+    RAISE NOTICE 'Appointments table has old structure (lead_id). New appointments structure will be skipped.';
+  END IF;
+END $$;
+
 -- Enums (only create if they don't exist)
 DO $$ BEGIN
   CREATE TYPE appointment_status AS ENUM (
