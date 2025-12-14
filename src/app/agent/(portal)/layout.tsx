@@ -64,10 +64,11 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
         }
 
         setUserName(profile.full_name || 'Agent');
+        setCheckingAuth(false); // Set to false first to allow render
 
-        // Check specialist status
+        // Check specialist status (non-blocking)
         const { data: { session } } = await supabaseClient.auth.getSession();
-        if (session?.access_token) {
+        if (session?.access_token && mounted) {
           try {
             const specialistRes = await fetch('/api/specialists/me', {
               headers: {
@@ -79,7 +80,7 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
             
             if (specialistRes.ok) {
               const specialist = await specialistRes.json();
-              if (specialist) {
+              if (specialist && mounted) {
                 // Check approval status from specialists table
                 if (specialist.status !== 'approved') {
                   setApprovalStatus(specialist.status || 'pending');
@@ -89,18 +90,20 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
                     setShowOnboarding(true);
                   }
                 }
-              } else {
-                // No specialist record yet - allow access but show pending
-                setApprovalStatus('pending');
+              } else if (mounted) {
+                // No specialist record yet - allow access (don't block)
+                // Only show pending status if we want to restrict access
+                // For now, allow access without specialist record
               }
+            } else {
+              // API error - log but don't block access
+              console.warn('Specialist API returned error:', specialistRes.status);
             }
           } catch (fetchError) {
             console.error('Error fetching specialist:', fetchError);
             // Don't block access if specialist fetch fails
           }
         }
-
-        setCheckingAuth(false);
       } catch (error) {
         console.error('Error checking approval:', error);
         if (mounted) {
