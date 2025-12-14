@@ -69,10 +69,10 @@ export default function AgentLandingPage() {
           const role = profile?.role;
 
           if (role === "agent") {
-            router.push("/agent/dashboard");
+            router.replace("/agent/dashboard");
             return;
           } else if (role === "admin") {
-            router.push("/admin/dashboard");
+            router.replace("/admin/dashboard");
             return;
           }
         }

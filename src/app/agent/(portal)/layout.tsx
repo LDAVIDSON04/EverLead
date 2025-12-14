@@ -37,12 +37,16 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
   const [profilePicturePreview, setProfilePicturePreview] = useState<string | null>(null);
 
   useEffect(() => {
+    let mounted = true;
+
     async function checkApproval() {
       try {
         const { data: { user } } = await supabaseClient.auth.getUser();
         
+        if (!mounted) return;
+        
         if (!user) {
-          router.push('/agent');
+          router.replace('/agent');
           return;
         }
 
@@ -52,49 +56,65 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
           .eq('id', user.id)
           .maybeSingle();
 
+        if (!mounted) return;
+
         if (!profile || profile.role !== 'agent') {
-          router.push('/agent');
+          router.replace('/agent');
           return;
         }
+
+        setUserName(profile.full_name || 'Agent');
 
         // Check specialist status
         const { data: { session } } = await supabaseClient.auth.getSession();
         if (session?.access_token) {
-          const specialistRes = await fetch('/api/specialists/me', {
-            headers: {
-              Authorization: `Bearer ${session.access_token}`,
-            },
-          });
-          
-          if (specialistRes.ok) {
-            const specialist = await specialistRes.json();
-            if (specialist) {
-              // Check approval status from specialists table
-              if (specialist.status !== 'approved') {
-                setApprovalStatus(specialist.status || 'pending');
-              } else {
-                // Check if onboarding is needed
-                if (!profile.onboarding_completed) {
-                  setShowOnboarding(true);
+          try {
+            const specialistRes = await fetch('/api/specialists/me', {
+              headers: {
+                Authorization: `Bearer ${session.access_token}`,
+              },
+            });
+            
+            if (!mounted) return;
+            
+            if (specialistRes.ok) {
+              const specialist = await specialistRes.json();
+              if (specialist) {
+                // Check approval status from specialists table
+                if (specialist.status !== 'approved') {
+                  setApprovalStatus(specialist.status || 'pending');
+                } else {
+                  // Check if onboarding is needed
+                  if (!profile.onboarding_completed) {
+                    setShowOnboarding(true);
+                  }
                 }
+              } else {
+                // No specialist record yet - allow access but show pending
+                setApprovalStatus('pending');
               }
-            } else {
-              // No specialist record yet
-              setApprovalStatus('pending');
             }
+          } catch (fetchError) {
+            console.error('Error fetching specialist:', fetchError);
+            // Don't block access if specialist fetch fails
           }
         }
 
-        setUserName(profile.full_name || 'Agent');
         setCheckingAuth(false);
       } catch (error) {
         console.error('Error checking approval:', error);
-        router.push('/agent');
+        if (mounted) {
+          router.replace('/agent');
+        }
       }
     }
 
     checkApproval();
-  }, [router]);
+
+    return () => {
+      mounted = false;
+    };
+  }, []); // Empty dependency array - only run once on mount
 
   const handleLogout = async () => {
     await supabaseClient.auth.signOut();
