@@ -1,20 +1,39 @@
 // src/app/api/integrations/google/connect/route.ts
 // Initiates Google Calendar OAuth flow
 import { NextRequest, NextResponse } from "next/server";
+import { supabaseServer } from "@/lib/supabaseServer";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 export async function GET(req: NextRequest) {
   try {
-    // TODO: Get specialist ID from authenticated session
-    // For now, accept as query param (you'll want to get this from auth in production)
-    const { searchParams } = new URL(req.url);
-    const specialistId = searchParams.get("specialistId");
+    // Get specialist ID from authenticated session
+    const authHeader = req.headers.get("authorization");
+    
+    let specialistId: string | null = null;
+    
+    if (authHeader?.startsWith("Bearer ")) {
+      const token = authHeader.substring(7);
+      const {
+        data: { user },
+        error: authError,
+      } = await supabaseServer.auth.getUser(token);
+      
+      if (!authError && user) {
+        specialistId = user.id;
+      }
+    }
+    
+    // Fallback to query param if not in auth header (for direct links)
+    if (!specialistId) {
+      const { searchParams } = new URL(req.url);
+      specialistId = searchParams.get("specialistId");
+    }
 
     if (!specialistId) {
       return NextResponse.json(
-        { error: "Specialist ID is required" },
+        { error: "Specialist ID is required. Please ensure you are logged in." },
         { status: 400 }
       );
     }

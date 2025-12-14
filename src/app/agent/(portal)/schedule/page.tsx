@@ -137,20 +137,41 @@ export default function SchedulePage() {
             <p className="text-sm text-gray-500">Your upcoming appointments</p>
           </div>
           <div className="flex items-center gap-3">
-            <a
-              href="/api/integrations/google/connect"
-              className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-sm"
-            >
-              <ExternalLink size={16} />
-              <span>Connect Google Calendar</span>
-            </a>
-            <a
-              href="/api/integrations/microsoft/connect"
-              className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-sm"
-            >
-              <ExternalLink size={16} />
-              <span>Connect Microsoft Calendar</span>
-            </a>
+            {specialist?.id ? (
+              <>
+                <a
+                  href={`/api/integrations/google/connect?specialistId=${specialist.id}`}
+                  className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-sm"
+                >
+                  <ExternalLink size={16} />
+                  <span>Connect Google Calendar</span>
+                </a>
+                <a
+                  href={`/api/integrations/microsoft/connect?specialistId=${specialist.id}`}
+                  className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-sm"
+                >
+                  <ExternalLink size={16} />
+                  <span>Connect Microsoft Calendar</span>
+                </a>
+              </>
+            ) : (
+              <>
+                <button
+                  disabled
+                  className="flex items-center gap-2 px-4 py-2 bg-gray-100 border border-gray-200 rounded-lg text-gray-400 cursor-not-allowed text-sm"
+                >
+                  <ExternalLink size={16} />
+                  <span>Connect Google Calendar</span>
+                </button>
+                <button
+                  disabled
+                  className="flex items-center gap-2 px-4 py-2 bg-gray-100 border border-gray-200 rounded-lg text-gray-400 cursor-not-allowed text-sm"
+                >
+                  <ExternalLink size={16} />
+                  <span>Connect Microsoft Calendar</span>
+                </button>
+              </>
+            )}
             {icsUrl && (
               <div className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm">
                 <span className="text-gray-600">ICS Feed:</span>
