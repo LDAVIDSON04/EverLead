@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
 
     // Get emails from auth.users
     const agentsWithEmail = await Promise.all(
-      (agents || []).map(async (agent) => {
+      (agents || []).map(async (agent: any) => {
         try {
           const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(agent.id);
           return {
