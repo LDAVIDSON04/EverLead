@@ -38,18 +38,29 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
 
   useEffect(() => {
     let mounted = true;
+    let timeoutId: NodeJS.Timeout;
+
+    // Safety timeout - always set checkingAuth to false after 5 seconds
+    timeoutId = setTimeout(() => {
+      if (mounted) {
+        console.warn('Auth check timeout - allowing access');
+        setCheckingAuth(false);
+      }
+    }, 5000);
 
     async function checkApproval() {
       try {
         const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
         
         if (!mounted) {
+          clearTimeout(timeoutId);
           setCheckingAuth(false);
           return;
         }
         
         if (userError || !user) {
           console.log('No user or auth error:', userError);
+          clearTimeout(timeoutId);
           setCheckingAuth(false);
           router.replace('/agent');
           return;
@@ -63,12 +74,14 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
             .maybeSingle();
 
           if (!mounted) {
+            clearTimeout(timeoutId);
             setCheckingAuth(false);
             return;
           }
 
           if (profileError) {
             console.error('Profile fetch error:', profileError);
+            clearTimeout(timeoutId);
             setCheckingAuth(false);
             router.replace('/agent');
             return;
@@ -76,12 +89,14 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
 
           if (!profile || profile.role !== 'agent') {
             console.log('No profile or not agent:', { hasProfile: !!profile, role: profile?.role });
+            clearTimeout(timeoutId);
             setCheckingAuth(false);
             router.replace('/agent');
             return;
           }
 
           // Success - set user name and allow render
+          clearTimeout(timeoutId);
           setUserName(profile.full_name || 'Agent');
           setCheckingAuth(false);
 
@@ -91,6 +106,7 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
           }
         } catch (profileError) {
           console.error('Error in profile check:', profileError);
+          clearTimeout(timeoutId);
           if (mounted) {
             setCheckingAuth(false);
             router.replace('/agent');
@@ -98,6 +114,7 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
         }
       } catch (error) {
         console.error('Error checking approval:', error);
+        clearTimeout(timeoutId);
         setCheckingAuth(false);
         if (mounted) {
           router.replace('/agent');
@@ -145,6 +162,7 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
 
     return () => {
       mounted = false;
+      clearTimeout(timeoutId);
     };
   }, []); // Empty dependency array - only run once on mount
 
