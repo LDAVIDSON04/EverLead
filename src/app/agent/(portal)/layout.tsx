@@ -13,7 +13,7 @@ type AgentLayoutProps = {
 
 const menuItems = [
   { href: '/agent/dashboard', label: 'Home', icon: Home },
-  { href: '/agent/appointments', label: 'Schedule', icon: Calendar },
+  { href: '/agent/schedule', label: 'Schedule', icon: Calendar },
   { href: '/agent/my-appointments', label: 'Files', icon: File },
   { href: '#', label: 'Email', icon: Mail },
   { href: '/agent/dashboard#roi', label: 'Report', icon: FileText },
