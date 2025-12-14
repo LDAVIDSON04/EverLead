@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabaseClient } from "@/lib/supabaseClient";
 import { useRequireRole } from "@/lib/hooks/useRequireRole";
-import { Calendar, Clock, User, ExternalLink, Loader2 } from "lucide-react";
+import { Calendar, Clock, User, X, Loader2 } from "lucide-react";
 import { DateTime } from "luxon";
 
 type Specialist = {
@@ -22,6 +22,12 @@ type Appointment = {
   family_name: string;
 };
 
+type CalendarConnection = {
+  id: string;
+  provider: "google" | "microsoft" | "ics";
+  specialist_id: string;
+};
+
 export default function SchedulePage() {
   useRequireRole("agent");
   const router = useRouter();
@@ -32,6 +38,9 @@ export default function SchedulePage() {
   const [loadingAppointments, setLoadingAppointments] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [icsUrl, setIcsUrl] = useState<string | null>(null);
+  const [showCalendarModal, setShowCalendarModal] = useState(false);
+  const [hasCalendarConnection, setHasCalendarConnection] = useState(false);
+  const [checkingConnection, setCheckingConnection] = useState(true);
 
   useEffect(() => {
     async function loadSpecialist() {
@@ -64,8 +73,9 @@ export default function SchedulePage() {
         const data = await res.json();
         setSpecialist(data);
 
-        // Load appointments and ICS URL if specialist exists
+        // Check if specialist has any calendar connections
         if (data && data.id) {
+          await checkCalendarConnections(data.id, session.access_token);
           await loadAppointments(session.access_token);
           await loadIcsUrl(data.id);
         }
@@ -79,6 +89,44 @@ export default function SchedulePage() {
 
     loadSpecialist();
   }, [router]);
+
+  async function checkCalendarConnections(specialistId: string, accessToken: string) {
+    try {
+      setCheckingConnection(true);
+      
+      // Check if specialist has any calendar connections (Google or Microsoft, not ICS)
+      const { data: connections, error } = await supabaseClient
+        .from("calendar_connections")
+        .select("id, provider")
+        .eq("specialist_id", specialistId)
+        .in("provider", ["google", "microsoft"]);
+
+      if (error) {
+        console.error("Error checking calendar connections:", error);
+        // If error, show modal (better to ask than to block)
+        setHasCalendarConnection(false);
+        setShowCalendarModal(true);
+        return;
+      }
+
+      if (connections && connections.length > 0) {
+        // Has a connection, don't show modal
+        setHasCalendarConnection(true);
+        setShowCalendarModal(false);
+      } else {
+        // No connection, show modal
+        setHasCalendarConnection(false);
+        setShowCalendarModal(true);
+      }
+    } catch (err) {
+      console.error("Error checking connections:", err);
+      // On error, show modal
+      setHasCalendarConnection(false);
+      setShowCalendarModal(true);
+    } finally {
+      setCheckingConnection(false);
+    }
+  }
 
   async function loadAppointments(accessToken: string) {
     try {
@@ -116,6 +164,31 @@ export default function SchedulePage() {
     }
   }
 
+  function handleConnectCalendar(provider: "google" | "microsoft") {
+    if (!specialist?.id) return;
+    
+    // Redirect to OAuth flow
+    window.location.href = `/api/integrations/${provider}/connect?specialistId=${specialist.id}`;
+  }
+
+  function handleDismissModal() {
+    // Store in localStorage that user dismissed the modal
+    if (specialist?.id) {
+      localStorage.setItem(`calendar_modal_dismissed_${specialist.id}`, "true");
+    }
+    setShowCalendarModal(false);
+  }
+
+  // Check localStorage on mount to see if user previously dismissed
+  useEffect(() => {
+    if (specialist?.id && !hasCalendarConnection) {
+      const dismissed = localStorage.getItem(`calendar_modal_dismissed_${specialist.id}`);
+      if (dismissed === "true") {
+        setShowCalendarModal(false);
+      }
+    }
+  }, [specialist, hasCalendarConnection]);
+
   if (loading) {
     return (
       <div className="p-8">
@@ -126,67 +199,71 @@ export default function SchedulePage() {
     );
   }
 
-  // Show schedule (removed approval checks)
+  // Show schedule
   return (
     <div className="p-8">
       <div className="space-y-6">
-        {/* Header with Calendar Integration */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-lg text-gray-900 mb-1">Schedule</h3>
-            <p className="text-sm text-gray-500">Your upcoming appointments</p>
-          </div>
-          <div className="flex items-center gap-3">
-            {specialist?.id ? (
-              <>
-                <a
-                  href={`/api/integrations/google/connect?specialistId=${specialist.id}`}
-                  className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-sm"
-                >
-                  <ExternalLink size={16} />
-                  <span>Connect Google Calendar</span>
-                </a>
-                <a
-                  href={`/api/integrations/microsoft/connect?specialistId=${specialist.id}`}
-                  className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-sm"
-                >
-                  <ExternalLink size={16} />
-                  <span>Connect Microsoft Calendar</span>
-                </a>
-              </>
-            ) : (
-              <>
-                <button
-                  disabled
-                  className="flex items-center gap-2 px-4 py-2 bg-gray-100 border border-gray-200 rounded-lg text-gray-400 cursor-not-allowed text-sm"
-                >
-                  <ExternalLink size={16} />
-                  <span>Connect Google Calendar</span>
-                </button>
-                <button
-                  disabled
-                  className="flex items-center gap-2 px-4 py-2 bg-gray-100 border border-gray-200 rounded-lg text-gray-400 cursor-not-allowed text-sm"
-                >
-                  <ExternalLink size={16} />
-                  <span>Connect Microsoft Calendar</span>
-                </button>
-              </>
-            )}
-            {icsUrl && (
-              <div className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm">
-                <span className="text-gray-600">ICS Feed:</span>
-                <a
-                  href={icsUrl}
-                  className="text-green-800 hover:underline"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Copy URL
-                </a>
-              </div>
-            )}
-          </div>
+        {/* Header */}
+        <div>
+          <h3 className="text-lg text-gray-900 mb-1">Schedule</h3>
+          <p className="text-sm text-gray-500">Your upcoming appointments</p>
         </div>
+
+        {/* Calendar Sync Modal - Only show if no connection and not dismissed */}
+        {showCalendarModal && !hasCalendarConnection && !checkingConnection && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-xl">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold text-gray-900">Sync Your Calendar</h2>
+                <button
+                  onClick={handleDismissModal}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <p className="text-sm text-gray-600 mb-6">
+                Connect your calendar to automatically sync your Soradin appointments with Google Calendar or Microsoft Outlook.
+              </p>
+
+              <div className="space-y-3">
+                <button
+                  onClick={() => handleConnectCalendar("google")}
+                  className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white border-2 border-gray-300 rounded-lg text-gray-700 hover:border-green-800 hover:bg-green-50 transition-colors font-medium"
+                >
+                  <svg className="w-5 h-5" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                  </svg>
+                  <span>Connect Google Calendar</span>
+                </button>
+
+                <button
+                  onClick={() => handleConnectCalendar("microsoft")}
+                  className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white border-2 border-gray-300 rounded-lg text-gray-700 hover:border-green-800 hover:bg-green-50 transition-colors font-medium"
+                >
+                  <svg className="w-5 h-5" viewBox="0 0 24 24">
+                    <path fill="#F25022" d="M1 1h10v10H1z"/>
+                    <path fill="#00A4EF" d="M13 1h10v10H13z"/>
+                    <path fill="#7FBA00" d="M1 13h10v10H1z"/>
+                    <path fill="#FFB900" d="M13 13h10v10H13z"/>
+                  </svg>
+                  <span>Connect Microsoft Calendar</span>
+                </button>
+              </div>
+
+              <button
+                onClick={handleDismissModal}
+                className="mt-4 w-full text-sm text-gray-500 hover:text-gray-700"
+              >
+                Maybe later
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Appointments List */}
         {loadingAppointments ? (
