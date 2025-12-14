@@ -102,17 +102,17 @@ export default function MyAppointmentsPage() {
 
   if (loading) {
     return (
-      <div className="p-6">
-        <h1 className="text-xl font-semibold mb-4">My Appointments</h1>
-        <p className="text-sm text-[#6b6b6b]">Loading appointments…</p>
+      <div className="p-8">
+        <h3 className="text-lg text-gray-900 mb-4">My Appointments</h3>
+        <p className="text-sm text-gray-500">Loading appointments…</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="p-6">
-        <h1 className="text-xl font-semibold mb-4">My Appointments</h1>
+      <div className="p-8">
+        <h3 className="text-lg text-gray-900 mb-4">My Appointments</h3>
         <p className="text-sm text-red-600">{error}</p>
       </div>
     );
@@ -123,7 +123,7 @@ export default function MyAppointmentsPage() {
   const noShow = appointments.filter((a) => a.status === 'no_show').length;
 
   return (
-    <div className="p-6">
+    <div className="p-8">
       <MyAppointmentsClient
         appointments={appointments}
         stats={{ total, completed, noShow }}

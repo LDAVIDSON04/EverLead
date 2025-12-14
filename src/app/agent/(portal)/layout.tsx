@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import { supabaseClient } from '@/lib/supabaseClient';
-import { Home, Calendar, File, Mail, FileText, User, XCircle } from 'lucide-react';
+import { Home, Calendar, File, Mail, FileText, User, XCircle, Upload, X } from 'lucide-react';
 
 type AgentLayoutProps = {
   children: ReactNode;
@@ -25,6 +25,16 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [approvalStatus, setApprovalStatus] = useState<string | null>(null);
   const [userName, setUserName] = useState<string>('');
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [onboardingData, setOnboardingData] = useState({
+    profile_picture_url: '',
+    job_title: '',
+    funeral_home: '',
+  });
+  const [onboardingLoading, setOnboardingLoading] = useState(false);
+  const [onboardingError, setOnboardingError] = useState<string | null>(null);
+  const [profilePictureFile, setProfilePictureFile] = useState<File | null>(null);
+  const [profilePicturePreview, setProfilePicturePreview] = useState<string | null>(null);
 
   useEffect(() => {
     async function checkApproval() {
@@ -38,7 +48,7 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
 
         const { data: profile } = await supabaseClient
           .from('profiles')
-          .select('role, approval_status, full_name')
+          .select('role, full_name, onboarding_completed')
           .eq('id', user.id)
           .maybeSingle();
 
@@ -47,8 +57,32 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
           return;
         }
 
-        if (profile.approval_status !== 'approved') {
-          setApprovalStatus(profile.approval_status || 'pending');
+        // Check specialist status
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (session?.access_token) {
+          const specialistRes = await fetch('/api/specialists/me', {
+            headers: {
+              Authorization: `Bearer ${session.access_token}`,
+            },
+          });
+          
+          if (specialistRes.ok) {
+            const specialist = await specialistRes.json();
+            if (specialist) {
+              // Check approval status from specialists table
+              if (specialist.status !== 'approved') {
+                setApprovalStatus(specialist.status || 'pending');
+              } else {
+                // Check if onboarding is needed
+                if (!profile.onboarding_completed) {
+                  setShowOnboarding(true);
+                }
+              }
+            } else {
+              // No specialist record yet
+              setApprovalStatus('pending');
+            }
+          }
         }
 
         setUserName(profile.full_name || 'Agent');
@@ -65,6 +99,86 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
   const handleLogout = async () => {
     await supabaseClient.auth.signOut();
     router.push('/agent');
+  };
+
+  const handleProfilePictureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setProfilePictureFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfilePicturePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const uploadProfilePicture = async (file: File): Promise<string> => {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+    const filePath = `profile-pictures/${fileName}`;
+
+    const { data, error } = await supabaseClient.storage
+      .from('avatars')
+      .upload(filePath, file, { upsert: true });
+
+    if (error) throw error;
+
+    const { data: { publicUrl } } = supabaseClient.storage
+      .from('avatars')
+      .getPublicUrl(filePath);
+
+    return publicUrl;
+  };
+
+  const handleOnboardingSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setOnboardingLoading(true);
+    setOnboardingError(null);
+
+    try {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error('Not authenticated');
+      }
+
+      let profilePictureUrl = onboardingData.profile_picture_url;
+
+      // Upload profile picture if a file was selected
+      if (profilePictureFile) {
+        profilePictureUrl = await uploadProfilePicture(profilePictureFile);
+      }
+
+      const res = await fetch('/api/agent/onboarding', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          profile_picture_url: profilePictureUrl,
+          job_title: onboardingData.job_title,
+          funeral_home: onboardingData.funeral_home,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Failed to save onboarding data');
+      }
+
+      // Close modal and reload to update profile
+      setShowOnboarding(false);
+      window.location.reload();
+    } catch (err: any) {
+      console.error('Error submitting onboarding:', err);
+      setOnboardingError(err.message || 'Failed to save. Please try again.');
+    } finally {
+      setOnboardingLoading(false);
+    }
   };
 
   if (checkingAuth) {
@@ -168,6 +282,118 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
       <div className="flex-1 overflow-auto">
         {children}
       </div>
+
+      {/* Onboarding Modal */}
+      {showOnboarding && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-xl">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-gray-900">Let's get started</h2>
+              <button
+                onClick={() => setShowOnboarding(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleOnboardingSubmit} className="space-y-4">
+              {/* Profile Picture */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Profile Picture
+                </label>
+                <div className="flex items-center gap-4">
+                  {profilePicturePreview ? (
+                    <div className="relative">
+                      <img
+                        src={profilePicturePreview}
+                        alt="Profile preview"
+                        className="w-20 h-20 rounded-full object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setProfilePictureFile(null);
+                          setProfilePicturePreview(null);
+                          setOnboardingData({ ...onboardingData, profile_picture_url: '' });
+                        }}
+                        className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-1"
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center">
+                      <User size={32} className="text-gray-400" />
+                    </div>
+                  )}
+                  <label className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 cursor-pointer">
+                    <Upload size={16} />
+                    <span>Upload</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleProfilePictureChange}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+              </div>
+
+              {/* Job Title */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Job Title <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={onboardingData.job_title}
+                  onChange={(e) =>
+                    setOnboardingData({ ...onboardingData, job_title: e.target.value })
+                  }
+                  placeholder="e.g., Funeral Director, Pre-need Specialist"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-800 focus:border-transparent"
+                />
+              </div>
+
+              {/* Funeral Home */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Funeral Home <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={onboardingData.funeral_home}
+                  onChange={(e) =>
+                    setOnboardingData({ ...onboardingData, funeral_home: e.target.value })
+                  }
+                  placeholder="Name of funeral home"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-800 focus:border-transparent"
+                />
+              </div>
+
+              {onboardingError && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                  <p className="text-sm text-red-600">{onboardingError}</p>
+                </div>
+              )}
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="submit"
+                  disabled={onboardingLoading}
+                  className="flex-1 bg-green-800 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-900 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+                >
+                  {onboardingLoading ? 'Saving...' : 'Save & Continue'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
