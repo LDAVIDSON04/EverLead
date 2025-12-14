@@ -41,74 +41,103 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
 
     async function checkApproval() {
       try {
-        const { data: { user } } = await supabaseClient.auth.getUser();
+        const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
         
-        if (!mounted) return;
+        if (!mounted) {
+          setCheckingAuth(false);
+          return;
+        }
         
-        if (!user) {
+        if (userError || !user) {
+          console.log('No user or auth error:', userError);
+          setCheckingAuth(false);
           router.replace('/agent');
           return;
         }
 
-        const { data: profile } = await supabaseClient
-          .from('profiles')
-          .select('role, full_name, onboarding_completed')
-          .eq('id', user.id)
-          .maybeSingle();
+        try {
+          const { data: profile, error: profileError } = await supabaseClient
+            .from('profiles')
+            .select('role, full_name, onboarding_completed')
+            .eq('id', user.id)
+            .maybeSingle();
 
-        if (!mounted) return;
+          if (!mounted) {
+            setCheckingAuth(false);
+            return;
+          }
 
-        if (!profile || profile.role !== 'agent') {
-          router.replace('/agent');
-          return;
-        }
+          if (profileError) {
+            console.error('Profile fetch error:', profileError);
+            setCheckingAuth(false);
+            router.replace('/agent');
+            return;
+          }
 
-        setUserName(profile.full_name || 'Agent');
-        setCheckingAuth(false); // Set to false first to allow render
+          if (!profile || profile.role !== 'agent') {
+            console.log('No profile or not agent:', { hasProfile: !!profile, role: profile?.role });
+            setCheckingAuth(false);
+            router.replace('/agent');
+            return;
+          }
 
-        // Check specialist status (non-blocking)
-        const { data: { session } } = await supabaseClient.auth.getSession();
-        if (session?.access_token && mounted) {
-          try {
-            const specialistRes = await fetch('/api/specialists/me', {
-              headers: {
-                Authorization: `Bearer ${session.access_token}`,
-              },
-            });
-            
-            if (!mounted) return;
-            
-            if (specialistRes.ok) {
-              const specialist = await specialistRes.json();
-              if (specialist && mounted) {
-                // Check approval status from specialists table
-                if (specialist.status !== 'approved') {
-                  setApprovalStatus(specialist.status || 'pending');
-                } else {
-                  // Check if onboarding is needed
-                  if (!profile.onboarding_completed) {
-                    setShowOnboarding(true);
-                  }
-                }
-              } else if (mounted) {
-                // No specialist record yet - allow access (don't block)
-                // Only show pending status if we want to restrict access
-                // For now, allow access without specialist record
-              }
-            } else {
-              // API error - log but don't block access
-              console.warn('Specialist API returned error:', specialistRes.status);
-            }
-          } catch (fetchError) {
-            console.error('Error fetching specialist:', fetchError);
-            // Don't block access if specialist fetch fails
+          // Success - set user name and allow render
+          setUserName(profile.full_name || 'Agent');
+          setCheckingAuth(false);
+
+          // Check specialist status (non-blocking, async)
+          if (mounted) {
+            checkSpecialistStatus(profile, mounted);
+          }
+        } catch (profileError) {
+          console.error('Error in profile check:', profileError);
+          if (mounted) {
+            setCheckingAuth(false);
+            router.replace('/agent');
           }
         }
       } catch (error) {
         console.error('Error checking approval:', error);
+        setCheckingAuth(false);
         if (mounted) {
           router.replace('/agent');
         }
+      }
+    }
+
+    async function checkSpecialistStatus(profile: any, isMounted: boolean) {
+      try {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (!session?.access_token || !isMounted) return;
+
+        const specialistRes = await fetch('/api/specialists/me', {
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        });
+        
+        if (!isMounted) return;
+        
+        if (specialistRes.ok) {
+          const specialist = await specialistRes.json();
+          if (specialist && isMounted) {
+            // Check approval status from specialists table
+            if (specialist.status !== 'approved') {
+              setApprovalStatus(specialist.status || 'pending');
+            } else {
+              // Check if onboarding is needed
+              if (!profile.onboarding_completed) {
+                setShowOnboarding(true);
+              }
+            }
+          }
+        } else {
+          // API error - log but don't block access
+          console.warn('Specialist API returned error:', specialistRes.status);
+        }
+      } catch (fetchError) {
+        console.error('Error fetching specialist:', fetchError);
+        // Don't block access if specialist fetch fails
       }
     }
 
