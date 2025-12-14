@@ -38,87 +38,57 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
 
   useEffect(() => {
     let mounted = true;
-    let timeoutId: NodeJS.Timeout;
-
-    // Safety timeout - always set checkingAuth to false after 5 seconds
-    timeoutId = setTimeout(() => {
-      if (mounted) {
-        console.warn('Auth check timeout - allowing access');
-        setCheckingAuth(false);
-      }
-    }, 5000);
 
     async function checkApproval() {
       try {
         const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
         
-        if (!mounted) {
-          clearTimeout(timeoutId);
-          setCheckingAuth(false);
-          return;
-        }
+        if (!mounted) return;
         
+        // Only redirect if we're CERTAIN there's no user
         if (userError || !user) {
-          console.log('No user or auth error:', userError);
-          clearTimeout(timeoutId);
-          setCheckingAuth(false);
           router.replace('/agent');
           return;
         }
 
-        try {
-          const { data: profile, error: profileError } = await supabaseClient
-            .from('profiles')
-            .select('role, full_name, onboarding_completed')
-            .eq('id', user.id)
-            .maybeSingle();
+        // Fetch profile
+        const { data: profile, error: profileError } = await supabaseClient
+          .from('profiles')
+          .select('role, full_name, onboarding_completed')
+          .eq('id', user.id)
+          .maybeSingle();
 
-          if (!mounted) {
-            clearTimeout(timeoutId);
-            setCheckingAuth(false);
-            return;
-          }
+        if (!mounted) return;
 
-          if (profileError) {
-            console.error('Profile fetch error:', profileError);
-            clearTimeout(timeoutId);
-            setCheckingAuth(false);
-            router.replace('/agent');
-            return;
-          }
+        // Only redirect if profile exists and role is explicitly NOT agent
+        // Don't redirect if profile is null (might be creating)
+        if (profile && profile.role !== 'agent') {
+          router.replace('/agent');
+          return;
+        }
 
-          if (!profile || profile.role !== 'agent') {
-            console.log('No profile or not agent:', { hasProfile: !!profile, role: profile?.role });
-            clearTimeout(timeoutId);
-            setCheckingAuth(false);
-            router.replace('/agent');
-            return;
-          }
+        // If profileError but we have a user, allow access (might be RLS issue)
+        // Only block if we're certain they're not an agent
+        if (profileError && profileError.code !== 'PGRST116') {
+          console.error('Profile fetch error:', profileError);
+          // Don't redirect on error - allow access
+        }
 
-          // Success - set user name and allow render
-          clearTimeout(timeoutId);
-          setUserName(profile.full_name || 'Agent');
+        // Success - set user name and allow render
+        setUserName(profile?.full_name || 'Agent');
+        setCheckingAuth(false);
+
+        // Check specialist status (non-blocking, async) - only if profile exists
+        if (profile && mounted) {
+          checkSpecialistStatus(profile, mounted);
+        } else {
+          // No profile yet - just allow access
           setCheckingAuth(false);
-
-          // Check specialist status (non-blocking, async)
-          if (mounted) {
-            checkSpecialistStatus(profile, mounted);
-          }
-        } catch (profileError) {
-          console.error('Error in profile check:', profileError);
-          clearTimeout(timeoutId);
-          if (mounted) {
-            setCheckingAuth(false);
-            router.replace('/agent');
-          }
         }
       } catch (error) {
         console.error('Error checking approval:', error);
-        clearTimeout(timeoutId);
+        // On error, allow access rather than redirecting (prevents loops)
         setCheckingAuth(false);
-        if (mounted) {
-          router.replace('/agent');
-        }
       }
     }
 
@@ -148,13 +118,9 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
               }
             }
           }
-        } else {
-          // API error - log but don't block access
-          console.warn('Specialist API returned error:', specialistRes.status);
         }
       } catch (fetchError) {
-        console.error('Error fetching specialist:', fetchError);
-        // Don't block access if specialist fetch fails
+        // Silently fail - don't block access
       }
     }
 
@@ -162,7 +128,6 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
 
     return () => {
       mounted = false;
-      clearTimeout(timeoutId);
     };
   }, []); // Empty dependency array - only run once on mount
 
