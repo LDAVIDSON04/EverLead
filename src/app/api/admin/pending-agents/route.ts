@@ -2,60 +2,52 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 export async function GET(req: NextRequest) {
   try {
-    if (!supabaseAdmin) {
-      return NextResponse.json(
-        { error: "Server configuration error" },
-        { status: 500 }
-      );
-    }
-
-    // Get profiles (without email - email is in auth.users)
-    const { data: profiles, error } = await supabaseAdmin
+    // Get all agents with pending approval
+    const { data: agents, error: agentsError } = await supabaseAdmin
       .from("profiles")
-      .select("id, full_name, phone, funeral_home, licensed_in_province, licensed_funeral_director, approval_status, created_at, notification_cities")
+      .select("*")
       .eq("role", "agent")
-      .in("approval_status", ["pending", "declined"])
+      .in("approval_status", ["pending", null])
       .order("created_at", { ascending: false });
 
-    if (error) {
-      console.error("Error loading pending agents:", error);
+    if (agentsError) {
+      console.error("Error fetching pending agents:", agentsError);
       return NextResponse.json(
-        { error: "Failed to load pending agents", details: error.message },
+        { error: "Failed to fetch pending agents" },
         { status: 500 }
       );
     }
 
-    // Get emails from auth.users for each profile
-    const agentsWithEmails = await Promise.all(
-      (profiles || []).map(async (profile: any) => {
+    // Get emails from auth.users
+    const agentsWithEmail = await Promise.all(
+      (agents || []).map(async (agent) => {
         try {
-          const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(profile.id);
+          const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(agent.id);
           return {
-            ...profile,
+            ...agent,
             email: authUser?.user?.email || null,
           };
         } catch (err) {
-          console.error(`Error getting email for profile ${profile.id}:`, err);
+          console.error(`Error fetching email for agent ${agent.id}:`, err);
           return {
-            ...profile,
+            ...agent,
             email: null,
           };
         }
       })
     );
 
-    return NextResponse.json(
-      { agents: agentsWithEmails },
-      { status: 200 }
-    );
+    return NextResponse.json(agentsWithEmail);
   } catch (error: any) {
-    console.error("Error in pending-agents route:", error);
+    console.error("Error in GET /api/admin/pending-agents:", error);
     return NextResponse.json(
-      { error: "An unexpected error occurred" },
+      { error: "Internal server error", message: error.message },
       { status: 500 }
     );
   }
 }
-
