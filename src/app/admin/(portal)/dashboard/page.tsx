@@ -429,6 +429,18 @@ export default function AdminDashboardPage() {
     <>
       {/* Content */}
       <section className="mx-auto max-w-6xl px-6 py-8">
+        <div className="mb-6">
+          <h1
+            className="mb-2 text-2xl font-normal text-[#2a2a2a]"
+            style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+          >
+            Admin Analytics Dashboard
+          </h1>
+          <p className="text-sm text-[#6b6b6b]">
+            Overview of all leads, revenue, and marketplace activity.
+          </p>
+        </div>
+
         {/* Tabs */}
         <div className="mb-6 border-b border-slate-200">
           <div className="flex gap-4">

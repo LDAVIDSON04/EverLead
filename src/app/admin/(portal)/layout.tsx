@@ -114,7 +114,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         
         {/* User Profile */}
         <div className="px-4 pb-6">
-          <div className="flex items-center gap-3 px-3 py-3">
+          <div className="flex items-center gap-3 px-3 py-3 mb-2">
             <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-purple-400 rounded-full flex items-center justify-center">
               <User size={16} className="text-white" />
             </div>
@@ -122,14 +122,14 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               <div className="text-white text-sm">{userName}</div>
               <div className="text-white/60 text-xs">Admin</div>
             </div>
-            <button
-              onClick={handleLogout}
-              className="text-white/60 hover:text-white text-xs"
-              title="Logout"
-            >
-              <XCircle size={16} />
-            </button>
           </div>
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+          >
+            <XCircle size={16} />
+            <span>Log out</span>
+          </button>
         </div>
       </div>
 

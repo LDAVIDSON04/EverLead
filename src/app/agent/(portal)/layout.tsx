@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import { supabaseClient } from '@/lib/supabaseClient';
-import { Home, Calendar, File, Mail, FileText, User } from 'lucide-react';
+import { Home, Calendar, File, Mail, FileText, User, XCircle } from 'lucide-react';
 
 type AgentLayoutProps = {
   children: ReactNode;
@@ -145,14 +145,22 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
         
         {/* User Profile */}
         <div className="px-4 pb-6">
-          <div className="flex items-center gap-3 px-3 py-3">
+          <div className="flex items-center gap-3 px-3 py-3 mb-2">
             <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-400 rounded-full flex items-center justify-center">
               <User size={16} className="text-white" />
             </div>
-            <div>
+            <div className="flex-1">
               <div className="text-white text-sm">{userName}</div>
+              <div className="text-white/60 text-xs">Agent</div>
             </div>
           </div>
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+          >
+            <XCircle size={16} />
+            <span>Log out</span>
+          </button>
         </div>
       </div>
 
