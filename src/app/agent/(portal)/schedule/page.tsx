@@ -73,11 +73,22 @@ export default function SchedulePage() {
         const data = await res.json();
         setSpecialist(data);
 
-        // Check if specialist has any calendar connections
+        // Load appointments regardless of specialist record
+        await loadAppointments(session.access_token);
+
+        // Check if specialist has any calendar connections (only if specialist exists)
         if (data && data.id) {
           await checkCalendarConnections(data.id, session.access_token);
-          await loadAppointments(session.access_token);
           await loadIcsUrl(data.id);
+        } else {
+          // No specialist record yet - show modal to encourage setup
+          setHasCalendarConnection(false);
+          setCheckingConnection(false);
+          // Check localStorage to see if user dismissed it before
+          const dismissed = localStorage.getItem(`calendar_modal_dismissed_${data?.id || 'new'}`);
+          if (dismissed !== "true") {
+            setShowCalendarModal(true);
+          }
         }
       } catch (err: any) {
         console.error("Error loading specialist:", err);
@@ -113,10 +124,15 @@ export default function SchedulePage() {
         // Has a connection, don't show modal
         setHasCalendarConnection(true);
         setShowCalendarModal(false);
+        // Clear any dismissal flag since they now have a connection
+        localStorage.removeItem(`calendar_modal_dismissed_${specialistId}`);
       } else {
-        // No connection, show modal
+        // No connection - check if user dismissed before showing
         setHasCalendarConnection(false);
-        setShowCalendarModal(true);
+        const dismissed = localStorage.getItem(`calendar_modal_dismissed_${specialistId}`);
+        if (dismissed !== "true") {
+          setShowCalendarModal(true);
+        }
       }
     } catch (err) {
       console.error("Error checking connections:", err);
@@ -173,21 +189,24 @@ export default function SchedulePage() {
 
   function handleDismissModal() {
     // Store in localStorage that user dismissed the modal
-    if (specialist?.id) {
-      localStorage.setItem(`calendar_modal_dismissed_${specialist.id}`, "true");
-    }
+    const id = specialist?.id || 'new';
+    localStorage.setItem(`calendar_modal_dismissed_${id}`, "true");
     setShowCalendarModal(false);
   }
 
-  // Check localStorage on mount to see if user previously dismissed
+  // Check localStorage when connection check completes
   useEffect(() => {
-    if (specialist?.id && !hasCalendarConnection) {
-      const dismissed = localStorage.getItem(`calendar_modal_dismissed_${specialist.id}`);
+    if (!checkingConnection && !hasCalendarConnection) {
+      const id = specialist?.id || 'new';
+      const dismissed = localStorage.getItem(`calendar_modal_dismissed_${id}`);
       if (dismissed === "true") {
         setShowCalendarModal(false);
+      } else {
+        // Show modal if not dismissed and no connection
+        setShowCalendarModal(true);
       }
     }
-  }, [specialist, hasCalendarConnection]);
+  }, [checkingConnection, hasCalendarConnection, specialist]);
 
   if (loading) {
     return (
