@@ -14,9 +14,9 @@ export async function GET(req: NextRequest) {
     const error = searchParams.get("error");
 
     if (error) {
-      return NextResponse.json(
-        { error: `OAuth error: ${error}` },
-        { status: 400 }
+      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL || "http://localhost:3000";
+      return NextResponse.redirect(
+        `${baseUrl}/agent/settings?error=${encodeURIComponent(`OAuth error: ${error}`)}`
       );
     }
 
