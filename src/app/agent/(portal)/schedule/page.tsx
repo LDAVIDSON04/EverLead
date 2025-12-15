@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabaseClient } from "@/lib/supabaseClient";
 import { useRequireRole } from "@/lib/hooks/useRequireRole";
-import { Calendar, Clock, User, X, Loader2, ChevronLeft, ChevronRight, Search, Settings, Bell } from "lucide-react";
+import { Calendar, Clock, User, X, Loader2, ChevronLeft, ChevronRight, Search, Settings, Bell, ArrowUpDown, Check, AlertCircle, MoreHorizontal } from "lucide-react";
 import { DateTime } from "luxon";
 import Link from "next/link";
 
@@ -366,88 +366,95 @@ export default function SchedulePage() {
 
             {/* Appointments List */}
             <div className="bg-white rounded-xl border border-gray-200 p-6">
-              <h3 className="text-lg text-gray-900 mb-4">My Appointments</h3>
+              <h3 className="text-lg text-gray-900 mb-4">My appointments</h3>
               
-              {loadingAppointments ? (
-                <div className="py-12 text-center">
-                  <Loader2 className="w-8 h-8 animate-spin text-gray-400 mx-auto mb-4" />
-                  <p className="text-sm text-gray-500">Loading appointments...</p>
-                </div>
-              ) : error ? (
-                <div className="py-8 text-center">
-                  <p className="text-sm text-red-600">{error}</p>
-                </div>
-              ) : filteredAppointments.length === 0 ? (
-                <div className="py-12 text-center">
-                  <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                  <h2 className="text-lg text-gray-900 mb-2">
-                    {searchQuery ? "No appointments found" : "No Upcoming Appointments"}
-                  </h2>
-                  <p className="text-sm text-gray-500">
-                    {searchQuery ? "Try a different search term" : "You don't have any scheduled appointments yet."}
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {/* Table Header */}
-                  <div className="grid grid-cols-12 gap-4 text-xs text-gray-500 pb-2 border-b border-gray-100">
-                    <div className="col-span-3">Client</div>
-                    <div className="col-span-3">Date</div>
-                    <div className="col-span-3">Time</div>
-                    <div className="col-span-2">Status</div>
-                    <div className="col-span-1"></div>
+              <div className="space-y-2">
+                {/* Table Header */}
+                <div className="grid grid-cols-12 gap-4 text-xs text-gray-500 pb-2 border-b border-gray-100">
+                  <div className="col-span-3 flex items-center gap-2">
+                    Name
+                    <ArrowUpDown size={14} className="text-green-800" />
                   </div>
-                  
-                  {/* Table Rows */}
-                  {filteredAppointments.map((appointment) => {
+                  <div className="col-span-2">Location</div>
+                  <div className="col-span-3 flex items-center gap-2">
+                    Date
+                    <ArrowUpDown size={14} className="text-gray-400" />
+                  </div>
+                  <div className="col-span-2 flex items-center gap-2">
+                    Time
+                    <ArrowUpDown size={14} className="text-gray-400" />
+                  </div>
+                  <div className="col-span-1">Status</div>
+                  <div className="col-span-1"></div>
+                </div>
+                
+                {/* Table Rows */}
+                {loadingAppointments ? (
+                  <div className="py-12 text-center">
+                    <Loader2 className="w-8 h-8 animate-spin text-gray-400 mx-auto mb-4" />
+                    <p className="text-sm text-gray-500">Loading appointments...</p>
+                  </div>
+                ) : error ? (
+                  <div className="py-8 text-center">
+                    <p className="text-sm text-red-600">{error}</p>
+                  </div>
+                ) : filteredAppointments.length === 0 ? (
+                  <div className="py-8 text-center text-sm text-gray-500">
+                    No appointments yet. <Link href="/agent/appointments" className="text-green-800 hover:underline">Browse available appointments</Link>
+                  </div>
+                ) : (
+                  filteredAppointments.map((appointment, idx) => {
                     const startDate = DateTime.fromISO(appointment.starts_at, { zone: "utc" });
                     const endDate = DateTime.fromISO(appointment.ends_at, { zone: "utc" });
                     const localStart = startDate.setZone("America/Edmonton");
                     const localEnd = endDate.setZone("America/Edmonton");
+                    const formattedDate = localStart.toLocaleString(DateTime.DATE_MED);
+                    const formattedTime = `${localStart.toLocaleString(DateTime.TIME_SIMPLE)} - ${localEnd.toLocaleString(DateTime.TIME_SIMPLE)}`;
 
                     return (
                       <Link
                         key={appointment.id}
                         href={`/agent/my-appointments`}
-                        className="grid grid-cols-12 gap-4 items-center py-3 rounded-lg hover:bg-gray-50 transition-colors"
+                        className={`grid grid-cols-12 gap-4 items-center py-3 rounded-lg transition-colors ${
+                          appointment.status === 'confirmed' ? 'bg-green-50 hover:bg-green-100' : 'bg-white hover:bg-gray-50'
+                        }`}
                       >
                         <div className="col-span-3 flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-full bg-green-100 text-green-800 flex items-center justify-center text-xs font-medium">
-                            {appointment.family_name?.charAt(0)?.toUpperCase() || '?'}
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs ${
+                            idx === 0 ? 'bg-gray-200 text-gray-700' : 
+                            idx === 1 ? 'bg-green-100 text-green-800' : 
+                            'bg-gray-200 text-gray-700'
+                          }`}>
+                            {appointment.family_name?.split(' ').map(n => n[0]).join('').toUpperCase() || '?'}
                           </div>
                           <span className="text-sm text-gray-900">{appointment.family_name || 'Unknown'}</span>
                         </div>
-                        <div className="col-span-3 text-sm text-gray-600">
-                          {localStart.toLocaleString(DateTime.DATE_MED)}
+                        <div className="col-span-2 text-sm text-gray-600">-</div>
+                        <div className="col-span-3 text-sm text-gray-600">{formattedDate}</div>
+                        <div className="col-span-2 text-sm text-gray-600">{formattedTime}</div>
+                        <div className="col-span-1">
+                          {appointment.status === 'confirmed' ? (
+                            <Check size={18} className="text-green-600" />
+                          ) : (
+                            <AlertCircle size={18} className="text-red-500" />
+                          )}
                         </div>
-                        <div className="col-span-3 text-sm text-gray-600">
-                          {localStart.toLocaleString(DateTime.TIME_SIMPLE)} - {localEnd.toLocaleString(DateTime.TIME_SIMPLE)}
-                        </div>
-                        <div className="col-span-2">
-                          <span
-                            className={`px-2 py-1 text-xs font-medium rounded-full ${
-                              appointment.status === "confirmed"
-                                ? "bg-green-100 text-green-800"
-                                : appointment.status === "cancelled"
-                                ? "bg-red-100 text-red-800"
-                                : appointment.status === "completed"
-                                ? "bg-blue-100 text-blue-800"
-                                : "bg-gray-100 text-gray-800"
-                            }`}
+                        <div className="col-span-1">
+                          <button 
+                            onClick={(e) => {
+                              e.preventDefault();
+                              router.push(`/agent/my-appointments`);
+                            }}
+                            className="p-1 hover:bg-gray-100 rounded"
                           >
-                            {appointment.status}
-                          </span>
-                        </div>
-                        <div className="col-span-1 flex justify-end">
-                          <button className="p-1 hover:bg-gray-100 rounded">
-                            <User size={16} className="text-gray-400" />
+                            <MoreHorizontal size={16} className="text-gray-400" />
                           </button>
                         </div>
                       </Link>
                     );
-                  })}
-                </div>
-              )}
+                  })
+                )}
+              </div>
             </div>
           </div>
           
@@ -500,6 +507,34 @@ export default function SchedulePage() {
               </div>
             </div>
 
+            {/* Number of Meetings Chart */}
+            <div className="bg-white rounded-xl border border-gray-200 p-5">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm text-gray-900">Number of Meetings</h3>
+                <button className="text-xs text-gray-500 hover:text-gray-700">Last week</button>
+              </div>
+              
+              <div className="h-48 flex items-end justify-between gap-3 border-l-2 border-b-2 border-gray-200 pl-2 pb-2">
+                {[
+                  { day: 'Mon', value: Math.min(100, (totalAppointments / 10) * 100) },
+                  { day: 'Tue', value: Math.min(100, (confirmedAppointments / 8) * 100) },
+                  { day: 'Wed', value: Math.min(100, (upcomingAppointments / 6) * 100) },
+                  { day: 'Thu', value: Math.min(100, (totalAppointments / 10) * 80) },
+                  { day: 'Fri', value: Math.min(100, (confirmedAppointments / 8) * 70) },
+                ].map((item, idx) => (
+                  <div key={idx} className="flex-1 flex flex-col items-center gap-2">
+                    <div className="w-full flex flex-col items-center justify-end h-40">
+                      <div 
+                        className="w-full bg-green-800 rounded-t hover:bg-green-900 transition-colors"
+                        style={{ height: `${item.value}%` }}
+                      ></div>
+                    </div>
+                    <div className="text-xs text-gray-600">{item.day}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
             {/* Calendar Sync Info */}
             {icsUrl && (
               <div className="bg-white rounded-xl border border-gray-200 p-5">
