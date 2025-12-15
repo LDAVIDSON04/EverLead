@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabaseClient } from "@/lib/supabaseClient";
 import { useRequireRole } from "@/lib/hooks/useRequireRole";
-import { Calendar, Clock, User, X, Loader2, ChevronLeft, ChevronRight, Search, Settings, Bell, ArrowUpDown, Check, AlertCircle, MoreHorizontal } from "lucide-react";
+import { Calendar, Clock, User, X, Loader2, ChevronLeft, ChevronRight, Search, Settings, Bell, Check, Eye, RefreshCw, Plus } from "lucide-react";
 import { DateTime } from "luxon";
 import Link from "next/link";
 
@@ -23,6 +23,9 @@ type Appointment = {
   family_name: string;
 };
 
+type ViewType = 'upcoming' | 'week';
+type FilterType = 'all' | 'today' | 'next7' | 'next30';
+
 export default function SchedulePage() {
   useRequireRole("agent");
   const router = useRouter();
@@ -38,6 +41,12 @@ export default function SchedulePage() {
   const [checkingConnection, setCheckingConnection] = useState(true);
   const [userName, setUserName] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [view, setView] = useState<ViewType>('upcoming');
+  const [filter, setFilter] = useState<FilterType>('next7');
+  const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
+
+  const hours = Array.from({ length: 13 }, (_, i) => i + 8); // 8 AM to 8 PM
+  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   useEffect(() => {
     async function loadSpecialist() {
@@ -124,20 +133,16 @@ export default function SchedulePage() {
 
       if (error) {
         console.error("Error checking calendar connections:", error);
-        // If error, show modal (better to ask than to block)
         setHasCalendarConnection(false);
         setShowCalendarModal(true);
         return;
       }
 
       if (connections && connections.length > 0) {
-        // Has a connection, don't show modal
         setHasCalendarConnection(true);
         setShowCalendarModal(false);
-        // Clear any dismissal flag since they now have a connection
         localStorage.removeItem(`calendar_modal_dismissed_${specialistId}`);
       } else {
-        // No connection - check if user dismissed before showing
         setHasCalendarConnection(false);
         const dismissed = localStorage.getItem(`calendar_modal_dismissed_${specialistId}`);
         if (dismissed !== "true") {
@@ -146,7 +151,6 @@ export default function SchedulePage() {
       }
     } catch (err) {
       console.error("Error checking connections:", err);
-      // On error, show modal
       setHasCalendarConnection(false);
       setShowCalendarModal(true);
     } finally {
@@ -186,16 +190,13 @@ export default function SchedulePage() {
       }
     } catch (err) {
       console.error("Error loading ICS URL:", err);
-      // Non-fatal, continue without ICS URL
     }
   }
 
   async function handleConnectCalendar(provider: "google" | "microsoft") {
-    // Get specialist ID from session if not available
     let specialistId = specialist?.id;
     
     if (!specialistId) {
-      // Try to get user ID from session as fallback
       const { data: { user } } = await supabaseClient.auth.getUser();
       if (user) {
         specialistId = user.id;
@@ -207,18 +208,15 @@ export default function SchedulePage() {
       return;
     }
     
-    // Redirect to OAuth flow
     window.location.href = `/api/integrations/${provider}/connect?specialistId=${specialistId}`;
   }
 
   function handleDismissModal() {
-    // Store in localStorage that user dismissed the modal
     const id = specialist?.id || 'new';
     localStorage.setItem(`calendar_modal_dismissed_${id}`, "true");
     setShowCalendarModal(false);
   }
 
-  // Check localStorage when connection check completes
   useEffect(() => {
     if (!checkingConnection && !hasCalendarConnection) {
       const id = specialist?.id || 'new';
@@ -226,39 +224,120 @@ export default function SchedulePage() {
       if (dismissed === "true") {
         setShowCalendarModal(false);
       } else {
-        // Show modal if not dismissed and no connection
         setShowCalendarModal(true);
       }
     }
   }, [checkingConnection, hasCalendarConnection, specialist]);
 
-  // Calendar view helpers
-  const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-  const today = new Date();
-  const currentDay = today.getDay();
-  const calendarDates: number[] = [];
-  
-  // Get dates for current week
-  for (let i = 0; i < 7; i++) {
-    const date = new Date(today);
-    date.setDate(today.getDate() - currentDay + i + 1);
-    calendarDates.push(date.getDate());
-  }
+  // Calculate the current week's dates
+  const getWeekDates = (offset: number) => {
+    const today = new Date();
+    const currentDay = today.getDay();
+    const diff = today.getDate() - currentDay + (offset * 7);
+    const sunday = new Date(today.setDate(diff));
 
-  // Filter appointments based on search
-  const filteredAppointments = appointments.filter(apt => {
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    return apt.family_name?.toLowerCase().includes(query);
-  });
+    return Array.from({ length: 7 }, (_, i) => {
+      const date = new Date(sunday);
+      date.setDate(sunday.getDate() + i);
+      return date;
+    });
+  };
 
-  // Stats
-  const totalAppointments = appointments.length;
-  const confirmedAppointments = appointments.filter(a => a.status === 'confirmed').length;
-  const upcomingAppointments = appointments.filter(a => {
-    const startDate = DateTime.fromISO(a.starts_at, { zone: "utc" });
-    return startDate > DateTime.now();
-  }).length;
+  const weekDates = getWeekDates(currentWeekOffset);
+
+  const formatDateRange = () => {
+    const start = weekDates[0];
+    const end = weekDates[6];
+    return `${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${end.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+  };
+
+  const goToPreviousWeek = () => setCurrentWeekOffset(currentWeekOffset - 1);
+  const goToNextWeek = () => setCurrentWeekOffset(currentWeekOffset + 1);
+  const goToToday = () => setCurrentWeekOffset(0);
+
+  const isToday = (date: Date) => {
+    const today = new Date();
+    return date.toDateString() === today.toDateString();
+  };
+
+  // Filter appointments based on selected filter
+  const getFilteredAppointments = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    let filtered = appointments;
+
+    if (filter === 'today') {
+      filtered = filtered.filter(apt => {
+        const aptDate = DateTime.fromISO(apt.starts_at, { zone: "utc" }).toJSDate();
+        aptDate.setHours(0, 0, 0, 0);
+        return aptDate.getTime() === today.getTime();
+      });
+    } else if (filter === 'next7') {
+      const next7Days = new Date(today);
+      next7Days.setDate(today.getDate() + 7);
+      filtered = filtered.filter(apt => {
+        const aptDate = DateTime.fromISO(apt.starts_at, { zone: "utc" }).toJSDate();
+        aptDate.setHours(0, 0, 0, 0);
+        return aptDate >= today && aptDate <= next7Days;
+      });
+    } else if (filter === 'next30') {
+      const next30Days = new Date(today);
+      next30Days.setDate(today.getDate() + 30);
+      filtered = filtered.filter(apt => {
+        const aptDate = DateTime.fromISO(apt.starts_at, { zone: "utc" }).toJSDate();
+        aptDate.setHours(0, 0, 0, 0);
+        return aptDate >= today && aptDate <= next30Days;
+      });
+    }
+
+    if (searchQuery) {
+      filtered = filtered.filter(apt =>
+        apt.family_name?.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    return filtered.sort((a, b) => 
+      DateTime.fromISO(a.starts_at).toMillis() - DateTime.fromISO(b.starts_at).toMillis()
+    );
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'confirmed': return 'bg-green-100 text-green-800';
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'cancelled': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  // Get appointments for week view
+  const getAppointmentsForWeek = () => {
+    return appointments.map(apt => {
+      const startDate = DateTime.fromISO(apt.starts_at, { zone: "utc" });
+      const localStart = startDate.setZone("America/Edmonton");
+      const weekStart = weekDates[0];
+      const weekEnd = weekDates[6];
+      weekStart.setHours(0, 0, 0, 0);
+      weekEnd.setHours(23, 59, 59, 999);
+      
+      if (localStart.toJSDate() >= weekStart && localStart.toJSDate() <= weekEnd) {
+        const day = localStart.weekday % 7; // Convert to 0-6 (Sun-Sat)
+        const hour = localStart.hour;
+        const duration = DateTime.fromISO(apt.ends_at, { zone: "utc" })
+          .diff(startDate, 'hours').hours;
+        
+        return {
+          ...apt,
+          day,
+          startTime: hour,
+          duration,
+          color: apt.status === 'confirmed' ? '#16a34a' : apt.status === 'pending' ? '#059669' : '#ef4444'
+        };
+      }
+      return null;
+    }).filter(Boolean);
+  };
 
   if (loading) {
     return (
@@ -270,301 +349,389 @@ export default function SchedulePage() {
     );
   }
 
+  const filteredAppointments = getFilteredAppointments();
+  const weekAppointments = getAppointmentsForWeek();
+
   return (
-    <div className="flex-1 overflow-auto bg-gray-50">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-8 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4 flex-1">
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-              <input
-                type="text"
-                placeholder="Search appointments..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-800"
-              />
+      <div className="bg-white border-b border-gray-200 sticky top-0 z-30 shadow-sm">
+        <div className="max-w-7xl mx-auto px-6 py-6">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-[#064e3b] rounded-xl flex items-center justify-center">
+                <Calendar className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-black">Schedule</h1>
+                <p className="text-sm text-gray-500">Manage your appointments and availability</p>
+              </div>
+            </div>
+            
+            <div className="flex gap-3">
+              <button className="px-5 py-2.5 bg-white text-gray-700 rounded-lg border border-gray-200 hover:bg-gray-50 transition-all flex items-center gap-2">
+                <Plus className="w-4 h-4" />
+                Add Time Off
+              </button>
+              <button className="px-5 py-2.5 bg-[#064e3b] text-white rounded-lg hover:bg-[#065f46] transition-all shadow-sm hover:shadow-md flex items-center gap-2">
+                <Settings className="w-4 h-4" />
+                Edit Availability
+              </button>
             </div>
           </div>
-          <div className="flex items-center gap-4 ml-4">
-            <Link
-              href="/agent/settings"
-              className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+
+          {/* View Tabs */}
+          <div className="flex items-center gap-4 mb-6">
+            <button
+              onClick={() => setView('upcoming')}
+              className={`px-6 py-2.5 rounded-lg transition-all ${
+                view === 'upcoming'
+                  ? 'bg-[#064e3b] text-white shadow-sm'
+                  : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
+              }`}
             >
-              Calendar Settings
-            </Link>
-            <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-              <Settings size={20} className="text-gray-600" />
+              Upcoming
             </button>
-            <button className="p-2 hover:bg-gray-100 rounded-lg relative transition-colors">
-              <Bell size={20} className="text-gray-600" />
+            <button
+              onClick={() => setView('week')}
+              className={`px-6 py-2.5 rounded-lg transition-all ${
+                view === 'week'
+                  ? 'bg-[#064e3b] text-white shadow-sm'
+                  : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
+              }`}
+            >
+              Week View
             </button>
-            <div className="flex items-center gap-2">
-              <div className="text-right">
-                <div className="text-sm text-gray-900">{userName || 'Agent'}</div>
-                <div className="text-xs text-gray-500">Agent profile</div>
+          </div>
+
+          {/* Filters and Search (only for upcoming view) */}
+          {view === 'upcoming' && (
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setFilter('all')}
+                  className={`px-4 py-2 rounded-lg text-sm transition-all ${
+                    filter === 'all' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  All
+                </button>
+                <button
+                  onClick={() => setFilter('today')}
+                  className={`px-4 py-2 rounded-lg text-sm transition-all ${
+                    filter === 'today' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  Today
+                </button>
+                <button
+                  onClick={() => setFilter('next7')}
+                  className={`px-4 py-2 rounded-lg text-sm transition-all ${
+                    filter === 'next7' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  Next 7 Days
+                </button>
+                <button
+                  onClick={() => setFilter('next30')}
+                  className={`px-4 py-2 rounded-lg text-sm transition-all ${
+                    filter === 'next30' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  Next 30 Days
+                </button>
               </div>
-              <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-400 rounded-full flex items-center justify-center">
-                <User size={20} className="text-white" />
+
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search by family name or type..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#064e3b] focus:border-transparent w-80"
+                />
               </div>
             </div>
-          </div>
+          )}
+
+          {/* Week Navigation (only for week view) */}
+          {view === 'week' && (
+            <div className="flex items-center justify-between">
+              <button
+                onClick={goToPreviousWeek}
+                className="flex items-center gap-2 px-5 py-2.5 bg-white text-gray-700 rounded-lg border border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-all"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                Previous
+              </button>
+              
+              <div className="flex items-center gap-4">
+                <span className="text-sm text-gray-600">{formatDateRange()}</span>
+                <button
+                  onClick={goToToday}
+                  className="px-5 py-2 bg-[#064e3b] text-white rounded-lg hover:bg-[#065f46] transition-all text-sm"
+                >
+                  Today
+                </button>
+              </div>
+
+              <button
+                onClick={goToNextWeek}
+                className="flex items-center gap-2 px-5 py-2.5 bg-white text-gray-700 rounded-lg border border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-all"
+              >
+                Next
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="p-8">
-        <div className="grid grid-cols-3 gap-6">
-          {/* Left 2 Columns */}
-          <div className="col-span-2 space-y-6">
-            {/* Welcome Section */}
-            <div className="bg-gradient-to-r from-green-900 to-green-800 rounded-2xl p-6">
-              <div>
-                <h2 className="text-2xl mb-2 text-white">
-                  Schedule Overview
-                </h2>
-                <p className="text-green-100">Manage your upcoming appointments</p>
-              </div>
-            </div>
-
-            {/* Stats Cards */}
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg text-gray-900">Schedule Statistics</h3>
-              </div>
-              
-              <div className="grid grid-cols-3 gap-4">
-                {/* Total Appointments */}
-                <div className="bg-white rounded-xl p-4 border border-gray-200">
-                  <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mb-3">
-                    <Calendar size={20} className="text-green-800" />
-                  </div>
-                  <div className="text-xs text-gray-500 mb-1">Total Appointments</div>
-                  <div className="text-2xl text-gray-900">{totalAppointments}</div>
-                </div>
-                
-                {/* Confirmed */}
-                <div className="bg-white rounded-xl p-4 border border-gray-200">
-                  <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mb-3">
-                    <Clock size={20} className="text-green-800" />
-                  </div>
-                  <div className="text-xs text-gray-500 mb-1">Confirmed</div>
-                  <div className="text-2xl text-gray-900">{confirmedAppointments}</div>
-                </div>
-                
-                {/* Upcoming */}
-                <div className="bg-white rounded-xl p-4 border border-gray-200">
-                  <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center mb-3">
-                    <Calendar size={20} className="text-gray-700" />
-                  </div>
-                  <div className="text-xs text-gray-500 mb-1">Upcoming</div>
-                  <div className="text-2xl text-gray-900">{upcomingAppointments}</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Appointments List */}
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
-              <h3 className="text-lg text-gray-900 mb-4">My appointments</h3>
-              
-              <div className="space-y-2">
-                {/* Table Header */}
-                <div className="grid grid-cols-12 gap-4 text-xs text-gray-500 pb-2 border-b border-gray-100">
-                  <div className="col-span-3 flex items-center gap-2">
-                    Name
-                    <ArrowUpDown size={14} className="text-green-800" />
-                  </div>
-                  <div className="col-span-2">Location</div>
-                  <div className="col-span-3 flex items-center gap-2">
-                    Date
-                    <ArrowUpDown size={14} className="text-gray-400" />
-                  </div>
-                  <div className="col-span-2 flex items-center gap-2">
-                    Time
-                    <ArrowUpDown size={14} className="text-gray-400" />
-                  </div>
-                  <div className="col-span-1">Status</div>
-                  <div className="col-span-1"></div>
-                </div>
-                
-                {/* Table Rows */}
+      <div className="max-w-7xl mx-auto px-6 py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Main Content Area */}
+          <div className="lg:col-span-3">
+            {view === 'upcoming' ? (
+              <div className="space-y-4">
                 {loadingAppointments ? (
-                  <div className="py-12 text-center">
+                  <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-12 text-center">
                     <Loader2 className="w-8 h-8 animate-spin text-gray-400 mx-auto mb-4" />
                     <p className="text-sm text-gray-500">Loading appointments...</p>
                   </div>
-                ) : error ? (
-                  <div className="py-8 text-center">
-                    <p className="text-sm text-red-600">{error}</p>
-                  </div>
                 ) : filteredAppointments.length === 0 ? (
-                  <div className="py-8 text-center text-sm text-gray-500">
-                    No appointments yet. <Link href="/agent/appointments" className="text-green-800 hover:underline">Browse available appointments</Link>
+                  <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-12 text-center">
+                    <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                    <h3 className="text-gray-900 mb-2">No upcoming appointments</h3>
+                    <p className="text-gray-500 mb-6">Get started by setting your availability and connecting your calendar</p>
+                    <div className="flex gap-3 justify-center">
+                      <button className="px-5 py-2.5 bg-[#064e3b] text-white rounded-lg hover:bg-[#065f46] transition-all">
+                        Set Availability
+                      </button>
+                      <button 
+                        onClick={() => setShowCalendarModal(true)}
+                        className="px-5 py-2.5 bg-white text-gray-700 rounded-lg border border-gray-200 hover:bg-gray-50 transition-all"
+                      >
+                        Connect Calendar
+                      </button>
+                    </div>
                   </div>
                 ) : (
-                  filteredAppointments.map((appointment, idx) => {
+                  filteredAppointments.map((appointment) => {
                     const startDate = DateTime.fromISO(appointment.starts_at, { zone: "utc" });
                     const endDate = DateTime.fromISO(appointment.ends_at, { zone: "utc" });
                     const localStart = startDate.setZone("America/Edmonton");
                     const localEnd = endDate.setZone("America/Edmonton");
-                    const formattedDate = localStart.toLocaleString(DateTime.DATE_MED);
-                    const formattedTime = `${localStart.toLocaleString(DateTime.TIME_SIMPLE)} - ${localEnd.toLocaleString(DateTime.TIME_SIMPLE)}`;
+                    const aptDate = localStart.toJSDate();
 
                     return (
-                      <Link
+                      <div
                         key={appointment.id}
-                        href={`/agent/my-appointments`}
-                        className={`grid grid-cols-12 gap-4 items-center py-3 rounded-lg transition-colors ${
-                          appointment.status === 'confirmed' ? 'bg-green-50 hover:bg-green-100' : 'bg-white hover:bg-gray-50'
-                        }`}
+                        className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all"
                       >
-                        <div className="col-span-3 flex items-center gap-2">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs ${
-                            idx === 0 ? 'bg-gray-200 text-gray-700' : 
-                            idx === 1 ? 'bg-green-100 text-green-800' : 
-                            'bg-gray-200 text-gray-700'
-                          }`}>
-                            {appointment.family_name?.split(' ').map(n => n[0]).join('').toUpperCase() || '?'}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-start gap-6 flex-1">
+                            {/* Date & Time */}
+                            <div className="flex flex-col items-center justify-center bg-gray-50 rounded-lg p-4 min-w-[100px]">
+                              <div className="text-xs text-gray-500 uppercase">
+                                {aptDate.toLocaleDateString('en-US', { month: 'short' })}
+                              </div>
+                              <div className="text-2xl text-gray-900 mt-1">
+                                {aptDate.getDate()}
+                              </div>
+                              <div className="text-sm text-gray-600 mt-1">
+                                {localStart.toLocaleString(DateTime.TIME_SIMPLE)}
+                              </div>
+                            </div>
+
+                            {/* Details */}
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 mb-2">
+                                <h3 className="text-gray-900">Appointment with {appointment.family_name || 'Family'}</h3>
+                                <span className={`px-3 py-1 rounded-full text-xs ${getStatusColor(appointment.status)}`}>
+                                  {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-4 text-sm text-gray-600">
+                                <span className="flex items-center gap-1">
+                                  <Clock className="w-4 h-4" />
+                                  {localStart.toLocaleString(DateTime.TIME_SIMPLE)} - {localEnd.toLocaleString(DateTime.TIME_SIMPLE)}
+                                </span>
+                                <span>•</span>
+                                <span>{appointment.family_name || 'Unknown'}</span>
+                              </div>
+                            </div>
                           </div>
-                          <span className="text-sm text-gray-900">{appointment.family_name || 'Unknown'}</span>
+
+                          {/* Actions */}
+                          <div className="flex items-center gap-2">
+                            <Link
+                              href={`/agent/my-appointments`}
+                              className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-all"
+                              title="View"
+                            >
+                              <Eye className="w-5 h-5" />
+                            </Link>
+                            <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-all" title="Reschedule">
+                              <RefreshCw className="w-5 h-5" />
+                            </button>
+                            <button className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all" title="Cancel">
+                              <X className="w-5 h-5" />
+                            </button>
+                          </div>
                         </div>
-                        <div className="col-span-2 text-sm text-gray-600">-</div>
-                        <div className="col-span-3 text-sm text-gray-600">{formattedDate}</div>
-                        <div className="col-span-2 text-sm text-gray-600">{formattedTime}</div>
-                        <div className="col-span-1">
-                          {appointment.status === 'confirmed' ? (
-                            <Check size={18} className="text-green-600" />
-                          ) : (
-                            <AlertCircle size={18} className="text-red-500" />
-                          )}
-                        </div>
-                        <div className="col-span-1">
-                          <button 
-                            onClick={(e) => {
-                              e.preventDefault();
-                              router.push(`/agent/my-appointments`);
-                            }}
-                            className="p-1 hover:bg-gray-100 rounded"
-                          >
-                            <MoreHorizontal size={16} className="text-gray-400" />
-                          </button>
-                        </div>
-                      </Link>
+                      </div>
                     );
                   })
                 )}
               </div>
-            </div>
-          </div>
-          
-          {/* Right Column */}
-          <div className="space-y-6">
-            {/* Schedule Calendar */}
-            <div className="bg-white rounded-xl border border-gray-200 p-5">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm text-gray-900">Schedule Calendar</h3>
-                <div className="flex items-center gap-2">
-                  <button className="p-1 hover:bg-gray-100 rounded">
-                    <ChevronLeft size={16} className="text-gray-600" />
-                  </button>
-                  <button className="p-1 hover:bg-gray-100 rounded">
-                    <ChevronRight size={16} className="text-gray-600" />
-                  </button>
-                  <span className="text-sm text-gray-600 ml-2">
-                    {today.toLocaleDateString('en-US', { month: 'short' })}
-                  </span>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-7 gap-2">
-                {weekDays.map((day, idx) => {
-                  const isToday = idx === currentDay - 1;
-                  const dateNum = calendarDates[idx];
-                  // Check if there are appointments on this day
-                  const hasAppointments = appointments.some(apt => {
-                    const aptDate = DateTime.fromISO(apt.starts_at, { zone: "utc" });
-                    const localAptDate = aptDate.setZone("America/Edmonton");
-                    return localAptDate.day === dateNum;
-                  });
-                  
-                  return (
-                    <div key={day} className="text-center">
-                      <div className="text-xs text-gray-500 mb-2">{day}</div>
-                      <div className={`w-full aspect-square rounded-lg flex flex-col items-center justify-center text-sm ${
-                        isToday ? 'bg-green-800 text-white' : 'bg-gray-50 text-gray-900'
-                      }`}>
-                        <div>{dateNum}</div>
-                        {hasAppointments && (
-                          <div className="flex gap-0.5 mt-1">
-                            <span className="w-1 h-1 bg-green-600 rounded-full"></span>
-                          </div>
-                        )}
+            ) : (
+              // Week View
+              <div className="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-200">
+                {/* Day Headers */}
+                <div className="grid grid-cols-8 border-b border-gray-200 bg-white sticky top-0 z-20">
+                  <div className="p-4"></div>
+                  {weekDates.map((date, index) => {
+                    const today = isToday(date);
+                    return (
+                      <div
+                        key={index}
+                        className="p-4 text-center border-l border-gray-200"
+                      >
+                        <div className={`text-xs uppercase tracking-wide ${today ? 'text-[#064e3b]' : 'text-gray-500'}`}>
+                          {dayNames[index]}
+                        </div>
+                        <div className={`mt-2 inline-flex items-center justify-center w-10 h-10 rounded-full transition-colors ${
+                          today ? 'bg-[#064e3b] text-white' : 'text-gray-900'
+                        }`}>
+                          {date.getDate()}
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+                    );
+                  })}
+                </div>
 
-            {/* Number of Meetings Chart */}
-            <div className="bg-white rounded-xl border border-gray-200 p-5">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm text-gray-900">Number of Meetings</h3>
-                <button className="text-xs text-gray-500 hover:text-gray-700">Last week</button>
-              </div>
-              
-              <div className="h-48 flex items-end justify-between gap-3 border-l-2 border-b-2 border-gray-200 pl-2 pb-2">
-                {[
-                  { day: 'Mon', value: Math.min(100, (totalAppointments / 10) * 100) },
-                  { day: 'Tue', value: Math.min(100, (confirmedAppointments / 8) * 100) },
-                  { day: 'Wed', value: Math.min(100, (upcomingAppointments / 6) * 100) },
-                  { day: 'Thu', value: Math.min(100, (totalAppointments / 10) * 80) },
-                  { day: 'Fri', value: Math.min(100, (confirmedAppointments / 8) * 70) },
-                ].map((item, idx) => (
-                  <div key={idx} className="flex-1 flex flex-col items-center gap-2">
-                    <div className="w-full flex flex-col items-center justify-end h-40">
-                      <div 
-                        className="w-full bg-green-800 rounded-t hover:bg-green-900 transition-colors"
-                        style={{ height: `${item.value}%` }}
-                      ></div>
+                {/* Time Slots */}
+                <div className="divide-y divide-gray-100">
+                  {hours.map((hour) => (
+                    <div key={hour} className="grid grid-cols-8 group">
+                      {/* Time Label */}
+                      <div className="p-4 flex items-start justify-end pr-6 text-xs text-gray-500 bg-gray-50/50">
+                        {hour === 12 ? '12 PM' : hour > 12 ? `${hour - 12} PM` : `${hour} AM`}
+                      </div>
+
+                      {/* Day Cells */}
+                      {[0, 1, 2, 3, 4, 5, 6].map((day) => (
+                        <div
+                          key={day}
+                          className="border-l border-gray-200 p-3 min-h-[90px] relative bg-white hover:bg-gray-50/50 transition-colors cursor-pointer"
+                        >
+                          {/* Render appointments for this time slot */}
+                          {weekAppointments
+                            .filter((apt: any) => apt.day === day && apt.startTime === hour)
+                            .map((apt: any) => (
+                              <div
+                                key={apt.id}
+                                className="absolute left-2 right-2 rounded-lg p-3 text-white shadow-md cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02] z-10"
+                                style={{
+                                  backgroundColor: apt.color,
+                                  height: `${apt.duration * 90 - 16}px`,
+                                  top: '12px',
+                                }}
+                              >
+                                <div className="text-xs opacity-90">
+                                  {DateTime.fromISO(apt.starts_at, { zone: "utc" })
+                                    .setZone("America/Edmonton")
+                                    .toLocaleString(DateTime.TIME_SIMPLE)}
+                                </div>
+                                <div className="mt-1">{apt.family_name || 'Appointment'}</div>
+                              </div>
+                            ))}
+                        </div>
+                      ))}
                     </div>
-                    <div className="text-xs text-gray-600">{item.day}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            
-            {/* Calendar Sync Info */}
-            {icsUrl && (
-              <div className="bg-white rounded-xl border border-gray-200 p-5">
-                <h3 className="text-sm text-gray-900 mb-2">ICS Calendar Feed</h3>
-                <p className="text-xs text-gray-500 mb-3">
-                  Add this URL to your calendar app to sync appointments
-                </p>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={icsUrl}
-                    readOnly
-                    className="flex-1 px-3 py-2 text-xs border border-gray-200 rounded-lg bg-gray-50"
-                  />
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(icsUrl);
-                    }}
-                    className="px-3 py-2 text-xs bg-green-800 text-white rounded-lg hover:bg-green-900 transition-colors"
-                  >
-                    Copy
-                  </button>
+                  ))}
                 </div>
               </div>
             )}
           </div>
+
+          {/* Right Sidebar */}
+          <div className="lg:col-span-1 space-y-6">
+            {/* Connected Calendars */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+              <h3 className="text-gray-900 mb-4 flex items-center gap-2">
+                <Calendar className="w-5 h-5" />
+                Connected Calendars
+              </h3>
+              <div className="space-y-3">
+                {hasCalendarConnection ? (
+                  <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
+                    <div className="flex items-center gap-2">
+                      <Check className="w-4 h-4 text-green-600" />
+                      <div>
+                        <div className="text-sm text-gray-900">Calendar Connected</div>
+                        <div className="text-xs text-gray-500">Synced</div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-gray-400" />
+                      <div>
+                        <div className="text-sm text-gray-900">Not connected</div>
+                        <div className="text-xs text-gray-500">Connect a calendar</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="pt-3 border-t border-gray-200">
+                  <button 
+                    onClick={() => setShowCalendarModal(true)}
+                    className="w-full px-4 py-2 bg-[#064e3b] text-white rounded-lg hover:bg-[#065f46] transition-all text-sm"
+                  >
+                    {hasCalendarConnection ? 'Reconnect' : 'Connect Calendar'}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Availability Overview */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+              <h3 className="text-gray-900 mb-4 flex items-center gap-2">
+                <Clock className="w-5 h-5" />
+                Availability Overview
+              </h3>
+              <div className="space-y-3 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Working Hours</span>
+                  <span className="text-gray-900">9 AM - 5 PM</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Slot Length</span>
+                  <span className="text-gray-900">30 minutes</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Buffer Time</span>
+                  <span className="text-gray-900">10 minutes</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Time Zone</span>
+                  <span className="text-gray-900">MST</span>
+                </div>
+                <button className="w-full mt-4 px-4 py-2 bg-white text-gray-700 rounded-lg border border-gray-200 hover:bg-gray-50 transition-all text-sm">
+                  Edit Settings
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Calendar Sync Modal - Only show if no connection and not dismissed */}
+      {/* Calendar Sync Modal */}
       {showCalendarModal && !hasCalendarConnection && !checkingConnection && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-xl">
@@ -585,7 +752,7 @@ export default function SchedulePage() {
             <div className="space-y-3">
               <button
                 onClick={() => handleConnectCalendar("google")}
-                className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white border-2 border-gray-300 rounded-lg text-gray-700 hover:border-green-800 hover:bg-green-50 transition-colors font-medium"
+                className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white border-2 border-gray-300 rounded-lg text-gray-700 hover:border-[#064e3b] hover:bg-green-50 transition-colors font-medium"
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -598,7 +765,7 @@ export default function SchedulePage() {
 
               <button
                 onClick={() => handleConnectCalendar("microsoft")}
-                className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white border-2 border-gray-300 rounded-lg text-gray-700 hover:border-green-800 hover:bg-green-50 transition-colors font-medium"
+                className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white border-2 border-gray-300 rounded-lg text-gray-700 hover:border-[#064e3b] hover:bg-green-50 transition-colors font-medium"
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
                   <path fill="#F25022" d="M1 1h10v10H1z"/>
