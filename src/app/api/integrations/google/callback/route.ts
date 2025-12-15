@@ -105,6 +105,42 @@ export async function GET(req: NextRequest) {
     const externalCalendarId = calendar.id;
     */
 
+    // Check if specialist exists, create if not
+    const { data: existingSpecialist, error: checkError } = await supabaseServer
+      .from("specialists")
+      .select("id")
+      .eq("id", specialistId)
+      .maybeSingle();
+
+    if (checkError) {
+      console.error("Error checking specialist:", checkError);
+      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL || "http://localhost:3000";
+      return NextResponse.redirect(
+        `${baseUrl}/agent/settings?error=${encodeURIComponent("Failed to verify specialist account")}`
+      );
+    }
+
+    // Create specialist record if it doesn't exist
+    if (!existingSpecialist) {
+      const { error: createError } = await supabaseServer
+        .from("specialists")
+        .insert({
+          id: specialistId,
+          status: "pending",
+          is_active: false,
+          display_name: "Specialist",
+          timezone: "America/Edmonton",
+        });
+
+      if (createError) {
+        console.error("Error creating specialist:", createError);
+        const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL || "http://localhost:3000";
+        return NextResponse.redirect(
+          `${baseUrl}/agent/settings?error=${encodeURIComponent("Failed to create specialist account")}`
+        );
+      }
+    }
+
     // Placeholder values (replace with actual values from OAuth flow above)
     const access_token = "TODO_REPLACE_WITH_ACTUAL_TOKEN";
     const refresh_token = "TODO_REPLACE_WITH_ACTUAL_REFRESH_TOKEN";
@@ -131,9 +167,10 @@ export async function GET(req: NextRequest) {
 
     if (upsertError) {
       console.error("Error saving calendar connection:", upsertError);
-      return NextResponse.json(
-        { error: "Failed to save calendar connection" },
-        { status: 500 }
+      console.error("Error details:", JSON.stringify(upsertError, null, 2));
+      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL || "http://localhost:3000";
+      return NextResponse.redirect(
+        `${baseUrl}/agent/settings?error=${encodeURIComponent(`Failed to save calendar connection: ${upsertError.message || upsertError.code || "Unknown error"}`)}`
       );
     }
 
