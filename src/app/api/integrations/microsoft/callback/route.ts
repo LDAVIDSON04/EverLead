@@ -141,14 +141,15 @@ export async function GET(req: NextRequest) {
     }
 
     // Redirect to success page
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL || "http://localhost:3000";
     return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/agent/settings?calendar=connected`
+      `${baseUrl}/agent/settings?calendar=connected&provider=microsoft`
     );
   } catch (error: any) {
     console.error("Error in /api/integrations/microsoft/callback:", error);
-    return NextResponse.json(
-      { error: "Internal server error", message: error.message },
-      { status: 500 }
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL || "http://localhost:3000";
+    return NextResponse.redirect(
+      `${baseUrl}/agent/settings?error=${encodeURIComponent(error.message || "Connection failed")}`
     );
   }
 }

@@ -137,16 +137,16 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Redirect to success page or return success response
-    // TODO: Redirect to a proper success page in your app
+    // Redirect to success page
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL || "http://localhost:3000";
     return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/agent/settings?calendar=connected`
+      `${baseUrl}/agent/settings?calendar=connected&provider=google`
     );
   } catch (error: any) {
     console.error("Error in /api/integrations/google/callback:", error);
-    return NextResponse.json(
-      { error: "Internal server error", message: error.message },
-      { status: 500 }
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL || "http://localhost:3000";
+    return NextResponse.redirect(
+      `${baseUrl}/agent/settings?error=${encodeURIComponent(error.message || "Connection failed")}`
     );
   }
 }
