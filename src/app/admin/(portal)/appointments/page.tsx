@@ -1,0 +1,242 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { supabaseClient } from "@/lib/supabaseClient";
+import { useRequireRole } from "@/lib/hooks/useRequireRole";
+import { Calendar, DollarSign, Eye, XCircle } from "lucide-react";
+
+type AdminAppointment = {
+  id: string;
+  starts_at: string;
+  ends_at: string;
+  status: string;
+  amount_cents: number | null;
+  family_name: string | null;
+  family_email: string | null;
+  specialist_name: string | null;
+  specialist_region: string | null;
+};
+
+export default function AdminAppointmentsPage() {
+  useRequireRole("admin");
+
+  const [appointments, setAppointments] = useState<AdminAppointment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function load() {
+      setLoading(true);
+      setError(null);
+      try {
+        const { data, error } = await supabaseClient
+          .from("appointments")
+          .select(
+            `
+              id,
+              starts_at,
+              ends_at,
+              status,
+              price_cents,
+              families:families ( full_name, email ),
+              specialists:specialists ( display_name, region )
+            `
+          )
+          .order("starts_at", { ascending: false })
+          .limit(100);
+
+        if (error) throw error;
+
+        const rows: AdminAppointment[] = (data || []).map((apt: any) => ({
+          id: apt.id,
+          starts_at: apt.starts_at,
+          ends_at: apt.ends_at,
+          status: apt.status,
+          amount_cents: apt.price_cents ?? null,
+          family_name: Array.isArray(apt.families) ? apt.families[0]?.full_name : apt.families?.full_name,
+          family_email: Array.isArray(apt.families) ? apt.families[0]?.email : apt.families?.email,
+          specialist_name: Array.isArray(apt.specialists) ? apt.specialists[0]?.display_name : apt.specialists?.display_name,
+          specialist_region: Array.isArray(apt.specialists) ? apt.specialists[0]?.region : apt.specialists?.region,
+        }));
+
+        setAppointments(rows);
+      } catch (err: any) {
+        console.error("Error loading admin appointments:", err);
+        setError(err.message || "Failed to load appointments");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    load();
+  }, []);
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "confirmed":
+      case "booked":
+        return "bg-emerald-100 text-emerald-700 border-emerald-200";
+      case "pending":
+        return "bg-yellow-100 text-yellow-700 border-yellow-200";
+      case "cancelled":
+        return "bg-red-100 text-red-700 border-red-200";
+      case "completed":
+        return "bg-blue-100 text-blue-700 border-blue-200";
+      default:
+        return "bg-neutral-100 text-neutral-700 border-neutral-200";
+    }
+  };
+
+  const getPaymentColor = (hasAmount: boolean) => {
+    return hasAmount ? "text-emerald-700" : "text-neutral-600";
+  };
+
+  if (loading) {
+    return (
+      <div className="p-8">
+        <p className="text-sm text-neutral-600">Loading appointments…</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-8">
+      <div className="mb-8">
+        <h1 className="text-3xl mb-2 text-black">Appointments</h1>
+        <p className="text-neutral-600">View and manage all appointments across Soradin.</p>
+      </div>
+
+      {error && (
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
+      {/* Simple filters shell matching design (static for now) */}
+      <div className="mb-6 flex gap-4">
+        <input
+          type="date"
+          className="px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-700"
+        />
+        <select className="px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-700">
+          <option>All Status</option>
+          <option>Pending</option>
+          <option>Confirmed</option>
+          <option>Booked</option>
+          <option>Completed</option>
+          <option>Cancelled</option>
+        </select>
+        <select className="px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-700">
+          <option>All Payment Status</option>
+          <option>With Amount</option>
+          <option>No Amount</option>
+        </select>
+      </div>
+
+      {/* Appointments Table */}
+      <div className="bg-white border border-neutral-200 rounded-lg overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-neutral-50 border-b border-neutral-200">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs text-neutral-600 uppercase tracking-wider">
+                  ID
+                </th>
+                <th className="px-6 py-3 text-left text-xs text-neutral-600 uppercase tracking-wider">
+                  Date &amp; Time
+                </th>
+                <th className="px-6 py-3 text-left text-xs text-neutral-600 uppercase tracking-wider">
+                  Client
+                </th>
+                <th className="px-6 py-3 text-left text-xs text-neutral-600 uppercase tracking-wider">
+                  Specialist
+                </th>
+                <th className="px-6 py-3 text-left text-xs text-neutral-600 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="px-6 py-3 text-left text-xs text-neutral-600 uppercase tracking-wider">
+                  Payment
+                </th>
+                <th className="px-6 py-3 text-left text-xs text-neutral-600 uppercase tracking-wider">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-neutral-200">
+              {appointments.map((apt) => {
+                const start = new Date(apt.starts_at);
+                const end = new Date(apt.ends_at);
+                const hasAmount = (apt.amount_cents ?? 0) > 0;
+                return (
+                  <tr key={apt.id} className="hover:bg-neutral-50">
+                    <td className="px-6 py-4 text-sm text-black">{apt.id}</td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-neutral-400" />
+                        <div>
+                          <p className="text-sm text-black">
+                            {start.toLocaleDateString()}
+                          </p>
+                          <p className="text-xs text-neutral-500">
+                            {start.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}{" "}
+                            –{" "}
+                            {end.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div>
+                        <p className="text-sm text-black">{apt.family_name || "Unknown"}</p>
+                        <p className="text-xs text-neutral-500">{apt.family_email || "—"}</p>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div>
+                        <p className="text-sm text-black">{apt.specialist_name || "Unknown"}</p>
+                        <p className="text-xs text-neutral-400">{apt.specialist_region || "—"}</p>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span
+                        className={`inline-flex px-3 py-1 rounded-full text-xs border ${getStatusColor(
+                          apt.status
+                        )}`}
+                      >
+                        {apt.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        <DollarSign className={`w-4 h-4 ${getPaymentColor(hasAmount)}`} />
+                        <div>
+                          <p className={`text-sm ${getPaymentColor(hasAmount)}`}>
+                            {hasAmount ? `$${((apt.amount_cents ?? 0) / 100).toFixed(2)}` : "$0.00"}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex gap-2">
+                        <button className="px-3 py-1.5 border border-neutral-300 text-neutral-700 rounded-md hover:bg-neutral-50 text-sm flex items-center gap-1">
+                          <Eye className="w-3 h-3" />
+                          View
+                        </button>
+                        <button className="px-3 py-1.5 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm flex items-center gap-1">
+                          <XCircle className="w-3 h-3" />
+                          Cancel
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+

@@ -2,7 +2,6 @@
 
 import { ReactNode, useEffect, useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import { supabaseClient } from '@/lib/supabaseClient';
 import { Home, Users, FileText, Settings, User, CheckCircle, XCircle } from 'lucide-react';
@@ -74,21 +73,16 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     <div className="flex h-screen bg-gray-50">
       {/* Sidebar */}
       <div className="w-64 bg-black flex flex-col">
-        {/* Logo - Top Left */}
-        <div className="px-4 py-6">
-          <Link href="/admin/dashboard" className="flex items-center gap-2">
-            <Image
-              src="/logo - white.png"
-              alt="Soradin Logo"
-              width={80}
-              height={80}
-              className="h-20 w-20 object-contain"
-            />
+        {/* Brand */}
+        <div className="px-6 py-6 border-b border-neutral-800">
+          <Link href="/admin/dashboard" className="block">
+            <div className="text-2xl tracking-tight text-white">Soradin</div>
+            <div className="text-sm text-neutral-400 mt-1">Admin Portal</div>
           </Link>
         </div>
         
         {/* Menu Items */}
-        <nav className="flex-1 px-4">
+        <nav className="flex-1 px-4 py-4">
           <div className="flex flex-col gap-1">
             {menuItems.map((item) => {
               const Icon = item.icon;
@@ -100,8 +94,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                   href={item.href}
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-left ${
                     isActive 
-                      ? 'bg-green-900/30 text-white' 
-                      : 'text-white/60 hover:bg-white/5 hover:text-white'
+                      ? 'bg-emerald-700 text-white' 
+                      : 'text-white/70 hover:bg-neutral-900 hover:text-white'
                   }`}
                 >
                   <Icon size={18} />
@@ -113,10 +107,10 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         </nav>
         
         {/* User Profile */}
-        <div className="px-4 pb-6">
+        <div className="px-4 pb-6 border-t border-neutral-800">
           <div className="flex items-center gap-3 px-3 py-3 mb-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-purple-400 rounded-full flex items-center justify-center">
-              <User size={16} className="text-white" />
+            <div className="w-8 h-8 rounded-full bg-emerald-700 flex items-center justify-center text-sm text-white">
+              {userName ? userName.charAt(0).toUpperCase() : <User size={16} className="text-white" />}
             </div>
             <div className="flex-1">
               <div className="text-white text-sm">{userName}</div>
@@ -125,7 +119,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           </div>
           <button
             onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+            className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm text-white/80 hover:text-white hover:bg-neutral-900 rounded-lg transition-colors"
           >
             <XCircle size={16} />
             <span>Log out</span>
