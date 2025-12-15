@@ -180,7 +180,7 @@ export default function SchedulePage() {
     }
   }
 
-  async function handleConnectCalendar(provider: "google" | "google" | "microsoft") {
+  async function handleConnectCalendar(provider: "google" | "microsoft") {
     // Get specialist ID from session if not available
     let specialistId = specialist?.id;
     
