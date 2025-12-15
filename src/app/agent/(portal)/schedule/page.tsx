@@ -180,11 +180,25 @@ export default function SchedulePage() {
     }
   }
 
-  function handleConnectCalendar(provider: "google" | "microsoft") {
-    if (!specialist?.id) return;
+  async function handleConnectCalendar(provider: "google" | "google" | "microsoft") {
+    // Get specialist ID from session if not available
+    let specialistId = specialist?.id;
+    
+    if (!specialistId) {
+      // Try to get user ID from session as fallback
+      const { data: { user } } = await supabaseClient.auth.getUser();
+      if (user) {
+        specialistId = user.id;
+      }
+    }
+    
+    if (!specialistId) {
+      console.error("Cannot connect calendar: no specialist ID available");
+      return;
+    }
     
     // Redirect to OAuth flow
-    window.location.href = `/api/integrations/${provider}/connect?specialistId=${specialist.id}`;
+    window.location.href = `/api/integrations/${provider}/connect?specialistId=${specialistId}`;
   }
 
   function handleDismissModal() {
