@@ -73,15 +73,46 @@ export async function POST(request: NextRequest) {
       profilePictureUrl,
     } = body;
 
+    console.log("Profile update request:", {
+      userId: user.id,
+      fullName,
+      firstName,
+      lastName,
+      profilePictureUrl: profilePictureUrl ? "provided" : "not provided",
+    });
+
     const updateData: any = {};
 
-    if (fullName !== undefined) updateData.full_name = fullName;
-    if (firstName !== undefined) updateData.first_name = firstName;
-    if (lastName !== undefined) updateData.last_name = lastName;
+    // Always update full_name if provided
+    if (fullName !== undefined && fullName !== null && fullName !== "") {
+      updateData.full_name = fullName;
+    }
+
+    // Update first_name and last_name - prefer explicit values, otherwise parse from fullName
+    if (firstName !== undefined && firstName !== null && firstName !== "") {
+      updateData.first_name = firstName;
+    } else if (fullName) {
+      const nameParts = fullName.trim().split(/\s+/);
+      if (nameParts.length > 0) {
+        updateData.first_name = nameParts[0];
+      }
+    }
+
+    if (lastName !== undefined && lastName !== null && lastName !== "") {
+      updateData.last_name = lastName;
+    } else if (fullName) {
+      const nameParts = fullName.trim().split(/\s+/);
+      if (nameParts.length > 1) {
+        updateData.last_name = nameParts.slice(1).join(' ');
+      }
+    }
+
     if (businessName !== undefined) updateData.funeral_home = businessName;
     if (professionalTitle !== undefined) updateData.job_title = professionalTitle;
     if (phone !== undefined) updateData.phone = phone;
-    if (profilePictureUrl !== undefined) updateData.profile_picture_url = profilePictureUrl;
+    if (profilePictureUrl !== undefined && profilePictureUrl !== null && profilePictureUrl !== "") {
+      updateData.profile_picture_url = profilePictureUrl;
+    }
 
     // Store additional fields in metadata JSONB or as separate fields
     // We'll use a metadata field to store these extra settings
@@ -105,17 +136,29 @@ export async function POST(request: NextRequest) {
       };
     }
 
-    const { error } = await supabaseAdmin
+    console.log("Updating profile with data:", updateData);
+
+    const { data: updatedProfile, error } = await supabaseAdmin
       .from("profiles")
       .update(updateData)
-      .eq("id", user.id);
+      .eq("id", user.id)
+      .select("full_name, first_name, last_name, profile_picture_url")
+      .single();
 
     if (error) {
       console.error("Error updating profile:", error);
-      return NextResponse.json({ error: "Failed to update profile" }, { status: 500 });
+      return NextResponse.json({ 
+        error: "Failed to update profile", 
+        details: error.message 
+      }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true });
+    console.log("Profile updated successfully:", updatedProfile);
+
+    return NextResponse.json({ 
+      success: true,
+      profile: updatedProfile 
+    });
   } catch (err: any) {
     console.error("Error in POST /api/agent/settings/profile:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

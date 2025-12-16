@@ -281,31 +281,60 @@ function ProfileSection({
     const file = e.target.files?.[0];
     if (!file) return;
 
+    setSaving(true);
+    setSaveMessage(null);
+
     try {
-      const { data: { user } } = await supabaseClient.auth.getUser();
-      if (!user) return;
+      const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+      if (userError || !user) {
+        throw new Error("Not authenticated. Please log in again.");
+      }
+
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        throw new Error("Please select an image file");
+      }
+
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        throw new Error("Image must be less than 5MB");
+      }
 
       const fileExt = file.name.split(".").pop();
       const fileName = `${user.id}-${Date.now()}.${fileExt}`;
       const filePath = `profile-pictures/${fileName}`;
 
-      const { error: uploadError } = await supabaseClient.storage
+      console.log("Uploading profile picture:", { fileName, filePath, fileSize: file.size });
+
+      // Upload to storage
+      const { data: uploadData, error: uploadError } = await supabaseClient.storage
         .from("avatars")
-        .upload(filePath, file, { upsert: true });
+        .upload(filePath, file, { 
+          upsert: true,
+          cacheControl: '3600',
+        });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error("Storage upload error:", uploadError);
+        throw new Error(`Upload failed: ${uploadError.message || "Unknown error"}`);
+      }
 
+      console.log("Upload successful:", uploadData);
+
+      // Get public URL
       const { data: { publicUrl } } = supabaseClient.storage
         .from("avatars")
         .getPublicUrl(filePath);
 
-      // Update local state
+      console.log("Public URL:", publicUrl);
+
+      // Update local state immediately for preview
       setProfileData({ ...profileData, profilePictureUrl: publicUrl });
 
-      // Save immediately to database
+      // Save to database
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (!session?.access_token) {
-        throw new Error("Not authenticated");
+        throw new Error("Session expired. Please log in again.");
       }
 
       const res = await fetch("/api/agent/settings/profile", {
@@ -321,18 +350,27 @@ function ProfileSection({
       });
 
       if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to save profile picture");
+        const errorData = await res.json().catch(() => ({}));
+        console.error("Profile save error:", errorData);
+        throw new Error(errorData.error || "Failed to save profile picture to database");
       }
+
+      const result = await res.json();
+      console.log("Profile saved successfully:", result);
 
       // Trigger a custom event to refresh the layout
       window.dispatchEvent(new CustomEvent("profileUpdated"));
       
-      setSaveMessage({ type: "success", text: "Profile picture uploaded successfully!" });
+      setSaveMessage({ type: "success", text: "Profile picture uploaded and saved successfully!" });
       setTimeout(() => setSaveMessage(null), 3000);
     } catch (err: any) {
       console.error("Error uploading profile picture:", err);
-      setSaveMessage({ type: "error", text: err.message || "Failed to upload profile picture" });
+      setSaveMessage({ 
+        type: "error", 
+        text: err.message || "Failed to upload profile picture. Please try again." 
+      });
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -343,7 +381,7 @@ function ProfileSection({
     try {
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (!session?.access_token) {
-        throw new Error("Not authenticated");
+        throw new Error("Not authenticated. Please log in again.");
       }
 
       // Parse full name into first and last name if not already set
@@ -356,6 +394,20 @@ function ProfileSection({
         }
       }
 
+      // Ensure we always send first_name and last_name if we have fullName
+      if (saveData.fullName && !saveData.firstName && !saveData.lastName) {
+        const nameParts = saveData.fullName.trim().split(/\s+/);
+        saveData.firstName = nameParts[0] || '';
+        saveData.lastName = nameParts.slice(1).join(' ') || '';
+      }
+
+      console.log("Saving profile data:", {
+        fullName: saveData.fullName,
+        firstName: saveData.firstName,
+        lastName: saveData.lastName,
+        profilePictureUrl: saveData.profilePictureUrl,
+      });
+
       const res = await fetch("/api/agent/settings/profile", {
         method: "POST",
         headers: {
@@ -366,9 +418,13 @@ function ProfileSection({
       });
 
       if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to save profile");
+        const errorData = await res.json().catch(() => ({}));
+        console.error("Profile save error:", errorData);
+        throw new Error(errorData.error || "Failed to save profile");
       }
+
+      const result = await res.json();
+      console.log("Profile saved successfully:", result);
 
       // Trigger a custom event to refresh the layout
       window.dispatchEvent(new CustomEvent("profileUpdated"));
