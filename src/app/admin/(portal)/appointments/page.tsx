@@ -33,21 +33,20 @@ export default function AdminAppointmentsPage() {
       setError(null);
       try {
         // Check if appointments table has new structure (family_id) or old structure (lead_id)
+        // Old structure uses requested_date, new structure uses starts_at/ends_at
         let query = supabaseClient
           .from("appointments")
           .select(
             `
               id,
-              starts_at,
-              ends_at,
+              requested_date,
               status,
               price_cents,
-              requested_date,
               lead_id,
               agent_id
             `
           )
-          .order("starts_at", { ascending: false })
+          .order("requested_date", { ascending: false })
           .limit(100);
 
         const { data, error } = await query;
@@ -89,10 +88,16 @@ export default function AdminAppointmentsPage() {
           const lead = apt.lead_id ? leadsMap[apt.lead_id] : null;
           const agent = apt.agent_id ? agentsMap[apt.agent_id] : null;
           
+          // Handle old structure: requested_date is a date, not a timestamp
+          // Convert to ISO string for starts_at/ends_at
+          const requestedDate = apt.requested_date 
+            ? new Date(apt.requested_date).toISOString() 
+            : new Date().toISOString();
+          
           return {
             id: apt.id,
-            starts_at: apt.starts_at || apt.requested_date || new Date().toISOString(),
-            ends_at: apt.ends_at || apt.requested_date || new Date().toISOString(),
+            starts_at: requestedDate,
+            ends_at: requestedDate, // Old structure doesn't have end time, use same as start
             status: apt.status,
             amount_cents: apt.price_cents ?? null,
             family_name: lead?.full_name || null,

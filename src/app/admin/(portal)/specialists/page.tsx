@@ -34,7 +34,7 @@ export default function AdminSpecialistsPage() {
         // First get specialists
         const { data: specialistsData, error: specialistsError } = await supabaseClient
           .from("specialists")
-          .select("id, display_name, status, funeral_home, region, specialty");
+          .select("id, display_name, is_active, location_city, location_region");
 
         if (specialistsError) throw specialistsError;
 
@@ -82,10 +82,10 @@ export default function AdminSpecialistsPage() {
             id: s.id,
             display_name: s.display_name || profile?.full_name || null,
             email: profile?.email || null,
-            funeral_home: s.funeral_home,
-            region: s.region,
-            specialty: s.specialty,
-            status: s.status,
+            funeral_home: s.location_city || null, // Using location_city as funeral_home
+            region: s.location_region || null,
+            specialty: null, // Column doesn't exist in table
+            status: s.is_active ? "approved" : "pending", // Convert is_active to status
             calendar_google: calendarBySpecialist[s.id]?.google ?? false,
             calendar_microsoft: calendarBySpecialist[s.id]?.microsoft ?? false,
           };
