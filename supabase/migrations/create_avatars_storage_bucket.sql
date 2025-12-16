@@ -15,16 +15,23 @@ ON CONFLICT (id) DO NOTHING;
 -- Enable RLS on storage.objects
 ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies if they exist (for idempotency)
+DROP POLICY IF EXISTS "Users can upload their own profile pictures" ON storage.objects;
+DROP POLICY IF EXISTS "Users can update their own profile pictures" ON storage.objects;
+DROP POLICY IF EXISTS "Users can delete their own profile pictures" ON storage.objects;
+DROP POLICY IF EXISTS "Public can view avatars" ON storage.objects;
+
 -- Policy: Allow authenticated users to upload their own profile pictures
 -- File path format: profile-pictures/{userId}-{timestamp}.{ext}
+-- The name field contains the full path like 'profile-pictures/user-id-1234567890.jpg'
 CREATE POLICY "Users can upload their own profile pictures"
 ON storage.objects
 FOR INSERT
 TO authenticated
 WITH CHECK (
   bucket_id = 'avatars' AND
-  (storage.foldername(name))[1] = 'profile-pictures' AND
-  split_part((storage.foldername(name))[2], '-', 1) = auth.uid()::text
+  name LIKE 'profile-pictures/%' AND
+  split_part(split_part(name, '/', 2), '-', 1) = auth.uid()::text
 );
 
 -- Policy: Allow authenticated users to update their own profile pictures
@@ -34,8 +41,8 @@ FOR UPDATE
 TO authenticated
 USING (
   bucket_id = 'avatars' AND
-  (storage.foldername(name))[1] = 'profile-pictures' AND
-  split_part((storage.foldername(name))[2], '-', 1) = auth.uid()::text
+  name LIKE 'profile-pictures/%' AND
+  split_part(split_part(name, '/', 2), '-', 1) = auth.uid()::text
 );
 
 -- Policy: Allow authenticated users to delete their own profile pictures
@@ -45,8 +52,8 @@ FOR DELETE
 TO authenticated
 USING (
   bucket_id = 'avatars' AND
-  (storage.foldername(name))[1] = 'profile-pictures' AND
-  split_part((storage.foldername(name))[2], '-', 1) = auth.uid()::text
+  name LIKE 'profile-pictures/%' AND
+  split_part(split_part(name, '/', 2), '-', 1) = auth.uid()::text
 );
 
 -- Policy: Allow public read access to avatars (for displaying profile pictures)
