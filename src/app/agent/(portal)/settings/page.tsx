@@ -154,7 +154,17 @@ export default function SettingsPage() {
           return;
         }
 
-        const res = await fetch("/api/agent/settings/profile");
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (!session?.access_token) {
+          router.push("/agent");
+          return;
+        }
+
+        const res = await fetch("/api/agent/settings/profile", {
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        });
         if (!res.ok) throw new Error("Failed to load profile");
 
         const { profile } = await res.json();
@@ -178,15 +188,16 @@ export default function SettingsPage() {
 
           // Calculate completeness
           let filled = 0;
-          const total = 8;
+          const total = 9;
           if (profile.full_name) filled++;
           if (profile.funeral_home) filled++;
           if (profile.job_title) filled++;
           if (profile.email) filled++;
           if (profile.phone) filled++;
-          if (profile.license_number) filled++;
-          if (profile.regions_served) filled++;
-          if (profile.specialty) filled++;
+          if (metadata.license_number) filled++;
+          if (metadata.regions_served) filled++;
+          if (metadata.specialty) filled++;
+          if (profile.profile_picture_url) filled++;
           setProfileCompleteness(Math.round((filled / total) * 100));
 
           // Set verification status (assuming agents are approved by default, or check a status field)
@@ -288,10 +299,40 @@ function ProfileSection({
         .from("avatars")
         .getPublicUrl(filePath);
 
+      // Update local state
       setProfileData({ ...profileData, profilePictureUrl: publicUrl });
-    } catch (err) {
+
+      // Save immediately to database
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error("Not authenticated");
+      }
+
+      const res = await fetch("/api/agent/settings/profile", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          ...profileData,
+          profilePictureUrl: publicUrl,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to save profile picture");
+      }
+
+      // Trigger a custom event to refresh the layout
+      window.dispatchEvent(new CustomEvent("profileUpdated"));
+      
+      setSaveMessage({ type: "success", text: "Profile picture uploaded successfully!" });
+      setTimeout(() => setSaveMessage(null), 3000);
+    } catch (err: any) {
       console.error("Error uploading profile picture:", err);
-      setSaveMessage({ type: "error", text: "Failed to upload profile picture" });
+      setSaveMessage({ type: "error", text: err.message || "Failed to upload profile picture" });
     }
   };
 
@@ -300,16 +341,37 @@ function ProfileSection({
     setSaveMessage(null);
 
     try {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error("Not authenticated");
+      }
+
+      // Parse full name into first and last name if not already set
+      const saveData = { ...profileData };
+      if (saveData.fullName && (!saveData.firstName || !saveData.lastName)) {
+        const nameParts = saveData.fullName.trim().split(/\s+/);
+        if (nameParts.length > 0) {
+          saveData.firstName = saveData.firstName || nameParts[0];
+          saveData.lastName = saveData.lastName || nameParts.slice(1).join(' ') || '';
+        }
+      }
+
       const res = await fetch("/api/agent/settings/profile", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(profileData),
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify(saveData),
       });
 
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data.error || "Failed to save profile");
       }
+
+      // Trigger a custom event to refresh the layout
+      window.dispatchEvent(new CustomEvent("profileUpdated"));
 
       setSaveMessage({ type: "success", text: "Profile saved successfully!" });
       setTimeout(() => setSaveMessage(null), 3000);
@@ -546,7 +608,14 @@ function CalendarAvailabilitySection() {
   useEffect(() => {
     async function loadAvailability() {
       try {
-        const res = await fetch("/api/agent/settings/availability");
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (!session?.access_token) return;
+
+        const res = await fetch("/api/agent/settings/availability", {
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        });
         if (!res.ok) throw new Error("Failed to load availability");
 
         const data = await res.json();
@@ -616,9 +685,17 @@ function CalendarAvailabilitySection() {
     setSaveMessage(null);
 
     try {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error("Not authenticated");
+      }
+
       const res = await fetch("/api/agent/settings/availability", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
         body: JSON.stringify({
           locations,
           availabilityByLocation,
@@ -915,7 +992,14 @@ function PayoutsSection() {
   useEffect(() => {
     async function loadBilling() {
       try {
-        const res = await fetch("/api/agent/settings/billing");
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (!session?.access_token) return;
+
+        const res = await fetch("/api/agent/settings/billing", {
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        });
         if (!res.ok) throw new Error("Failed to load billing data");
 
         const data = await res.json();
@@ -1051,7 +1135,14 @@ function NotificationsSection({ email, phone }: { email: string; phone: string }
   useEffect(() => {
     async function loadNotifications() {
       try {
-        const res = await fetch("/api/agent/settings/notifications");
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (!session?.access_token) return;
+
+        const res = await fetch("/api/agent/settings/notifications", {
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        });
         if (!res.ok) throw new Error("Failed to load notifications");
 
         const data = await res.json();
@@ -1073,9 +1164,17 @@ function NotificationsSection({ email, phone }: { email: string; phone: string }
     setSaveMessage(null);
 
     try {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error("Not authenticated");
+      }
+
       const res = await fetch("/api/agent/settings/notifications", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
         body: JSON.stringify({ notifications }),
       });
 

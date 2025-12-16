@@ -43,6 +43,33 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
   useEffect(() => {
     let mounted = true;
 
+    // Listen for profile updates
+    const handleProfileUpdate = async () => {
+      if (!mounted) return;
+      
+      try {
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        if (!user) return;
+
+        const { data: profile } = await supabaseClient
+          .from('profiles')
+          .select('full_name, first_name, last_name, profile_picture_url')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        if (profile && mounted) {
+          setUserName(profile.full_name || 'Agent');
+          setUserFirstName(profile.first_name || profile.full_name?.split(' ')[0] || 'Agent');
+          setUserLastName(profile.last_name || profile.full_name?.split(' ').slice(1).join(' ') || '');
+          setProfilePictureUrl(profile.profile_picture_url || null);
+        }
+      } catch (error) {
+        console.error('Error refreshing profile:', error);
+      }
+    };
+
+    window.addEventListener('profileUpdated', handleProfileUpdate);
+
     async function checkApproval() {
       try {
         const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
@@ -135,6 +162,7 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
 
     return () => {
       mounted = false;
+      window.removeEventListener('profileUpdated', handleProfileUpdate);
     };
   }, []); // Empty dependency array - only run once on mount
 
