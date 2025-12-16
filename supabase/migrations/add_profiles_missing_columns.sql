@@ -68,4 +68,15 @@ BEGIN
     ALTER TABLE public.profiles ADD COLUMN funeral_home text;
     COMMENT ON COLUMN public.profiles.funeral_home IS 'Business or funeral home name';
   END IF;
+  
+  -- Add email column if it doesn't exist
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_schema = 'public' 
+      AND table_name = 'profiles' 
+      AND column_name = 'email'
+  ) THEN
+    ALTER TABLE public.profiles ADD COLUMN email text;
+    COMMENT ON COLUMN public.profiles.email IS 'Email address of the user';
+  END IF;
 END $$;

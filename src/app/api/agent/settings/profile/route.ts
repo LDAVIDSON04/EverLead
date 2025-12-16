@@ -120,11 +120,9 @@ export async function POST(request: NextRequest) {
     if (phone !== undefined) {
       updateData.phone = phone;
     }
+    // Update email - only if column exists, otherwise just update auth
     if (email !== undefined && email !== null && email !== "") {
-      // Update email in both auth.users and profiles
-      updateData.email = email;
-      
-      // Also update the auth user's email
+      // Always update auth user's email first
       try {
         const { error: emailUpdateError } = await supabaseAdmin.auth.admin.updateUserById(
           user.id,
@@ -133,7 +131,7 @@ export async function POST(request: NextRequest) {
         
         if (emailUpdateError) {
           console.error("Error updating auth email:", emailUpdateError);
-          // Don't fail the whole request, but log it
+          // Continue anyway - might be a validation issue
         } else {
           console.log("Auth email updated successfully");
         }
@@ -141,6 +139,10 @@ export async function POST(request: NextRequest) {
         console.error("Exception updating auth email:", emailErr);
         // Continue with profile update even if auth email update fails
       }
+      
+      // Try to update email in profiles table (only if column exists)
+      // We'll let the database tell us if the column doesn't exist
+      updateData.email = email;
     }
     if (profilePictureUrl !== undefined && profilePictureUrl !== null && profilePictureUrl !== "") {
       updateData.profile_picture_url = profilePictureUrl;
@@ -179,14 +181,48 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
+    // Try to update, but handle missing columns gracefully
+    let updateDataToUse = { ...updateData };
+    
+    // If email is in updateData but column doesn't exist, remove it and just update auth
+    // We'll check by trying the update and handling the error
     const { data: updatedProfile, error } = await supabaseAdmin
       .from("profiles")
-      .update(updateData)
+      .update(updateDataToUse)
       .eq("id", user.id)
-      .select("full_name, first_name, last_name, profile_picture_url, email, phone, funeral_home, job_title")
+      .select("full_name, first_name, last_name, profile_picture_url, phone, funeral_home, job_title")
       .single();
 
     if (error) {
+      // If error is about missing email column, retry without email
+      if (error.code === 'PGRST204' && error.message?.includes('email')) {
+        console.warn("Email column doesn't exist, updating without email field");
+        const { email: emailValue, ...dataWithoutEmail } = updateDataToUse;
+        const { data: retryProfile, error: retryError } = await supabaseAdmin
+          .from("profiles")
+          .update(dataWithoutEmail)
+          .eq("id", user.id)
+          .select("full_name, first_name, last_name, profile_picture_url, phone, funeral_home, job_title")
+          .single();
+          
+        if (retryError) {
+          console.error("Error updating profile (retry):", retryError);
+          return NextResponse.json({ 
+            error: "Failed to update profile", 
+            details: retryError.message,
+            code: retryError.code,
+            hint: retryError.hint
+          }, { status: 500 });
+        }
+        
+        // Return success even though email wasn't saved to profiles (it was saved to auth)
+        return NextResponse.json({ 
+          success: true,
+          profile: retryProfile,
+          warning: "Email updated in auth but profiles.email column doesn't exist. Please run migration."
+        });
+      }
+      
       console.error("Error updating profile:", error);
       console.error("Error details:", {
         code: error.code,
