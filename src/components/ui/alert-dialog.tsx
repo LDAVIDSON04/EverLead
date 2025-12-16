@@ -25,11 +25,12 @@ function AlertDialogTrigger({ asChild, children, ...props }: { asChild?: boolean
   if (!context) throw new Error("AlertDialogTrigger must be used within AlertDialog");
 
   if (asChild && React.isValidElement(children)) {
+    const childProps = children.props as { onClick?: (e: React.MouseEvent) => void };
     return React.cloneElement(children, {
       ...props,
       onClick: (e: React.MouseEvent) => {
         context.setOpen(true);
-        if (children.props.onClick) children.props.onClick(e);
+        if (childProps.onClick) childProps.onClick(e);
       },
     } as any);
   }
