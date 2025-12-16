@@ -29,12 +29,11 @@ export async function GET(req: NextRequest) {
     const service = searchParams.get("service") || "";
     const query = searchParams.get("q") || "";
 
-    // Get all approved agents with availability set up
+    // Get all agents (we'll filter by approval and availability)
     const { data: profiles, error } = await supabaseAdmin
       .from("profiles")
       .select("id, full_name, first_name, last_name, profile_picture_url, funeral_home, job_title, agent_city, agent_province, metadata, approval_status")
-      .eq("role", "agent")
-      .eq("approval_status", "approved");
+      .eq("role", "agent");
 
     if (error) {
       console.error("Error fetching agents:", error);
@@ -44,13 +43,28 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Filter agents who have availability configured
+    console.log(`[AGENT SEARCH] Found ${profiles?.length || 0} agents total`);
+
+    // Filter agents who are approved and have availability configured
     const agentsWithAvailability: AgentSearchResult[] = (profiles || [])
       .filter((profile: any) => {
+        // Check approval status
+        if (profile.approval_status !== "approved") {
+          console.log(`[AGENT SEARCH] Agent ${profile.id} not approved: ${profile.approval_status}`);
+          return false;
+        }
+
+        // Check availability
         const metadata = profile.metadata || {};
         const availability = metadata.availability || {};
         const locations = availability.locations || [];
-        return locations.length > 0;
+        
+        if (locations.length === 0) {
+          console.log(`[AGENT SEARCH] Agent ${profile.id} has no availability configured`);
+          return false;
+        }
+
+        return true;
       })
       .map((profile: any) => {
         const metadata = profile.metadata || {};
@@ -72,18 +86,34 @@ export async function GET(req: NextRequest) {
         };
       });
 
+    console.log(`[AGENT SEARCH] ${agentsWithAvailability.length} agents with availability configured`);
+
     // Apply filters
     let filtered = agentsWithAvailability;
 
     if (location) {
-      const locationLower = location.toLowerCase();
+      const locationLower = location.toLowerCase().trim();
+      // Handle "City, Province" format - extract city and province separately
+      const locationParts = locationLower.split(',').map(s => s.trim());
+      const searchCity = locationParts[0];
+      const searchProvince = locationParts[1] || '';
+      
       filtered = filtered.filter((agent) => {
-        return (
-          agent.agent_city?.toLowerCase().includes(locationLower) ||
-          agent.agent_province?.toLowerCase().includes(locationLower) ||
-          agent.regions_served?.toLowerCase().includes(locationLower)
-        );
+        const cityMatch = agent.agent_city?.toLowerCase().includes(searchCity) || 
+                         searchCity.includes(agent.agent_city?.toLowerCase() || '');
+        const provinceMatch = agent.agent_province?.toLowerCase().includes(searchProvince) ||
+                             (searchProvince && agent.agent_province?.toLowerCase() === searchProvince) ||
+                             (!searchProvince && agent.agent_province);
+        const regionsMatch = agent.regions_served?.toLowerCase().includes(locationLower);
+        
+        // Also check if location string contains city or province
+        const fullLocationMatch = locationLower.includes(agent.agent_city?.toLowerCase() || '') ||
+                                 locationLower.includes(agent.agent_province?.toLowerCase() || '');
+        
+        return cityMatch || provinceMatch || regionsMatch || fullLocationMatch;
       });
+      
+      console.log(`[AGENT SEARCH] After location filter "${location}": ${filtered.length} agents`);
     }
 
     if (service) {
