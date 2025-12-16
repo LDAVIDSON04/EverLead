@@ -563,17 +563,25 @@ function CalendarAvailabilitySection() {
         }
 
         // Load calendar connections
-        const { data: { user } } = await supabaseClient.auth.getUser();
-        if (user) {
-          const { data: connections } = await supabaseClient
-            .from("calendar_connections")
-            .select("provider")
-            .eq("specialist_id", user.id);
+        // Note: calendar_connections uses specialist_id, but agents might not have that
+        // For now, we'll check if the user has any calendar connections
+        try {
+          const { data: { user } } = await supabaseClient.auth.getUser();
+          if (user) {
+            // Try to find connections by user id (might be in specialist_id or a different field)
+            const { data: connections } = await supabaseClient
+              .from("calendar_connections")
+              .select("provider")
+              .eq("specialist_id", user.id);
 
-          if (connections) {
-            setGoogleConnected(connections.some((c: any) => c.provider === "google"));
-            setMicrosoftConnected(connections.some((c: any) => c.provider === "microsoft"));
+            if (connections && connections.length > 0) {
+              setGoogleConnected(connections.some((c: any) => c.provider === "google"));
+              setMicrosoftConnected(connections.some((c: any) => c.provider === "microsoft"));
+            }
           }
+        } catch (err) {
+          // Calendar connections might not be set up for agents yet
+          console.log("No calendar connections found");
         }
       } catch (err) {
         console.error("Error loading availability:", err);
