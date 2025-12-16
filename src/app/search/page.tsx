@@ -133,30 +133,8 @@ function SearchResults() {
         const startDate = today.toISOString().split("T")[0];
         const endDate = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
 
-        const availabilityPromises = mappedAppointments.map(async (apt) => {
-          if (!apt.agent?.id) return;
-          try {
-            const res = await fetch(
-              `/api/agents/availability?agentId=${apt.agent.id}&startDate=${startDate}&endDate=${endDate}`
-            );
-            if (res.ok) {
-              const data = await res.json();
-              return { agentId: apt.agent.id, availability: data };
-            }
-          } catch (err) {
-            console.error(`Error loading availability for agent ${apt.agent.id}:`, err);
-          }
-          return null;
-        });
-
-        const availabilityResults = await Promise.all(availabilityPromises);
-        const availabilityMap: Record<string, AvailabilityDay[]> = {};
-        availabilityResults.forEach((result) => {
-          if (result) {
-            availabilityMap[result.agentId] = result.availability;
-          }
-        });
-        setAgentAvailability(availabilityMap);
+        // Note: We'll load availability on-demand when days are clicked
+        // This keeps the initial load fast
       } catch (err) {
         console.error("Error:", err);
       } finally {
@@ -186,24 +164,8 @@ function SearchResults() {
     const slots: AvailabilitySlot[] = [];
     const today = new Date();
     
-    // Get real availability if we have it
-    const agentId = appointment.agent?.id;
-    const realAvailability = agentId ? agentAvailability[agentId] : null;
-    
-    if (realAvailability) {
-      // Use real availability data
-      return realAvailability.slice(0, 8).map((day) => {
-        const date = new Date(day.date + "T00:00:00");
-        const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
-        const monthName = date.toLocaleDateString('en-US', { month: 'short' });
-        const dayNum = date.getDate();
-        
-        return {
-          date: `${dayName}\n${monthName} ${dayNum}`,
-          spots: day.slots.length,
-        };
-      });
-    }
+    // For now, generate placeholder slots
+    // Real availability will be loaded when a day is clicked
     
     // Fallback: generate placeholder slots
     for (let i = 0; i < 8; i++) {
