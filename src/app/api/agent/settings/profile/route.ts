@@ -138,18 +138,43 @@ export async function POST(request: NextRequest) {
 
     console.log("Updating profile with data:", updateData);
 
+    // Check if updateData is empty
+    if (Object.keys(updateData).length === 0) {
+      console.log("No data to update");
+      return NextResponse.json({ 
+        error: "No data provided to update",
+        details: "Please provide at least one field to update"
+      }, { status: 400 });
+    }
+
     const { data: updatedProfile, error } = await supabaseAdmin
       .from("profiles")
       .update(updateData)
       .eq("id", user.id)
-      .select("full_name, first_name, last_name, profile_picture_url")
+      .select("full_name, first_name, last_name, profile_picture_url, email, phone, funeral_home, job_title")
       .single();
 
     if (error) {
       console.error("Error updating profile:", error);
+      console.error("Error details:", {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+      });
       return NextResponse.json({ 
         error: "Failed to update profile", 
-        details: error.message 
+        details: error.message,
+        code: error.code,
+        hint: error.hint
+      }, { status: 500 });
+    }
+
+    if (!updatedProfile) {
+      console.error("Profile update returned no data");
+      return NextResponse.json({ 
+        error: "Failed to update profile", 
+        details: "Update succeeded but no profile data returned"
       }, { status: 500 });
     }
 
