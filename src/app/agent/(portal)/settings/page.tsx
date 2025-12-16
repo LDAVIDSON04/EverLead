@@ -358,7 +358,35 @@ function ProfileSection({
       const result = await res.json();
       console.log("Profile saved successfully:", result);
 
-      // Trigger a custom event to refresh the layout
+      // Reload profile data to show updated picture
+      const reloadRes = await fetch("/api/agent/settings/profile", {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+      
+      if (reloadRes.ok) {
+        const { profile: updatedProfile } = await reloadRes.json();
+        if (updatedProfile) {
+          const metadata = updatedProfile.metadata || {};
+          setProfileData({
+            fullName: updatedProfile.full_name || profileData.fullName,
+            firstName: updatedProfile.first_name || profileData.firstName,
+            lastName: updatedProfile.last_name || profileData.lastName,
+            businessName: updatedProfile.funeral_home || profileData.businessName,
+            professionalTitle: updatedProfile.job_title || profileData.professionalTitle,
+            email: updatedProfile.email || profileData.email,
+            phone: updatedProfile.phone || profileData.phone,
+            regionsServed: metadata.regions_served || profileData.regionsServed,
+            specialty: metadata.specialty || profileData.specialty,
+            licenseNumber: metadata.license_number || profileData.licenseNumber,
+            businessAddress: metadata.business_address || profileData.businessAddress,
+            profilePictureUrl: updatedProfile.profile_picture_url || publicUrl,
+          });
+        }
+      }
+
+      // Trigger a custom event to refresh the layout and other pages
       window.dispatchEvent(new CustomEvent("profileUpdated"));
       
       setSaveMessage({ type: "success", text: "Profile picture uploaded and saved successfully!" });
@@ -426,7 +454,35 @@ function ProfileSection({
       const result = await res.json();
       console.log("Profile saved successfully:", result);
 
-      // Trigger a custom event to refresh the layout
+      // Reload profile data to show updated values
+      const reloadRes = await fetch("/api/agent/settings/profile", {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+      
+      if (reloadRes.ok) {
+        const { profile: updatedProfile } = await reloadRes.json();
+        if (updatedProfile) {
+          const metadata = updatedProfile.metadata || {};
+          setProfileData({
+            fullName: updatedProfile.full_name || "",
+            firstName: updatedProfile.first_name || updatedProfile.full_name?.split(" ")[0] || "",
+            lastName: updatedProfile.last_name || updatedProfile.full_name?.split(" ").slice(1).join(" ") || "",
+            businessName: updatedProfile.funeral_home || "",
+            professionalTitle: updatedProfile.job_title || "",
+            email: updatedProfile.email || "",
+            phone: updatedProfile.phone || "",
+            regionsServed: metadata.regions_served || "",
+            specialty: metadata.specialty || "",
+            licenseNumber: metadata.license_number || "",
+            businessAddress: metadata.business_address || "",
+            profilePictureUrl: updatedProfile.profile_picture_url || "",
+          });
+        }
+      }
+
+      // Trigger a custom event to refresh the layout and other pages
       window.dispatchEvent(new CustomEvent("profileUpdated"));
 
       setSaveMessage({ type: "success", text: "Profile saved successfully!" });
@@ -489,12 +545,17 @@ function ProfileSection({
             <img
               src={profileData.profilePictureUrl}
               alt="Profile"
-              className="w-20 h-20 rounded-full object-cover"
+              className="w-20 h-20 rounded-full object-cover border-2 border-gray-200"
+              onError={(e) => {
+                console.error("Error loading profile picture:", profileData.profilePictureUrl);
+                // Hide broken image
+                (e.target as HTMLImageElement).style.display = 'none';
+              }}
             />
           ) : (
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-yellow-400 to-orange-400 flex items-center justify-center text-2xl text-white">
-              {profileData.firstName?.[0] || profileData.fullName?.[0] || "A"}
-              {profileData.lastName?.[0] || ""}
+            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-yellow-400 to-orange-400 flex items-center justify-center text-2xl text-white border-2 border-gray-200">
+              {profileData.firstName?.[0]?.toUpperCase() || profileData.fullName?.[0]?.toUpperCase() || "A"}
+              {profileData.lastName?.[0]?.toUpperCase() || ""}
             </div>
           )}
           <label className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2 cursor-pointer">

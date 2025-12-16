@@ -334,15 +334,29 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
               <img
                 src={profilePictureUrl}
                 alt={`${userFirstName} ${userLastName}`}
-                className="w-10 h-10 rounded-full object-cover"
+                className="w-10 h-10 rounded-full object-cover border-2 border-white/20"
+                onError={(e) => {
+                  console.error("Error loading profile picture in nav:", profilePictureUrl);
+                  // Hide broken image and show fallback
+                  (e.target as HTMLImageElement).style.display = 'none';
+                  const parent = (e.target as HTMLImageElement).parentElement;
+                  if (parent) {
+                    const fallback = document.createElement('div');
+                    fallback.className = 'w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-400 rounded-full flex items-center justify-center';
+                    fallback.innerHTML = `<span class="text-white text-xs font-semibold">${userFirstName?.[0]?.toUpperCase() || 'A'}${userLastName?.[0]?.toUpperCase() || ''}</span>`;
+                    parent.appendChild(fallback);
+                  }
+                }}
               />
             ) : (
-              <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-400 rounded-full flex items-center justify-center">
-                <User size={18} className="text-white" />
+              <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-400 rounded-full flex items-center justify-center border-2 border-white/20">
+                <span className="text-white text-xs font-semibold">
+                  {userFirstName?.[0]?.toUpperCase() || 'A'}{userLastName?.[0]?.toUpperCase() || ''}
+                </span>
               </div>
             )}
-            <div className="flex-1">
-              <div className="text-white text-sm">
+            <div className="flex-1 min-w-0">
+              <div className="text-white text-sm font-medium truncate">
                 {userFirstName} {userLastName}
               </div>
               <div className="text-white/60 text-xs">Agent</div>

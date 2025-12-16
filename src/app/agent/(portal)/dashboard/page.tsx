@@ -44,6 +44,34 @@ export default function AgentDashboardPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
 
   useEffect(() => {
+    let mounted = true;
+
+    // Listen for profile updates
+    const handleProfileUpdate = async () => {
+      if (!mounted) return;
+      
+      try {
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        if (!user) return;
+
+        const { data: profile } = await supabaseClient
+          .from("profiles")
+          .select("full_name, first_name, last_name")
+          .eq("id", user.id)
+          .maybeSingle();
+
+        if (profile && mounted) {
+          setUserName(profile.full_name || 'Agent');
+          const firstName = profile.first_name || profile.full_name?.split(' ')[0] || 'Agent';
+          setUserFirstName(firstName);
+        }
+      } catch (error) {
+        console.error('Error refreshing profile on dashboard:', error);
+      }
+    };
+
+    window.addEventListener('profileUpdated', handleProfileUpdate);
+
     async function loadDashboard() {
       setLoading(true);
       try {
@@ -62,17 +90,15 @@ export default function AgentDashboardPage() {
         // Get user name
         const { data: profile } = await supabaseClient
           .from("profiles")
-          .select("full_name, first_name")
+          .select("full_name, first_name, last_name")
           .eq("id", agentId)
           .maybeSingle();
         
-        if (profile?.full_name) {
-          setUserName(profile.full_name);
+        if (profile) {
+          setUserName(profile.full_name || 'Agent');
+          const firstName = profile.first_name || profile.full_name?.split(' ')[0] || 'Agent';
+          setUserFirstName(firstName);
         }
-        
-        // Set first name for welcome message
-        const firstName = profile?.first_name || profile?.full_name?.split(' ')[0] || 'Agent';
-        setUserFirstName(firstName);
 
         // Fetch dashboard data from API
         const res = await fetch(`/api/agent/dashboard?agentId=${agentId}`);
@@ -203,11 +229,18 @@ export default function AgentDashboardPage() {
         console.error("Error loading agent dashboard:", err);
         setError("Failed to load dashboard stats");
       } finally {
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     }
 
     loadDashboard();
+
+    return () => {
+      mounted = false;
+      window.removeEventListener('profileUpdated', handleProfileUpdate);
+    };
   }, [router]);
 
   const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
