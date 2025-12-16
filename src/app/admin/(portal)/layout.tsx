@@ -11,10 +11,11 @@ type AdminLayoutProps = {
 };
 
 const menuItems = [
-  { href: '/admin/(portal)/agent-approval', label: 'Approvals', icon: CheckCircle, badge: true },
-  { href: '/admin/(portal)/specialists', label: 'Specialists', icon: Users },
-  { href: '/admin/(portal)/appointments', label: 'Appointments', icon: Calendar },
-  { href: '/admin/(portal)/payments', label: 'Payments', icon: DollarSign },
+  // Note: (portal) is a route group; the public path omits it.
+  { href: '/admin/agent-approval', label: 'Approvals', icon: CheckCircle, badge: true },
+  { href: '/admin/specialists', label: 'Specialists', icon: Users },
+  { href: '/admin/appointments', label: 'Appointments', icon: Calendar },
+  { href: '/admin/payments', label: 'Payments', icon: DollarSign },
 ];
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
@@ -93,7 +94,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       <aside className="w-64 bg-black text-white flex flex-col">
         {/* Logo / Brand */}
         <div className="p-6 border-b border-neutral-800">
-          <Link href="/admin/(portal)/agent-approval" className="block">
+          {/* Note: (portal) is a route group only, the actual path is /admin/agent-approval */}
+          <Link href="/admin/agent-approval" className="block">
             <h1 className="text-2xl tracking-tight text-white">Soradin</h1>
             <p className="text-sm text-neutral-400 mt-1">Admin Portal</p>
           </Link>

@@ -7,7 +7,8 @@ export default function AdminDashboardPage() {
   const router = useRouter();
 
   useEffect(() => {
-    router.replace("/admin/(portal)/agent-approval");
+    // (portal) is a route group; the public path omits it.
+    router.replace("/admin/agent-approval");
   }, [router]);
 
   return (
