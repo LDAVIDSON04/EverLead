@@ -79,7 +79,7 @@ function SearchResults() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [showMoreAvailability, setShowMoreAvailability] = useState(false);
-  const [agentAvailability, setAgentAvailability] = useState<Record<string, AvailabilityDay[]>>({});
+  const [agentAvailability, setAgentAvailability] = useState<Record<string, { startsAt: string; endsAt: string }[]>>({});
 
   // Sync state with URL params when they change
   useEffect(() => {
@@ -277,10 +277,7 @@ function SearchResults() {
               const key = `${agentId}-${dateStr}`;
               setAgentAvailability((prev) => ({
                 ...prev,
-                [key]: dayData.slots.map((slot: any) => ({
-                  startsAt: slot.startsAt,
-                  endsAt: slot.endsAt,
-                })),
+                [key]: dayData.slots,
               }));
             }
           }
@@ -414,7 +411,7 @@ function SearchResults() {
                       
                       if (realSlots && realSlots.length > 0) {
                         // Convert real slots to time strings
-                        timeSlots = realSlots.map((slot: any) => {
+                        timeSlots = realSlots.map((slot) => {
                           const date = new Date(slot.startsAt);
                           const hours = date.getUTCHours();
                           const minutes = date.getUTCMinutes();
