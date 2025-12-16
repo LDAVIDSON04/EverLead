@@ -300,63 +300,39 @@ function ProfileSection({
         throw new Error("Image must be less than 5MB");
       }
 
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
-      const filePath = `profile-pictures/${fileName}`;
+      console.log("Uploading profile picture:", { fileName: file.name, fileSize: file.size });
 
-      console.log("Uploading profile picture:", { fileName, filePath, fileSize: file.size });
-
-      // Upload to storage
-      const { data: uploadData, error: uploadError } = await supabaseClient.storage
-        .from("avatars")
-        .upload(filePath, file, { 
-          upsert: true,
-          cacheControl: '3600',
-        });
-
-      if (uploadError) {
-        console.error("Storage upload error:", uploadError);
-        throw new Error(`Upload failed: ${uploadError.message || "Unknown error"}`);
-      }
-
-      console.log("Upload successful:", uploadData);
-
-      // Get public URL
-      const { data: { publicUrl } } = supabaseClient.storage
-        .from("avatars")
-        .getPublicUrl(filePath);
-
-      console.log("Public URL:", publicUrl);
-
-      // Update local state immediately for preview
-      setProfileData({ ...profileData, profilePictureUrl: publicUrl });
-
-      // Save to database
+      // Get session for auth
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (!session?.access_token) {
         throw new Error("Session expired. Please log in again.");
       }
 
-      const res = await fetch("/api/agent/settings/profile", {
+      // Upload via API endpoint (uses admin client to bypass RLS)
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const uploadRes = await fetch("/api/agent/settings/upload-profile-picture", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
           Authorization: `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({
-          ...profileData,
-          profilePictureUrl: publicUrl,
-        }),
+        body: formData,
       });
 
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        console.error("Profile save error:", errorData);
-        throw new Error(errorData.error || "Failed to save profile picture to database");
+      if (!uploadRes.ok) {
+        const errorData = await uploadRes.json().catch(() => ({}));
+        console.error("Upload error:", errorData);
+        throw new Error(errorData.error || "Failed to upload profile picture");
       }
 
-      const result = await res.json();
-      console.log("Profile saved successfully:", result);
+      const uploadResult = await uploadRes.json();
+      const publicUrl = uploadResult.url;
+
+      console.log("Upload successful, URL:", publicUrl);
+
+      // Update local state immediately for preview
+      setProfileData({ ...profileData, profilePictureUrl: publicUrl });
 
       // Reload profile data to show updated picture
       const reloadRes = await fetch("/api/agent/settings/profile", {
