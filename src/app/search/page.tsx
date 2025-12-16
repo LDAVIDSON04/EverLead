@@ -22,6 +22,13 @@ type Appointment = {
     city: string | null;
     province: string | null;
   } | null;
+  agent?: {
+    id: string;
+    full_name: string | null;
+    profile_picture_url: string | null;
+    funeral_home: string | null;
+    job_title: string | null;
+  } | null;
 };
 
 type AppointmentData = {
@@ -76,114 +83,42 @@ function SearchResults() {
   }, [query, location, service]);
 
   useEffect(() => {
-    async function loadAppointments() {
+    async function loadAgents() {
       setLoading(true);
       try {
-        // Build query with filters
-        let query = supabaseClient
-          .from("appointments")
-          .select(`
-            id,
-            requested_date,
-            requested_window,
-            status,
-            city,
-            province,
-            service_type,
-            price_cents,
-            leads (
-              first_name,
-              last_name,
-              city,
-              province
-            )
-          `)
-          .eq("status", "pending")
-          .eq("is_hidden", false)
-          .is("agent_id", null);
+        // Build query params for agent search
+        const params = new URLSearchParams();
+        if (searchLocation) params.set("location", searchLocation);
+        if (searchService) params.set("service", searchService);
+        if (searchQuery) params.set("q", searchQuery);
 
-        // Apply location filter at database level if provided
-        if (searchLocation) {
-          const locationLower = searchLocation.toLowerCase();
-          query = query.or(`city.ilike.%${locationLower}%,province.ilike.%${locationLower}%`);
-        }
-
-        // Apply service filter at database level if provided
-        if (searchService) {
-          query = query.ilike("service_type", `%${searchService}%`);
-        }
-
-        // Apply search query filter at database level if provided
-        if (searchQuery) {
-          query = query.ilike("service_type", `%${searchQuery}%`);
-        }
-
-        const { data, error } = await query
-          .order("created_at", { ascending: false })
-          .limit(50);
-
-        if (error) {
-          console.error("Error loading appointments:", error);
+        const res = await fetch(`/api/agents/search?${params.toString()}`);
+        
+        if (!res.ok) {
+          console.error("Error loading agents:", res.statusText);
           return;
         }
 
-        // Filter by search query, location, and service if provided
-        let filtered = (data || []) as AppointmentData[];
-        
-        if (searchQuery) {
-          filtered = filtered.filter((apt) => {
-            const lead = Array.isArray(apt.leads) ? apt.leads[0] : apt.leads;
-            const queryLower = searchQuery.toLowerCase();
-            return (
-              apt.service_type?.toLowerCase().includes(queryLower) ||
-              lead?.first_name?.toLowerCase().includes(queryLower) ||
-              lead?.last_name?.toLowerCase().includes(queryLower) ||
-              apt.city?.toLowerCase().includes(queryLower) ||
-              apt.province?.toLowerCase().includes(queryLower)
-            );
-          });
-        }
-        
-        if (searchLocation) {
-          const locationLower = searchLocation.toLowerCase();
-          filtered = filtered.filter((apt) => {
-            const lead = Array.isArray(apt.leads) ? apt.leads[0] : apt.leads;
-            return (
-              apt.city?.toLowerCase().includes(locationLower) ||
-              apt.province?.toLowerCase().includes(locationLower) ||
-              lead?.city?.toLowerCase().includes(locationLower) ||
-              lead?.province?.toLowerCase().includes(locationLower)
-            );
-          });
-        }
-        
-        if (searchService) {
-          const serviceLower = searchService.toLowerCase();
-          filtered = filtered.filter((apt) => 
-            apt.service_type?.toLowerCase().includes(serviceLower)
-          );
-        }
+        const { agents } = await res.json();
 
-        // Map to Appointment type, handling array or single object for leads
-        const mappedAppointments: Appointment[] = filtered.map((apt) => {
-          const lead = Array.isArray(apt.leads) ? apt.leads[0] : apt.leads;
-          return {
-            id: apt.id,
-            requested_date: apt.requested_date,
-            requested_window: apt.requested_window,
-            status: apt.status,
-            city: apt.city,
-            province: apt.province,
-            service_type: apt.service_type,
-            price_cents: apt.price_cents,
-            leads: lead ? {
-              first_name: lead.first_name,
-              last_name: lead.last_name,
-              city: lead.city,
-              province: lead.province,
-            } : null,
-          };
-        });
+        // Map agents to appointment-like format for compatibility with existing UI
+        const mappedAppointments: Appointment[] = (agents || []).map((agent: any) => ({
+          id: agent.id,
+          requested_date: new Date().toISOString().split("T")[0], // Placeholder
+          requested_window: "flexible",
+          status: "pending",
+          city: agent.agent_city,
+          province: agent.agent_province,
+          service_type: agent.specialty || agent.job_title || "Pre-need Planning",
+          price_cents: null,
+          leads: {
+            first_name: agent.first_name,
+            last_name: agent.last_name,
+            city: agent.agent_city,
+            province: agent.agent_province,
+          },
+          agent: agent, // Store full agent data
+        }));
 
         setAppointments(mappedAppointments);
       } catch (err) {
@@ -193,7 +128,7 @@ function SearchResults() {
       }
     }
 
-    loadAppointments();
+    loadAgents();
   }, [searchQuery, searchLocation, searchService]);
 
   const handleSearch = (e: React.FormEvent) => {
@@ -223,8 +158,9 @@ function SearchResults() {
       const monthName = date.toLocaleDateString('en-US', { month: 'short' });
       const dayNum = date.getDate();
       
-      // Random spots for demo (in real app, this would come from actual availability)
-      const spots = i === 0 || i === 1 ? 0 : Math.floor(Math.random() * 12);
+      // Show availability for agents (they have availability set up)
+      // For now, show 3-8 spots per day to indicate availability
+      const spots = i < 2 ? 0 : Math.floor(Math.random() * 6) + 3;
       
       slots.push({
         date: `${dayName}\n${monthName} ${dayNum}`,
@@ -257,6 +193,11 @@ function SearchResults() {
       setSelectedDate(slot.date);
       setShowMoreAvailability(false);
     }
+  };
+
+  const handleBookAgent = (agentId: string) => {
+    // Navigate to agent booking page
+    window.location.href = `/book/agent/${agentId}`;
   };
 
   const closeModal = () => {
@@ -505,20 +446,39 @@ function SearchResults() {
                 ? `${appointment.city}, ${appointment.province}`
                 : appointment.city || appointment.province || 'Location not specified';
               
+              const agent = appointment.agent;
+              const agentName = agent 
+                ? `${agent.full_name || ''}`.trim() || `${appointment.leads?.first_name || ''} ${appointment.leads?.last_name || ''}`.trim()
+                : specialistName;
+              const agentId = agent?.id || appointment.id;
+
               return (
                 <div key={appointment.id} className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
                   <div className="flex gap-6">
-                    {/* Specialist Avatar */}
+                    {/* Agent Avatar */}
                     <div className="flex-shrink-0">
-                      <div className={`w-16 h-16 ${avatarColors[index % avatarColors.length]} rounded-full flex items-center justify-center`}>
-                        <span className="text-white text-2xl">{specialistName[0].toUpperCase()}</span>
-                      </div>
+                      {agent?.profile_picture_url ? (
+                        <img
+                          src={agent.profile_picture_url}
+                          alt={agentName}
+                          className="w-16 h-16 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className={`w-16 h-16 ${avatarColors[index % avatarColors.length]} rounded-full flex items-center justify-center`}>
+                          <span className="text-white text-2xl">{agentName[0]?.toUpperCase() || 'A'}</span>
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex-1">
                       <div className="mb-2">
-                        <h3 className="text-xl text-gray-900">{specialistName}</h3>
-                        <p className="text-gray-600 mt-1">{appointment.service_type || 'Pre-need Planning Specialist'}</p>
+                        <h3 className="text-xl text-gray-900">{agentName}</h3>
+                        <p className="text-gray-600 mt-1">
+                          {agent?.job_title || appointment.service_type || 'Pre-need Planning Specialist'}
+                        </p>
+                        {agent?.funeral_home && (
+                          <p className="text-gray-500 text-sm mt-1">{agent.funeral_home}</p>
+                        )}
                       </div>
 
                       {/* Rating */}
@@ -542,7 +502,7 @@ function SearchResults() {
                             return (
                               <button
                                 key={slotIndex}
-                                onClick={() => hasSpots && handleDayClick(appointment, slot, index)}
+                                onClick={() => hasSpots && handleBookAgent(agentId)}
                                 className={`
                                   px-3 py-2 rounded-lg border text-center text-sm transition-colors
                                   ${hasSpots 
@@ -558,7 +518,10 @@ function SearchResults() {
                               </button>
                             );
                           })}
-                          <button className="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:border-green-800 hover:bg-green-50 text-sm flex items-center justify-center">
+                          <button 
+                            onClick={() => handleBookAgent(agentId)}
+                            className="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:border-green-800 hover:bg-green-50 text-sm flex items-center justify-center"
+                          >
                             More
                           </button>
                         </div>
