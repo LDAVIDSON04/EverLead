@@ -139,30 +139,14 @@ export default function AdminPaymentsPage() {
           <table className="w-full">
             <thead className="bg-neutral-50 border-b border-neutral-200">
               <tr>
-                <th className="px-6 py-3 text-left text-xs text-neutral-600 uppercase tracking-wider">
-                  Transaction ID
-                </th>
-                <th className="px-6 py-3 text-left text-xs text-neutral-600 uppercase tracking-wider">
-                  Date
-                </th>
-                <th className="px-6 py-3 text-left text-xs text-neutral-600 uppercase tracking-wider">
-                  Appointment
-                </th>
-                <th className="px-6 py-3 text-left text-xs text-neutral-600 uppercase tracking-wider">
-                  Client
-                </th>
-                <th className="px-6 py-3 text-left text-xs text-neutral-600 uppercase tracking-wider">
-                  Specialist
-                </th>
-                <th className="px-6 py-3 text-left text-xs text-neutral-600 uppercase tracking-wider">
-                  Amount
-                </th>
-                <th className="px-6 py-3 text-left text-xs text-neutral-600 uppercase tracking-wider">
-                  Platform Fee
-                </th>
-                <th className="px-6 py-3 text-left text-xs text-neutral-600 uppercase tracking-wider">
-                  Status
-                </th>
+                <th className="px-6 py-3 text-left text-xs text-neutral-600 uppercase tracking-wider">Transaction ID</th>
+                <th className="px-6 py-3 text-left text-xs text-neutral-600 uppercase tracking-wider">Date</th>
+                <th className="px-6 py-3 text-left text-xs text-neutral-600 uppercase tracking-wider">Appointment</th>
+                <th className="px-6 py-3 text-left text-xs text-neutral-600 uppercase tracking-wider">Client</th>
+                <th className="px-6 py-3 text-left text-xs text-neutral-600 uppercase tracking-wider">Specialist</th>
+                <th className="px-6 py-3 text-left text-xs text-neutral-600 uppercase tracking-wider">Amount</th>
+                <th className="px-6 py-3 text-left text-xs text-neutral-600 uppercase tracking-wider">Platform Fee</th>
+                <th className="px-6 py-3 text-left text-xs text-neutral-600 uppercase tracking-wider">Status</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-200">

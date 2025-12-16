@@ -11,7 +11,7 @@ type AdminLayoutProps = {
 };
 
 const menuItems = [
-  { href: '/admin/(portal)/agent-approval', label: 'Approvals', icon: CheckCircle },
+  { href: '/admin/(portal)/agent-approval', label: 'Approvals', icon: CheckCircle, badge: true },
   { href: '/admin/(portal)/specialists', label: 'Specialists', icon: Users },
   { href: '/admin/(portal)/appointments', label: 'Appointments', icon: Calendar },
   { href: '/admin/(portal)/payments', label: 'Payments', icon: DollarSign },
@@ -22,6 +22,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const pathname = usePathname();
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [userName, setUserName] = useState<string>('');
+  const [pendingCount, setPendingCount] = useState<number>(0);
 
   useEffect(() => {
     async function checkAuth() {
@@ -54,6 +55,24 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
     checkAuth();
   }, [router]);
+
+  useEffect(() => {
+    async function loadPendingCount() {
+      try {
+        const res = await fetch("/api/admin/pending-agents");
+        if (res.ok) {
+          const data = await res.json();
+          setPendingCount(data.agents?.length || 0);
+        }
+      } catch (error) {
+        console.error('Error loading pending count:', error);
+      }
+    }
+
+    if (!checkingAuth) {
+      loadPendingCount();
+    }
+  }, [checkingAuth]);
 
   const handleLogout = async () => {
     await supabaseClient.auth.signOut();
@@ -99,6 +118,15 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                   >
                     <Icon className="w-5 h-5 flex-shrink-0" />
                     <span className="flex-1 text-left">{item.label}</span>
+                    {item.badge && pendingCount > 0 && (
+                      <span className={`px-2 py-0.5 text-xs rounded-full ${
+                        isActive 
+                          ? 'bg-emerald-900 text-emerald-100' 
+                          : 'bg-emerald-700 text-white'
+                      }`}>
+                        {pendingCount}
+                      </span>
+                    )}
                   </Link>
                 </li>
               );
@@ -108,7 +136,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
         {/* User Info */}
         <div className="p-4 border-t border-neutral-800">
-          <div className="flex items-center gap-3 mb-2">
+          <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-emerald-700 flex items-center justify-center text-sm text-white">
               {userName ? userName.charAt(0).toUpperCase() : <User className="w-4 h-4" />}
             </div>
@@ -117,13 +145,6 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               <p className="text-xs text-neutral-400">admin@soradin.com</p>
             </div>
           </div>
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm text-neutral-300 hover:text-white hover:bg-neutral-900 rounded-lg transition-colors"
-          >
-            <XCircle className="w-4 h-4" />
-            <span>Log out</span>
-          </button>
         </div>
       </aside>
 
