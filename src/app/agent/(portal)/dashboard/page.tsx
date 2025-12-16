@@ -13,6 +13,7 @@ type Stats = {
   purchased: number;
   purchasedThisMonth: number;
   totalSpent: number;
+  myAppointments: number;
 };
 
 type Appointment = {
@@ -33,6 +34,7 @@ export default function AgentDashboardPage() {
     purchased: 0,
     purchasedThisMonth: 0,
     totalSpent: 0,
+    myAppointments: 0,
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -90,6 +92,7 @@ export default function AgentDashboardPage() {
           purchased: 0,
           purchasedThisMonth: data.stats.purchasedThisMonth ?? 0,
           totalSpent: (data.stats.totalSpentCents ?? 0) / 100,
+          myAppointments: data.stats.myAppointments ?? 0,
         });
 
         // Fetch recent appointments
@@ -98,29 +101,44 @@ export default function AgentDashboardPage() {
           .select(`
             id,
             status,
+            requested_date,
             created_at,
-            leads (
-              first_name,
-              last_name,
-              city,
-              province
-            )
+            lead_id,
+            agent_id
           `)
           .eq("agent_id", agentId)
           .order("created_at", { ascending: false })
           .limit(5);
 
+        // Fetch leads for these appointments
+        const leadIds = (appointmentsData || [])
+          .map((apt: any) => apt.lead_id)
+          .filter(Boolean);
+        
+        let leadsMap: Record<string, any> = {};
+        if (leadIds.length > 0) {
+          const { data: leadsData } = await supabaseClient
+            .from("leads")
+            .select("id, first_name, last_name, city, province")
+            .in("id", leadIds);
+          
+          (leadsData || []).forEach((lead: any) => {
+            leadsMap[lead.id] = lead;
+          });
+        }
+
         if (appointmentsData) {
           const formattedAppointments: Appointment[] = appointmentsData.map((apt: any) => {
-            const lead = apt.leads;
+            const lead = apt.lead_id ? leadsMap[apt.lead_id] : null;
             const name = lead ? `${lead.first_name || ''} ${lead.last_name || ''}`.trim() : 'Unknown';
             const location = lead ? `${lead.city || ''}, ${lead.province || ''}`.trim() : 'N/A';
-            const date = new Date(apt.created_at).toLocaleDateString('en-US', { 
+            const dateObj = apt.requested_date ? new Date(apt.requested_date) : new Date(apt.created_at);
+            const date = dateObj.toLocaleDateString('en-US', { 
               day: 'numeric', 
               month: 'short', 
               year: 'numeric' 
             });
-            const time = new Date(apt.created_at).toLocaleTimeString('en-US', { 
+            const time = dateObj.toLocaleTimeString('en-US', { 
               hour: '2-digit', 
               minute: '2-digit' 
             });
@@ -131,11 +149,51 @@ export default function AgentDashboardPage() {
               location,
               date,
               time,
-              status: apt.status === 'booked' ? 'pending' : apt.status === 'completed' ? 'confirmed' : 'pending',
+              status: apt.status === 'confirmed' || apt.status === 'booked' ? 'confirmed' : 'pending',
             };
           });
           setAppointments(formattedAppointments);
         }
+
+        // Generate meetings chart data from last week's appointments
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+        
+        const { data: weeklyAppointments } = await supabaseClient
+          .from("appointments")
+          .select("requested_date, created_at")
+          .eq("agent_id", agentId)
+          .gte("created_at", oneWeekAgo.toISOString());
+
+        // Group appointments by day of week (Mon-Fri)
+        const dayCounts: Record<string, number> = {
+          'Mon': 0,
+          'Tue': 0,
+          'Wed': 0,
+          'Thu': 0,
+          'Fri': 0,
+        };
+
+        (weeklyAppointments || []).forEach((apt: any) => {
+          const date = apt.requested_date ? new Date(apt.requested_date) : new Date(apt.created_at);
+          const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, etc.
+          const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+          const dayName = dayNames[dayOfWeek];
+          if (dayName && dayCounts[dayName] !== undefined) {
+            dayCounts[dayName]++;
+          }
+        });
+
+        // Calculate max value for percentage scaling
+        const maxCount = Math.max(...Object.values(dayCounts), 1);
+        
+        setMeetingsData([
+          { day: 'Mon', value: maxCount > 0 ? Math.round((dayCounts['Mon'] / maxCount) * 100) : 0 },
+          { day: 'Tue', value: maxCount > 0 ? Math.round((dayCounts['Tue'] / maxCount) * 100) : 0 },
+          { day: 'Wed', value: maxCount > 0 ? Math.round((dayCounts['Wed'] / maxCount) * 100) : 0 },
+          { day: 'Thu', value: maxCount > 0 ? Math.round((dayCounts['Thu'] / maxCount) * 100) : 0 },
+          { day: 'Fri', value: maxCount > 0 ? Math.round((dayCounts['Fri'] / maxCount) * 100) : 0 },
+        ]);
       } catch (err) {
         console.error("Error loading agent dashboard:", err);
         setError("Failed to load dashboard stats");
@@ -159,13 +217,13 @@ export default function AgentDashboardPage() {
     calendarDates.push(date.getDate());
   }
 
-  const meetingsData = [
-    { day: 'Mon', value: 45 },
-    { day: 'Tue', value: 60 },
-    { day: 'Wed', value: 85 },
-    { day: 'Thu', value: 70 },
-    { day: 'Fri', value: 55 },
-  ];
+  const [meetingsData, setMeetingsData] = useState([
+    { day: 'Mon', value: 0 },
+    { day: 'Tue', value: 0 },
+    { day: 'Wed', value: 0 },
+    { day: 'Thu', value: 0 },
+    { day: 'Fri', value: 0 },
+  ]);
 
   if (loading) {
     return (
@@ -255,7 +313,7 @@ export default function AgentDashboardPage() {
                     <Phone size={20} className="text-gray-700" />
                   </div>
                   <div className="text-xs text-gray-500 mb-1">Phone Calls</div>
-                  <div className="text-2xl text-gray-900">{stats.myLeads}</div>
+                  <div className="text-2xl text-gray-900">{stats.myAppointments}</div>
                 </div>
                 
                 {/* Appointments */}
@@ -264,7 +322,7 @@ export default function AgentDashboardPage() {
                     <Calendar size={20} className="text-green-800" />
                   </div>
                   <div className="text-xs text-gray-500 mb-1">Appointments</div>
-                  <div className="text-2xl text-gray-900">{stats.myLeads}</div>
+                  <div className="text-2xl text-gray-900">{stats.myAppointments}</div>
                 </div>
                 
                 {/* Unread Mail */}
@@ -273,7 +331,7 @@ export default function AgentDashboardPage() {
                     <MailIcon size={20} className="text-gray-700" />
                   </div>
                   <div className="text-xs text-gray-500 mb-1">Unread Mail</div>
-                  <div className="text-2xl text-gray-900">05</div>
+                  <div className="text-2xl text-gray-900">0</div>
                 </div>
                 
                 {/* Add More */}

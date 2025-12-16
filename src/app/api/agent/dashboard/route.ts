@@ -12,6 +12,7 @@ type AgentDashboardData = {
     purchasedThisMonth: number;
     totalSpentCents: number;
     newLeadsNeedingAttention: number;
+    myAppointments: number;
   };
   recentLeads: {
     id: string;
@@ -100,13 +101,11 @@ export async function GET(request: NextRequest) {
     const thirtyDaysAgoISO = thirtyDaysAgo.toISOString();
     const nowISO = new Date().toISOString();
 
-    // 1. Stats: Available appointments (pending, not hidden, not assigned)
-    const { count: availableAppointmentsCount } = await supabaseAdmin
-      .from("appointments")
+    // 1. Stats: Total leads assigned to this agent
+    const { count: myLeadsCount } = await supabaseAdmin
+      .from("leads")
       .select("id", { count: "exact", head: true })
-      .eq("status", "pending")
-      .eq("is_hidden", false)
-      .is("agent_id", null);
+      .eq("assigned_agent_id", agentId);
 
     // 2. Stats: My appointments (assigned to this agent)
     const { count: myAppointmentsCount } = await supabaseAdmin
@@ -114,14 +113,21 @@ export async function GET(request: NextRequest) {
       .select("id", { count: "exact", head: true })
       .eq("agent_id", agentId);
 
-    // 3. Stats: Purchased this month (appointments purchased in last 30 days)
+    // 3. Stats: Available appointments (pending, not hidden, not assigned)
+    const { count: availableAppointmentsCount } = await supabaseAdmin
+      .from("appointments")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "pending")
+      .is("agent_id", null);
+
+    // 4. Stats: Purchased this month (appointments purchased in last 30 days)
     const { count: purchasedThisMonthCount } = await supabaseAdmin
       .from("appointments")
       .select("id", { count: "exact", head: true })
       .eq("agent_id", agentId)
       .gte("created_at", thirtyDaysAgoISO);
 
-    // 4. Stats: Total spent on appointments
+    // 5. Stats: Total spent on appointments
     const { data: purchasedAppointments } = await supabaseAdmin
       .from("appointments")
       .select("price_cents")
@@ -134,14 +140,14 @@ export async function GET(request: NextRequest) {
         0
       ) || 0;
 
-    // 5. Stats: New appointments needing attention (booked but not completed/no-show)
+    // 6. Stats: New appointments needing attention (booked but not completed/no-show)
     const { count: newAppointmentsCount } = await supabaseAdmin
       .from("appointments")
       .select("id", { count: "exact", head: true })
       .eq("agent_id", agentId)
       .eq("status", "booked");
 
-    // 6. Recent leads (last 5)
+    // 7. Recent leads (last 5)
     const { data: recentLeadsData } = await supabaseAdmin
       .from("leads")
       .select(
@@ -151,7 +157,7 @@ export async function GET(request: NextRequest) {
       .order("created_at", { ascending: false })
       .limit(5);
 
-    // 7. Recent bids (last 5 bids, regardless of auction status)
+    // 8. Recent bids (last 5 bids, regardless of auction status)
     const { data: recentBidsData } = await supabaseAdmin
       .from("lead_bids")
       .select("id, lead_id, amount, created_at")
@@ -188,7 +194,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // 8. Your bids (active auction bids only - for the "Your bids" panel)
+    // 9. Your bids (active auction bids only - for the "Your bids" panel)
     // Get all bids from this agent
     const { data: bidsData } = await supabaseAdmin
       .from("lead_bids")
@@ -243,7 +249,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // 9. Pending auctions
+    // 10. Pending auctions
     // Get auctions where this agent is involved (either highest bidder or has placed a bid)
     const { data: allPendingAuctions } = await supabaseAdmin
       .from("leads")
@@ -293,11 +299,12 @@ export async function GET(request: NextRequest) {
 
         const response: AgentDashboardData = {
           stats: {
-            availableLeads: availableAppointmentsCount ?? 0, // Using appointments count
-            myLeads: myAppointmentsCount ?? 0, // Using appointments count
+            availableLeads: availableAppointmentsCount ?? 0,
+            myLeads: myLeadsCount ?? 0, // Total leads assigned to agent
             purchasedThisMonth: purchasedThisMonthCount ?? 0,
             totalSpentCents: totalSpentCents,
-            newLeadsNeedingAttention: newAppointmentsCount ?? 0, // Using appointments count
+            newLeadsNeedingAttention: newAppointmentsCount ?? 0,
+            myAppointments: myAppointmentsCount ?? 0, // Total appointments for agent
           },
       recentLeads: (recentLeadsData || []).map((lead: any) => ({
         id: lead.id,
