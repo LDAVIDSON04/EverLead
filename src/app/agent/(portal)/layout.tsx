@@ -47,19 +47,44 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
       
       try {
         const { data: { user } } = await supabaseClient.auth.getUser();
-        if (!user) return;
+        if (!user) {
+          console.log('No user found in handleProfileUpdate');
+          return;
+        }
 
-        const { data: profile } = await supabaseClient
+        console.log('Refreshing profile for user:', user.id);
+
+        const { data: profile, error: profileError } = await supabaseClient
           .from('profiles')
           .select('full_name, first_name, last_name, profile_picture_url, email, phone, funeral_home, job_title')
           .eq('id', user.id)
           .maybeSingle();
+
+        if (profileError) {
+          console.error('Error fetching profile in handleProfileUpdate:', profileError);
+          return;
+        }
+
+        console.log('Profile data fetched:', {
+          full_name: profile?.full_name,
+          first_name: profile?.first_name,
+          last_name: profile?.last_name,
+          profile_picture_url: profile?.profile_picture_url,
+        });
 
         if (profile && mounted) {
           setUserName(profile.full_name || 'Agent');
           setUserFirstName(profile.first_name || profile.full_name?.split(' ')[0] || 'Agent');
           setUserLastName(profile.last_name || profile.full_name?.split(' ').slice(1).join(' ') || '');
           setProfilePictureUrl(profile.profile_picture_url || null);
+          console.log('Profile state updated:', {
+            userName: profile.full_name || 'Agent',
+            firstName: profile.first_name || profile.full_name?.split(' ')[0] || 'Agent',
+            lastName: profile.last_name || profile.full_name?.split(' ').slice(1).join(' ') || '',
+            pictureUrl: profile.profile_picture_url || null,
+          });
+        } else {
+          console.log('No profile found for user:', user.id);
         }
       } catch (error) {
         console.error('Error refreshing profile:', error);
@@ -67,9 +92,6 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
     };
 
     window.addEventListener('profileUpdated', handleProfileUpdate);
-
-    // Also trigger profile refresh on mount to ensure data is loaded
-    handleProfileUpdate();
 
     async function checkApproval() {
       try {
@@ -115,10 +137,18 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
           hasProfile: !!profile,
         });
         
-        setUserName(profile?.full_name || 'Agent');
-        setUserFirstName(profile?.first_name || profile?.full_name?.split(' ')[0] || 'Agent');
-        setUserLastName(profile?.last_name || profile?.full_name?.split(' ').slice(1).join(' ') || '');
-        setProfilePictureUrl(profile?.profile_picture_url || null);
+        if (profile) {
+          setUserName(profile.full_name || 'Agent');
+          setUserFirstName(profile.first_name || profile.full_name?.split(' ')[0] || 'Agent');
+          setUserLastName(profile.last_name || profile.full_name?.split(' ').slice(1).join(' ') || '');
+          setProfilePictureUrl(profile.profile_picture_url || null);
+        } else {
+          // If no profile, try to load it again after a short delay
+          setTimeout(() => {
+            handleProfileUpdate();
+          }, 1000);
+        }
+        
         setCheckingAuth(false);
 
         // Check specialist status (non-blocking, async) - only if profile exists
