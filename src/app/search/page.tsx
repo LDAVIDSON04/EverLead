@@ -481,15 +481,32 @@ function SearchResults() {
           </div>
         ) : appointments.length === 0 ? (
           <div className="bg-white border border-gray-200 rounded-lg p-12 text-center">
-            <p className="text-gray-600 mb-4">
-              No appointments found. Try adjusting your search criteria.
+            <p className="text-gray-600 mb-2 text-lg font-medium">
+              No agents found
             </p>
-            <Link
-              href="/"
-              className="inline-block bg-green-800 hover:bg-green-900 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
-            >
-              Return to Homepage
-            </Link>
+            <p className="text-gray-500 mb-6 text-sm">
+              {searchLocation 
+                ? `We couldn't find any available agents in "${searchLocation}". Try searching for a different location or removing the location filter.`
+                : "No agents are currently available for booking. Agents need to set up their availability in their settings to appear here."}
+            </p>
+            <div className="flex gap-3 justify-center">
+              <button
+                onClick={() => {
+                  setSearchLocation("");
+                  setSearchQuery("");
+                  setSearchService("");
+                }}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Clear Filters
+              </button>
+              <Link
+                href="/"
+                className="inline-block bg-green-800 hover:bg-green-900 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
+              >
+                Return to Homepage
+              </Link>
+            </div>
           </div>
         ) : (
           <div className="space-y-4">
