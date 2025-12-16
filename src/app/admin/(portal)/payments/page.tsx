@@ -28,7 +28,7 @@ export default function AdminPaymentsPage() {
       setLoading(true);
       setError(null);
       try {
-        const { data, error } = await supabaseClient
+        const { data: paymentsData, error: paymentsError } = await supabaseClient
           .from("payments")
           .select(`
             id,
@@ -36,27 +36,74 @@ export default function AdminPaymentsPage() {
             appointment_id,
             amount_cents,
             fee_cents,
-            status,
-            appointments:appointment_id (
-              families:families ( full_name ),
-              specialists:specialists ( display_name )
-            )
+            status
           `)
           .order("created_at", { ascending: false })
           .limit(100);
 
-        if (error) throw error;
+        if (paymentsError) throw paymentsError;
 
-        const rows: AdminPayment[] = (data || []).map((p: any) => ({
-          id: p.id,
-          created_at: p.created_at,
-          appointment_id: p.appointment_id,
-          amount_cents: p.amount_cents,
-          fee_cents: p.fee_cents,
-          status: p.status,
-          family_name: p.appointments?.families?.full_name || null,
-          specialist_name: p.appointments?.specialists?.display_name || null,
-        }));
+        // Fetch appointment data if we have appointment_ids
+        const appointmentIds = (paymentsData || []).map((p: any) => p.appointment_id).filter(Boolean);
+        let appointmentsMap: Record<string, any> = {};
+        let leadIds: string[] = [];
+        let agentIds: string[] = [];
+
+        if (appointmentIds.length > 0) {
+          const { data: appointmentsData } = await supabaseClient
+            .from("appointments")
+            .select("id, lead_id, agent_id")
+            .in("id", appointmentIds);
+          
+          (appointmentsData || []).forEach((apt: any) => {
+            appointmentsMap[apt.id] = apt;
+            if (apt.lead_id) leadIds.push(apt.lead_id);
+            if (apt.agent_id) agentIds.push(apt.agent_id);
+          });
+        }
+
+        // Fetch leads data
+        let leadsMap: Record<string, any> = {};
+        if (leadIds.length > 0) {
+          const { data: leadsData } = await supabaseClient
+            .from("leads")
+            .select("id, full_name")
+            .in("id", leadIds);
+          
+          (leadsData || []).forEach((lead: any) => {
+            leadsMap[lead.id] = lead;
+          });
+        }
+
+        // Fetch agent/specialist data
+        let agentsMap: Record<string, any> = {};
+        if (agentIds.length > 0) {
+          const { data: agentsData } = await supabaseClient
+            .from("profiles")
+            .select("id, full_name")
+            .in("id", agentIds);
+          
+          (agentsData || []).forEach((agent: any) => {
+            agentsMap[agent.id] = agent;
+          });
+        }
+
+        const rows: AdminPayment[] = (paymentsData || []).map((p: any) => {
+          const appointment = appointmentsMap[p.appointment_id];
+          const lead = appointment?.lead_id ? leadsMap[appointment.lead_id] : null;
+          const agent = appointment?.agent_id ? agentsMap[appointment.agent_id] : null;
+          
+          return {
+            id: p.id,
+            created_at: p.created_at,
+            appointment_id: p.appointment_id,
+            amount_cents: p.amount_cents,
+            fee_cents: p.fee_cents,
+            status: p.status,
+            family_name: lead?.full_name || null,
+            specialist_name: agent?.full_name || null,
+          };
+        });
 
         setPayments(rows);
       } catch (err: any) {

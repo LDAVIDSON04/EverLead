@@ -31,19 +31,30 @@ export default function AdminSpecialistsPage() {
       setLoading(true);
       setError(null);
       try {
-        const { data, error } = await supabaseClient
+        // First get specialists
+        const { data: specialistsData, error: specialistsError } = await supabaseClient
           .from("specialists")
-          .select(
-            `
-              id,
-              display_name,
-              status,
-              funeral_home,
-              region,
-              specialty,
-              profiles:profiles!specialists_user_id_fkey ( email, full_name )
-            `
-          );
+          .select("id, display_name, status, funeral_home, region, specialty");
+
+        if (specialistsError) throw specialistsError;
+
+        // Then get profiles for those specialist IDs
+        const specialistIds = (specialistsData || []).map((s: any) => s.id);
+        let profilesMap: Record<string, any> = {};
+        
+        if (specialistIds.length > 0) {
+          const { data: profilesData } = await supabaseClient
+            .from("profiles")
+            .select("id, email, full_name")
+            .in("id", specialistIds);
+          
+          (profilesData || []).forEach((profile: any) => {
+            profilesMap[profile.id] = profile;
+          });
+        }
+
+        const data = specialistsData;
+        const error = null;
 
         if (error) throw error;
 
@@ -65,17 +76,20 @@ export default function AdminSpecialistsPage() {
           });
         }
 
-        const rows: SpecialistRow[] = (data || []).map((s: any) => ({
-          id: s.id,
-          display_name: s.display_name || s.profiles?.full_name || null,
-          email: s.profiles?.email || null,
-          funeral_home: s.funeral_home,
-          region: s.region,
-          specialty: s.specialty,
-          status: s.status,
-          calendar_google: calendarBySpecialist[s.id]?.google ?? false,
-          calendar_microsoft: calendarBySpecialist[s.id]?.microsoft ?? false,
-        }));
+        const rows: SpecialistRow[] = (data || []).map((s: any) => {
+          const profile = profilesMap[s.id];
+          return {
+            id: s.id,
+            display_name: s.display_name || profile?.full_name || null,
+            email: profile?.email || null,
+            funeral_home: s.funeral_home,
+            region: s.region,
+            specialty: s.specialty,
+            status: s.status,
+            calendar_google: calendarBySpecialist[s.id]?.google ?? false,
+            calendar_microsoft: calendarBySpecialist[s.id]?.microsoft ?? false,
+          };
+        });
 
         setSpecialists(rows);
       } catch (err: any) {

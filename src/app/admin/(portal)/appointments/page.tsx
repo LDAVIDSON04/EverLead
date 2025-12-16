@@ -32,7 +32,8 @@ export default function AdminAppointmentsPage() {
       setLoading(true);
       setError(null);
       try {
-        const { data, error } = await supabaseClient
+        // Check if appointments table has new structure (family_id) or old structure (lead_id)
+        let query = supabaseClient
           .from("appointments")
           .select(
             `
@@ -41,26 +42,65 @@ export default function AdminAppointmentsPage() {
               ends_at,
               status,
               price_cents,
-              families:families ( full_name, email ),
-              specialists:specialists ( display_name, region )
+              requested_date,
+              lead_id,
+              agent_id
             `
           )
           .order("starts_at", { ascending: false })
           .limit(100);
 
+        const { data, error } = await query;
+
         if (error) throw error;
 
-        const rows: AdminAppointment[] = (data || []).map((apt: any) => ({
-          id: apt.id,
-          starts_at: apt.starts_at,
-          ends_at: apt.ends_at,
-          status: apt.status,
-          amount_cents: apt.price_cents ?? null,
-          family_name: Array.isArray(apt.families) ? apt.families[0]?.full_name : apt.families?.full_name,
-          family_email: Array.isArray(apt.families) ? apt.families[0]?.email : apt.families?.email,
-          specialist_name: Array.isArray(apt.specialists) ? apt.specialists[0]?.display_name : apt.specialists?.display_name,
-          specialist_region: Array.isArray(apt.specialists) ? apt.specialists[0]?.region : apt.specialists?.region,
-        }));
+        // Fetch related data if available
+        const appointmentIds = (data || []).map((apt: any) => apt.id);
+        const leadIds = (data || []).map((apt: any) => apt.lead_id).filter(Boolean);
+        const agentIds = (data || []).map((apt: any) => apt.agent_id).filter(Boolean);
+
+        // Fetch leads data if we have lead_ids
+        let leadsMap: Record<string, any> = {};
+        if (leadIds.length > 0) {
+          const { data: leadsData } = await supabaseClient
+            .from("leads")
+            .select("id, full_name, email")
+            .in("id", leadIds);
+          
+          (leadsData || []).forEach((lead: any) => {
+            leadsMap[lead.id] = lead;
+          });
+        }
+
+        // Fetch agent/specialist data if we have agent_ids
+        let agentsMap: Record<string, any> = {};
+        if (agentIds.length > 0) {
+          const { data: agentsData } = await supabaseClient
+            .from("profiles")
+            .select("id, full_name, email")
+            .in("id", agentIds);
+          
+          (agentsData || []).forEach((agent: any) => {
+            agentsMap[agent.id] = agent;
+          });
+        }
+
+        const rows: AdminAppointment[] = (data || []).map((apt: any) => {
+          const lead = apt.lead_id ? leadsMap[apt.lead_id] : null;
+          const agent = apt.agent_id ? agentsMap[apt.agent_id] : null;
+          
+          return {
+            id: apt.id,
+            starts_at: apt.starts_at || apt.requested_date || new Date().toISOString(),
+            ends_at: apt.ends_at || apt.requested_date || new Date().toISOString(),
+            status: apt.status,
+            amount_cents: apt.price_cents ?? null,
+            family_name: lead?.full_name || null,
+            family_email: lead?.email || null,
+            specialist_name: agent?.full_name || null,
+            specialist_region: null,
+          };
+        });
 
         setAppointments(rows);
       } catch (err: any) {
