@@ -24,14 +24,13 @@ export default function AdminSpecialistsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "suspended">("all");
 
   useEffect(() => {
     async function load() {
       setLoading(true);
       setError(null);
       try {
-        // Join specialists with profiles for email / name
         const { data, error } = await supabaseClient
           .from("specialists")
           .select(
@@ -92,7 +91,7 @@ export default function AdminSpecialistsPage() {
 
   const filtered = specialists.filter((s) => {
     if (statusFilter === "active" && s.status !== "approved") return false;
-    if (statusFilter === "inactive" && s.status === "approved") return false;
+    if (statusFilter === "suspended" && s.status === "approved") return false;
     if (!search) return true;
     const q = search.toLowerCase();
     return (
@@ -114,7 +113,7 @@ export default function AdminSpecialistsPage() {
     <div className="p-8">
       <div className="mb-8">
         <h1 className="text-3xl mb-2 text-black">Specialists</h1>
-        <p className="text-neutral-600">Manage active specialists and calendar connections.</p>
+        <p className="text-neutral-600">Manage active specialists</p>
       </div>
 
       {error && (
@@ -123,13 +122,13 @@ export default function AdminSpecialistsPage() {
         </div>
       )}
 
-      {/* Search + filter row, styled like design bundle */}
+      {/* Search */}
       <div className="mb-6 flex gap-4">
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
           <input
             type="text"
-            placeholder="Search by name or funeral home..."
+            placeholder="Search by name or company..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-10 pr-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-700"
@@ -141,75 +140,63 @@ export default function AdminSpecialistsPage() {
           className="px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-700"
         >
           <option value="all">All Status</option>
-          <option value="active">Approved</option>
-          <option value="inactive">Not approved</option>
+          <option value="active">Active</option>
+          <option value="suspended">Suspended</option>
         </select>
       </div>
 
-      {/* Specialists table in Admin Portal Design style */}
+      {/* Specialists Table */}
       <div className="bg-white border border-neutral-200 rounded-lg overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-neutral-50 border-b border-neutral-200">
               <tr>
-                <th className="px-6 py-3 text-left text-xs text-neutral-600 uppercase tracking-wider">
-                  Name
-                </th>
-                <th className="px-6 py-3 text-left text-xs text-neutral-600 uppercase tracking-wider">
-                  Region
-                </th>
-                <th className="px-6 py-3 text-left text-xs text-neutral-600 uppercase tracking-wider">
-                  Specialty
-                </th>
-                <th className="px-6 py-3 text-left text-xs text-neutral-600 uppercase tracking-wider">
-                  Calendar
-                </th>
-                <th className="px-6 py-3 text-left text-xs text-neutral-600 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs text-neutral-600 uppercase tracking-wider">
-                  Actions
-                </th>
+                <th className="px-6 py-3 text-left text-xs text-neutral-600 uppercase tracking-wider">Name</th>
+                <th className="px-6 py-3 text-left text-xs text-neutral-600 uppercase tracking-wider">Region</th>
+                <th className="px-6 py-3 text-left text-xs text-neutral-600 uppercase tracking-wider">Specialty</th>
+                <th className="px-6 py-3 text-left text-xs text-neutral-600 uppercase tracking-wider">Calendar</th>
+                <th className="px-6 py-3 text-left text-xs text-neutral-600 uppercase tracking-wider">Status</th>
+                <th className="px-6 py-3 text-left text-xs text-neutral-600 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-200">
-              {filtered.map((s) => (
-                <tr key={s.id} className="hover:bg-neutral-50">
+              {filtered.map((specialist) => (
+                <tr key={specialist.id} className="hover:bg-neutral-50">
                   <td className="px-6 py-4">
                     <div>
-                      <p className="text-black">{s.display_name || "Unknown"}</p>
-                      <p className="text-sm text-neutral-600">{s.funeral_home || "—"}</p>
-                      <p className="text-xs text-neutral-500">{s.email || "—"}</p>
+                      <p className="text-black">{specialist.display_name || "Unknown"}</p>
+                      <p className="text-sm text-neutral-600">{specialist.funeral_home || "—"}</p>
+                      <p className="text-xs text-neutral-500">{specialist.email || "—"}</p>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-neutral-700">{s.region || "—"}</td>
-                  <td className="px-6 py-4 text-sm text-neutral-700">{s.specialty || "—"}</td>
+                  <td className="px-6 py-4 text-sm text-neutral-700">{specialist.region || "—"}</td>
+                  <td className="px-6 py-4 text-sm text-neutral-700">{specialist.specialty || "—"}</td>
                   <td className="px-6 py-4">
-                    {s.calendar_google && (
+                    {specialist.calendar_google && (
                       <div className="flex items-center gap-2">
                         <Calendar className="w-4 h-4 text-emerald-700" />
                         <span className="text-sm text-emerald-700">Google</span>
                       </div>
                     )}
-                    {s.calendar_microsoft && (
+                    {specialist.calendar_microsoft && (
                       <div className="flex items-center gap-2">
                         <Calendar className="w-4 h-4 text-blue-600" />
                         <span className="text-sm text-blue-600">Microsoft</span>
                       </div>
                     )}
-                    {!s.calendar_google && !s.calendar_microsoft && (
+                    {!specialist.calendar_google && !specialist.calendar_microsoft && (
                       <span className="text-sm text-neutral-400">Not connected</span>
                     )}
                   </td>
                   <td className="px-6 py-4">
                     <span
                       className={`inline-flex px-3 py-1 rounded-full text-xs ${
-                        s.status === "approved"
+                        specialist.status === "approved"
                           ? "bg-emerald-100 text-emerald-700"
                           : "bg-red-100 text-red-700"
                       }`}
                     >
-                      {s.status || "pending"}
+                      {specialist.status || "pending"}
                     </span>
                   </td>
                   <td className="px-6 py-4">
@@ -220,12 +207,19 @@ export default function AdminSpecialistsPage() {
                       </button>
                       <button className="px-3 py-1.5 border border-neutral-300 text-neutral-700 rounded-md hover:bg-neutral-50 text-sm flex items-center gap-1">
                         <UserX className="w-3 h-3" />
-                        {s.status === "approved" ? "Suspend" : "Activate"}
+                        {specialist.status === "approved" ? "Suspend" : "Activate"}
                       </button>
                     </div>
                   </td>
                 </tr>
               ))}
+              {filtered.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="px-6 py-8 text-center text-sm text-neutral-600">
+                    No specialists found
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -233,5 +227,3 @@ export default function AdminSpecialistsPage() {
     </div>
   );
 }
-
-

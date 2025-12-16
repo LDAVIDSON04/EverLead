@@ -23,6 +23,9 @@ export default function AdminAppointmentsPage() {
   const [appointments, setAppointments] = useState<AdminAppointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [dateFilter, setDateFilter] = useState<string>("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [paymentFilter, setPaymentFilter] = useState<string>("all");
 
   useEffect(() => {
     async function load() {
@@ -91,6 +94,17 @@ export default function AdminAppointmentsPage() {
     return hasAmount ? "text-emerald-700" : "text-neutral-600";
   };
 
+  const filtered = appointments.filter((apt) => {
+    if (statusFilter !== "all" && apt.status !== statusFilter) return false;
+    if (paymentFilter === "paid" && !apt.amount_cents) return false;
+    if (paymentFilter === "unpaid" && apt.amount_cents) return false;
+    if (dateFilter) {
+      const aptDate = new Date(apt.starts_at).toISOString().split("T")[0];
+      if (aptDate !== dateFilter) return false;
+    }
+    return true;
+  });
+
   if (loading) {
     return (
       <div className="p-8">
@@ -103,7 +117,7 @@ export default function AdminAppointmentsPage() {
     <div className="p-8">
       <div className="mb-8">
         <h1 className="text-3xl mb-2 text-black">Appointments</h1>
-        <p className="text-neutral-600">View and manage all appointments across Soradin.</p>
+        <p className="text-neutral-600">View and manage appointment disputes</p>
       </div>
 
       {error && (
@@ -112,24 +126,34 @@ export default function AdminAppointmentsPage() {
         </div>
       )}
 
-      {/* Simple filters shell matching design (static for now) */}
+      {/* Filters */}
       <div className="mb-6 flex gap-4">
         <input
           type="date"
+          value={dateFilter}
+          onChange={(e) => setDateFilter(e.target.value)}
           className="px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-700"
         />
-        <select className="px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-700">
-          <option>All Status</option>
-          <option>Pending</option>
-          <option>Confirmed</option>
-          <option>Booked</option>
-          <option>Completed</option>
-          <option>Cancelled</option>
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-700"
+        >
+          <option value="all">All Status</option>
+          <option value="pending">Pending</option>
+          <option value="confirmed">Confirmed</option>
+          <option value="booked">Booked</option>
+          <option value="completed">Completed</option>
+          <option value="cancelled">Cancelled</option>
         </select>
-        <select className="px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-700">
-          <option>All Payment Status</option>
-          <option>With Amount</option>
-          <option>No Amount</option>
+        <select
+          value={paymentFilter}
+          onChange={(e) => setPaymentFilter(e.target.value)}
+          className="px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-700"
+        >
+          <option value="all">All Payment Status</option>
+          <option value="paid">Paid</option>
+          <option value="unpaid">Unpaid</option>
         </select>
       </div>
 
@@ -139,44 +163,29 @@ export default function AdminAppointmentsPage() {
           <table className="w-full">
             <thead className="bg-neutral-50 border-b border-neutral-200">
               <tr>
-                <th className="px-6 py-3 text-left text-xs text-neutral-600 uppercase tracking-wider">
-                  ID
-                </th>
-                <th className="px-6 py-3 text-left text-xs text-neutral-600 uppercase tracking-wider">
-                  Date &amp; Time
-                </th>
-                <th className="px-6 py-3 text-left text-xs text-neutral-600 uppercase tracking-wider">
-                  Client
-                </th>
-                <th className="px-6 py-3 text-left text-xs text-neutral-600 uppercase tracking-wider">
-                  Specialist
-                </th>
-                <th className="px-6 py-3 text-left text-xs text-neutral-600 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs text-neutral-600 uppercase tracking-wider">
-                  Payment
-                </th>
-                <th className="px-6 py-3 text-left text-xs text-neutral-600 uppercase tracking-wider">
-                  Actions
-                </th>
+                <th className="px-6 py-3 text-left text-xs text-neutral-600 uppercase tracking-wider">ID</th>
+                <th className="px-6 py-3 text-left text-xs text-neutral-600 uppercase tracking-wider">Date & Time</th>
+                <th className="px-6 py-3 text-left text-xs text-neutral-600 uppercase tracking-wider">Client</th>
+                <th className="px-6 py-3 text-left text-xs text-neutral-600 uppercase tracking-wider">Specialist</th>
+                <th className="px-6 py-3 text-left text-xs text-neutral-600 uppercase tracking-wider">Service</th>
+                <th className="px-6 py-3 text-left text-xs text-neutral-600 uppercase tracking-wider">Status</th>
+                <th className="px-6 py-3 text-left text-xs text-neutral-600 uppercase tracking-wider">Payment</th>
+                <th className="px-6 py-3 text-left text-xs text-neutral-600 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-200">
-              {appointments.map((apt) => {
+              {filtered.map((apt) => {
                 const start = new Date(apt.starts_at);
                 const end = new Date(apt.ends_at);
                 const hasAmount = (apt.amount_cents ?? 0) > 0;
                 return (
                   <tr key={apt.id} className="hover:bg-neutral-50">
-                    <td className="px-6 py-4 text-sm text-black">{apt.id}</td>
+                    <td className="px-6 py-4 text-sm text-black">{apt.id.slice(0, 8)}</td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
                         <Calendar className="w-4 h-4 text-neutral-400" />
                         <div>
-                          <p className="text-sm text-black">
-                            {start.toLocaleDateString()}
-                          </p>
+                          <p className="text-sm text-black">{start.toLocaleDateString()}</p>
                           <p className="text-xs text-neutral-500">
                             {start.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}{" "}
                             –{" "}
@@ -197,6 +206,7 @@ export default function AdminAppointmentsPage() {
                         <p className="text-xs text-neutral-400">{apt.specialist_region || "—"}</p>
                       </div>
                     </td>
+                    <td className="px-6 py-4 text-sm text-neutral-700">Consultation</td>
                     <td className="px-6 py-4">
                       <span
                         className={`inline-flex px-3 py-1 rounded-full text-xs border ${getStatusColor(
@@ -213,6 +223,7 @@ export default function AdminAppointmentsPage() {
                           <p className={`text-sm ${getPaymentColor(hasAmount)}`}>
                             {hasAmount ? `$${((apt.amount_cents ?? 0) / 100).toFixed(2)}` : "$0.00"}
                           </p>
+                          <p className="text-xs text-neutral-500">{hasAmount ? "paid" : "unpaid"}</p>
                         </div>
                       </div>
                     </td>
@@ -224,13 +235,20 @@ export default function AdminAppointmentsPage() {
                         </button>
                         <button className="px-3 py-1.5 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm flex items-center gap-1">
                           <XCircle className="w-3 h-3" />
-                          Cancel
+                          Cancel & Refund
                         </button>
                       </div>
                     </td>
                   </tr>
                 );
               })}
+              {filtered.length === 0 && (
+                <tr>
+                  <td colSpan={8} className="px-6 py-8 text-center text-sm text-neutral-600">
+                    No appointments found
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -238,5 +256,3 @@ export default function AdminAppointmentsPage() {
     </div>
   );
 }
-
-

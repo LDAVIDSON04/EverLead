@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { supabaseClient } from "@/lib/supabaseClient";
-import { CheckCircle, XCircle, Mail, Phone, MapPin, Calendar, Loader2 } from "lucide-react";
+import { Check, X, AlertCircle, Download, Eye, Clock } from "lucide-react";
 
 type PendingAgent = {
   id: string;
@@ -15,6 +15,20 @@ type PendingAgent = {
   notification_cities: Array<{ city: string; province: string }> | null;
   created_at: string;
   approval_status: string | null;
+};
+
+type Specialist = {
+  id: string;
+  name: string;
+  company: string;
+  region: string;
+  specialty: string;
+  email: string;
+  submittedDate: string;
+  status: 'pending' | 'approved' | 'rejected' | 'needs-info';
+  documents: Array<{ name: string; uploaded: boolean }>;
+  notes: string;
+  tags: string[];
 };
 
 export default function AgentApprovalPage() {
@@ -32,7 +46,6 @@ export default function AgentApprovalPage() {
       setLoading(true);
       setError(null);
 
-      // Fetch pending agents from API (includes emails)
       const res = await fetch("/api/admin/pending-agents");
       if (!res.ok) {
         throw new Error("Failed to fetch pending agents");
@@ -48,11 +61,11 @@ export default function AgentApprovalPage() {
     }
   }
 
-  async function handleApprove(agentId: string) {
+  async function handleApprove(id: string) {
     if (processing) return;
 
     try {
-      setProcessing(agentId);
+      setProcessing(id);
       setError(null);
 
       const { data: { user } } = await supabaseClient.auth.getUser();
@@ -64,7 +77,7 @@ export default function AgentApprovalPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          agentId,
+          agentId: id,
           action: "approve",
           adminUserId: user.id,
         }),
@@ -75,7 +88,6 @@ export default function AgentApprovalPage() {
         throw new Error(errorData.error || "Failed to approve agent");
       }
 
-      // Reload pending agents
       await loadPendingAgents();
     } catch (err: any) {
       console.error("Error approving agent:", err);
@@ -85,14 +97,14 @@ export default function AgentApprovalPage() {
     }
   }
 
-  async function handleDecline(agentId: string) {
+  async function handleReject(id: string) {
     if (processing) return;
 
     const reason = prompt("Please provide a reason for declining (optional):");
-    if (reason === null) return; // User cancelled
+    if (reason === null) return;
 
     try {
-      setProcessing(agentId);
+      setProcessing(id);
       setError(null);
 
       const { data: { user } } = await supabaseClient.auth.getUser();
@@ -104,7 +116,7 @@ export default function AgentApprovalPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          agentId,
+          agentId: id,
           action: "decline",
           notes: reason || undefined,
           adminUserId: user.id,
@@ -116,7 +128,6 @@ export default function AgentApprovalPage() {
         throw new Error(errorData.error || "Failed to decline agent");
       }
 
-      // Reload pending agents
       await loadPendingAgents();
     } catch (err: any) {
       console.error("Error declining agent:", err);
@@ -126,153 +137,228 @@ export default function AgentApprovalPage() {
     }
   }
 
+  async function handleRequestInfo(id: string) {
+    // This would be implemented to request additional info
+    alert("Request info functionality to be implemented");
+  }
+
+  const getStatusColor = (status: string | null) => {
+    switch (status) {
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'approved':
+        return 'bg-emerald-100 text-emerald-800 border-emerald-200';
+      case 'rejected':
+      case 'declined':
+        return 'bg-red-100 text-red-800 border-red-200';
+      case 'needs-info':
+        return 'bg-orange-100 text-orange-800 border-orange-200';
+      default:
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+    }
+  };
+
+  // Convert agents to specialists format for display
+  const specialists: Specialist[] = pendingAgents.map((agent) => ({
+    id: agent.id,
+    name: agent.full_name || 'Unknown',
+    company: agent.funeral_home || 'N/A',
+    region: agent.notification_cities && agent.notification_cities.length > 0
+      ? `${agent.notification_cities[0].city}, ${agent.notification_cities[0].province}`
+      : 'N/A',
+    specialty: 'Funeral Services',
+    email: agent.email || 'N/A',
+    submittedDate: new Date(agent.created_at).toISOString().split('T')[0],
+    status: (agent.approval_status as any) || 'pending',
+    documents: [
+      { name: 'License Verification', uploaded: agent.licensed_in_province },
+      { name: 'Funeral Director License', uploaded: agent.licensed_funeral_director },
+      { name: 'Business Registration', uploaded: !!agent.funeral_home },
+    ],
+    notes: '',
+    tags: [],
+  }));
+
+  const pendingCount = specialists.filter(s => s.status === 'pending').length;
+  const needsInfoCount = specialists.filter(s => s.status === 'needs-info').length;
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+      <div className="p-8">
+        <p className="text-sm text-neutral-600">Loading approvals...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Agent Approval</h1>
-          <p className="text-gray-600">
-            Review and approve agent applications for access to the Soradin platform.
-          </p>
+    <div className="p-8">
+      <div className="mb-8">
+        <h1 className="text-3xl mb-2 text-black">Approvals</h1>
+        <p className="text-neutral-600">Review and approve pending specialist applications</p>
+      </div>
+
+      {error && (
+        <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
         </div>
+      )}
 
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-            {error}
-          </div>
-        )}
+      {/* Stats */}
+      <div className="grid grid-cols-4 gap-4 mb-8">
+        <div className="bg-white border border-neutral-200 rounded-lg p-4">
+          <p className="text-sm text-neutral-600 mb-1">Pending Review</p>
+          <p className="text-3xl text-black">{pendingCount}</p>
+        </div>
+        <div className="bg-white border border-neutral-200 rounded-lg p-4">
+          <p className="text-sm text-neutral-600 mb-1">Needs Info</p>
+          <p className="text-3xl text-orange-600">{needsInfoCount}</p>
+        </div>
+        <div className="bg-white border border-neutral-200 rounded-lg p-4">
+          <p className="text-sm text-neutral-600 mb-1">Approved Today</p>
+          <p className="text-3xl text-emerald-700">0</p>
+        </div>
+        <div className="bg-white border border-neutral-200 rounded-lg p-4">
+          <p className="text-sm text-neutral-600 mb-1">Avg. Review Time</p>
+          <p className="text-3xl text-black">—</p>
+        </div>
+      </div>
 
-        {pendingAgents.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-            <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">All caught up!</h2>
-            <p className="text-gray-600">There are no pending agent applications at this time.</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {pendingAgents.map((agent) => (
-              <div
-                key={agent.id}
-                className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center">
-                        <span className="text-white font-semibold text-lg">
-                          {agent.full_name?.[0]?.toUpperCase() || "A"}
-                        </span>
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900">
-                          {agent.full_name || "No name provided"}
-                        </h3>
-                        <p className="text-sm text-gray-500">
-                          Applied {new Date(agent.created_at).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                      {agent.email && (
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                          <Mail className="w-4 h-4" />
-                          <span>{agent.email}</span>
-                        </div>
-                      )}
-                      {agent.phone && (
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                          <Phone className="w-4 h-4" />
-                          <span>{agent.phone}</span>
-                        </div>
-                      )}
-                      {agent.funeral_home && (
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                          <MapPin className="w-4 h-4" />
-                          <span>{agent.funeral_home}</span>
-                        </div>
-                      )}
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <Calendar className="w-4 h-4" />
-                        <span>
-                          {agent.licensed_in_province ? "Licensed in province" : "Not licensed in province"}
-                        </span>
-                      </div>
-                    </div>
-
-                    {agent.notification_cities && agent.notification_cities.length > 0 && (
-                      <div className="mb-4">
-                        <p className="text-sm font-medium text-gray-700 mb-2">Notification Cities:</p>
-                        <div className="flex flex-wrap gap-2">
-                          {agent.notification_cities.map((city, idx) => (
-                            <span
-                              key={idx}
-                              className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs"
-                            >
-                              {city.city}, {city.province}
+      {/* Applications Queue */}
+      <div className="bg-white border border-neutral-200 rounded-lg overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-neutral-50 border-b border-neutral-200">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs text-neutral-600 uppercase tracking-wider">Specialist</th>
+                <th className="px-6 py-3 text-left text-xs text-neutral-600 uppercase tracking-wider">Region</th>
+                <th className="px-6 py-3 text-left text-xs text-neutral-600 uppercase tracking-wider">Specialty</th>
+                <th className="px-6 py-3 text-left text-xs text-neutral-600 uppercase tracking-wider">Documents</th>
+                <th className="px-6 py-3 text-left text-xs text-neutral-600 uppercase tracking-wider">Status</th>
+                <th className="px-6 py-3 text-left text-xs text-neutral-600 uppercase tracking-wider">Submitted</th>
+                <th className="px-6 py-3 text-left text-xs text-neutral-600 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-neutral-200">
+              {specialists.map((specialist) => (
+                <tr key={specialist.id} className="hover:bg-neutral-50">
+                  <td className="px-6 py-4">
+                    <div>
+                      <p className="text-black">{specialist.name}</p>
+                      <p className="text-sm text-neutral-600">{specialist.company}</p>
+                      <p className="text-xs text-neutral-500">{specialist.email}</p>
+                      {specialist.tags.length > 0 && (
+                        <div className="flex gap-1 mt-1">
+                          {specialist.tags.map(tag => (
+                            <span key={tag} className="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-xs rounded">
+                              {tag}
                             </span>
                           ))}
                         </div>
-                      </div>
-                    )}
-
-                    <div className="flex items-center gap-4 text-sm">
-                      <span
-                        className={`px-2 py-1 rounded ${
-                          agent.licensed_funeral_director
-                            ? "bg-green-100 text-green-700"
-                            : "bg-gray-100 text-gray-700"
-                        }`}
-                      >
-                        {agent.licensed_funeral_director
-                          ? "Licensed Funeral Director"
-                          : "Not a Licensed Funeral Director"}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col gap-2 ml-4">
-                    <button
-                      onClick={() => handleApprove(agent.id)}
-                      disabled={processing === agent.id}
-                      className="flex items-center gap-2 px-4 py-2 bg-green-700 hover:bg-green-800 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {processing === agent.id ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          <span>Processing...</span>
-                        </>
-                      ) : (
-                        <>
-                          <CheckCircle className="w-4 h-4" />
-                          <span>Approve</span>
-                        </>
                       )}
-                    </button>
-                    <button
-                      onClick={() => handleDecline(agent.id)}
-                      disabled={processing === agent.id}
-                      className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <XCircle className="w-4 h-4" />
-                      <span>Decline</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-neutral-700">{specialist.region}</td>
+                  <td className="px-6 py-4 text-sm text-neutral-700">{specialist.specialty}</td>
+                  <td className="px-6 py-4">
+                    <div className="space-y-1">
+                      {specialist.documents.map((doc, idx) => (
+                        <div key={idx} className="flex items-center gap-2 text-sm">
+                          {doc.uploaded ? (
+                            <>
+                              <Check className="w-4 h-4 text-emerald-700" />
+                              <span className="text-neutral-700">{doc.name}</span>
+                              <button className="text-emerald-700 hover:text-emerald-800">
+                                <Download className="w-3 h-3" />
+                              </button>
+                              <button className="text-emerald-700 hover:text-emerald-800">
+                                <Eye className="w-3 h-3" />
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <X className="w-4 h-4 text-red-500" />
+                              <span className="text-neutral-400">{doc.name}</span>
+                            </>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs border ${getStatusColor(specialist.status)}`}>
+                      {specialist.status === 'needs-info' && <AlertCircle className="w-3 h-3" />}
+                      {specialist.status === 'pending' && <Clock className="w-3 h-3" />}
+                      {specialist.status.replace('-', ' ')}
+                    </span>
+                    {specialist.notes && (
+                      <p className="text-xs text-neutral-500 mt-1 italic">"{specialist.notes}"</p>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-neutral-600">{specialist.submittedDate}</td>
+                  <td className="px-6 py-4">
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleApprove(specialist.id)}
+                        disabled={processing === specialist.id}
+                        className="px-3 py-1.5 bg-emerald-700 text-white rounded-md hover:bg-emerald-800 text-sm flex items-center gap-1 disabled:opacity-50"
+                      >
+                        <Check className="w-3 h-3" />
+                        Approve
+                      </button>
+                      <button
+                        onClick={() => handleReject(specialist.id)}
+                        disabled={processing === specialist.id}
+                        className="px-3 py-1.5 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm flex items-center gap-1 disabled:opacity-50"
+                      >
+                        <X className="w-3 h-3" />
+                        Reject
+                      </button>
+                      <button
+                        onClick={() => handleRequestInfo(specialist.id)}
+                        disabled={processing === specialist.id}
+                        className="px-3 py-1.5 border border-neutral-300 text-neutral-700 rounded-md hover:bg-neutral-50 text-sm flex items-center gap-1 disabled:opacity-50"
+                      >
+                        <AlertCircle className="w-3 h-3" />
+                        Request Info
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {specialists.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="px-6 py-8 text-center text-sm text-neutral-600">
+                    No pending applications
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Approval Rules */}
+      <div className="mt-8 bg-emerald-50 border border-emerald-200 rounded-lg p-6">
+        <h3 className="text-lg mb-3 text-black">Approval Rules</h3>
+        <ul className="space-y-2 text-sm text-neutral-700">
+          <li className="flex items-start gap-2">
+            <Check className="w-4 h-4 text-emerald-700 mt-0.5" />
+            <span>All required documents must be uploaded and valid</span>
+          </li>
+          <li className="flex items-start gap-2">
+            <Check className="w-4 h-4 text-emerald-700 mt-0.5" />
+            <span>Email domain should match company domain (optional verification)</span>
+          </li>
+          <li className="flex items-start gap-2">
+            <Check className="w-4 h-4 text-emerald-700 mt-0.5" />
+            <span>Region and specialty must match Soradin coverage areas</span>
+          </li>
+          <li className="flex items-start gap-2">
+            <Check className="w-4 h-4 text-emerald-700 mt-0.5" />
+            <span>License verification through state board (manual check)</span>
+          </li>
+        </ul>
       </div>
     </div>
   );
 }
-

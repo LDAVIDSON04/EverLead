@@ -428,21 +428,16 @@ export default function AdminDashboardPage() {
   return (
     <>
       {/* Content */}
-      <section className="mx-auto max-w-6xl px-6 py-8">
-        <div className="mb-6">
-          <h1
-            className="mb-2 text-2xl font-normal text-[#2a2a2a]"
-            style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-          >
-            Admin Analytics Dashboard
-          </h1>
-          <p className="text-sm text-[#6b6b6b]">
+      <section className="p-8">
+        <div className="mb-8">
+          <h1 className="text-3xl mb-2 text-black">Admin Analytics Dashboard</h1>
+          <p className="text-neutral-600">
             Overview of all leads, revenue, and marketplace activity.
           </p>
         </div>
 
         {/* Tabs */}
-        <div className="mb-6 border-b border-slate-200">
+        <div className="mb-6 border-b border-neutral-200">
           <div className="flex gap-4">
             {[
               { id: "overview" as const, label: "Overview" },
@@ -457,8 +452,8 @@ export default function AdminDashboardPage() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 ${
                   activeTab === tab.id
-                    ? "border-[#2a2a2a] text-[#2a2a2a]"
-                    : "border-transparent text-[#6b6b6b] hover:text-[#2a2a2a] hover:border-slate-300"
+                    ? "border-black text-black"
+                    : "border-transparent text-neutral-600 hover:text-black hover:border-neutral-300"
                 }`}
               >
                 {tab.label}
@@ -472,50 +467,45 @@ export default function AdminDashboardPage() {
           <div className="space-y-8">
             {/* Funnel Overview */}
             <div>
-              <h2
-                className="mb-4 text-lg font-normal text-[#2a2a2a]"
-                style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-              >
-                Funnel Overview
-              </h2>
+              <h2 className="mb-4 text-lg text-black">Funnel Overview</h2>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs max-w-3xl mb-6">
-                <div className="border border-slate-200 rounded-lg p-3 bg-white">
-                  <p className="text-[#6b6b6b] mb-1">Leads</p>
-                  <p className="text-lg font-semibold text-[#2a2a2a]">{stats.totalLeads}</p>
+                <div className="border border-neutral-200 rounded-lg p-3 bg-white">
+                  <p className="text-neutral-600 mb-1">Leads</p>
+                  <p className="text-lg font-semibold text-black">{stats.totalLeads}</p>
                 </div>
-                <div className="border border-slate-200 rounded-lg p-3 bg-white">
-                  <p className="text-[#6b6b6b] mb-1">Appointments</p>
-                  <p className="text-lg font-semibold text-[#2a2a2a]">
+                <div className="border border-neutral-200 rounded-lg p-3 bg-white">
+                  <p className="text-neutral-600 mb-1">Appointments</p>
+                  <p className="text-lg font-semibold text-black">
                     {apiData?.appointments?.totalAppointments ?? 0}
                   </p>
                 </div>
-                <div className="border border-slate-200 rounded-lg p-3 bg-white">
-                  <p className="text-[#6b6b6b] mb-1">Booked</p>
-                  <p className="text-lg font-semibold text-[#2a2a2a]">
+                <div className="border border-neutral-200 rounded-lg p-3 bg-white">
+                  <p className="text-neutral-600 mb-1">Booked</p>
+                  <p className="text-lg font-semibold text-black">
                     {apiData?.appointments?.bookedAppointments ?? 0}
                   </p>
                 </div>
-                <div className="border border-slate-200 rounded-lg p-3 bg-white">
-                  <p className="text-[#6b6b6b] mb-1">Completed</p>
-                  <p className="text-lg font-semibold text-[#2a2a2a]">
+                <div className="border border-neutral-200 rounded-lg p-3 bg-white">
+                  <p className="text-neutral-600 mb-1">Completed</p>
+                  <p className="text-lg font-semibold text-black">
                     {apiData?.appointments?.completedAppointments ?? 0}
                   </p>
                 </div>
-                <div className="border border-slate-200 rounded-lg p-3 bg-white">
-                  <p className="text-[#6b6b6b] mb-1">No-shows</p>
-                  <p className="text-lg font-semibold text-[#2a2a2a]">
+                <div className="border border-neutral-200 rounded-lg p-3 bg-white">
+                  <p className="text-neutral-600 mb-1">No-shows</p>
+                  <p className="text-lg font-semibold text-black">
                     {apiData?.appointments?.noShowAppointments ?? 0}
                   </p>
                 </div>
-                <div className="border border-slate-200 rounded-lg p-3 bg-white">
-                  <p className="text-[#6b6b6b] mb-1">Appointment Revenue</p>
-                  <p className="text-lg font-semibold text-[#2a2a2a]">
+                <div className="border border-neutral-200 rounded-lg p-3 bg-white">
+                  <p className="text-neutral-600 mb-1">Appointment Revenue</p>
+                  <p className="text-lg font-semibold text-black">
                     {formatMoney(apiData?.appointments?.appointmentRevenueCents ?? 0)}
                   </p>
                 </div>
-                <div className="border border-slate-200 rounded-lg p-3 bg-white">
-                  <p className="text-[#6b6b6b] mb-1">Approved agents</p>
-                  <p className="text-lg font-semibold text-[#2a2a2a]">
+                <div className="border border-neutral-200 rounded-lg p-3 bg-white">
+                  <p className="text-neutral-600 mb-1">Approved agents</p>
+                  <p className="text-lg font-semibold text-black">
                     {apiData?.approvedAgentsCount ?? 0}
                   </p>
                 </div>
@@ -535,38 +525,30 @@ export default function AdminDashboardPage() {
 
             {/* Pipeline Overview */}
             <div>
-              <h2
-                className="mb-4 text-lg font-normal text-[#2a2a2a]"
-                style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-              >
-                Pipeline Overview
-              </h2>
+              <h2 className="mb-4 text-lg text-black">Pipeline Overview</h2>
               <div className="grid gap-6 md:grid-cols-2">
                 {/* Leads by Urgency */}
-                <div className="rounded-xl border border-slate-200 bg-white/70 p-6 shadow-sm">
-                  <h3
-                    className="mb-4 text-base font-semibold text-[#2a2a2a]"
-                    style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-                  >
+                <div className="rounded-lg border border-neutral-200 bg-white p-6">
+                  <h3 className="mb-4 text-base font-semibold text-black">
                     Leads by Urgency
                   </h3>
                   <table className="w-full text-sm">
                     <tbody>
-                      <tr className="border-b border-slate-100">
-                        <td className="py-2 text-[#4a4a4a]">HOT</td>
-                        <td className="py-2 text-right font-semibold text-[#2a2a2a]">
+                      <tr className="border-b border-neutral-100">
+                        <td className="py-2 text-neutral-600">HOT</td>
+                        <td className="py-2 text-right font-semibold text-black">
                           {stats.hotLeads}
                         </td>
                       </tr>
-                      <tr className="border-b border-slate-100">
-                        <td className="py-2 text-[#4a4a4a]">WARM</td>
-                        <td className="py-2 text-right font-semibold text-[#2a2a2a]">
+                      <tr className="border-b border-neutral-100">
+                        <td className="py-2 text-neutral-600">WARM</td>
+                        <td className="py-2 text-right font-semibold text-black">
                           {stats.warmLeads}
                         </td>
                       </tr>
                       <tr>
-                        <td className="py-2 text-[#4a4a4a]">COLD</td>
-                        <td className="py-2 text-right font-semibold text-[#2a2a2a]">
+                        <td className="py-2 text-neutral-600">COLD</td>
+                        <td className="py-2 text-right font-semibold text-black">
                           {stats.coldLeads}
                         </td>
                       </tr>
@@ -575,24 +557,21 @@ export default function AdminDashboardPage() {
                 </div>
 
                 {/* Sales Summary */}
-                <div className="rounded-xl border border-slate-200 bg-white/70 p-6 shadow-sm">
-                  <h3
-                    className="mb-4 text-base font-semibold text-[#2a2a2a]"
-                    style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-                  >
+                <div className="rounded-lg border border-neutral-200 bg-white p-6">
+                  <h3 className="mb-4 text-base font-semibold text-black">
                     Sales Summary
                   </h3>
                   <table className="w-full text-sm">
                     <tbody>
-                      <tr className="border-b border-slate-100">
-                        <td className="py-2 text-[#4a4a4a]">Leads sold</td>
-                        <td className="py-2 text-right font-semibold text-[#2a2a2a]">
+                      <tr className="border-b border-neutral-100">
+                        <td className="py-2 text-neutral-600">Leads sold</td>
+                        <td className="py-2 text-right font-semibold text-black">
                           {stats.purchasedLeads}
                         </td>
                       </tr>
                       <tr>
-                        <td className="py-2 text-[#4a4a4a]">Total revenue</td>
-                        <td className="py-2 text-right font-semibold text-[#2a2a2a]">
+                        <td className="py-2 text-neutral-600">Total revenue</td>
+                        <td className="py-2 text-right font-semibold text-black">
                           {formatMoney(stats.totalRevenueCents)}
                         </td>
                       </tr>
@@ -604,40 +583,35 @@ export default function AdminDashboardPage() {
 
             {/* Recent Leads Table */}
             <div>
-              <h2
-                className="mb-4 text-lg font-normal text-[#2a2a2a]"
-                style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-              >
-                Recent Leads
-              </h2>
+              <h2 className="mb-4 text-lg text-black">Recent Leads</h2>
               {recentLeads.length === 0 ? (
-                <div className="rounded-xl border border-slate-200 bg-white/70 px-8 py-12 text-center shadow-sm">
-                  <p className="text-sm text-[#6b6b6b]">No leads found.</p>
+                <div className="rounded-lg border border-neutral-200 bg-white px-8 py-12 text-center">
+                  <p className="text-sm text-neutral-600">No leads found.</p>
                 </div>
               ) : (
-                <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white/70 shadow-sm">
+                <div className="overflow-x-auto rounded-lg border border-neutral-200 bg-white">
                   <table className="w-full border-collapse text-sm">
                     <thead>
-                      <tr className="border-b border-slate-200 bg-[#faf8f5]">
-                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                      <tr className="border-b border-neutral-200 bg-neutral-50">
+                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-neutral-600">
                           Created date
                         </th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-neutral-600">
                           City / Province
                         </th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-neutral-600">
                           Urgency
                         </th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-neutral-600">
                           Status
                         </th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-neutral-600">
                           Auction enabled?
                         </th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-neutral-600">
                           Purchased?
                         </th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-neutral-600">
                           Action
                         </th>
                       </tr>
@@ -646,38 +620,38 @@ export default function AdminDashboardPage() {
                       {recentLeads.slice(0, 10).map((lead) => (
                         <tr
                           key={lead.id}
-                          className="border-b border-slate-100 hover:bg-[#faf8f5]"
+                          className="border-b border-neutral-100 hover:bg-neutral-50"
                         >
-                          <td className="whitespace-nowrap px-4 py-3 text-sm text-[#4a4a4a]">
+                          <td className="whitespace-nowrap px-4 py-3 text-sm text-neutral-700">
                             {formatDate(lead.created_at)}
                           </td>
-                          <td className="px-4 py-3 text-sm text-[#4a4a4a]">
+                          <td className="px-4 py-3 text-sm text-neutral-700">
                             {[lead.city, lead.province].filter(Boolean).join(", ") || "-"}
                           </td>
-                          <td className="px-4 py-3 text-sm text-[#4a4a4a]">
+                          <td className="px-4 py-3 text-sm text-neutral-700">
                             {formatUrgency(lead.urgency_level)}
                           </td>
-                          <td className="px-4 py-3 text-sm text-[#4a4a4a]">
+                          <td className="px-4 py-3 text-sm text-neutral-700">
                             {lead.agent_status || lead.status || "New"}
                           </td>
-                          <td className="px-4 py-3 text-sm text-[#4a4a4a]">
+                          <td className="px-4 py-3 text-sm text-neutral-700">
                             {lead.auction_enabled ? (
-                              <span className="text-green-600 font-medium">Yes</span>
+                              <span className="text-emerald-700 font-medium">Yes</span>
                             ) : (
-                              <span className="text-[#6b6b6b]">No</span>
+                              <span className="text-neutral-600">No</span>
                             )}
                           </td>
-                          <td className="px-4 py-3 text-sm text-[#4a4a4a]">
+                          <td className="px-4 py-3 text-sm text-neutral-700">
                             {lead.price_charged_cents ? (
-                              <span className="text-green-600 font-medium">Yes</span>
+                              <span className="text-emerald-700 font-medium">Yes</span>
                             ) : (
-                              <span className="text-[#6b6b6b]">No</span>
+                              <span className="text-neutral-600">No</span>
                             )}
                           </td>
                           <td className="px-4 py-3">
                             <Link
                               href={`/admin/leads/${lead.id}`}
-                              className="text-xs font-medium text-[#6b6b6b] hover:text-[#2a2a2a] transition-colors"
+                              className="text-xs font-medium text-neutral-600 hover:text-black transition-colors"
                             >
                               View →
                             </Link>
@@ -1268,11 +1242,11 @@ export default function AdminDashboardPage() {
 
 function StatCard({ label, value }: { label: string; value: number | string }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white/80 px-4 py-3 shadow-sm flex flex-col gap-1">
-      <span className="text-xs font-medium uppercase tracking-wide text-slate-500">
+    <div className="rounded-lg border border-neutral-200 bg-white px-4 py-3 flex flex-col gap-1">
+      <span className="text-xs font-medium uppercase tracking-wide text-neutral-600">
         {label}
       </span>
-      <span className="text-2xl font-semibold text-slate-900">{value}</span>
+      <span className="text-2xl font-semibold text-black">{value}</span>
     </div>
   );
 }

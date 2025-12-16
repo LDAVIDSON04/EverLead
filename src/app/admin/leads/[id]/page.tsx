@@ -171,7 +171,33 @@ export default function AdminLeadDetailPage() {
     price ? `$${price.toFixed(2)}` : "-";
 
   return (
-    <>
+    <main className="min-h-screen bg-[#f7f4ef]">
+      <header className="border-b border-[#ded3c2] bg-white">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+          <div className="flex items-baseline gap-2">
+            <span className="text-lg font-semibold text-[#2a2a2a]">
+              EverLead
+            </span>
+            <span className="text-[11px] uppercase tracking-[0.18em] text-[#6b6b6b]">
+              Admin
+            </span>
+          </div>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => router.push("/admin/leads")}
+              className="text-xs text-[#6b6b6b] hover:text-[#2a2a2a] transition-colors"
+            >
+              ← Back to leads
+            </button>
+            <button
+              onClick={() => (window.location.href = "/logout")}
+              className="rounded-md border border-[#ded3c2] bg-white px-3 py-1 text-xs font-medium text-[#6b6b6b] hover:bg-[#f7f4ef] transition-colors"
+            >
+              Log out
+            </button>
+          </div>
+        </div>
+      </header>
 
       <section className="mx-auto max-w-4xl px-6 py-8">
         <div className="mb-6">
@@ -331,7 +357,7 @@ export default function AdminLeadDetailPage() {
           </div>
         )}
       </section>
-    </>
+    </main>
   );
 }
 

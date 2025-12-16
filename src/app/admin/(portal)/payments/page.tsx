@@ -12,6 +12,8 @@ type AdminPayment = {
   amount_cents: number;
   fee_cents: number | null;
   status: string;
+  family_name?: string | null;
+  specialist_name?: string | null;
 };
 
 export default function AdminPaymentsPage() {
@@ -28,13 +30,35 @@ export default function AdminPaymentsPage() {
       try {
         const { data, error } = await supabaseClient
           .from("payments")
-          .select("id, created_at, appointment_id, amount_cents, fee_cents, status")
+          .select(`
+            id,
+            created_at,
+            appointment_id,
+            amount_cents,
+            fee_cents,
+            status,
+            appointments:appointment_id (
+              families:families ( full_name ),
+              specialists:specialists ( display_name )
+            )
+          `)
           .order("created_at", { ascending: false })
           .limit(100);
 
         if (error) throw error;
 
-        setPayments((data || []) as AdminPayment[]);
+        const rows: AdminPayment[] = (data || []).map((p: any) => ({
+          id: p.id,
+          created_at: p.created_at,
+          appointment_id: p.appointment_id,
+          amount_cents: p.amount_cents,
+          fee_cents: p.fee_cents,
+          status: p.status,
+          family_name: p.appointments?.families?.full_name || null,
+          specialist_name: p.appointments?.specialists?.display_name || null,
+        }));
+
+        setPayments(rows);
       } catch (err: any) {
         console.error("Error loading payments:", err);
         setError(err.message || "Failed to load payments");
@@ -64,12 +88,20 @@ export default function AdminPaymentsPage() {
     return "bg-neutral-100 text-neutral-700";
   };
 
+  if (loading) {
+    return (
+      <div className="p-8">
+        <p className="text-sm text-neutral-600">Loading payments…</p>
+      </div>
+    );
+  }
+
   return (
     <div className="p-8">
       <div className="mb-8 flex justify-between items-start">
         <div>
           <h1 className="text-3xl mb-2 text-black">Payments</h1>
-          <p className="text-neutral-600">View transactions and revenue.</p>
+          <p className="text-neutral-600">View transactions and revenue</p>
         </div>
         <button className="px-4 py-2 border border-neutral-300 text-neutral-700 rounded-lg hover:bg-neutral-50 flex items-center gap-2">
           <Download className="w-4 h-4" />
@@ -83,7 +115,7 @@ export default function AdminPaymentsPage() {
         </div>
       )}
 
-      {/* Stats row styled like design bundle */}
+      {/* Stats */}
       <div className="grid grid-cols-3 gap-4 mb-8">
         <div className="bg-white border border-neutral-200 rounded-lg p-6">
           <p className="text-sm text-neutral-600 mb-1">Total Revenue</p>
@@ -117,6 +149,12 @@ export default function AdminPaymentsPage() {
                   Appointment
                 </th>
                 <th className="px-6 py-3 text-left text-xs text-neutral-600 uppercase tracking-wider">
+                  Client
+                </th>
+                <th className="px-6 py-3 text-left text-xs text-neutral-600 uppercase tracking-wider">
+                  Specialist
+                </th>
+                <th className="px-6 py-3 text-left text-xs text-neutral-600 uppercase tracking-wider">
                   Amount
                 </th>
                 <th className="px-6 py-3 text-left text-xs text-neutral-600 uppercase tracking-wider">
@@ -130,12 +168,18 @@ export default function AdminPaymentsPage() {
             <tbody className="divide-y divide-neutral-200">
               {payments.map((txn) => (
                 <tr key={txn.id} className="hover:bg-neutral-50">
-                  <td className="px-6 py-4 text-sm text-black">{txn.id}</td>
+                  <td className="px-6 py-4 text-sm text-black">{txn.id.slice(0, 8)}</td>
                   <td className="px-6 py-4 text-sm text-neutral-700">
                     {new Date(txn.created_at).toLocaleString()}
                   </td>
                   <td className="px-6 py-4 text-sm text-neutral-700">
-                    {txn.appointment_id || "—"}
+                    {txn.appointment_id ? txn.appointment_id.slice(0, 8) : "—"}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-neutral-700">
+                    {txn.family_name || "—"}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-neutral-700">
+                    {txn.specialist_name || "—"}
                   </td>
                   <td className="px-6 py-4 text-sm text-black">
                     ${(txn.amount_cents / 100).toFixed(2)}
@@ -157,7 +201,7 @@ export default function AdminPaymentsPage() {
               {payments.length === 0 && !loading && (
                 <tr>
                   <td
-                    colSpan={6}
+                    colSpan={8}
                     className="px-6 py-6 text-sm text-neutral-600 text-center"
                   >
                     No payments found.
@@ -171,5 +215,3 @@ export default function AdminPaymentsPage() {
     </div>
   );
 }
-
-

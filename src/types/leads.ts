@@ -11,20 +11,11 @@ export interface Lead {
   buy_now_price_cents: number | null;
   // Auction fields
   auction_enabled: boolean;
-  auction_start_time: string | null;
-  auction_end_time: string | null;
-  after_hours_release_time: string | null;
-  auction_status: 'open' | 'closed' | 'pending' | null;
-  auction_timezone: string | null;
-  starting_bid: number | null;
-  min_increment: number | null;
+  auction_ends_at: string | null;
   buy_now_price: number | null; // In dollars, not cents
   current_bid_amount: number | null; // In dollars, not cents
   current_bid_agent_id: string | null;
-  winning_agent_id: string | null;
   assigned_agent_id: string | null;
-  notification_sent_at: string | null;
-  last_bid_at: string | null;
 }
 
 export interface LeadBid {
