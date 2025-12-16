@@ -66,6 +66,7 @@ export async function POST(request: NextRequest) {
       businessName,
       professionalTitle,
       phone,
+      email,
       licenseNumber,
       regionsServed,
       specialty,
@@ -118,6 +119,28 @@ export async function POST(request: NextRequest) {
     }
     if (phone !== undefined) {
       updateData.phone = phone;
+    }
+    if (email !== undefined && email !== null && email !== "") {
+      // Update email in both auth.users and profiles
+      updateData.email = email;
+      
+      // Also update the auth user's email
+      try {
+        const { error: emailUpdateError } = await supabaseAdmin.auth.admin.updateUserById(
+          user.id,
+          { email: email }
+        );
+        
+        if (emailUpdateError) {
+          console.error("Error updating auth email:", emailUpdateError);
+          // Don't fail the whole request, but log it
+        } else {
+          console.log("Auth email updated successfully");
+        }
+      } catch (emailErr: any) {
+        console.error("Exception updating auth email:", emailErr);
+        // Continue with profile update even if auth email update fails
+      }
     }
     if (profilePictureUrl !== undefined && profilePictureUrl !== null && profilePictureUrl !== "") {
       updateData.profile_picture_url = profilePictureUrl;

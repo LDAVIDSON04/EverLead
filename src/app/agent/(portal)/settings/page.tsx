@@ -594,10 +594,10 @@ function ProfileSection({
             id="email"
             type="email"
             value={profileData.email}
-            disabled
-            className="mt-1 bg-gray-50"
+            onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
+            className="mt-1"
           />
-          <p className="text-xs text-gray-500 mt-1">Email cannot be changed</p>
+          <p className="text-xs text-gray-500 mt-1">Changing your email will update your login email</p>
         </div>
       </div>
 
