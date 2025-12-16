@@ -58,6 +58,11 @@ type AvailabilitySlot = {
   spots: number;
 };
 
+type AvailabilityDay = {
+  date: string;
+  slots: { startsAt: string; endsAt: string }[];
+};
+
 function SearchResults() {
   const searchParams = useSearchParams();
   const query = searchParams.get("q") || "";
@@ -74,6 +79,7 @@ function SearchResults() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [showMoreAvailability, setShowMoreAvailability] = useState(false);
+  const [agentAvailability, setAgentAvailability] = useState<Record<string, AvailabilityDay[]>>({});
 
   // Sync state with URL params when they change
   useEffect(() => {
@@ -121,6 +127,36 @@ function SearchResults() {
         }));
 
         setAppointments(mappedAppointments);
+
+        // Load availability for each agent
+        const today = new Date();
+        const startDate = today.toISOString().split("T")[0];
+        const endDate = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+
+        const availabilityPromises = mappedAppointments.map(async (apt) => {
+          if (!apt.agent?.id) return;
+          try {
+            const res = await fetch(
+              `/api/agents/availability?agentId=${apt.agent.id}&startDate=${startDate}&endDate=${endDate}`
+            );
+            if (res.ok) {
+              const data = await res.json();
+              return { agentId: apt.agent.id, availability: data };
+            }
+          } catch (err) {
+            console.error(`Error loading availability for agent ${apt.agent.id}:`, err);
+          }
+          return null;
+        });
+
+        const availabilityResults = await Promise.all(availabilityPromises);
+        const availabilityMap: Record<string, AvailabilityDay[]> = {};
+        availabilityResults.forEach((result) => {
+          if (result) {
+            availabilityMap[result.agentId] = result.availability;
+          }
+        });
+        setAgentAvailability(availabilityMap);
       } catch (err) {
         console.error("Error:", err);
       } finally {
@@ -150,6 +186,26 @@ function SearchResults() {
     const slots: AvailabilitySlot[] = [];
     const today = new Date();
     
+    // Get real availability if we have it
+    const agentId = appointment.agent?.id;
+    const realAvailability = agentId ? agentAvailability[agentId] : null;
+    
+    if (realAvailability) {
+      // Use real availability data
+      return realAvailability.slice(0, 8).map((day) => {
+        const date = new Date(day.date + "T00:00:00");
+        const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+        const monthName = date.toLocaleDateString('en-US', { month: 'short' });
+        const dayNum = date.getDate();
+        
+        return {
+          date: `${dayName}\n${monthName} ${dayNum}`,
+          spots: day.slots.length,
+        };
+      });
+    }
+    
+    // Fallback: generate placeholder slots
     for (let i = 0; i < 8; i++) {
       const date = new Date(today);
       date.setDate(today.getDate() + i);
