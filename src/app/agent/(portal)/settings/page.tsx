@@ -14,7 +14,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+} from "../../../../components/ui/alert-dialog";
 
 // Import UI components - we'll create simple versions if they don't exist
 function Input({ className = "", ...props }: React.InputHTMLAttributes<HTMLInputElement>) {
