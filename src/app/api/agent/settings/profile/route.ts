@@ -83,27 +83,29 @@ export async function POST(request: NextRequest) {
 
     const updateData: any = {};
 
-    // Always update full_name if provided
-    if (fullName !== undefined && fullName !== null && fullName !== "") {
-      updateData.full_name = fullName;
+    // Always update full_name if provided (even if empty string, to clear it)
+    if (fullName !== undefined && fullName !== null) {
+      updateData.full_name = fullName.trim();
     }
 
     // Update first_name and last_name - prefer explicit values, otherwise parse from fullName
-    if (firstName !== undefined && firstName !== null && firstName !== "") {
-      updateData.first_name = firstName;
-    } else if (fullName) {
+    if (firstName !== undefined && firstName !== null) {
+      updateData.first_name = firstName.trim() || null;
+    } else if (fullName !== undefined && fullName !== null && fullName.trim()) {
       const nameParts = fullName.trim().split(/\s+/);
       if (nameParts.length > 0) {
         updateData.first_name = nameParts[0];
       }
     }
 
-    if (lastName !== undefined && lastName !== null && lastName !== "") {
-      updateData.last_name = lastName;
-    } else if (fullName) {
+    if (lastName !== undefined && lastName !== null) {
+      updateData.last_name = lastName.trim() || null;
+    } else if (fullName !== undefined && fullName !== null && fullName.trim()) {
       const nameParts = fullName.trim().split(/\s+/);
       if (nameParts.length > 1) {
         updateData.last_name = nameParts.slice(1).join(' ');
+      } else {
+        updateData.last_name = null;
       }
     }
 

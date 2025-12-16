@@ -421,13 +421,20 @@ function ProfileSection({
         body: JSON.stringify(saveData),
       });
 
+      const result = await res.json();
+      console.log("Profile save response:", { status: res.status, result });
+
       if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        console.error("Profile save error:", errorData);
-        throw new Error(errorData.error || "Failed to save profile");
+        console.error("Profile save failed:", result);
+        const errorMessage = result.error || result.details || `Failed to save profile (${res.status})`;
+        throw new Error(errorMessage);
       }
 
-      const result = await res.json();
+      if (!result.success) {
+        console.error("Profile save returned success: false", result);
+        throw new Error(result.error || "Failed to save profile");
+      }
+
       console.log("Profile saved successfully:", result);
 
       // Reload profile data to show updated values
