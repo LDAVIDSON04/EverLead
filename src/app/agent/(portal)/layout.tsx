@@ -41,18 +41,15 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
   useEffect(() => {
     let mounted = true;
 
-    // Listen for profile updates
-    const handleProfileUpdate = async () => {
+    // Function to load profile data
+    const loadProfileData = async () => {
       if (!mounted) return;
       
       try {
         const { data: { user } } = await supabaseClient.auth.getUser();
         if (!user) {
-          console.log('No user found in handleProfileUpdate');
           return;
         }
-
-        console.log('Refreshing profile for user:', user.id);
 
         const { data: profile, error: profileError } = await supabaseClient
           .from('profiles')
@@ -61,37 +58,35 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
           .maybeSingle();
 
         if (profileError) {
-          console.error('Error fetching profile in handleProfileUpdate:', profileError);
+          console.error('Error fetching profile:', profileError);
           return;
         }
-
-        console.log('Profile data fetched:', {
-          full_name: profile?.full_name,
-          first_name: profile?.first_name,
-          last_name: profile?.last_name,
-          profile_picture_url: profile?.profile_picture_url,
-        });
 
         if (profile && mounted) {
           setUserName(profile.full_name || 'Agent');
           setUserFirstName(profile.first_name || profile.full_name?.split(' ')[0] || 'Agent');
           setUserLastName(profile.last_name || profile.full_name?.split(' ').slice(1).join(' ') || '');
           setProfilePictureUrl(profile.profile_picture_url || null);
-          console.log('Profile state updated:', {
-            userName: profile.full_name || 'Agent',
-            firstName: profile.first_name || profile.full_name?.split(' ')[0] || 'Agent',
-            lastName: profile.last_name || profile.full_name?.split(' ').slice(1).join(' ') || '',
-            pictureUrl: profile.profile_picture_url || null,
-          });
-        } else {
-          console.log('No profile found for user:', user.id);
         }
       } catch (error) {
-        console.error('Error refreshing profile:', error);
+        console.error('Error loading profile:', error);
       }
     };
 
+    // Listen for profile updates
+    const handleProfileUpdate = () => {
+      loadProfileData();
+    };
+
     window.addEventListener('profileUpdated', handleProfileUpdate);
+    
+    // Also listen for auth state changes to reload profile
+    const { data: { subscription } } = supabaseClient.auth.onAuthStateChange((event, session) => {
+      if (session && mounted) {
+        // Reload profile when auth state changes (login, token refresh, etc.)
+        loadProfileData();
+      }
+    });
 
     async function checkApproval() {
       try {
@@ -129,27 +124,19 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
         }
 
         // Success - set user name and allow render
-        console.log('Profile loaded in layout:', {
-          full_name: profile?.full_name,
-          first_name: profile?.first_name,
-          last_name: profile?.last_name,
-          profile_picture_url: profile?.profile_picture_url,
-          hasProfile: !!profile,
-        });
-        
         if (profile) {
           setUserName(profile.full_name || 'Agent');
           setUserFirstName(profile.first_name || profile.full_name?.split(' ')[0] || 'Agent');
           setUserLastName(profile.last_name || profile.full_name?.split(' ').slice(1).join(' ') || '');
           setProfilePictureUrl(profile.profile_picture_url || null);
-        } else {
-          // If no profile, try to load it again after a short delay
-          setTimeout(() => {
-            handleProfileUpdate();
-          }, 1000);
         }
         
         setCheckingAuth(false);
+        
+        // After auth check, ensure profile data is loaded
+        if (mounted) {
+          loadProfileData();
+        }
 
         // Check specialist status (non-blocking, async) - only if profile exists
         if (profile && mounted) {
@@ -202,6 +189,7 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
     return () => {
       mounted = false;
       window.removeEventListener('profileUpdated', handleProfileUpdate);
+      subscription.unsubscribe();
     };
   }, []); // Empty dependency array - only run once on mount
 
