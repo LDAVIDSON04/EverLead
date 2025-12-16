@@ -5,19 +5,29 @@ import { cookies } from "next/headers";
 export async function POST(request: NextRequest) {
   try {
     const cookieStore = await cookies();
+    
+    // Create Supabase client with cookie access
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
-        cookies: {
-          get(name: string) {
-            return cookieStore.get(name)?.value;
+        auth: {
+          storage: {
+            getItem: (key: string) => {
+              return cookieStore.get(key)?.value ?? null;
+            },
+            setItem: () => {},
+            removeItem: () => {},
           },
         },
       }
     );
 
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
