@@ -242,12 +242,48 @@ function SearchResults() {
     return times.filter(() => Math.random() > 0.25);
   };
 
-  const handleDayClick = (appointment: Appointment, slot: AvailabilitySlot, index: number) => {
-    if (slot.spots > 0) {
+  const handleDayClick = async (appointment: Appointment, slot: AvailabilitySlot, index: number) => {
+    if (slot.spots > 0 && appointment.agent?.id) {
       setSelectedAppointment(appointment);
       setSelectedAppointmentIndex(index);
       setSelectedDate(slot.date);
       setShowMoreAvailability(false);
+      
+      // Load real availability for this agent and date
+      try {
+        const agentId = appointment.agent.id;
+        // Parse the date from the slot (format: "Mon\nDec 16")
+        const dateMatch = slot.date.match(/(\w+)\s+(\d+)/);
+        if (dateMatch) {
+          const dayNum = parseInt(dateMatch[2]);
+          const today = new Date();
+          const targetDate = new Date(today.getFullYear(), today.getMonth(), dayNum);
+          // If the day number is less than today's day, it's next month
+          if (dayNum < today.getDate()) {
+            targetDate.setMonth(today.getMonth() + 1);
+          }
+          const dateStr = targetDate.toISOString().split("T")[0];
+          const endDateStr = dateStr; // Same day
+          
+          const res = await fetch(
+            `/api/agents/availability?agentId=${agentId}&startDate=${dateStr}&endDate=${endDateStr}`
+          );
+          
+          if (res.ok) {
+            const availabilityData: AvailabilityDay[] = await res.json();
+            const dayData = availabilityData.find((day) => day.date === dateStr);
+            if (dayData) {
+              // Store the real slots for this date
+              setAgentAvailability({
+                ...agentAvailability,
+                [`${agentId}-${dateStr}`]: dayData.slots,
+              });
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Error loading availability:", err);
+      }
     }
   };
 
@@ -302,26 +338,40 @@ function SearchResults() {
               </button>
             </div>
 
-            {/* Specialist Info */}
+            {/* Agent Info */}
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-start gap-4">
-                <div className={`w-16 h-16 ${avatarColors[selectedAppointmentIndex % avatarColors.length]} rounded-full flex items-center justify-center flex-shrink-0`}>
-                  <span className="text-white text-2xl">
-                    {selectedAppointment.leads 
-                      ? `${selectedAppointment.leads.first_name || ''} ${selectedAppointment.leads.last_name || ''}`.trim()[0]?.toUpperCase() || 'S'
-                      : 'S'}
-                  </span>
-                </div>
+                {selectedAppointment.agent?.profile_picture_url ? (
+                  <img
+                    src={selectedAppointment.agent.profile_picture_url}
+                    alt={selectedAppointment.agent.full_name || "Agent"}
+                    className="w-16 h-16 rounded-full object-cover flex-shrink-0"
+                  />
+                ) : (
+                  <div className={`w-16 h-16 ${avatarColors[selectedAppointmentIndex % avatarColors.length]} rounded-full flex items-center justify-center flex-shrink-0`}>
+                    <span className="text-white text-2xl">
+                      {selectedAppointment.agent?.full_name?.[0]?.toUpperCase() ||
+                       selectedAppointment.leads?.first_name?.[0]?.toUpperCase() ||
+                       'A'}
+                    </span>
+                  </div>
+                )}
                 
                 <div className="flex-1">
                   <h3 className="text-black mb-1 text-lg font-semibold">
-                    {selectedAppointment.leads 
-                      ? `${selectedAppointment.leads.first_name || ''} ${selectedAppointment.leads.last_name || ''}`.trim() || 'Pre-need Specialist'
-                      : 'Pre-need Specialist'}
+                    {selectedAppointment.agent?.full_name ||
+                     (selectedAppointment.leads 
+                       ? `${selectedAppointment.leads.first_name || ''} ${selectedAppointment.leads.last_name || ''}`.trim() || 'Pre-need Specialist'
+                       : 'Pre-need Specialist')}
                   </h3>
                   <p className="text-gray-600 text-sm mb-2">
-                    {selectedAppointment.service_type || 'Pre-need Planning Specialist'}
+                    {selectedAppointment.agent?.job_title ||
+                     selectedAppointment.service_type || 
+                     'Pre-need Planning Specialist'}
                   </p>
+                  {selectedAppointment.agent?.funeral_home && (
+                    <p className="text-gray-500 text-xs mb-2">{selectedAppointment.agent.funeral_home}</p>
+                  )}
                   
                   <div className="flex items-center gap-1">
                     <Star className="w-4 h-4 fill-green-600 text-green-600" />
@@ -339,24 +389,73 @@ function SearchResults() {
               {/* Selected Date */}
               <div className="mb-6">
                 <p className="text-black mb-3 font-medium">{selectedDate.replace('\n', ', ')}</p>
-                <div className="flex flex-wrap gap-2">
-                  {generateTimeSlots(selectedDate).map((time, timeIdx) => {
-                    const isSelected = selectedTime === `${selectedDate}-${time}`;
-                    return (
-                      <button
-                        key={timeIdx}
-                        onClick={() => setSelectedTime(`${selectedDate}-${time}`)}
-                        className={`px-4 py-2 rounded-md text-sm transition-colors ${
-                          isSelected
-                            ? 'bg-green-600 text-white'
-                            : 'bg-green-100 text-black hover:bg-green-200'
-                        }`}
-                      >
-                        {time}
-                      </button>
-                    );
-                  })}
-                </div>
+                {(() => {
+                  // Get real availability slots if available
+                  const agentId = selectedAppointment?.agent?.id;
+                  let timeSlots: string[] = [];
+                  
+                  if (agentId && selectedDate) {
+                    // Try to parse the date from selectedDate (format: "Mon\nDec 16")
+                    const dateMatch = selectedDate.match(/(\w+)\s+(\d+)/);
+                    if (dateMatch) {
+                      const dayNum = parseInt(dateMatch[2]);
+                      const today = new Date();
+                      const targetDate = new Date(today.getFullYear(), today.getMonth(), dayNum);
+                      if (dayNum < today.getDate()) {
+                        targetDate.setMonth(today.getMonth() + 1);
+                      }
+                      const dateStr = targetDate.toISOString().split("T")[0];
+                      const key = `${agentId}-${dateStr}`;
+                      const realSlots = agentAvailability[key];
+                      
+                      if (realSlots && realSlots.length > 0) {
+                        // Convert real slots to time strings
+                        timeSlots = realSlots.map((slot: any) => {
+                          const date = new Date(slot.startsAt);
+                          const hours = date.getUTCHours();
+                          const minutes = date.getUTCMinutes();
+                          const ampm = hours >= 12 ? "PM" : "AM";
+                          const displayHours = hours % 12 || 12;
+                          return `${displayHours}:${String(minutes).padStart(2, "0")} ${ampm}`;
+                        });
+                      }
+                    }
+                  }
+                  
+                  // Fallback to generated slots if no real data
+                  if (timeSlots.length === 0) {
+                    timeSlots = generateTimeSlots(selectedDate);
+                  }
+                  
+                  return (
+                    <div className="flex flex-wrap gap-2">
+                      {timeSlots.map((time, timeIdx) => {
+                        const isSelected = selectedTime === `${selectedDate}-${time}`;
+                        return (
+                          <button
+                            key={timeIdx}
+                            onClick={() => {
+                              setSelectedTime(`${selectedDate}-${time}`);
+                              // Navigate to booking page when time is selected
+                              if (selectedAppointment?.agent?.id) {
+                                setTimeout(() => {
+                                  window.location.href = `/book/agent/${selectedAppointment.agent.id}`;
+                                }, 300);
+                              }
+                            }}
+                            className={`px-4 py-2 rounded-md text-sm transition-colors ${
+                              isSelected
+                                ? 'bg-green-600 text-white'
+                                : 'bg-green-100 text-black hover:bg-green-200'
+                            }`}
+                          >
+                            {time}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* More Availability */}
@@ -575,7 +674,7 @@ function SearchResults() {
                             return (
                               <button
                                 key={slotIndex}
-                                onClick={() => hasSpots && handleBookAgent(agentId)}
+                                onClick={() => hasSpots && handleDayClick(appointment, slot, index)}
                                 className={`
                                   px-3 py-2 rounded-lg border text-center text-sm transition-colors
                                   ${hasSpots 
