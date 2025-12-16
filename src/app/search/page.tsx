@@ -274,10 +274,14 @@ function SearchResults() {
             const dayData = availabilityData.find((day) => day.date === dateStr);
             if (dayData) {
               // Store the real slots for this date
-              setAgentAvailability({
-                ...agentAvailability,
-                [`${agentId}-${dateStr}`]: dayData.slots,
-              });
+              const key = `${agentId}-${dateStr}`;
+              setAgentAvailability((prev) => ({
+                ...prev,
+                [key]: dayData.slots.map((slot: any) => ({
+                  startsAt: slot.startsAt,
+                  endsAt: slot.endsAt,
+                })),
+              }));
             }
           }
         }
@@ -437,9 +441,10 @@ function SearchResults() {
                             onClick={() => {
                               setSelectedTime(`${selectedDate}-${time}`);
                               // Navigate to booking page when time is selected
-                              if (selectedAppointment?.agent?.id) {
+                              const agentId = selectedAppointment?.agent?.id;
+                              if (agentId) {
                                 setTimeout(() => {
-                                  window.location.href = `/book/agent/${selectedAppointment.agent.id}`;
+                                  window.location.href = `/book/agent/${agentId}`;
                                 }, 300);
                               }
                             }}
