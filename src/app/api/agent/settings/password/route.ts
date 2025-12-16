@@ -1,31 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-import { cookies } from "next/headers";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 export async function POST(request: NextRequest) {
   try {
-    const cookieStore = await cookies();
-    
-    // Create Supabase client with cookie access
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        auth: {
-          storage: {
-            getItem: (key: string) => {
-              return cookieStore.get(key)?.value ?? null;
-            },
-            setItem: () => {},
-            removeItem: () => {},
-          },
-        },
-      }
-    );
+    const body = await request.json();
+    const { userId, newPassword, confirmPassword } = body;
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
-    if (authError || !user) {
+    if (!userId) {
+      return NextResponse.json({ error: "User ID is required" }, { status: 400 });
+    }
+
+    // Verify user exists and is an agent
+    const { data: profile, error: profileError } = await supabaseAdmin
+      .from("profiles")
+      .select("id, role")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (profileError || !profile || profile.role !== "agent") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -33,11 +25,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = await request.json();
-    const { currentPassword, newPassword, confirmPassword } = body;
-
-    if (!currentPassword || !newPassword || !confirmPassword) {
-      return NextResponse.json({ error: "All fields are required" }, { status: 400 });
+    if (!newPassword || !confirmPassword) {
+      return NextResponse.json({ error: "New password and confirmation are required" }, { status: 400 });
     }
 
     if (newPassword !== confirmPassword) {
@@ -48,8 +37,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Password must be at least 6 characters" }, { status: 400 });
     }
 
-    // Update password using Supabase Auth
-    const { error } = await supabase.auth.updateUser({
+    // Update password using Supabase Admin API
+    const { error } = await supabaseAdmin.auth.admin.updateUserById(userId, {
       password: newPassword,
     });
 

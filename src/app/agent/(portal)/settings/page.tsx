@@ -1286,10 +1286,22 @@ function SecuritySection() {
         return;
       }
 
+      // Get user ID
+      const { data: { user } } = await supabaseClient.auth.getUser();
+      if (!user) {
+        setPasswordMessage({ type: "error", text: "Not authenticated" });
+        setSaving(false);
+        return;
+      }
+
       const res = await fetch("/api/agent/settings/password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(passwordData),
+        body: JSON.stringify({
+          userId: user.id,
+          newPassword: passwordData.new,
+          confirmPassword: passwordData.confirm,
+        }),
       });
 
       if (!res.ok) {
