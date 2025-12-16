@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import { supabaseClient } from '@/lib/supabaseClient';
-import { Home, Calendar, File, Mail, FileText, User, XCircle, Upload, X } from 'lucide-react';
+import { Home, Calendar, File, Mail, FileText, User, XCircle, Upload, X, Settings } from 'lucide-react';
 
 type AgentLayoutProps = {
   children: ReactNode;
@@ -17,6 +17,7 @@ const menuItems = [
   { href: '/agent/my-appointments', label: 'Files', icon: File },
   { href: '#', label: 'Email', icon: Mail },
   { href: '/agent/dashboard#roi', label: 'Report', icon: FileText },
+  { href: '/agent/settings', label: 'Settings', icon: Settings },
 ];
 
 export default function AgentLayout({ children }: AgentLayoutProps) {
@@ -25,6 +26,9 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [approvalStatus, setApprovalStatus] = useState<string | null>(null);
   const [userName, setUserName] = useState<string>('');
+  const [userFirstName, setUserFirstName] = useState<string>('');
+  const [userLastName, setUserLastName] = useState<string>('');
+  const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardingData, setOnboardingData] = useState({
     profile_picture_url: '',
@@ -54,7 +58,7 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
         // Fetch profile
         const { data: profile, error: profileError } = await supabaseClient
           .from('profiles')
-          .select('role, full_name, onboarding_completed')
+          .select('role, full_name, first_name, last_name, profile_picture_url, onboarding_completed')
           .eq('id', user.id)
           .maybeSingle();
 
@@ -76,6 +80,9 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
 
         // Success - set user name and allow render
         setUserName(profile?.full_name || 'Agent');
+        setUserFirstName(profile?.first_name || profile?.full_name?.split(' ')[0] || 'Agent');
+        setUserLastName(profile?.last_name || profile?.full_name?.split(' ').slice(1).join(' ') || '');
+        setProfilePictureUrl(profile?.profile_picture_url || null);
         setCheckingAuth(false);
 
         // Check specialist status (non-blocking, async) - only if profile exists
@@ -295,11 +302,21 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
         {/* User Profile */}
         <div className="px-4 pb-6">
           <div className="flex items-center gap-3 px-3 py-3 mb-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-400 rounded-full flex items-center justify-center">
-              <User size={16} className="text-white" />
-            </div>
+            {profilePictureUrl ? (
+              <img
+                src={profilePictureUrl}
+                alt={`${userFirstName} ${userLastName}`}
+                className="w-10 h-10 rounded-full object-cover"
+              />
+            ) : (
+              <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-400 rounded-full flex items-center justify-center">
+                <User size={18} className="text-white" />
+              </div>
+            )}
             <div className="flex-1">
-              <div className="text-white text-sm">{userName}</div>
+              <div className="text-white text-sm">
+                {userFirstName} {userLastName}
+              </div>
               <div className="text-white/60 text-xs">Agent</div>
             </div>
           </div>

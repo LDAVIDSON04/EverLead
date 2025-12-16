@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabaseClient } from "@/lib/supabaseClient";
-import { Search, Settings, Bell, Calendar, ChevronLeft, ChevronRight, Phone, Mail as MailIcon, Users, Plus, MoreHorizontal, ArrowUpDown, AlertCircle, Check, User } from "lucide-react";
+import { Search, Bell, Calendar, ChevronLeft, ChevronRight, Phone, Mail as MailIcon, Users, Plus, MoreHorizontal, ArrowUpDown, AlertCircle, Check, User } from "lucide-react";
 
 type Stats = {
   available: number;
@@ -40,6 +40,7 @@ export default function AgentDashboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [userName, setUserName] = useState<string>("");
+  const [userFirstName, setUserFirstName] = useState<string>("");
   const [appointments, setAppointments] = useState<Appointment[]>([]);
 
   useEffect(() => {
@@ -61,13 +62,17 @@ export default function AgentDashboardPage() {
         // Get user name
         const { data: profile } = await supabaseClient
           .from("profiles")
-          .select("full_name")
+          .select("full_name, first_name")
           .eq("id", agentId)
           .maybeSingle();
         
         if (profile?.full_name) {
           setUserName(profile.full_name);
         }
+        
+        // Set first name for welcome message
+        const firstName = profile?.first_name || profile?.full_name?.split(' ')[0] || 'Agent';
+        setUserFirstName(firstName);
 
         // Fetch dashboard data from API
         const res = await fetch(`/api/agent/dashboard?agentId=${agentId}`);
@@ -255,22 +260,10 @@ export default function AgentDashboardPage() {
             </Link>
           </div>
           <div className="flex items-center gap-4 ml-4">
-            <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-              <Settings size={20} className="text-gray-600" />
-            </button>
             <button className="p-2 hover:bg-gray-100 rounded-lg relative transition-colors">
               <Bell size={20} className="text-gray-600" />
               <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
             </button>
-            <div className="flex items-center gap-2">
-              <div className="text-right">
-                <div className="text-sm text-gray-900">{userName || 'Agent'}</div>
-                <div className="text-xs text-gray-500">Agent profile</div>
-              </div>
-              <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-400 rounded-full flex items-center justify-center">
-                <User size={20} className="text-white" />
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -284,7 +277,7 @@ export default function AgentDashboardPage() {
             <div className="bg-gradient-to-r from-green-900 to-green-800 rounded-2xl p-6">
               <div>
                 <h2 className="text-2xl mb-2 text-white">
-                  Welcome back, <span className="text-gray-100">{userName || 'Agent'}</span>
+                  Welcome back, <span className="text-gray-100">{userFirstName || 'Agent'}</span>
                 </h2>
                 <p className="text-green-100">Have a nice day at work</p>
               </div>
