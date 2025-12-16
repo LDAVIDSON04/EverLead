@@ -51,7 +51,7 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
 
         const { data: profile } = await supabaseClient
           .from('profiles')
-          .select('full_name, first_name, last_name, profile_picture_url')
+          .select('full_name, first_name, last_name, profile_picture_url, email, phone, funeral_home, job_title')
           .eq('id', user.id)
           .maybeSingle();
 
@@ -68,6 +68,9 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
 
     window.addEventListener('profileUpdated', handleProfileUpdate);
 
+    // Also trigger profile refresh on mount to ensure data is loaded
+    handleProfileUpdate();
+
     async function checkApproval() {
       try {
         const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
@@ -80,10 +83,10 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
           return;
         }
 
-        // Fetch profile
+        // Fetch profile with all necessary fields
         const { data: profile, error: profileError } = await supabaseClient
           .from('profiles')
-          .select('role, full_name, first_name, last_name, profile_picture_url, onboarding_completed')
+          .select('role, full_name, first_name, last_name, profile_picture_url, onboarding_completed, email, phone, funeral_home, job_title')
           .eq('id', user.id)
           .maybeSingle();
 
@@ -104,6 +107,14 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
         }
 
         // Success - set user name and allow render
+        console.log('Profile loaded in layout:', {
+          full_name: profile?.full_name,
+          first_name: profile?.first_name,
+          last_name: profile?.last_name,
+          profile_picture_url: profile?.profile_picture_url,
+          hasProfile: !!profile,
+        });
+        
         setUserName(profile?.full_name || 'Agent');
         setUserFirstName(profile?.first_name || profile?.full_name?.split(' ')[0] || 'Agent');
         setUserLastName(profile?.last_name || profile?.full_name?.split(' ').slice(1).join(' ') || '');
@@ -335,12 +346,12 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
                 className="w-10 h-10 rounded-full object-cover border-2 border-white/20"
                 onError={(e) => {
                   console.error("Error loading profile picture in nav:", profilePictureUrl);
-                  // Hide broken image and show fallback
+                  // Show fallback instead of hiding
                   (e.target as HTMLImageElement).style.display = 'none';
                   const parent = (e.target as HTMLImageElement).parentElement;
-                  if (parent) {
+                  if (parent && !parent.querySelector('.fallback-avatar')) {
                     const fallback = document.createElement('div');
-                    fallback.className = 'w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-400 rounded-full flex items-center justify-center';
+                    fallback.className = 'fallback-avatar w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-400 rounded-full flex items-center justify-center border-2 border-white/20';
                     fallback.innerHTML = `<span class="text-white text-xs font-semibold">${userFirstName?.[0]?.toUpperCase() || 'A'}${userLastName?.[0]?.toUpperCase() || ''}</span>`;
                     parent.appendChild(fallback);
                   }
