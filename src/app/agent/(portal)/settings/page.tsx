@@ -142,6 +142,8 @@ export default function SettingsPage() {
 
   const [profileCompleteness, setProfileCompleteness] = useState(0);
   const [verificationStatus, setVerificationStatus] = useState<"approved" | "pending" | "needs_info">("pending");
+  const [saving, setSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   useEffect(() => {
     async function loadProfile() {
@@ -152,13 +154,13 @@ export default function SettingsPage() {
           return;
         }
 
-        const { data: profile } = await supabaseClient
-          .from("profiles")
-          .select("*")
-          .eq("id", user.id)
-          .maybeSingle();
+        const res = await fetch("/api/agent/settings/profile");
+        if (!res.ok) throw new Error("Failed to load profile");
+
+        const { profile } = await res.json();
 
         if (profile) {
+          const metadata = profile.metadata || {};
           setProfileData({
             fullName: profile.full_name || "",
             firstName: profile.first_name || profile.full_name?.split(" ")[0] || "",
@@ -167,10 +169,10 @@ export default function SettingsPage() {
             professionalTitle: profile.job_title || "",
             email: profile.email || "",
             phone: profile.phone || "",
-            regionsServed: "",
-            specialty: "",
-            licenseNumber: "",
-            businessAddress: "",
+            regionsServed: metadata.regions_served || "",
+            specialty: metadata.specialty || "",
+            licenseNumber: metadata.license_number || "",
+            businessAddress: metadata.business_address || "",
             profilePictureUrl: profile.profile_picture_url || "",
           });
 
@@ -182,7 +184,13 @@ export default function SettingsPage() {
           if (profile.job_title) filled++;
           if (profile.email) filled++;
           if (profile.phone) filled++;
+          if (profile.license_number) filled++;
+          if (profile.regions_served) filled++;
+          if (profile.specialty) filled++;
           setProfileCompleteness(Math.round((filled / total) * 100));
+
+          // Set verification status (assuming agents are approved by default, or check a status field)
+          setVerificationStatus(profile.status === "approved" ? "approved" : "pending");
         }
       } catch (err) {
         console.error("Error loading profile:", err);
@@ -255,6 +263,9 @@ function ProfileSection({
   profileCompleteness: number;
   verificationStatus: "approved" | "pending" | "needs_info";
 }) {
+  const [saving, setSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
   const handleProfilePictureChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -280,6 +291,33 @@ function ProfileSection({
       setProfileData({ ...profileData, profilePictureUrl: publicUrl });
     } catch (err) {
       console.error("Error uploading profile picture:", err);
+      setSaveMessage({ type: "error", text: "Failed to upload profile picture" });
+    }
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    setSaveMessage(null);
+
+    try {
+      const res = await fetch("/api/agent/settings/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(profileData),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to save profile");
+      }
+
+      setSaveMessage({ type: "success", text: "Profile saved successfully!" });
+      setTimeout(() => setSaveMessage(null), 3000);
+    } catch (err: any) {
+      console.error("Error saving profile:", err);
+      setSaveMessage({ type: "error", text: err.message || "Failed to save profile" });
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -458,9 +496,21 @@ function ProfileSection({
         />
       </div>
 
+      {saveMessage && (
+        <div className={`mb-4 p-3 rounded-lg ${
+          saveMessage.type === "success" ? "bg-green-50 text-green-800" : "bg-red-50 text-red-800"
+        }`}>
+          {saveMessage.text}
+        </div>
+      )}
+
       <div className="flex justify-end">
-        <button className="px-6 py-2 bg-green-800 text-white rounded-lg hover:bg-green-900">
-          Save Changes
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="px-6 py-2 bg-green-800 text-white rounded-lg hover:bg-green-900 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {saving ? "Saving..." : "Save Changes"}
         </button>
       </div>
     </div>
@@ -468,10 +518,13 @@ function ProfileSection({
 }
 
 function CalendarAvailabilitySection() {
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [googleConnected, setGoogleConnected] = useState(false);
   const [microsoftConnected, setMicrosoftConnected] = useState(false);
-  const [selectedLocation, setSelectedLocation] = useState("Kelowna");
-  const [locations, setLocations] = useState(["Kelowna"]);
+  const [selectedLocation, setSelectedLocation] = useState("");
+  const [locations, setLocations] = useState<string[]>([]);
   const [newLocationName, setNewLocationName] = useState("");
   const [showAddLocation, setShowAddLocation] = useState(false);
   const [appointmentLength, setAppointmentLength] = useState("30");
@@ -486,11 +539,55 @@ function CalendarAvailabilitySection() {
     sunday: { enabled: false, start: "10:00", end: "14:00" },
   };
 
-  const [availabilityByLocation, setAvailabilityByLocation] = useState<Record<string, typeof defaultSchedule>>({
-    Kelowna: defaultSchedule,
-  });
+  const [availabilityByLocation, setAvailabilityByLocation] = useState<Record<string, typeof defaultSchedule>>({});
 
   const days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+
+  useEffect(() => {
+    async function loadAvailability() {
+      try {
+        const res = await fetch("/api/agent/settings/availability");
+        if (!res.ok) throw new Error("Failed to load availability");
+
+        const data = await res.json();
+        if (data.locations && data.locations.length > 0) {
+          setLocations(data.locations);
+          setSelectedLocation(data.locations[0]);
+          setAvailabilityByLocation(data.availabilityByLocation || {});
+          setAppointmentLength(data.appointmentLength || "30");
+        } else {
+          // Initialize with default location if none exist
+          setLocations(["Kelowna"]);
+          setSelectedLocation("Kelowna");
+          setAvailabilityByLocation({ Kelowna: defaultSchedule });
+        }
+
+        // Load calendar connections
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        if (user) {
+          const { data: connections } = await supabaseClient
+            .from("calendar_connections")
+            .select("provider")
+            .eq("specialist_id", user.id);
+
+          if (connections) {
+            setGoogleConnected(connections.some((c: any) => c.provider === "google"));
+            setMicrosoftConnected(connections.some((c: any) => c.provider === "microsoft"));
+          }
+        }
+      } catch (err) {
+        console.error("Error loading availability:", err);
+        // Set defaults on error
+        setLocations(["Kelowna"]);
+        setSelectedLocation("Kelowna");
+        setAvailabilityByLocation({ Kelowna: defaultSchedule });
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadAvailability();
+  }, []);
 
   const addLocation = () => {
     if (newLocationName.trim() && !locations.includes(newLocationName.trim())) {
@@ -505,6 +602,44 @@ function CalendarAvailabilitySection() {
       setShowAddLocation(false);
     }
   };
+
+  const handleSaveAvailability = async () => {
+    setSaving(true);
+    setSaveMessage(null);
+
+    try {
+      const res = await fetch("/api/agent/settings/availability", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          locations,
+          availabilityByLocation,
+          appointmentLength,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to save availability");
+      }
+
+      setSaveMessage({ type: "success", text: "Availability saved successfully!" });
+      setTimeout(() => setSaveMessage(null), 3000);
+    } catch (err: any) {
+      console.error("Error saving availability:", err);
+      setSaveMessage({ type: "error", text: err.message || "Failed to save availability" });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <p className="text-sm text-gray-600">Loading availability...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-6">
@@ -741,9 +876,21 @@ function CalendarAvailabilitySection() {
         </div>
       </div>
 
+      {saveMessage && (
+        <div className={`mb-4 p-3 rounded-lg ${
+          saveMessage.type === "success" ? "bg-green-50 text-green-800" : "bg-red-50 text-red-800"
+        }`}>
+          {saveMessage.text}
+        </div>
+      )}
+
       <div className="flex justify-end">
-        <button className="px-6 py-2 bg-green-800 text-white rounded-lg hover:bg-green-900">
-          Save Availability
+        <button
+          onClick={handleSaveAvailability}
+          disabled={saving}
+          className="px-6 py-2 bg-green-800 text-white rounded-lg hover:bg-green-900 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {saving ? "Saving..." : "Save Availability"}
         </button>
       </div>
     </div>
@@ -751,11 +898,40 @@ function CalendarAvailabilitySection() {
 }
 
 function PayoutsSection() {
-  const pricePerAppointment = 29.0;
-  const currentMonthAppointments = 0;
-  const currentMonthTotal = (pricePerAppointment * currentMonthAppointments).toFixed(2);
+  const [loading, setLoading] = useState(true);
+  const [pricePerAppointment, setPricePerAppointment] = useState(29.0);
+  const [currentMonthAppointments, setCurrentMonthAppointments] = useState(0);
+  const [currentMonthTotal, setCurrentMonthTotal] = useState("0.00");
+  const [pastPayments, setPastPayments] = useState<any[]>([]);
 
-  const pastPayments: any[] = [];
+  useEffect(() => {
+    async function loadBilling() {
+      try {
+        const res = await fetch("/api/agent/settings/billing");
+        if (!res.ok) throw new Error("Failed to load billing data");
+
+        const data = await res.json();
+        setPricePerAppointment(data.pricePerAppointment);
+        setCurrentMonthAppointments(data.currentMonthAppointments);
+        setCurrentMonthTotal(data.currentMonthTotal);
+        setPastPayments(data.pastPayments || []);
+      } catch (err) {
+        console.error("Error loading billing:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadBilling();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <p className="text-sm text-gray-600">Loading billing data...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-6">
@@ -853,6 +1029,9 @@ function PayoutsSection() {
 }
 
 function NotificationsSection({ email, phone }: { email: string; phone: string }) {
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [notifications, setNotifications] = useState({
     newAppointment: { email: true, sms: false },
     appointmentCancelled: { email: true, sms: true },
@@ -860,6 +1039,60 @@ function NotificationsSection({ email, phone }: { email: string; phone: string }
     calendarSyncError: { email: true, sms: false },
     appointmentReminder: { email: true, sms: true },
   });
+
+  useEffect(() => {
+    async function loadNotifications() {
+      try {
+        const res = await fetch("/api/agent/settings/notifications");
+        if (!res.ok) throw new Error("Failed to load notifications");
+
+        const data = await res.json();
+        if (data.notifications) {
+          setNotifications(data.notifications);
+        }
+      } catch (err) {
+        console.error("Error loading notifications:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadNotifications();
+  }, []);
+
+  const handleSaveNotifications = async () => {
+    setSaving(true);
+    setSaveMessage(null);
+
+    try {
+      const res = await fetch("/api/agent/settings/notifications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ notifications }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to save notifications");
+      }
+
+      setSaveMessage({ type: "success", text: "Notification preferences saved!" });
+      setTimeout(() => setSaveMessage(null), 3000);
+    } catch (err: any) {
+      console.error("Error saving notifications:", err);
+      setSaveMessage({ type: "error", text: err.message || "Failed to save notifications" });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <p className="text-sm text-gray-600">Loading notifications...</p>
+      </div>
+    );
+  }
 
   const notificationTypes = [
     {
@@ -992,9 +1225,21 @@ function NotificationsSection({ email, phone }: { email: string; phone: string }
         </div>
       </div>
 
+      {saveMessage && (
+        <div className={`mb-4 p-3 rounded-lg ${
+          saveMessage.type === "success" ? "bg-green-50 text-green-800" : "bg-red-50 text-red-800"
+        }`}>
+          {saveMessage.text}
+        </div>
+      )}
+
       <div className="flex justify-end">
-        <button className="px-6 py-2 bg-green-800 text-white rounded-lg hover:bg-green-900">
-          Save Preferences
+        <button
+          onClick={handleSaveNotifications}
+          disabled={saving}
+          className="px-6 py-2 bg-green-800 text-white rounded-lg hover:bg-green-900 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {saving ? "Saving..." : "Save Preferences"}
         </button>
       </div>
     </div>
@@ -1008,10 +1253,51 @@ function SecuritySection() {
     new: "",
     confirm: "",
   });
+  const [saving, setSaving] = useState(false);
+  const [passwordMessage, setPasswordMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const handleLogout = async () => {
     await supabaseClient.auth.signOut();
     router.push("/agent");
+  };
+
+  const handleUpdatePassword = async () => {
+    setSaving(true);
+    setPasswordMessage(null);
+
+    try {
+      if (passwordData.new !== passwordData.confirm) {
+        setPasswordMessage({ type: "error", text: "New passwords do not match" });
+        setSaving(false);
+        return;
+      }
+
+      if (passwordData.new.length < 6) {
+        setPasswordMessage({ type: "error", text: "Password must be at least 6 characters" });
+        setSaving(false);
+        return;
+      }
+
+      const res = await fetch("/api/agent/settings/password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(passwordData),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to update password");
+      }
+
+      setPasswordMessage({ type: "success", text: "Password updated successfully!" });
+      setPasswordData({ current: "", new: "", confirm: "" });
+      setTimeout(() => setPasswordMessage(null), 3000);
+    } catch (err: any) {
+      console.error("Error updating password:", err);
+      setPasswordMessage({ type: "error", text: err.message || "Failed to update password" });
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -1064,8 +1350,20 @@ function SecuritySection() {
             />
           </div>
 
-          <button className="px-4 py-2 bg-green-800 text-white rounded-lg hover:bg-green-900">
-            Update Password
+          {passwordMessage && (
+            <div className={`mb-4 p-3 rounded-lg ${
+              passwordMessage.type === "success" ? "bg-green-50 text-green-800" : "bg-red-50 text-red-800"
+            }`}>
+              {passwordMessage.text}
+            </div>
+          )}
+
+          <button
+            onClick={handleUpdatePassword}
+            disabled={saving}
+            className="px-4 py-2 bg-green-800 text-white rounded-lg hover:bg-green-900 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {saving ? "Updating..." : "Update Password"}
           </button>
         </div>
       </div>
@@ -1130,7 +1428,22 @@ function SecuritySection() {
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction className="bg-red-600 hover:bg-red-700">
+                <AlertDialogAction
+                  className="bg-red-600 hover:bg-red-700"
+                  onClick={async () => {
+                    try {
+                      // Delete account - this would typically involve:
+                      // 1. Delete all related data (appointments, leads, etc.)
+                      // 2. Delete profile
+                      // 3. Delete auth user
+                      // For now, we'll just sign out and redirect
+                      await supabaseClient.auth.signOut();
+                      router.push("/agent");
+                    } catch (err) {
+                      console.error("Error deleting account:", err);
+                    }
+                  }}
+                >
                   Yes, Delete My Account
                 </AlertDialogAction>
               </AlertDialogFooter>
