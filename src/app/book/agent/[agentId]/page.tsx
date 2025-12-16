@@ -32,6 +32,17 @@ export default function BookAgentPage() {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [showBookingForm, setShowBookingForm] = useState(false);
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    city: "",
+    province: "",
+    notes: "",
+  });
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [agentInfo, setAgentInfo] = useState<{
     full_name: string | null;
     first_name: string | null;
@@ -150,9 +161,82 @@ export default function BookAgentPage() {
     reloadAvailability();
   };
 
+  const validateForm = (): boolean => {
+    const errors: Record<string, string> = {};
+
+    if (!formData.firstName.trim()) {
+      errors.firstName = "First name is required";
+    }
+
+    if (!formData.lastName.trim()) {
+      errors.lastName = "Last name is required";
+    }
+
+    if (!formData.email.trim()) {
+      errors.email = "Email is required";
+    } else {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email)) {
+        errors.email = "Please enter a valid email address";
+      }
+    }
+
+    if (!formData.phone.trim()) {
+      errors.phone = "Phone number is required";
+    } else {
+      // Basic phone validation (allows various formats)
+      const phoneRegex = /^[\d\s\-\+\(\)]+$/;
+      if (!phoneRegex.test(formData.phone) || formData.phone.replace(/\D/g, "").length < 10) {
+        errors.phone = "Please enter a valid phone number";
+      }
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleFormChange = (field: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    // Clear error when user starts typing
+    if (formErrors[field]) {
+      setFormErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
+  };
+
+  const handleOpenBookingForm = () => {
+    if (!selectedDate || !selectedSlot) {
+      setError("Please select a date and time");
+      return;
+    }
+    setShowBookingForm(true);
+    setError(null);
+  };
+
+  const handleCloseBookingForm = () => {
+    setShowBookingForm(false);
+    setFormData({
+      firstName: "",
+      lastName: "",
+      email: "",
+      phone: "",
+      city: "",
+      province: "",
+      notes: "",
+    });
+    setFormErrors({});
+  };
+
   const handleBook = async () => {
     if (!selectedDate || !selectedSlot) {
       setError("Please select a date and time");
+      return;
+    }
+
+    if (!validateForm()) {
       return;
     }
 
@@ -160,29 +244,6 @@ export default function BookAgentPage() {
     setError(null);
 
     try {
-      // Collect family information (for now, using a simple form approach)
-      // In a production system, you might want a multi-step form or modal
-      const firstName = prompt("Please enter your first name:");
-      const lastName = prompt("Please enter your last name:");
-      const email = prompt("Please enter your email:");
-      const phone = prompt("Please enter your phone number:");
-      const city = prompt("Please enter your city (optional):") || "";
-      const province = prompt("Please enter your province (optional):") || "";
-
-      if (!firstName || !lastName || !email || !phone) {
-        setError("All required fields must be filled");
-        setIsBooking(false);
-        return;
-      }
-
-      // Validate email format
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email)) {
-        setError("Please enter a valid email address");
-        setIsBooking(false);
-        return;
-      }
-
       const res = await fetch("/api/agents/book", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -190,13 +251,14 @@ export default function BookAgentPage() {
           agentId,
           startsAt: selectedSlot.startsAt,
           endsAt: selectedSlot.endsAt,
-          firstName: firstName.trim(),
-          lastName: lastName.trim(),
-          email: email.trim(),
-          phone: phone.trim(),
-          city: city.trim() || null,
-          province: province.trim() || null,
+          firstName: formData.firstName.trim(),
+          lastName: formData.lastName.trim(),
+          email: formData.email.trim(),
+          phone: formData.phone.trim(),
+          city: formData.city.trim() || null,
+          province: formData.province.trim() || null,
           serviceType: "Pre-need Planning",
+          notes: formData.notes.trim() || null,
         }),
       });
 
@@ -215,6 +277,7 @@ export default function BookAgentPage() {
           setAvailability(newAvailability);
         }
         setIsBooking(false);
+        handleCloseBookingForm();
         return;
       }
 
@@ -225,9 +288,10 @@ export default function BookAgentPage() {
 
       const data = await res.json();
       setSuccessMessage(
-        `Your appointment is confirmed for ${formatDate(selectedDate!)} at ${formatTime(selectedSlot.startsAt)}. We'll send a confirmation email to ${email}.`
+        `Your appointment is confirmed for ${formatDate(selectedDate!)} at ${formatTime(selectedSlot.startsAt)}. We'll send a confirmation email to ${formData.email}.`
       );
       setShowModal(true);
+      handleCloseBookingForm();
       setSelectedSlot(null);
       setSelectedDate(null);
     } catch (err: any) {
@@ -437,14 +501,208 @@ export default function BookAgentPage() {
             {selectedSlot && (
               <div className="mt-6 pt-6 border-t border-gray-200">
                 <button
-                  onClick={handleBook}
-                  disabled={isBooking}
-                  className="w-full bg-green-800 text-white py-3 px-6 rounded-lg font-semibold hover:bg-green-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  onClick={handleOpenBookingForm}
+                  className="w-full bg-green-800 text-white py-3 px-6 rounded-lg font-semibold hover:bg-green-900 transition-colors"
                 >
-                  {isBooking ? "Booking..." : "Book Appointment"}
+                  Book Appointment
                 </button>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Booking Form Modal */}
+        {showBookingForm && selectedSlot && (
+          <div
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+            onClick={(e) => {
+              if (e.target === e.currentTarget && !isBooking) {
+                handleCloseBookingForm();
+              }
+            }}
+          >
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+              {/* Header */}
+              <div className="flex items-center justify-between p-6 border-b border-gray-200 sticky top-0 bg-white z-10">
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900">Book Appointment</h2>
+                  {selectedDate && selectedSlot && (
+                    <p className="text-sm text-gray-600 mt-1">
+                      {formatDate(selectedDate)} at {formatTime(selectedSlot.startsAt)}
+                    </p>
+                  )}
+                </div>
+                <button
+                  onClick={handleCloseBookingForm}
+                  disabled={isBooking}
+                  className="text-gray-400 hover:text-gray-600 disabled:opacity-50"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              {/* Form */}
+              <div className="p-6">
+                <div className="space-y-4">
+                  {/* First Name */}
+                  <div>
+                    <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
+                      First Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      id="firstName"
+                      value={formData.firstName}
+                      onChange={(e) => handleFormChange("firstName", e.target.value)}
+                      className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800 ${
+                        formErrors.firstName ? "border-red-500" : "border-gray-300"
+                      }`}
+                      placeholder="John"
+                      disabled={isBooking}
+                    />
+                    {formErrors.firstName && (
+                      <p className="text-sm text-red-500 mt-1">{formErrors.firstName}</p>
+                    )}
+                  </div>
+
+                  {/* Last Name */}
+                  <div>
+                    <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">
+                      Last Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      id="lastName"
+                      value={formData.lastName}
+                      onChange={(e) => handleFormChange("lastName", e.target.value)}
+                      className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800 ${
+                        formErrors.lastName ? "border-red-500" : "border-gray-300"
+                      }`}
+                      placeholder="Doe"
+                      disabled={isBooking}
+                    />
+                    {formErrors.lastName && (
+                      <p className="text-sm text-red-500 mt-1">{formErrors.lastName}</p>
+                    )}
+                  </div>
+
+                  {/* Email */}
+                  <div>
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                      Email <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="email"
+                      id="email"
+                      value={formData.email}
+                      onChange={(e) => handleFormChange("email", e.target.value)}
+                      className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800 ${
+                        formErrors.email ? "border-red-500" : "border-gray-300"
+                      }`}
+                      placeholder="john.doe@example.com"
+                      disabled={isBooking}
+                    />
+                    {formErrors.email && (
+                      <p className="text-sm text-red-500 mt-1">{formErrors.email}</p>
+                    )}
+                  </div>
+
+                  {/* Phone */}
+                  <div>
+                    <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
+                      Phone Number <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="tel"
+                      id="phone"
+                      value={formData.phone}
+                      onChange={(e) => handleFormChange("phone", e.target.value)}
+                      className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800 ${
+                        formErrors.phone ? "border-red-500" : "border-gray-300"
+                      }`}
+                      placeholder="(555) 123-4567"
+                      disabled={isBooking}
+                    />
+                    {formErrors.phone && (
+                      <p className="text-sm text-red-500 mt-1">{formErrors.phone}</p>
+                    )}
+                  </div>
+
+                  {/* City and Province */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1">
+                        City
+                      </label>
+                      <input
+                        type="text"
+                        id="city"
+                        value={formData.city}
+                        onChange={(e) => handleFormChange("city", e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800"
+                        placeholder="Toronto"
+                        disabled={isBooking}
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="province" className="block text-sm font-medium text-gray-700 mb-1">
+                        Province
+                      </label>
+                      <input
+                        type="text"
+                        id="province"
+                        value={formData.province}
+                        onChange={(e) => handleFormChange("province", e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800"
+                        placeholder="ON"
+                        disabled={isBooking}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Notes */}
+                  <div>
+                    <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">
+                      Additional Notes (Optional)
+                    </label>
+                    <textarea
+                      id="notes"
+                      value={formData.notes}
+                      onChange={(e) => handleFormChange("notes", e.target.value)}
+                      rows={3}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800"
+                      placeholder="Any additional information you'd like to share..."
+                      disabled={isBooking}
+                    />
+                  </div>
+
+                  {/* Error Message */}
+                  {error && (
+                    <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                      <p className="text-sm text-red-600">{error}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200 sticky bottom-0 bg-white">
+                <button
+                  onClick={handleCloseBookingForm}
+                  disabled={isBooking}
+                  className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleBook}
+                  disabled={isBooking}
+                  className="px-6 py-2 bg-green-800 text-white rounded-lg font-semibold hover:bg-green-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {isBooking ? "Booking..." : "Confirm Booking"}
+                </button>
+              </div>
+            </div>
           </div>
         )}
 
