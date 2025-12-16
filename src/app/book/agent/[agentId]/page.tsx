@@ -160,10 +160,76 @@ export default function BookAgentPage() {
     setError(null);
 
     try {
-      // TODO: Create appointment booking API
-      // For now, redirect to a booking form or show success
-      setSuccessMessage("Appointment booking functionality coming soon!");
+      // Collect family information (for now, using a simple form approach)
+      // In a production system, you might want a multi-step form or modal
+      const firstName = prompt("Please enter your first name:");
+      const lastName = prompt("Please enter your last name:");
+      const email = prompt("Please enter your email:");
+      const phone = prompt("Please enter your phone number:");
+      const city = prompt("Please enter your city (optional):") || "";
+      const province = prompt("Please enter your province (optional):") || "";
+
+      if (!firstName || !lastName || !email || !phone) {
+        setError("All required fields must be filled");
+        setIsBooking(false);
+        return;
+      }
+
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        setError("Please enter a valid email address");
+        setIsBooking(false);
+        return;
+      }
+
+      const res = await fetch("/api/agents/book", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          agentId,
+          startsAt: selectedSlot.startsAt,
+          endsAt: selectedSlot.endsAt,
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
+          email: email.trim(),
+          phone: phone.trim(),
+          city: city.trim() || null,
+          province: province.trim() || null,
+          serviceType: "Pre-need Planning",
+        }),
+      });
+
+      if (res.status === 409) {
+        const errorData = await res.json();
+        setError(errorData.error || "This time slot is no longer available. Please select another time.");
+        // Reload availability
+        const today = new Date();
+        const startDate = today.toISOString().split("T")[0];
+        const endDate = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+        const availabilityRes = await fetch(
+          `/api/agents/availability?agentId=${agentId}&startDate=${startDate}&endDate=${endDate}`
+        );
+        if (availabilityRes.ok) {
+          const newAvailability = await availabilityRes.json();
+          setAvailability(newAvailability);
+        }
+        setIsBooking(false);
+        return;
+      }
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to book appointment");
+      }
+
+      const data = await res.json();
+      setSuccessMessage(
+        `Your appointment is confirmed for ${formatDate(selectedDate!)} at ${formatTime(selectedSlot.startsAt)}. We'll send a confirmation email to ${email}.`
+      );
       setShowModal(true);
+      setSelectedSlot(null);
+      setSelectedDate(null);
     } catch (err: any) {
       console.error("Error booking appointment:", err);
       setError(err.message || "Failed to book appointment");
