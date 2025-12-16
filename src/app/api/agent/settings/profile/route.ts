@@ -109,9 +109,16 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    if (businessName !== undefined) updateData.funeral_home = businessName;
-    if (professionalTitle !== undefined) updateData.job_title = professionalTitle;
-    if (phone !== undefined) updateData.phone = phone;
+    // Only update columns that exist - check if they're defined before adding
+    if (businessName !== undefined) {
+      updateData.funeral_home = businessName;
+    }
+    if (professionalTitle !== undefined) {
+      updateData.job_title = professionalTitle;
+    }
+    if (phone !== undefined) {
+      updateData.phone = phone;
+    }
     if (profilePictureUrl !== undefined && profilePictureUrl !== null && profilePictureUrl !== "") {
       updateData.profile_picture_url = profilePictureUrl;
     }

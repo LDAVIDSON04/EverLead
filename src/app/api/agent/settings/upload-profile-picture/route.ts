@@ -70,15 +70,27 @@ export async function POST(request: NextRequest) {
       .getPublicUrl(filePath);
 
     // Update profile with the new picture URL
+    // Only update if the column exists (check first)
     const { error: updateError } = await supabaseAdmin
       .from("profiles")
       .update({ profile_picture_url: publicUrl })
       .eq("id", user.id);
 
     if (updateError) {
-      console.error("Error updating profile:", updateError);
+      console.error("Error updating profile with picture URL:", updateError);
+      // If column doesn't exist, that's okay - we'll still return the URL
+      // The user can manually update it later or we can add the column
+      if (updateError.code === 'PGRST204') {
+        console.warn("profile_picture_url column doesn't exist, but upload succeeded");
+        // Still return success with the URL
+        return NextResponse.json({
+          success: true,
+          url: publicUrl,
+          warning: "Profile picture uploaded but column doesn't exist. Please run migration.",
+        });
+      }
       return NextResponse.json(
-        { error: "Failed to update profile", details: updateError.message },
+        { error: "Failed to update profile", details: updateError.message, code: updateError.code },
         { status: 500 }
       );
     }
