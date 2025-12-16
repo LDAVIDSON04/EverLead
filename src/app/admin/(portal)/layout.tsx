@@ -136,8 +136,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           </ul>
         </nav>
 
-        {/* User Info */}
-        <div className="p-4 border-t border-neutral-800">
+        {/* User Info + Logout */}
+        <div className="p-4 border-t border-neutral-800 space-y-3">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-emerald-700 flex items-center justify-center text-sm text-white">
               {userName ? userName.charAt(0).toUpperCase() : <User className="w-4 h-4" />}
@@ -147,6 +147,15 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               <p className="text-xs text-neutral-400">admin@soradin.com</p>
             </div>
           </div>
+
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-neutral-900 px-3 py-2 text-sm text-neutral-100 hover:bg-neutral-800 transition-colors"
+          >
+            <XCircle className="w-4 h-4" />
+            <span>Log out</span>
+          </button>
         </div>
       </aside>
 
