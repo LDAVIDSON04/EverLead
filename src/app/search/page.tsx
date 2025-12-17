@@ -440,10 +440,10 @@ function SearchResults() {
           <div 
             className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto relative z-50"
             onClick={(e) => {
-              // NEVER stop propagation for buttons
+              // Don't interfere with Link components
               const target = e.target as HTMLElement;
-              if (target.tagName === 'BUTTON' || target.closest('button')) {
-                return; // Let button handle its own click
+              if (target.tagName === 'A' || target.closest('a')) {
+                return; // Let Link handle navigation
               }
               e.stopPropagation();
             }}
@@ -581,31 +581,27 @@ function SearchResults() {
                           }
                           
                           return (
-                            <button
+                            <Link
                               key={timeIdx}
-                              type="button"
-                              className={`px-4 py-2 rounded-md text-sm transition-colors ${
+                              href={bookingUrl || '#'}
+                              onClick={(e) => {
+                                // Close modal when link is clicked
+                                closeModal();
+                                // Let Next.js Link handle navigation naturally
+                              }}
+                              className={`px-4 py-2 rounded-md text-sm transition-colors inline-block text-center no-underline ${
                                 isSelected
                                   ? 'bg-green-600 text-white'
                                   : 'bg-green-100 text-black hover:bg-green-200'
                               }`}
                               style={{
-                                border: 'none',
-                                cursor: 'pointer',
-                                position: 'relative',
-                                zIndex: 99999,
-                                pointerEvents: 'auto'
-                              }}
-                              onMouseDown={(e) => {
-                                if (!bookingUrl) return;
-                                e.stopPropagation();
-                                e.preventDefault();
-                                console.log("NAVIGATING NOW:", bookingUrl);
-                                window.location.href = bookingUrl;
+                                textDecoration: 'none',
+                                display: 'inline-block',
+                                cursor: 'pointer'
                               }}
                             >
                               {timeSlot.time}
-                            </button>
+                            </Link>
                           );
                         })}
                       </div>
