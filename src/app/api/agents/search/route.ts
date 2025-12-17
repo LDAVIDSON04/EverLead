@@ -112,7 +112,7 @@ export async function GET(req: NextRequest) {
           return null;
         }
       })
-      .filter((agent): agent is AgentSearchResult => agent !== null);
+      .filter((agent: AgentSearchResult | null): agent is AgentSearchResult => agent !== null);
 
     console.log(`[AGENT SEARCH] ${agentsWithAvailability.length} agents with availability configured`);
 
