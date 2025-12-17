@@ -315,7 +315,7 @@ export default function AgentDashboardPage() {
         }
         
         // Fallback to defaults if no availability set
-        if (!availabilitySettings) {
+        if (!availabilitySettings || !profileData?.metadata?.availability) {
           setAvailabilitySettings({
             workingHours: "9 AM - 5 PM",
             slotLength: "30 minutes",

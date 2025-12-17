@@ -166,7 +166,7 @@ export default function SchedulePage() {
           }
           
           // Fallback to defaults if no availability set
-          if (!availabilityOverview) {
+          if (!availabilityOverview || !profileData?.metadata?.availability) {
             setAvailabilityOverview({
               workingHours: "9 AM - 5 PM",
               slotLength: "30 minutes",
