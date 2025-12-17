@@ -152,9 +152,7 @@ export async function POST(req: NextRequest) {
       leadId = newLead.id;
     }
 
-    // Create the appointment
-    const requestedDate = slotStart.toISOString().split("T")[0];
-    
+    // Create the appointment (requestedDate already defined above)
     const { data: appointment, error: appointmentError } = await supabaseAdmin
       .from("appointments")
       .insert({
