@@ -581,7 +581,9 @@ function SearchResults() {
                               onClick={(e) => {
                                 e.stopPropagation();
                                 console.log("Link clicked - navigating to:", bookingUrl);
+                                // Close modal and let Link handle navigation
                                 closeModal();
+                                // Don't prevent default - let Link navigate
                               }}
                               className={`px-4 py-2 rounded-md text-sm transition-colors cursor-pointer inline-block text-center no-underline ${
                                 isSelected
@@ -592,6 +594,7 @@ function SearchResults() {
                                 textDecoration: 'none',
                                 display: 'inline-block'
                               }}
+                              prefetch={false}
                             >
                               {timeSlot.time}
                             </Link>

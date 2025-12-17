@@ -161,15 +161,6 @@ function BookingStep1Content() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
-        <p className="text-gray-600">Loading...</p>
-      </div>
-    );
-  }
-
-  // Don't block rendering - show loading state instead
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
         <p className="text-gray-600">Loading booking information...</p>
       </div>
     );
