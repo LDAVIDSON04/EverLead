@@ -550,7 +550,7 @@ function SearchResults() {
                   return (
                     <div key={dayIdx} className="mb-6">
                       <p className="text-black mb-3 font-medium">{displayDate}</p>
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap gap-2" style={{ position: 'relative', zIndex: 1 }}>
                         {timeSlots.map((timeSlot, timeIdx) => {
                           const timeKey = `${day.date}-${timeSlot.time}`;
                           const isSelected = selectedTime === timeKey;
@@ -586,28 +586,34 @@ function SearchResults() {
                               key={timeIdx}
                               type="button"
                               onClick={(e) => {
+                                console.log("BUTTON CLICK EVENT FIRED");
                                 if (!bookingUrl) {
                                   alert("Error: Missing appointment data. Please try again.");
                                   return;
                                 }
                                 
-                                // Stop propagation to prevent modal from interfering
-                                if (e.stopPropagation) e.stopPropagation();
-                                if (e.preventDefault) e.preventDefault();
-                                
                                 console.log("=== TIME SLOT BUTTON CLICKED ===");
                                 console.log("Booking URL:", bookingUrl);
+                                console.log("Navigating NOW");
                                 
-                                // IMMEDIATELY navigate - no delays, no checks
+                                // Stop all propagation
+                                e.stopPropagation();
+                                e.preventDefault();
+                                
+                                // Navigate immediately
                                 window.location.href = bookingUrl;
                               }}
                               onMouseDown={(e) => {
-                                // Also handle mousedown to catch clicks early
+                                console.log("BUTTON MOUSEDOWN EVENT FIRED");
                                 if (!bookingUrl) return;
                                 e.stopPropagation();
-                                console.log("Mouse down on time slot button");
                               }}
-                              className={`px-4 py-2 rounded-md text-sm transition-colors cursor-pointer ${
+                              onMouseUp={(e) => {
+                                console.log("BUTTON MOUSEUP EVENT FIRED");
+                                if (!bookingUrl) return;
+                                e.stopPropagation();
+                              }}
+                              className={`px-4 py-2 rounded-md text-sm transition-colors ${
                                 isSelected
                                   ? 'bg-green-600 text-white'
                                   : 'bg-green-100 text-black hover:bg-green-200'
@@ -616,7 +622,10 @@ function SearchResults() {
                                 border: 'none',
                                 cursor: 'pointer',
                                 position: 'relative',
-                                zIndex: 99999
+                                zIndex: 999999,
+                                pointerEvents: 'auto',
+                                userSelect: 'none',
+                                WebkitUserSelect: 'none'
                               }}
                             >
                               {timeSlot.time}
