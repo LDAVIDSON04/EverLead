@@ -432,23 +432,18 @@ function SearchResults() {
         <div 
           className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
           onClick={(e) => {
-            // Only close if clicking the backdrop itself, not links
             if (e.target === e.currentTarget) {
-              const target = e.target as HTMLElement;
-              if (target.tagName !== 'A' && !target.closest('a')) {
-                closeModal();
-              }
+              closeModal();
             }
           }}
         >
           <div 
             className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto relative z-50"
             onClick={(e) => {
-              // Don't interfere with forms or buttons
+              // NEVER stop propagation for buttons
               const target = e.target as HTMLElement;
-              if (target.tagName === 'FORM' || target.closest('form') || 
-                  target.tagName === 'BUTTON' || target.closest('button')) {
-                return;
+              if (target.tagName === 'BUTTON' || target.closest('button')) {
+                return; // Let button handle its own click
               }
               e.stopPropagation();
             }}
@@ -586,42 +581,31 @@ function SearchResults() {
                           }
                           
                           return (
-                            <form
+                            <button
                               key={timeIdx}
-                              action={bookingUrl || '#'}
-                              method="get"
-                              style={{ display: 'inline-block', margin: 0, padding: 0 }}
-                              onSubmit={(e) => {
-                                if (!bookingUrl) {
-                                  e.preventDefault();
-                                  return;
-                                }
-                                // Don't prevent default - let form submit naturally
-                                // This will cause a full page navigation
+                              type="button"
+                              className={`px-4 py-2 rounded-md text-sm transition-colors ${
+                                isSelected
+                                  ? 'bg-green-600 text-white'
+                                  : 'bg-green-100 text-black hover:bg-green-200'
+                              }`}
+                              style={{
+                                border: 'none',
+                                cursor: 'pointer',
+                                position: 'relative',
+                                zIndex: 99999,
+                                pointerEvents: 'auto'
+                              }}
+                              onMouseDown={(e) => {
+                                if (!bookingUrl) return;
+                                e.stopPropagation();
+                                e.preventDefault();
+                                console.log("NAVIGATING NOW:", bookingUrl);
+                                window.location.href = bookingUrl;
                               }}
                             >
-                              <button
-                                type="submit"
-                                className={`px-4 py-2 rounded-md text-sm transition-colors ${
-                                  isSelected
-                                    ? 'bg-green-600 text-white'
-                                    : 'bg-green-100 text-black hover:bg-green-200'
-                                }`}
-                                style={{
-                                  border: 'none',
-                                  cursor: 'pointer',
-                                  position: 'relative',
-                                  zIndex: 10000
-                                }}
-                                onClick={(e) => {
-                                  // Stop propagation so modal doesn't interfere
-                                  e.stopPropagation();
-                                  // Don't prevent default - let form submit
-                                }}
-                              >
-                                {timeSlot.time}
-                              </button>
-                            </form>
+                              {timeSlot.time}
+                            </button>
                           );
                         })}
                       </div>
