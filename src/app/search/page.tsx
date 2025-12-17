@@ -586,16 +586,10 @@ function SearchResults() {
                             );
                           }
                           
-                          // Build full URL for absolute navigation
-                          const fullBookingUrl = bookingUrl 
-                            ? `${window.location.origin}${bookingUrl}`
-                            : '#';
-                          
                           return (
-                            <a
+                            <Link
                               key={timeIdx}
-                              href={fullBookingUrl}
-                              target="_self"
+                              href={bookingUrl || '#'}
                               className={`px-4 py-2 rounded-md text-sm transition-colors inline-block text-center no-underline ${
                                 isSelected
                                   ? 'bg-green-600 text-white'
@@ -604,13 +598,11 @@ function SearchResults() {
                               style={{
                                 textDecoration: 'none',
                                 display: 'inline-block',
-                                cursor: 'pointer',
-                                position: 'relative',
-                                zIndex: 10000
+                                cursor: 'pointer'
                               }}
                             >
                               {timeSlot.time}
-                            </a>
+                            </Link>
                           );
                         })}
                       </div>
