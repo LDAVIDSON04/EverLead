@@ -260,67 +260,10 @@ export default function AgentDashboardPage() {
 
         if (profileData?.metadata?.availability) {
           const availability = profileData.metadata.availability;
-          const locations = availability.locations || [];
-          const availabilityByLocation = availability.availabilityByLocation || {};
-          const appointmentLength = availability.appointmentLength || "30";
-          
-          // Get first location's schedule as default
-          if (locations.length > 0) {
-            const firstLocation = locations[0];
-            const locationSchedule = availabilityByLocation[firstLocation] || {};
-            
-            // Find common working hours across enabled days
-            const enabledDays = Object.keys(locationSchedule).filter(
-              (day) => locationSchedule[day]?.enabled
-            );
-            
-            if (enabledDays.length > 0) {
-              const times = enabledDays.map((day) => ({
-                start: locationSchedule[day].start,
-                end: locationSchedule[day].end,
-              }));
-              
-              // Find earliest start and latest end
-              const allStarts = times.map((t) => {
-                const [hours, minutes] = t.start.split(":").map(Number);
-                return hours * 60 + minutes;
-              });
-              const allEnds = times.map((t) => {
-                const [hours, minutes] = t.end.split(":").map(Number);
-                return hours * 60 + minutes;
-              });
-              
-              const earliestStart = Math.min(...allStarts);
-              const latestEnd = Math.max(...allEnds);
-              
-              const startHour = Math.floor(earliestStart / 60);
-              const startMin = earliestStart % 60;
-              const endHour = Math.floor(latestEnd / 60);
-              const endMin = latestEnd % 60;
-              
-              const formatTime = (hour: number, min: number) => {
-                const period = hour >= 12 ? "PM" : "AM";
-                const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
-                return `${displayHour}:${String(min).padStart(2, "0")} ${period}`;
-              };
-              
-              setAvailabilitySettings({
-                workingHours: `${formatTime(startHour, startMin)} - ${formatTime(endHour, endMin)}`,
-                slotLength: `${appointmentLength} minutes`,
-                bufferTime: "10 minutes", // Default, could be added to settings later
-                timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || "MST",
-              });
-            }
-          }
-        }
-        
-        // Fallback to defaults if no availability set
-        if (!availabilitySettings || !profileData?.metadata?.availability) {
           setAvailabilitySettings({
-            workingHours: "9 AM - 5 PM",
-            slotLength: "30 minutes",
-            bufferTime: "10 minutes",
-            timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || "MST",
+            locations: availability.locations || [],
+            availabilityByLocation: availability.availabilityByLocation || {},
+            appointmentLength: availability.appointmentLength || "30",
           });
         }
       } catch (err) {
@@ -362,10 +305,9 @@ export default function AgentDashboardPage() {
   ]);
   const [calendarAppointments, setCalendarAppointments] = useState<Record<number, number>>({});
   const [availabilitySettings, setAvailabilitySettings] = useState<{
-    workingHours: string;
-    slotLength: string;
-    bufferTime: string;
-    timeZone: string;
+    locations: string[];
+    availabilityByLocation: Record<string, any>;
+    appointmentLength: string;
   } | null>(null);
 
   if (loading) {
@@ -625,34 +567,85 @@ export default function AgentDashboardPage() {
             </div>
 
             {/* Availability Overview */}
-            {availabilitySettings && (
+            {availabilitySettings && availabilitySettings.locations.length > 0 ? (
+              <div className="bg-white rounded-xl border border-gray-200 p-5">
+                <h3 className="text-sm text-gray-900 mb-4 flex items-center gap-2">
+                  <Clock className="w-5 h-5" />
+                  Availability Overview
+                </h3>
+                <div className="space-y-4 text-sm">
+                  {/* Locations */}
+                  <div>
+                    <span className="text-gray-600 block mb-2">Locations</span>
+                    <div className="space-y-1">
+                      {availabilitySettings.locations.map((location, idx) => (
+                        <div key={idx} className="text-gray-900 font-medium">{location}</div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Schedule for first location */}
+                  {availabilitySettings.locations.length > 0 && (() => {
+                    const firstLocation = availabilitySettings.locations[0];
+                    const locationSchedule = availabilitySettings.availabilityByLocation[firstLocation] || {};
+                    const days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+                    const dayLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+                    const enabledDays = days.filter(day => locationSchedule[day]?.enabled);
+                    
+                    if (enabledDays.length > 0) {
+                      return (
+                        <div>
+                          <span className="text-gray-600 block mb-2">Schedule ({firstLocation})</span>
+                          <div className="space-y-1">
+                            {enabledDays.map((day, idx) => {
+                              const dayData = locationSchedule[day];
+                              const dayLabel = dayLabels[days.indexOf(day)];
+                              const formatTime = (timeStr: string) => {
+                                const [hours, minutes] = timeStr.split(":").map(Number);
+                                const period = hours >= 12 ? "PM" : "AM";
+                                const displayHour = hours > 12 ? hours - 12 : hours === 0 ? 12 : hours;
+                                return `${displayHour}:${String(minutes).padStart(2, "0")} ${period}`;
+                              };
+                              return (
+                                <div key={idx} className="text-gray-900">
+                                  {dayLabel}: {formatTime(dayData.start)} - {formatTime(dayData.end)}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
+
+                  {/* Appointment Length */}
+                  <div className="flex justify-between pt-2 border-t border-gray-100">
+                    <span className="text-gray-600">Appointment Length</span>
+                    <span className="text-gray-900 font-medium">{availabilitySettings.appointmentLength} minutes</span>
+                  </div>
+
+                  <Link
+                    href="/agent/settings"
+                    className="w-full mt-4 px-4 py-2 bg-white text-gray-700 rounded-lg border border-gray-200 hover:bg-gray-50 transition-all text-sm flex items-center justify-center"
+                  >
+                    Edit Availability
+                  </Link>
+                </div>
+              </div>
+            ) : (
               <div className="bg-white rounded-xl border border-gray-200 p-5">
                 <h3 className="text-sm text-gray-900 mb-4 flex items-center gap-2">
                   <Clock className="w-5 h-5" />
                   Availability Overview
                 </h3>
                 <div className="space-y-3 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Working Hours</span>
-                    <span className="text-gray-900">{availabilitySettings.workingHours}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Slot Length</span>
-                    <span className="text-gray-900">{availabilitySettings.slotLength}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Buffer Time</span>
-                    <span className="text-gray-900">{availabilitySettings.bufferTime}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Time Zone</span>
-                    <span className="text-gray-900">{availabilitySettings.timeZone}</span>
-                  </div>
+                  <p className="text-gray-500 text-xs">No availability set up yet</p>
                   <Link
                     href="/agent/settings"
                     className="w-full mt-4 px-4 py-2 bg-white text-gray-700 rounded-lg border border-gray-200 hover:bg-gray-50 transition-all text-sm flex items-center justify-center"
                   >
-                    Edit Settings
+                    Set Availability
                   </Link>
                 </div>
               </div>
