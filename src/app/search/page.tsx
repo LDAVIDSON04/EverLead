@@ -603,24 +603,15 @@ function SearchResults() {
                                 const fullUrl = window.location.origin + bookingUrl;
                                 console.log("Full URL:", fullUrl);
                                 
-                                // Try multiple navigation methods to ensure it works
-                                try {
-                                  // Method 1: window.location.assign (most reliable)
-                                  window.location.assign(fullUrl);
-                                  console.log("Used window.location.assign");
-                                } catch (err) {
-                                  console.error("assign failed, trying href:", err);
-                                  // Method 2: window.location.href (fallback)
-                                  window.location.href = fullUrl;
-                                }
+                                // Force navigation immediately - don't check if it worked
+                                // Just navigate and let the browser handle it
+                                console.log("Executing window.location.href =", fullUrl);
+                                window.location.href = fullUrl;
                                 
-                                // Method 3: If still not working after 100ms, force with replace
+                                // Also try assign as backup
                                 setTimeout(() => {
-                                  if (window.location.pathname !== bookingUrl.split('?')[0]) {
-                                    console.log("Navigation didn't work, forcing with replace");
-                                    window.location.replace(fullUrl);
-                                  }
-                                }, 100);
+                                  window.location.assign(fullUrl);
+                                }, 10);
                               }}
                               onMouseDown={(e) => {
                                 console.log("BUTTON MOUSEDOWN");
