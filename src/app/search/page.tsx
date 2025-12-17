@@ -595,24 +595,18 @@ function SearchResults() {
                                 console.log("=== TIME SLOT BUTTON CLICKED ===");
                                 console.log("Booking URL:", bookingUrl);
                                 
-                                // Stop all propagation
+                                // Stop propagation to prevent modal from closing
                                 e.stopPropagation();
-                                e.preventDefault();
                                 
-                                // Use window.location.replace - most forceful navigation
-                                // This replaces the current page in history and forces navigation
-                                console.log("Using window.location.replace for forced navigation");
+                                // DON'T prevent default - let the browser handle navigation naturally
+                                // Use window.location.replace which is most forceful
+                                console.log("Navigating with window.location.replace");
+                                
+                                // Close modal first
+                                closeModal();
+                                
+                                // Navigate immediately - use replace to force it
                                 window.location.replace(bookingUrl);
-                                
-                                // If that doesn't work immediately, try href as backup
-                                setTimeout(() => {
-                                  const currentPath = window.location.pathname;
-                                  const targetPath = bookingUrl.split('?')[0];
-                                  if (currentPath !== targetPath) {
-                                    console.log("Replace didn't work, trying href:", { currentPath, targetPath });
-                                    window.location.href = bookingUrl;
-                                  }
-                                }, 50);
                               }}
                               onMouseDown={(e) => {
                                 console.log("BUTTON MOUSEDOWN EVENT FIRED");
