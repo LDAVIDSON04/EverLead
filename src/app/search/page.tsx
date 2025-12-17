@@ -589,26 +589,22 @@ function SearchResults() {
                               key={timeIdx}
                               type="button"
                               onClick={(e) => {
-                                console.log("BUTTON CLICKED - bookingUrl:", bookingUrl);
-                                if (!bookingUrl) {
-                                  console.log("No bookingUrl, returning");
-                                  return;
-                                }
+                                if (!bookingUrl) return;
                                 
-                                // Stop propagation immediately
                                 e.stopPropagation();
                                 e.preventDefault();
                                 
-                                console.log("Navigating to:", bookingUrl);
+                                console.log("BUTTON CLICKED - Navigating to:", bookingUrl);
                                 
-                                // Close modal first
+                                // Close modal immediately
                                 closeModal();
                                 
-                                // Use replace which is more forceful - can't be blocked
-                                setTimeout(() => {
-                                  console.log("Executing window.location.replace");
-                                  window.location.replace(bookingUrl);
-                                }, 50);
+                                // Use full URL for absolute navigation
+                                const fullUrl = window.location.origin + bookingUrl;
+                                console.log("Full URL:", fullUrl);
+                                
+                                // Force immediate navigation - no delays
+                                window.location.href = fullUrl;
                               }}
                               onMouseDown={(e) => {
                                 console.log("BUTTON MOUSEDOWN");
