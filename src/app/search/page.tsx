@@ -585,43 +585,35 @@ function SearchResults() {
                           }
                           
                           return (
-                            <form
+                            <a
                               key={timeIdx}
-                              action={bookingUrl || '#'}
-                              method="get"
-                              style={{ display: 'inline-block', margin: 0, padding: 0 }}
-                              onSubmit={(e) => {
+                              href={bookingUrl || '#'}
+                              target="_self"
+                              rel="noopener noreferrer"
+                              onClick={(e) => {
                                 if (!bookingUrl) {
                                   e.preventDefault();
                                   return;
                                 }
-                                // Let form submit naturally - this will cause full page navigation
-                                console.log("FORM SUBMITTING to:", bookingUrl);
+                                e.stopPropagation();
+                                // Don't prevent default - let the link navigate
+                                console.log("LINK CLICKED - Navigating to:", bookingUrl);
+                              }}
+                              className={`px-4 py-2 rounded-md text-sm transition-colors inline-block text-center no-underline ${
+                                isSelected
+                                  ? 'bg-green-600 text-white'
+                                  : 'bg-green-100 text-black hover:bg-green-200'
+                              }`}
+                              style={{
+                                textDecoration: 'none',
+                                display: 'inline-block',
+                                cursor: 'pointer',
+                                position: 'relative',
+                                zIndex: 99999
                               }}
                             >
-                              <button
-                                type="submit"
-                                onClick={(e) => {
-                                  // Stop propagation so modal doesn't interfere
-                                  e.stopPropagation();
-                                  // Don't prevent default - let form submit
-                                }}
-                                className={`px-4 py-2 rounded-md text-sm transition-colors ${
-                                  isSelected
-                                    ? 'bg-green-600 text-white'
-                                    : 'bg-green-100 text-black hover:bg-green-200'
-                                }`}
-                                style={{
-                                  border: 'none',
-                                  cursor: 'pointer',
-                                  position: 'relative',
-                                  zIndex: 99999,
-                                  pointerEvents: 'auto'
-                                }}
-                              >
-                                {timeSlot.time}
-                              </button>
-                            </form>
+                              {timeSlot.time}
+                            </a>
                           );
                         })}
                       </div>
