@@ -432,19 +432,22 @@ function SearchResults() {
         <div 
           className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
           onClick={(e) => {
+            // Only close if clicking the backdrop itself, not buttons
             if (e.target === e.currentTarget) {
-              closeModal();
+              const target = e.target as HTMLElement;
+              if (target.tagName !== 'BUTTON' && !target.closest('button')) {
+                closeModal();
+              }
             }
           }}
         >
           <div 
             className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto relative z-50"
             onClick={(e) => {
-              // Don't interfere with ANY clicks inside the modal
-              // Let all events bubble naturally
+              // NEVER stop propagation for buttons - let them handle clicks
               const target = e.target as HTMLElement;
-              if (target.closest('a')) {
-                return; // Let Link handle navigation
+              if (target.tagName === 'BUTTON' || target.closest('button')) {
+                return; // Let button handle its own click
               }
               e.stopPropagation();
             }}
@@ -586,12 +589,24 @@ function SearchResults() {
                               key={timeIdx}
                               type="button"
                               onClick={(e) => {
-                                if (!bookingUrl) return;
+                                console.log("BUTTON CLICKED - bookingUrl:", bookingUrl);
+                                if (!bookingUrl) {
+                                  console.log("No bookingUrl, returning");
+                                  return;
+                                }
                                 
+                                // Stop propagation immediately
                                 e.stopPropagation();
+                                e.preventDefault();
                                 
-                                // Use router.push for navigation
-                                router.push(bookingUrl);
+                                console.log("Navigating to:", bookingUrl);
+                                
+                                // Force navigation with window.location
+                                window.location.href = bookingUrl;
+                              }}
+                              onMouseDown={(e) => {
+                                console.log("BUTTON MOUSEDOWN");
+                                e.stopPropagation();
                               }}
                               className={`px-4 py-2 rounded-md text-sm transition-colors ${
                                 isSelected
@@ -602,7 +617,8 @@ function SearchResults() {
                                 border: 'none',
                                 cursor: 'pointer',
                                 position: 'relative',
-                                zIndex: 10000
+                                zIndex: 99999,
+                                pointerEvents: 'auto'
                               }}
                             >
                               {timeSlot.time}
