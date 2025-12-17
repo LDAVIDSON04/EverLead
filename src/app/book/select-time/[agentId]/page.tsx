@@ -99,10 +99,11 @@ function SelectTimeContent() {
       date: day.date,
     });
     
-    // Navigate directly - use window.location for guaranteed navigation
+    // Navigate directly - force full page navigation
     const bookingUrl = `/book/step1/${agentId}?${params.toString()}`;
     console.log("Time slot clicked, navigating to:", bookingUrl);
-    window.location.href = bookingUrl;
+    // Use replace to ensure navigation happens immediately
+    window.location.replace(bookingUrl);
   };
 
   const formatDate = (dateStr: string): string => {
