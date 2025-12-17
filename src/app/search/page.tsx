@@ -432,20 +432,26 @@ function SearchResults() {
         <div 
           className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
           onClick={(e) => {
-            // Only close if clicking the backdrop itself
+            // Only close if clicking the backdrop itself, not links
             if (e.target === e.currentTarget) {
-              closeModal();
+              const target = e.target as HTMLElement;
+              if (target.tagName !== 'A' && !target.closest('a')) {
+                closeModal();
+              }
             }
           }}
         >
           <div 
             className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto relative z-50"
             onClick={(e) => {
-              // Only stop propagation if clicking the modal itself, not links
+              // NEVER stop propagation for links - let them navigate
               const target = e.target as HTMLElement;
-              if (target.tagName !== 'A' && !target.closest('a')) {
-                e.stopPropagation();
+              if (target.tagName === 'A' || target.closest('a')) {
+                // Let the link navigate - don't interfere
+                return;
               }
+              // Only stop propagation for non-link clicks
+              e.stopPropagation();
             }}
           >
             {/* Header */}
@@ -584,6 +590,13 @@ function SearchResults() {
                             <a
                               key={timeIdx}
                               href={bookingUrl || '#'}
+                              onClick={(e) => {
+                                // Force navigation - don't let anything stop it
+                                if (bookingUrl) {
+                                  e.stopPropagation();
+                                  window.location.href = bookingUrl;
+                                }
+                              }}
                               className={`px-4 py-2 rounded-md text-sm transition-colors inline-block text-center no-underline ${
                                 isSelected
                                   ? 'bg-green-600 text-white'
@@ -592,7 +605,9 @@ function SearchResults() {
                               style={{
                                 textDecoration: 'none',
                                 display: 'inline-block',
-                                cursor: 'pointer'
+                                cursor: 'pointer',
+                                position: 'relative',
+                                zIndex: 10000
                               }}
                             >
                               {timeSlot.time}
