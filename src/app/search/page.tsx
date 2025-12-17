@@ -524,21 +524,21 @@ function SearchResults() {
                           return (
                             <button
                               key={timeIdx}
-                              onClick={() => {
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
                                 setSelectedTime(timeKey);
                                 // Navigate to Step 1 booking page when time is selected
-                                if (agentId) {
+                                if (agentId && timeSlot.startsAt && timeSlot.endsAt) {
                                   const params = new URLSearchParams({
                                     startsAt: timeSlot.startsAt,
                                     endsAt: timeSlot.endsAt,
                                     date: day.date,
                                   });
-                                  setTimeout(() => {
-                                    window.location.href = `/book/step1/${agentId}?${params.toString()}`;
-                                  }, 300);
+                                  window.location.href = `/book/step1/${agentId}?${params.toString()}`;
                                 }
                               }}
-                              className={`px-4 py-2 rounded-md text-sm transition-colors ${
+                              className={`px-4 py-2 rounded-md text-sm transition-colors cursor-pointer ${
                                 isSelected
                                   ? 'bg-green-600 text-white'
                                   : 'bg-green-100 text-black hover:bg-green-200'
