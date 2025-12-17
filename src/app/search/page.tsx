@@ -575,15 +575,14 @@ function SearchResults() {
                           }
                           
                           return (
-                            <Link
+                            <a
                               key={timeIdx}
                               href={bookingUrl}
                               onClick={(e) => {
                                 e.stopPropagation();
-                                console.log("Link clicked - navigating to:", bookingUrl);
-                                // Close modal and let Link handle navigation
+                                console.log("Time slot link clicked - navigating to:", bookingUrl);
                                 closeModal();
-                                // Don't prevent default - let Link navigate
+                                // Let the browser handle navigation naturally
                               }}
                               className={`px-4 py-2 rounded-md text-sm transition-colors cursor-pointer inline-block text-center no-underline ${
                                 isSelected
@@ -594,10 +593,9 @@ function SearchResults() {
                                 textDecoration: 'none',
                                 display: 'inline-block'
                               }}
-                              prefetch={false}
                             >
                               {timeSlot.time}
-                            </Link>
+                            </a>
                           );
                         })}
                       </div>
