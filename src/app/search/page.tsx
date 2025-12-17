@@ -232,55 +232,36 @@ function SearchResults() {
   const handleMoreButtonClick = async (appointment: Appointment, index: number) => {
     if (!appointment.agent?.id) return;
     
-    // Find the first available day from the calendar
-    const availability = generateAvailability(appointment);
-    const firstAvailableSlot = availability.find(slot => slot.spots > 0);
+    // Open modal and load availability
+    setSelectedAppointment(appointment);
+    setSelectedAppointmentIndex(index);
+    setShowMoreAvailability(true);
+    setShowMoreWeeks(false);
     
-    if (firstAvailableSlot) {
-      // Open modal with the first available day
-      await handleDayClick(appointment, firstAvailableSlot, index);
-    } else {
-      // If no available days, still open modal but load availability
-      setSelectedAppointment(appointment);
-      setSelectedAppointmentIndex(index);
-      setShowMoreAvailability(true);
-      setShowMoreWeeks(false);
-      
-      const agentId = appointment.agent.id;
-      if (!agentAvailability[agentId]) {
-        try {
-          const today = new Date();
-          const startDate = today.toISOString().split("T")[0];
-          const endDate = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
-          
-          const res = await fetch(
-            `/api/agents/availability?agentId=${agentId}&startDate=${startDate}&endDate=${endDate}`
-          );
-          
-          if (res.ok) {
-            const availabilityData: AvailabilityDay[] = await res.json();
-            setAgentAvailability((prev) => ({
-              ...prev,
-              [agentId]: availabilityData,
-            }));
-            setAvailabilityDaysToShow((prev) => ({
-              ...prev,
-              [agentId]: 7,
-            }));
-            
-            // Set the first available day as selected
-            if (availabilityData.length > 0 && availabilityData[0].slots.length > 0) {
-              const firstDay = availabilityData[0];
-              const date = new Date(firstDay.date + "T00:00:00");
-              const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
-              const monthName = date.toLocaleDateString('en-US', { month: 'short' });
-              const dayNum = date.getDate();
-              setSelectedDate(`${dayName}\n${monthName} ${dayNum}`);
-            }
-          }
-        } catch (err) {
-          console.error("Error loading availability:", err);
+    const agentId = appointment.agent.id;
+    if (!agentAvailability[agentId]) {
+      try {
+        const today = new Date();
+        const startDate = today.toISOString().split("T")[0];
+        const endDate = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+        
+        const res = await fetch(
+          `/api/agents/availability?agentId=${agentId}&startDate=${startDate}&endDate=${endDate}`
+        );
+        
+        if (res.ok) {
+          const availabilityData: AvailabilityDay[] = await res.json();
+          setAgentAvailability((prev) => ({
+            ...prev,
+            [agentId]: availabilityData,
+          }));
+          setAvailabilityDaysToShow((prev) => ({
+            ...prev,
+            [agentId]: 7,
+          }));
         }
+      } catch (err) {
+        console.error("Error loading availability:", err);
       }
     }
   };
@@ -390,6 +371,26 @@ function SearchResults() {
     setShowMoreWeeks(false);
   };
 
+  // Test function to verify clicks are working
+  const handleTimeSlotClick = (agentId: string, timeSlot: any, dayDate: string) => {
+    console.log("handleTimeSlotClick called:", { agentId, timeSlot, dayDate });
+    
+    if (!agentId || !timeSlot?.startsAt || !timeSlot?.endsAt || !dayDate) {
+      console.error("Missing required data for navigation:", { agentId, startsAt: timeSlot?.startsAt, endsAt: timeSlot?.endsAt, date: dayDate });
+      alert("Error: Missing appointment data. Please try again.");
+      return;
+    }
+    
+    const params = new URLSearchParams({
+      startsAt: timeSlot.startsAt,
+      endsAt: timeSlot.endsAt,
+      date: dayDate,
+    });
+    const url = `/book/step1/${agentId}?${params.toString()}`;
+    console.log("Navigating to:", url);
+    window.location.href = url;
+  };
+
   const filters = [
     { icon: Calendar, label: "I'm flexible" },
     { icon: Clock, label: "Time of day" },
@@ -408,7 +409,7 @@ function SearchResults() {
   return (
     <div className="min-h-screen bg-white">
       {/* Appointment Booking Modal */}
-      {selectedAppointment && selectedDate && (
+      {selectedAppointment && (
         <div 
           className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
           onClick={closeModal}
@@ -529,34 +530,17 @@ function SearchResults() {
                               onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
-                                console.log("Time slot clicked:", { agentId, timeSlot, day: day.date });
-                                
-                                // Navigate to Step 1 booking page when time is selected
-                                if (agentId && timeSlot.startsAt && timeSlot.endsAt && day.date) {
-                                  const params = new URLSearchParams({
-                                    startsAt: timeSlot.startsAt,
-                                    endsAt: timeSlot.endsAt,
-                                    date: day.date,
-                                  });
-                                  const url = `/book/step1/${agentId}?${params.toString()}`;
-                                  console.log("Navigating to:", url);
-                                  // Use window.location for immediate navigation
-                                  window.location.href = url;
-                                } else {
-                                  console.error("Missing required data:", { 
-                                    agentId, 
-                                    startsAt: timeSlot.startsAt, 
-                                    endsAt: timeSlot.endsAt, 
-                                    date: day.date,
-                                    timeSlot: timeSlot
-                                  });
-                                }
+                                handleTimeSlotClick(agentId, timeSlot, day.date);
                               }}
-                              className={`px-4 py-2 rounded-md text-sm transition-colors cursor-pointer ${
+                              onMouseDown={(e) => {
+                                e.stopPropagation();
+                              }}
+                              className={`px-4 py-2 rounded-md text-sm transition-colors cursor-pointer z-10 relative ${
                                 isSelected
                                   ? 'bg-green-600 text-white'
                                   : 'bg-green-100 text-black hover:bg-green-200'
                               }`}
+                              style={{ pointerEvents: 'auto' }}
                             >
                               {timeSlot.time}
                             </button>
