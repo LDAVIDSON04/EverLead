@@ -581,10 +581,11 @@ function SearchResults() {
                           }
                           
                           return (
-                            <a
+                            <form
                               key={timeIdx}
-                              href={bookingUrl || '#'}
-                              onClick={(e) => {
+                              action={bookingUrl || '#'}
+                              method="get"
+                              onSubmit={(e) => {
                                 if (!bookingUrl) {
                                   e.preventDefault();
                                   e.stopPropagation();
@@ -592,44 +593,67 @@ function SearchResults() {
                                   return false;
                                 }
                                 
-                                // CRITICAL: Stop all event propagation immediately
+                                // Stop propagation
+                                e.stopPropagation();
+                                
+                                console.log("=== TIME SLOT FORM SUBMITTED ===");
+                                console.log("Booking URL:", bookingUrl);
+                                
+                                // Navigate immediately
+                                window.location.href = bookingUrl;
+                                
+                                // Prevent default form submission since we're handling it
+                                e.preventDefault();
+                                return false;
+                              }}
+                              onClick={(e) => {
+                                if (!bookingUrl) {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  return false;
+                                }
+                                
+                                // Stop all propagation
                                 e.stopPropagation();
                                 e.preventDefault();
                                 
                                 console.log("=== TIME SLOT CLICKED ===");
                                 console.log("Booking URL:", bookingUrl);
-                                console.log("Agent ID:", agentId);
-                                console.log("Date:", day.date);
-                                console.log("Starts At:", timeSlot.startsAt);
-                                console.log("Ends At:", timeSlot.endsAt);
                                 
-                                // IMMEDIATELY navigate - use replace to force navigation
-                                // This will navigate away from the current page
-                                console.log("NAVIGATING NOW - window.location.replace");
-                                window.location.replace(bookingUrl);
+                                // IMMEDIATELY navigate - synchronous, no delays
+                                console.log("NAVIGATING NOW - window.location.href");
+                                window.location.href = bookingUrl;
                                 
-                                // Return false to prevent any other handlers
                                 return false;
                               }}
-                              onMouseDown={(e) => {
-                                // Also stop on mouse down to prevent any interference
-                                e.stopPropagation();
-                              }}
-                              className={`px-4 py-2 rounded-md text-sm transition-colors cursor-pointer inline-block text-center no-underline ${
-                                isSelected
-                                  ? 'bg-green-600 text-white'
-                                  : 'bg-green-100 text-black hover:bg-green-200'
-                              }`}
                               style={{
-                                textDecoration: 'none',
                                 display: 'inline-block',
-                                position: 'relative',
-                                zIndex: 10000,
-                                pointerEvents: 'auto'
+                                margin: 0,
+                                padding: 0
                               }}
                             >
-                              {timeSlot.time}
-                            </a>
+                              <button
+                                type="submit"
+                                className={`px-4 py-2 rounded-md text-sm transition-colors cursor-pointer inline-block text-center ${
+                                  isSelected
+                                    ? 'bg-green-600 text-white'
+                                    : 'bg-green-100 text-black hover:bg-green-200'
+                                }`}
+                                style={{
+                                  border: 'none',
+                                  position: 'relative',
+                                  zIndex: 10000,
+                                  pointerEvents: 'auto',
+                                  width: '100%'
+                                }}
+                                onClick={(e) => {
+                                  // Stop propagation on button too
+                                  e.stopPropagation();
+                                }}
+                              >
+                                {timeSlot.time}
+                              </button>
+                            </form>
                           );
                         })}
                       </div>
