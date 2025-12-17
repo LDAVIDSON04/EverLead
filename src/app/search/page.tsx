@@ -403,19 +403,21 @@ function SearchResults() {
                         targetDate.setMonth(today.getMonth() + 1);
                       }
                       const dateStr = targetDate.toISOString().split("T")[0];
-                      const key = `${agentId}-${dateStr}`;
-                      const realSlots = agentAvailability[key];
-                      
-                      if (realSlots && realSlots.length > 0) {
-                        // Convert real slots to time strings
-                        timeSlots = realSlots.map((slot) => {
-                          const date = new Date(slot.startsAt);
-                          const hours = date.getUTCHours();
-                          const minutes = date.getUTCMinutes();
-                          const ampm = hours >= 12 ? "PM" : "AM";
-                          const displayHours = hours % 12 || 12;
-                          return `${displayHours}:${String(minutes).padStart(2, "0")} ${ampm}`;
-                        });
+                      // Get availability for this agent
+                      const agentAvailabilityData = agentAvailability[agentId];
+                      if (agentAvailabilityData) {
+                        const dayData = agentAvailabilityData.find((day) => day.date === dateStr);
+                        if (dayData && dayData.slots.length > 0) {
+                          // Convert real slots to time strings
+                          timeSlots = dayData.slots.map((slot) => {
+                            const date = new Date(slot.startsAt);
+                            const hours = date.getUTCHours();
+                            const minutes = date.getUTCMinutes();
+                            const ampm = hours >= 12 ? "PM" : "AM";
+                            const displayHours = hours % 12 || 12;
+                            return `${displayHours}:${String(minutes).padStart(2, "0")} ${ampm}`;
+                          });
+                        }
                       }
                     }
                   }
