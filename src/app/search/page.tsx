@@ -268,14 +268,11 @@ function SearchResults() {
           
           if (res.ok) {
             const availabilityData: AvailabilityDay[] = await res.json();
-            const dayData = availabilityData.find((day) => day.date === dateStr);
-            if (dayData) {
-              // Store the availability data for this agent
-              setAgentAvailability((prev) => ({
-                ...prev,
-                [agentId]: availabilityData,
-              }));
-            }
+            // Store the full availability data for this agent
+            setAgentAvailability((prev) => ({
+              ...prev,
+              [agentId]: availabilityData,
+            }));
           }
         }
       } catch (err) {
