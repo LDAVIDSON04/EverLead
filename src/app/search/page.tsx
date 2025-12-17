@@ -539,48 +539,52 @@ function SearchResults() {
                   return (
                     <div key={dayIdx} className="mb-6">
                       <p className="text-black mb-3 font-medium">{displayDate}</p>
-                      <div 
-                        className="flex flex-wrap gap-2" 
-                        onClick={(e) => e.stopPropagation()}
-                        onMouseDown={(e) => e.stopPropagation()}
-                        style={{ pointerEvents: 'auto', position: 'relative', zIndex: 100 }}
-                      >
+                      <div className="flex flex-wrap gap-2">
                         {timeSlots.map((timeSlot, timeIdx) => {
                           const timeKey = `${day.date}-${timeSlot.time}`;
                           const isSelected = selectedTime === timeKey;
+                          
+                          // Build the navigation URL
+                          const buildBookingUrl = () => {
+                            if (!agentId || !timeSlot.startsAt || !timeSlot.endsAt || !day.date) {
+                              console.error("Cannot build URL - missing data:", { agentId, startsAt: timeSlot.startsAt, endsAt: timeSlot.endsAt, date: day.date });
+                              return null;
+                            }
+                            const params = new URLSearchParams({
+                              startsAt: timeSlot.startsAt,
+                              endsAt: timeSlot.endsAt,
+                              date: day.date,
+                            });
+                            return `/book/step1/${agentId}?${params.toString()}`;
+                          };
+                          
+                          const bookingUrl = buildBookingUrl();
+                          
                           return (
-                            <button
+                            <Link
                               key={timeIdx}
-                              type="button"
+                              href={bookingUrl || '#'}
                               onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                console.log("Button clicked directly:", { agentId, timeSlot, dayDate: day.date });
-                                handleTimeSlotClick(agentId, timeSlot, day.date);
+                                if (!bookingUrl) {
+                                  e.preventDefault();
+                                  alert("Error: Missing appointment data. Please try again.");
+                                  return;
+                                }
+                                console.log("Link clicked - navigating to:", bookingUrl);
+                                // Let the Link handle navigation naturally
                               }}
-                              onMouseDown={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                console.log("Mouse down on button");
-                              }}
-                              onMouseUp={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                              }}
-                              className={`px-4 py-2 rounded-md text-sm transition-colors cursor-pointer ${
+                              className={`px-4 py-2 rounded-md text-sm transition-colors cursor-pointer inline-block text-center no-underline ${
                                 isSelected
                                   ? 'bg-green-600 text-white'
                                   : 'bg-green-100 text-black hover:bg-green-200'
                               }`}
                               style={{ 
-                                pointerEvents: 'auto', 
-                                position: 'relative', 
-                                zIndex: 101,
-                                cursor: 'pointer'
+                                textDecoration: 'none',
+                                display: 'inline-block'
                               }}
                             >
                               {timeSlot.time}
-                            </button>
+                            </Link>
                           );
                         })}
                       </div>
