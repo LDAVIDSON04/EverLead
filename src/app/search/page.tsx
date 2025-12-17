@@ -596,22 +596,13 @@ function SearchResults() {
                                 
                                 console.log("BUTTON CLICKED - Navigating to:", bookingUrl);
                                 
-                                // Close modal immediately
-                                closeModal();
-                                
+                                // DON'T close modal - let navigation happen first
                                 // Use full URL for absolute navigation
                                 const fullUrl = window.location.origin + bookingUrl;
                                 console.log("Full URL:", fullUrl);
                                 
-                                // Force navigation immediately - don't check if it worked
-                                // Just navigate and let the browser handle it
-                                console.log("Executing window.location.href =", fullUrl);
+                                // Navigate immediately - don't let anything interfere
                                 window.location.href = fullUrl;
-                                
-                                // Also try assign as backup
-                                setTimeout(() => {
-                                  window.location.assign(fullUrl);
-                                }, 10);
                               }}
                               onMouseDown={(e) => {
                                 console.log("BUTTON MOUSEDOWN");
