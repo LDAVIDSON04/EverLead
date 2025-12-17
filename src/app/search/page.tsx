@@ -371,24 +371,43 @@ function SearchResults() {
     setShowMoreWeeks(false);
   };
 
-  // Test function to verify clicks are working
+  // Handle time slot click - navigate to Step 1 booking page
   const handleTimeSlotClick = (agentId: string | undefined, timeSlot: any, dayDate: string) => {
     console.log("handleTimeSlotClick called:", { agentId, timeSlot, dayDate });
     
-    if (!agentId || !timeSlot?.startsAt || !timeSlot?.endsAt || !dayDate) {
-      console.error("Missing required data for navigation:", { agentId, startsAt: timeSlot?.startsAt, endsAt: timeSlot?.endsAt, date: dayDate });
-      alert("Error: Missing appointment data. Please try again.");
+    if (!agentId) {
+      console.error("Missing agentId");
+      alert("Error: Agent information is missing. Please try again.");
       return;
     }
     
-    const params = new URLSearchParams({
-      startsAt: timeSlot.startsAt,
-      endsAt: timeSlot.endsAt,
-      date: dayDate,
-    });
-    const url = `/book/step1/${agentId}?${params.toString()}`;
-    console.log("Navigating to:", url);
-    window.location.href = url;
+    if (!timeSlot?.startsAt || !timeSlot?.endsAt) {
+      console.error("Missing time slot data:", { startsAt: timeSlot?.startsAt, endsAt: timeSlot?.endsAt });
+      alert("Error: Time slot information is missing. Please try again.");
+      return;
+    }
+    
+    if (!dayDate) {
+      console.error("Missing date");
+      alert("Error: Date information is missing. Please try again.");
+      return;
+    }
+    
+    try {
+      const params = new URLSearchParams({
+        startsAt: timeSlot.startsAt,
+        endsAt: timeSlot.endsAt,
+        date: dayDate,
+      });
+      const url = `/book/step1/${agentId}?${params.toString()}`;
+      console.log("Navigating to:", url);
+      
+      // Force navigation immediately
+      window.location.href = url;
+    } catch (error) {
+      console.error("Error navigating:", error);
+      alert("Error navigating to booking page. Please try again.");
+    }
   };
 
   const filters = [
@@ -415,8 +434,9 @@ function SearchResults() {
           onClick={closeModal}
         >
           <div 
-            className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+            className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto relative z-50"
             onClick={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
           >
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-200">
@@ -519,7 +539,12 @@ function SearchResults() {
                   return (
                     <div key={dayIdx} className="mb-6">
                       <p className="text-black mb-3 font-medium">{displayDate}</p>
-                      <div className="flex flex-wrap gap-2" onClick={(e) => e.stopPropagation()}>
+                      <div 
+                        className="flex flex-wrap gap-2" 
+                        onClick={(e) => e.stopPropagation()}
+                        onMouseDown={(e) => e.stopPropagation()}
+                        style={{ pointerEvents: 'auto', position: 'relative', zIndex: 100 }}
+                      >
                         {timeSlots.map((timeSlot, timeIdx) => {
                           const timeKey = `${day.date}-${timeSlot.time}`;
                           const isSelected = selectedTime === timeKey;
@@ -530,17 +555,29 @@ function SearchResults() {
                               onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
+                                console.log("Button clicked directly:", { agentId, timeSlot, dayDate: day.date });
                                 handleTimeSlotClick(agentId, timeSlot, day.date);
                               }}
                               onMouseDown={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                console.log("Mouse down on button");
+                              }}
+                              onMouseUp={(e) => {
+                                e.preventDefault();
                                 e.stopPropagation();
                               }}
-                              className={`px-4 py-2 rounded-md text-sm transition-colors cursor-pointer z-10 relative ${
+                              className={`px-4 py-2 rounded-md text-sm transition-colors cursor-pointer ${
                                 isSelected
                                   ? 'bg-green-600 text-white'
                                   : 'bg-green-100 text-black hover:bg-green-200'
                               }`}
-                              style={{ pointerEvents: 'auto' }}
+                              style={{ 
+                                pointerEvents: 'auto', 
+                                position: 'relative', 
+                                zIndex: 101,
+                                cursor: 'pointer'
+                              }}
                             >
                               {timeSlot.time}
                             </button>
