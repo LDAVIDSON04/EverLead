@@ -518,7 +518,7 @@ function SearchResults() {
                   return (
                     <div key={dayIdx} className="mb-6">
                       <p className="text-black mb-3 font-medium">{displayDate}</p>
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap gap-2" onClick={(e) => e.stopPropagation()}>
                         {timeSlots.map((timeSlot, timeIdx) => {
                           const timeKey = `${day.date}-${timeSlot.time}`;
                           const isSelected = selectedTime === timeKey;
@@ -530,7 +530,7 @@ function SearchResults() {
                                 e.preventDefault();
                                 e.stopPropagation();
                                 console.log("Time slot clicked:", { agentId, timeSlot, day: day.date });
-                                setSelectedTime(timeKey);
+                                
                                 // Navigate to Step 1 booking page when time is selected
                                 if (agentId && timeSlot.startsAt && timeSlot.endsAt && day.date) {
                                   const params = new URLSearchParams({
@@ -540,9 +540,16 @@ function SearchResults() {
                                   });
                                   const url = `/book/step1/${agentId}?${params.toString()}`;
                                   console.log("Navigating to:", url);
-                                  router.push(url);
+                                  // Use window.location for immediate navigation
+                                  window.location.href = url;
                                 } else {
-                                  console.error("Missing required data:", { agentId, startsAt: timeSlot.startsAt, endsAt: timeSlot.endsAt, date: day.date });
+                                  console.error("Missing required data:", { 
+                                    agentId, 
+                                    startsAt: timeSlot.startsAt, 
+                                    endsAt: timeSlot.endsAt, 
+                                    date: day.date,
+                                    timeSlot: timeSlot
+                                  });
                                 }
                               }}
                               className={`px-4 py-2 rounded-md text-sm transition-colors cursor-pointer ${
