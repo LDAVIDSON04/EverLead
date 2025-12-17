@@ -43,7 +43,10 @@ function BookingStep1Content() {
   // Fetch agent info
   useEffect(() => {
     async function loadAgent() {
-      if (!agentId) return;
+      if (!agentId) {
+        setIsLoading(false);
+        return;
+      }
       
       try {
         const { data, error } = await supabaseClient
@@ -55,6 +58,7 @@ function BookingStep1Content() {
 
         if (error) {
           console.error("Error loading agent:", error);
+          // Still set loading to false so page can render
         } else if (data) {
           setAgentInfo(data);
         }
