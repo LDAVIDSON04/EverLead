@@ -588,17 +588,6 @@ function SearchResults() {
                             <a
                               key={timeIdx}
                               href={bookingUrl || '#'}
-                              target="_self"
-                              rel="noopener noreferrer"
-                              onClick={(e) => {
-                                if (!bookingUrl) {
-                                  e.preventDefault();
-                                  return;
-                                }
-                                e.stopPropagation();
-                                // Don't prevent default - let the link navigate
-                                console.log("LINK CLICKED - Navigating to:", bookingUrl);
-                              }}
                               className={`px-4 py-2 rounded-md text-sm transition-colors inline-block text-center no-underline ${
                                 isSelected
                                   ? 'bg-green-600 text-white'
@@ -607,9 +596,7 @@ function SearchResults() {
                               style={{
                                 textDecoration: 'none',
                                 display: 'inline-block',
-                                cursor: 'pointer',
-                                position: 'relative',
-                                zIndex: 99999
+                                cursor: 'pointer'
                               }}
                             >
                               {timeSlot.time}
