@@ -585,23 +585,27 @@ function SearchResults() {
                             <button
                               key={timeIdx}
                               type="button"
+                              onMouseDown={(e) => {
+                                if (!bookingUrl) return;
+                                
+                                e.stopPropagation();
+                                e.preventDefault();
+                                
+                                console.log("MOUSEDOWN - Navigating to:", bookingUrl);
+                                
+                                // Navigate immediately on mousedown
+                                window.location.href = bookingUrl;
+                              }}
                               onClick={(e) => {
                                 if (!bookingUrl) return;
                                 
                                 e.stopPropagation();
+                                e.preventDefault();
                                 
-                                // Use replace - most forceful navigation method
-                                window.location.replace(bookingUrl);
-                              }}
-                              onMouseDown={(e) => {
-                                console.log("BUTTON MOUSEDOWN EVENT FIRED");
-                                if (!bookingUrl) return;
-                                e.stopPropagation();
-                              }}
-                              onMouseUp={(e) => {
-                                console.log("BUTTON MOUSEUP EVENT FIRED");
-                                if (!bookingUrl) return;
-                                e.stopPropagation();
+                                console.log("CLICK - Navigating to:", bookingUrl);
+                                
+                                // Navigate on click as backup
+                                window.location.href = bookingUrl;
                               }}
                               className={`px-4 py-2 rounded-md text-sm transition-colors ${
                                 isSelected
