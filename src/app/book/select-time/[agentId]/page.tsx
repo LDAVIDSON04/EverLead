@@ -99,8 +99,10 @@ function SelectTimeContent() {
       date: day.date,
     });
     
-    // Navigate directly - no modal, no complexity
-    router.push(`/book/step1/${agentId}?${params.toString()}`);
+    // Navigate directly - use window.location for guaranteed navigation
+    const bookingUrl = `/book/step1/${agentId}?${params.toString()}`;
+    console.log("Time slot clicked, navigating to:", bookingUrl);
+    window.location.href = bookingUrl;
   };
 
   const formatDate = (dateStr: string): string => {

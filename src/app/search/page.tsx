@@ -254,9 +254,10 @@ function SearchResults() {
   const handleDayClick = (appointment: Appointment, slot: AvailabilitySlot, index: number) => {
     console.log("Day clicked:", { spots: slot.spots, agentId: appointment.agent?.id });
     if (slot.spots > 0 && appointment.agent?.id) {
-      // Navigate directly to the booking page - no modal!
-      console.log("Navigating to:", `/book/select-time/${appointment.agent.id}`);
-      router.push(`/book/select-time/${appointment.agent.id}`);
+      // Navigate directly to the booking page - use window.location for guaranteed navigation
+      const bookingUrl = `/book/select-time/${appointment.agent.id}`;
+      console.log("Navigating to:", bookingUrl);
+      window.location.href = bookingUrl;
     } else {
       console.log("Cannot navigate - missing spots or agent ID");
     }
