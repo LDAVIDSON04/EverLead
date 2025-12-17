@@ -587,27 +587,32 @@ function SearchResults() {
                           }
                           
                           return (
-                            <Link
+                            <button
                               key={timeIdx}
-                              href={bookingUrl || '#'}
+                              type="button"
                               onClick={(e) => {
-                                // Close modal when link is clicked
+                                if (!bookingUrl) return;
+                                
+                                e.stopPropagation();
+                                
+                                // Close modal first
                                 closeModal();
-                                // Let Next.js Link handle navigation
+                                
+                                // Use router.push for navigation
+                                router.push(bookingUrl);
                               }}
-                              className={`px-4 py-2 rounded-md text-sm transition-colors inline-block text-center no-underline ${
+                              className={`px-4 py-2 rounded-md text-sm transition-colors ${
                                 isSelected
                                   ? 'bg-green-600 text-white'
                                   : 'bg-green-100 text-black hover:bg-green-200'
                               }`}
                               style={{
-                                textDecoration: 'none',
-                                display: 'inline-block',
+                                border: 'none',
                                 cursor: 'pointer'
                               }}
                             >
                               {timeSlot.time}
-                            </Link>
+                            </button>
                           );
                         })}
                       </div>
