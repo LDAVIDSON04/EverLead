@@ -84,6 +84,13 @@ function SearchResults() {
   const [agentAvailability, setAgentAvailability] = useState<Record<string, AvailabilityDay[]>>({});
   const [availabilityDaysToShow, setAvailabilityDaysToShow] = useState<Record<string, number>>({});
   const [calendarDaysToShow, setCalendarDaysToShow] = useState<Record<string, number>>({});
+  
+  // Time slot modal state
+  const [showTimeSlotModal, setShowTimeSlotModal] = useState(false);
+  const [selectedDayForModal, setSelectedDayForModal] = useState<string | null>(null);
+  const [selectedAgentIdForModal, setSelectedAgentIdForModal] = useState<string | null>(null);
+  const [dayTimeSlots, setDayTimeSlots] = useState<{ time: string; startsAt: string; endsAt: string; available: boolean }[]>([]);
+  const [loadingTimeSlots, setLoadingTimeSlots] = useState(false);
 
   // Sync state with URL params when they change
   useEffect(() => {
@@ -251,25 +258,103 @@ function SearchResults() {
     return times.filter(() => Math.random() > 0.25);
   };
 
-  const handleDayClick = (e: React.MouseEvent, appointment: Appointment, slot: AvailabilitySlot, index: number) => {
+  const handleDayClick = async (e: React.MouseEvent, appointment: Appointment, slot: AvailabilitySlot, index: number) => {
     e.preventDefault();
     e.stopPropagation();
     
-    console.log("Day clicked:", { spots: slot.spots, agentId: appointment.agent?.id });
-    if (slot.spots > 0 && appointment.agent?.id) {
-      // Navigate directly to the booking page - use absolute URL with window.location
-      const bookingUrl = `${window.location.origin}/book/select-time/${appointment.agent.id}`;
-      console.log("Navigating to:", bookingUrl);
-      // Force immediate navigation - try multiple methods
-      try {
-        window.location.href = bookingUrl;
-      } catch (err) {
-        console.error("Navigation error:", err);
-        window.location.replace(bookingUrl);
-      }
-    } else {
-      console.log("Cannot navigate - missing spots or agent ID");
+    if (!slot.spots || slot.spots === 0 || !appointment.agent?.id) {
+      return;
     }
+
+    const agentId = appointment.agent.id;
+    const dayDate = slot.date.split('\n')[1]; // Extract date from "Wed\nDec 17" format
+    
+    // Parse the date to get YYYY-MM-DD format
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    const dateMatch = dayDate.match(/(\w+)\s+(\d+)/);
+    if (!dateMatch) return;
+    
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const monthName = dateMatch[1];
+    const dayNum = parseInt(dateMatch[2]);
+    const monthIndex = monthNames.indexOf(monthName);
+    
+    if (monthIndex === -1) return;
+    
+    const selectedDate = new Date(currentYear, monthIndex, dayNum);
+    const dateStr = selectedDate.toISOString().split("T")[0];
+    
+    // Set modal state
+    setSelectedDayForModal(dateStr);
+    setSelectedAgentIdForModal(agentId);
+    setLoadingTimeSlots(true);
+    setShowTimeSlotModal(true);
+    
+    // Fetch availability for this agent and day
+    try {
+      const startDate = dateStr;
+      const endDate = dateStr;
+      
+      const res = await fetch(
+        `/api/agents/availability?agentId=${agentId}&startDate=${startDate}&endDate=${endDate}`
+      );
+      
+      if (res.ok) {
+        const availabilityData: AvailabilityDay[] = await res.json();
+        const dayData = availabilityData.find(d => d.date === dateStr);
+        
+        if (dayData) {
+          // Format time slots with readable time and available status
+          const formattedSlots = dayData.slots.map(slot => {
+            const startDate = new Date(slot.startsAt);
+            const hours = startDate.getUTCHours();
+            const minutes = startDate.getUTCMinutes();
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            const displayHours = hours % 12 || 12;
+            const timeStr = `${displayHours}:${String(minutes).padStart(2, '0')} ${ampm}`;
+            
+            return {
+              time: timeStr,
+              startsAt: slot.startsAt,
+              endsAt: slot.endsAt,
+              available: true
+            };
+          });
+          
+          setDayTimeSlots(formattedSlots);
+        } else {
+          setDayTimeSlots([]);
+        }
+      } else {
+        setDayTimeSlots([]);
+      }
+    } catch (err) {
+      console.error("Error loading time slots:", err);
+      setDayTimeSlots([]);
+    } finally {
+      setLoadingTimeSlots(false);
+    }
+  };
+  
+  const handleTimeSlotClick = (timeSlot: { time: string; startsAt: string; endsAt: string }) => {
+    if (!selectedAgentIdForModal || !selectedDayForModal) return;
+    
+    const params = new URLSearchParams({
+      startsAt: timeSlot.startsAt,
+      endsAt: timeSlot.endsAt,
+      date: selectedDayForModal,
+    });
+    
+    // Navigate to Step 1 booking page
+    window.location.href = `/book/step1/${selectedAgentIdForModal}?${params.toString()}`;
+  };
+  
+  const closeTimeSlotModal = () => {
+    setShowTimeSlotModal(false);
+    setSelectedDayForModal(null);
+    setSelectedAgentIdForModal(null);
+    setDayTimeSlots([]);
   };
 
   const handleShowMoreWeeks = async (agentId: string) => {
@@ -768,31 +853,27 @@ function SearchResults() {
                           {availability.map((slot, slotIndex) => {
                             const hasSpots = slot.spots > 0;
                             return (
-                              <a
+                              <button
                                 key={slotIndex}
-                                href={hasSpots && appointment.agent?.id ? `/book/select-time/${appointment.agent.id}` : '#'}
+                                type="button"
                                 onClick={(e) => {
-                                  if (!hasSpots || !appointment.agent?.id) {
-                                    e.preventDefault();
-                                    return false;
+                                  if (hasSpots && appointment.agent?.id) {
+                                    handleDayClick(e, appointment, slot, index);
                                   }
-                                  // Let the anchor tag navigate naturally - don't prevent default
-                                  console.log("Day link clicked, navigating to:", `/book/select-time/${appointment.agent.id}`);
-                                  // Don't prevent default - let browser handle navigation
                                 }}
+                                disabled={!hasSpots}
                                 className={`
-                                  px-3 py-2 rounded-lg border text-center text-sm transition-colors block no-underline
+                                  px-3 py-2 rounded-lg border text-center text-sm transition-colors
                                   ${hasSpots 
                                     ? 'bg-green-800 text-white border-green-800 hover:bg-green-900 cursor-pointer' 
-                                    : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed pointer-events-none'}
+                                    : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'}
                                 `}
-                                style={{ textDecoration: 'none' }}
                               >
                                 <div className="whitespace-pre-line leading-tight">{slot.date}</div>
                                 <div className="text-xs mt-1">
                                   {hasSpots ? `${slot.spots}\nappointments` : 'No\nappointments'}
                                 </div>
-                              </a>
+                              </button>
                             );
                           })}
                           <button 
@@ -811,6 +892,72 @@ function SearchResults() {
           </div>
         )}
       </main>
+
+      {/* Time Slot Selection Modal */}
+      {showTimeSlotModal && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              closeTimeSlotModal();
+            }
+          }}
+        >
+          <div 
+            className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto relative z-50"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 sticky top-0 bg-white">
+              <h2 className="text-xl font-semibold text-black">Select a time</h2>
+              <button
+                onClick={closeTimeSlotModal}
+                className="text-gray-500 hover:text-black transition-colors p-2"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6">
+              {selectedDayForModal && (
+                <div className="mb-4">
+                  <p className="text-gray-600">
+                    {new Date(selectedDayForModal + "T00:00:00").toLocaleDateString("en-US", {
+                      weekday: "long",
+                      month: "long",
+                      day: "numeric",
+                    })}
+                  </p>
+                </div>
+              )}
+
+              {loadingTimeSlots ? (
+                <div className="text-center py-12">
+                  <p className="text-gray-600">Loading available times...</p>
+                </div>
+              ) : dayTimeSlots.length === 0 ? (
+                <div className="text-center py-12">
+                  <p className="text-gray-600">No time slots available for this day.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                  {dayTimeSlots.map((timeSlot, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => handleTimeSlotClick(timeSlot)}
+                      className="px-4 py-2 rounded-md text-sm transition-colors bg-green-100 text-black hover:bg-green-200 border border-green-300"
+                    >
+                      {timeSlot.time}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
