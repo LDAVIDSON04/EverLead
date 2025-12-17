@@ -589,27 +589,10 @@ function SearchResults() {
                                 // Close modal immediately
                                 closeModal();
                                 
-                                // Force navigation immediately - try multiple methods
-                                try {
-                                  // Method 1: Direct assignment
-                                  window.location.href = url;
-                                } catch (err1) {
-                                  console.error("window.location.href failed:", err1);
-                                  try {
-                                    // Method 2: Assign
-                                    window.location.assign(url);
-                                  } catch (err2) {
-                                    console.error("window.location.assign failed:", err2);
-                                    try {
-                                      // Method 3: Replace
-                                      window.location.replace(url);
-                                    } catch (err3) {
-                                      console.error("window.location.replace failed:", err3);
-                                      // Method 4: Router as last resort
-                                      router.push(url);
-                                    }
-                                  }
-                                }
+                                // Navigate immediately - no delays
+                                console.log("Setting window.location.href to:", url);
+                                window.location.href = url;
+                                console.log("Navigation command executed");
                               }}
                               onMouseDown={(e) => {
                                 // Prevent any mouse down events from bubbling
