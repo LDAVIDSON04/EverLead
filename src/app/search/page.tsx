@@ -372,7 +372,7 @@ function SearchResults() {
   };
 
   // Test function to verify clicks are working
-  const handleTimeSlotClick = (agentId: string, timeSlot: any, dayDate: string) => {
+  const handleTimeSlotClick = (agentId: string | undefined, timeSlot: any, dayDate: string) => {
     console.log("handleTimeSlotClick called:", { agentId, timeSlot, dayDate });
     
     if (!agentId || !timeSlot?.startsAt || !timeSlot?.endsAt || !dayDate) {
