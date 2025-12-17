@@ -440,9 +440,10 @@ function SearchResults() {
           <div 
             className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto relative z-50"
             onClick={(e) => {
-              // Don't interfere with Link components
+              // Don't interfere with ANY clicks inside the modal
+              // Let all events bubble naturally
               const target = e.target as HTMLElement;
-              if (target.tagName === 'A' || target.closest('a')) {
+              if (target.closest('a')) {
                 return; // Let Link handle navigation
               }
               e.stopPropagation();
@@ -584,6 +585,14 @@ function SearchResults() {
                             <Link
                               key={timeIdx}
                               href={bookingUrl || '#'}
+                              onClick={(e) => {
+                                // Stop propagation to prevent modal from interfering
+                                e.stopPropagation();
+                                // Let Next.js Link handle navigation
+                                if (!bookingUrl) {
+                                  e.preventDefault();
+                                }
+                              }}
                               className={`px-4 py-2 rounded-md text-sm transition-colors inline-block text-center no-underline ${
                                 isSelected
                                   ? 'bg-green-600 text-white'
@@ -594,7 +603,8 @@ function SearchResults() {
                                 display: 'inline-block',
                                 cursor: 'pointer',
                                 position: 'relative',
-                                zIndex: 10000
+                                zIndex: 10000,
+                                pointerEvents: 'auto'
                               }}
                             >
                               {timeSlot.time}
