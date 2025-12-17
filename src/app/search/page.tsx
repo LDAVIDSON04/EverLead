@@ -582,33 +582,31 @@ function SearchResults() {
                           }
                           
                           return (
-                            <Link
+                            <button
                               key={timeIdx}
-                              href={bookingUrl || '#'}
+                              type="button"
                               onClick={(e) => {
-                                // Stop propagation to prevent modal from interfering
+                                if (!bookingUrl) return;
+                                
                                 e.stopPropagation();
-                                // Let Next.js Link handle navigation
-                                if (!bookingUrl) {
-                                  e.preventDefault();
-                                }
+                                
+                                // Use router.push for navigation
+                                router.push(bookingUrl);
                               }}
-                              className={`px-4 py-2 rounded-md text-sm transition-colors inline-block text-center no-underline ${
+                              className={`px-4 py-2 rounded-md text-sm transition-colors ${
                                 isSelected
                                   ? 'bg-green-600 text-white'
                                   : 'bg-green-100 text-black hover:bg-green-200'
                               }`}
                               style={{
-                                textDecoration: 'none',
-                                display: 'inline-block',
+                                border: 'none',
                                 cursor: 'pointer',
                                 position: 'relative',
-                                zIndex: 10000,
-                                pointerEvents: 'auto'
+                                zIndex: 10000
                               }}
                             >
                               {timeSlot.time}
-                            </Link>
+                            </button>
                           );
                         })}
                       </div>
