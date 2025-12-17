@@ -561,55 +561,53 @@ function SearchResults() {
                             return `/book/step1/${agentId}?${params.toString()}`;
                           })();
                           
+                          // Build URL
+                          const bookingUrl = (() => {
+                            if (!agentId || !timeSlot.startsAt || !timeSlot.endsAt || !day.date) {
+                              return null;
+                            }
+                            const params = new URLSearchParams({
+                              startsAt: timeSlot.startsAt,
+                              endsAt: timeSlot.endsAt,
+                              date: day.date,
+                            });
+                            return `/book/step1/${agentId}?${params.toString()}`;
+                          })();
+                          
+                          if (!bookingUrl) {
+                            return (
+                              <button
+                                key={timeIdx}
+                                type="button"
+                                disabled
+                                className="px-4 py-2 rounded-md text-sm bg-gray-200 text-gray-400 cursor-not-allowed"
+                              >
+                                {timeSlot.time}
+                              </button>
+                            );
+                          }
+                          
                           return (
-                            <button
+                            <Link
                               key={timeIdx}
-                              type="button"
+                              href={bookingUrl}
                               onClick={(e) => {
-                                // Stop event propagation
                                 e.stopPropagation();
-                                
-                                // Validate data
-                                if (!agentId || !timeSlot.startsAt || !timeSlot.endsAt || !day.date) {
-                                  console.error("Missing data:", { agentId, startsAt: timeSlot.startsAt, endsAt: timeSlot.endsAt, date: day.date });
-                                  alert("Error: Missing appointment data. Please try again.");
-                                  return;
-                                }
-                                
-                                // Build URL
-                                const params = new URLSearchParams({
-                                  startsAt: timeSlot.startsAt,
-                                  endsAt: timeSlot.endsAt,
-                                  date: day.date,
-                                });
-                                const url = `/book/step1/${agentId}?${params.toString()}`;
-                                
-                                console.log("TIME SLOT CLICKED! Navigating to:", url);
-                                
-                                // Close modal immediately
+                                console.log("Link clicked - navigating to:", bookingUrl);
                                 closeModal();
-                                
-                                // Navigate immediately - no delays
-                                console.log("Setting window.location.href to:", url);
-                                window.location.href = url;
-                                console.log("Navigation command executed");
                               }}
-                              onMouseDown={(e) => {
-                                // Prevent any mouse down events from bubbling
-                                e.stopPropagation();
-                              }}
-                              className={`px-4 py-2 rounded-md text-sm transition-colors cursor-pointer ${
+                              className={`px-4 py-2 rounded-md text-sm transition-colors cursor-pointer inline-block text-center no-underline ${
                                 isSelected
                                   ? 'bg-green-600 text-white'
                                   : 'bg-green-100 text-black hover:bg-green-200'
                               }`}
                               style={{
-                                position: 'relative',
-                                zIndex: 9999
+                                textDecoration: 'none',
+                                display: 'inline-block'
                               }}
                             >
                               {timeSlot.time}
-                            </button>
+                            </Link>
                           );
                         })}
                       </div>
