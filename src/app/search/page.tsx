@@ -565,10 +565,9 @@ function SearchResults() {
                             <button
                               key={timeIdx}
                               type="button"
-                              onClick={async (e) => {
+                              onClick={(e) => {
                                 // Stop event propagation to prevent modal from closing
                                 e.stopPropagation();
-                                // Don't prevent default - we want navigation to happen
                                 
                                 // Validate data
                                 if (!agentId || !timeSlot.startsAt || !timeSlot.endsAt || !day.date) {
@@ -587,14 +586,8 @@ function SearchResults() {
                                 
                                 console.log("TIME SLOT CLICKED! Navigating to:", url);
                                 
-                                // Use router.push for Next.js navigation
-                                try {
-                                  router.push(url);
-                                } catch (error) {
-                                  console.error("Router.push failed, using window.location:", error);
-                                  // Fallback to window.location if router fails
-                                  window.location.href = url;
-                                }
+                                // Force full page navigation - this will definitely work
+                                window.location.assign(url);
                               }}
                               onMouseDown={(e) => {
                                 // Prevent any mouse down events from bubbling
