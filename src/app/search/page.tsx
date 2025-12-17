@@ -348,8 +348,15 @@ function SearchResults() {
       date: selectedDayForModal,
     });
     
-    // Navigate to Step 1 booking page
-    window.location.href = `/book/step1/${selectedAgentIdForModal}?${params.toString()}`;
+    // Close modal immediately for better UX
+    closeTimeSlotModal();
+    
+    // Navigate to Step 1 booking page - use replace to avoid back button issues
+    const bookingUrl = `/book/step1/${selectedAgentIdForModal}?${params.toString()}`;
+    console.log("Navigating to booking page:", bookingUrl);
+    
+    // Use replace for immediate navigation
+    window.location.replace(bookingUrl);
   };
   
   const closeTimeSlotModal = () => {
