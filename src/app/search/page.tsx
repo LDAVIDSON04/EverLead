@@ -229,41 +229,11 @@ function SearchResults() {
     return slots;
   };
 
-  const handleMoreButtonClick = async (appointment: Appointment, index: number) => {
+  const handleMoreButtonClick = (appointment: Appointment, index: number) => {
     if (!appointment.agent?.id) return;
     
-    // Open modal and load availability
-    setSelectedAppointment(appointment);
-    setSelectedAppointmentIndex(index);
-    setShowMoreAvailability(true);
-    setShowMoreWeeks(false);
-    
-    const agentId = appointment.agent.id;
-    if (!agentAvailability[agentId]) {
-      try {
-        const today = new Date();
-        const startDate = today.toISOString().split("T")[0];
-        const endDate = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
-        
-        const res = await fetch(
-          `/api/agents/availability?agentId=${agentId}&startDate=${startDate}&endDate=${endDate}`
-        );
-        
-        if (res.ok) {
-          const availabilityData: AvailabilityDay[] = await res.json();
-          setAgentAvailability((prev) => ({
-            ...prev,
-            [agentId]: availabilityData,
-          }));
-          setAvailabilityDaysToShow((prev) => ({
-            ...prev,
-            [agentId]: 7,
-          }));
-        }
-      } catch (err) {
-        console.error("Error loading availability:", err);
-      }
-    }
+    // Navigate directly to the booking page - no modal!
+    router.push(`/book/select-time/${appointment.agent.id}`);
   };
 
   // Generate time slots for a selected date
@@ -281,42 +251,10 @@ function SearchResults() {
     return times.filter(() => Math.random() > 0.25);
   };
 
-  const handleDayClick = async (appointment: Appointment, slot: AvailabilitySlot, index: number) => {
+  const handleDayClick = (appointment: Appointment, slot: AvailabilitySlot, index: number) => {
     if (slot.spots > 0 && appointment.agent?.id) {
-      setSelectedAppointment(appointment);
-      setSelectedAppointmentIndex(index);
-      setSelectedDate(slot.date);
-      setShowMoreAvailability(true); // Always show all days
-      setShowMoreWeeks(false); // Reset to first week
-      
-      // Load real availability for this agent (7 days from today) if not already loaded
-      const agentId = appointment.agent.id;
-      if (!agentAvailability[agentId]) {
-        try {
-          const today = new Date();
-          const startDate = today.toISOString().split("T")[0];
-          const endDate = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
-          
-          const res = await fetch(
-            `/api/agents/availability?agentId=${agentId}&startDate=${startDate}&endDate=${endDate}`
-          );
-          
-          if (res.ok) {
-            const availabilityData: AvailabilityDay[] = await res.json();
-            // Store the full availability data for this agent
-            setAgentAvailability((prev) => ({
-              ...prev,
-              [agentId]: availabilityData,
-            }));
-            setAvailabilityDaysToShow((prev) => ({
-              ...prev,
-              [agentId]: 7,
-            }));
-          }
-        } catch (err) {
-          console.error("Error loading availability:", err);
-        }
-      }
+      // Navigate directly to the booking page - no modal!
+      router.push(`/book/select-time/${appointment.agent.id}`);
     }
   };
 
