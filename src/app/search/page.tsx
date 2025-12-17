@@ -432,10 +432,11 @@ function SearchResults() {
         <div 
           className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
           onClick={(e) => {
-            // Only close if clicking the backdrop itself, not buttons
+            // Only close if clicking the backdrop itself, not links or buttons
             if (e.target === e.currentTarget) {
               const target = e.target as HTMLElement;
-              if (target.tagName !== 'BUTTON' && !target.closest('button')) {
+              if (target.tagName !== 'A' && !target.closest('a') && 
+                  target.tagName !== 'BUTTON' && !target.closest('button')) {
                 closeModal();
               }
             }
