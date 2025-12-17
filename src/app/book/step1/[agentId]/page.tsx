@@ -166,11 +166,33 @@ function BookingStep1Content() {
     );
   }
 
-  if (!agentInfo || !startsAt || !date) {
+  // Don't block rendering - show loading state instead
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <p className="text-gray-600">Loading booking information...</p>
+      </div>
+    );
+  }
+
+  if (!agentInfo) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-600 mb-4">Invalid booking information</p>
+          <p className="text-gray-600 mb-4">Agent not found</p>
+          <Link href="/search" className="text-green-800 hover:underline">
+            Return to search
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (!startsAt || !date) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-600 mb-4">Missing appointment time information</p>
           <Link href="/search" className="text-green-800 hover:underline">
             Return to search
           </Link>
