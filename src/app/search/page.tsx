@@ -348,15 +348,17 @@ function SearchResults() {
       date: selectedDayForModal,
     });
     
-    // Close modal immediately for better UX
-    closeTimeSlotModal();
-    
-    // Navigate to Step 1 booking page - use replace to avoid back button issues
+    // Build URL first
     const bookingUrl = `/book/step1/${selectedAgentIdForModal}?${params.toString()}`;
     console.log("Navigating to booking page:", bookingUrl);
     
-    // Use replace for immediate navigation
-    window.location.replace(bookingUrl);
+    // Close modal first
+    closeTimeSlotModal();
+    
+    // Small delay to ensure modal closes, then navigate
+    setTimeout(() => {
+      window.location.href = bookingUrl;
+    }, 100);
   };
   
   const closeTimeSlotModal = () => {

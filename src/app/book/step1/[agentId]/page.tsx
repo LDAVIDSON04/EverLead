@@ -161,7 +161,10 @@ function BookingStep1Content() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
-        <p className="text-gray-600">Loading booking information...</p>
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mb-4"></div>
+          <p className="text-gray-600">Loading booking information...</p>
+        </div>
       </div>
     );
   }
