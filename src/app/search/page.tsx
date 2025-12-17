@@ -441,9 +441,9 @@ function SearchResults() {
           <div 
             className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto relative z-50"
             onClick={(e) => {
-              // Only stop propagation if not clicking a link
+              // Only stop propagation if not clicking a link or button
               const target = e.target as HTMLElement;
-              if (target.tagName !== 'A' && !target.closest('a')) {
+              if (target.tagName !== 'A' && !target.closest('a') && target.tagName !== 'BUTTON' && !target.closest('button')) {
                 e.stopPropagation();
               }
             }}
@@ -592,25 +592,28 @@ function SearchResults() {
                                   return false;
                                 }
                                 
-                                // Stop propagation to prevent modal backdrop from interfering
+                                // CRITICAL: Stop all event propagation immediately
                                 e.stopPropagation();
+                                e.preventDefault();
                                 
                                 console.log("=== TIME SLOT CLICKED ===");
                                 console.log("Booking URL:", bookingUrl);
-                                console.log("Navigating NOW to Step 1 booking page");
+                                console.log("Agent ID:", agentId);
+                                console.log("Date:", day.date);
+                                console.log("Starts At:", timeSlot.startsAt);
+                                console.log("Ends At:", timeSlot.endsAt);
                                 
-                                // Force navigation - don't prevent default, let the anchor work
-                                // But also force it programmatically as backup
-                                const url = bookingUrl;
+                                // IMMEDIATELY navigate - use replace to force navigation
+                                // This will navigate away from the current page
+                                console.log("NAVIGATING NOW - window.location.replace");
+                                window.location.replace(bookingUrl);
                                 
-                                // Use setTimeout 0 to ensure this runs after any React state updates
-                                setTimeout(() => {
-                                  console.log("Executing navigation to:", url);
-                                  window.location.replace(url);
-                                }, 0);
-                                
-                                // Don't prevent default - let anchor navigate naturally too
-                                // This gives us double insurance
+                                // Return false to prevent any other handlers
+                                return false;
+                              }}
+                              onMouseDown={(e) => {
+                                // Also stop on mouse down to prevent any interference
+                                e.stopPropagation();
                               }}
                               className={`px-4 py-2 rounded-md text-sm transition-colors cursor-pointer inline-block text-center no-underline ${
                                 isSelected
@@ -621,7 +624,8 @@ function SearchResults() {
                                 textDecoration: 'none',
                                 display: 'inline-block',
                                 position: 'relative',
-                                zIndex: 1000
+                                zIndex: 10000,
+                                pointerEvents: 'auto'
                               }}
                             >
                               {timeSlot.time}
