@@ -583,17 +583,16 @@ function SearchResults() {
                                   e.preventDefault();
                                   e.stopPropagation();
                                   alert("Error: Missing appointment data. Please try again.");
-                                  return;
+                                  return false;
                                 }
                                 
+                                // Stop propagation to prevent modal from closing
                                 e.stopPropagation();
                                 console.log("Time slot clicked - navigating to:", bookingUrl);
                                 
-                                // Close modal first
-                                closeModal();
-                                
-                                // Don't prevent default - let the anchor tag navigate naturally
-                                // The href will handle the navigation
+                                // Let the anchor tag navigate naturally - don't prevent default
+                                // The page navigation will happen automatically via href
+                                // Don't close modal here - let navigation happen first
                               }}
                               className={`px-4 py-2 rounded-md text-sm transition-colors cursor-pointer inline-block text-center no-underline ${
                                 isSelected
@@ -602,7 +601,9 @@ function SearchResults() {
                               }`}
                               style={{
                                 textDecoration: 'none',
-                                display: 'inline-block'
+                                display: 'inline-block',
+                                position: 'relative',
+                                zIndex: 1000
                               }}
                             >
                               {timeSlot.time}
