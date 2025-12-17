@@ -770,15 +770,15 @@ function SearchResults() {
                             return (
                               <a
                                 key={slotIndex}
-                                href={hasSpots && appointment.agent?.id ? `/book/select-time/${appointment.agent.id}` : undefined}
+                                href={hasSpots && appointment.agent?.id ? `/book/select-time/${appointment.agent.id}` : '#'}
                                 onClick={(e) => {
                                   if (!hasSpots || !appointment.agent?.id) {
                                     e.preventDefault();
-                                    return;
+                                    return false;
                                   }
-                                  // Force full page navigation - bypass Next.js routing
-                                  e.preventDefault();
-                                  window.location.href = `/book/select-time/${appointment.agent.id}`;
+                                  // Let the anchor tag navigate naturally - don't prevent default
+                                  console.log("Day link clicked, navigating to:", `/book/select-time/${appointment.agent.id}`);
+                                  // Don't prevent default - let browser handle navigation
                                 }}
                                 className={`
                                   px-3 py-2 rounded-lg border text-center text-sm transition-colors block no-underline
