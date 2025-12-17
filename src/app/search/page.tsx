@@ -603,8 +603,24 @@ function SearchResults() {
                                 const fullUrl = window.location.origin + bookingUrl;
                                 console.log("Full URL:", fullUrl);
                                 
-                                // Force immediate navigation - no delays
-                                window.location.href = fullUrl;
+                                // Try multiple navigation methods to ensure it works
+                                try {
+                                  // Method 1: window.location.assign (most reliable)
+                                  window.location.assign(fullUrl);
+                                  console.log("Used window.location.assign");
+                                } catch (err) {
+                                  console.error("assign failed, trying href:", err);
+                                  // Method 2: window.location.href (fallback)
+                                  window.location.href = fullUrl;
+                                }
+                                
+                                // Method 3: If still not working after 100ms, force with replace
+                                setTimeout(() => {
+                                  if (window.location.pathname !== bookingUrl.split('?')[0]) {
+                                    console.log("Navigation didn't work, forcing with replace");
+                                    window.location.replace(fullUrl);
+                                  }
+                                }, 100);
                               }}
                               onMouseDown={(e) => {
                                 console.log("BUTTON MOUSEDOWN");
