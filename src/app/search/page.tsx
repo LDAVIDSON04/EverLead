@@ -408,8 +408,8 @@ function SearchResults() {
     setShowMoreWeeks(false);
   };
 
-  // Handle time slot click - navigate to Step 1 booking page
-  const handleTimeSlotClick = (agentId: string | undefined, timeSlot: any, dayDate: string) => {
+  // Handle time slot click in old modal - navigate to Step 1 booking page
+  const handleTimeSlotClickOld = (agentId: string | undefined, timeSlot: any, dayDate: string) => {
     console.log("handleTimeSlotClick called:", { agentId, timeSlot, dayDate });
     
     if (!agentId) {
