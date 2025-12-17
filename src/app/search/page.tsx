@@ -586,14 +586,30 @@ function SearchResults() {
                                 
                                 console.log("TIME SLOT CLICKED! Navigating to:", url);
                                 
-                                // Close modal first to avoid any interference
+                                // Close modal immediately
                                 closeModal();
                                 
-                                // Use setTimeout to ensure modal closes, then navigate
-                                setTimeout(() => {
-                                  console.log("Executing navigation to:", url);
+                                // Force navigation immediately - try multiple methods
+                                try {
+                                  // Method 1: Direct assignment
                                   window.location.href = url;
-                                }, 100);
+                                } catch (err1) {
+                                  console.error("window.location.href failed:", err1);
+                                  try {
+                                    // Method 2: Assign
+                                    window.location.assign(url);
+                                  } catch (err2) {
+                                    console.error("window.location.assign failed:", err2);
+                                    try {
+                                      // Method 3: Replace
+                                      window.location.replace(url);
+                                    } catch (err3) {
+                                      console.error("window.location.replace failed:", err3);
+                                      // Method 4: Router as last resort
+                                      router.push(url);
+                                    }
+                                  }
+                                }
                               }}
                               onMouseDown={(e) => {
                                 // Prevent any mouse down events from bubbling
