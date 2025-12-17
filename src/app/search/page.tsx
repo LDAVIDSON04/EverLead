@@ -441,11 +441,9 @@ function SearchResults() {
           <div 
             className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto relative z-50"
             onClick={(e) => {
-              // Don't stop propagation for links or buttons - let them handle their own clicks
+              // Only stop propagation if clicking the modal itself, not links
               const target = e.target as HTMLElement;
-              const isLink = target.tagName === 'A' || target.closest('a');
-              const isButton = target.tagName === 'BUTTON' || target.closest('button');
-              if (!isLink && !isButton) {
+              if (target.tagName !== 'A' && !target.closest('a')) {
                 e.stopPropagation();
               }
             }}
@@ -586,26 +584,6 @@ function SearchResults() {
                             <a
                               key={timeIdx}
                               href={bookingUrl || '#'}
-                              onClick={(e) => {
-                                if (!bookingUrl) {
-                                  e.preventDefault();
-                                  return;
-                                }
-                                
-                                e.stopPropagation();
-                                
-                                console.log("LINK CLICKED - URL:", bookingUrl);
-                                
-                                // Don't prevent default - let the anchor navigate naturally
-                                // But also force it programmatically
-                                const url = bookingUrl;
-                                
-                                // Force navigation
-                                setTimeout(() => {
-                                  console.log("Forcing navigation to:", url);
-                                  window.location.href = url;
-                                }, 0);
-                              }}
                               className={`px-4 py-2 rounded-md text-sm transition-colors inline-block text-center no-underline ${
                                 isSelected
                                   ? 'bg-green-600 text-white'
@@ -614,10 +592,7 @@ function SearchResults() {
                               style={{
                                 textDecoration: 'none',
                                 display: 'inline-block',
-                                cursor: 'pointer',
-                                position: 'relative',
-                                zIndex: 999999,
-                                pointerEvents: 'auto'
+                                cursor: 'pointer'
                               }}
                             >
                               {timeSlot.time}
