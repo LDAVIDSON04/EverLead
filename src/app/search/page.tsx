@@ -591,15 +591,13 @@ function SearchResults() {
                                   return;
                                 }
                                 
-                                // Stop propagation
+                                // Stop propagation only
                                 e.stopPropagation();
-                                e.preventDefault();
                                 
                                 console.log("NAVIGATING TO:", bookingUrl);
                                 
-                                // FORCE navigation - don't close modal, just navigate
-                                // Navigation will naturally leave the page
-                                window.location.href = bookingUrl;
+                                // Use assign which is more forceful than href
+                                window.location.assign(bookingUrl);
                               }}
                               onMouseDown={(e) => {
                                 console.log("BUTTON MOUSEDOWN EVENT FIRED");
