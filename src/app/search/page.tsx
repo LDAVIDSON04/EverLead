@@ -348,17 +348,15 @@ function SearchResults() {
       date: selectedDayForModal,
     });
     
-    // Build URL first
-    const bookingUrl = `/book/step1/${selectedAgentIdForModal}?${params.toString()}`;
-    console.log("Navigating to booking page:", bookingUrl);
+    // Build absolute URL
+    const bookingUrl = `${window.location.origin}/book/step1/${selectedAgentIdForModal}?${params.toString()}`;
+    console.log("FORCE NAVIGATING to:", bookingUrl);
     
-    // Close modal first
+    // Close modal
     closeTimeSlotModal();
     
-    // Small delay to ensure modal closes, then navigate
-    setTimeout(() => {
-      window.location.href = bookingUrl;
-    }, 100);
+    // Force immediate navigation - no delays, no React interference
+    window.location.assign(bookingUrl);
   };
   
   const closeTimeSlotModal = () => {
@@ -953,16 +951,32 @@ function SearchResults() {
                 </div>
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                  {dayTimeSlots.map((timeSlot, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => handleTimeSlotClick(timeSlot)}
-                      className="px-4 py-2 rounded-md text-sm transition-colors bg-green-100 text-black hover:bg-green-200 border border-green-300"
-                    >
-                      {timeSlot.time}
-                    </button>
-                  ))}
+                  {dayTimeSlots.map((timeSlot, idx) => {
+                    const params = new URLSearchParams({
+                      startsAt: timeSlot.startsAt,
+                      endsAt: timeSlot.endsAt,
+                      date: selectedDayForModal || '',
+                    });
+                    const bookingUrl = `/book/step1/${selectedAgentIdForModal}?${params.toString()}`;
+                    
+                    return (
+                      <a
+                        key={idx}
+                        href={bookingUrl}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          closeTimeSlotModal();
+                          // Force navigation
+                          window.location.href = bookingUrl;
+                        }}
+                        className="px-4 py-2 rounded-md text-sm transition-colors bg-green-100 text-black hover:bg-green-200 border border-green-300 text-center block no-underline"
+                        style={{ textDecoration: 'none' }}
+                      >
+                        {timeSlot.time}
+                      </a>
+                    );
+                  })}
                 </div>
               )}
             </div>
