@@ -585,44 +585,43 @@ function SearchResults() {
                           }
                           
                           return (
-                            <button
+                            <form
                               key={timeIdx}
-                              type="button"
-                              onClick={(e) => {
-                                if (!bookingUrl) return;
-                                
-                                e.stopPropagation();
-                                e.preventDefault();
-                                
-                                console.log("BUTTON CLICKED - Navigating to:", bookingUrl);
-                                
-                                // DON'T close modal - let navigation happen first
-                                // Use full URL for absolute navigation
-                                const fullUrl = window.location.origin + bookingUrl;
-                                console.log("Full URL:", fullUrl);
-                                
-                                // Navigate immediately - don't let anything interfere
-                                window.location.href = fullUrl;
-                              }}
-                              onMouseDown={(e) => {
-                                console.log("BUTTON MOUSEDOWN");
-                                e.stopPropagation();
-                              }}
-                              className={`px-4 py-2 rounded-md text-sm transition-colors ${
-                                isSelected
-                                  ? 'bg-green-600 text-white'
-                                  : 'bg-green-100 text-black hover:bg-green-200'
-                              }`}
-                              style={{
-                                border: 'none',
-                                cursor: 'pointer',
-                                position: 'relative',
-                                zIndex: 99999,
-                                pointerEvents: 'auto'
+                              action={bookingUrl || '#'}
+                              method="get"
+                              style={{ display: 'inline-block', margin: 0, padding: 0 }}
+                              onSubmit={(e) => {
+                                if (!bookingUrl) {
+                                  e.preventDefault();
+                                  return;
+                                }
+                                // Let form submit naturally - this will cause full page navigation
+                                console.log("FORM SUBMITTING to:", bookingUrl);
                               }}
                             >
-                              {timeSlot.time}
-                            </button>
+                              <button
+                                type="submit"
+                                onClick={(e) => {
+                                  // Stop propagation so modal doesn't interfere
+                                  e.stopPropagation();
+                                  // Don't prevent default - let form submit
+                                }}
+                                className={`px-4 py-2 rounded-md text-sm transition-colors ${
+                                  isSelected
+                                    ? 'bg-green-600 text-white'
+                                    : 'bg-green-100 text-black hover:bg-green-200'
+                                }`}
+                                style={{
+                                  border: 'none',
+                                  cursor: 'pointer',
+                                  position: 'relative',
+                                  zIndex: 99999,
+                                  pointerEvents: 'auto'
+                                }}
+                              >
+                                {timeSlot.time}
+                              </button>
+                            </form>
                           );
                         })}
                       </div>
