@@ -586,18 +586,12 @@ function SearchResults() {
                               key={timeIdx}
                               type="button"
                               onClick={(e) => {
-                                if (!bookingUrl) {
-                                  alert("Error: Missing appointment data. Please try again.");
-                                  return;
-                                }
+                                if (!bookingUrl) return;
                                 
-                                // Stop propagation only
                                 e.stopPropagation();
                                 
-                                console.log("NAVIGATING TO:", bookingUrl);
-                                
-                                // Use assign which is more forceful than href
-                                window.location.assign(bookingUrl);
+                                // Use replace - most forceful navigation method
+                                window.location.replace(bookingUrl);
                               }}
                               onMouseDown={(e) => {
                                 console.log("BUTTON MOUSEDOWN EVENT FIRED");
