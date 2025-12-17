@@ -432,11 +432,12 @@ function SearchResults() {
         <div 
           className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
           onClick={(e) => {
-            // Only close if clicking the backdrop itself, not links or buttons
+            // Only close if clicking the backdrop itself, not links, buttons, or forms
             if (e.target === e.currentTarget) {
               const target = e.target as HTMLElement;
               if (target.tagName !== 'A' && !target.closest('a') && 
-                  target.tagName !== 'BUTTON' && !target.closest('button')) {
+                  target.tagName !== 'BUTTON' && !target.closest('button') &&
+                  target.tagName !== 'FORM' && !target.closest('form')) {
                 closeModal();
               }
             }
@@ -445,11 +446,12 @@ function SearchResults() {
           <div 
             className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto relative z-50"
             onClick={(e) => {
-              // NEVER stop propagation for links or buttons - let them handle clicks
+              // NEVER stop propagation for links, buttons, or forms - let them handle clicks
               const target = e.target as HTMLElement;
               if (target.tagName === 'A' || target.closest('a') || 
-                  target.tagName === 'BUTTON' || target.closest('button')) {
-                return; // Let link/button handle its own click
+                  target.tagName === 'BUTTON' || target.closest('button') ||
+                  target.tagName === 'FORM' || target.closest('form')) {
+                return; // Let link/button/form handle its own click
               }
               e.stopPropagation();
             }}
@@ -587,32 +589,37 @@ function SearchResults() {
                           }
                           
                           return (
-                            <button
+                            <form
                               key={timeIdx}
-                              type="button"
-                              onClick={(e) => {
-                                if (!bookingUrl) return;
-                                
+                              action={bookingUrl || '#'}
+                              method="get"
+                              onSubmit={(e) => {
                                 e.stopPropagation();
-                                
-                                // Close modal first
+                                // Close modal before navigation
                                 closeModal();
-                                
-                                // Use router.push for navigation
-                                router.push(bookingUrl);
+                                // Let form submit naturally - don't prevent default
                               }}
-                              className={`px-4 py-2 rounded-md text-sm transition-colors ${
-                                isSelected
-                                  ? 'bg-green-600 text-white'
-                                  : 'bg-green-100 text-black hover:bg-green-200'
-                              }`}
-                              style={{
-                                border: 'none',
-                                cursor: 'pointer'
-                              }}
+                              style={{ display: 'inline' }}
                             >
-                              {timeSlot.time}
-                            </button>
+                              <button
+                                type="submit"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  // Don't close modal here - let form onSubmit handle it
+                                }}
+                                className={`px-4 py-2 rounded-md text-sm transition-colors ${
+                                  isSelected
+                                    ? 'bg-green-600 text-white'
+                                    : 'bg-green-100 text-black hover:bg-green-200'
+                                }`}
+                                style={{
+                                  border: 'none',
+                                  cursor: 'pointer'
+                                }}
+                              >
+                                {timeSlot.time}
+                              </button>
+                            </form>
                           );
                         })}
                       </div>
