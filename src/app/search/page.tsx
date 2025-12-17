@@ -1,6 +1,6 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Suspense, useState, useEffect } from "react";
@@ -64,6 +64,7 @@ type AvailabilityDay = {
 };
 
 function SearchResults() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const query = searchParams.get("q") || "";
   const location = searchParams.get("location") || "";
@@ -524,18 +525,24 @@ function SearchResults() {
                           return (
                             <button
                               key={timeIdx}
+                              type="button"
                               onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
+                                console.log("Time slot clicked:", { agentId, timeSlot, day: day.date });
                                 setSelectedTime(timeKey);
                                 // Navigate to Step 1 booking page when time is selected
-                                if (agentId && timeSlot.startsAt && timeSlot.endsAt) {
+                                if (agentId && timeSlot.startsAt && timeSlot.endsAt && day.date) {
                                   const params = new URLSearchParams({
                                     startsAt: timeSlot.startsAt,
                                     endsAt: timeSlot.endsAt,
                                     date: day.date,
                                   });
-                                  window.location.href = `/book/step1/${agentId}?${params.toString()}`;
+                                  const url = `/book/step1/${agentId}?${params.toString()}`;
+                                  console.log("Navigating to:", url);
+                                  router.push(url);
+                                } else {
+                                  console.error("Missing required data:", { agentId, startsAt: timeSlot.startsAt, endsAt: timeSlot.endsAt, date: day.date });
                                 }
                               }}
                               className={`px-4 py-2 rounded-md text-sm transition-colors cursor-pointer ${
