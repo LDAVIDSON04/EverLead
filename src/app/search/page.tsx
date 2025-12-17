@@ -79,7 +79,10 @@ function SearchResults() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [showMoreAvailability, setShowMoreAvailability] = useState(false);
+  const [showMoreWeeks, setShowMoreWeeks] = useState(false);
   const [agentAvailability, setAgentAvailability] = useState<Record<string, AvailabilityDay[]>>({});
+  const [availabilityDaysToShow, setAvailabilityDaysToShow] = useState<Record<string, number>>({});
+  const [calendarDaysToShow, setCalendarDaysToShow] = useState<Record<string, number>>({});
 
   // Sync state with URL params when they change
   useEffect(() => {
@@ -181,7 +184,7 @@ function SearchResults() {
     setSearchService(searchService);
   };
 
-  // Generate availability slots for the next 8 days
+  // Generate availability slots for the calendar grid
   const generateAvailability = (appointment: Appointment): AvailabilitySlot[] => {
     const slots: AvailabilitySlot[] = [];
     const today = new Date();
@@ -189,10 +192,11 @@ function SearchResults() {
     // Get real availability if we have it
     const agentId = appointment.agent?.id;
     const realAvailability = agentId ? agentAvailability[agentId] : null;
+    const daysToShow = agentId ? (calendarDaysToShow[agentId] || 8) : 8;
     
     if (realAvailability && realAvailability.length > 0) {
       // Use real availability data from agent's settings
-      return realAvailability.slice(0, 8).map((day) => {
+      return realAvailability.slice(0, daysToShow).map((day) => {
         const date = new Date(day.date + "T00:00:00");
         const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
         const monthName = date.toLocaleDateString('en-US', { month: 'short' });
@@ -206,7 +210,7 @@ function SearchResults() {
     }
     
     // Fallback: generate placeholder slots if availability not loaded yet
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < daysToShow; i++) {
       const date = new Date(today);
       date.setDate(today.getDate() + i);
       
@@ -222,6 +226,40 @@ function SearchResults() {
     }
     
     return slots;
+  };
+
+  const handleLoadMoreCalendarDays = async (agentId: string) => {
+    const currentDays = calendarDaysToShow[agentId] || 8;
+    const newDays = currentDays + 7; // Load 7 more days
+    
+    // Load more availability if needed
+    const existingAvailability = agentAvailability[agentId] || [];
+    if (existingAvailability.length < newDays) {
+      try {
+        const today = new Date();
+        const startDate = today.toISOString().split("T")[0];
+        const endDate = new Date(today.getTime() + newDays * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+        
+        const res = await fetch(
+          `/api/agents/availability?agentId=${agentId}&startDate=${startDate}&endDate=${endDate}`
+        );
+        
+        if (res.ok) {
+          const availabilityData: AvailabilityDay[] = await res.json();
+          setAgentAvailability((prev) => ({
+            ...prev,
+            [agentId]: availabilityData,
+          }));
+        }
+      } catch (err) {
+        console.error("Error loading more calendar days:", err);
+      }
+    }
+    
+    setCalendarDaysToShow((prev) => ({
+      ...prev,
+      [agentId]: newDays,
+    }));
   };
 
   // Generate time slots for a selected date
@@ -245,6 +283,7 @@ function SearchResults() {
       setSelectedAppointmentIndex(index);
       setSelectedDate(slot.date);
       setShowMoreAvailability(true); // Always show all days
+      setShowMoreWeeks(false); // Reset to first week
       
       // Load real availability for this agent (7 days from today) if not already loaded
       const agentId = appointment.agent.id;
@@ -265,11 +304,52 @@ function SearchResults() {
               ...prev,
               [agentId]: availabilityData,
             }));
+            setAvailabilityDaysToShow((prev) => ({
+              ...prev,
+              [agentId]: 7,
+            }));
           }
         } catch (err) {
           console.error("Error loading availability:", err);
         }
       }
+    }
+  };
+
+  const handleShowMoreWeeks = async (agentId: string) => {
+    if (!showMoreWeeks) {
+      // Load next 2 weeks (14 days total)
+      try {
+        const today = new Date();
+        const startDate = today.toISOString().split("T")[0];
+        const endDate = new Date(today.getTime() + 14 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+        
+        const res = await fetch(
+          `/api/agents/availability?agentId=${agentId}&startDate=${startDate}&endDate=${endDate}`
+        );
+        
+        if (res.ok) {
+          const availabilityData: AvailabilityDay[] = await res.json();
+          setAgentAvailability((prev) => ({
+            ...prev,
+            [agentId]: availabilityData,
+          }));
+          setAvailabilityDaysToShow((prev) => ({
+            ...prev,
+            [agentId]: 14,
+          }));
+          setShowMoreWeeks(true);
+        }
+      } catch (err) {
+        console.error("Error loading more availability:", err);
+      }
+    } else {
+      // Already showing 2 weeks, just toggle the display
+      setShowMoreWeeks(false);
+      setAvailabilityDaysToShow((prev) => ({
+        ...prev,
+        [agentId]: 7,
+      }));
     }
   };
 
@@ -284,6 +364,7 @@ function SearchResults() {
     setSelectedDate(null);
     setSelectedTime(null);
     setShowMoreAvailability(false);
+    setShowMoreWeeks(false);
   };
 
   const filters = [
@@ -372,10 +453,11 @@ function SearchResults() {
             <div className="p-6">
               <h3 className="text-black mb-4 font-semibold">Available appointments</h3>
               
-              {/* Show all 7 days with their time slots */}
+              {/* Show days with their time slots */}
               {(() => {
                 const agentId = selectedAppointment?.agent?.id;
                 const agentAvailabilityData = agentId ? agentAvailability[agentId] : null;
+                const daysToShow = agentId ? (availabilityDaysToShow[agentId] || 7) : 7;
                 
                 if (!agentAvailabilityData || agentAvailabilityData.length === 0) {
                   // Fallback: show placeholder
@@ -386,8 +468,8 @@ function SearchResults() {
                   );
                 }
                 
-                // Show all days (up to 7) with their time slots
-                return agentAvailabilityData.slice(0, 7).map((day, dayIdx) => {
+                // Show days (7 or 14 based on showMoreWeeks) with their time slots
+                return agentAvailabilityData.slice(0, daysToShow).map((day, dayIdx) => {
                   const date = new Date(day.date + "T00:00:00");
                   const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
                   const monthName = date.toLocaleDateString('en-US', { month: 'short' });
@@ -443,6 +525,26 @@ function SearchResults() {
                     </div>
                   );
                 });
+              })()}
+              
+              {/* Show More button for next 2 weeks */}
+              {(() => {
+                const agentId = selectedAppointment?.agent?.id;
+                const agentAvailabilityData = agentId ? agentAvailability[agentId] : null;
+                const daysToShow = agentId ? (availabilityDaysToShow[agentId] || 7) : 7;
+                
+                if (!agentId || !agentAvailabilityData || agentAvailabilityData.length === 0) {
+                  return null;
+                }
+                
+                return (
+                  <button
+                    onClick={() => handleShowMoreWeeks(agentId)}
+                    className="w-full py-3 px-4 border border-gray-300 rounded-md text-black hover:bg-gray-50 transition-colors mt-4"
+                  >
+                    {showMoreWeeks ? "Show less" : "Show more availability"}
+                  </button>
+                );
               })()}
             </div>
           </div>
@@ -632,7 +734,7 @@ function SearchResults() {
                             );
                           })}
                           <button 
-                            onClick={() => handleBookAgent(agentId)}
+                            onClick={() => handleLoadMoreCalendarDays(agentId)}
                             className="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:border-green-800 hover:bg-green-50 text-sm flex items-center justify-center"
                           >
                             More
