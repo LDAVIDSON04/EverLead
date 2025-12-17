@@ -313,11 +313,15 @@ function SearchResults() {
     <div className="min-h-screen bg-white">
       {/* Appointment Booking Modal - Side panel that doesn't block background */}
       {selectedAppointment && selectedDate && (
-        <div 
-          className="fixed inset-0 z-40 pointer-events-none"
-        >
+        <>
+          {/* Backdrop - subtle overlay that doesn't block interaction */}
           <div 
-            className="absolute right-0 top-0 h-full w-full max-w-lg bg-white shadow-2xl overflow-y-auto pointer-events-auto"
+            className="fixed inset-0 bg-black bg-opacity-20 z-40"
+            onClick={closeModal}
+          />
+          {/* Side Panel */}
+          <div 
+            className="fixed right-0 top-0 h-full w-full max-w-lg bg-white shadow-2xl overflow-y-auto z-50"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
