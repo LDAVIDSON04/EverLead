@@ -590,6 +590,11 @@ function SearchResults() {
                             <Link
                               key={timeIdx}
                               href={bookingUrl || '#'}
+                              onClick={(e) => {
+                                // Close modal when link is clicked
+                                closeModal();
+                                // Let Next.js Link handle navigation
+                              }}
                               className={`px-4 py-2 rounded-md text-sm transition-colors inline-block text-center no-underline ${
                                 isSelected
                                   ? 'bg-green-600 text-white'
