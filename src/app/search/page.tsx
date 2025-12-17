@@ -441,10 +441,11 @@ function SearchResults() {
           <div 
             className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto relative z-50"
             onClick={(e) => {
-              // Don't stop propagation for buttons - let them handle their own clicks
+              // Don't stop propagation for links or buttons - let them handle their own clicks
               const target = e.target as HTMLElement;
+              const isLink = target.tagName === 'A' || target.closest('a');
               const isButton = target.tagName === 'BUTTON' || target.closest('button');
-              if (!isButton) {
+              if (!isLink && !isButton) {
                 e.stopPropagation();
               }
             }}
