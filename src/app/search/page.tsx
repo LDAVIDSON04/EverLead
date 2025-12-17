@@ -128,10 +128,10 @@ function SearchResults() {
 
         setAppointments(mappedAppointments);
 
-        // Load availability for each agent to show accurate availability counts (7 days)
+        // Load availability for each agent to show accurate availability counts
         const today = new Date();
         const startDate = today.toISOString().split("T")[0];
-        const endDate = new Date(today.getTime() + 6 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]; // 7 days total (0-6 = 7 days)
+        const endDate = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
 
         const availabilityPromises = mappedAppointments.map(async (apt) => {
           if (!apt.agent?.id) return null;
@@ -181,7 +181,7 @@ function SearchResults() {
     setSearchService(searchService);
   };
 
-  // Generate availability slots for exactly 7 days (always)
+  // Generate availability slots for the next 8 days
   const generateAvailability = (appointment: Appointment): AvailabilitySlot[] => {
     const slots: AvailabilitySlot[] = [];
     const today = new Date();
@@ -191,8 +191,8 @@ function SearchResults() {
     const realAvailability = agentId ? agentAvailability[agentId] : null;
     
     if (realAvailability && realAvailability.length > 0) {
-      // Use real availability data from agent's settings - always show 7 days
-      return realAvailability.slice(0, 7).map((day) => {
+      // Use real availability data from agent's settings
+      return realAvailability.slice(0, 8).map((day) => {
         const date = new Date(day.date + "T00:00:00");
         const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
         const monthName = date.toLocaleDateString('en-US', { month: 'short' });
@@ -205,8 +205,8 @@ function SearchResults() {
       });
     }
     
-    // Fallback: generate 7 days if availability not loaded yet
-    for (let i = 0; i < 7; i++) {
+    // Fallback: generate placeholder slots if availability not loaded yet
+    for (let i = 0; i < 8; i++) {
       const date = new Date(today);
       date.setDate(today.getDate() + i);
       
@@ -244,36 +244,26 @@ function SearchResults() {
       setSelectedAppointment(appointment);
       setSelectedAppointmentIndex(index);
       setSelectedDate(slot.date);
-      setShowMoreAvailability(false);
+      setShowMoreAvailability(true); // Always show all days
       
-      // Load real availability for this agent and date
+      // Load real availability for this agent (7 days from today)
       try {
         const agentId = appointment.agent.id;
-        // Parse the date from the slot (format: "Mon\nDec 16")
-        const dateMatch = slot.date.match(/(\w+)\s+(\d+)/);
-        if (dateMatch) {
-          const dayNum = parseInt(dateMatch[2]);
-          const today = new Date();
-          const targetDate = new Date(today.getFullYear(), today.getMonth(), dayNum);
-          // If the day number is less than today's day, it's next month
-          if (dayNum < today.getDate()) {
-            targetDate.setMonth(today.getMonth() + 1);
-          }
-          const dateStr = targetDate.toISOString().split("T")[0];
-          const endDateStr = dateStr; // Same day
-          
-          const res = await fetch(
-            `/api/agents/availability?agentId=${agentId}&startDate=${dateStr}&endDate=${endDateStr}`
-          );
-          
-          if (res.ok) {
-            const availabilityData: AvailabilityDay[] = await res.json();
-            // Store the full availability data for this agent
-            setAgentAvailability((prev) => ({
-              ...prev,
-              [agentId]: availabilityData,
-            }));
-          }
+        const today = new Date();
+        const startDate = today.toISOString().split("T")[0];
+        const endDate = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+        
+        const res = await fetch(
+          `/api/agents/availability?agentId=${agentId}&startDate=${startDate}&endDate=${endDate}`
+        );
+        
+        if (res.ok) {
+          const availabilityData: AvailabilityDay[] = await res.json();
+          // Store the full availability data for this agent
+          setAgentAvailability((prev) => ({
+            ...prev,
+            [agentId]: availabilityData,
+          }));
         }
       } catch (err) {
         console.error("Error loading availability:", err);
@@ -311,17 +301,14 @@ function SearchResults() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Appointment Booking Modal - Side panel that doesn't block background */}
+      {/* Appointment Booking Modal */}
       {selectedAppointment && selectedDate && (
-        <>
-          {/* Backdrop - subtle overlay that doesn't block interaction */}
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+          onClick={closeModal}
+        >
           <div 
-            className="fixed inset-0 bg-black bg-opacity-20 z-40"
-            onClick={closeModal}
-          />
-          {/* Side Panel */}
-          <div 
-            className="fixed right-0 top-0 h-full w-full max-w-lg bg-white shadow-2xl overflow-y-auto z-50"
+            className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
@@ -383,214 +370,78 @@ function SearchResults() {
             <div className="p-6">
               <h3 className="text-black mb-4 font-semibold">Available appointments</h3>
               
-              {/* Selected Date */}
-              <div className="mb-6">
-                <p className="text-black mb-3 font-medium">{selectedDate.replace('\n', ', ')}</p>
-                {(() => {
-                  // Get real availability slots if available
-                  const agentId = selectedAppointment?.agent?.id;
-                  let timeSlots: string[] = [];
-                  
-                  if (agentId && selectedDate) {
-                    // Try to parse the date from selectedDate (format: "Mon\nDec 16")
-                    const dateMatch = selectedDate.match(/(\w+)\s+(\d+)/);
-                    if (dateMatch) {
-                      const dayNum = parseInt(dateMatch[2]);
-                      const today = new Date();
-                      const targetDate = new Date(today.getFullYear(), today.getMonth(), dayNum);
-                      if (dayNum < today.getDate()) {
-                        targetDate.setMonth(today.getMonth() + 1);
-                      }
-                      const dateStr = targetDate.toISOString().split("T")[0];
-                      // Get availability for this agent
-                      const agentAvailabilityData = agentAvailability[agentId];
-                      if (agentAvailabilityData) {
-                        const dayData = agentAvailabilityData.find((day) => day.date === dateStr);
-                        if (dayData && dayData.slots.length > 0) {
-                          // Convert real slots to time strings
-                          timeSlots = dayData.slots.map((slot) => {
-                            const date = new Date(slot.startsAt);
-                            const hours = date.getUTCHours();
-                            const minutes = date.getUTCMinutes();
-                            const ampm = hours >= 12 ? "PM" : "AM";
-                            const displayHours = hours % 12 || 12;
-                            return `${displayHours}:${String(minutes).padStart(2, "0")} ${ampm}`;
-                          });
-                        }
-                      }
-                    }
-                  }
-                  
-                  // Fallback to generated slots if no real data
-                  if (timeSlots.length === 0) {
-                    timeSlots = generateTimeSlots(selectedDate);
-                  }
-                  
+              {/* Show all 7 days with their time slots */}
+              {(() => {
+                const agentId = selectedAppointment?.agent?.id;
+                const agentAvailabilityData = agentId ? agentAvailability[agentId] : null;
+                
+                if (!agentAvailabilityData || agentAvailabilityData.length === 0) {
+                  // Fallback: show placeholder
                   return (
-                    <div className="flex flex-wrap gap-2">
-                      {timeSlots.map((time, timeIdx) => {
-                        const isSelected = selectedTime === `${selectedDate}-${time}`;
-                        return (
-                          <button
-                            key={timeIdx}
-                            onClick={() => {
-                              setSelectedTime(`${selectedDate}-${time}`);
-                              // Navigate to booking page when time is selected
-                              const agentId = selectedAppointment?.agent?.id;
-                              if (agentId) {
-                                setTimeout(() => {
-                                  window.location.href = `/book/agent/${agentId}`;
-                                }, 300);
-                              }
-                            }}
-                            className={`px-4 py-2 rounded-md text-sm transition-colors ${
-                              isSelected
-                                ? 'bg-green-600 text-white'
-                                : 'bg-green-100 text-black hover:bg-green-200'
-                            }`}
-                          >
-                            {time}
-                          </button>
-                        );
-                      })}
+                    <div className="text-gray-500 text-sm">
+                      Loading availability...
                     </div>
                   );
-                })()}
-              </div>
-
-              {/* More Availability - Show full week and month */}
-              {!showMoreAvailability ? (
-                <button 
-                  onClick={async () => {
-                    setShowMoreAvailability(true);
-                    // Load full availability for the agent (next 30 days)
-                    const agentId = selectedAppointment?.agent?.id;
-                    if (agentId) {
-                      const today = new Date();
-                      const startDate = today.toISOString().split("T")[0];
-                      const endDate = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
-                      
-                      try {
-                        const res = await fetch(
-                          `/api/agents/availability?agentId=${agentId}&startDate=${startDate}&endDate=${endDate}`
-                        );
-                        if (res.ok) {
-                          const data: AvailabilityDay[] = await res.json();
-                          setAgentAvailability((prev) => ({
-                            ...prev,
-                            [agentId]: data,
-                          }));
-                        }
-                      } catch (err) {
-                        console.error("Error loading full availability:", err);
-                      }
-                    }
-                  }}
-                  className="text-black underline hover:no-underline text-sm"
-                >
-                  Show more availability
-                </button>
-              ) : (
-                <>
-                  {(() => {
-                    const agentId = selectedAppointment?.agent?.id;
-                    const fullAvailability = agentId ? agentAvailability[agentId] : null;
-                    
-                    if (!fullAvailability || fullAvailability.length === 0) {
-                      return (
-                        <div className="text-sm text-gray-500">
-                          Loading full availability...
-                        </div>
-                      );
-                    }
-                    
-                    // Group by week (7 days per week)
-                    const weeks: AvailabilityDay[][] = [];
-                    let currentWeek: AvailabilityDay[] = [];
-                    
-                    fullAvailability.forEach((day, idx) => {
-                      if (idx > 0 && idx % 7 === 0) {
-                        weeks.push(currentWeek);
-                        currentWeek = [day];
-                      } else {
-                        currentWeek.push(day);
-                      }
-                    });
-                    if (currentWeek.length > 0) {
-                      weeks.push(currentWeek);
-                    }
-                    
-                    return (
-                      <div className="space-y-6">
-                        {weeks.map((week, weekIdx) => (
-                          <div key={weekIdx} className="border-t border-gray-200 pt-4">
-                            <h4 className="text-sm font-semibold text-gray-700 mb-3">
-                              Week {weekIdx + 1} {weekIdx === 0 && '(Current Week)'}
-                            </h4>
-                            {week.map((day, dayIdx) => {
-                              // Skip the selected date
-                              const date = new Date(day.date + "T00:00:00");
-                              const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
-                              const monthName = date.toLocaleDateString('en-US', { month: 'short' });
-                              const dayNum = date.getDate();
-                              const dateStr = `${dayName}\n${monthName} ${dayNum}`;
-                              
-                              if (dateStr === selectedDate) return null;
-                              
-                              // Get real time slots for this day
-                              let timeSlots: string[] = [];
-                              if (day.slots && day.slots.length > 0) {
-                                timeSlots = day.slots.map((slot) => {
-                                  const slotDate = new Date(slot.startsAt);
-                                  const hours = slotDate.getUTCHours();
-                                  const minutes = slotDate.getUTCMinutes();
-                                  const ampm = hours >= 12 ? "PM" : "AM";
-                                  const displayHours = hours % 12 || 12;
-                                  return `${displayHours}:${String(minutes).padStart(2, "0")} ${ampm}`;
-                                });
-                              }
-                              
-                              if (timeSlots.length === 0) return null;
-                              
-                              return (
-                                <div key={dayIdx} className="mb-4">
-                                  <p className="text-black mb-2 font-medium text-sm">{dateStr.replace('\n', ', ')}</p>
-                                  <div className="flex flex-wrap gap-2">
-                                    {timeSlots.map((time, timeIdx) => {
-                                      const isSelected = selectedTime === `${dateStr}-${time}`;
-                                      return (
-                                        <button
-                                          key={timeIdx}
-                                          onClick={() => {
-                                            setSelectedTime(`${dateStr}-${time}`);
-                                            const agentId = selectedAppointment?.agent?.id;
-                                            if (agentId) {
-                                              setTimeout(() => {
-                                                window.location.href = `/book/agent/${agentId}`;
-                                              }, 300);
-                                            }
-                                          }}
-                                          className={`px-3 py-1.5 rounded-md text-xs transition-colors ${
-                                            isSelected
-                                              ? 'bg-green-600 text-white'
-                                              : 'bg-green-100 text-black hover:bg-green-200'
-                                          }`}
-                                        >
-                                          {time}
-                                        </button>
-                                      );
-                                    })}
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        ))}
+                }
+                
+                // Show all days (up to 7) with their time slots
+                return agentAvailabilityData.slice(0, 7).map((day, dayIdx) => {
+                  const date = new Date(day.date + "T00:00:00");
+                  const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+                  const monthName = date.toLocaleDateString('en-US', { month: 'short' });
+                  const dayNum = date.getDate();
+                  const displayDate = `${dayName}, ${monthName} ${dayNum}`;
+                  
+                  // Convert slots to time strings
+                  const timeSlots = day.slots.map((slot) => {
+                    const slotDate = new Date(slot.startsAt);
+                    const hours = slotDate.getUTCHours();
+                    const minutes = slotDate.getUTCMinutes();
+                    const ampm = hours >= 12 ? "PM" : "AM";
+                    const displayHours = hours % 12 || 12;
+                    return {
+                      time: `${displayHours}:${String(minutes).padStart(2, "0")} ${ampm}`,
+                      startsAt: slot.startsAt,
+                      endsAt: slot.endsAt,
+                    };
+                  });
+                  
+                  if (timeSlots.length === 0) return null;
+                  
+                  return (
+                    <div key={dayIdx} className="mb-6">
+                      <p className="text-black mb-3 font-medium">{displayDate}</p>
+                      <div className="flex flex-wrap gap-2">
+                        {timeSlots.map((timeSlot, timeIdx) => {
+                          const timeKey = `${day.date}-${timeSlot.time}`;
+                          const isSelected = selectedTime === timeKey;
+                          return (
+                            <button
+                              key={timeIdx}
+                              onClick={() => {
+                                setSelectedTime(timeKey);
+                                // Navigate to booking page when time is selected
+                                if (agentId) {
+                                  setTimeout(() => {
+                                    window.location.href = `/book/agent/${agentId}`;
+                                  }, 300);
+                                }
+                              }}
+                              className={`px-4 py-2 rounded-md text-sm transition-colors ${
+                                isSelected
+                                  ? 'bg-green-600 text-white'
+                                  : 'bg-green-100 text-black hover:bg-green-200'
+                              }`}
+                            >
+                              {timeSlot.time}
+                            </button>
+                          );
+                        })}
                       </div>
-                    );
-                  })()}
-                </>
-              )}
+                    </div>
+                  );
+                });
+              })()}
             </div>
           </div>
         </div>
@@ -655,11 +506,10 @@ function SearchResults() {
           <h2 className="text-2xl text-gray-900">
             {loading ? "Loading..." : `${appointments.length} ${appointments.length === 1 ? 'appointment' : 'appointments'} available`}
           </h2>
-          <div className="flex items-center gap-2 text-gray-700">
-            <span className="text-sm">
-              {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {new Date(Date.now() + 6 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} (7 days)
-            </span>
-          </div>
+          <button className="flex items-center gap-2 text-gray-700 hover:text-gray-900">
+            <span>Today, {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {new Date(Date.now() + 13 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+            <ChevronRight className="w-5 h-5" />
+          </button>
         </div>
 
         {/* Appointment Cards */}
@@ -755,21 +605,18 @@ function SearchResults() {
                         <span className="text-gray-600 text-sm">{location}</span>
                       </div>
 
-                      {/* Availability Calendar - Always show 7 days */}
+                      {/* Availability Calendar */}
                       <div className="mt-4">
-                        <div className="grid grid-cols-7 gap-2">
+                        <div className="grid grid-cols-4 gap-2">
                           {availability.map((slot, slotIndex) => {
                             const hasSpots = slot.spots > 0;
-                            const isSelected = selectedAppointment?.id === appointment.id && selectedDate === slot.date;
                             return (
                               <button
                                 key={slotIndex}
                                 onClick={() => hasSpots && handleDayClick(appointment, slot, index)}
                                 className={`
-                                  px-2 py-2 rounded-lg border text-center text-xs transition-colors
-                                  ${isSelected
-                                    ? 'bg-green-600 text-white border-green-600'
-                                    : hasSpots 
+                                  px-3 py-2 rounded-lg border text-center text-sm transition-colors
+                                  ${hasSpots 
                                     ? 'bg-green-800 text-white border-green-800 hover:bg-green-900 cursor-pointer' 
                                     : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'}
                                 `}
@@ -777,11 +624,17 @@ function SearchResults() {
                               >
                                 <div className="whitespace-pre-line leading-tight">{slot.date}</div>
                                 <div className="text-xs mt-1">
-                                  {hasSpots ? `${slot.spots}\nspots` : 'No\nspots'}
+                                  {hasSpots ? `${slot.spots}\nappointments` : 'No\nappointments'}
                                 </div>
                               </button>
                             );
                           })}
+                          <button 
+                            onClick={() => handleBookAgent(agentId)}
+                            className="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:border-green-800 hover:bg-green-50 text-sm flex items-center justify-center"
+                          >
+                            More
+                          </button>
                         </div>
                       </div>
                     </div>
