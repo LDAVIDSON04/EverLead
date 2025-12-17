@@ -252,9 +252,13 @@ function SearchResults() {
   };
 
   const handleDayClick = (appointment: Appointment, slot: AvailabilitySlot, index: number) => {
+    console.log("Day clicked:", { spots: slot.spots, agentId: appointment.agent?.id });
     if (slot.spots > 0 && appointment.agent?.id) {
       // Navigate directly to the booking page - no modal!
+      console.log("Navigating to:", `/book/select-time/${appointment.agent.id}`);
       router.push(`/book/select-time/${appointment.agent.id}`);
+    } else {
+      console.log("Cannot navigate - missing spots or agent ID");
     }
   };
 
