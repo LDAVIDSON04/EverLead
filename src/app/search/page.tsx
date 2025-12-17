@@ -594,13 +594,25 @@ function SearchResults() {
                                 
                                 // Stop propagation to prevent modal backdrop from interfering
                                 e.stopPropagation();
-                                console.log("Time slot clicked - navigating to:", bookingUrl);
                                 
-                                // Navigate immediately - this will cause a full page load
-                                // which will naturally close the modal
-                                window.location.href = bookingUrl;
+                                console.log("=== TIME SLOT CLICKED ===");
+                                console.log("Booking URL:", bookingUrl);
+                                console.log("Agent ID:", agentId);
+                                console.log("Time Slot:", timeSlot);
+                                console.log("Day Date:", day.date);
                                 
-                                // Prevent default since we're handling navigation
+                                // Navigate immediately using window.location
+                                // This will cause a full page navigation
+                                try {
+                                  window.location.href = bookingUrl;
+                                  console.log("Navigation executed successfully");
+                                } catch (error) {
+                                  console.error("Navigation error:", error);
+                                  // Fallback: try router
+                                  router.push(bookingUrl);
+                                }
+                                
+                                // Prevent default to handle navigation ourselves
                                 e.preventDefault();
                               }}
                               className={`px-4 py-2 rounded-md text-sm transition-colors cursor-pointer inline-block text-center no-underline ${
