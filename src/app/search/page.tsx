@@ -270,11 +270,10 @@ function SearchResults() {
             const availabilityData: AvailabilityDay[] = await res.json();
             const dayData = availabilityData.find((day) => day.date === dateStr);
             if (dayData) {
-              // Store the real slots for this date
-              const key = `${agentId}-${dateStr}`;
+              // Store the availability data for this agent
               setAgentAvailability((prev) => ({
                 ...prev,
-                [key]: dayData.slots,
+                [agentId]: availabilityData,
               }));
             }
           }
