@@ -79,7 +79,7 @@ function SearchResults() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [showMoreAvailability, setShowMoreAvailability] = useState(false);
-  const [agentAvailability, setAgentAvailability] = useState<Record<string, { startsAt: string; endsAt: string }[]>>({});
+  const [agentAvailability, setAgentAvailability] = useState<Record<string, AvailabilityDay[]>>({});
 
   // Sync state with URL params when they change
   useEffect(() => {
@@ -128,13 +128,35 @@ function SearchResults() {
 
         setAppointments(mappedAppointments);
 
-        // Load availability for each agent
+        // Load availability for each agent to show accurate availability counts
         const today = new Date();
         const startDate = today.toISOString().split("T")[0];
         const endDate = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
 
-        // Note: We'll load availability on-demand when days are clicked
-        // This keeps the initial load fast
+        const availabilityPromises = mappedAppointments.map(async (apt) => {
+          if (!apt.agent?.id) return null;
+          try {
+            const res = await fetch(
+              `/api/agents/availability?agentId=${apt.agent.id}&startDate=${startDate}&endDate=${endDate}`
+            );
+            if (res.ok) {
+              const data: AvailabilityDay[] = await res.json();
+              return { agentId: apt.agent.id, availability: data };
+            }
+          } catch (err) {
+            console.error(`Error loading availability for agent ${apt.agent.id}:`, err);
+          }
+          return null;
+        });
+
+        const availabilityResults = await Promise.all(availabilityPromises);
+        const availabilityMap: Record<string, AvailabilityDay[]> = {};
+        availabilityResults.forEach((result) => {
+          if (result) {
+            availabilityMap[result.agentId] = result.availability;
+          }
+        });
+        setAgentAvailability(availabilityMap);
       } catch (err) {
         console.error("Error:", err);
       } finally {
@@ -164,10 +186,26 @@ function SearchResults() {
     const slots: AvailabilitySlot[] = [];
     const today = new Date();
     
-    // For now, generate placeholder slots
-    // Real availability will be loaded when a day is clicked
+    // Get real availability if we have it
+    const agentId = appointment.agent?.id;
+    const realAvailability = agentId ? agentAvailability[agentId] : null;
     
-    // Fallback: generate placeholder slots
+    if (realAvailability && realAvailability.length > 0) {
+      // Use real availability data from agent's settings
+      return realAvailability.slice(0, 8).map((day) => {
+        const date = new Date(day.date + "T00:00:00");
+        const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+        const monthName = date.toLocaleDateString('en-US', { month: 'short' });
+        const dayNum = date.getDate();
+        
+        return {
+          date: `${dayName}\n${monthName} ${dayNum}`,
+          spots: day.slots.length,
+        };
+      });
+    }
+    
+    // Fallback: generate placeholder slots if availability not loaded yet
     for (let i = 0; i < 8; i++) {
       const date = new Date(today);
       date.setDate(today.getDate() + i);
@@ -176,13 +214,10 @@ function SearchResults() {
       const monthName = date.toLocaleDateString('en-US', { month: 'short' });
       const dayNum = date.getDate();
       
-      // Show availability for agents (they have availability set up)
-      // For now, show 3-8 spots per day to indicate availability
-      const spots = i < 2 ? 0 : Math.floor(Math.random() * 6) + 3;
-      
+      // Show 0 spots until real data loads
       slots.push({
         date: `${dayName}\n${monthName} ${dayNum}`,
-        spots,
+        spots: 0,
       });
     }
     
