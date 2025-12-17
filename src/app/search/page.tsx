@@ -582,48 +582,45 @@ function SearchResults() {
                           }
                           
                           return (
-                            <button
+                            <a
                               key={timeIdx}
-                              type="button"
-                              onMouseDown={(e) => {
-                                if (!bookingUrl) return;
-                                
-                                e.stopPropagation();
-                                e.preventDefault();
-                                
-                                console.log("MOUSEDOWN - Navigating to:", bookingUrl);
-                                
-                                // Navigate immediately on mousedown
-                                window.location.href = bookingUrl;
-                              }}
+                              href={bookingUrl || '#'}
                               onClick={(e) => {
-                                if (!bookingUrl) return;
+                                if (!bookingUrl) {
+                                  e.preventDefault();
+                                  return;
+                                }
                                 
                                 e.stopPropagation();
-                                e.preventDefault();
                                 
-                                console.log("CLICK - Navigating to:", bookingUrl);
+                                console.log("LINK CLICKED - URL:", bookingUrl);
                                 
-                                // Navigate on click as backup
-                                window.location.href = bookingUrl;
+                                // Don't prevent default - let the anchor navigate naturally
+                                // But also force it programmatically
+                                const url = bookingUrl;
+                                
+                                // Force navigation
+                                setTimeout(() => {
+                                  console.log("Forcing navigation to:", url);
+                                  window.location.href = url;
+                                }, 0);
                               }}
-                              className={`px-4 py-2 rounded-md text-sm transition-colors ${
+                              className={`px-4 py-2 rounded-md text-sm transition-colors inline-block text-center no-underline ${
                                 isSelected
                                   ? 'bg-green-600 text-white'
                                   : 'bg-green-100 text-black hover:bg-green-200'
                               }`}
                               style={{
-                                border: 'none',
+                                textDecoration: 'none',
+                                display: 'inline-block',
                                 cursor: 'pointer',
                                 position: 'relative',
                                 zIndex: 999999,
-                                pointerEvents: 'auto',
-                                userSelect: 'none',
-                                WebkitUserSelect: 'none'
+                                pointerEvents: 'auto'
                               }}
                             >
                               {timeSlot.time}
-                            </button>
+                            </a>
                           );
                         })}
                       </div>
