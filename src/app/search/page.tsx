@@ -432,11 +432,18 @@ function SearchResults() {
         <div 
           className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
           onClick={closeModal}
+          onMouseDown={(e) => {
+            // Only close if clicking the backdrop, not the modal content
+            if (e.target === e.currentTarget) {
+              closeModal();
+            }
+          }}
         >
           <div 
             className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto relative z-50"
             onClick={(e) => e.stopPropagation()}
             onMouseDown={(e) => e.stopPropagation()}
+            style={{ pointerEvents: 'auto' }}
           >
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-200">
