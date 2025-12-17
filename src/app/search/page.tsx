@@ -789,7 +789,7 @@ function SearchResults() {
                                 <div className="text-xs mt-1">
                                   {hasSpots ? `${slot.spots}\nappointments` : 'No\nappointments'}
                                 </div>
-                              </button>
+                              </Link>
                             );
                           })}
                           <button 
