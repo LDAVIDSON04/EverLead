@@ -566,9 +566,9 @@ function SearchResults() {
                               key={timeIdx}
                               type="button"
                               onClick={async (e) => {
-                                // Stop all event propagation immediately
+                                // Stop event propagation to prevent modal from closing
                                 e.stopPropagation();
-                                e.preventDefault();
+                                // Don't prevent default - we want navigation to happen
                                 
                                 // Validate data
                                 if (!agentId || !timeSlot.startsAt || !timeSlot.endsAt || !day.date) {
@@ -587,12 +587,11 @@ function SearchResults() {
                                 
                                 console.log("TIME SLOT CLICKED! Navigating to:", url);
                                 
-                                // Try router.push first (Next.js way)
+                                // Use router.push for Next.js navigation
                                 try {
-                                  await router.push(url);
-                                  console.log("Router.push completed");
+                                  router.push(url);
                                 } catch (error) {
-                                  console.error("Router.push failed, trying window.location:", error);
+                                  console.error("Router.push failed, using window.location:", error);
                                   // Fallback to window.location if router fails
                                   window.location.href = url;
                                 }
