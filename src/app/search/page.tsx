@@ -441,8 +441,19 @@ function SearchResults() {
         >
           <div 
             className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto relative z-50"
-            onClick={(e) => e.stopPropagation()}
-            onMouseDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              // Only stop propagation if not clicking a button
+              const target = e.target as HTMLElement;
+              if (target.tagName !== 'BUTTON' && !target.closest('button')) {
+                e.stopPropagation();
+              }
+            }}
+            onMouseDown={(e) => {
+              const target = e.target as HTMLElement;
+              if (target.tagName !== 'BUTTON' && !target.closest('button')) {
+                e.stopPropagation();
+              }
+            }}
             style={{ pointerEvents: 'auto' }}
           >
             {/* Header */}
@@ -551,47 +562,50 @@ function SearchResults() {
                           const timeKey = `${day.date}-${timeSlot.time}`;
                           const isSelected = selectedTime === timeKey;
                           
-                          // Build the navigation URL
-                          const buildBookingUrl = () => {
+                          const handleTimeClick = (e: React.MouseEvent) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            
                             if (!agentId || !timeSlot.startsAt || !timeSlot.endsAt || !day.date) {
-                              console.error("Cannot build URL - missing data:", { agentId, startsAt: timeSlot.startsAt, endsAt: timeSlot.endsAt, date: day.date });
-                              return null;
+                              console.error("Cannot navigate - missing data:", { agentId, startsAt: timeSlot.startsAt, endsAt: timeSlot.endsAt, date: day.date });
+                              alert("Error: Missing appointment data. Please try again.");
+                              return;
                             }
+                            
                             const params = new URLSearchParams({
                               startsAt: timeSlot.startsAt,
                               endsAt: timeSlot.endsAt,
                               date: day.date,
                             });
-                            return `/book/step1/${agentId}?${params.toString()}`;
+                            const url = `/book/step1/${agentId}?${params.toString()}`;
+                            console.log("Navigating to:", url);
+                            
+                            // Force navigation using window.location
+                            window.location.href = url;
                           };
                           
-                          const bookingUrl = buildBookingUrl();
-                          
                           return (
-                            <Link
+                            <button
                               key={timeIdx}
-                              href={bookingUrl || '#'}
-                              onClick={(e) => {
-                                if (!bookingUrl) {
-                                  e.preventDefault();
-                                  alert("Error: Missing appointment data. Please try again.");
-                                  return;
-                                }
-                                console.log("Link clicked - navigating to:", bookingUrl);
-                                // Let the Link handle navigation naturally
+                              type="button"
+                              onClick={handleTimeClick}
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
                               }}
-                              className={`px-4 py-2 rounded-md text-sm transition-colors cursor-pointer inline-block text-center no-underline ${
+                              className={`px-4 py-2 rounded-md text-sm transition-colors cursor-pointer ${
                                 isSelected
                                   ? 'bg-green-600 text-white'
                                   : 'bg-green-100 text-black hover:bg-green-200'
                               }`}
                               style={{ 
-                                textDecoration: 'none',
-                                display: 'inline-block'
+                                pointerEvents: 'auto',
+                                position: 'relative',
+                                zIndex: 1000
                               }}
                             >
                               {timeSlot.time}
-                            </Link>
+                            </button>
                           );
                         })}
                       </div>
