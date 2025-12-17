@@ -440,7 +440,13 @@ function SearchResults() {
         >
           <div 
             className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto relative z-50"
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              // Only stop propagation if not clicking a link
+              const target = e.target as HTMLElement;
+              if (target.tagName !== 'A' && !target.closest('a')) {
+                e.stopPropagation();
+              }
+            }}
           >
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-200">
