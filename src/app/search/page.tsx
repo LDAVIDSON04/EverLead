@@ -581,14 +581,15 @@ function SearchResults() {
                           }
                           
                           return (
-                            <button
+                            <a
                               key={timeIdx}
-                              type="button"
+                              href={bookingUrl || '#'}
                               onClick={(e) => {
                                 if (!bookingUrl) {
+                                  e.preventDefault();
                                   e.stopPropagation();
                                   alert("Error: Missing appointment data. Please try again.");
-                                  return;
+                                  return false;
                                 }
                                 
                                 // Stop propagation to prevent modal backdrop from interfering
@@ -596,27 +597,35 @@ function SearchResults() {
                                 
                                 console.log("=== TIME SLOT CLICKED ===");
                                 console.log("Booking URL:", bookingUrl);
+                                console.log("Navigating NOW to Step 1 booking page");
                                 
-                                // Close modal first
-                                closeModal();
+                                // Force navigation - don't prevent default, let the anchor work
+                                // But also force it programmatically as backup
+                                const url = bookingUrl;
                                 
-                                // Navigate immediately - use window.location for full page reload
-                                // This ensures we leave the current page completely
-                                window.location.href = bookingUrl;
+                                // Use setTimeout 0 to ensure this runs after any React state updates
+                                setTimeout(() => {
+                                  console.log("Executing navigation to:", url);
+                                  window.location.replace(url);
+                                }, 0);
+                                
+                                // Don't prevent default - let anchor navigate naturally too
+                                // This gives us double insurance
                               }}
-                              className={`px-4 py-2 rounded-md text-sm transition-colors cursor-pointer inline-block text-center ${
+                              className={`px-4 py-2 rounded-md text-sm transition-colors cursor-pointer inline-block text-center no-underline ${
                                 isSelected
                                   ? 'bg-green-600 text-white'
                                   : 'bg-green-100 text-black hover:bg-green-200'
                               }`}
                               style={{
+                                textDecoration: 'none',
+                                display: 'inline-block',
                                 position: 'relative',
-                                zIndex: 1000,
-                                border: 'none'
+                                zIndex: 1000
                               }}
                             >
                               {timeSlot.time}
-                            </button>
+                            </a>
                           );
                         })}
                       </div>
