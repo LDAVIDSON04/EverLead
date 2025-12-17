@@ -491,13 +491,20 @@ function SearchResults() {
                   {(() => {
                     const agentId = selectedAppointment?.agent?.id;
                     const fullAvailability = agentId ? agentAvailability[agentId] : null;
-                    const availabilityToShow = fullAvailability || generateAvailability(selectedAppointment);
                     
-                    // Group by week
+                    if (!fullAvailability || fullAvailability.length === 0) {
+                      return (
+                        <div className="text-sm text-gray-500">
+                          Loading full availability...
+                        </div>
+                      );
+                    }
+                    
+                    // Group by week (7 days per week)
                     const weeks: AvailabilityDay[][] = [];
                     let currentWeek: AvailabilityDay[] = [];
                     
-                    availabilityToShow.forEach((day, idx) => {
+                    fullAvailability.forEach((day, idx) => {
                       if (idx > 0 && idx % 7 === 0) {
                         weeks.push(currentWeek);
                         currentWeek = [day];
@@ -517,47 +524,41 @@ function SearchResults() {
                               Week {weekIdx + 1} {weekIdx === 0 && '(Current Week)'}
                             </h4>
                             {week.map((day, dayIdx) => {
-                              if (day.date === selectedDate) return null;
+                              // Skip the selected date
+                              const date = new Date(day.date + "T00:00:00");
+                              const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+                              const monthName = date.toLocaleDateString('en-US', { month: 'short' });
+                              const dayNum = date.getDate();
+                              const dateStr = `${dayName}\n${monthName} ${dayNum}`;
+                              
+                              if (dateStr === selectedDate) return null;
                               
                               // Get real time slots for this day
                               let timeSlots: string[] = [];
-                              if (fullAvailability) {
-                                const dayData = fullAvailability.find((d) => {
-                                  const date = new Date(d.date + "T00:00:00");
-                                  const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
-                                  const monthName = date.toLocaleDateString('en-US', { month: 'short' });
-                                  const dayNum = date.getDate();
-                                  const dateStr = `${dayName}\n${monthName} ${dayNum}`;
-                                  return dateStr === day.date;
+                              if (day.slots && day.slots.length > 0) {
+                                timeSlots = day.slots.map((slot) => {
+                                  const slotDate = new Date(slot.startsAt);
+                                  const hours = slotDate.getUTCHours();
+                                  const minutes = slotDate.getUTCMinutes();
+                                  const ampm = hours >= 12 ? "PM" : "AM";
+                                  const displayHours = hours % 12 || 12;
+                                  return `${displayHours}:${String(minutes).padStart(2, "0")} ${ampm}`;
                                 });
-                                
-                                if (dayData && dayData.slots.length > 0) {
-                                  timeSlots = dayData.slots.map((slot) => {
-                                    const date = new Date(slot.startsAt);
-                                    const hours = date.getUTCHours();
-                                    const minutes = date.getUTCMinutes();
-                                    const ampm = hours >= 12 ? "PM" : "AM";
-                                    const displayHours = hours % 12 || 12;
-                                    return `${displayHours}:${String(minutes).padStart(2, "0")} ${ampm}`;
-                                  });
-                                }
-                              } else {
-                                timeSlots = generateTimeSlots(day.date);
                               }
                               
                               if (timeSlots.length === 0) return null;
                               
                               return (
                                 <div key={dayIdx} className="mb-4">
-                                  <p className="text-black mb-2 font-medium text-sm">{day.date.replace('\n', ', ')}</p>
+                                  <p className="text-black mb-2 font-medium text-sm">{dateStr.replace('\n', ', ')}</p>
                                   <div className="flex flex-wrap gap-2">
                                     {timeSlots.map((time, timeIdx) => {
-                                      const isSelected = selectedTime === `${day.date}-${time}`;
+                                      const isSelected = selectedTime === `${dateStr}-${time}`;
                                       return (
                                         <button
                                           key={timeIdx}
                                           onClick={() => {
-                                            setSelectedTime(`${day.date}-${time}`);
+                                            setSelectedTime(`${dateStr}-${time}`);
                                             const agentId = selectedAppointment?.agent?.id;
                                             if (agentId) {
                                               setTimeout(() => {
@@ -650,10 +651,11 @@ function SearchResults() {
           <h2 className="text-2xl text-gray-900">
             {loading ? "Loading..." : `${appointments.length} ${appointments.length === 1 ? 'appointment' : 'appointments'} available`}
           </h2>
-          <button className="flex items-center gap-2 text-gray-700 hover:text-gray-900">
-            <span>Today, {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {new Date(Date.now() + 13 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
-            <ChevronRight className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2 text-gray-700">
+            <span className="text-sm">
+              {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {new Date(Date.now() + 6 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} (7 days)
+            </span>
+          </div>
         </div>
 
         {/* Appointment Cards */}
