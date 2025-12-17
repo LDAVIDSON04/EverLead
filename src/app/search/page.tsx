@@ -228,38 +228,60 @@ function SearchResults() {
     return slots;
   };
 
-  const handleLoadMoreCalendarDays = async (agentId: string) => {
-    const currentDays = calendarDaysToShow[agentId] || 8;
-    const newDays = currentDays + 7; // Load 7 more days
+  const handleMoreButtonClick = async (appointment: Appointment, index: number) => {
+    if (!appointment.agent?.id) return;
     
-    // Load more availability if needed
-    const existingAvailability = agentAvailability[agentId] || [];
-    if (existingAvailability.length < newDays) {
-      try {
-        const today = new Date();
-        const startDate = today.toISOString().split("T")[0];
-        const endDate = new Date(today.getTime() + newDays * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
-        
-        const res = await fetch(
-          `/api/agents/availability?agentId=${agentId}&startDate=${startDate}&endDate=${endDate}`
-        );
-        
-        if (res.ok) {
-          const availabilityData: AvailabilityDay[] = await res.json();
-          setAgentAvailability((prev) => ({
-            ...prev,
-            [agentId]: availabilityData,
-          }));
+    // Find the first available day from the calendar
+    const availability = generateAvailability(appointment);
+    const firstAvailableSlot = availability.find(slot => slot.spots > 0);
+    
+    if (firstAvailableSlot) {
+      // Open modal with the first available day
+      await handleDayClick(appointment, firstAvailableSlot, index);
+    } else {
+      // If no available days, still open modal but load availability
+      setSelectedAppointment(appointment);
+      setSelectedAppointmentIndex(index);
+      setShowMoreAvailability(true);
+      setShowMoreWeeks(false);
+      
+      const agentId = appointment.agent.id;
+      if (!agentAvailability[agentId]) {
+        try {
+          const today = new Date();
+          const startDate = today.toISOString().split("T")[0];
+          const endDate = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+          
+          const res = await fetch(
+            `/api/agents/availability?agentId=${agentId}&startDate=${startDate}&endDate=${endDate}`
+          );
+          
+          if (res.ok) {
+            const availabilityData: AvailabilityDay[] = await res.json();
+            setAgentAvailability((prev) => ({
+              ...prev,
+              [agentId]: availabilityData,
+            }));
+            setAvailabilityDaysToShow((prev) => ({
+              ...prev,
+              [agentId]: 7,
+            }));
+            
+            // Set the first available day as selected
+            if (availabilityData.length > 0 && availabilityData[0].slots.length > 0) {
+              const firstDay = availabilityData[0];
+              const date = new Date(firstDay.date + "T00:00:00");
+              const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+              const monthName = date.toLocaleDateString('en-US', { month: 'short' });
+              const dayNum = date.getDate();
+              setSelectedDate(`${dayName}\n${monthName} ${dayNum}`);
+            }
+          }
+        } catch (err) {
+          console.error("Error loading availability:", err);
         }
-      } catch (err) {
-        console.error("Error loading more calendar days:", err);
       }
     }
-    
-    setCalendarDaysToShow((prev) => ({
-      ...prev,
-      [agentId]: newDays,
-    }));
   };
 
   // Generate time slots for a selected date
@@ -734,7 +756,7 @@ function SearchResults() {
                             );
                           })}
                           <button 
-                            onClick={() => handleLoadMoreCalendarDays(agentId)}
+                            onClick={() => handleMoreButtonClick(appointment, index)}
                             className="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:border-green-800 hover:bg-green-50 text-sm flex items-center justify-center"
                           >
                             More
