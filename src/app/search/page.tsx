@@ -581,12 +581,11 @@ function SearchResults() {
                           }
                           
                           return (
-                            <a
+                            <button
                               key={timeIdx}
-                              href={bookingUrl || '#'}
+                              type="button"
                               onClick={(e) => {
                                 if (!bookingUrl) {
-                                  e.preventDefault();
                                   e.stopPropagation();
                                   alert("Error: Missing appointment data. Please try again.");
                                   return;
@@ -597,38 +596,27 @@ function SearchResults() {
                                 
                                 console.log("=== TIME SLOT CLICKED ===");
                                 console.log("Booking URL:", bookingUrl);
-                                console.log("Agent ID:", agentId);
-                                console.log("Time Slot:", timeSlot);
-                                console.log("Day Date:", day.date);
                                 
-                                // Navigate immediately using window.location
-                                // This will cause a full page navigation
-                                try {
-                                  window.location.href = bookingUrl;
-                                  console.log("Navigation executed successfully");
-                                } catch (error) {
-                                  console.error("Navigation error:", error);
-                                  // Fallback: try router
-                                  router.push(bookingUrl);
-                                }
+                                // Close modal first
+                                closeModal();
                                 
-                                // Prevent default to handle navigation ourselves
-                                e.preventDefault();
+                                // Navigate immediately - use window.location for full page reload
+                                // This ensures we leave the current page completely
+                                window.location.href = bookingUrl;
                               }}
-                              className={`px-4 py-2 rounded-md text-sm transition-colors cursor-pointer inline-block text-center no-underline ${
+                              className={`px-4 py-2 rounded-md text-sm transition-colors cursor-pointer inline-block text-center ${
                                 isSelected
                                   ? 'bg-green-600 text-white'
                                   : 'bg-green-100 text-black hover:bg-green-200'
                               }`}
                               style={{
-                                textDecoration: 'none',
-                                display: 'inline-block',
                                 position: 'relative',
-                                zIndex: 1000
+                                zIndex: 1000,
+                                border: 'none'
                               }}
                             >
                               {timeSlot.time}
-                            </a>
+                            </button>
                           );
                         })}
                       </div>

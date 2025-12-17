@@ -48,43 +48,71 @@ export async function GET(req: NextRequest) {
     // Filter agents who are approved and have availability configured
     const agentsWithAvailability: AgentSearchResult[] = (profiles || [])
       .filter((profile: any) => {
-        // Check approval status
-        if (profile.approval_status !== "approved") {
-          console.log(`[AGENT SEARCH] Agent ${profile.id} not approved: ${profile.approval_status}`);
+        try {
+          // Check approval status
+          if (profile.approval_status !== "approved") {
+            console.log(`[AGENT SEARCH] Agent ${profile.id} not approved: ${profile.approval_status}`);
+            return false;
+          }
+
+          // Check availability - handle different metadata structures
+          let metadata = {};
+          try {
+            if (typeof profile.metadata === 'string') {
+              metadata = JSON.parse(profile.metadata);
+            } else if (profile.metadata && typeof profile.metadata === 'object') {
+              metadata = profile.metadata;
+            }
+          } catch (e) {
+            console.log(`[AGENT SEARCH] Agent ${profile.id} has invalid metadata format`);
+            // Continue anyway - might still have availability
+          }
+
+          const availability = (metadata as any)?.availability || {};
+          const locations = availability.locations || [];
+          
+          // If no locations in availability, still include agent (they might have availability set up differently)
+          // We'll check actual availability via the availability API instead
+          return true;
+        } catch (err) {
+          console.error(`[AGENT SEARCH] Error processing agent ${profile.id}:`, err);
           return false;
         }
-
-        // Check availability
-        const metadata = profile.metadata || {};
-        const availability = metadata.availability || {};
-        const locations = availability.locations || [];
-        
-        if (locations.length === 0) {
-          console.log(`[AGENT SEARCH] Agent ${profile.id} has no availability configured`);
-          return false;
-        }
-
-        return true;
       })
       .map((profile: any) => {
-        const metadata = profile.metadata || {};
-        const availability = metadata.availability || {};
-        
-        return {
-          id: profile.id,
-          full_name: profile.full_name,
-          first_name: profile.first_name,
-          last_name: profile.last_name,
-          profile_picture_url: profile.profile_picture_url,
-          funeral_home: profile.funeral_home,
-          job_title: profile.job_title,
-          agent_city: profile.agent_city,
-          agent_province: profile.agent_province,
-          regions_served: metadata.regions_served || null,
-          specialty: metadata.specialty || null,
-          hasAvailability: true,
-        };
-      });
+        try {
+          let metadata = {};
+          try {
+            if (typeof profile.metadata === 'string') {
+              metadata = JSON.parse(profile.metadata);
+            } else if (profile.metadata && typeof profile.metadata === 'object') {
+              metadata = profile.metadata;
+            }
+          } catch (e) {
+            // Use empty object if metadata is invalid
+            metadata = {};
+          }
+          
+          return {
+            id: profile.id,
+            full_name: profile.full_name,
+            first_name: profile.first_name,
+            last_name: profile.last_name,
+            profile_picture_url: profile.profile_picture_url,
+            funeral_home: profile.funeral_home,
+            job_title: profile.job_title,
+            agent_city: profile.agent_city,
+            agent_province: profile.agent_province,
+            regions_served: (metadata as any)?.regions_served || null,
+            specialty: (metadata as any)?.specialty || null,
+            hasAvailability: true,
+          };
+        } catch (err) {
+          console.error(`[AGENT SEARCH] Error mapping agent ${profile.id}:`, err);
+          return null;
+        }
+      })
+      .filter((agent): agent is AgentSearchResult => agent !== null);
 
     console.log(`[AGENT SEARCH] ${agentsWithAvailability.length} agents with availability configured`);
 
