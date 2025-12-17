@@ -601,8 +601,14 @@ function SearchResults() {
                                 
                                 console.log("Navigating to:", bookingUrl);
                                 
-                                // Force navigation with window.location
-                                window.location.href = bookingUrl;
+                                // Close modal first
+                                closeModal();
+                                
+                                // Use replace which is more forceful - can't be blocked
+                                setTimeout(() => {
+                                  console.log("Executing window.location.replace");
+                                  window.location.replace(bookingUrl);
+                                }, 50);
                               }}
                               onMouseDown={(e) => {
                                 console.log("BUTTON MOUSEDOWN");
