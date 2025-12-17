@@ -548,19 +548,6 @@ function SearchResults() {
                           const timeKey = `${day.date}-${timeSlot.time}`;
                           const isSelected = selectedTime === timeKey;
                           
-                          // Build URL immediately
-                          const bookingUrl = (() => {
-                            if (!agentId || !timeSlot.startsAt || !timeSlot.endsAt || !day.date) {
-                              return null;
-                            }
-                            const params = new URLSearchParams({
-                              startsAt: timeSlot.startsAt,
-                              endsAt: timeSlot.endsAt,
-                              date: day.date,
-                            });
-                            return `/book/step1/${agentId}?${params.toString()}`;
-                          })();
-                          
                           // Build URL
                           const bookingUrl = (() => {
                             if (!agentId || !timeSlot.startsAt || !timeSlot.endsAt || !day.date) {
