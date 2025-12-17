@@ -565,7 +565,7 @@ function SearchResults() {
                             <button
                               key={timeIdx}
                               type="button"
-                              onClick={(e) => {
+                              onClick={async (e) => {
                                 // Stop all event propagation immediately
                                 e.stopPropagation();
                                 e.preventDefault();
@@ -587,8 +587,15 @@ function SearchResults() {
                                 
                                 console.log("TIME SLOT CLICKED! Navigating to:", url);
                                 
-                                // Force immediate navigation
-                                window.location.href = url;
+                                // Try router.push first (Next.js way)
+                                try {
+                                  await router.push(url);
+                                  console.log("Router.push completed");
+                                } catch (error) {
+                                  console.error("Router.push failed, trying window.location:", error);
+                                  // Fallback to window.location if router fails
+                                  window.location.href = url;
+                                }
                               }}
                               onMouseDown={(e) => {
                                 // Prevent any mouse down events from bubbling
