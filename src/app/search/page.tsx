@@ -566,7 +566,7 @@ function SearchResults() {
                               key={timeIdx}
                               type="button"
                               onClick={(e) => {
-                                // Stop event propagation to prevent modal from closing
+                                // Stop event propagation
                                 e.stopPropagation();
                                 
                                 // Validate data
@@ -586,8 +586,14 @@ function SearchResults() {
                                 
                                 console.log("TIME SLOT CLICKED! Navigating to:", url);
                                 
-                                // Force full page navigation - this will definitely work
-                                window.location.assign(url);
+                                // Close modal first to avoid any interference
+                                closeModal();
+                                
+                                // Use setTimeout to ensure modal closes, then navigate
+                                setTimeout(() => {
+                                  console.log("Executing navigation to:", url);
+                                  window.location.href = url;
+                                }, 100);
                               }}
                               onMouseDown={(e) => {
                                 // Prevent any mouse down events from bubbling
