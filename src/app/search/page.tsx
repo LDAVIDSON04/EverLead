@@ -594,14 +594,28 @@ function SearchResults() {
                                 
                                 console.log("=== TIME SLOT BUTTON CLICKED ===");
                                 console.log("Booking URL:", bookingUrl);
-                                console.log("Navigating NOW");
                                 
                                 // Stop all propagation
                                 e.stopPropagation();
                                 e.preventDefault();
                                 
-                                // Navigate immediately
-                                window.location.href = bookingUrl;
+                                // Try multiple navigation methods to ensure it works
+                                console.log("Attempting navigation with window.location.href");
+                                try {
+                                  window.location.href = bookingUrl;
+                                  console.log("window.location.href set");
+                                } catch (err) {
+                                  console.error("href failed, trying assign:", err);
+                                  window.location.assign(bookingUrl);
+                                }
+                                
+                                // Force navigation as backup
+                                setTimeout(() => {
+                                  if (window.location.pathname !== bookingUrl.split('?')[0]) {
+                                    console.log("Navigation didn't work, forcing with replace");
+                                    window.location.replace(bookingUrl);
+                                  }
+                                }, 100);
                               }}
                               onMouseDown={(e) => {
                                 console.log("BUTTON MOUSEDOWN EVENT FIRED");
