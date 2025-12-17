@@ -756,7 +756,11 @@ function SearchResults() {
                             return (
                               <button
                                 key={slotIndex}
-                                onClick={() => hasSpots && handleDayClick(appointment, slot, index)}
+                                onClick={() => {
+                                  if (hasSpots) {
+                                    handleDayClick(appointment, slot, index);
+                                  }
+                                }}
                                 className={`
                                   px-3 py-2 rounded-lg border text-center text-sm transition-colors
                                   ${hasSpots 
