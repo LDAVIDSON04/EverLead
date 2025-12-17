@@ -577,20 +577,29 @@ function SearchResults() {
                           return (
                             <a
                               key={timeIdx}
-                              href={bookingUrl}
+                              href={bookingUrl || '#'}
                               onClick={(e) => {
+                                if (!bookingUrl) {
+                                  e.preventDefault();
+                                  alert("Error: Missing appointment data. Please try again.");
+                                  return;
+                                }
+                                
                                 e.stopPropagation();
-                                console.log("Time slot link clicked - navigating to:", bookingUrl);
-                                // Close modal immediately
+                                console.log("Time slot clicked - URL:", bookingUrl);
+                                
+                                // Close modal
                                 closeModal();
-                                // Force navigation - don't let anything prevent it
-                                setTimeout(() => {
-                                  if (bookingUrl) {
-                                    window.location.href = bookingUrl;
-                                  }
-                                }, 50);
-                                // Prevent default to handle navigation ourselves
-                                e.preventDefault();
+                                
+                                // Immediately navigate - don't prevent default, let anchor work
+                                // But also force it as backup
+                                const navigate = () => {
+                                  console.log("Executing navigation to:", bookingUrl);
+                                  window.location.href = bookingUrl;
+                                };
+                                
+                                // Small delay to ensure modal closes, then navigate
+                                setTimeout(navigate, 10);
                               }}
                               className={`px-4 py-2 rounded-md text-sm transition-colors cursor-pointer inline-block text-center no-underline ${
                                 isSelected
@@ -599,7 +608,8 @@ function SearchResults() {
                               }`}
                               style={{
                                 textDecoration: 'none',
-                                display: 'inline-block'
+                                display: 'inline-block',
+                                pointerEvents: 'auto'
                               }}
                             >
                               {timeSlot.time}
