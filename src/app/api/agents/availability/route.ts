@@ -69,12 +69,12 @@ export async function GET(req: NextRequest) {
     const firstLocation = locations[0];
     const locationSchedule = availabilityByLocation[firstLocation] || {};
 
-    // Load existing appointments for this agent
+    // Load existing appointments for this agent (get actual times if available)
     const { data: appointments, error: appointmentsError } = await supabaseAdmin
       .from("appointments")
-      .select("requested_date, requested_window, status")
+      .select("requested_date, requested_window, status, created_at")
       .eq("agent_id", agentId)
-      .neq("status", "cancelled")
+      .in("status", ["pending", "confirmed", "booked"])
       .gte("requested_date", startDate)
       .lte("requested_date", endDate);
 
@@ -82,23 +82,37 @@ export async function GET(req: NextRequest) {
       console.error("Error loading appointments:", appointmentsError);
     }
 
-    // Helper to convert time string (HH:MM) to Date for a given date
+    // Helper to convert time string (HH:MM) in agent's local timezone to UTC Date
+    // We'll assume the agent's timezone is their system timezone or use a default
+    // For now, we'll treat the times as if they're in the agent's local timezone
     const timeToDate = (dateStr: string, timeStr: string): Date => {
       const [year, month, day] = dateStr.split("-").map(Number);
       const [hours, minutes] = timeStr.split(":").map(Number);
+      
+      // Create date in local timezone (agent's timezone)
+      // Then convert to UTC for storage
+      const localDate = new Date(year, month - 1, day, hours, minutes);
+      
+      // For API responses, we want UTC ISO strings
+      // The time provided is in the agent's local timezone, so we need to account for that
+      // For simplicity, we'll create a UTC date that represents the same "wall clock time"
+      // This assumes the agent's schedule times are in their local timezone
       return new Date(Date.UTC(year, month - 1, day, hours, minutes));
     };
 
     // Helper to check if a time slot conflicts with an appointment
+    // Since appointments table doesn't store exact start/end times, we'll block
+    // any slot if there's an appointment on that date to prevent double-booking
     const hasConflict = (slotStart: Date, slotEnd: Date, dateStr: string): boolean => {
-      if (!appointments) return false;
+      if (!appointments || appointments.length === 0) return false;
       
+      // Check if there's any appointment on this date
+      // This is conservative but ensures no double-booking
+      // In the future, if we store exact start/end times in appointments,
+      // we can check for actual time overlaps
       return appointments.some((apt: any) => {
         if (apt.requested_date !== dateStr) return false;
-        if (apt.status === "cancelled") return false;
-        
-        // For now, if there's any appointment on this date, block the slot
-        // Could be enhanced to check specific time windows
+        // Any active appointment on this date blocks the slot
         return true;
       });
     };
@@ -127,30 +141,36 @@ export async function GET(req: NextRequest) {
         continue;
       }
 
-      // Generate time slots for this day
+      // Generate time slots for this day based on agent's exact schedule
       const slots: { startsAt: string; endsAt: string }[] = [];
       const [startHour, startMin] = daySchedule.start.split(":").map(Number);
       const [endHour, endMin] = daySchedule.end.split(":").map(Number);
 
-      let currentHour = startHour;
-      let currentMin = startMin;
+      // Convert end time to minutes for easier comparison
+      const endTimeMinutes = endHour * 60 + endMin;
+      
+      // Start from the beginning of the day's availability
+      let currentTimeMinutes = startHour * 60 + startMin;
 
-      while (
-        currentHour < endHour ||
-        (currentHour === endHour && currentMin < endMin)
-      ) {
+      while (currentTimeMinutes < endTimeMinutes) {
+        // Calculate if this slot would extend beyond the end time
+        const slotEndMinutes = currentTimeMinutes + appointmentLength;
+        
+        if (slotEndMinutes > endTimeMinutes) {
+          // This slot would extend beyond available hours, stop
+          break;
+        }
+
+        // Convert current time to hours and minutes
+        const currentHour = Math.floor(currentTimeMinutes / 60);
+        const currentMin = currentTimeMinutes % 60;
         const timeStr = `${String(currentHour).padStart(2, "0")}:${String(currentMin).padStart(2, "0")}`;
+        
+        // Create slot start and end times
         const slotStart = timeToDate(dateStr, timeStr);
         const slotEnd = new Date(slotStart.getTime() + appointmentLength * 60 * 1000);
 
-        // Check if slot extends beyond end time
-        const slotEndHour = slotEnd.getUTCHours();
-        const slotEndMin = slotEnd.getUTCMinutes();
-        if (slotEndHour > endHour || (slotEndHour === endHour && slotEndMin > endMin)) {
-          break; // Stop if slot would extend beyond available hours
-        }
-
-        // Check for conflicts
+        // Check for conflicts with existing appointments
         if (!hasConflict(slotStart, slotEnd, dateStr)) {
           slots.push({
             startsAt: slotStart.toISOString(),
@@ -159,11 +179,7 @@ export async function GET(req: NextRequest) {
         }
 
         // Move to next slot (use appointment length as interval)
-        currentMin += appointmentLength;
-        if (currentMin >= 60) {
-          currentHour += Math.floor(currentMin / 60);
-          currentMin = currentMin % 60;
-        }
+        currentTimeMinutes += appointmentLength;
       }
 
       days.push({ date: dateStr, slots });

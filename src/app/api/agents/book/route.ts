@@ -64,22 +64,41 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check for conflicts - look for existing appointments that overlap
+    // Check for conflicts - look for existing appointments that overlap with this time slot
+    const requestedDate = slotStart.toISOString().split("T")[0];
+    const slotEndTime = slotEnd.getTime();
+    const slotStartTime = slotStart.getTime();
+    
+    // Get all appointments for this agent on this date
     const { data: conflictingAppointments, error: conflictError } = await supabaseAdmin
       .from("appointments")
-      .select("id, requested_date, requested_window")
+      .select("id, requested_date, requested_window, created_at")
       .eq("agent_id", agentId)
-      .eq("requested_date", slotStart.toISOString().split("T")[0])
-      .in("status", ["pending", "confirmed", "booked"])
-      .neq("status", "cancelled");
+      .eq("requested_date", requestedDate)
+      .in("status", ["pending", "confirmed", "booked"]);
 
     if (conflictError) {
       console.error("Error checking conflicts:", conflictError);
     }
 
-    // For now, we'll use a simple check - if there's any appointment on that date with the agent, 
-    // we'll need to be more sophisticated later with actual time slots
-    // Convert time to window (morning, afternoon, evening)
+    // Check for time overlaps
+    // Since we don't have exact start/end times in appointments table, we'll be conservative
+    // If there's any appointment on this date, we'll block the booking
+    // This ensures no double-booking
+    if (conflictingAppointments && conflictingAppointments.length > 0) {
+      // For now, if there's any appointment on this date, block it
+      // In the future, we could store exact start/end times in appointments table
+      // and check for actual time overlaps
+      return NextResponse.json(
+        { 
+          error: "This time slot is no longer available",
+          code: "SLOT_CONFLICT"
+        },
+        { status: 409 }
+      );
+    }
+
+    // Convert time to window (morning, afternoon, evening) for storage
     const hour = slotStart.getUTCHours();
     let requestedWindow: "morning" | "afternoon" | "evening";
     if (hour < 12) {
@@ -88,25 +107,6 @@ export async function POST(req: NextRequest) {
       requestedWindow = "afternoon";
     } else {
       requestedWindow = "evening";
-    }
-
-    // Check if there's already an appointment in the same window
-    if (conflictingAppointments && conflictingAppointments.length > 0) {
-      const hasConflict = conflictingAppointments.some((apt: any) => {
-        // If there's any appointment on this date, we'll be conservative and block
-        // In a more sophisticated system, we'd check actual time overlaps
-        return apt.requested_window === requestedWindow || !apt.requested_window;
-      });
-
-      if (hasConflict) {
-        return NextResponse.json(
-          { 
-            error: "This time slot is no longer available",
-            code: "SLOT_CONFLICT"
-          },
-          { status: 409 }
-        );
-      }
     }
 
     // Create or find a lead for this booking
