@@ -589,16 +589,25 @@ function SearchResults() {
                                   e.preventDefault();
                                   e.stopPropagation();
                                   alert("Error: Missing appointment data. Please try again.");
-                                  return false;
+                                  return;
                                 }
                                 
-                                // Stop propagation to prevent modal from closing
+                                // Stop propagation to prevent modal backdrop from closing modal
                                 e.stopPropagation();
                                 console.log("Time slot clicked - navigating to:", bookingUrl);
                                 
-                                // Let the anchor tag navigate naturally - don't prevent default
-                                // The page navigation will happen automatically via href
-                                // Don't close modal here - let navigation happen first
+                                // Force immediate navigation - don't rely on href alone
+                                // Close modal and navigate
+                                closeModal();
+                                
+                                // Use setTimeout to ensure modal closes, then navigate
+                                setTimeout(() => {
+                                  console.log("Executing navigation to:", bookingUrl);
+                                  window.location.href = bookingUrl;
+                                }, 100);
+                                
+                                // Prevent default to handle navigation ourselves
+                                e.preventDefault();
                               }}
                               className={`px-4 py-2 rounded-md text-sm transition-colors cursor-pointer inline-block text-center no-underline ${
                                 isSelected
