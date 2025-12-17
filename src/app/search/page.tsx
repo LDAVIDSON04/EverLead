@@ -599,23 +599,20 @@ function SearchResults() {
                                 e.stopPropagation();
                                 e.preventDefault();
                                 
-                                // Try multiple navigation methods to ensure it works
-                                console.log("Attempting navigation with window.location.href");
-                                try {
-                                  window.location.href = bookingUrl;
-                                  console.log("window.location.href set");
-                                } catch (err) {
-                                  console.error("href failed, trying assign:", err);
-                                  window.location.assign(bookingUrl);
-                                }
+                                // Use window.location.replace - most forceful navigation
+                                // This replaces the current page in history and forces navigation
+                                console.log("Using window.location.replace for forced navigation");
+                                window.location.replace(bookingUrl);
                                 
-                                // Force navigation as backup
+                                // If that doesn't work immediately, try href as backup
                                 setTimeout(() => {
-                                  if (window.location.pathname !== bookingUrl.split('?')[0]) {
-                                    console.log("Navigation didn't work, forcing with replace");
-                                    window.location.replace(bookingUrl);
+                                  const currentPath = window.location.pathname;
+                                  const targetPath = bookingUrl.split('?')[0];
+                                  if (currentPath !== targetPath) {
+                                    console.log("Replace didn't work, trying href:", { currentPath, targetPath });
+                                    window.location.href = bookingUrl;
                                   }
-                                }, 100);
+                                }, 50);
                               }}
                               onMouseDown={(e) => {
                                 console.log("BUTTON MOUSEDOWN EVENT FIRED");
