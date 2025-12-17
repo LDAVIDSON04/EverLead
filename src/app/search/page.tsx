@@ -251,13 +251,22 @@ function SearchResults() {
     return times.filter(() => Math.random() > 0.25);
   };
 
-  const handleDayClick = (appointment: Appointment, slot: AvailabilitySlot, index: number) => {
+  const handleDayClick = (e: React.MouseEvent, appointment: Appointment, slot: AvailabilitySlot, index: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
     console.log("Day clicked:", { spots: slot.spots, agentId: appointment.agent?.id });
     if (slot.spots > 0 && appointment.agent?.id) {
-      // Navigate directly to the booking page - use window.location for guaranteed navigation
-      const bookingUrl = `/book/select-time/${appointment.agent.id}`;
+      // Navigate directly to the booking page - use absolute URL with window.location
+      const bookingUrl = `${window.location.origin}/book/select-time/${appointment.agent.id}`;
       console.log("Navigating to:", bookingUrl);
-      window.location.href = bookingUrl;
+      // Force immediate navigation - try multiple methods
+      try {
+        window.location.href = bookingUrl;
+      } catch (err) {
+        console.error("Navigation error:", err);
+        window.location.replace(bookingUrl);
+      }
     } else {
       console.log("Cannot navigate - missing spots or agent ID");
     }
@@ -761,9 +770,9 @@ function SearchResults() {
                             return (
                               <button
                                 key={slotIndex}
-                                onClick={() => {
+                                onClick={(e) => {
                                   if (hasSpots) {
-                                    handleDayClick(appointment, slot, index);
+                                    handleDayClick(e, appointment, slot, index);
                                   }
                                 }}
                                 className={`
