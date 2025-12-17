@@ -768,20 +768,22 @@ function SearchResults() {
                           {availability.map((slot, slotIndex) => {
                             const hasSpots = slot.spots > 0;
                             return (
-                              <button
+                              <Link
                                 key={slotIndex}
+                                href={hasSpots ? `/book/select-time/${appointment.agent?.id}` : '#'}
                                 onClick={(e) => {
-                                  if (hasSpots) {
-                                    handleDayClick(e, appointment, slot, index);
+                                  if (!hasSpots || !appointment.agent?.id) {
+                                    e.preventDefault();
+                                    return;
                                   }
+                                  console.log("Link clicked, navigating to:", `/book/select-time/${appointment.agent.id}`);
                                 }}
                                 className={`
-                                  px-3 py-2 rounded-lg border text-center text-sm transition-colors
+                                  px-3 py-2 rounded-lg border text-center text-sm transition-colors block no-underline
                                   ${hasSpots 
                                     ? 'bg-green-800 text-white border-green-800 hover:bg-green-900 cursor-pointer' 
-                                    : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'}
+                                    : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed pointer-events-none'}
                                 `}
-                                disabled={!hasSpots}
                               >
                                 <div className="whitespace-pre-line leading-tight">{slot.date}</div>
                                 <div className="text-xs mt-1">
