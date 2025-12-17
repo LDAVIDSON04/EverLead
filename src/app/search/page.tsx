@@ -581,25 +581,19 @@ function SearchResults() {
                               onClick={(e) => {
                                 if (!bookingUrl) {
                                   e.preventDefault();
+                                  e.stopPropagation();
                                   alert("Error: Missing appointment data. Please try again.");
                                   return;
                                 }
                                 
                                 e.stopPropagation();
-                                console.log("Time slot clicked - URL:", bookingUrl);
+                                console.log("Time slot clicked - navigating to:", bookingUrl);
                                 
-                                // Close modal
+                                // Close modal first
                                 closeModal();
                                 
-                                // Immediately navigate - don't prevent default, let anchor work
-                                // But also force it as backup
-                                const navigate = () => {
-                                  console.log("Executing navigation to:", bookingUrl);
-                                  window.location.href = bookingUrl;
-                                };
-                                
-                                // Small delay to ensure modal closes, then navigate
-                                setTimeout(navigate, 10);
+                                // Don't prevent default - let the anchor tag navigate naturally
+                                // The href will handle the navigation
                               }}
                               className={`px-4 py-2 rounded-md text-sm transition-colors cursor-pointer inline-block text-center no-underline ${
                                 isSelected
@@ -608,8 +602,7 @@ function SearchResults() {
                               }`}
                               style={{
                                 textDecoration: 'none',
-                                display: 'inline-block',
-                                pointerEvents: 'auto'
+                                display: 'inline-block'
                               }}
                             >
                               {timeSlot.time}
