@@ -594,7 +594,6 @@ function SearchResults() {
                                 
                                 console.log("=== TIME SLOT BUTTON CLICKED ===");
                                 console.log("Booking URL:", bookingUrl);
-                                console.log("Current URL:", window.location.href);
                                 
                                 // Stop propagation to prevent modal from interfering
                                 e.stopPropagation();
@@ -602,22 +601,19 @@ function SearchResults() {
                                 // Close modal immediately
                                 closeModal();
                                 
-                                // Use setTimeout 0 to ensure modal closes first, then navigate
+                                // Use Next.js router for navigation - this is the proper way in Next.js
+                                console.log("Navigating with Next.js router");
+                                router.push(bookingUrl);
+                                
+                                // Backup: if router doesn't work, use window.location
                                 setTimeout(() => {
-                                  console.log("Executing navigation now");
-                                  console.log("Target URL:", bookingUrl);
-                                  
-                                  // Try replace first (most forceful)
-                                  window.location.replace(bookingUrl);
-                                  
-                                  // Backup: if replace doesn't work, try href
-                                  setTimeout(() => {
-                                    if (window.location.pathname !== bookingUrl.split('?')[0]) {
-                                      console.log("Replace didn't work, trying href");
-                                      window.location.href = bookingUrl;
-                                    }
-                                  }, 100);
-                                }, 10);
+                                  const currentPath = window.location.pathname;
+                                  const targetPath = bookingUrl.split('?')[0];
+                                  if (currentPath !== targetPath) {
+                                    console.log("Router didn't work, using window.location.href");
+                                    window.location.href = bookingUrl;
+                                  }
+                                }, 200);
                               }}
                               onMouseDown={(e) => {
                                 console.log("BUTTON MOUSEDOWN EVENT FIRED");
