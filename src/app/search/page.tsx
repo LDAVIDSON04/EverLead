@@ -594,19 +594,30 @@ function SearchResults() {
                                 
                                 console.log("=== TIME SLOT BUTTON CLICKED ===");
                                 console.log("Booking URL:", bookingUrl);
+                                console.log("Current URL:", window.location.href);
                                 
-                                // Stop propagation to prevent modal from closing
+                                // Stop propagation to prevent modal from interfering
                                 e.stopPropagation();
                                 
-                                // DON'T prevent default - let the browser handle navigation naturally
-                                // Use window.location.replace which is most forceful
-                                console.log("Navigating with window.location.replace");
-                                
-                                // Close modal first
+                                // Close modal immediately
                                 closeModal();
                                 
-                                // Navigate immediately - use replace to force it
-                                window.location.replace(bookingUrl);
+                                // Use setTimeout 0 to ensure modal closes first, then navigate
+                                setTimeout(() => {
+                                  console.log("Executing navigation now");
+                                  console.log("Target URL:", bookingUrl);
+                                  
+                                  // Try replace first (most forceful)
+                                  window.location.replace(bookingUrl);
+                                  
+                                  // Backup: if replace doesn't work, try href
+                                  setTimeout(() => {
+                                    if (window.location.pathname !== bookingUrl.split('?')[0]) {
+                                      console.log("Replace didn't work, trying href");
+                                      window.location.href = bookingUrl;
+                                    }
+                                  }, 100);
+                                }, 10);
                               }}
                               onMouseDown={(e) => {
                                 console.log("BUTTON MOUSEDOWN EVENT FIRED");
