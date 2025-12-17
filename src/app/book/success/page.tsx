@@ -1,11 +1,12 @@
 "use client";
 
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { CheckCircle } from "lucide-react";
 
-export default function BookingSuccessPage() {
+function BookingSuccessContent() {
   const searchParams = useSearchParams();
   const appointmentId = searchParams.get("appointmentId");
   const email = searchParams.get("email");
@@ -49,5 +50,17 @@ export default function BookingSuccessPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function BookingSuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <p className="text-gray-600">Loading...</p>
+      </div>
+    }>
+      <BookingSuccessContent />
+    </Suspense>
   );
 }

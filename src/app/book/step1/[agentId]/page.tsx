@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Star, MapPin, Info, Calendar } from "lucide-react";
 import { supabaseClient } from "@/lib/supabaseClient";
 
-export default function BookingStep1Page() {
+function BookingStep1Content() {
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -422,5 +422,17 @@ export default function BookingStep1Page() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function BookingStep1Page() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <p className="text-gray-600">Loading...</p>
+      </div>
+    }>
+      <BookingStep1Content />
+    </Suspense>
   );
 }
