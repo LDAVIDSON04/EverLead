@@ -90,7 +90,7 @@ function SelectTimeContent() {
     loadAvailability();
   }, [agentId, showMoreWeeks]);
 
-  const handleTimeSlotClick = (day: AvailabilityDay, timeSlot: { time: string; startsAt: string; endsAt: string }) => {
+  const handleTimeSlotClick = (day: AvailabilityDay, timeSlot: { time: string; startsAt: string; endsAt: string; available: boolean }) => {
     if (!timeSlot.available) return;
     
     const params = new URLSearchParams({
