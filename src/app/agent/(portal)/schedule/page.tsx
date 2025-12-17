@@ -44,6 +44,12 @@ export default function SchedulePage() {
   const [view, setView] = useState<ViewType>('upcoming');
   const [filter, setFilter] = useState<FilterType>('next7');
   const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
+  const [availabilityOverview, setAvailabilityOverview] = useState<{
+    workingHours: string;
+    slotLength: string;
+    bufferTime: string;
+    timeZone: string;
+  } | null>(null);
 
   const hours = Array.from({ length: 13 }, (_, i) => i + 8); // 8 AM to 8 PM
   const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -94,6 +100,81 @@ export default function SchedulePage() {
 
         // Load appointments regardless of specialist record
         await loadAppointments(session.access_token);
+
+        // Load availability settings
+        if (user) {
+          const { data: profileData } = await supabaseClient
+            .from("profiles")
+            .select("metadata")
+            .eq("id", user.id)
+            .maybeSingle();
+
+          if (profileData?.metadata?.availability) {
+            const availability = profileData.metadata.availability;
+            const locations = availability.locations || [];
+            const availabilityByLocation = availability.availabilityByLocation || {};
+            const appointmentLength = availability.appointmentLength || "30";
+            
+            // Get first location's schedule as default
+            if (locations.length > 0) {
+              const firstLocation = locations[0];
+              const locationSchedule = availabilityByLocation[firstLocation] || {};
+              
+              // Find common working hours across enabled days
+              const enabledDays = Object.keys(locationSchedule).filter(
+                (day) => locationSchedule[day]?.enabled
+              );
+              
+              if (enabledDays.length > 0) {
+                const times = enabledDays.map((day) => ({
+                  start: locationSchedule[day].start,
+                  end: locationSchedule[day].end,
+                }));
+                
+                // Find earliest start and latest end
+                const allStarts = times.map((t) => {
+                  const [hours, minutes] = t.start.split(":").map(Number);
+                  return hours * 60 + minutes;
+                });
+                const allEnds = times.map((t) => {
+                  const [hours, minutes] = t.end.split(":").map(Number);
+                  return hours * 60 + minutes;
+                });
+                
+                const earliestStart = Math.min(...allStarts);
+                const latestEnd = Math.max(...allEnds);
+                
+                const startHour = Math.floor(earliestStart / 60);
+                const startMin = earliestStart % 60;
+                const endHour = Math.floor(latestEnd / 60);
+                const endMin = latestEnd % 60;
+                
+                const formatTime = (hour: number, min: number) => {
+                  const period = hour >= 12 ? "PM" : "AM";
+                  const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
+                  return `${displayHour}:${String(min).padStart(2, "0")} ${period}`;
+                };
+                
+                setAvailabilityOverview({
+                  workingHours: `${formatTime(startHour, startMin)} - ${formatTime(endHour, endMin)}`,
+                  slotLength: `${appointmentLength} minutes`,
+                  bufferTime: "10 minutes", // Default, could be added to settings later
+                  timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || "MST",
+                });
+              }
+            }
+          }
+          
+          // Fallback to defaults if no availability set
+          if (!availabilityOverview) {
+            setAvailabilityOverview({
+              workingHours: "9 AM - 5 PM",
+              slotLength: "30 minutes",
+              bufferTime: "10 minutes",
+              timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || "MST",
+            });
+          }
+        }
 
         // Check if specialist has any calendar connections (only if specialist exists)
         if (data && data.id) {
@@ -708,23 +789,26 @@ export default function SchedulePage() {
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Working Hours</span>
-                  <span className="text-gray-900">9 AM - 5 PM</span>
+                  <span className="text-gray-900">{availabilityOverview?.workingHours || "9 AM - 5 PM"}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Slot Length</span>
-                  <span className="text-gray-900">30 minutes</span>
+                  <span className="text-gray-900">{availabilityOverview?.slotLength || "30 minutes"}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Buffer Time</span>
-                  <span className="text-gray-900">10 minutes</span>
+                  <span className="text-gray-900">{availabilityOverview?.bufferTime || "10 minutes"}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Time Zone</span>
-                  <span className="text-gray-900">MST</span>
+                  <span className="text-gray-900">{availabilityOverview?.timeZone || "MST"}</span>
                 </div>
-                <button className="w-full mt-4 px-4 py-2 bg-white text-gray-700 rounded-lg border border-gray-200 hover:bg-gray-50 transition-all text-sm">
+                <Link
+                  href="/agent/settings"
+                  className="w-full mt-4 px-4 py-2 bg-white text-gray-700 rounded-lg border border-gray-200 hover:bg-gray-50 transition-all text-sm flex items-center justify-center"
+                >
                   Edit Settings
-                </button>
+                </Link>
               </div>
             </div>
           </div>

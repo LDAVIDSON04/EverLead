@@ -225,6 +225,104 @@ export default function AgentDashboardPage() {
           { day: 'Thu', value: maxCount > 0 ? Math.round((dayCounts['Thu'] / maxCount) * 100) : 0 },
           { day: 'Fri', value: maxCount > 0 ? Math.round((dayCounts['Fri'] / maxCount) * 100) : 0 },
         ]);
+
+        // Load appointments for calendar display (current week)
+        const weekStart = new Date(today);
+        weekStart.setDate(today.getDate() - currentDay + 1);
+        weekStart.setHours(0, 0, 0, 0);
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekStart.getDate() + 6);
+        weekEnd.setHours(23, 59, 59, 999);
+
+        const { data: weekAppointments } = await supabaseClient
+          .from("appointments")
+          .select("requested_date, created_at")
+          .eq("agent_id", agentId)
+          .gte("requested_date", weekStart.toISOString().split("T")[0])
+          .lte("requested_date", weekEnd.toISOString().split("T")[0])
+          .in("status", ["pending", "confirmed", "booked"]);
+
+        // Count appointments per day of the week
+        const appointmentsByDay: Record<number, number> = {};
+        (weekAppointments || []).forEach((apt: any) => {
+          const date = apt.requested_date ? new Date(apt.requested_date) : new Date(apt.created_at);
+          const dayOfMonth = date.getDate();
+          appointmentsByDay[dayOfMonth] = (appointmentsByDay[dayOfMonth] || 0) + 1;
+        });
+        setCalendarAppointments(appointmentsByDay);
+
+        // Load availability settings
+        const { data: profileData } = await supabaseClient
+          .from("profiles")
+          .select("metadata")
+          .eq("id", agentId)
+          .maybeSingle();
+
+        if (profileData?.metadata?.availability) {
+          const availability = profileData.metadata.availability;
+          const locations = availability.locations || [];
+          const availabilityByLocation = availability.availabilityByLocation || {};
+          const appointmentLength = availability.appointmentLength || "30";
+          
+          // Get first location's schedule as default
+          if (locations.length > 0) {
+            const firstLocation = locations[0];
+            const locationSchedule = availabilityByLocation[firstLocation] || {};
+            
+            // Find common working hours across enabled days
+            const enabledDays = Object.keys(locationSchedule).filter(
+              (day) => locationSchedule[day]?.enabled
+            );
+            
+            if (enabledDays.length > 0) {
+              const times = enabledDays.map((day) => ({
+                start: locationSchedule[day].start,
+                end: locationSchedule[day].end,
+              }));
+              
+              // Find earliest start and latest end
+              const allStarts = times.map((t) => {
+                const [hours, minutes] = t.start.split(":").map(Number);
+                return hours * 60 + minutes;
+              });
+              const allEnds = times.map((t) => {
+                const [hours, minutes] = t.end.split(":").map(Number);
+                return hours * 60 + minutes;
+              });
+              
+              const earliestStart = Math.min(...allStarts);
+              const latestEnd = Math.max(...allEnds);
+              
+              const startHour = Math.floor(earliestStart / 60);
+              const startMin = earliestStart % 60;
+              const endHour = Math.floor(latestEnd / 60);
+              const endMin = latestEnd % 60;
+              
+              const formatTime = (hour: number, min: number) => {
+                const period = hour >= 12 ? "PM" : "AM";
+                const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
+                return `${displayHour}:${String(min).padStart(2, "0")} ${period}`;
+              };
+              
+              setAvailabilitySettings({
+                workingHours: `${formatTime(startHour, startMin)} - ${formatTime(endHour, endMin)}`,
+                slotLength: `${appointmentLength} minutes`,
+                bufferTime: "10 minutes", // Default, could be added to settings later
+                timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || "MST",
+              });
+            }
+          }
+        }
+        
+        // Fallback to defaults if no availability set
+        if (!availabilitySettings) {
+          setAvailabilitySettings({
+            workingHours: "9 AM - 5 PM",
+            slotLength: "30 minutes",
+            bufferTime: "10 minutes",
+            timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || "MST",
+          });
+        }
       } catch (err) {
         console.error("Error loading agent dashboard:", err);
         setError("Failed to load dashboard stats");
@@ -262,6 +360,13 @@ export default function AgentDashboardPage() {
     { day: 'Thu', value: 0 },
     { day: 'Fri', value: 0 },
   ]);
+  const [calendarAppointments, setCalendarAppointments] = useState<Record<number, number>>({});
+  const [availabilitySettings, setAvailabilitySettings] = useState<{
+    workingHours: string;
+    slotLength: string;
+    bufferTime: string;
+    timeZone: string;
+  } | null>(null);
 
   if (loading) {
     return (
@@ -453,13 +558,7 @@ export default function AgentDashboardPage() {
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm text-gray-900">Schedule Calendar</h3>
                 <div className="flex items-center gap-2">
-                  <button className="p-1 hover:bg-gray-100 rounded">
-                    <ChevronLeft size={16} className="text-gray-600" />
-                  </button>
-                  <button className="p-1 hover:bg-gray-100 rounded">
-                    <ChevronRight size={16} className="text-gray-600" />
-                  </button>
-                  <span className="text-sm text-gray-600 ml-2">
+                  <span className="text-sm text-gray-600">
                     {today.toLocaleDateString('en-US', { month: 'short' })}
                   </span>
                 </div>
@@ -469,25 +568,33 @@ export default function AgentDashboardPage() {
                 {weekDays.map((day, idx) => {
                   const isToday = idx === currentDay - 1;
                   return (
-                    <div key={day} className="text-center">
+                      <div key={day} className="text-center">
                       <div className="text-xs text-gray-500 mb-2">{day}</div>
                       <div className={`w-full aspect-square rounded-lg flex flex-col items-center justify-center text-sm ${
                         isToday ? 'bg-green-800 text-white' : 'bg-gray-50 text-gray-900'
                       }`}>
                         <div>{calendarDates[idx]}</div>
-                        {idx === 1 && (
-                          <div className="flex gap-0.5 mt-1">
-                            <span className="w-1 h-1 bg-green-600 rounded-full"></span>
-                            <span className="w-1 h-1 bg-gray-600 rounded-full"></span>
-                            <span className="w-1 h-1 bg-green-600 rounded-full"></span>
-                          </div>
-                        )}
-                        {idx === 6 && (
-                          <div className="flex gap-0.5 mt-1">
-                            <span className="w-1 h-1 bg-gray-600 rounded-full"></span>
-                            <span className="w-1 h-1 bg-green-600 rounded-full"></span>
-                          </div>
-                        )}
+                        {(() => {
+                          const dayNum = calendarDates[idx];
+                          const appointmentCount = calendarAppointments[dayNum] || 0;
+                          if (appointmentCount > 0) {
+                            // Show dots for appointments (max 3 dots)
+                            const dotsToShow = Math.min(appointmentCount, 3);
+                            return (
+                              <div className="flex gap-0.5 mt-1">
+                                {Array.from({ length: dotsToShow }).map((_, i) => (
+                                  <span
+                                    key={i}
+                                    className={`w-1 h-1 rounded-full ${
+                                      isToday ? 'bg-white' : 'bg-green-600'
+                                    }`}
+                                  ></span>
+                                ))}
+                              </div>
+                            );
+                          }
+                          return null;
+                        })()}
                       </div>
                     </div>
                   );
@@ -516,6 +623,40 @@ export default function AgentDashboardPage() {
                 ))}
               </div>
             </div>
+
+            {/* Availability Overview */}
+            {availabilitySettings && (
+              <div className="bg-white rounded-xl border border-gray-200 p-5">
+                <h3 className="text-sm text-gray-900 mb-4 flex items-center gap-2">
+                  <Clock className="w-5 h-5" />
+                  Availability Overview
+                </h3>
+                <div className="space-y-3 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Working Hours</span>
+                    <span className="text-gray-900">{availabilitySettings.workingHours}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Slot Length</span>
+                    <span className="text-gray-900">{availabilitySettings.slotLength}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Buffer Time</span>
+                    <span className="text-gray-900">{availabilitySettings.bufferTime}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Time Zone</span>
+                    <span className="text-gray-900">{availabilitySettings.timeZone}</span>
+                  </div>
+                  <Link
+                    href="/agent/settings"
+                    className="w-full mt-4 px-4 py-2 bg-white text-gray-700 rounded-lg border border-gray-200 hover:bg-gray-50 transition-all text-sm flex items-center justify-center"
+                  >
+                    Edit Settings
+                  </Link>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
