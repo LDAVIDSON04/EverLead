@@ -581,8 +581,16 @@ function SearchResults() {
                               onClick={(e) => {
                                 e.stopPropagation();
                                 console.log("Time slot link clicked - navigating to:", bookingUrl);
+                                // Close modal immediately
                                 closeModal();
-                                // Let the browser handle navigation naturally
+                                // Force navigation - don't let anything prevent it
+                                setTimeout(() => {
+                                  if (bookingUrl) {
+                                    window.location.href = bookingUrl;
+                                  }
+                                }, 50);
+                                // Prevent default to handle navigation ourselves
+                                e.preventDefault();
                               }}
                               className={`px-4 py-2 rounded-md text-sm transition-colors cursor-pointer inline-block text-center no-underline ${
                                 isSelected
