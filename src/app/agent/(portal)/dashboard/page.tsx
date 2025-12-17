@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabaseClient } from "@/lib/supabaseClient";
-import { Search, Bell, Calendar, ChevronLeft, ChevronRight, Phone, Mail as MailIcon, Users, Plus, MoreHorizontal, ArrowUpDown, AlertCircle, Check, User } from "lucide-react";
+import { Search, Bell, Calendar, ChevronLeft, ChevronRight, Phone, Mail as MailIcon, Users, Plus, MoreHorizontal, ArrowUpDown, AlertCircle, Check, User, Clock } from "lucide-react";
 
 type Stats = {
   available: number;
