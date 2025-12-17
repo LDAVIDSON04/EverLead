@@ -586,34 +586,20 @@ function SearchResults() {
                               key={timeIdx}
                               type="button"
                               onClick={(e) => {
-                                console.log("BUTTON CLICK EVENT FIRED");
                                 if (!bookingUrl) {
                                   alert("Error: Missing appointment data. Please try again.");
                                   return;
                                 }
                                 
-                                console.log("=== TIME SLOT BUTTON CLICKED ===");
-                                console.log("Booking URL:", bookingUrl);
-                                
-                                // Stop propagation to prevent modal from interfering
+                                // Stop propagation
                                 e.stopPropagation();
+                                e.preventDefault();
                                 
-                                // Close modal immediately
-                                closeModal();
+                                console.log("NAVIGATING TO:", bookingUrl);
                                 
-                                // Use Next.js router for navigation - this is the proper way in Next.js
-                                console.log("Navigating with Next.js router");
-                                router.push(bookingUrl);
-                                
-                                // Backup: if router doesn't work, use window.location
-                                setTimeout(() => {
-                                  const currentPath = window.location.pathname;
-                                  const targetPath = bookingUrl.split('?')[0];
-                                  if (currentPath !== targetPath) {
-                                    console.log("Router didn't work, using window.location.href");
-                                    window.location.href = bookingUrl;
-                                  }
-                                }, 200);
+                                // FORCE navigation - don't close modal, just navigate
+                                // Navigation will naturally leave the page
+                                window.location.href = bookingUrl;
                               }}
                               onMouseDown={(e) => {
                                 console.log("BUTTON MOUSEDOWN EVENT FIRED");
