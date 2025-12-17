@@ -376,7 +376,7 @@ function SearchResults() {
   };
 
   const handleBookAgent = (agentId: string) => {
-    // Navigate to agent booking page
+    // Navigate to agent booking page (old flow - keeping for compatibility)
     window.location.href = `/book/agent/${agentId}`;
   };
 
@@ -526,10 +526,15 @@ function SearchResults() {
                               key={timeIdx}
                               onClick={() => {
                                 setSelectedTime(timeKey);
-                                // Navigate to booking page when time is selected
+                                // Navigate to Step 1 booking page when time is selected
                                 if (agentId) {
+                                  const params = new URLSearchParams({
+                                    startsAt: timeSlot.startsAt,
+                                    endsAt: timeSlot.endsAt,
+                                    date: day.date,
+                                  });
                                   setTimeout(() => {
-                                    window.location.href = `/book/agent/${agentId}`;
+                                    window.location.href = `/book/step1/${agentId}?${params.toString()}`;
                                   }, 300);
                                 }
                               }}
