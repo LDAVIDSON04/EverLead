@@ -561,33 +561,48 @@ function SearchResults() {
                             return `/book/step1/${agentId}?${params.toString()}`;
                           })();
                           
-                          const handleTimeClick = () => {
-                            if (!bookingUrl) {
-                              console.error("Cannot navigate - missing data:", { agentId, startsAt: timeSlot.startsAt, endsAt: timeSlot.endsAt, date: day.date });
-                              alert("Error: Missing appointment data. Please try again.");
-                              return;
-                            }
-                            
-                            console.log("Time slot clicked! Navigating to:", bookingUrl);
-                            
-                            // Immediately navigate - no delays, no checks
-                            window.location.href = bookingUrl;
-                          };
-                          
                           return (
                             <button
                               key={timeIdx}
                               type="button"
                               onClick={(e) => {
+                                // Stop all event propagation immediately
                                 e.stopPropagation();
                                 e.preventDefault();
-                                handleTimeClick();
+                                
+                                // Validate data
+                                if (!agentId || !timeSlot.startsAt || !timeSlot.endsAt || !day.date) {
+                                  console.error("Missing data:", { agentId, startsAt: timeSlot.startsAt, endsAt: timeSlot.endsAt, date: day.date });
+                                  alert("Error: Missing appointment data. Please try again.");
+                                  return;
+                                }
+                                
+                                // Build URL
+                                const params = new URLSearchParams({
+                                  startsAt: timeSlot.startsAt,
+                                  endsAt: timeSlot.endsAt,
+                                  date: day.date,
+                                });
+                                const url = `/book/step1/${agentId}?${params.toString()}`;
+                                
+                                console.log("TIME SLOT CLICKED! Navigating to:", url);
+                                
+                                // Force immediate navigation
+                                window.location.href = url;
+                              }}
+                              onMouseDown={(e) => {
+                                // Prevent any mouse down events from bubbling
+                                e.stopPropagation();
                               }}
                               className={`px-4 py-2 rounded-md text-sm transition-colors cursor-pointer ${
                                 isSelected
                                   ? 'bg-green-600 text-white'
                                   : 'bg-green-100 text-black hover:bg-green-200'
                               }`}
+                              style={{
+                                position: 'relative',
+                                zIndex: 9999
+                              }}
                             >
                               {timeSlot.time}
                             </button>
