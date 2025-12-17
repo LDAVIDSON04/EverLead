@@ -441,9 +441,10 @@ function SearchResults() {
           <div 
             className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto relative z-50"
             onClick={(e) => {
-              // Only stop propagation if not clicking a link or button
+              // Don't stop propagation for buttons - let them handle their own clicks
               const target = e.target as HTMLElement;
-              if (target.tagName !== 'A' && !target.closest('a') && target.tagName !== 'BUTTON' && !target.closest('button')) {
+              const isButton = target.tagName === 'BUTTON' || target.closest('button');
+              if (!isButton) {
                 e.stopPropagation();
               }
             }}
@@ -586,39 +587,36 @@ function SearchResults() {
                               type="button"
                               onClick={(e) => {
                                 if (!bookingUrl) {
-                                  e.stopPropagation();
                                   alert("Error: Missing appointment data. Please try again.");
                                   return;
                                 }
                                 
-                                // CRITICAL: Stop all event propagation
-                                e.stopPropagation();
-                                e.preventDefault();
+                                // Stop propagation to prevent modal from interfering
+                                if (e.stopPropagation) e.stopPropagation();
+                                if (e.preventDefault) e.preventDefault();
                                 
                                 console.log("=== TIME SLOT BUTTON CLICKED ===");
                                 console.log("Booking URL:", bookingUrl);
-                                console.log("Full URL will be:", window.location.origin + bookingUrl);
                                 
-                                // FORCE navigation - use assign which is more reliable than href
-                                console.log("EXECUTING window.location.assign NOW");
-                                try {
-                                  window.location.assign(bookingUrl);
-                                  console.log("Navigation command executed");
-                                } catch (err) {
-                                  console.error("Navigation error, trying href:", err);
-                                  window.location.href = bookingUrl;
-                                }
+                                // IMMEDIATELY navigate - no delays, no checks
+                                window.location.href = bookingUrl;
                               }}
-                              className={`px-4 py-2 rounded-md text-sm transition-colors cursor-pointer inline-block text-center ${
+                              onMouseDown={(e) => {
+                                // Also handle mousedown to catch clicks early
+                                if (!bookingUrl) return;
+                                e.stopPropagation();
+                                console.log("Mouse down on time slot button");
+                              }}
+                              className={`px-4 py-2 rounded-md text-sm transition-colors cursor-pointer ${
                                 isSelected
                                   ? 'bg-green-600 text-white'
                                   : 'bg-green-100 text-black hover:bg-green-200'
                               }`}
                               style={{
                                 border: 'none',
+                                cursor: 'pointer',
                                 position: 'relative',
-                                zIndex: 10000,
-                                pointerEvents: 'auto'
+                                zIndex: 99999
                               }}
                             >
                               {timeSlot.time}
