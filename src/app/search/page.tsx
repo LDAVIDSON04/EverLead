@@ -592,21 +592,15 @@ function SearchResults() {
                                   return;
                                 }
                                 
-                                // Stop propagation to prevent modal backdrop from closing modal
+                                // Stop propagation to prevent modal backdrop from interfering
                                 e.stopPropagation();
                                 console.log("Time slot clicked - navigating to:", bookingUrl);
                                 
-                                // Force immediate navigation - don't rely on href alone
-                                // Close modal and navigate
-                                closeModal();
+                                // Navigate immediately - this will cause a full page load
+                                // which will naturally close the modal
+                                window.location.href = bookingUrl;
                                 
-                                // Use setTimeout to ensure modal closes, then navigate
-                                setTimeout(() => {
-                                  console.log("Executing navigation to:", bookingUrl);
-                                  window.location.href = bookingUrl;
-                                }, 100);
-                                
-                                // Prevent default to handle navigation ourselves
+                                // Prevent default since we're handling navigation
                                 e.preventDefault();
                               }}
                               className={`px-4 py-2 rounded-md text-sm transition-colors cursor-pointer inline-block text-center no-underline ${
