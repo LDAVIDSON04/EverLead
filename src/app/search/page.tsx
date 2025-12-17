@@ -444,13 +444,12 @@ function SearchResults() {
           <div 
             className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto relative z-50"
             onClick={(e) => {
-              // NEVER stop propagation for links - let them navigate
+              // Don't interfere with forms or buttons
               const target = e.target as HTMLElement;
-              if (target.tagName === 'A' || target.closest('a')) {
-                // Let the link navigate - don't interfere
+              if (target.tagName === 'FORM' || target.closest('form') || 
+                  target.tagName === 'BUTTON' || target.closest('button')) {
                 return;
               }
-              // Only stop propagation for non-link clicks
               e.stopPropagation();
             }}
           >
@@ -587,31 +586,42 @@ function SearchResults() {
                           }
                           
                           return (
-                            <a
+                            <form
                               key={timeIdx}
-                              href={bookingUrl || '#'}
-                              onClick={(e) => {
-                                // Force navigation - don't let anything stop it
-                                if (bookingUrl) {
-                                  e.stopPropagation();
-                                  window.location.href = bookingUrl;
+                              action={bookingUrl || '#'}
+                              method="get"
+                              style={{ display: 'inline-block', margin: 0, padding: 0 }}
+                              onSubmit={(e) => {
+                                if (!bookingUrl) {
+                                  e.preventDefault();
+                                  return;
                                 }
-                              }}
-                              className={`px-4 py-2 rounded-md text-sm transition-colors inline-block text-center no-underline ${
-                                isSelected
-                                  ? 'bg-green-600 text-white'
-                                  : 'bg-green-100 text-black hover:bg-green-200'
-                              }`}
-                              style={{
-                                textDecoration: 'none',
-                                display: 'inline-block',
-                                cursor: 'pointer',
-                                position: 'relative',
-                                zIndex: 10000
+                                // Don't prevent default - let form submit naturally
+                                // This will cause a full page navigation
                               }}
                             >
-                              {timeSlot.time}
-                            </a>
+                              <button
+                                type="submit"
+                                className={`px-4 py-2 rounded-md text-sm transition-colors ${
+                                  isSelected
+                                    ? 'bg-green-600 text-white'
+                                    : 'bg-green-100 text-black hover:bg-green-200'
+                                }`}
+                                style={{
+                                  border: 'none',
+                                  cursor: 'pointer',
+                                  position: 'relative',
+                                  zIndex: 10000
+                                }}
+                                onClick={(e) => {
+                                  // Stop propagation so modal doesn't interfere
+                                  e.stopPropagation();
+                                  // Don't prevent default - let form submit
+                                }}
+                              >
+                                {timeSlot.time}
+                              </button>
+                            </form>
                           );
                         })}
                       </div>
