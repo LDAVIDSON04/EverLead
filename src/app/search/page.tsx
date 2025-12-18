@@ -1128,25 +1128,29 @@ function SearchResults() {
                         type="button"
                         id={timeSlotId}
                         name={timeSlotId}
-                        onClick={(e) => {
+                        onMouseDown={(e) => {
+                          // Use onMouseDown for immediate response
                           e.preventDefault();
                           e.stopPropagation();
-                          console.log("Time slot clicked, navigating to:", bookingUrl);
                           
-                          // Close modal immediately
+                          const params = new URLSearchParams({
+                            startsAt: timeSlot.startsAt,
+                            endsAt: timeSlot.endsAt,
+                            date: selectedDayForModal || '',
+                          });
+                          const url = `${window.location.origin}/book/step1/${selectedAgentIdForModal}?${params.toString()}`;
+                          
+                          console.log("Time slot clicked, FORCING navigation to:", url);
+                          
+                          // Close modal
                           setShowTimeSlotModal(false);
                           setSelectedDayForModal(null);
                           setSelectedAgentIdForModal(null);
                           setSelectedAgentInfo(null);
                           setDayTimeSlots([]);
                           
-                          // Force navigation - use multiple methods as fallback
-                          try {
-                            window.location.replace(bookingUrl);
-                          } catch (err) {
-                            console.error("Replace failed, trying href:", err);
-                            window.location.href = bookingUrl;
-                          }
+                          // IMMEDIATE navigation - no delays, no try/catch blocking
+                          window.location.href = url;
                         }}
                         className="w-full px-4 py-3 rounded-lg text-sm font-medium transition-all bg-green-100 text-black hover:bg-green-600 hover:text-white border-2 border-green-300 hover:border-green-600 shadow-sm hover:shadow-md"
                       >
