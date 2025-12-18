@@ -964,13 +964,26 @@ function SearchResults() {
                 <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
                   <div className="flex items-center gap-4">
                     {selectedAgentInfo.profile_picture_url ? (
-                      <Image
-                        src={selectedAgentInfo.profile_picture_url}
-                        alt={selectedAgentInfo.full_name || "Agent"}
-                        width={80}
-                        height={80}
-                        className="rounded-full object-cover border-2 border-green-600"
-                      />
+                      <div className="relative">
+                        <Image
+                          src={selectedAgentInfo.profile_picture_url}
+                          alt={selectedAgentInfo.full_name || "Agent"}
+                          width={80}
+                          height={80}
+                          className="rounded-full object-cover border-2 border-green-600"
+                          unoptimized
+                          onError={(e) => {
+                            // Hide image and show placeholder
+                            const img = e.target as HTMLImageElement;
+                            img.style.display = 'none';
+                          }}
+                        />
+                        <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center border-2 border-green-600 absolute inset-0 hidden" id={`agent-avatar-fallback-${selectedAgentIdForModal}`}>
+                          <span className="text-green-700 text-2xl font-semibold">
+                            {(selectedAgentInfo.full_name || "A")[0].toUpperCase()}
+                          </span>
+                        </div>
+                      </div>
                     ) : (
                       <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center border-2 border-green-600">
                         <span className="text-green-700 text-2xl font-semibold">
@@ -1046,6 +1059,7 @@ function SearchResults() {
                       date: selectedDayForModal || '',
                     });
                     const bookingUrl = `/book/step1/${selectedAgentIdForModal}?${params.toString()}`;
+                    const timeSlotId = `time-slot-${idx}-${timeSlot.startsAt}`;
                     
                     return (
                       <form
@@ -1062,6 +1076,8 @@ function SearchResults() {
                       >
                         <button
                           type="submit"
+                          id={timeSlotId}
+                          name={timeSlotId}
                           className="w-full px-4 py-3 rounded-lg text-sm font-medium transition-all bg-green-100 text-black hover:bg-green-600 hover:text-white border-2 border-green-300 hover:border-green-600 shadow-sm hover:shadow-md"
                         >
                           {timeSlot.time}
