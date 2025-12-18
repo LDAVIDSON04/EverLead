@@ -549,7 +549,7 @@ function SearchResults() {
         endsAt: timeSlot.endsAt,
         date: dayDate,
       });
-      const url = `/book/step1/${agentId}?${params.toString()}`;
+      const url = `/book/step2?agentId=${agentId}&${params.toString()}`;
       console.log("Navigating to:", url);
       
       // Force navigation immediately
@@ -722,7 +722,7 @@ function SearchResults() {
                               endsAt: timeSlot.endsAt,
                               date: day.date,
                             });
-                            return `/book/step1/${agentId}?${params.toString()}`;
+                            return `/book/step2?agentId=${agentId}&${params.toString()}`;
                           })();
                           
                           if (!bookingUrl) {
@@ -1119,7 +1119,7 @@ function SearchResults() {
                       endsAt: timeSlot.endsAt,
                       date: selectedDayForModal || '',
                     });
-                    const bookingUrl = `${window.location.origin}/book/step1/${selectedAgentIdForModal}?${params.toString()}`;
+                    const bookingUrl = `${window.location.origin}/book/step2?agentId=${selectedAgentIdForModal}&${params.toString()}`;
                     const timeSlotId = `time-slot-${idx}-${timeSlot.startsAt}`;
                     
                     return (
@@ -1138,7 +1138,7 @@ function SearchResults() {
                             endsAt: timeSlot.endsAt,
                             date: selectedDayForModal || '',
                           });
-                          const url = `${window.location.origin}/book/step1/${selectedAgentIdForModal}?${params.toString()}`;
+                          const url = `${window.location.origin}/book/step2?agentId=${selectedAgentIdForModal}&${params.toString()}`;
                           
                           console.log("Time slot clicked, FORCING navigation to:", url);
                           
