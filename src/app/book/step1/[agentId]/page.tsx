@@ -171,19 +171,8 @@ function BookingStep1Content() {
     router.push(`/book/step2?${step2Params.toString()}`);
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mb-4"></div>
-          <p className="text-gray-600">Loading booking information...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Show page even if agent info is still loading or missing - don't redirect
-  // The form will show with loading states
+  // Show page immediately - don't block on agent info loading
+  // The form will work even if agent info is still loading
 
   return (
     <div className="min-h-screen bg-white">
