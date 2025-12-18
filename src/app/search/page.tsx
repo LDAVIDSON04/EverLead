@@ -963,12 +963,9 @@ function SearchResults() {
                       <a
                         key={idx}
                         href={bookingUrl}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
+                        onClick={() => {
+                          // Just close modal, let browser handle navigation naturally
                           closeTimeSlotModal();
-                          // Force navigation
-                          window.location.href = bookingUrl;
                         }}
                         className="px-4 py-2 rounded-md text-sm transition-colors bg-green-100 text-black hover:bg-green-200 border border-green-300 text-center block no-underline"
                         style={{ textDecoration: 'none' }}
