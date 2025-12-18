@@ -4,8 +4,9 @@ import { Suspense } from "react";
 import BookingStep1Content from "./BookingStep1Content";
 
 export default function BookingStep1Page() {
-  try {
-    return (
+  return (
+    <div className="min-h-screen bg-white p-8">
+      <h1 className="text-2xl font-bold mb-4">Test - Step 1 Page Loading</h1>
       <Suspense fallback={
         <div className="min-h-screen bg-white flex items-center justify-center">
           <div className="text-center">
@@ -16,19 +17,6 @@ export default function BookingStep1Page() {
       }>
         <BookingStep1Content />
       </Suspense>
-    );
-  } catch (error) {
-    console.error("Error in BookingStep1Page:", error);
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-semibold mb-4">Something went wrong</h1>
-          <p className="text-gray-600">Please try again later.</p>
-          {process.env.NODE_ENV === 'development' && (
-            <pre className="mt-4 text-xs text-red-600">{String(error)}</pre>
-          )}
-        </div>
-      </div>
-    );
-  }
+    </div>
+  );
 }
