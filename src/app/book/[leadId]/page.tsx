@@ -1,5 +1,6 @@
 import BookForm from './BookForm';
 import { createClient } from '@supabase/supabase-js';
+import { notFound } from 'next/navigation';
 
 type Props = {
   params: Promise<{ leadId: string }> | { leadId: string };
@@ -11,17 +12,10 @@ export default async function BookPage(props: Props) {
   const leadId = params.leadId;
 
   // Exclude reserved routes that should be handled by other pages
+  // Use notFound() to let Next.js handle routing to the correct page
   const reservedRoutes = ['step1', 'step2', 'success', 'select-time', 'agent'];
   if (reservedRoutes.includes(leadId)) {
-    // This route should be handled by a more specific route, redirect to 404 or let Next.js handle it
-    return (
-      <div className="max-w-xl mx-auto py-10 px-4">
-        <h1 className="text-2xl font-semibold mb-4">Page not found</h1>
-        <p className="text-sm text-gray-600">
-          The requested page could not be found.
-        </p>
-      </div>
-    );
+    notFound();
   }
 
   if (!leadId) {
