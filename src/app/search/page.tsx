@@ -944,72 +944,80 @@ function SearchResults() {
           }}
         >
           <div 
-            className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto relative z-50"
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto relative z-50"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-200 sticky top-0 bg-white">
-              <h2 className="text-xl font-semibold text-black">Select a time</h2>
-              <button
-                onClick={closeTimeSlotModal}
-                className="text-gray-500 hover:text-black transition-colors p-2"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Content */}
-            <div className="p-6">
-              {/* Agent Info Section */}
+            {/* Header with Agent Info */}
+            <div className="bg-gradient-to-r from-green-50 to-white p-6 border-b border-gray-200 sticky top-0 z-10">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-bold text-black">Book an appointment</h2>
+                <button
+                  onClick={closeTimeSlotModal}
+                  className="text-gray-500 hover:text-black transition-colors p-2 rounded-full hover:bg-gray-100"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+              
+              {/* Agent Profile Card */}
               {selectedAgentInfo && (
-                <div className="mb-6 pb-6 border-b border-gray-200">
+                <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
                   <div className="flex items-center gap-4">
                     {selectedAgentInfo.profile_picture_url ? (
                       <Image
                         src={selectedAgentInfo.profile_picture_url}
                         alt={selectedAgentInfo.full_name || "Agent"}
-                        width={64}
-                        height={64}
-                        className="rounded-full object-cover"
+                        width={80}
+                        height={80}
+                        className="rounded-full object-cover border-2 border-green-600"
                       />
                     ) : (
-                      <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center">
-                        <span className="text-gray-400 text-xl">
+                      <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center border-2 border-green-600">
+                        <span className="text-green-700 text-2xl font-semibold">
                           {(selectedAgentInfo.full_name || "A")[0].toUpperCase()}
                         </span>
                       </div>
                     )}
                     <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-black">
+                      <h3 className="text-xl font-bold text-black mb-1">
                         {selectedAgentInfo.full_name || "Agent"}
                       </h3>
                       {selectedAgentInfo.job_title && (
-                        <p className="text-gray-600 text-sm">{selectedAgentInfo.job_title}</p>
+                        <p className="text-gray-700 font-medium text-sm mb-1">{selectedAgentInfo.job_title}</p>
                       )}
                       {selectedAgentInfo.funeral_home && (
-                        <p className="text-gray-600 text-sm">{selectedAgentInfo.funeral_home}</p>
+                        <p className="text-gray-600 text-sm mb-2">{selectedAgentInfo.funeral_home}</p>
                       )}
-                      {(selectedAgentInfo.agent_city || selectedAgentInfo.agent_province) && (
-                        <div className="flex items-center gap-1 mt-1">
-                          <MapPin className="w-3 h-3 text-gray-500" />
-                          <span className="text-gray-500 text-sm">
-                            {[selectedAgentInfo.agent_city, selectedAgentInfo.agent_province].filter(Boolean).join(", ")}
-                          </span>
+                      <div className="flex items-center gap-3 flex-wrap">
+                        {(selectedAgentInfo.agent_city || selectedAgentInfo.agent_province) && (
+                          <div className="flex items-center gap-1">
+                            <MapPin className="w-4 h-4 text-gray-500" />
+                            <span className="text-gray-600 text-sm">
+                              {[selectedAgentInfo.agent_city, selectedAgentInfo.agent_province].filter(Boolean).join(", ")}
+                            </span>
+                          </div>
+                        )}
+                        <div className="flex items-center gap-1">
+                          <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                          <span className="text-sm font-semibold text-gray-900">4.9</span>
+                          <span className="text-sm text-gray-600">({Math.floor(Math.random() * 200 + 50)} reviews)</span>
                         </div>
-                      )}
-                      <div className="flex items-center gap-1 mt-1">
-                        <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                        <span className="text-sm text-gray-600">4.9</span>
-                        <span className="text-sm text-gray-500">· {Math.floor(Math.random() * 200 + 50)} reviews</span>
                       </div>
                     </div>
                   </div>
                 </div>
               )}
+            </div>
 
+            {/* Content */}
+            <div className="p-6">
               {selectedDayForModal && (
-                <div className="mb-4">
-                  <p className="text-gray-600 font-medium">
+                <div className="mb-6">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Calendar className="w-5 h-5 text-green-600" />
+                    <h3 className="text-lg font-semibold text-black">Select a time</h3>
+                  </div>
+                  <p className="text-gray-700 text-base ml-7">
                     {new Date(selectedDayForModal + "T00:00:00").toLocaleDateString("en-US", {
                       weekday: "long",
                       month: "long",
@@ -1021,10 +1029,12 @@ function SearchResults() {
 
               {loadingTimeSlots ? (
                 <div className="text-center py-12">
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mb-4"></div>
                   <p className="text-gray-600">Loading available times...</p>
                 </div>
               ) : dayTimeSlots.length === 0 ? (
                 <div className="text-center py-12">
+                  <Clock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-gray-600">No time slots available for this day.</p>
                 </div>
               ) : (
@@ -1038,18 +1048,25 @@ function SearchResults() {
                     const bookingUrl = `/book/step1/${selectedAgentIdForModal}?${params.toString()}`;
                     
                     return (
-                      <a
+                      <form
                         key={idx}
-                        href={bookingUrl}
-                        onClick={() => {
-                          // Just close modal, let browser handle navigation naturally
+                        action={bookingUrl}
+                        method="get"
+                        onSubmit={(e) => {
+                          e.preventDefault();
                           closeTimeSlotModal();
+                          // Use absolute URL for guaranteed navigation
+                          window.location.href = `${window.location.origin}${bookingUrl}`;
                         }}
-                        className="px-4 py-2 rounded-md text-sm transition-colors bg-green-100 text-black hover:bg-green-200 border border-green-300 text-center block no-underline"
-                        style={{ textDecoration: 'none' }}
+                        style={{ display: 'inline' }}
                       >
-                        {timeSlot.time}
-                      </a>
+                        <button
+                          type="submit"
+                          className="w-full px-4 py-3 rounded-lg text-sm font-medium transition-all bg-green-100 text-black hover:bg-green-600 hover:text-white border-2 border-green-300 hover:border-green-600 shadow-sm hover:shadow-md"
+                        >
+                          {timeSlot.time}
+                        </button>
+                      </form>
                     );
                   })}
                 </div>
