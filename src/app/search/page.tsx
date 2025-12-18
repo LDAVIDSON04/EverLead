@@ -1133,14 +1133,20 @@ function SearchResults() {
                           e.stopPropagation();
                           console.log("Time slot clicked, navigating to:", bookingUrl);
                           
-                          // Close modal first
-                          closeTimeSlotModal();
+                          // Close modal immediately
+                          setShowTimeSlotModal(false);
+                          setSelectedDayForModal(null);
+                          setSelectedAgentIdForModal(null);
+                          setSelectedAgentInfo(null);
+                          setDayTimeSlots([]);
                           
-                          // Force navigation immediately - try multiple methods
-                          setTimeout(() => {
-                            // Use replace to ensure it happens
+                          // Force navigation - use multiple methods as fallback
+                          try {
                             window.location.replace(bookingUrl);
-                          }, 50);
+                          } catch (err) {
+                            console.error("Replace failed, trying href:", err);
+                            window.location.href = bookingUrl;
+                          }
                         }}
                         className="w-full px-4 py-3 rounded-lg text-sm font-medium transition-all bg-green-100 text-black hover:bg-green-600 hover:text-white border-2 border-green-300 hover:border-green-600 shadow-sm hover:shadow-md"
                       >
