@@ -48,6 +48,12 @@ function BookingStep1Content() {
         return;
       }
       
+      // Set a timeout to ensure loading doesn't hang forever
+      const timeoutId = setTimeout(() => {
+        console.warn("Agent load timeout - rendering page anyway");
+        setIsLoading(false);
+      }, 5000); // 5 second timeout
+      
       try {
         const { data, error } = await supabaseClient
           .from("profiles")
@@ -56,6 +62,8 @@ function BookingStep1Content() {
           .eq("role", "agent")
           .single();
 
+        clearTimeout(timeoutId);
+        
         if (error) {
           console.error("Error loading agent:", error);
           // Still set loading to false so page can render
@@ -64,6 +72,7 @@ function BookingStep1Content() {
         }
       } catch (err) {
         console.error("Error loading agent:", err);
+        clearTimeout(timeoutId);
       } finally {
         setIsLoading(false);
       }
