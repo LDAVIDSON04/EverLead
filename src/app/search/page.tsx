@@ -1128,11 +1128,19 @@ function SearchResults() {
                         type="button"
                         id={timeSlotId}
                         name={timeSlotId}
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
                           console.log("Time slot clicked, navigating to:", bookingUrl);
+                          
+                          // Close modal first
                           closeTimeSlotModal();
-                          // Direct navigation - no forms, no preventDefault, just go
-                          window.location.href = bookingUrl;
+                          
+                          // Force navigation immediately - try multiple methods
+                          setTimeout(() => {
+                            // Use replace to ensure it happens
+                            window.location.replace(bookingUrl);
+                          }, 50);
                         }}
                         className="w-full px-4 py-3 rounded-lg text-sm font-medium transition-all bg-green-100 text-black hover:bg-green-600 hover:text-white border-2 border-green-300 hover:border-green-600 shadow-sm hover:shadow-md"
                       >
