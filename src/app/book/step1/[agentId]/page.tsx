@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense } from "react";
-import BookingStep1Content from "./BookingStep1Content";
+import BookingStep1Content from "./BookingStep1Content.tsx";
 
 export default function BookingStep1Page() {
   return (
