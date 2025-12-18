@@ -91,6 +91,14 @@ function SearchResults() {
   const [showTimeSlotModal, setShowTimeSlotModal] = useState(false);
   const [selectedDayForModal, setSelectedDayForModal] = useState<string | null>(null);
   const [selectedAgentIdForModal, setSelectedAgentIdForModal] = useState<string | null>(null);
+  const [selectedAgentInfo, setSelectedAgentInfo] = useState<{
+    full_name: string | null;
+    profile_picture_url: string | null;
+    job_title: string | null;
+    funeral_home: string | null;
+    agent_city: string | null;
+    agent_province: string | null;
+  } | null>(null);
   const [dayTimeSlots, setDayTimeSlots] = useState<{ time: string; startsAt: string; endsAt: string; available: boolean }[]>([]);
   const [loadingTimeSlots, setLoadingTimeSlots] = useState(false);
 
@@ -293,50 +301,72 @@ function SearchResults() {
     setLoadingTimeSlots(true);
     setShowTimeSlotModal(true);
     
-    // Fetch availability for this agent and day
-    try {
-      const startDate = dateStr;
-      const endDate = dateStr;
-      
-      const res = await fetch(
-        `/api/agents/availability?agentId=${agentId}&startDate=${startDate}&endDate=${endDate}`
-      );
-      
-      if (res.ok) {
-        const availabilityData: AvailabilityDay[] = await res.json();
-        const dayData = availabilityData.find(d => d.date === dateStr);
+    // Fetch agent info and availability in parallel
+    const fetchAgentInfo = async () => {
+      try {
+        const { data, error } = await supabaseClient
+          .from("profiles")
+          .select("full_name, profile_picture_url, job_title, funeral_home, agent_city, agent_province")
+          .eq("id", agentId)
+          .eq("role", "agent")
+          .single();
         
-        if (dayData) {
-          // Format time slots with readable time and available status
-          const formattedSlots = dayData.slots.map(slot => {
-            const startDate = new Date(slot.startsAt);
-            const hours = startDate.getUTCHours();
-            const minutes = startDate.getUTCMinutes();
-            const ampm = hours >= 12 ? 'PM' : 'AM';
-            const displayHours = hours % 12 || 12;
-            const timeStr = `${displayHours}:${String(minutes).padStart(2, '0')} ${ampm}`;
-            
-            return {
-              time: timeStr,
-              startsAt: slot.startsAt,
-              endsAt: slot.endsAt,
-              available: true
-            };
-          });
+        if (!error && data) {
+          setSelectedAgentInfo(data);
+        }
+      } catch (err) {
+        console.error("Error loading agent info:", err);
+      }
+    };
+    
+    const fetchAvailability = async () => {
+      try {
+        const startDate = dateStr;
+        const endDate = dateStr;
+        
+        const res = await fetch(
+          `/api/agents/availability?agentId=${agentId}&startDate=${startDate}&endDate=${endDate}`
+        );
+        
+        if (res.ok) {
+          const availabilityData: AvailabilityDay[] = await res.json();
+          const dayData = availabilityData.find(d => d.date === dateStr);
           
-          setDayTimeSlots(formattedSlots);
+          if (dayData) {
+            // Format time slots with readable time and available status
+            const formattedSlots = dayData.slots.map(slot => {
+              const startDate = new Date(slot.startsAt);
+              const hours = startDate.getUTCHours();
+              const minutes = startDate.getUTCMinutes();
+              const ampm = hours >= 12 ? 'PM' : 'AM';
+              const displayHours = hours % 12 || 12;
+              const timeStr = `${displayHours}:${String(minutes).padStart(2, '0')} ${ampm}`;
+              
+              return {
+                time: timeStr,
+                startsAt: slot.startsAt,
+                endsAt: slot.endsAt,
+                available: true
+              };
+            });
+            
+            setDayTimeSlots(formattedSlots);
+          } else {
+            setDayTimeSlots([]);
+          }
         } else {
           setDayTimeSlots([]);
         }
-      } else {
+      } catch (err) {
+        console.error("Error loading time slots:", err);
         setDayTimeSlots([]);
+      } finally {
+        setLoadingTimeSlots(false);
       }
-    } catch (err) {
-      console.error("Error loading time slots:", err);
-      setDayTimeSlots([]);
-    } finally {
-      setLoadingTimeSlots(false);
-    }
+    };
+    
+    // Fetch both in parallel
+    Promise.all([fetchAgentInfo(), fetchAvailability()]);
   };
   
   const handleTimeSlotClick = (timeSlot: { time: string; startsAt: string; endsAt: string }) => {
@@ -363,6 +393,7 @@ function SearchResults() {
     setShowTimeSlotModal(false);
     setSelectedDayForModal(null);
     setSelectedAgentIdForModal(null);
+    setSelectedAgentInfo(null);
     setDayTimeSlots([]);
   };
 
@@ -929,9 +960,56 @@ function SearchResults() {
 
             {/* Content */}
             <div className="p-6">
+              {/* Agent Info Section */}
+              {selectedAgentInfo && (
+                <div className="mb-6 pb-6 border-b border-gray-200">
+                  <div className="flex items-center gap-4">
+                    {selectedAgentInfo.profile_picture_url ? (
+                      <Image
+                        src={selectedAgentInfo.profile_picture_url}
+                        alt={selectedAgentInfo.full_name || "Agent"}
+                        width={64}
+                        height={64}
+                        className="rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center">
+                        <span className="text-gray-400 text-xl">
+                          {(selectedAgentInfo.full_name || "A")[0].toUpperCase()}
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-black">
+                        {selectedAgentInfo.full_name || "Agent"}
+                      </h3>
+                      {selectedAgentInfo.job_title && (
+                        <p className="text-gray-600 text-sm">{selectedAgentInfo.job_title}</p>
+                      )}
+                      {selectedAgentInfo.funeral_home && (
+                        <p className="text-gray-600 text-sm">{selectedAgentInfo.funeral_home}</p>
+                      )}
+                      {(selectedAgentInfo.agent_city || selectedAgentInfo.agent_province) && (
+                        <div className="flex items-center gap-1 mt-1">
+                          <MapPin className="w-3 h-3 text-gray-500" />
+                          <span className="text-gray-500 text-sm">
+                            {[selectedAgentInfo.agent_city, selectedAgentInfo.agent_province].filter(Boolean).join(", ")}
+                          </span>
+                        </div>
+                      )}
+                      <div className="flex items-center gap-1 mt-1">
+                        <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                        <span className="text-sm text-gray-600">4.9</span>
+                        <span className="text-sm text-gray-500">· {Math.floor(Math.random() * 200 + 50)} reviews</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {selectedDayForModal && (
                 <div className="mb-4">
-                  <p className="text-gray-600">
+                  <p className="text-gray-600 font-medium">
                     {new Date(selectedDayForModal + "T00:00:00").toLocaleDateString("en-US", {
                       weekday: "long",
                       month: "long",
