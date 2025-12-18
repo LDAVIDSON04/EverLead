@@ -246,11 +246,84 @@ function SearchResults() {
     return slots;
   };
 
-  const handleMoreButtonClick = (appointment: Appointment, index: number) => {
+  const handleMoreButtonClick = async (appointment: Appointment, index: number) => {
     if (!appointment.agent?.id) return;
     
-    // Navigate directly to the booking page - no modal!
-    router.push(`/book/select-time/${appointment.agent.id}`);
+    // Open modal with first available day
+    const agentId = appointment.agent.id;
+    const today = new Date();
+    const dateStr = today.toISOString().split("T")[0];
+    
+    setSelectedDayForModal(dateStr);
+    setSelectedAgentIdForModal(agentId);
+    setLoadingTimeSlots(true);
+    setShowTimeSlotModal(true);
+    
+    // Fetch agent info and availability
+    const fetchAgentInfo = async () => {
+      try {
+        const { data, error } = await supabaseClient
+          .from("profiles")
+          .select("full_name, profile_picture_url, job_title, funeral_home, agent_city, agent_province")
+          .eq("id", agentId)
+          .eq("role", "agent")
+          .single();
+        
+        if (!error && data) {
+          setSelectedAgentInfo(data);
+        }
+      } catch (err) {
+        console.error("Error loading agent info:", err);
+      }
+    };
+    
+    const fetchAvailability = async () => {
+      try {
+        const startDate = dateStr;
+        const endDate = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+        
+        const res = await fetch(
+          `/api/agents/availability?agentId=${agentId}&startDate=${startDate}&endDate=${endDate}`
+        );
+        
+        if (res.ok) {
+          const availabilityData: AvailabilityDay[] = await res.json();
+          if (availabilityData.length > 0) {
+            const firstDay = availabilityData[0];
+            setSelectedDayForModal(firstDay.date);
+            
+            const formattedSlots = firstDay.slots.map(slot => {
+              const startDate = new Date(slot.startsAt);
+              const hours = startDate.getUTCHours();
+              const minutes = startDate.getUTCMinutes();
+              const ampm = hours >= 12 ? 'PM' : 'AM';
+              const displayHours = hours % 12 || 12;
+              const timeStr = `${displayHours}:${String(minutes).padStart(2, '0')} ${ampm}`;
+              
+              return {
+                time: timeStr,
+                startsAt: slot.startsAt,
+                endsAt: slot.endsAt,
+                available: true
+              };
+            });
+            
+            setDayTimeSlots(formattedSlots);
+          } else {
+            setDayTimeSlots([]);
+          }
+        } else {
+          setDayTimeSlots([]);
+        }
+      } catch (err) {
+        console.error("Error loading time slots:", err);
+        setDayTimeSlots([]);
+      } finally {
+        setLoadingTimeSlots(false);
+      }
+    };
+    
+    Promise.all([fetchAgentInfo(), fetchAvailability()]);
   };
 
   // Generate time slots for a selected date

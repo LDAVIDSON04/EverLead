@@ -283,6 +283,7 @@ function BookingStep1Content() {
               <input
                 type="email"
                 id="email"
+                name="email"
                 value={formData.email}
                 onChange={(e) => handleInputChange("email", e.target.value)}
                 className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800 ${
@@ -307,6 +308,7 @@ function BookingStep1Content() {
                 <input
                   type="text"
                   id="legalFirstName"
+                  name="legalFirstName"
                   value={formData.legalFirstName}
                   onChange={(e) => handleInputChange("legalFirstName", e.target.value)}
                   className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800 ${
@@ -328,6 +330,7 @@ function BookingStep1Content() {
                 <input
                   type="text"
                   id="legalLastName"
+                  name="legalLastName"
                   value={formData.legalLastName}
                   onChange={(e) => handleInputChange("legalLastName", e.target.value)}
                   className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800 ${
@@ -351,6 +354,7 @@ function BookingStep1Content() {
                 <input
                   type="text"
                   id="dateOfBirth"
+                  name="dateOfBirth"
                   value={formData.dateOfBirth}
                   onChange={(e) => handleInputChange("dateOfBirth", e.target.value)}
                   className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800 ${
@@ -377,6 +381,7 @@ function BookingStep1Content() {
                 <label className="flex items-center gap-3 cursor-pointer">
                   <input
                     type="radio"
+                    id="sex-male"
                     name="sex"
                     value="male"
                     checked={formData.sex === "male"}
@@ -388,6 +393,7 @@ function BookingStep1Content() {
                 <label className="flex items-center gap-3 cursor-pointer">
                   <input
                     type="radio"
+                    id="sex-female"
                     name="sex"
                     value="female"
                     checked={formData.sex === "female"}
