@@ -8,15 +8,16 @@ import { Star, MapPin, Info, Calendar } from "lucide-react";
 import { supabaseClient } from "@/lib/supabaseClient";
 
 export default function BookingStep1Content() {
-  const params = useParams();
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const agentId = (params?.agentId as string) || "";
-  
-  // Get selected time slot from query params
-  const startsAt = searchParams.get("startsAt");
-  const endsAt = searchParams.get("endsAt");
-  const date = searchParams.get("date") || "";
+  try {
+    const params = useParams();
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const agentId = (params?.agentId as string) || "";
+    
+    // Get selected time slot from query params
+    const startsAt = searchParams.get("startsAt");
+    const endsAt = searchParams.get("endsAt");
+    const date = searchParams.get("date") || "";
 
   const [agentInfo, setAgentInfo] = useState<{
     full_name: string | null;
