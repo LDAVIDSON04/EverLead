@@ -1119,31 +1119,25 @@ function SearchResults() {
                       endsAt: timeSlot.endsAt,
                       date: selectedDayForModal || '',
                     });
-                    const bookingUrl = `/book/step1/${selectedAgentIdForModal}?${params.toString()}`;
+                    const bookingUrl = `${window.location.origin}/book/step1/${selectedAgentIdForModal}?${params.toString()}`;
                     const timeSlotId = `time-slot-${idx}-${timeSlot.startsAt}`;
                     
                     return (
-                      <form
+                      <button
                         key={idx}
-                        action={bookingUrl}
-                        method="get"
-                        onSubmit={(e) => {
-                          e.preventDefault();
+                        type="button"
+                        id={timeSlotId}
+                        name={timeSlotId}
+                        onClick={() => {
+                          console.log("Time slot clicked, navigating to:", bookingUrl);
                           closeTimeSlotModal();
-                          // Use absolute URL for guaranteed navigation
-                          window.location.href = `${window.location.origin}${bookingUrl}`;
+                          // Direct navigation - no forms, no preventDefault, just go
+                          window.location.href = bookingUrl;
                         }}
-                        style={{ display: 'inline' }}
+                        className="w-full px-4 py-3 rounded-lg text-sm font-medium transition-all bg-green-100 text-black hover:bg-green-600 hover:text-white border-2 border-green-300 hover:border-green-600 shadow-sm hover:shadow-md"
                       >
-                        <button
-                          type="submit"
-                          id={timeSlotId}
-                          name={timeSlotId}
-                          className="w-full px-4 py-3 rounded-lg text-sm font-medium transition-all bg-green-100 text-black hover:bg-green-600 hover:text-white border-2 border-green-300 hover:border-green-600 shadow-sm hover:shadow-md"
-                        >
-                          {timeSlot.time}
-                        </button>
-                      </form>
+                        {timeSlot.time}
+                      </button>
                     );
                   })}
                 </div>
