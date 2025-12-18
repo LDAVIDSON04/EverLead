@@ -964,26 +964,14 @@ function SearchResults() {
                 <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
                   <div className="flex items-center gap-4">
                     {selectedAgentInfo.profile_picture_url ? (
-                      <div className="relative">
-                        <Image
-                          src={selectedAgentInfo.profile_picture_url}
-                          alt={selectedAgentInfo.full_name || "Agent"}
-                          width={80}
-                          height={80}
-                          className="rounded-full object-cover border-2 border-green-600"
-                          unoptimized
-                          onError={(e) => {
-                            // Hide image and show placeholder
-                            const img = e.target as HTMLImageElement;
-                            img.style.display = 'none';
-                          }}
-                        />
-                        <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center border-2 border-green-600 absolute inset-0 hidden" id={`agent-avatar-fallback-${selectedAgentIdForModal}`}>
-                          <span className="text-green-700 text-2xl font-semibold">
-                            {(selectedAgentInfo.full_name || "A")[0].toUpperCase()}
-                          </span>
-                        </div>
-                      </div>
+                      <Image
+                        src={selectedAgentInfo.profile_picture_url}
+                        alt={selectedAgentInfo.full_name || "Agent"}
+                        width={80}
+                        height={80}
+                        className="rounded-full object-cover border-2 border-green-600"
+                        unoptimized
+                      />
                     ) : (
                       <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center border-2 border-green-600">
                         <span className="text-green-700 text-2xl font-semibold">
