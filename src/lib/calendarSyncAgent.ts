@@ -192,15 +192,20 @@ export async function syncAgentAppointmentToGoogleCalendar(
   
   if (appointment.confirmed_at) {
     // Use the exact booking time from confirmed_at
-    const confirmedDate = new Date(appointment.confirmed_at);
-    startsAt = confirmedDate.toISOString();
+    // Convert from UTC to agent's local timezone
+    const confirmedDateUTC = DateTime.fromISO(appointment.confirmed_at, { zone: "utc" });
+    const confirmedDateLocal = confirmedDateUTC.setZone(agentTimezone);
     
     // Get appointment length from agent's settings (default to 60 minutes)
     const appointmentLengthMinutes = agentProfile?.metadata?.availability?.appointmentLength 
       ? parseInt(agentProfile.metadata.availability.appointmentLength, 10) 
       : 60;
-    const confirmedEnd = new Date(confirmedDate.getTime() + appointmentLengthMinutes * 60 * 1000);
-    endsAt = confirmedEnd.toISOString();
+    const confirmedEndLocal = confirmedDateLocal.plus({ minutes: appointmentLengthMinutes });
+    
+    // Format as ISO string without timezone offset (Google Calendar uses the timeZone field)
+    // Format: "2025-12-19T14:00:00" (local time, timeZone will be "America/Vancouver")
+    startsAt = confirmedDateLocal.toFormat("yyyy-MM-dd'T'HH:mm:ss");
+    endsAt = confirmedEndLocal.toFormat("yyyy-MM-dd'T'HH:mm:ss");
   } else {
     // Fallback: infer from requested_window (for old appointments without confirmed_at)
     const dateStr = appointment.requested_date;
@@ -221,8 +226,9 @@ export async function syncAgentAppointmentToGoogleCalendar(
       : 60;
     const localEnd = localStart.plus({ minutes: appointmentLengthMinutes });
     
-    startsAt = localStart.toUTC().toISO()!;
-    endsAt = localEnd.toUTC().toISO()!;
+    // Format as ISO string without timezone offset
+    startsAt = localStart.toFormat("yyyy-MM-dd'T'HH:mm:ss");
+    endsAt = localEnd.toFormat("yyyy-MM-dd'T'HH:mm:ss");
   }
 
   // Get family name from lead
@@ -483,15 +489,20 @@ export async function syncAgentAppointmentToMicrosoftCalendar(
   
   if (appointment.confirmed_at) {
     // Use the exact booking time from confirmed_at
-    const confirmedDate = new Date(appointment.confirmed_at);
-    startsAt = confirmedDate.toISOString();
+    // Convert from UTC to agent's local timezone
+    const confirmedDateUTC = DateTime.fromISO(appointment.confirmed_at, { zone: "utc" });
+    const confirmedDateLocal = confirmedDateUTC.setZone(agentTimezone);
     
     // Get appointment length from agent's settings (default to 60 minutes)
     const appointmentLengthMinutes = agentProfile?.metadata?.availability?.appointmentLength 
       ? parseInt(agentProfile.metadata.availability.appointmentLength, 10) 
       : 60;
-    const confirmedEnd = new Date(confirmedDate.getTime() + appointmentLengthMinutes * 60 * 1000);
-    endsAt = confirmedEnd.toISOString();
+    const confirmedEndLocal = confirmedDateLocal.plus({ minutes: appointmentLengthMinutes });
+    
+    // Format as ISO string without timezone offset (Microsoft Calendar uses the timeZone field)
+    // Format: "2025-12-19T14:00:00" (local time, timeZone will be "America/Vancouver")
+    startsAt = confirmedDateLocal.toFormat("yyyy-MM-dd'T'HH:mm:ss");
+    endsAt = confirmedEndLocal.toFormat("yyyy-MM-dd'T'HH:mm:ss");
   } else {
     // Fallback: infer from requested_window (for old appointments without confirmed_at)
     const dateStr = appointment.requested_date;
@@ -512,8 +523,9 @@ export async function syncAgentAppointmentToMicrosoftCalendar(
       : 60;
     const localEnd = localStart.plus({ minutes: appointmentLengthMinutes });
     
-    startsAt = localStart.toUTC().toISO()!;
-    endsAt = localEnd.toUTC().toISO()!;
+    // Format as ISO string without timezone offset
+    startsAt = localStart.toFormat("yyyy-MM-dd'T'HH:mm:ss");
+    endsAt = localEnd.toFormat("yyyy-MM-dd'T'HH:mm:ss");
   }
 
   // Get family name from lead
