@@ -229,7 +229,123 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // TODO: Send confirmation emails to both agent and family
+    // Send confirmation emails to both agent and family
+    try {
+      // Get agent email
+      const { data: agentAuth } = await supabaseAdmin.auth.admin.getUserById(agentId);
+      const agentEmail = agentAuth?.user?.email;
+      
+      // Get family email from lead
+      const { data: leadData } = await supabaseAdmin
+        .from("leads")
+        .select("email, first_name, last_name, full_name")
+        .eq("id", leadId)
+        .single();
+      
+      const familyEmail = leadData?.email;
+      const familyName = leadData?.full_name || 
+        (leadData?.first_name && leadData?.last_name ? `${leadData.first_name} ${leadData.last_name}` : "Family");
+      
+      // Get agent name
+      const { data: agentProfile } = await supabaseAdmin
+        .from("profiles")
+        .select("full_name, first_name, last_name")
+        .eq("id", agentId)
+        .single();
+      
+      const agentName = agentProfile?.full_name || 
+        (agentProfile?.first_name && agentProfile?.last_name ? `${agentProfile.first_name} ${agentProfile.last_name}` : "Agent");
+      
+      // Format appointment date/time
+      const aptDate = new Date(requestedDate + "T00:00:00");
+      const windowLabel = requestedWindow === "morning" ? "Morning" : requestedWindow === "afternoon" ? "Afternoon" : "Evening";
+      const formattedDate = aptDate.toLocaleDateString("en-US", { 
+        weekday: "long", 
+        year: "numeric", 
+        month: "long", 
+        day: "numeric" 
+      });
+      
+      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://soradin.com';
+      const resendApiKey = process.env.RESEND_API_KEY;
+      const resendFromEmail = process.env.RESEND_FROM_EMAIL || 'Soradin <notifications@soradin.com>';
+      
+      // Send email to family
+      if (familyEmail && resendApiKey) {
+        try {
+          await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${resendApiKey}`,
+            },
+            body: JSON.stringify({
+              from: resendFromEmail.includes('<') ? resendFromEmail : `Soradin <${resendFromEmail}>`,
+              to: [familyEmail],
+              subject: `Appointment Confirmed with ${agentName}`,
+              html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                  <h2 style="color: #2a2a2a;">Appointment Confirmed</h2>
+                  <p>Hi ${familyName},</p>
+                  <p>Your appointment with <strong>${agentName}</strong> has been confirmed.</p>
+                  <div style="background-color: #f7f4ef; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                    <p style="margin: 5px 0;"><strong>Date:</strong> ${formattedDate}</p>
+                    <p style="margin: 5px 0;"><strong>Time:</strong> ${windowLabel}</p>
+                    <p style="margin: 5px 0;"><strong>Agent:</strong> ${agentName}</p>
+                  </div>
+                  <p>We look forward to meeting with you.</p>
+                </div>
+              `,
+            }),
+          }).catch(err => console.error("Error sending family email:", err));
+        } catch (err) {
+          console.error("Error sending family email:", err);
+        }
+      }
+      
+      // Send email to agent
+      if (agentEmail && resendApiKey) {
+        try {
+          await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${resendApiKey}`,
+            },
+            body: JSON.stringify({
+              from: resendFromEmail.includes('<') ? resendFromEmail : `Soradin <${resendFromEmail}>`,
+              to: [agentEmail],
+              subject: `New Appointment: ${familyName}`,
+              html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                  <h2 style="color: #2a2a2a;">New Appointment Booked</h2>
+                  <p>Hi ${agentName},</p>
+                  <p>You have a new appointment with <strong>${familyName}</strong>.</p>
+                  <div style="background-color: #f7f4ef; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                    <p style="margin: 5px 0;"><strong>Date:</strong> ${formattedDate}</p>
+                    <p style="margin: 5px 0;"><strong>Time:</strong> ${windowLabel}</p>
+                    <p style="margin: 5px 0;"><strong>Client:</strong> ${familyName}</p>
+                    <p style="margin: 5px 0;"><strong>Email:</strong> ${familyEmail || 'N/A'}</p>
+                  </div>
+                  <p><a href="${baseUrl}/agent/dashboard" style="background-color: #00A86B; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block;">View in Dashboard</a></p>
+                </div>
+              `,
+            }),
+          }).catch(err => console.error("Error sending agent email:", err));
+        } catch (err) {
+          console.error("Error sending agent email:", err);
+        }
+      }
+    } catch (emailError) {
+      console.error("Error sending confirmation emails (non-fatal):", emailError);
+      // Don't fail the booking if emails fail
+    }
+    
+    // Sync to Google Calendar if connected
+    // Note: Calendar sync uses specialist_id/family_id schema, but we use agent_id/lead_id
+    // We'll need to adapt the sync function or create a new one
+    // For now, skip calendar sync - it needs to be adapted for the old schema
+    console.log("Calendar sync skipped - needs adaptation for agent_id/lead_id schema");
 
     return NextResponse.json(
       {

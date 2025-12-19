@@ -28,53 +28,63 @@ export async function GET(req: NextRequest) {
 
     const userId = user.id;
 
-    // Verify user is a specialist
-    const { data: specialist, error: specialistError } = await supabaseServer
-      .from("specialists")
-      .select("id, status, is_active")
+    // Verify user is an agent (using old schema with agent_id)
+    const { data: agent, error: agentError } = await supabaseServer
+      .from("profiles")
+      .select("id, role, approval_status")
       .eq("id", userId)
+      .eq("role", "agent")
       .maybeSingle();
 
-    if (specialistError) {
-      console.error("Error fetching specialist:", specialistError);
+    if (agentError) {
+      console.error("Error fetching agent:", agentError);
       return NextResponse.json(
-        { error: "Failed to verify specialist" },
+        { error: "Failed to verify agent" },
         { status: 500 }
       );
     }
 
-    if (!specialist) {
+    if (!agent) {
       return NextResponse.json(
-        { error: "Specialist record not found" },
+        { error: "Agent record not found" },
         { status: 404 }
       );
     }
 
-    if (specialist.status !== "approved" || !specialist.is_active) {
+    if (agent.approval_status !== "approved") {
       return NextResponse.json(
-        { error: "Specialist account not approved or inactive" },
+        { error: "Agent account not approved" },
         { status: 403 }
       );
     }
 
-    // Fetch upcoming appointments for this specialist
-    const now = new Date().toISOString();
+    // Fetch upcoming appointments for this agent (using old schema: agent_id, lead_id)
+    // Convert requested_date and requested_window to starts_at/ends_at for display
+    const now = new Date();
+    const today = now.toISOString().split('T')[0]; // YYYY-MM-DD
+    
     const { data: appointments, error: appointmentsError } = await supabaseServer
       .from("appointments")
       .select(
         `
         id,
-        starts_at,
-        ends_at,
+        requested_date,
+        requested_window,
         status,
-        families (
-          full_name
+        created_at,
+        leads (
+          first_name,
+          last_name,
+          full_name,
+          email
         )
       `
       )
-      .eq("specialist_id", userId)
-      .gte("starts_at", now)
-      .order("starts_at", { ascending: true });
+      .eq("agent_id", userId)
+      .gte("requested_date", today)
+      .in("status", ["pending", "confirmed", "booked"])
+      .order("requested_date", { ascending: true })
+      .order("created_at", { ascending: true });
 
     if (appointmentsError) {
       console.error("Error fetching appointments:", appointmentsError);
@@ -84,16 +94,39 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Map appointments to handle families as array
-    const mappedAppointments = (appointments || []).map((apt: any) => ({
-      id: apt.id,
-      starts_at: apt.starts_at,
-      ends_at: apt.ends_at,
-      status: apt.status,
-      family_name: Array.isArray(apt.families) && apt.families.length > 0
-        ? apt.families[0].full_name
-        : apt.families?.full_name || "Client",
-    }));
+    // Map appointments to format expected by schedule page
+    // Convert requested_date + requested_window to starts_at/ends_at
+    const mappedAppointments = (appointments || []).map((apt: any) => {
+      // Convert requested_date + requested_window to ISO timestamps
+      const date = new Date(apt.requested_date + "T00:00:00Z");
+      let startHour = 9; // Default to morning
+      
+      if (apt.requested_window === "afternoon") {
+        startHour = 13; // 1 PM
+      } else if (apt.requested_window === "evening") {
+        startHour = 17; // 5 PM
+      }
+      
+      const startsAt = new Date(date);
+      startsAt.setUTCHours(startHour, 0, 0, 0);
+      
+      const endsAt = new Date(startsAt);
+      endsAt.setUTCHours(startHour + 1, 0, 0, 0); // 1 hour duration
+      
+      // Get family name from lead
+      const lead = Array.isArray(apt.leads) ? apt.leads[0] : apt.leads;
+      const familyName = lead?.full_name || 
+        (lead?.first_name && lead?.last_name ? `${lead.first_name} ${lead.last_name}` : null) ||
+        "Client";
+      
+      return {
+        id: apt.id,
+        starts_at: startsAt.toISOString(),
+        ends_at: endsAt.toISOString(),
+        status: apt.status,
+        family_name: familyName,
+      };
+    });
 
     return NextResponse.json(mappedAppointments);
   } catch (error: any) {
