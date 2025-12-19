@@ -77,7 +77,9 @@ export async function GET(req: NextRequest) {
           first_name,
           last_name,
           full_name,
-          email
+          email,
+          city,
+          province
         )
       `
       )
@@ -176,11 +178,12 @@ export async function GET(req: NextRequest) {
         return null;
       }
       
-      // Get family name from lead
+      // Get family name and location from lead
       const lead = Array.isArray(apt.leads) ? apt.leads[0] : apt.leads;
       const familyName = lead?.full_name || 
         (lead?.first_name && lead?.last_name ? `${lead.first_name} ${lead.last_name}` : null) ||
         "Client";
+      const location = lead ? `${lead.city || ''}, ${lead.province || ''}`.trim() : null;
       
       return {
         id: apt.id,
@@ -188,6 +191,7 @@ export async function GET(req: NextRequest) {
         ends_at: endsAt,
         status: apt.status,
         family_name: familyName,
+        location: location || "N/A",
       };
     });
 

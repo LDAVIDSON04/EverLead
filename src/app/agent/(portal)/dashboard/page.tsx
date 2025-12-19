@@ -177,7 +177,7 @@ export default function AgentDashboardPage() {
             }
           }
           
-          // appointmentsFromAPI already has starts_at, ends_at, and family_name from the API
+          // appointmentsFromAPI already has starts_at, ends_at, family_name, and location from the API
           const formattedAppointments: Appointment[] = appointmentsFromAPI
             .slice(0, 5) // Limit to 5 most recent
             .map((apt: any) => {
@@ -197,43 +197,15 @@ export default function AgentDashboardPage() {
                 hour12: true
               });
               
-              // Extract location from family_name or use the lead data if available
-              // The API returns family_name, but we need city/province from the lead
-              // For now, we'll need to fetch leads separately or the API should include it
-              // Let's fetch leads for location
               return {
                 id: apt.id,
                 name: apt.family_name || 'Unknown',
-                location: 'Loading...', // Will be updated below
+                location: apt.location || 'N/A', // Location from API (lead's city, province)
                 date,
                 time,
                 status: apt.status === 'confirmed' || apt.status === 'booked' ? 'confirmed' : 'pending',
-                leadId: null, // We'll need to get this
               };
             });
-          
-          // Fetch lead IDs and locations for these appointments
-          const appointmentIds = formattedAppointments.map(apt => apt.id);
-          if (appointmentIds.length > 0) {
-            const { data: appointmentsWithLeads } = await supabaseClient
-              .from("appointments")
-              .select("id, lead_id, leads(city, province)")
-              .in("id", appointmentIds);
-            
-            // Create a map of appointment ID to lead location
-            const locationMap: Record<string, string> = {};
-            (appointmentsWithLeads || []).forEach((apt: any) => {
-              const lead = Array.isArray(apt.leads) ? apt.leads[0] : apt.leads;
-              if (lead) {
-                locationMap[apt.id] = `${lead.city || ''}, ${lead.province || ''}`.trim() || 'N/A';
-              }
-            });
-            
-            // Update appointments with locations
-            formattedAppointments.forEach(apt => {
-              apt.location = locationMap[apt.id] || 'N/A';
-            });
-          }
           
           setAppointments(formattedAppointments);
         }
