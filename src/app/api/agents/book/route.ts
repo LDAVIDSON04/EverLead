@@ -238,7 +238,7 @@ export async function POST(req: NextRequest) {
     const exactHour = slotStartLocal.hour;
     
     // Store exact hour in notes for availability API to use
-    const appointmentNotes = notes?.trim() || '';
+    const appointmentNotes = (notes && typeof notes === 'string') ? notes.trim() : '';
     const notesWithHour = appointmentNotes 
       ? `${appointmentNotes} | booked_hour:${exactHour}`
       : `booked_hour:${exactHour}`;
