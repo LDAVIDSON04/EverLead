@@ -54,10 +54,7 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // TODO: Exchange authorization code for access token and refresh token
-    // This requires making a POST request to Microsoft's token endpoint
-    // Example implementation:
-    /*
+    // Exchange authorization code for access token and refresh token
     const tokenResponse = await fetch(
       "https://login.microsoftonline.com/common/oauth2/v2.0/token",
       {
@@ -71,26 +68,34 @@ export async function GET(req: NextRequest) {
           client_secret: clientSecret,
           redirect_uri: redirectUri,
           grant_type: "authorization_code",
-          scope: "Calendars.ReadWrite",
+          scope: "Calendars.ReadWrite offline_access",
         }),
       }
     );
 
     if (!tokenResponse.ok) {
-      const error = await tokenResponse.json();
-      throw new Error(`Token exchange failed: ${JSON.stringify(error)}`);
+      const error = await tokenResponse.json().catch(() => ({ error: "Unknown error" }));
+      console.error("Microsoft OAuth token exchange failed:", error);
+      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL || "http://localhost:3000";
+      return NextResponse.redirect(
+        `${baseUrl}/agent/settings?error=${encodeURIComponent(`Token exchange failed: ${error.error || JSON.stringify(error)}`)}`
+      );
     }
 
     const tokens = await tokenResponse.json();
     const { access_token, refresh_token, expires_in } = tokens;
 
-    // Calculate expiration time
-    const expiresAt = new Date(Date.now() + expires_in * 1000);
-    */
+    if (!access_token) {
+      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL || "http://localhost:3000";
+      return NextResponse.redirect(
+        `${baseUrl}/agent/settings?error=${encodeURIComponent("Failed to get access token from Microsoft")}`
+      );
+    }
 
-    // TODO: Get the primary calendar ID
-    // This requires calling Microsoft Graph API:
-    /*
+    // Calculate expiration time
+    const expiresAt = new Date(Date.now() + (expires_in || 3600) * 1000);
+
+    // Get the primary calendar ID
     const calendarResponse = await fetch(
       "https://graph.microsoft.com/v1.0/me/calendar",
       {
@@ -100,13 +105,13 @@ export async function GET(req: NextRequest) {
       }
     );
 
-    if (!calendarResponse.ok) {
-      throw new Error("Failed to get primary calendar");
+    let externalCalendarId = "calendar"; // Default fallback
+    if (calendarResponse.ok) {
+      const calendar = await calendarResponse.json();
+      externalCalendarId = calendar.id || "calendar";
+    } else {
+      console.warn("Failed to get primary calendar, using default 'calendar'");
     }
-
-    const calendar = await calendarResponse.json();
-    const externalCalendarId = calendar.id;
-    */
 
     // Check if specialist exists, create if not
     const { data: existingSpecialist, error: checkError } = await supabaseServer
@@ -144,11 +149,7 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // Placeholder values (replace with actual values from OAuth flow above)
-    const access_token = "TODO_REPLACE_WITH_ACTUAL_TOKEN";
-    const refresh_token = "TODO_REPLACE_WITH_ACTUAL_REFRESH_TOKEN";
-    const expiresAt = new Date(Date.now() + 3600 * 1000); // 1 hour from now
-    const externalCalendarId = "TODO_REPLACE_WITH_ACTUAL_CALENDAR_ID";
+    // Values are now set from OAuth flow above
 
     // Upsert calendar connection
     const { error: upsertError } = await supabaseServer
