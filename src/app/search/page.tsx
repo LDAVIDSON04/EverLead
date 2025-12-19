@@ -158,7 +158,7 @@ function SearchResults() {
           if (!apt.agent?.id) return null;
           try {
             const res = await fetch(
-              `/api/agents/availability?agentId=${apt.agent.id}&startDate=${startDate}&endDate=${endDate}`
+              `/api/agents/availability?agentId=${apt.agent.id}&startDate=${startDate}&endDate=${endDate}${searchLocation ? `&location=${encodeURIComponent(searchLocation)}` : ''}`
             );
             if (res.ok) {
               const data: AvailabilityDay[] = await res.json();

@@ -13,6 +13,7 @@ const querySchema = z.object({
   agentId: z.string().uuid(),
   startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  location: z.string().optional(), // Optional location to filter schedule
 });
 
 type AvailabilityDay = {
@@ -27,6 +28,7 @@ export async function GET(req: NextRequest) {
       agentId: searchParams.get("agentId"),
       startDate: searchParams.get("startDate"),
       endDate: searchParams.get("endDate"),
+      location: searchParams.get("location"), // Get location from query params
     };
 
     // Validate query params
@@ -38,7 +40,7 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const { agentId, startDate, endDate } = validation.data;
+    const { agentId, startDate, endDate, location } = validation.data;
 
     // Load agent profile with availability settings
     const { data: profile, error: profileError } = await supabaseAdmin
@@ -66,9 +68,35 @@ export async function GET(req: NextRequest) {
       return NextResponse.json([]);
     }
 
-    // For now, use the first location's schedule (could be enhanced to filter by location)
-    const firstLocation = locations[0];
-    const locationSchedule = availabilityByLocation[firstLocation] || {};
+    // Use the specified location, or fall back to first location, or agent's default city
+    let selectedLocation = location;
+    if (!selectedLocation && locations.length > 0) {
+      selectedLocation = locations[0];
+    }
+    if (!selectedLocation && profile.agent_city) {
+      selectedLocation = profile.agent_city;
+    }
+    if (!selectedLocation && locations.length > 0) {
+      selectedLocation = locations[0];
+    }
+    
+    // Get the schedule for the selected location
+    const locationSchedule = selectedLocation ? (availabilityByLocation[selectedLocation] || {}) : {};
+    
+    // If no schedule found for selected location, try to find a matching location (case-insensitive)
+    if (Object.keys(locationSchedule).length === 0 && selectedLocation) {
+      const matchingLocation = Object.keys(availabilityByLocation).find(
+        loc => loc.toLowerCase() === selectedLocation.toLowerCase()
+      );
+      if (matchingLocation) {
+        Object.assign(locationSchedule, availabilityByLocation[matchingLocation]);
+      }
+    }
+    
+    // Final fallback: use first available location's schedule
+    if (Object.keys(locationSchedule).length === 0 && locations.length > 0) {
+      Object.assign(locationSchedule, availabilityByLocation[locations[0]] || {});
+    }
 
     // Load existing appointments for this agent (get actual times if available)
     const { data: appointments, error: appointmentsError } = await supabaseAdmin
