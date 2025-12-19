@@ -117,8 +117,10 @@ export async function POST(req: NextRequest) {
         }
         
         // Also check for time overlap (slot overlaps with appointment time)
-        const appointmentLength = 60 * 60 * 1000; // Default 60 minutes in milliseconds
-        const aptEndTime = aptStartTime + appointmentLength;
+        // Use the actual slot duration (slotEnd - slotStart) to calculate appointment end time
+        // This is more accurate than assuming a fixed length
+        const slotDuration = slotEndTime - slotStartTime; // Duration of the slot being booked
+        const aptEndTime = aptStartTime + slotDuration; // Assume existing appointment has same duration
         
         // Overlap occurs if: slotStart < aptEnd && slotEnd > aptStart
         const hasOverlap = slotStartTime < aptEndTime && slotEndTime > aptStartTime;
