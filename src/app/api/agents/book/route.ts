@@ -99,8 +99,41 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Convert time to window (morning, afternoon, evening) for storage
-    const hour = slotStart.getUTCHours();
+    // Get agent's timezone to convert slot time correctly
+    const { data: agentProfile } = await supabaseAdmin
+      .from("profiles")
+      .select("metadata, agent_province")
+      .eq("id", agentId)
+      .maybeSingle();
+    
+    let agentTimezone = "America/Vancouver"; // Default
+    if (agentProfile?.metadata?.timezone) {
+      agentTimezone = agentProfile.metadata.timezone;
+    } else if (agentProfile?.metadata?.availability?.timezone) {
+      agentTimezone = agentProfile.metadata.availability.timezone;
+    } else if (agentProfile?.agent_province) {
+      const province = agentProfile.agent_province.toUpperCase();
+      if (province === "BC" || province === "BRITISH COLUMBIA") {
+        agentTimezone = "America/Vancouver";
+      } else if (province === "AB" || province === "ALBERTA") {
+        agentTimezone = "America/Edmonton";
+      } else if (province === "SK" || province === "SASKATCHEWAN") {
+        agentTimezone = "America/Regina";
+      } else if (province === "MB" || province === "MANITOBA") {
+        agentTimezone = "America/Winnipeg";
+      } else if (province === "ON" || province === "ONTARIO") {
+        agentTimezone = "America/Toronto";
+      } else if (province === "QC" || province === "QUEBEC") {
+        agentTimezone = "America/Montreal";
+      }
+    }
+
+    // Convert slot time to agent's local timezone to determine window
+    const { DateTime } = await import("luxon");
+    const slotStartUTC = DateTime.fromISO(slotStart.toISOString(), { zone: "utc" });
+    const slotStartLocal = slotStartUTC.setZone(agentTimezone);
+    const hour = slotStartLocal.hour;
+    
     let requestedWindow: "morning" | "afternoon" | "evening";
     if (hour < 12) {
       requestedWindow = "morning";

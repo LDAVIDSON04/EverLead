@@ -83,23 +83,7 @@ export async function GET(req: NextRequest) {
       console.error("Error loading appointments:", appointmentsError);
     }
 
-    // Helper to convert time string (HH:MM) in agent's local timezone to UTC Date
-    // We'll assume the agent's timezone is their system timezone or use a default
-    // For now, we'll treat the times as if they're in the agent's local timezone
-    const timeToDate = (dateStr: string, timeStr: string): Date => {
-      const [year, month, day] = dateStr.split("-").map(Number);
-      const [hours, minutes] = timeStr.split(":").map(Number);
-      
-      // Create date in local timezone (agent's timezone)
-      // Then convert to UTC for storage
-      const localDate = new Date(year, month - 1, day, hours, minutes);
-      
-      // For API responses, we want UTC ISO strings
-      // The time provided is in the agent's local timezone, so we need to account for that
-      // For simplicity, we'll create a UTC date that represents the same "wall clock time"
-      // This assumes the agent's schedule times are in their local timezone
-      return new Date(Date.UTC(year, month - 1, day, hours, minutes));
-    };
+    // Note: timeToDate helper removed - now using DateTime from luxon directly in slot generation
 
     // Get agent's timezone for converting appointment times
     let agentTimezone = "America/Vancouver"; // Default fallback
@@ -226,9 +210,19 @@ export async function GET(req: NextRequest) {
         const currentMin = currentTimeMinutes % 60;
         const timeStr = `${String(currentHour).padStart(2, "0")}:${String(currentMin).padStart(2, "0")}`;
         
-        // Create slot start and end times
-        const slotStart = timeToDate(dateStr, timeStr);
-        const slotEnd = new Date(slotStart.getTime() + appointmentLength * 60 * 1000);
+        // Create slot start and end times in agent's timezone, then convert to UTC
+        const localDateTimeStr = `${dateStr}T${timeStr}:00`;
+        const localStart = DateTime.fromISO(localDateTimeStr, { zone: agentTimezone });
+        const localEnd = localStart.plus({ minutes: appointmentLength });
+        
+        if (!localStart.isValid || !localEnd.isValid) {
+          console.error(`Invalid slot time for ${dateStr} ${timeStr}`);
+          continue;
+        }
+        
+        // Convert to UTC for API response
+        const slotStart = new Date(localStart.toUTC().toISO());
+        const slotEnd = new Date(localEnd.toUTC().toISO());
 
         // Check for conflicts with existing appointments
         if (!hasConflict(slotStart, slotEnd, dateStr)) {
