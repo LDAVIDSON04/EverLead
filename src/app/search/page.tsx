@@ -293,10 +293,16 @@ function SearchResults() {
             const firstDay = availabilityData[0];
             setSelectedDayForModal(firstDay.date);
             
+            // Get agent's timezone from the agent info (if available) or use browser timezone
+            // For now, we'll convert UTC back to local time - the API sends UTC but we need to display in agent's timezone
+            // Since we don't have agent timezone here, we'll use the browser's timezone as a fallback
+            // The API should ideally include timezone info, but for now this will work better than showing UTC
             const formattedSlots = firstDay.slots.map(slot => {
               const startDate = new Date(slot.startsAt);
-              const hours = startDate.getUTCHours();
-              const minutes = startDate.getUTCMinutes();
+              // Convert UTC to local time for display (this will show in user's browser timezone)
+              // TODO: Ideally we'd use the agent's timezone, but this is better than showing UTC
+              const hours = startDate.getHours();
+              const minutes = startDate.getMinutes();
               const ampm = hours >= 12 ? 'PM' : 'AM';
               const displayHours = hours % 12 || 12;
               const timeStr = `${displayHours}:${String(minutes).padStart(2, '0')} ${ampm}`;
@@ -409,10 +415,12 @@ function SearchResults() {
           
           if (dayData) {
             // Format time slots with readable time and available status
+            // Convert UTC times back to local time for display (will show in user's browser timezone)
             const formattedSlots = dayData.slots.map(slot => {
               const startDate = new Date(slot.startsAt);
-              const hours = startDate.getUTCHours();
-              const minutes = startDate.getUTCMinutes();
+              // Use getHours() instead of getUTCHours() to convert from UTC to local time
+              const hours = startDate.getHours();
+              const minutes = startDate.getMinutes();
               const ampm = hours >= 12 ? 'PM' : 'AM';
               const displayHours = hours % 12 || 12;
               const timeStr = `${displayHours}:${String(minutes).padStart(2, '0')} ${ampm}`;
