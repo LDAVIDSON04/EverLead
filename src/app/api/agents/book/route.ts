@@ -73,15 +73,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check for conflicts - look for existing appointments that overlap with this time slot
+    // Check for conflicts - look for existing appointments that overlap with this EXACT time slot
     const requestedDate = slotStart.toISOString().split("T")[0];
     const slotEndTime = slotEnd.getTime();
     const slotStartTime = slotStart.getTime();
+    const slotStartISO = slotStart.toISOString();
     
-    // Get all appointments for this agent on this date
+    // Get all appointments for this agent on this date - include confirmed_at for exact matching
     const { data: conflictingAppointments, error: conflictError } = await supabaseAdmin
       .from("appointments")
-      .select("id, requested_date, requested_window, created_at")
+      .select("id, requested_date, requested_window, created_at, confirmed_at")
       .eq("agent_id", agentId)
       .eq("requested_date", requestedDate)
       .in("status", ["pending", "confirmed", "booked"]);
@@ -90,21 +91,61 @@ export async function POST(req: NextRequest) {
       console.error("Error checking conflicts:", conflictError);
     }
 
-    // Check for time overlaps
-    // Since we don't have exact start/end times in appointments table, we'll be conservative
-    // If there's any appointment on this date, we'll block the booking
-    // This ensures no double-booking
+    // Check for exact time overlaps using confirmed_at (exact booking time)
     if (conflictingAppointments && conflictingAppointments.length > 0) {
-      // For now, if there's any appointment on this date, block it
-      // In the future, we could store exact start/end times in appointments table
-      // and check for actual time overlaps
-      return NextResponse.json(
-        { 
-          error: "This time slot is no longer available",
-          code: "SLOT_CONFLICT"
-        },
-        { status: 409 }
-      );
+      // Check if any appointment has the exact same confirmed_at time (exact slot match)
+      const hasExactConflict = conflictingAppointments.some((apt: any) => {
+        if (!apt.confirmed_at) {
+          // If no confirmed_at, we can't be precise, so skip it
+          // (old appointments without confirmed_at won't block new bookings)
+          return false;
+        }
+        
+        const aptStartTime = new Date(apt.confirmed_at).getTime();
+        const tolerance = 60 * 1000; // 1 minute tolerance
+        const timeDifference = Math.abs(slotStartTime - aptStartTime);
+        
+        // Check if times match (within tolerance)
+        if (timeDifference <= tolerance) {
+          console.log("❌ CONFLICT DETECTED in booking API:", {
+            slotStartISO,
+            aptConfirmedAt: apt.confirmed_at,
+            timeDifferenceMs: timeDifference,
+            appointmentId: apt.id,
+          });
+          return true; // Exact conflict - this exact slot is already booked
+        }
+        
+        // Also check for time overlap (slot overlaps with appointment time)
+        const appointmentLength = 60 * 60 * 1000; // Default 60 minutes in milliseconds
+        const aptEndTime = aptStartTime + appointmentLength;
+        
+        // Overlap occurs if: slotStart < aptEnd && slotEnd > aptStart
+        const hasOverlap = slotStartTime < aptEndTime && slotEndTime > aptStartTime;
+        
+        if (hasOverlap) {
+          console.log("❌ TIME OVERLAP DETECTED in booking API:", {
+            slotStartISO,
+            slotEndISO: slotEnd.toISOString(),
+            aptConfirmedAt: apt.confirmed_at,
+            aptEndTime: new Date(aptEndTime).toISOString(),
+            appointmentId: apt.id,
+          });
+          return true;
+        }
+        
+        return false;
+      });
+      
+      if (hasExactConflict) {
+        return NextResponse.json(
+          { 
+            error: "This time slot is no longer available",
+            code: "SLOT_CONFLICT"
+          },
+          { status: 409 }
+        );
+      }
     }
 
     // Get agent's timezone to convert slot time correctly
