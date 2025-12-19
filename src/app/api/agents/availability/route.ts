@@ -168,66 +168,45 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // Helper to get the exact booked hour from appointment
-    // Use confirmed_at if available (stores exact booking time), otherwise fall back to created_at
-    const getAppointmentExactHour = (apt: any): number | null => {
-      // Prefer confirmed_at as it stores the exact booking time (startsAt)
-      const timeSource = apt.confirmed_at || apt.created_at;
-      if (!timeSource) return null;
-      
-      const timeDate = new Date(timeSource);
-      const timeInAgentTZ = DateTime.fromJSDate(timeDate, { zone: "utc" })
-        .setZone(agentTimezone);
-      return timeInAgentTZ.hour;
-    };
-
     // Helper to check if a time slot conflicts with an appointment
-    // Uses confirmed_at (exact booking time) or created_at to determine the exact booked hour
+    // Uses confirmed_at (exact booking time) for precise matching
     const hasConflict = (slotStart: Date, slotEnd: Date, dateStr: string, slotHour: number): boolean => {
       if (!appointments || appointments.length === 0) return false;
       
-      // Get the slot's hour in agent's timezone for matching
-      const slotStartInAgentTZ = DateTime.fromJSDate(slotStart, { zone: "utc" })
-        .setZone(agentTimezone);
-      const slotHourInAgentTZ = slotStartInAgentTZ.hour;
+      const slotStartTime = slotStart.getTime();
+      const slotEndTime = slotEnd.getTime();
       
       // Check if this slot conflicts with any appointment on this date
       return appointments.some((apt: any) => {
         if (apt.requested_date !== dateStr) return false;
         
-        // Get the exact booked hour from confirmed_at (stores exact booking time) or created_at
-        const bookedHour = getAppointmentExactHour(apt);
-        
-        if (bookedHour !== null) {
-          // We have the exact hour - check if it matches the slot hour
-          // Also verify the window matches (e.g., 9 AM is in morning window)
-          const windowMatches = 
-            (apt.requested_window === "morning" && slotHourInAgentTZ >= 9 && slotHourInAgentTZ < 12) ||
-            (apt.requested_window === "afternoon" && slotHourInAgentTZ >= 13 && slotHourInAgentTZ < 17) ||
-            (apt.requested_window === "evening" && slotHourInAgentTZ >= 17 && slotHourInAgentTZ < 21);
+        // If we have confirmed_at, it stores the exact booking time (startsAt from booking)
+        // This is the most precise way to match - direct timestamp comparison
+        if (apt.confirmed_at) {
+          const aptStartTime = new Date(apt.confirmed_at).getTime();
+          const aptEndTime = aptStartTime + (appointmentLength * 60 * 1000); // appointmentLength is in minutes
           
-          // Only block if both the hour matches AND the window matches
-          if (bookedHour === slotHourInAgentTZ && windowMatches) {
-            // Verify time overlap to be absolutely sure
-            const slotStartTime = slotStart.getTime();
-            const slotEndTime = slotEnd.getTime();
-            const aptDateStr = apt.requested_date;
-            const aptLocalStart = DateTime.fromISO(`${aptDateStr}T${String(slotHourInAgentTZ).padStart(2, '0')}:00:00`, { zone: agentTimezone });
-            const aptLocalEnd = aptLocalStart.plus({ hours: appointmentLength / 60 });
-            
-            if (aptLocalStart.isValid && aptLocalEnd.isValid) {
-              const aptStartISO = aptLocalStart.toUTC().toISO();
-              const aptEndISO = aptLocalEnd.toUTC().toISO();
-              if (aptStartISO && aptEndISO) {
-                const aptStartTime = new Date(aptStartISO).getTime();
-                const aptEndTime = new Date(aptEndISO).getTime();
-                return slotStartTime < aptEndTime && slotEndTime > aptStartTime;
-              }
-            }
+          // Check for time overlap: slotStart < aptEnd && slotEnd > aptStart
+          const hasOverlap = slotStartTime < aptEndTime && slotEndTime > aptStartTime;
+          
+          if (hasOverlap) {
+            console.log("Conflict detected:", {
+              dateStr,
+              slotStart: slotStart.toISOString(),
+              slotEnd: slotEnd.toISOString(),
+              aptConfirmedAt: apt.confirmed_at,
+              aptStartTime: new Date(aptStartTime).toISOString(),
+              aptEndTime: new Date(aptEndTime).toISOString(),
+            });
+            return true; // Exact match - this slot is booked
           }
         } else {
-          // Can't determine exact hour - fall back to window-based blocking for safety
-          // This is less precise but prevents double-booking
+          // Fallback for older appointments without confirmed_at
+          // Use window-based blocking (less precise but safe)
+          const slotStartInAgentTZ = DateTime.fromJSDate(slotStart, { zone: "utc" })
+            .setZone(agentTimezone);
+          const slotHourInAgentTZ = slotStartInAgentTZ.hour;
+          
           const windowStartHour = apt.requested_window === "afternoon" ? 13 : 
                                  apt.requested_window === "evening" ? 17 : 9;
           const windowEndHour = apt.requested_window === "afternoon" ? 17 :
@@ -235,9 +214,7 @@ export async function GET(req: NextRequest) {
           
           // Block if slot hour falls within the appointment's window
           if (slotHourInAgentTZ >= windowStartHour && slotHourInAgentTZ < windowEndHour) {
-            // Verify time overlap
-            const slotStartTime = slotStart.getTime();
-            const slotEndTime = slotEnd.getTime();
+            // Verify time overlap using a representative time for the window
             const aptDateStr = apt.requested_date;
             const aptLocalStart = DateTime.fromISO(`${aptDateStr}T${String(slotHourInAgentTZ).padStart(2, '0')}:00:00`, { zone: agentTimezone });
             const aptLocalEnd = aptLocalStart.plus({ hours: appointmentLength / 60 });
