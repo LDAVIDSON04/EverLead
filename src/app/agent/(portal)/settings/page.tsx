@@ -764,6 +764,35 @@ function CalendarAvailabilitySection() {
     }
 
     loadAvailability();
+
+    // Check for calendar connection success message
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const calendarConnected = urlParams.get("calendarConnected");
+      const success = urlParams.get("success");
+      
+      if (calendarConnected && success) {
+        const provider = calendarConnected === "google" ? "Google Calendar" : "Microsoft Calendar";
+        alert(`✅ ${provider} connected successfully! Your appointments will now sync automatically.`);
+        
+        // Refresh calendar connection status
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        if (user) {
+          const { data: connections } = await supabaseClient
+            .from("calendar_connections")
+            .select("provider")
+            .eq("specialist_id", user.id);
+          
+          if (connections) {
+            setGoogleConnected(connections.some((c: any) => c.provider === "google"));
+            setMicrosoftConnected(connections.some((c: any) => c.provider === "microsoft"));
+          }
+        }
+        
+        // Clean up URL
+        window.history.replaceState({}, "", "/agent/settings");
+      }
+    }
   }, []);
 
   const addLocation = () => {

@@ -175,11 +175,11 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Redirect to dashboard first (which handles auth better), then user can navigate to settings
-    // Include a success message in the URL
+    // Redirect to login page with success message - user can log back in and go to settings
+    // This handles the case where session is lost during OAuth flow
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL || "http://localhost:3000";
     return NextResponse.redirect(
-      `${baseUrl}/agent/dashboard?calendarConnected=google&redirectTo=settings`
+      `${baseUrl}/agent?calendarConnected=google&message=${encodeURIComponent("Google Calendar connected successfully! Please log in to continue.")}`
     );
   } catch (error: any) {
     console.error("Error in /api/integrations/google/callback:", error);

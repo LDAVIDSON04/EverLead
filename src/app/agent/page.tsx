@@ -69,7 +69,18 @@ export default function AgentLandingPage() {
           const role = profile?.role;
 
           if (role === "agent") {
-            router.replace("/agent/dashboard");
+            // Check if calendar was just connected
+            const calendarConnected = sessionStorage.getItem('calendarConnected');
+            const calendarMessage = sessionStorage.getItem('calendarMessage');
+            
+            if (calendarConnected && calendarMessage) {
+              sessionStorage.removeItem('calendarConnected');
+              sessionStorage.removeItem('calendarMessage');
+              // Redirect to settings with success message
+              router.replace(`/agent/settings?calendarConnected=${calendarConnected}&success=${encodeURIComponent(calendarMessage)}`);
+            } else {
+              router.replace("/agent/dashboard");
+            }
             return;
           } else if (role === "admin") {
             router.replace("/admin/dashboard");
@@ -85,6 +96,25 @@ export default function AgentLandingPage() {
     }
 
     checkAuth();
+
+    // Check for calendar connection success message
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const calendarConnected = urlParams.get("calendarConnected");
+      const message = urlParams.get("message");
+      
+      if (calendarConnected && message) {
+        // Show success message
+        setError(null); // Clear any errors
+        // Store message to show after login
+        sessionStorage.setItem('calendarConnected', calendarConnected);
+        sessionStorage.setItem('calendarMessage', decodeURIComponent(message));
+        
+        // Clean up URL
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, "", newUrl);
+      }
+    }
   }, [router]);
 
   async function handleSubmit(e: React.FormEvent) {
