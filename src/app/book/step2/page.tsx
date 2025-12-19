@@ -173,7 +173,7 @@ function BookingStep2Content() {
           firstName: formData.legalFirstName,
           lastName: formData.legalLastName,
           email: formData.email,
-          phone: "", // Will be collected in future steps if needed
+          phone: null, // Optional for now
           city: agentInfo?.agent_city || null,
           province: agentInfo?.agent_province || null,
           serviceType: selectedService,

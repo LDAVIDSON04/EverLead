@@ -23,10 +23,10 @@ export async function POST(req: NextRequest) {
       notes,
     } = body;
 
-    // Validate required fields
-    if (!agentId || !startsAt || !firstName || !lastName || !email || !phone) {
+    // Validate required fields (phone is optional for now)
+    if (!agentId || !startsAt || !firstName || !lastName || !email) {
       return NextResponse.json(
-        { error: "Missing required fields: agentId, startsAt, firstName, lastName, email, phone" },
+        { error: "Missing required fields: agentId, startsAt, firstName, lastName, email" },
         { status: 400 }
       );
     }
@@ -127,7 +127,7 @@ export async function POST(req: NextRequest) {
         last_name: lastName.trim(),
         full_name: `${firstName} ${lastName}`.trim(),
         email: email.trim(),
-        phone: phone.trim(),
+        phone: phone?.trim() || null,
         city: city?.trim() || null,
         province: province?.trim() || null,
         service_type: serviceType?.trim() || "Pre-need Planning",
