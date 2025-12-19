@@ -193,7 +193,7 @@ export async function POST(req: NextRequest) {
         agent_id: agentId,
         requested_date: requestedDate,
         requested_window: requestedWindow,
-        status: "pending",
+        status: "confirmed", // Mark as confirmed immediately after booking
         price_cents: null, // Can be set later
       })
       .select()
