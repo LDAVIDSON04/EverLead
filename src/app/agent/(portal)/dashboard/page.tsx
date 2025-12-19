@@ -126,46 +126,30 @@ export default function AgentDashboardPage() {
           myAppointments: data.stats.myAppointments ?? 0,
         });
 
-        // Fetch recent appointments
-        const { data: appointmentsData } = await supabaseClient
-          .from("appointments")
-          .select(`
-            id,
-            status,
-            requested_date,
-            created_at,
-            lead_id,
-            agent_id
-          `)
-          .eq("agent_id", agentId)
-          .order("created_at", { ascending: false })
-          .limit(5);
-
-        // Fetch leads for these appointments
-        const leadIds = (appointmentsData || [])
-          .map((apt: any) => apt.lead_id)
-          .filter(Boolean);
-        
-        let leadsMap: Record<string, any> = {};
-        if (leadIds.length > 0) {
-          const { data: leadsData } = await supabaseClient
-            .from("leads")
-            .select("id, first_name, last_name, city, province")
-            .in("id", leadIds);
-          
-          (leadsData || []).forEach((lead: any) => {
-            leadsMap[lead.id] = lead;
-          });
+        // Fetch recent appointments - use the same API endpoint as schedule page for consistency
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (!session?.access_token) {
+          throw new Error("Not authenticated");
         }
-
-        if (appointmentsData) {
-          // Import DateTime for timezone conversion
+        
+        const appointmentsRes = await fetch("/api/appointments/mine", {
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        });
+        
+        if (!appointmentsRes.ok) {
+          throw new Error("Failed to fetch appointments");
+        }
+        
+        const appointmentsFromAPI = await appointmentsRes.json();
+        
+        // Format appointments for dashboard display
+        if (appointmentsFromAPI && Array.isArray(appointmentsFromAPI)) {
           const { DateTime } = await import('luxon');
           
-          // Get agent's timezone from profile metadata or use browser detection
+          // Get agent's timezone (same logic as schedule page)
           let agentTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "America/Vancouver";
-          
-          // Try to get from profile metadata
           const { data: profileData } = await supabaseClient
             .from("profiles")
             .select("metadata, agent_province")
@@ -177,7 +161,6 @@ export default function AgentDashboardPage() {
           } else if (profileData?.metadata?.availability?.timezone) {
             agentTimezone = profileData.metadata.availability.timezone;
           } else if (profileData?.agent_province) {
-            // Infer from province
             const province = profileData.agent_province.toUpperCase();
             if (province === "BC" || province === "BRITISH COLUMBIA") {
               agentTimezone = "America/Vancouver";
@@ -194,28 +177,15 @@ export default function AgentDashboardPage() {
             }
           }
           
-          const formattedAppointments: Appointment[] = appointmentsData.map((apt: any) => {
-            const lead = apt.lead_id ? leadsMap[apt.lead_id] : null;
-            const name = lead ? `${lead.first_name || ''} ${lead.last_name || ''}`.trim() : 'Unknown';
-            // Use lead's city from booking, not agent's default city
-            const location = lead ? `${lead.city || ''}, ${lead.province || ''}`.trim() : 'N/A';
-            
-            // Convert requested_date + requested_window to proper PST time
-            if (apt.requested_date && apt.requested_window) {
-              const dateStr = apt.requested_date;
-              let startHour = 9; // Default to morning (9 AM PST)
+          // appointmentsFromAPI already has starts_at, ends_at, and family_name from the API
+          const formattedAppointments: Appointment[] = appointmentsFromAPI
+            .slice(0, 5) // Limit to 5 most recent
+            .map((apt: any) => {
+              // Parse the ISO timestamps and convert to agent's timezone
+              const startDate = DateTime.fromISO(apt.starts_at, { zone: "utc" });
+              const localStart = startDate.setZone(agentTimezone);
               
-              if (apt.requested_window === "afternoon") {
-                startHour = 13; // 1 PM PST
-              } else if (apt.requested_window === "evening") {
-                startHour = 17; // 5 PM PST
-              }
-              
-              // Create date in PST timezone
-              const localDateTimeStr = `${dateStr}T${String(startHour).padStart(2, '0')}:00:00`;
-              const localStart = DateTime.fromISO(localDateTimeStr, { zone: agentTimezone });
-              
-              // Format date and time in PST
+              // Format date and time in agent's timezone
               const date = localStart.toLocaleString({ 
                 day: 'numeric', 
                 month: 'short', 
@@ -227,39 +197,44 @@ export default function AgentDashboardPage() {
                 hour12: true
               });
               
+              // Extract location from family_name or use the lead data if available
+              // The API returns family_name, but we need city/province from the lead
+              // For now, we'll need to fetch leads separately or the API should include it
+              // Let's fetch leads for location
               return {
                 id: apt.id,
-                name,
-                location,
+                name: apt.family_name || 'Unknown',
+                location: 'Loading...', // Will be updated below
                 date,
                 time,
                 status: apt.status === 'confirmed' || apt.status === 'booked' ? 'confirmed' : 'pending',
+                leadId: null, // We'll need to get this
               };
-            } else {
-              // Fallback for appointments without requested_date/window
-              const dateObj = apt.requested_date ? new Date(apt.requested_date) : new Date(apt.created_at);
-              const date = dateObj.toLocaleDateString('en-US', { 
-                day: 'numeric', 
-                month: 'short', 
-                year: 'numeric',
-                timeZone: agentTimezone
-              });
-              const time = dateObj.toLocaleTimeString('en-US', { 
-                hour: '2-digit', 
-                minute: '2-digit',
-                timeZone: agentTimezone
-              });
-              
-              return {
-                id: apt.id,
-                name,
-                location,
-                date,
-                time,
-                status: apt.status === 'confirmed' || apt.status === 'booked' ? 'confirmed' : 'pending',
-              };
-            }
-          });
+            });
+          
+          // Fetch lead IDs and locations for these appointments
+          const appointmentIds = formattedAppointments.map(apt => apt.id);
+          if (appointmentIds.length > 0) {
+            const { data: appointmentsWithLeads } = await supabaseClient
+              .from("appointments")
+              .select("id, lead_id, leads(city, province)")
+              .in("id", appointmentIds);
+            
+            // Create a map of appointment ID to lead location
+            const locationMap: Record<string, string> = {};
+            (appointmentsWithLeads || []).forEach((apt: any) => {
+              const lead = Array.isArray(apt.leads) ? apt.leads[0] : apt.leads;
+              if (lead) {
+                locationMap[apt.id] = `${lead.city || ''}, ${lead.province || ''}`.trim() || 'N/A';
+              }
+            });
+            
+            // Update appointments with locations
+            formattedAppointments.forEach(apt => {
+              apt.location = locationMap[apt.id] || 'N/A';
+            });
+          }
+          
           setAppointments(formattedAppointments);
         }
 
