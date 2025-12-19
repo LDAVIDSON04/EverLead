@@ -150,10 +150,16 @@ export async function GET(req: NextRequest) {
       let startsAt: string | null = null;
       let endsAt: string | null = null;
       
+      // Get appointment length from agent's settings (default to 60 minutes)
+      const appointmentLengthMinutes = agentProfile?.metadata?.availability?.appointmentLength 
+        ? parseInt(agentProfile.metadata.availability.appointmentLength, 10) 
+        : 60;
+      const appointmentLengthMs = appointmentLengthMinutes * 60 * 1000;
+      
       // If we have confirmed_at, use it directly (this is the exact booking time)
       if (apt.confirmed_at) {
         const confirmedDate = new Date(apt.confirmed_at);
-        const confirmedEnd = new Date(confirmedDate.getTime() + 60 * 60 * 1000); // Add 1 hour
+        const confirmedEnd = new Date(confirmedDate.getTime() + appointmentLengthMs);
         
         startsAt = confirmedDate.toISOString();
         endsAt = confirmedEnd.toISOString();
@@ -174,7 +180,7 @@ export async function GET(req: NextRequest) {
         
         // Use DateTime from luxon to properly handle timezone conversion
         const localStart = DateTime.fromISO(localDateTimeStr, { zone: agentTimezone });
-        const localEnd = localStart.plus({ hours: 1 }); // 1 hour duration
+        const localEnd = localStart.plus({ minutes: appointmentLengthMinutes }); // Use actual appointment length
         
         // Convert to UTC ISO strings for the API response
         startsAt = localStart.toUTC().toISO();
