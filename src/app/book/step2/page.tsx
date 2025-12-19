@@ -6,6 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Star, MapPin, Calendar, ArrowLeft, Info } from "lucide-react";
 import { supabaseClient } from "@/lib/supabaseClient";
+import { DateTime } from "luxon";
 
 function BookingStep2Content() {
   const router = useRouter();
@@ -83,9 +84,35 @@ function BookingStep2Content() {
 
   const formatTime = (isoString: string): string => {
     if (!isoString) return "";
-    const date = new Date(isoString);
-    const hours = date.getUTCHours();
-    const minutes = date.getUTCMinutes();
+    
+    // Get agent's timezone - infer from agent_province or use browser default
+    let timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    
+    // If we have agent info, try to infer timezone from province
+    if (agentInfo?.agent_province) {
+      const province = agentInfo.agent_province.toUpperCase();
+      if (province === "BC" || province === "BRITISH COLUMBIA") {
+        timezone = "America/Vancouver";
+      } else if (province === "AB" || province === "ALBERTA") {
+        timezone = "America/Edmonton";
+      } else if (province === "SK" || province === "SASKATCHEWAN") {
+        timezone = "America/Regina";
+      } else if (province === "MB" || province === "MANITOBA") {
+        timezone = "America/Winnipeg";
+      } else if (province === "ON" || province === "ONTARIO") {
+        timezone = "America/Toronto";
+      } else if (province === "QC" || province === "QUEBEC") {
+        timezone = "America/Montreal";
+      }
+    }
+    
+    // Use luxon to properly convert UTC to agent's local timezone
+    const utcDate = DateTime.fromISO(isoString, { zone: "utc" });
+    const localDate = utcDate.setZone(timezone);
+    
+    // Format in 12-hour format
+    const hours = localDate.hour;
+    const minutes = localDate.minute;
     const ampm = hours >= 12 ? "PM" : "AM";
     const displayHours = hours % 12 || 12;
     return `${displayHours}:${String(minutes).padStart(2, "0")} ${ampm}`;
