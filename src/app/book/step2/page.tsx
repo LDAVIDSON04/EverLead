@@ -297,11 +297,11 @@ function BookingStep2Content() {
                     {formatDate(date)}, {formatTime(startsAt)}
                   </span>
                 </div>
-                {agentInfo.agent_city && (
+                {(searchedCity || agentInfo.agent_city) && (
                   <div className="flex items-center gap-2">
                     <MapPin className="w-4 h-4" />
                     <span>
-                      {agentInfo.agent_city}
+                      {searchedCity || agentInfo.agent_city}
                       {agentInfo.agent_province && `, ${agentInfo.agent_province}`}
                     </span>
                   </div>
