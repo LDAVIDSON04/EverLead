@@ -342,10 +342,16 @@ export async function POST(req: NextRequest) {
     }
     
     // Sync to Google Calendar if connected
-    // Note: Calendar sync uses specialist_id/family_id schema, but we use agent_id/lead_id
-    // We'll need to adapt the sync function or create a new one
-    // For now, skip calendar sync - it needs to be adapted for the old schema
-    console.log("Calendar sync skipped - needs adaptation for agent_id/lead_id schema");
+    try {
+      const { syncAgentAppointmentToGoogleCalendar } = await import('@/lib/calendarSyncAgent');
+      await syncAgentAppointmentToGoogleCalendar(appointment.id).catch(err => {
+        console.error("Error syncing to Google Calendar (non-fatal):", err);
+        // Don't fail the booking if calendar sync fails
+      });
+    } catch (calendarError) {
+      console.error("Error importing calendar sync (non-fatal):", calendarError);
+      // Don't fail the booking if calendar sync fails
+    }
 
     return NextResponse.json(
       {

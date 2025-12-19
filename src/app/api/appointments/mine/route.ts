@@ -3,6 +3,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabaseServer";
+import { DateTime } from "luxon";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -96,22 +97,30 @@ export async function GET(req: NextRequest) {
 
     // Map appointments to format expected by schedule page
     // Convert requested_date + requested_window to starts_at/ends_at
+    // Use agent's timezone (America/Vancouver or America/Edmonton) for local times
+    const agentTimezone = "America/Vancouver"; // Default to Vancouver timezone
     const mappedAppointments = (appointments || []).map((apt: any) => {
-      // Convert requested_date + requested_window to ISO timestamps
-      const date = new Date(apt.requested_date + "T00:00:00Z");
-      let startHour = 9; // Default to morning
+      // Parse the requested date
+      const dateStr = apt.requested_date; // Format: YYYY-MM-DD
+      let startHour = 9; // Default to morning (9 AM local time)
       
       if (apt.requested_window === "afternoon") {
-        startHour = 13; // 1 PM
+        startHour = 13; // 1 PM local time
       } else if (apt.requested_window === "evening") {
-        startHour = 17; // 5 PM
+        startHour = 17; // 5 PM local time
       }
       
-      const startsAt = new Date(date);
-      startsAt.setUTCHours(startHour, 0, 0, 0);
+      // Create date in local timezone, then convert to UTC for storage
+      // Format: YYYY-MM-DDTHH:MM:SS in local timezone
+      const localDateTimeStr = `${dateStr}T${String(startHour).padStart(2, '0')}:00:00`;
       
-      const endsAt = new Date(startsAt);
-      endsAt.setUTCHours(startHour + 1, 0, 0, 0); // 1 hour duration
+      // Use DateTime from luxon to properly handle timezone conversion
+      const localStart = DateTime.fromISO(localDateTimeStr, { zone: agentTimezone });
+      const localEnd = localStart.plus({ hours: 1 }); // 1 hour duration
+      
+      // Convert to UTC ISO strings for the API response
+      const startsAt = localStart.toUTC().toISO();
+      const endsAt = localEnd.toUTC().toISO();
       
       // Get family name from lead
       const lead = Array.isArray(apt.leads) ? apt.leads[0] : apt.leads;
