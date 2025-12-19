@@ -73,13 +73,20 @@ export async function GET(req: NextRequest) {
       return NextResponse.json([]);
     }
 
+    // Normalize location by removing province suffix (e.g., "Kelowna, BC" -> "Kelowna")
+    const normalizeLocation = (loc: string | undefined): string | undefined => {
+      if (!loc) return undefined;
+      // Remove common province suffixes like ", BC", ", AB", etc.
+      return loc.split(',').map(s => s.trim())[0];
+    };
+    
     // Use the specified location, or fall back to first location, or agent's default city
-    let selectedLocation = location;
+    let selectedLocation = normalizeLocation(location);
     if (!selectedLocation && locations.length > 0) {
       selectedLocation = locations[0];
     }
     if (!selectedLocation && profile.agent_city) {
-      selectedLocation = profile.agent_city;
+      selectedLocation = normalizeLocation(profile.agent_city);
     }
     if (!selectedLocation && locations.length > 0) {
       selectedLocation = locations[0];
@@ -95,7 +102,7 @@ export async function GET(req: NextRequest) {
       } else {
         // Try case-insensitive match
         const matchingLocation = Object.keys(availabilityByLocation).find(
-          loc => loc.toLowerCase() === selectedLocation.toLowerCase()
+          loc => loc.toLowerCase() === selectedLocation!.toLowerCase()
         );
         if (matchingLocation) {
           locationSchedule = availabilityByLocation[matchingLocation];
