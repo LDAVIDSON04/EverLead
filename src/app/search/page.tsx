@@ -704,10 +704,11 @@ function SearchResults() {
                   const displayDate = `${dayName}, ${monthName} ${dayNum}`;
                   
                   // Convert slots to time strings
+                  // Use getHours() instead of getUTCHours() to convert from UTC to local time for display
                   const timeSlots = day.slots.map((slot) => {
                     const slotDate = new Date(slot.startsAt);
-                    const hours = slotDate.getUTCHours();
-                    const minutes = slotDate.getUTCMinutes();
+                    const hours = slotDate.getHours(); // Use getHours() for local time display
+                    const minutes = slotDate.getMinutes(); // Use getMinutes() for local time display
                     const ampm = hours >= 12 ? "PM" : "AM";
                     const displayHours = hours % 12 || 12;
                     return {
