@@ -262,8 +262,16 @@ export async function POST(req: NextRequest) {
     });
     
     // Build appointment data
-    // Store the exact booking time in confirmed_at so we can retrieve the exact hour later
-    // This allows precise conflict detection in the availability API
+    // CRITICAL: Store the exact booking time in confirmed_at - this is used to immediately block the slot
+    // The availability API compares slot timestamps with confirmed_at to hide booked slots
+    const confirmedAtISO = slotStart.toISOString();
+    console.log("📅 Storing booking time in confirmed_at:", {
+      slotStart: slotStart.toISOString(),
+      confirmedAtISO,
+      requestedDate,
+      requestedWindow,
+    });
+    
     const appointmentData: any = {
       lead_id: leadId,
       agent_id: agentId,
@@ -271,7 +279,7 @@ export async function POST(req: NextRequest) {
       requested_window: requestedWindow,
       status: "confirmed", // Mark as confirmed immediately after booking
       price_cents: null, // Can be set later
-      confirmed_at: slotStart.toISOString(), // Store exact booking time for conflict detection
+      confirmed_at: confirmedAtISO, // Store exact booking time - MUST match slot startsAt for conflict detection
     };
     
     const { data: appointment, error: appointmentError } = await supabaseAdmin
