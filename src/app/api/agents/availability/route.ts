@@ -182,106 +182,39 @@ export async function GET(req: NextRequest) {
     }
 
     // Helper to check if a time slot conflicts with an appointment
-    // Uses confirmed_at (exact booking time) for precise matching
-    // This MUST work correctly - if a slot is booked, it should be blocked immediately
+    // SIMPLE LOGIC: Only block if we have confirmed_at and it matches the slot time
+    // If no confirmed_at, don't block (we can't be sure which exact slot was booked)
     const hasConflict = (slotStart: Date, slotEnd: Date, dateStr: string, slotHour: number): boolean => {
       if (!appointments || appointments.length === 0) return false;
       
       const slotStartTime = slotStart.getTime();
-      const slotEndTime = slotEnd.getTime();
       const slotStartISO = slotStart.toISOString();
       
       // Check if this slot conflicts with any appointment on this date
       return appointments.some((apt: any) => {
         if (apt.requested_date !== dateStr) return false;
         
-        // If we have confirmed_at, it stores the exact booking time (startsAt from booking)
-        // Compare timestamps directly - this is the most reliable method
+        // ONLY block if we have confirmed_at - this is the exact booking time
+        // Without confirmed_at, we can't know which exact slot was booked, so don't block
         if (apt.confirmed_at) {
           const aptStartTime = new Date(apt.confirmed_at).getTime();
-          const aptEndTime = aptStartTime + (appointmentLength * 60 * 1000); // appointmentLength is in minutes
           
-          // Use a tolerance of 2 minutes to account for any rounding or timezone differences
-          const tolerance = 2 * 60 * 1000; // 2 minutes in milliseconds
+          // Compare timestamps directly - use 30 second tolerance for any rounding
+          const tolerance = 30 * 1000; // 30 seconds
+          const timeDifference = Math.abs(slotStartTime - aptStartTime);
           
-          // Check if the slot start time matches the appointment start time (within tolerance)
-          // This is the primary check - if times match, it's definitely the same slot
-          const timeMatches = Math.abs(slotStartTime - aptStartTime) <= tolerance;
-          
-          // Also check for time overlap as a secondary check
-          const hasOverlap = slotStartTime < (aptEndTime + tolerance) && slotEndTime > (aptStartTime - tolerance);
-          
-          if (timeMatches || hasOverlap) {
-            console.log("✅ CONFLICT DETECTED - Blocking slot:", {
+          if (timeDifference <= tolerance) {
+            console.log("✅ BLOCKING BOOKED SLOT:", {
               dateStr,
               slotStartISO,
-              slotStartTime,
-              slotStartLocal: DateTime.fromJSDate(slotStart, { zone: "utc" }).setZone(agentTimezone).toISO(),
               aptConfirmedAt: apt.confirmed_at,
-              aptStartTime,
-              aptStartLocal: DateTime.fromJSDate(new Date(apt.confirmed_at), { zone: "utc" }).setZone(agentTimezone).toISO(),
-              timeDifference: Math.abs(slotStartTime - aptStartTime),
-              timeMatches,
-              hasOverlap,
+              timeDifferenceMs: timeDifference,
               appointmentId: apt.id,
             });
-            return true; // This slot is booked - block it immediately
-          }
-        } else {
-          // Fallback for older appointments without confirmed_at
-          // For very recent appointments (within last 10 minutes), use created_at as proxy
-          // Otherwise, block all slots in the window (conservative but safe)
-          const slotStartInAgentTZ = DateTime.fromJSDate(slotStart, { zone: "utc" })
-            .setZone(agentTimezone);
-          const slotHourInAgentTZ = slotStartInAgentTZ.hour;
-          
-          const windowStartHour = apt.requested_window === "afternoon" ? 13 : 
-                                 apt.requested_window === "evening" ? 17 : 9;
-          const windowEndHour = apt.requested_window === "afternoon" ? 17 :
-                              apt.requested_window === "evening" ? 21 : 12;
-          
-          // Check if slot hour falls within the appointment's window
-          if (slotHourInAgentTZ >= windowStartHour && slotHourInAgentTZ < windowEndHour) {
-            // For very recent appointments, try to use created_at to infer exact time
-            if (apt.created_at) {
-              const createdDate = new Date(apt.created_at);
-              const now = new Date();
-              const minutesSinceCreation = (now.getTime() - createdDate.getTime()) / (1000 * 60);
-              
-              // If created within last 10 minutes, use created_at hour as proxy
-              if (minutesSinceCreation <= 10) {
-                const createdInAgentTZ = DateTime.fromJSDate(createdDate, { zone: "utc" })
-                  .setZone(agentTimezone);
-                const createdHour = createdInAgentTZ.hour;
-                
-                // If the slot hour matches the created hour (within 1 hour tolerance), block it
-                if (Math.abs(createdHour - slotHourInAgentTZ) <= 1) {
-                  console.log("Conflict detected (created_at fallback):", {
-                    dateStr,
-                    slotHour: slotHourInAgentTZ,
-                    createdHour,
-                    minutesSinceCreation,
-                    appointmentId: apt.id,
-                  });
-                  return true;
-                }
-              }
-            }
-            
-            // For older appointments or if created_at doesn't match, block all slots in window
-            // This is conservative but prevents double-booking
-            console.log("Conflict detected (window fallback):", {
-              dateStr,
-              slotHour: slotHourInAgentTZ,
-              window: apt.requested_window,
-              windowStartHour,
-              windowEndHour,
-              appointmentId: apt.id,
-            });
-            return true;
+            return true; // This exact slot is booked - block it
           }
         }
-        
+        // If no confirmed_at, don't block - we can't be precise
         return false;
       });
     };
