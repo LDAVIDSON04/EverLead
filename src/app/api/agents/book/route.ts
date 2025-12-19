@@ -122,6 +122,7 @@ export async function POST(req: NextRequest) {
       leadId = existingLead.id;
     } else {
       // Create a new lead
+      // Provide all fields that might be required, with sensible defaults
       const leadData: any = {
         first_name: firstName.trim(),
         last_name: lastName.trim(),
@@ -133,6 +134,12 @@ export async function POST(req: NextRequest) {
         service_type: serviceType?.trim() || "Pre-need Planning",
         status: "new",
         urgency_level: "warm",
+        // Add optional fields that might be required by schema
+        timeline_intent: null,
+        planning_for: null,
+        remains_disposition: null,
+        service_celebration: null,
+        family_pre_arranged: null,
       };
 
       const { data: newLead, error: leadError } = await supabaseAdmin
