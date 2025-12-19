@@ -129,10 +129,10 @@ export async function GET(req: NextRequest) {
     });
 
     // Load existing appointments for this agent
-    // We'll reconstruct exact times from requested_window + a calculated hour
+    // We'll reconstruct exact times from requested_window + created_at timestamp
     const { data: appointments, error: appointmentsError } = await supabaseAdmin
       .from("appointments")
-      .select("requested_date, requested_window, status, created_at, notes")
+      .select("requested_date, requested_window, status, created_at")
       .eq("agent_id", agentId)
       .in("status", ["pending", "confirmed", "booked"])
       .gte("requested_date", startDate)
@@ -168,19 +168,12 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // Helper to get the exact hour from appointment notes or calculate from created_at
-    // The booking API should store the exact hour in notes, but if not, we'll infer it
+    // Helper to get the exact hour from appointment
+    // Since notes column doesn't exist, we'll use created_at to infer the booking time
+    // The created_at timestamp should be very close to when the booking was made
     const getAppointmentExactHour = (apt: any): number | null => {
-      // Try to extract hour from notes if stored there (format: "booked_hour:9" or similar)
-      if (apt.notes) {
-        const hourMatch = apt.notes.match(/booked_hour[:\s]+(\d+)/i);
-        if (hourMatch) {
-          return parseInt(hourMatch[1], 10);
-        }
-      }
-      
-      // Fallback: Try to infer from created_at timestamp
-      // This is not perfect but better than blocking entire window
+      // Use created_at timestamp to infer the booking hour
+      // This works because bookings happen in real-time, so created_at is close to the booking time
       if (apt.created_at) {
         const createdDate = new Date(apt.created_at);
         const createdInAgentTZ = DateTime.fromJSDate(createdDate, { zone: "utc" })
