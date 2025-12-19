@@ -95,10 +95,55 @@ export async function GET(req: NextRequest) {
       );
     }
 
+    // Get agent's timezone from profile metadata or use default
+    const { data: agentProfile } = await supabaseServer
+      .from("profiles")
+      .select("metadata")
+      .eq("id", userId)
+      .maybeSingle();
+    
+    // Get timezone from metadata, or infer from agent_province, or use browser default
+    let agentTimezone = "America/Vancouver"; // Default fallback
+    if (agentProfile?.metadata?.timezone) {
+      agentTimezone = agentProfile.metadata.timezone;
+    } else if (agentProfile?.metadata?.availability?.timezone) {
+      agentTimezone = agentProfile.metadata.availability.timezone;
+    } else {
+      // Try to infer from agent_province if available
+      const { data: profileWithProvince } = await supabaseServer
+        .from("profiles")
+        .select("agent_province")
+        .eq("id", userId)
+        .maybeSingle();
+      
+      if (profileWithProvince?.agent_province) {
+        const province = profileWithProvince.agent_province.toUpperCase();
+        // Map common provinces to timezones
+        if (province === "BC" || province === "BRITISH COLUMBIA") {
+          agentTimezone = "America/Vancouver"; // PST/PDT
+        } else if (province === "AB" || province === "ALBERTA") {
+          agentTimezone = "America/Edmonton"; // MST/MDT
+        } else if (province === "SK" || province === "SASKATCHEWAN") {
+          agentTimezone = "America/Regina"; // CST (no DST)
+        } else if (province === "MB" || province === "MANITOBA") {
+          agentTimezone = "America/Winnipeg"; // CST/CDT
+        } else if (province === "ON" || province === "ONTARIO") {
+          agentTimezone = "America/Toronto"; // EST/EDT
+        } else if (province === "QC" || province === "QUEBEC") {
+          agentTimezone = "America/Montreal"; // EST/EDT
+        } else if (province === "NB" || province === "NEW BRUNSWICK" || 
+                   province === "NS" || province === "NOVA SCOTIA" ||
+                   province === "PE" || province === "PRINCE EDWARD ISLAND") {
+          agentTimezone = "America/Halifax"; // AST/ADT
+        } else if (province === "NL" || province === "NEWFOUNDLAND") {
+          agentTimezone = "America/St_Johns"; // NST/NDT
+        }
+      }
+    }
+
     // Map appointments to format expected by schedule page
     // Convert requested_date + requested_window to starts_at/ends_at
-    // Use agent's timezone (America/Vancouver or America/Edmonton) for local times
-    const agentTimezone = "America/Vancouver"; // Default to Vancouver timezone
+    // Use agent's timezone for local times
     const mappedAppointments = (appointments || []).map((apt: any) => {
       // Parse the requested date
       const dateStr = apt.requested_date; // Format: YYYY-MM-DD

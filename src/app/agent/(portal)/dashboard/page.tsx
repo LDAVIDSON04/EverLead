@@ -161,7 +161,38 @@ export default function AgentDashboardPage() {
         if (appointmentsData) {
           // Import DateTime for timezone conversion
           const { DateTime } = await import('luxon');
-          const agentTimezone = "America/Vancouver"; // PST timezone for Kelowna
+          
+          // Get agent's timezone from profile metadata or use browser detection
+          let agentTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "America/Vancouver";
+          
+          // Try to get from profile metadata
+          const { data: profileData } = await supabaseClient
+            .from("profiles")
+            .select("metadata, agent_province")
+            .eq("id", agentId)
+            .maybeSingle();
+          
+          if (profileData?.metadata?.timezone) {
+            agentTimezone = profileData.metadata.timezone;
+          } else if (profileData?.metadata?.availability?.timezone) {
+            agentTimezone = profileData.metadata.availability.timezone;
+          } else if (profileData?.agent_province) {
+            // Infer from province
+            const province = profileData.agent_province.toUpperCase();
+            if (province === "BC" || province === "BRITISH COLUMBIA") {
+              agentTimezone = "America/Vancouver";
+            } else if (province === "AB" || province === "ALBERTA") {
+              agentTimezone = "America/Edmonton";
+            } else if (province === "SK" || province === "SASKATCHEWAN") {
+              agentTimezone = "America/Regina";
+            } else if (province === "MB" || province === "MANITOBA") {
+              agentTimezone = "America/Winnipeg";
+            } else if (province === "ON" || province === "ONTARIO") {
+              agentTimezone = "America/Toronto";
+            } else if (province === "QC" || province === "QUEBEC") {
+              agentTimezone = "America/Montreal";
+            }
+          }
           
           const formattedAppointments: Appointment[] = appointmentsData.map((apt: any) => {
             const lead = apt.lead_id ? leadsMap[apt.lead_id] : null;
@@ -211,12 +242,12 @@ export default function AgentDashboardPage() {
                 day: 'numeric', 
                 month: 'short', 
                 year: 'numeric',
-                timeZone: 'America/Vancouver'
+                timeZone: agentTimezone
               });
               const time = dateObj.toLocaleTimeString('en-US', { 
                 hour: '2-digit', 
                 minute: '2-digit',
-                timeZone: 'America/Vancouver'
+                timeZone: agentTimezone
               });
               
               return {

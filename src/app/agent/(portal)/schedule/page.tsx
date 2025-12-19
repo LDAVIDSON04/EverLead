@@ -50,6 +50,7 @@ export default function SchedulePage() {
     bufferTime: string;
     timeZone: string;
   } | null>(null);
+  const [agentTimezone, setAgentTimezone] = useState<string>("America/Vancouver"); // Default to PST
 
   const hours = Array.from({ length: 13 }, (_, i) => i + 8); // 8 AM to 8 PM
   const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -155,11 +156,16 @@ export default function SchedulePage() {
                   return `${displayHour}:${String(min).padStart(2, "0")} ${period}`;
                 };
                 
+                // Get timezone from metadata or use browser detection
+                const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                const timezoneFromMetadata = availability.timezone || detectedTimezone || "America/Vancouver";
+                setAgentTimezone(timezoneFromMetadata);
+                
                 setAvailabilityOverview({
                   workingHours: `${formatTime(startHour, startMin)} - ${formatTime(endHour, endMin)}`,
                   slotLength: `${appointmentLength} minutes`,
                   bufferTime: "10 minutes", // Default, could be added to settings later
-                  timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || "MST",
+                  timeZone: timezoneFromMetadata,
                 });
               }
             }
@@ -167,11 +173,13 @@ export default function SchedulePage() {
           
           // Fallback to defaults if no availability set
           if (!availabilityOverview || !profileData?.metadata?.availability) {
+            const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "America/Vancouver";
+            setAgentTimezone(detectedTimezone);
             setAvailabilityOverview({
               workingHours: "9 AM - 5 PM",
               slotLength: "30 minutes",
               bufferTime: "10 minutes",
-              timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || "MST",
+              timeZone: detectedTimezone,
             });
           }
         }
@@ -396,7 +404,7 @@ export default function SchedulePage() {
   const getAppointmentsForWeek = () => {
     return appointments.map(apt => {
       const startDate = DateTime.fromISO(apt.starts_at, { zone: "utc" });
-      const localStart = startDate.setZone("America/Vancouver"); // PST for Kelowna
+      const localStart = startDate.setZone(agentTimezone); // Use agent's timezone
       const weekStart = weekDates[0];
       const weekEnd = weekDates[6];
       weekStart.setHours(0, 0, 0, 0);
@@ -602,8 +610,8 @@ export default function SchedulePage() {
                   filteredAppointments.map((appointment) => {
                     const startDate = DateTime.fromISO(appointment.starts_at, { zone: "utc" });
                     const endDate = DateTime.fromISO(appointment.ends_at, { zone: "utc" });
-                    const localStart = startDate.setZone("America/Vancouver"); // PST for Kelowna
-                    const localEnd = endDate.setZone("America/Vancouver"); // PST for Kelowna
+                    const localStart = startDate.setZone(agentTimezone); // Use agent's timezone
+                    const localEnd = endDate.setZone(agentTimezone); // Use agent's timezone
                     const aptDate = localStart.toJSDate();
 
                     return (
@@ -723,7 +731,7 @@ export default function SchedulePage() {
                               >
                                 <div className="text-xs opacity-90">
                                   {DateTime.fromISO(apt.starts_at, { zone: "utc" })
-                                    .setZone("America/Vancouver") // PST for Kelowna
+                                    .setZone(agentTimezone) // Use agent's timezone
                                     .toLocaleString(DateTime.TIME_SIMPLE)}
                                 </div>
                                 <div className="mt-1">{apt.family_name || 'Appointment'}</div>

@@ -96,8 +96,37 @@ export async function syncAgentAppointmentToGoogleCalendar(
     return;
   }
 
+  // Get agent's timezone from profile or use default
+  const { data: agentProfile } = await supabaseAdmin
+    .from("profiles")
+    .select("metadata, agent_province")
+    .eq("id", appointment.agent_id)
+    .maybeSingle();
+  
+  let agentTimezone = "America/Vancouver"; // Default fallback
+  if (agentProfile?.metadata?.timezone) {
+    agentTimezone = agentProfile.metadata.timezone;
+  } else if (agentProfile?.metadata?.availability?.timezone) {
+    agentTimezone = agentProfile.metadata.availability.timezone;
+  } else if (agentProfile?.agent_province) {
+    // Infer from province
+    const province = agentProfile.agent_province.toUpperCase();
+    if (province === "BC" || province === "BRITISH COLUMBIA") {
+      agentTimezone = "America/Vancouver";
+    } else if (province === "AB" || province === "ALBERTA") {
+      agentTimezone = "America/Edmonton";
+    } else if (province === "SK" || province === "SASKATCHEWAN") {
+      agentTimezone = "America/Regina";
+    } else if (province === "MB" || province === "MANITOBA") {
+      agentTimezone = "America/Winnipeg";
+    } else if (province === "ON" || province === "ONTARIO") {
+      agentTimezone = "America/Toronto";
+    } else if (province === "QC" || province === "QUEBEC") {
+      agentTimezone = "America/Montreal";
+    }
+  }
+
   // Convert requested_date + requested_window to ISO timestamps
-  const agentTimezone = "America/Vancouver";
   const dateStr = appointment.requested_date;
   let startHour = 9; // Default to morning
   
