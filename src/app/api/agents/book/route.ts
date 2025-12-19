@@ -265,11 +265,15 @@ export async function POST(req: NextRequest) {
     // CRITICAL: Store the exact booking time in confirmed_at - this is used to immediately block the slot
     // The availability API compares slot timestamps with confirmed_at to hide booked slots
     const confirmedAtISO = slotStart.toISOString();
-    console.log("📅 Storing booking time in confirmed_at:", {
-      slotStart: slotStart.toISOString(),
+    console.log("📅 CRITICAL: Storing booking time in confirmed_at:", {
+      startsAtFromRequest: startsAt,
+      slotStartDate: slotStart,
+      slotStartISO: slotStart.toISOString(),
+      slotStartLocal: slotStart.toLocaleString(),
       confirmedAtISO,
       requestedDate,
       requestedWindow,
+      slotStartTime: slotStart.getTime(),
     });
     
     const appointmentData: any = {
