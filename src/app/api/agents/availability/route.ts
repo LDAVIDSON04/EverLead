@@ -197,7 +197,18 @@ export async function GET(req: NextRequest) {
       
       // Check if this slot conflicts with any appointment on this date
       return appointments.some((apt: any) => {
-        if (apt.requested_date !== dateStr) return false;
+        // First check if the date matches
+        if (apt.requested_date !== dateStr) {
+          return false;
+        }
+        
+        console.log("🔍 Checking appointment for conflict:", {
+          appointmentId: apt.id,
+          appointmentDate: apt.requested_date,
+          slotDate: dateStr,
+          hasConfirmedAt: !!apt.confirmed_at,
+          confirmedAt: apt.confirmed_at,
+        });
         
         // ONLY block if we have confirmed_at - this is the exact booking time
         if (apt.confirmed_at) {
