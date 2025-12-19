@@ -183,36 +183,44 @@ export async function GET(req: NextRequest) {
 
     // Helper to check if a time slot conflicts with an appointment
     // Uses confirmed_at (exact booking time) for precise matching
+    // This MUST work correctly - if a slot is booked, it should be blocked immediately
     const hasConflict = (slotStart: Date, slotEnd: Date, dateStr: string, slotHour: number): boolean => {
       if (!appointments || appointments.length === 0) return false;
       
       const slotStartTime = slotStart.getTime();
       const slotEndTime = slotEnd.getTime();
+      const slotStartISO = slotStart.toISOString();
       
       // Check if this slot conflicts with any appointment on this date
       return appointments.some((apt: any) => {
         if (apt.requested_date !== dateStr) return false;
         
         // If we have confirmed_at, it stores the exact booking time (startsAt from booking)
-        // This is the most precise way to match - direct timestamp comparison
+        // Compare timestamps directly - this is the most reliable method
         if (apt.confirmed_at) {
           const aptStartTime = new Date(apt.confirmed_at).getTime();
           const aptEndTime = aptStartTime + (appointmentLength * 60 * 1000); // appointmentLength is in minutes
           
-          // Check for time overlap: slotStart < aptEnd && slotEnd > aptStart
-          const hasOverlap = slotStartTime < aptEndTime && slotEndTime > aptStartTime;
+          // Use a tolerance of 1 minute to account for any rounding differences
+          const tolerance = 60 * 1000; // 1 minute in milliseconds
           
-          if (hasOverlap) {
-            console.log("Conflict detected (confirmed_at):", {
+          // Check if the slot start time matches the appointment start time (within tolerance)
+          // OR if there's any time overlap
+          const timeMatches = Math.abs(slotStartTime - aptStartTime) <= tolerance;
+          const hasOverlap = slotStartTime < (aptEndTime + tolerance) && slotEndTime > (aptStartTime - tolerance);
+          
+          if (timeMatches || hasOverlap) {
+            console.log("✅ CONFLICT DETECTED - Blocking slot:", {
               dateStr,
-              slotStart: slotStart.toISOString(),
-              slotEnd: slotEnd.toISOString(),
+              slotStartISO,
+              slotStartTime,
               aptConfirmedAt: apt.confirmed_at,
-              aptStartTime: new Date(aptStartTime).toISOString(),
-              aptEndTime: new Date(aptEndTime).toISOString(),
+              aptStartTime,
+              timeMatches,
+              hasOverlap,
               appointmentId: apt.id,
             });
-            return true; // Exact match - this slot is booked
+            return true; // This slot is booked - block it immediately
           }
         } else {
           // Fallback for older appointments without confirmed_at
