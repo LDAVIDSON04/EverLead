@@ -140,14 +140,19 @@ export async function GET(req: NextRequest) {
       .order("created_at", { ascending: false }); // Most recent first
 
     // Debug: Log appointments to see what we're working with
-    console.log("Loaded appointments for conflict detection:", {
+    console.log("📋 Loaded appointments for conflict detection:", {
+      agentId,
+      startDate,
+      endDate,
       count: appointments?.length || 0,
       appointments: appointments?.map((apt: any) => ({
         id: apt.id,
         date: apt.requested_date,
         window: apt.requested_window,
+        status: apt.status,
         hasConfirmedAt: !!apt.confirmed_at,
         confirmedAt: apt.confirmed_at,
+        confirmedAtISO: apt.confirmed_at ? new Date(apt.confirmed_at).toISOString() : null,
         createdAt: apt.created_at,
       })),
     });
@@ -183,36 +188,66 @@ export async function GET(req: NextRequest) {
 
     // Helper to check if a time slot conflicts with an appointment
     // SIMPLE LOGIC: Only block if we have confirmed_at and it matches the slot time
-    // If no confirmed_at, don't block (we can't be sure which exact slot was booked)
+    // Compare ISO strings directly for exact matching
     const hasConflict = (slotStart: Date, slotEnd: Date, dateStr: string, slotHour: number): boolean => {
       if (!appointments || appointments.length === 0) return false;
       
-      const slotStartTime = slotStart.getTime();
       const slotStartISO = slotStart.toISOString();
+      const slotStartTime = slotStart.getTime();
       
       // Check if this slot conflicts with any appointment on this date
       return appointments.some((apt: any) => {
         if (apt.requested_date !== dateStr) return false;
         
         // ONLY block if we have confirmed_at - this is the exact booking time
-        // Without confirmed_at, we can't know which exact slot was booked, so don't block
         if (apt.confirmed_at) {
-          const aptStartTime = new Date(apt.confirmed_at).getTime();
+          // Convert confirmed_at to Date and get ISO string
+          const aptConfirmedDate = new Date(apt.confirmed_at);
+          const aptConfirmedISO = aptConfirmedDate.toISOString();
           
-          // Compare timestamps directly - use 30 second tolerance for any rounding
-          const tolerance = 30 * 1000; // 30 seconds
+          // Compare ISO strings directly (most reliable - exact match)
+          const isoMatch = slotStartISO === aptConfirmedISO;
+          
+          // Also compare timestamps with tolerance (1 minute) as backup
+          const aptStartTime = aptConfirmedDate.getTime();
+          const tolerance = 60 * 1000; // 1 minute in milliseconds
           const timeDifference = Math.abs(slotStartTime - aptStartTime);
+          const timeMatch = timeDifference <= tolerance;
           
-          if (timeDifference <= tolerance) {
-            console.log("✅ BLOCKING BOOKED SLOT:", {
+          // Log comparison for debugging
+          if (isoMatch || timeMatch) {
+            console.log("✅✅✅ CONFLICT FOUND - BLOCKING SLOT:", {
               dateStr,
               slotStartISO,
+              slotStartTime,
               aptConfirmedAt: apt.confirmed_at,
+              aptConfirmedISO,
+              aptStartTime,
+              isoMatch,
+              timeDifferenceMs: timeDifference,
+              timeMatch,
+              appointmentId: apt.id,
+              appointmentStatus: apt.status,
+            });
+            return true; // This exact slot is booked - block it immediately
+          } else {
+            // Log when we have confirmed_at but it doesn't match (for debugging)
+            console.log("⚠️ Appointment has confirmed_at but times don't match:", {
+              dateStr,
+              slotStartISO,
+              aptConfirmedISO,
               timeDifferenceMs: timeDifference,
               appointmentId: apt.id,
             });
-            return true; // This exact slot is booked - block it
           }
+        } else {
+          // Log when appointment doesn't have confirmed_at
+          console.log("⚠️ Appointment missing confirmed_at (won't block):", {
+            dateStr,
+            appointmentId: apt.id,
+            status: apt.status,
+            createdAt: apt.created_at,
+          });
         }
         // If no confirmed_at, don't block - we can't be precise
         return false;
@@ -306,14 +341,21 @@ export async function GET(req: NextRequest) {
         const slotHour = localStart.hour;
 
         // Check for conflicts with existing appointments - this MUST block booked slots immediately
-        if (!hasConflict(slotStart, slotEnd, dateStr, slotHour)) {
+        const slotStartsAtISO = slotStart.toISOString();
+        const hasConflictResult = hasConflict(slotStart, slotEnd, dateStr, slotHour);
+        
+        if (!hasConflictResult) {
           slots.push({
-            startsAt: slotStart.toISOString(),
+            startsAt: slotStartsAtISO,
             endsAt: slotEnd.toISOString(),
           });
         } else {
           // Log when a slot is blocked so we can verify it's working
-          console.log(`🚫 Blocked booked slot: ${slotStart.toISOString()} on ${dateStr}`);
+          console.log(`🚫 BLOCKED SLOT - Not adding to available slots:`, {
+            slotStartsAt: slotStartsAtISO,
+            date: dateStr,
+            slotHour,
+          });
         }
 
         // Move to next slot (use appointment length as interval)
