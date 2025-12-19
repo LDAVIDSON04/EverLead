@@ -128,14 +128,17 @@ export async function GET(req: NextRequest) {
       metadataAvailability: availabilityData,
     });
 
-    // Load existing appointments for this agent (get actual times if available)
+    // Load existing appointments for this agent
+    // Note: We need to reconstruct exact times from requested_window, but we'll use created_at
+    // as a hint for the exact booking time if available
     const { data: appointments, error: appointmentsError } = await supabaseAdmin
       .from("appointments")
       .select("requested_date, requested_window, status, created_at")
       .eq("agent_id", agentId)
       .in("status", ["pending", "confirmed", "booked"])
       .gte("requested_date", startDate)
-      .lte("requested_date", endDate);
+      .lte("requested_date", endDate)
+      .order("created_at", { ascending: false }); // Most recent first
 
     if (appointmentsError) {
       console.error("Error loading appointments:", appointmentsError);
@@ -167,35 +170,49 @@ export async function GET(req: NextRequest) {
     }
 
     // Helper to convert appointment requested_date + requested_window to actual start/end times
-    const getAppointmentTimes = (apt: any): { start: Date; end: Date } | null => {
+    // Since we only have requested_window (morning/afternoon/evening), we need to be smart about
+    // which exact time slot is booked. We'll check all possible slots in that window.
+    const getAppointmentTimeRanges = (apt: any, appointmentLength: number): Array<{ start: Date; end: Date }> | null => {
       const dateStr = apt.requested_date;
       if (!dateStr) return null;
 
-      // Convert requested_window to start hour (same logic as booking API)
-      let startHour = 9; // Default to morning (9 AM)
+      // Determine the time window based on requested_window
+      let windowStartHour = 9; // Default to morning (9 AM)
+      let windowEndHour = 12; // Morning ends at 12 PM
+      
       if (apt.requested_window === "afternoon") {
-        startHour = 13; // 1 PM
+        windowStartHour = 13; // 1 PM
+        windowEndHour = 17; // Afternoon ends at 5 PM
       } else if (apt.requested_window === "evening") {
-        startHour = 17; // 5 PM
+        windowStartHour = 17; // 5 PM
+        windowEndHour = 21; // Evening ends at 9 PM (assuming business hours)
       }
 
-      // Create DateTime in agent's timezone, then convert to UTC
-      const localDateTimeStr = `${dateStr}T${String(startHour).padStart(2, '0')}:00:00`;
-      const localStart = DateTime.fromISO(localDateTimeStr, { zone: agentTimezone });
-      const localEnd = localStart.plus({ hours: 1 }); // 1 hour duration
+      // Generate all possible time slots in this window that could be booked
+      // This is a conservative approach - we'll block all slots in the window
+      // since we don't know the exact time
+      const ranges: Array<{ start: Date; end: Date }> = [];
+      const slotLengthHours = appointmentLength / 60;
+      
+      for (let hour = windowStartHour; hour < windowEndHour; hour++) {
+        const localDateTimeStr = `${dateStr}T${String(hour).padStart(2, '0')}:00:00`;
+        const localStart = DateTime.fromISO(localDateTimeStr, { zone: agentTimezone });
+        const localEnd = localStart.plus({ hours: slotLengthHours });
 
-      if (!localStart.isValid || !localEnd.isValid) {
-        return null;
+        if (localStart.isValid && localEnd.isValid) {
+          ranges.push({
+            start: new Date(localStart.toUTC().toISO()),
+            end: new Date(localEnd.toUTC().toISO()),
+          });
+        }
       }
 
-      return {
-        start: new Date(localStart.toUTC().toISO()),
-        end: new Date(localEnd.toUTC().toISO()),
-      };
+      return ranges.length > 0 ? ranges : null;
     };
 
     // Helper to check if a time slot conflicts with an appointment
-    // Now checks actual time overlaps instead of blocking entire days
+    // Since appointments only store requested_window, we check if the slot falls within
+    // any of the possible time ranges for appointments in that window
     const hasConflict = (slotStart: Date, slotEnd: Date, dateStr: string): boolean => {
       if (!appointments || appointments.length === 0) return false;
       
@@ -203,19 +220,21 @@ export async function GET(req: NextRequest) {
       return appointments.some((apt: any) => {
         if (apt.requested_date !== dateStr) return false;
         
-        // Get the appointment's actual start/end times
-        const aptTimes = getAppointmentTimes(apt);
-        if (!aptTimes) return false;
+        // Get all possible time ranges for this appointment (based on window)
+        const aptRanges = getAppointmentTimeRanges(apt, appointmentLength);
+        if (!aptRanges || aptRanges.length === 0) return false;
         
-        // Check for time overlap: slot overlaps if it starts before appointment ends
-        // and ends after appointment starts
         const slotStartTime = slotStart.getTime();
         const slotEndTime = slotEnd.getTime();
-        const aptStartTime = aptTimes.start.getTime();
-        const aptEndTime = aptTimes.end.getTime();
         
-        // Overlap occurs if: slotStart < aptEnd && slotEnd > aptStart
-        return slotStartTime < aptEndTime && slotEndTime > aptStartTime;
+        // Check if slot overlaps with any of the possible appointment time ranges
+        return aptRanges.some((aptRange) => {
+          const aptStartTime = aptRange.start.getTime();
+          const aptEndTime = aptRange.end.getTime();
+          
+          // Overlap occurs if: slotStart < aptEnd && slotEnd > aptStart
+          return slotStartTime < aptEndTime && slotEndTime > aptStartTime;
+        });
       });
     };
 
