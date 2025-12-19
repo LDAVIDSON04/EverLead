@@ -64,6 +64,9 @@ export async function GET(req: NextRequest) {
     const locations = availabilityData.locations || [];
     const availabilityByLocation = availabilityData.availabilityByLocation || {};
     const appointmentLength = parseInt(availabilityData.appointmentLength || "30", 10);
+    
+    // Log the raw metadata to see what's actually stored
+    console.log("Raw profile metadata.availability:", JSON.stringify(availabilityData, null, 2));
 
     if (locations.length === 0) {
       // No availability set up
