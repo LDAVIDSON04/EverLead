@@ -183,7 +183,28 @@ export async function GET(req: NextRequest) {
       const familyName = lead?.full_name || 
         (lead?.first_name && lead?.last_name ? `${lead.first_name} ${lead.last_name}` : null) ||
         "Client";
-      const location = lead ? `${lead.city || ''}, ${lead.province || ''}`.trim() : null;
+      
+      // Format location: use lead's city and province (the city where the family booked)
+      // This ensures it shows the searched city (e.g., Penticton) not the agent's default city
+      let location: string | null = null;
+      if (lead) {
+        const city = (lead.city || '').trim();
+        const province = (lead.province || '').trim();
+        
+        // Build location string, avoiding duplication
+        if (city && province) {
+          // Check if city already contains province to avoid duplication
+          if (city.toLowerCase().includes(province.toLowerCase())) {
+            location = city; // City already includes province
+          } else {
+            location = `${city}, ${province}`;
+          }
+        } else if (city) {
+          location = city;
+        } else if (province) {
+          location = province;
+        }
+      }
       
       return {
         id: apt.id,
