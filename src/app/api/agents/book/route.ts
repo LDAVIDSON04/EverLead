@@ -148,7 +148,6 @@ export async function POST(req: NextRequest) {
         family_pre_arranged: null,
         // Ensure lead is unsold
         assigned_agent_id: null,
-        purchased_at: null,
         auction_enabled: false,
       };
 
