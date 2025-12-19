@@ -234,6 +234,16 @@ export async function POST(req: NextRequest) {
       leadId = newLead.id;
     }
 
+    // Calculate exact hour in agent's timezone for conflict detection
+    const slotStartLocal = slotStartUTC.setZone(agentTimezone);
+    const exactHour = slotStartLocal.hour;
+    
+    // Store exact hour in notes for availability API to use
+    const appointmentNotes = notes?.trim() || '';
+    const notesWithHour = appointmentNotes 
+      ? `${appointmentNotes} | booked_hour:${exactHour}`
+      : `booked_hour:${exactHour}`;
+
     // Create the appointment (requestedDate already defined above)
     const { data: appointment, error: appointmentError } = await supabaseAdmin
       .from("appointments")
@@ -244,6 +254,7 @@ export async function POST(req: NextRequest) {
         requested_window: requestedWindow,
         status: "confirmed", // Mark as confirmed immediately after booking
         price_cents: null, // Can be set later
+        notes: notesWithHour, // Store exact hour for conflict detection
       })
       .select()
       .single();
