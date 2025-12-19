@@ -261,9 +261,9 @@ export async function POST(req: NextRequest) {
       notes: notesWithHour || null,
     });
     
-    // Build appointment data - only include notes if column exists
-    // For now, we'll store the hour in a way that doesn't require the notes column
-    // We can use the requested_window more precisely or store in metadata later
+    // Build appointment data
+    // Store the exact booking time in confirmed_at so we can retrieve the exact hour later
+    // This allows precise conflict detection in the availability API
     const appointmentData: any = {
       lead_id: leadId,
       agent_id: agentId,
@@ -271,11 +271,8 @@ export async function POST(req: NextRequest) {
       requested_window: requestedWindow,
       status: "confirmed", // Mark as confirmed immediately after booking
       price_cents: null, // Can be set later
+      confirmed_at: slotStart.toISOString(), // Store exact booking time for conflict detection
     };
-    
-    // Try to include notes, but don't fail if column doesn't exist
-    // The exact hour will be calculated from requested_window + created_at in availability API
-    // For now, we'll rely on the window-based conflict detection
     
     const { data: appointment, error: appointmentError } = await supabaseAdmin
       .from("appointments")
