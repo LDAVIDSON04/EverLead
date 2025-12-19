@@ -190,7 +190,8 @@ function BookingStep2Content() {
 
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.error || "Failed to book appointment");
+        console.error("Booking API error:", errorData);
+        throw new Error(errorData.error || errorData.details || "Failed to book appointment");
       }
 
       const data = await res.json();

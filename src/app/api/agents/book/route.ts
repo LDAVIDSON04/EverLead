@@ -143,8 +143,16 @@ export async function POST(req: NextRequest) {
 
       if (leadError || !newLead) {
         console.error("Error creating lead:", leadError);
+        console.error("Lead data attempted:", JSON.stringify(leadData, null, 2));
         return NextResponse.json(
-          { error: "Failed to create booking record" },
+          { 
+            error: "Failed to create booking record",
+            details: leadError?.message || "Unknown error",
+            code: leadError?.code || "UNKNOWN",
+            hint: leadError?.hint || null,
+            // Include full error in development
+            ...(process.env.NODE_ENV === 'development' ? { fullError: leadError } : {})
+          },
           { status: 500 }
         );
       }
