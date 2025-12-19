@@ -79,7 +79,7 @@ export default function AgentLandingPage() {
               // Redirect to settings with success message
               router.replace(`/agent/settings?calendarConnected=${calendarConnected}&success=${encodeURIComponent(calendarMessage)}`);
             } else {
-              router.replace("/agent/dashboard");
+            router.replace("/agent/dashboard");
             }
             return;
           } else if (role === "admin") {

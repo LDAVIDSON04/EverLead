@@ -3,6 +3,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { DateTime } from "luxon";
 import { z } from "zod";
 
 export const dynamic = "force-dynamic";
@@ -100,20 +101,79 @@ export async function GET(req: NextRequest) {
       return new Date(Date.UTC(year, month - 1, day, hours, minutes));
     };
 
+    // Get agent's timezone for converting appointment times
+    let agentTimezone = "America/Vancouver"; // Default fallback
+    if (metadata.timezone) {
+      agentTimezone = metadata.timezone;
+    } else if (availabilityData.timezone) {
+      agentTimezone = availabilityData.timezone;
+    } else if (profile.agent_province) {
+      const province = profile.agent_province.toUpperCase();
+      if (province === "BC" || province === "BRITISH COLUMBIA") {
+        agentTimezone = "America/Vancouver";
+      } else if (province === "AB" || province === "ALBERTA") {
+        agentTimezone = "America/Edmonton";
+      } else if (province === "SK" || province === "SASKATCHEWAN") {
+        agentTimezone = "America/Regina";
+      } else if (province === "MB" || province === "MANITOBA") {
+        agentTimezone = "America/Winnipeg";
+      } else if (province === "ON" || province === "ONTARIO") {
+        agentTimezone = "America/Toronto";
+      } else if (province === "QC" || province === "QUEBEC") {
+        agentTimezone = "America/Montreal";
+      }
+    }
+
+    // Helper to convert appointment requested_date + requested_window to actual start/end times
+    const getAppointmentTimes = (apt: any): { start: Date; end: Date } | null => {
+      const dateStr = apt.requested_date;
+      if (!dateStr) return null;
+
+      // Convert requested_window to start hour (same logic as booking API)
+      let startHour = 9; // Default to morning (9 AM)
+      if (apt.requested_window === "afternoon") {
+        startHour = 13; // 1 PM
+      } else if (apt.requested_window === "evening") {
+        startHour = 17; // 5 PM
+      }
+
+      // Create DateTime in agent's timezone, then convert to UTC
+      const localDateTimeStr = `${dateStr}T${String(startHour).padStart(2, '0')}:00:00`;
+      const localStart = DateTime.fromISO(localDateTimeStr, { zone: agentTimezone });
+      const localEnd = localStart.plus({ hours: 1 }); // 1 hour duration
+
+      if (!localStart.isValid || !localEnd.isValid) {
+        return null;
+      }
+
+      return {
+        start: new Date(localStart.toUTC().toISO()),
+        end: new Date(localEnd.toUTC().toISO()),
+      };
+    };
+
     // Helper to check if a time slot conflicts with an appointment
-    // Since appointments table doesn't store exact start/end times, we'll block
-    // any slot if there's an appointment on that date to prevent double-booking
+    // Now checks actual time overlaps instead of blocking entire days
     const hasConflict = (slotStart: Date, slotEnd: Date, dateStr: string): boolean => {
       if (!appointments || appointments.length === 0) return false;
       
-      // Check if there's any appointment on this date
-      // This is conservative but ensures no double-booking
-      // In the future, if we store exact start/end times in appointments,
-      // we can check for actual time overlaps
+      // Check if this slot overlaps with any appointment on this date
       return appointments.some((apt: any) => {
         if (apt.requested_date !== dateStr) return false;
-        // Any active appointment on this date blocks the slot
-        return true;
+        
+        // Get the appointment's actual start/end times
+        const aptTimes = getAppointmentTimes(apt);
+        if (!aptTimes) return false;
+        
+        // Check for time overlap: slot overlaps if it starts before appointment ends
+        // and ends after appointment starts
+        const slotStartTime = slotStart.getTime();
+        const slotEndTime = slotEnd.getTime();
+        const aptStartTime = aptTimes.start.getTime();
+        const aptEndTime = aptTimes.end.getTime();
+        
+        // Overlap occurs if: slotStart < aptEnd && slotEnd > aptStart
+        return slotStartTime < aptEndTime && slotEndTime > aptStartTime;
       });
     };
 

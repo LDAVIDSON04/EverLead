@@ -207,10 +207,10 @@ export async function GET(req: NextRequest) {
       }
       
       return {
-        id: apt.id,
+      id: apt.id,
         starts_at: startsAt,
         ends_at: endsAt,
-        status: apt.status,
+      status: apt.status,
         family_name: familyName,
         location: location || "N/A",
       };
@@ -218,7 +218,7 @@ export async function GET(req: NextRequest) {
 
     // Filter out any null entries from failed date conversions
     const validAppointments = mappedAppointments.filter((apt): apt is NonNullable<typeof apt> => apt !== null);
-    
+
     return NextResponse.json(validAppointments);
   } catch (error: any) {
     console.error("Error in GET /api/appointments/mine:", error);

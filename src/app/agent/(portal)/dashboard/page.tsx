@@ -187,25 +187,25 @@ export default function AgentDashboardPage() {
               
               // Format date and time in agent's timezone
               const date = localStart.toLocaleString({ 
-                day: 'numeric', 
-                month: 'short', 
-                year: 'numeric' 
-              });
+              day: 'numeric', 
+              month: 'short', 
+              year: 'numeric' 
+            });
               const time = localStart.toLocaleString({ 
-                hour: '2-digit', 
+              hour: '2-digit', 
                 minute: '2-digit',
                 hour12: true
-              });
-              
-              return {
-                id: apt.id,
+            });
+            
+            return {
+              id: apt.id,
                 name: apt.family_name || 'Unknown',
                 location: apt.location || 'N/A', // Location from API (lead's city, province)
-                date,
-                time,
+              date,
+              time,
                 status: apt.status === 'confirmed' || apt.status === 'booked' ? 'confirmed' : 'pending',
-              };
-            });
+            };
+          });
           
           setAppointments(formattedAppointments);
         }
@@ -319,7 +319,7 @@ export default function AgentDashboardPage() {
         setError("Failed to load dashboard stats");
       } finally {
         if (mounted) {
-          setLoading(false);
+        setLoading(false);
         }
       }
     }
@@ -581,7 +581,7 @@ export default function AgentDashboardPage() {
                 {weekDays.map((day, idx) => {
                   const isToday = idx === currentDay - 1;
                   return (
-                      <div key={day} className="text-center">
+                    <div key={day} className="text-center">
                       <div className="text-xs text-gray-500 mb-2">{day}</div>
                       <div className={`w-full aspect-square rounded-lg flex flex-col items-center justify-center text-sm ${
                         isToday ? 'bg-green-800 text-white' : 'bg-gray-50 text-gray-900'
@@ -594,7 +594,7 @@ export default function AgentDashboardPage() {
                             // Show dots for appointments (max 3 dots)
                             const dotsToShow = Math.min(appointmentCount, 3);
                             return (
-                              <div className="flex gap-0.5 mt-1">
+                          <div className="flex gap-0.5 mt-1">
                                 {Array.from({ length: dotsToShow }).map((_, i) => (
                                   <span
                                     key={i}
@@ -603,7 +603,7 @@ export default function AgentDashboardPage() {
                                     }`}
                                   ></span>
                                 ))}
-                              </div>
+                          </div>
                             );
                           }
                           return null;

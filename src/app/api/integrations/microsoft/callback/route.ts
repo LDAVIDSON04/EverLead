@@ -107,7 +107,7 @@ export async function GET(req: NextRequest) {
 
     let externalCalendarId = "calendar"; // Default fallback
     if (calendarResponse.ok) {
-      const calendar = await calendarResponse.json();
+    const calendar = await calendarResponse.json();
       externalCalendarId = calendar.id || "calendar";
     } else {
       console.warn("Failed to get primary calendar, using default 'calendar'");
