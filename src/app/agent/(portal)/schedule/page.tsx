@@ -396,7 +396,7 @@ export default function SchedulePage() {
   const getAppointmentsForWeek = () => {
     return appointments.map(apt => {
       const startDate = DateTime.fromISO(apt.starts_at, { zone: "utc" });
-      const localStart = startDate.setZone("America/Edmonton");
+      const localStart = startDate.setZone("America/Vancouver"); // PST for Kelowna
       const weekStart = weekDates[0];
       const weekEnd = weekDates[6];
       weekStart.setHours(0, 0, 0, 0);
@@ -602,8 +602,8 @@ export default function SchedulePage() {
                   filteredAppointments.map((appointment) => {
                     const startDate = DateTime.fromISO(appointment.starts_at, { zone: "utc" });
                     const endDate = DateTime.fromISO(appointment.ends_at, { zone: "utc" });
-                    const localStart = startDate.setZone("America/Edmonton");
-                    const localEnd = endDate.setZone("America/Edmonton");
+                    const localStart = startDate.setZone("America/Vancouver"); // PST for Kelowna
+                    const localEnd = endDate.setZone("America/Vancouver"); // PST for Kelowna
                     const aptDate = localStart.toJSDate();
 
                     return (
@@ -723,7 +723,7 @@ export default function SchedulePage() {
                               >
                                 <div className="text-xs opacity-90">
                                   {DateTime.fromISO(apt.starts_at, { zone: "utc" })
-                                    .setZone("America/Edmonton")
+                                    .setZone("America/Vancouver") // PST for Kelowna
                                     .toLocaleString(DateTime.TIME_SIMPLE)}
                                 </div>
                                 <div className="mt-1">{apt.family_name || 'Appointment'}</div>

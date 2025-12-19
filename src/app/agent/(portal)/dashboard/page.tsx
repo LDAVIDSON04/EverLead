@@ -159,29 +159,75 @@ export default function AgentDashboardPage() {
         }
 
         if (appointmentsData) {
+          // Import DateTime for timezone conversion
+          const { DateTime } = await import('luxon');
+          const agentTimezone = "America/Vancouver"; // PST timezone for Kelowna
+          
           const formattedAppointments: Appointment[] = appointmentsData.map((apt: any) => {
             const lead = apt.lead_id ? leadsMap[apt.lead_id] : null;
             const name = lead ? `${lead.first_name || ''} ${lead.last_name || ''}`.trim() : 'Unknown';
+            // Use lead's city from booking, not agent's default city
             const location = lead ? `${lead.city || ''}, ${lead.province || ''}`.trim() : 'N/A';
-            const dateObj = apt.requested_date ? new Date(apt.requested_date) : new Date(apt.created_at);
-            const date = dateObj.toLocaleDateString('en-US', { 
-              day: 'numeric', 
-              month: 'short', 
-              year: 'numeric' 
-            });
-            const time = dateObj.toLocaleTimeString('en-US', { 
-              hour: '2-digit', 
-              minute: '2-digit' 
-            });
             
-            return {
-              id: apt.id,
-              name,
-              location,
-              date,
-              time,
-              status: apt.status === 'confirmed' || apt.status === 'booked' ? 'confirmed' : 'pending',
-            };
+            // Convert requested_date + requested_window to proper PST time
+            if (apt.requested_date && apt.requested_window) {
+              const dateStr = apt.requested_date;
+              let startHour = 9; // Default to morning (9 AM PST)
+              
+              if (apt.requested_window === "afternoon") {
+                startHour = 13; // 1 PM PST
+              } else if (apt.requested_window === "evening") {
+                startHour = 17; // 5 PM PST
+              }
+              
+              // Create date in PST timezone
+              const localDateTimeStr = `${dateStr}T${String(startHour).padStart(2, '0')}:00:00`;
+              const localStart = DateTime.fromISO(localDateTimeStr, { zone: agentTimezone });
+              
+              // Format date and time in PST
+              const date = localStart.toLocaleString({ 
+                day: 'numeric', 
+                month: 'short', 
+                year: 'numeric' 
+              });
+              const time = localStart.toLocaleString({ 
+                hour: '2-digit', 
+                minute: '2-digit',
+                hour12: true
+              });
+              
+              return {
+                id: apt.id,
+                name,
+                location,
+                date,
+                time,
+                status: apt.status === 'confirmed' || apt.status === 'booked' ? 'confirmed' : 'pending',
+              };
+            } else {
+              // Fallback for appointments without requested_date/window
+              const dateObj = apt.requested_date ? new Date(apt.requested_date) : new Date(apt.created_at);
+              const date = dateObj.toLocaleDateString('en-US', { 
+                day: 'numeric', 
+                month: 'short', 
+                year: 'numeric',
+                timeZone: 'America/Vancouver'
+              });
+              const time = dateObj.toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                timeZone: 'America/Vancouver'
+              });
+              
+              return {
+                id: apt.id,
+                name,
+                location,
+                date,
+                time,
+                status: apt.status === 'confirmed' || apt.status === 'booked' ? 'confirmed' : 'pending',
+              };
+            }
           });
           setAppointments(formattedAppointments);
         }
