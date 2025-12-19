@@ -60,7 +60,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Fetch upcoming appointments for this agent (using old schema: agent_id, lead_id)
-    // Convert requested_date and requested_window to starts_at/ends_at for display
+    // Use confirmed_at (exact booking time) if available, otherwise infer from requested_window
     const now = new Date();
     const today = now.toISOString().split('T')[0]; // YYYY-MM-DD
     
@@ -73,6 +73,7 @@ export async function GET(req: NextRequest) {
         requested_window,
         status,
         created_at,
+        confirmed_at,
         leads (
           first_name,
           last_name,
@@ -144,36 +145,48 @@ export async function GET(req: NextRequest) {
     }
 
     // Map appointments to format expected by schedule page
-    // Convert requested_date + requested_window to starts_at/ends_at
-    // Use agent's timezone for local times
+    // Use confirmed_at (exact booking time) if available, otherwise infer from requested_window
     const mappedAppointments = (appointments || []).map((apt: any) => {
-      // Parse the requested date
-      const dateStr = apt.requested_date; // Format: YYYY-MM-DD
-      let startHour = 9; // Default to morning (9 AM local time)
+      let startsAt: string | null = null;
+      let endsAt: string | null = null;
       
-      if (apt.requested_window === "afternoon") {
-        startHour = 13; // 1 PM local time
-      } else if (apt.requested_window === "evening") {
-        startHour = 17; // 5 PM local time
+      // If we have confirmed_at, use it directly (this is the exact booking time)
+      if (apt.confirmed_at) {
+        const confirmedDate = new Date(apt.confirmed_at);
+        const confirmedEnd = new Date(confirmedDate.getTime() + 60 * 60 * 1000); // Add 1 hour
+        
+        startsAt = confirmedDate.toISOString();
+        endsAt = confirmedEnd.toISOString();
+      } else {
+        // Fallback: infer from requested_window (for old appointments without confirmed_at)
+        const dateStr = apt.requested_date; // Format: YYYY-MM-DD
+        let startHour = 9; // Default to morning (9 AM local time)
+        
+        if (apt.requested_window === "afternoon") {
+          startHour = 13; // 1 PM local time
+        } else if (apt.requested_window === "evening") {
+          startHour = 17; // 5 PM local time
+        }
+        
+        // Create date in local timezone, then convert to UTC for storage
+        // Format: YYYY-MM-DDTHH:MM:SS in local timezone
+        const localDateTimeStr = `${dateStr}T${String(startHour).padStart(2, '0')}:00:00`;
+        
+        // Use DateTime from luxon to properly handle timezone conversion
+        const localStart = DateTime.fromISO(localDateTimeStr, { zone: agentTimezone });
+        const localEnd = localStart.plus({ hours: 1 }); // 1 hour duration
+        
+        // Convert to UTC ISO strings for the API response
+        startsAt = localStart.toUTC().toISO();
+        endsAt = localEnd.toUTC().toISO();
       }
-      
-      // Create date in local timezone, then convert to UTC for storage
-      // Format: YYYY-MM-DDTHH:MM:SS in local timezone
-      const localDateTimeStr = `${dateStr}T${String(startHour).padStart(2, '0')}:00:00`;
-      
-      // Use DateTime from luxon to properly handle timezone conversion
-      const localStart = DateTime.fromISO(localDateTimeStr, { zone: agentTimezone });
-      const localEnd = localStart.plus({ hours: 1 }); // 1 hour duration
-      
-      // Convert to UTC ISO strings for the API response
-      const startsAt = localStart.toUTC().toISO();
-      const endsAt = localEnd.toUTC().toISO();
       
       // Skip if DateTime conversion failed
       if (!startsAt || !endsAt) {
         console.error(`Failed to convert date/time for appointment ${apt.id}`, {
           requested_date: apt.requested_date,
           requested_window: apt.requested_window,
+          confirmed_at: apt.confirmed_at,
         });
         return null;
       }
