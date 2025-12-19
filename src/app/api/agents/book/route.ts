@@ -194,7 +194,6 @@ export async function POST(req: NextRequest) {
         requested_date: requestedDate,
         requested_window: requestedWindow,
         status: "pending",
-        notes: notes?.trim() || null,
         price_cents: null, // Can be set later
       })
       .select()
