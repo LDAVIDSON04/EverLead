@@ -122,6 +122,15 @@ export async function GET(req: NextRequest) {
       const startsAt = localStart.toUTC().toISO();
       const endsAt = localEnd.toUTC().toISO();
       
+      // Skip if DateTime conversion failed
+      if (!startsAt || !endsAt) {
+        console.error(`Failed to convert date/time for appointment ${apt.id}`, {
+          requested_date: apt.requested_date,
+          requested_window: apt.requested_window,
+        });
+        return null;
+      }
+      
       // Get family name from lead
       const lead = Array.isArray(apt.leads) ? apt.leads[0] : apt.leads;
       const familyName = lead?.full_name || 
@@ -130,8 +139,8 @@ export async function GET(req: NextRequest) {
       
       return {
         id: apt.id,
-        starts_at: startsAt.toISOString(),
-        ends_at: endsAt.toISOString(),
+        starts_at: startsAt,
+        ends_at: endsAt,
         status: apt.status,
         family_name: familyName,
       };
