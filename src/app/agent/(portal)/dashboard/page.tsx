@@ -278,6 +278,29 @@ export default function AgentDashboardPage() {
 
     loadDashboard();
 
+    // Check for calendar connection success message
+    const urlParams = new URLSearchParams(window.location.search);
+    const calendarConnected = urlParams.get("calendarConnected");
+    const redirectTo = urlParams.get("redirectTo");
+    
+    if (calendarConnected) {
+      const provider = calendarConnected === "google" ? "Google Calendar" : "Microsoft Calendar";
+      alert(`Successfully connected ${provider}! You can now view it in Settings.`);
+      
+      // Clean up URL
+      const newUrl = redirectTo === "settings" 
+        ? "/agent/settings" 
+        : window.location.pathname;
+      window.history.replaceState({}, "", newUrl);
+      
+      // Redirect to settings if requested
+      if (redirectTo === "settings") {
+        setTimeout(() => {
+          router.push("/agent/settings");
+        }, 500);
+      }
+    }
+
     return () => {
       mounted = false;
       window.removeEventListener('profileUpdated', handleProfileUpdate);

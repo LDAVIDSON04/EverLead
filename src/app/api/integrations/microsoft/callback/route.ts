@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
     if (error) {
       const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL || "http://localhost:3000";
       return NextResponse.redirect(
-        `${baseUrl}/agent/settings?error=${encodeURIComponent(`OAuth error: ${error}`)}`
+        `${baseUrl}/agent?error=${encodeURIComponent(`OAuth error: ${error}. Please try connecting again.`)}`
       );
     }
 
@@ -124,7 +124,7 @@ export async function GET(req: NextRequest) {
       console.error("Error checking specialist:", checkError);
       const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL || "http://localhost:3000";
       return NextResponse.redirect(
-        `${baseUrl}/agent/settings?error=${encodeURIComponent("Failed to verify specialist account")}`
+        `${baseUrl}/agent?error=${encodeURIComponent("Failed to verify account. Please log in and try again.")}`
       );
     }
 
@@ -144,7 +144,7 @@ export async function GET(req: NextRequest) {
         console.error("Error creating specialist:", createError);
         const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL || "http://localhost:3000";
         return NextResponse.redirect(
-          `${baseUrl}/agent/settings?error=${encodeURIComponent("Failed to create specialist account")}`
+          `${baseUrl}/agent?error=${encodeURIComponent("Failed to create account. Please log in and try again.")}`
         );
       }
     }
@@ -174,20 +174,20 @@ export async function GET(req: NextRequest) {
       console.error("Error details:", JSON.stringify(upsertError, null, 2));
       const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL || "http://localhost:3000";
       return NextResponse.redirect(
-        `${baseUrl}/agent/settings?error=${encodeURIComponent(`Failed to save calendar connection: ${upsertError.message || upsertError.code || "Unknown error"}`)}`
+        `${baseUrl}/agent?error=${encodeURIComponent("Failed to save calendar connection. Please log in and try again.")}`
       );
     }
 
-    // Redirect to success page
+    // Redirect to dashboard first (which handles auth better), then user can navigate to settings
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL || "http://localhost:3000";
     return NextResponse.redirect(
-      `${baseUrl}/agent/settings?calendar=connected&provider=microsoft`
+      `${baseUrl}/agent/dashboard?calendarConnected=microsoft&redirectTo=settings`
     );
   } catch (error: any) {
     console.error("Error in /api/integrations/microsoft/callback:", error);
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL || "http://localhost:3000";
     return NextResponse.redirect(
-      `${baseUrl}/agent/settings?error=${encodeURIComponent(error.message || "Connection failed")}`
+      `${baseUrl}/agent?error=${encodeURIComponent("Connection failed. Please log in and try again.")}`
     );
   }
 }
