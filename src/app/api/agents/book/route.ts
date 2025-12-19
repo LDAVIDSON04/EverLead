@@ -132,17 +132,17 @@ export async function POST(req: NextRequest) {
         last_name: lastName.trim(),
         full_name: `${firstName} ${lastName}`.trim(),
         email: email.trim(),
-        phone: phone?.trim() || null,
-        city: city?.trim() || null,
-        province: province?.trim() || null,
+        phone: phone?.trim() || "",
+        city: city?.trim() || "",
+        province: province?.trim() || "",
         service_type: serviceType?.trim() || "Pre-need Planning",
         status: "new",
         urgency_level: urgencyLevel,
         lead_price: leadPrice, // Required field - calculate from urgency
         buy_now_price_cents: leadPrice * 100, // For backward compatibility
-        // Add optional fields that might be required by schema
-        timeline_intent: null,
-        planning_for: null,
+        // Provide default empty strings for fields that might be required
+        timeline_intent: "not_specified",
+        planning_for: "self",
         remains_disposition: null,
         service_celebration: null,
         family_pre_arranged: null,
