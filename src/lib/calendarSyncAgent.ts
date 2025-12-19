@@ -91,10 +91,69 @@ export async function syncAgentAppointmentToGoogleCalendar(
 
   const connection = connections as CalendarConnection;
 
-  // Check if token is expired
+  // Check if token is expired and refresh if needed
+  let accessToken = connection.access_token;
   if (connection.expires_at && new Date(connection.expires_at) < new Date()) {
-    console.warn("Google token expired, refresh not implemented yet");
-    return;
+    console.log("Google token expired, attempting to refresh...");
+    
+    if (!connection.refresh_token) {
+      console.warn("No refresh token available, cannot refresh Google token");
+      return;
+    }
+
+    // Refresh the token
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+
+    if (!clientId || !clientSecret) {
+      console.warn("Google OAuth credentials not configured, cannot refresh token");
+      return;
+    }
+
+    try {
+      const refreshResponse = await fetch("https://oauth2.googleapis.com/token", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+          client_id: clientId,
+          client_secret: clientSecret,
+          refresh_token: connection.refresh_token,
+          grant_type: "refresh_token",
+        }),
+      });
+
+      if (!refreshResponse.ok) {
+        const error = await refreshResponse.json().catch(() => ({ error: "Unknown error" }));
+        console.error("Failed to refresh Google token:", error);
+        return;
+      }
+
+      const tokens = await refreshResponse.json();
+      accessToken = tokens.access_token;
+      const expiresIn = tokens.expires_in || 3600;
+      const newExpiresAt = new Date(Date.now() + expiresIn * 1000);
+
+      // Update the connection with new token
+      const { error: updateError } = await supabaseAdmin
+        .from("calendar_connections")
+        .update({
+          access_token: accessToken,
+          expires_at: newExpiresAt.toISOString(),
+        })
+        .eq("id", connection.id);
+
+      if (updateError) {
+        console.error("Failed to update refreshed token:", updateError);
+        // Continue with the new token anyway
+      } else {
+        console.log("✅ Successfully refreshed Google token");
+      }
+    } catch (error: any) {
+      console.error("Error refreshing Google token:", error);
+      return;
+    }
   }
 
   // Get agent's timezone from profile or use default
@@ -194,13 +253,14 @@ export async function syncAgentAppointmentToGoogleCalendar(
   };
 
   // Make actual API call to Google Calendar
+  // Use the refreshed token if we refreshed it, otherwise use the original
   try {
     const response = await fetch(
       `https://www.googleapis.com/calendar/v3/calendars/${connection.external_calendar_id}/events`,
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${connection.access_token}`,
+          Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify(event),
@@ -307,10 +367,75 @@ export async function syncAgentAppointmentToMicrosoftCalendar(
 
   const connection = connections as CalendarConnection;
 
-  // Check if token is expired
+  // Check if token is expired and refresh if needed
+  let accessToken = connection.access_token;
   if (connection.expires_at && new Date(connection.expires_at) < new Date()) {
-    console.warn("Microsoft token expired, refresh not implemented yet");
-    return;
+    console.log("Microsoft token expired, attempting to refresh...");
+    
+    if (!connection.refresh_token) {
+      console.warn("No refresh token available, cannot refresh Microsoft token");
+      return;
+    }
+
+    // Refresh the token
+    const clientId = process.env.MICROSOFT_CLIENT_ID;
+    const clientSecret = process.env.MICROSOFT_CLIENT_SECRET;
+    const tenantId = process.env.MICROSOFT_TENANT_ID || "common";
+
+    if (!clientId || !clientSecret) {
+      console.warn("Microsoft OAuth credentials not configured, cannot refresh token");
+      return;
+    }
+
+    try {
+      const refreshResponse = await fetch(
+        `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: new URLSearchParams({
+            client_id: clientId,
+            client_secret: clientSecret,
+            refresh_token: connection.refresh_token,
+            grant_type: "refresh_token",
+            scope: "https://graph.microsoft.com/Calendars.ReadWrite offline_access",
+          }),
+        }
+      );
+
+      if (!refreshResponse.ok) {
+        const error = await refreshResponse.json().catch(() => ({ error: "Unknown error" }));
+        console.error("Failed to refresh Microsoft token:", error);
+        return;
+      }
+
+      const tokens = await refreshResponse.json();
+      accessToken = tokens.access_token;
+      const expiresIn = tokens.expires_in || 3600;
+      const newExpiresAt = new Date(Date.now() + expiresIn * 1000);
+
+      // Update the connection with new token
+      const { error: updateError } = await supabaseAdmin
+        .from("calendar_connections")
+        .update({
+          access_token: accessToken,
+          expires_at: newExpiresAt.toISOString(),
+          refresh_token: tokens.refresh_token || connection.refresh_token, // Use new refresh token if provided
+        })
+        .eq("id", connection.id);
+
+      if (updateError) {
+        console.error("Failed to update refreshed token:", updateError);
+        // Continue with the new token anyway
+      } else {
+        console.log("✅ Successfully refreshed Microsoft token");
+      }
+    } catch (error: any) {
+      console.error("Error refreshing Microsoft token:", error);
+      return;
+    }
   }
 
   // Get agent's timezone from profile or use default
@@ -410,13 +535,15 @@ export async function syncAgentAppointmentToMicrosoftCalendar(
   };
 
   // Make actual API call to Microsoft Calendar
+  // Use the calendar ID from connection, or default to primary calendar
+  const calendarId = connection.external_calendar_id || "calendar";
   try {
     const response = await fetch(
-      `https://graph.microsoft.com/v1.0/me/calendars/${connection.external_calendar_id}/events`,
+      `https://graph.microsoft.com/v1.0/me/calendars/${calendarId}/events`,
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${connection.access_token}`,
+          Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify(event),
