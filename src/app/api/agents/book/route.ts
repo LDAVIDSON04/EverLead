@@ -289,7 +289,11 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (appointmentError || !appointment) {
-      console.error("Error creating appointment:", appointmentError);
+      console.error("❌ ERROR creating appointment:", {
+        error: appointmentError,
+        appointmentData,
+        confirmedAtISO,
+      });
       console.error("Appointment data attempted:", {
         lead_id: leadId,
         agent_id: agentId,
