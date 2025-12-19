@@ -439,9 +439,14 @@ export async function POST(req: NextRequest) {
       { status: 201 }
     );
   } catch (error: any) {
-    console.error("Error in /api/agents/book:", error);
+    console.error("Error in POST /api/agents/book:", error);
+    console.error("Error stack:", error.stack);
     return NextResponse.json(
-      { error: "Internal server error", message: error.message },
+      { 
+        error: "Internal server error", 
+        message: error.message,
+        ...(process.env.NODE_ENV === 'development' ? { stack: error.stack } : {})
+      },
       { status: 500 }
     );
   }
