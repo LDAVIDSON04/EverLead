@@ -202,8 +202,30 @@ export async function POST(req: NextRequest) {
 
     if (appointmentError || !appointment) {
       console.error("Error creating appointment:", appointmentError);
+      console.error("Appointment data attempted:", {
+        lead_id: leadId,
+        agent_id: agentId,
+        requested_date: requestedDate,
+        requested_window: requestedWindow,
+        status: "pending",
+        notes: notes?.trim() || null,
+      });
+      // Log full error details for debugging
+      if (appointmentError) {
+        console.error("Full appointment error object:", {
+          message: appointmentError.message,
+          code: appointmentError.code,
+          hint: appointmentError.hint,
+          details: appointmentError.details,
+        });
+      }
       return NextResponse.json(
-        { error: "Failed to create appointment" },
+        { 
+          error: "Failed to create appointment",
+          details: appointmentError?.message || "Unknown error",
+          code: appointmentError?.code || "UNKNOWN",
+          hint: appointmentError?.hint || null,
+        },
         { status: 500 }
       );
     }
