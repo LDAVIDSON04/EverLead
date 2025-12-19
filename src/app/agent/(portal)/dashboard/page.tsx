@@ -126,6 +126,35 @@ export default function AgentDashboardPage() {
           myAppointments: data.stats.myAppointments ?? 0,
         });
 
+        // Get agent's timezone (shared for both appointments list and calendar widget)
+        let agentTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "America/Vancouver";
+        const { data: profileData } = await supabaseClient
+          .from("profiles")
+          .select("metadata, agent_province")
+          .eq("id", agentId)
+          .maybeSingle();
+        
+        if (profileData?.metadata?.timezone) {
+          agentTimezone = profileData.metadata.timezone;
+        } else if (profileData?.metadata?.availability?.timezone) {
+          agentTimezone = profileData.metadata.availability.timezone;
+        } else if (profileData?.agent_province) {
+          const province = profileData.agent_province.toUpperCase();
+          if (province === "BC" || province === "BRITISH COLUMBIA") {
+            agentTimezone = "America/Vancouver";
+          } else if (province === "AB" || province === "ALBERTA") {
+            agentTimezone = "America/Edmonton";
+          } else if (province === "SK" || province === "SASKATCHEWAN") {
+            agentTimezone = "America/Regina";
+          } else if (province === "MB" || province === "MANITOBA") {
+            agentTimezone = "America/Winnipeg";
+          } else if (province === "ON" || province === "ONTARIO") {
+            agentTimezone = "America/Toronto";
+          } else if (province === "QC" || province === "QUEBEC") {
+            agentTimezone = "America/Montreal";
+          }
+        }
+
         // Fetch recent appointments - use the same API endpoint as schedule page for consistency
         const { data: { session } } = await supabaseClient.auth.getSession();
         if (!session?.access_token) {
@@ -147,35 +176,6 @@ export default function AgentDashboardPage() {
         // Format appointments for dashboard display
         if (appointmentsFromAPI && Array.isArray(appointmentsFromAPI)) {
           const { DateTime } = await import('luxon');
-          
-          // Get agent's timezone (same logic as schedule page) - need to define this outside the map
-          let agentTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "America/Vancouver";
-          const { data: profileData } = await supabaseClient
-            .from("profiles")
-            .select("metadata, agent_province")
-            .eq("id", agentId)
-            .maybeSingle();
-          
-          if (profileData?.metadata?.timezone) {
-            agentTimezone = profileData.metadata.timezone;
-          } else if (profileData?.metadata?.availability?.timezone) {
-            agentTimezone = profileData.metadata.availability.timezone;
-          } else if (profileData?.agent_province) {
-            const province = profileData.agent_province.toUpperCase();
-            if (province === "BC" || province === "BRITISH COLUMBIA") {
-              agentTimezone = "America/Vancouver";
-            } else if (province === "AB" || province === "ALBERTA") {
-              agentTimezone = "America/Edmonton";
-            } else if (province === "SK" || province === "SASKATCHEWAN") {
-              agentTimezone = "America/Regina";
-            } else if (province === "MB" || province === "MANITOBA") {
-              agentTimezone = "America/Winnipeg";
-            } else if (province === "ON" || province === "ONTARIO") {
-              agentTimezone = "America/Toronto";
-            } else if (province === "QC" || province === "QUEBEC") {
-              agentTimezone = "America/Montreal";
-            }
-          }
           
           // appointmentsFromAPI already has starts_at, ends_at, family_name, and location from the API
           const formattedAppointments: Appointment[] = appointmentsFromAPI
