@@ -3,6 +3,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { getLeadPriceFromUrgency } from "@/lib/leads/pricing";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -123,6 +124,9 @@ export async function POST(req: NextRequest) {
     } else {
       // Create a new lead
       // Provide all fields that might be required, with sensible defaults
+      const urgencyLevel = "warm";
+      const leadPrice = getLeadPriceFromUrgency(urgencyLevel);
+      
       const leadData: any = {
         first_name: firstName.trim(),
         last_name: lastName.trim(),
@@ -133,13 +137,19 @@ export async function POST(req: NextRequest) {
         province: province?.trim() || null,
         service_type: serviceType?.trim() || "Pre-need Planning",
         status: "new",
-        urgency_level: "warm",
+        urgency_level: urgencyLevel,
+        lead_price: leadPrice, // Required field - calculate from urgency
+        buy_now_price_cents: leadPrice * 100, // For backward compatibility
         // Add optional fields that might be required by schema
         timeline_intent: null,
         planning_for: null,
         remains_disposition: null,
         service_celebration: null,
         family_pre_arranged: null,
+        // Ensure lead is unsold
+        assigned_agent_id: null,
+        purchased_at: null,
+        auction_enabled: false,
       };
 
       const { data: newLead, error: leadError } = await supabaseAdmin
