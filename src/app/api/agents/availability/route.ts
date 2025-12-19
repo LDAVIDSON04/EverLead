@@ -190,19 +190,21 @@ export async function GET(req: NextRequest) {
           const hasOverlap = slotStartTime < aptEndTime && slotEndTime > aptStartTime;
           
           if (hasOverlap) {
-            console.log("Conflict detected:", {
+            console.log("Conflict detected (confirmed_at):", {
               dateStr,
               slotStart: slotStart.toISOString(),
               slotEnd: slotEnd.toISOString(),
               aptConfirmedAt: apt.confirmed_at,
               aptStartTime: new Date(aptStartTime).toISOString(),
               aptEndTime: new Date(aptEndTime).toISOString(),
+              appointmentId: apt.id,
             });
             return true; // Exact match - this slot is booked
           }
         } else {
           // Fallback for older appointments without confirmed_at
-          // Use window-based blocking (less precise but safe)
+          // For very recent appointments (within last 10 minutes), use created_at as proxy
+          // Otherwise, block all slots in the window (conservative but safe)
           const slotStartInAgentTZ = DateTime.fromJSDate(slotStart, { zone: "utc" })
             .setZone(agentTimezone);
           const slotHourInAgentTZ = slotStartInAgentTZ.hour;
@@ -212,22 +214,45 @@ export async function GET(req: NextRequest) {
           const windowEndHour = apt.requested_window === "afternoon" ? 17 :
                               apt.requested_window === "evening" ? 21 : 12;
           
-          // Block if slot hour falls within the appointment's window
+          // Check if slot hour falls within the appointment's window
           if (slotHourInAgentTZ >= windowStartHour && slotHourInAgentTZ < windowEndHour) {
-            // Verify time overlap using a representative time for the window
-            const aptDateStr = apt.requested_date;
-            const aptLocalStart = DateTime.fromISO(`${aptDateStr}T${String(slotHourInAgentTZ).padStart(2, '0')}:00:00`, { zone: agentTimezone });
-            const aptLocalEnd = aptLocalStart.plus({ hours: appointmentLength / 60 });
-            
-            if (aptLocalStart.isValid && aptLocalEnd.isValid) {
-              const aptStartISO = aptLocalStart.toUTC().toISO();
-              const aptEndISO = aptLocalEnd.toUTC().toISO();
-              if (aptStartISO && aptEndISO) {
-                const aptStartTime = new Date(aptStartISO).getTime();
-                const aptEndTime = new Date(aptEndISO).getTime();
-                return slotStartTime < aptEndTime && slotEndTime > aptStartTime;
+            // For very recent appointments, try to use created_at to infer exact time
+            if (apt.created_at) {
+              const createdDate = new Date(apt.created_at);
+              const now = new Date();
+              const minutesSinceCreation = (now.getTime() - createdDate.getTime()) / (1000 * 60);
+              
+              // If created within last 10 minutes, use created_at hour as proxy
+              if (minutesSinceCreation <= 10) {
+                const createdInAgentTZ = DateTime.fromJSDate(createdDate, { zone: "utc" })
+                  .setZone(agentTimezone);
+                const createdHour = createdInAgentTZ.hour;
+                
+                // If the slot hour matches the created hour (within 1 hour tolerance), block it
+                if (Math.abs(createdHour - slotHourInAgentTZ) <= 1) {
+                  console.log("Conflict detected (created_at fallback):", {
+                    dateStr,
+                    slotHour: slotHourInAgentTZ,
+                    createdHour,
+                    minutesSinceCreation,
+                    appointmentId: apt.id,
+                  });
+                  return true;
+                }
               }
             }
+            
+            // For older appointments or if created_at doesn't match, block all slots in window
+            // This is conservative but prevents double-booking
+            console.log("Conflict detected (window fallback):", {
+              dateStr,
+              slotHour: slotHourInAgentTZ,
+              window: apt.requested_window,
+              windowStartHour,
+              windowEndHour,
+              appointmentId: apt.id,
+            });
+            return true;
           }
         }
         
