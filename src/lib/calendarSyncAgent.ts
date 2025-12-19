@@ -234,16 +234,17 @@ export async function syncAgentAppointmentToGoogleCalendar(
   const description = `Funeral planning appointment scheduled through Soradin.`;
 
   // Build Google Calendar event
+  // IMPORTANT: Use agent's timezone, not UTC, so Google Calendar displays the correct local time
   const event = {
     summary,
     description,
     start: {
       dateTime: startsAt,
-      timeZone: "UTC",
+      timeZone: agentTimezone, // Use agent's actual timezone (e.g., "America/Vancouver")
     },
     end: {
       dateTime: endsAt,
-      timeZone: "UTC",
+      timeZone: agentTimezone, // Use agent's actual timezone
     },
     extendedProperties: {
       private: {
@@ -251,6 +252,14 @@ export async function syncAgentAppointmentToGoogleCalendar(
       },
     },
   };
+  
+  console.log("📅 Creating Google Calendar event:", {
+    summary,
+    startsAt,
+    endsAt,
+    agentTimezone,
+    appointmentId: appointment.id,
+  });
 
   // Make actual API call to Google Calendar
   // Use the refreshed token if we refreshed it, otherwise use the original
@@ -516,6 +525,7 @@ export async function syncAgentAppointmentToMicrosoftCalendar(
   const body = `Funeral planning appointment scheduled through Soradin.`;
 
   // Build Microsoft Calendar event
+  // IMPORTANT: Use agent's timezone, not UTC, so Microsoft Calendar displays the correct local time
   const event = {
     subject,
     body: {
@@ -524,15 +534,23 @@ export async function syncAgentAppointmentToMicrosoftCalendar(
     },
     start: {
       dateTime: startsAt,
-      timeZone: "UTC",
+      timeZone: agentTimezone, // Use agent's actual timezone (e.g., "America/Vancouver")
     },
     end: {
       dateTime: endsAt,
-      timeZone: "UTC",
+      timeZone: agentTimezone, // Use agent's actual timezone
     },
     isReminderOn: true,
     reminderMinutesBeforeStart: 15,
   };
+  
+  console.log("📅 Creating Microsoft Calendar event:", {
+    subject,
+    startsAt,
+    endsAt,
+    agentTimezone,
+    appointmentId: appointment.id,
+  });
 
   // Make actual API call to Microsoft Calendar
   // Use the calendar ID from connection, or default to primary calendar
