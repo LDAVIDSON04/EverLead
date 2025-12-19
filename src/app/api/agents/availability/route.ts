@@ -83,22 +83,35 @@ export async function GET(req: NextRequest) {
     }
     
     // Get the schedule for the selected location
-    const locationSchedule = selectedLocation ? (availabilityByLocation[selectedLocation] || {}) : {};
+    let locationSchedule: Record<string, any> = {};
     
-    // If no schedule found for selected location, try to find a matching location (case-insensitive)
-    if (Object.keys(locationSchedule).length === 0 && selectedLocation) {
-      const matchingLocation = Object.keys(availabilityByLocation).find(
-        loc => loc.toLowerCase() === selectedLocation.toLowerCase()
-      );
-      if (matchingLocation) {
-        Object.assign(locationSchedule, availabilityByLocation[matchingLocation]);
+    if (selectedLocation) {
+      // Try exact match first
+      if (availabilityByLocation[selectedLocation]) {
+        locationSchedule = availabilityByLocation[selectedLocation];
+      } else {
+        // Try case-insensitive match
+        const matchingLocation = Object.keys(availabilityByLocation).find(
+          loc => loc.toLowerCase() === selectedLocation.toLowerCase()
+        );
+        if (matchingLocation) {
+          locationSchedule = availabilityByLocation[matchingLocation];
+        }
       }
     }
     
     // Final fallback: use first available location's schedule
     if (Object.keys(locationSchedule).length === 0 && locations.length > 0) {
-      Object.assign(locationSchedule, availabilityByLocation[locations[0]] || {});
+      locationSchedule = availabilityByLocation[locations[0]] || {};
     }
+    
+    // Debug logging
+    console.log("Availability API Debug:", {
+      selectedLocation,
+      availableLocations: Object.keys(availabilityByLocation),
+      locationScheduleKeys: Object.keys(locationSchedule),
+      fridaySchedule: locationSchedule.friday,
+    });
 
     // Load existing appointments for this agent (get actual times if available)
     const { data: appointments, error: appointmentsError } = await supabaseAdmin
@@ -217,8 +230,19 @@ export async function GET(req: NextRequest) {
 
       // Generate time slots for this day based on agent's exact schedule
       const slots: { startsAt: string; endsAt: string }[] = [];
-      const [startHour, startMin] = daySchedule.start.split(":").map(Number);
-      const [endHour, endMin] = daySchedule.end.split(":").map(Number);
+      
+      // Parse start and end times (format: "HH:MM" or "HH:mm")
+      const startTime = daySchedule.start || "09:00";
+      const endTime = daySchedule.end || "17:00";
+      const [startHour, startMin] = startTime.split(":").map(Number);
+      const [endHour, endMin] = endTime.split(":").map(Number);
+      
+      // Validate parsed times
+      if (isNaN(startHour) || isNaN(startMin) || isNaN(endHour) || isNaN(endMin)) {
+        console.error(`Invalid time format for ${dayName}: start=${startTime}, end=${endTime}`);
+        days.push({ date: dateStr, slots: [] });
+        continue;
+      }
 
       // Convert end time to minutes for easier comparison
       const endTimeMinutes = endHour * 60 + endMin;
