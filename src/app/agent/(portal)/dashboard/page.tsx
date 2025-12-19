@@ -126,7 +126,7 @@ export default function AgentDashboardPage() {
           myAppointments: data.stats.myAppointments ?? 0,
         });
 
-        // Get agent's timezone (shared for both appointments list and calendar widget)
+        // Get agent's timezone and profile data (shared for both appointments list, calendar widget, and availability settings)
         let agentTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "America/Vancouver";
         const { data: profileData } = await supabaseClient
           .from("profiles")
@@ -305,13 +305,7 @@ export default function AgentDashboardPage() {
           }
         }
 
-        // Load availability settings
-        const { data: profileData } = await supabaseClient
-          .from("profiles")
-          .select("metadata")
-          .eq("id", agentId)
-          .maybeSingle();
-
+        // Load availability settings (reuse profileData from above)
         if (profileData?.metadata?.availability) {
           const availability = profileData.metadata.availability;
           setAvailabilitySettings({
