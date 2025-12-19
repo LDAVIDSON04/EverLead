@@ -16,6 +16,7 @@ function BookingStep2Content() {
   const startsAt = searchParams.get("startsAt") || "";
   const endsAt = searchParams.get("endsAt") || "";
   const date = searchParams.get("date") || "";
+  const searchedCity = searchParams.get("city") || ""; // City from search (e.g., Penticton)
 
   const [agentInfo, setAgentInfo] = useState<{
     full_name: string | null;
@@ -174,7 +175,8 @@ function BookingStep2Content() {
           lastName: formData.legalLastName,
           email: formData.email,
           phone: null, // Optional for now
-          city: agentInfo?.agent_city || null,
+          // Use searched city if available (from search), otherwise fall back to agent's city
+          city: searchedCity || agentInfo?.agent_city || null,
           province: agentInfo?.agent_province || null,
           serviceType: selectedService,
           notes: `Date of Birth: ${formData.dateOfBirth}, Sex: ${formData.sex}`,
