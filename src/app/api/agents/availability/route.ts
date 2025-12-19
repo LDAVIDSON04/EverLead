@@ -168,81 +168,80 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // Helper to get the exact hour from appointment
-    // Since notes column doesn't exist, we'll use created_at to infer the booking time
-    // The created_at timestamp should be very close to when the booking was made
-    const getAppointmentExactHour = (apt: any): number | null => {
-      // Use created_at timestamp to infer the booking hour
-      // This works because bookings happen in real-time, so created_at is close to the booking time
-      if (apt.created_at) {
-        const createdDate = new Date(apt.created_at);
-        const createdInAgentTZ = DateTime.fromJSDate(createdDate, { zone: "utc" })
-          .setZone(agentTimezone);
-        return createdInAgentTZ.hour;
-      }
-      
-      return null;
-    };
-
-    // Helper to convert appointment requested_date + requested_window to actual start/end times
-    // We try to get the exact hour, but fall back to blocking the window if we can't determine it
-    const getAppointmentTimes = (apt: any): { start: Date; end: Date } | null => {
+    // Helper to get all possible time slots for an appointment based on its window
+    // Since we only have requested_window, we need to check all possible slots in that window
+    const getAppointmentPossibleSlots = (apt: any, appointmentLength: number): Array<{ start: Date; end: Date; hour: number }> => {
       const dateStr = apt.requested_date;
-      if (!dateStr) return null;
+      if (!dateStr) return [];
 
-      // Try to get exact hour
-      const exactHour = getAppointmentExactHour(apt);
-      let startHour: number;
+      // Determine the time window based on requested_window
+      let windowStartHour = 9; // Default to morning (9 AM)
+      let windowEndHour = 12; // Morning ends at 12 PM
       
-      if (exactHour !== null) {
-        // Use exact hour if we have it
-        startHour = exactHour;
-      } else {
-        // Fall back to window defaults
-        if (apt.requested_window === "afternoon") {
-          startHour = 13; // 1 PM
-        } else if (apt.requested_window === "evening") {
-          startHour = 17; // 5 PM
-        } else {
-          startHour = 9; // Default to morning (9 AM)
+      if (apt.requested_window === "afternoon") {
+        windowStartHour = 13; // 1 PM
+        windowEndHour = 17; // Afternoon ends at 5 PM
+      } else if (apt.requested_window === "evening") {
+        windowStartHour = 17; // 5 PM
+        windowEndHour = 21; // Evening ends at 9 PM (assuming business hours)
+      }
+
+      // Generate all possible slots in this window
+      const slots: Array<{ start: Date; end: Date; hour: number }> = [];
+      const slotLengthHours = appointmentLength / 60;
+      
+      for (let hour = windowStartHour; hour < windowEndHour; hour += slotLengthHours) {
+        const localDateTimeStr = `${dateStr}T${String(Math.floor(hour)).padStart(2, '0')}:${String((hour % 1) * 60).padStart(2, '0')}:00`;
+        const localStart = DateTime.fromISO(localDateTimeStr, { zone: agentTimezone });
+        const localEnd = localStart.plus({ hours: slotLengthHours });
+
+        if (localStart.isValid && localEnd.isValid) {
+          slots.push({
+            start: new Date(localStart.toUTC().toISO()),
+            end: new Date(localEnd.toUTC().toISO()),
+            hour: Math.floor(hour),
+          });
         }
       }
 
-      // Create DateTime in agent's timezone, then convert to UTC
-      const localDateTimeStr = `${dateStr}T${String(startHour).padStart(2, '0')}:00:00`;
-      const localStart = DateTime.fromISO(localDateTimeStr, { zone: agentTimezone });
-      const localEnd = localStart.plus({ hours: appointmentLength / 60 }); // Use appointment length
-
-      if (!localStart.isValid || !localEnd.isValid) {
-        return null;
-      }
-
-      return {
-        start: new Date(localStart.toUTC().toISO()),
-        end: new Date(localEnd.toUTC().toISO()),
-      };
+      return slots;
     };
 
     // Helper to check if a time slot conflicts with an appointment
-    // Now uses exact times when available, falls back to window-based checking
-    const hasConflict = (slotStart: Date, slotEnd: Date, dateStr: string): boolean => {
+    // Uses the slot's exact hour to match against possible appointment slots
+    const hasConflict = (slotStart: Date, slotEnd: Date, dateStr: string, slotHour: number): boolean => {
       if (!appointments || appointments.length === 0) return false;
+      
+      // Get the slot's hour in agent's timezone for matching
+      const slotStartInAgentTZ = DateTime.fromJSDate(slotStart, { zone: "utc" })
+        .setZone(agentTimezone);
+      const slotHourInAgentTZ = slotStartInAgentTZ.hour;
       
       // Check if this slot overlaps with any appointment on this date
       return appointments.some((apt: any) => {
         if (apt.requested_date !== dateStr) return false;
         
-        // Get the appointment's start/end times (with exact hour if available)
-        const aptTimes = getAppointmentTimes(apt);
-        if (!aptTimes) return false;
+        // Get all possible slots for this appointment in its window
+        const possibleSlots = getAppointmentPossibleSlots(apt, appointmentLength);
         
-        const slotStartTime = slotStart.getTime();
-        const slotEndTime = slotEnd.getTime();
-        const aptStartTime = aptTimes.start.getTime();
-        const aptEndTime = aptTimes.end.getTime();
+        // Check if the slot's hour matches any of the possible appointment hours
+        // This is more precise than checking time overlap - we match the exact hour
+        const hourMatches = possibleSlots.some(slot => slot.hour === slotHourInAgentTZ);
         
-        // Overlap occurs if: slotStart < aptEnd && slotEnd > aptStart
-        return slotStartTime < aptEndTime && slotEndTime > aptStartTime;
+        if (hourMatches) {
+          // Also verify time overlap to be safe
+          const slotStartTime = slotStart.getTime();
+          const slotEndTime = slotEnd.getTime();
+          
+          return possibleSlots.some(slot => {
+            const aptStartTime = slot.start.getTime();
+            const aptEndTime = slot.end.getTime();
+            // Overlap occurs if: slotStart < aptEnd && slotEnd > aptStart
+            return slotStartTime < aptEndTime && slotEndTime > aptStartTime;
+          });
+        }
+        
+        return false;
       });
     };
 
@@ -328,9 +327,12 @@ export async function GET(req: NextRequest) {
         // Convert to UTC for API response
         const slotStart = new Date(localStart.toUTC().toISO());
         const slotEnd = new Date(localEnd.toUTC().toISO());
+        
+        // Get the hour in agent's timezone for conflict checking
+        const slotHour = localStart.hour;
 
-        // Check for conflicts with existing appointments
-        if (!hasConflict(slotStart, slotEnd, dateStr)) {
+        // Check for conflicts with existing appointments - pass the exact hour for precise matching
+        if (!hasConflict(slotStart, slotEnd, dateStr, slotHour)) {
           slots.push({
             startsAt: slotStart.toISOString(),
             endsAt: slotEnd.toISOString(),
