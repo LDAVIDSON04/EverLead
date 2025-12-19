@@ -201,12 +201,14 @@ export async function GET(req: NextRequest) {
           const aptStartTime = new Date(apt.confirmed_at).getTime();
           const aptEndTime = aptStartTime + (appointmentLength * 60 * 1000); // appointmentLength is in minutes
           
-          // Use a tolerance of 1 minute to account for any rounding differences
-          const tolerance = 60 * 1000; // 1 minute in milliseconds
+          // Use a tolerance of 2 minutes to account for any rounding or timezone differences
+          const tolerance = 2 * 60 * 1000; // 2 minutes in milliseconds
           
           // Check if the slot start time matches the appointment start time (within tolerance)
-          // OR if there's any time overlap
+          // This is the primary check - if times match, it's definitely the same slot
           const timeMatches = Math.abs(slotStartTime - aptStartTime) <= tolerance;
+          
+          // Also check for time overlap as a secondary check
           const hasOverlap = slotStartTime < (aptEndTime + tolerance) && slotEndTime > (aptStartTime - tolerance);
           
           if (timeMatches || hasOverlap) {
@@ -214,8 +216,11 @@ export async function GET(req: NextRequest) {
               dateStr,
               slotStartISO,
               slotStartTime,
+              slotStartLocal: DateTime.fromJSDate(slotStart, { zone: "utc" }).setZone(agentTimezone).toISO(),
               aptConfirmedAt: apt.confirmed_at,
               aptStartTime,
+              aptStartLocal: DateTime.fromJSDate(new Date(apt.confirmed_at), { zone: "utc" }).setZone(agentTimezone).toISO(),
+              timeDifference: Math.abs(slotStartTime - aptStartTime),
               timeMatches,
               hasOverlap,
               appointmentId: apt.id,
@@ -367,12 +372,15 @@ export async function GET(req: NextRequest) {
         // Get the hour in agent's timezone for conflict checking
         const slotHour = localStart.hour;
 
-        // Check for conflicts with existing appointments - pass the exact hour for precise matching
+        // Check for conflicts with existing appointments - this MUST block booked slots immediately
         if (!hasConflict(slotStart, slotEnd, dateStr, slotHour)) {
           slots.push({
             startsAt: slotStart.toISOString(),
             endsAt: slotEnd.toISOString(),
           });
+        } else {
+          // Log when a slot is blocked so we can verify it's working
+          console.log(`🚫 Blocked booked slot: ${slotStart.toISOString()} on ${dateStr}`);
         }
 
         // Move to next slot (use appointment length as interval)
