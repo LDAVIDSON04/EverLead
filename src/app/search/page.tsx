@@ -282,8 +282,9 @@ function SearchResults() {
         const startDate = dateStr;
         const endDate = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
         
+        const locationParam = searchLocation ? `&location=${encodeURIComponent(searchLocation)}` : '';
         const res = await fetch(
-          `/api/agents/availability?agentId=${agentId}&startDate=${startDate}&endDate=${endDate}`
+          `/api/agents/availability?agentId=${agentId}&startDate=${startDate}&endDate=${endDate}${locationParam}`
         );
         
         if (res.ok) {
@@ -397,8 +398,9 @@ function SearchResults() {
         const startDate = dateStr;
         const endDate = dateStr;
         
+        const locationParam = searchLocation ? `&location=${encodeURIComponent(searchLocation)}` : '';
         const res = await fetch(
-          `/api/agents/availability?agentId=${agentId}&startDate=${startDate}&endDate=${endDate}`
+          `/api/agents/availability?agentId=${agentId}&startDate=${startDate}&endDate=${endDate}${locationParam}`
         );
         
         if (res.ok) {
@@ -478,8 +480,9 @@ function SearchResults() {
         const startDate = today.toISOString().split("T")[0];
         const endDate = new Date(today.getTime() + 14 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
         
+        const locationParam = searchLocation ? `&location=${encodeURIComponent(searchLocation)}` : '';
         const res = await fetch(
-          `/api/agents/availability?agentId=${agentId}&startDate=${startDate}&endDate=${endDate}`
+          `/api/agents/availability?agentId=${agentId}&startDate=${startDate}&endDate=${endDate}${locationParam}`
         );
         
         if (res.ok) {

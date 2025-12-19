@@ -24,16 +24,18 @@ type AvailabilityDay = {
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
+    const locationParam = searchParams.get("location");
     const params = {
       agentId: searchParams.get("agentId"),
       startDate: searchParams.get("startDate"),
       endDate: searchParams.get("endDate"),
-      location: searchParams.get("location"), // Get location from query params
+      location: locationParam || undefined, // Convert null to undefined for zod optional
     };
 
     // Validate query params
     const validation = querySchema.safeParse(params);
     if (!validation.success) {
+      console.error("Validation error:", validation.error.issues);
       return NextResponse.json(
         { error: "Invalid query parameters", details: validation.error.issues },
         { status: 400 }
