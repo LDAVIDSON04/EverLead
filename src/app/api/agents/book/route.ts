@@ -10,7 +10,15 @@ export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
   try {
+    console.log("Booking API called");
     const body = await req.json();
+    console.log("Booking request body:", { 
+      agentId: body.agentId, 
+      startsAt: body.startsAt,
+      firstName: body.firstName,
+      lastName: body.lastName,
+      email: body.email 
+    });
     const {
       agentId,
       startsAt, // ISO timestamp in UTC
@@ -244,6 +252,15 @@ export async function POST(req: NextRequest) {
       : `booked_hour:${exactHour}`;
 
     // Create the appointment (requestedDate already defined above)
+    console.log("Creating appointment with data:", {
+      lead_id: leadId,
+      agent_id: agentId,
+      requested_date: requestedDate,
+      requested_window: requestedWindow,
+      status: "confirmed",
+      notes: notesWithHour || null,
+    });
+    
     const { data: appointment, error: appointmentError } = await supabaseAdmin
       .from("appointments")
       .insert({
@@ -253,7 +270,7 @@ export async function POST(req: NextRequest) {
         requested_window: requestedWindow,
         status: "confirmed", // Mark as confirmed immediately after booking
         price_cents: null, // Can be set later
-        notes: notesWithHour, // Store exact hour for conflict detection
+        notes: notesWithHour || null, // Store exact hour for conflict detection (null if empty)
       })
       .select()
       .single();
@@ -265,17 +282,17 @@ export async function POST(req: NextRequest) {
         agent_id: agentId,
         requested_date: requestedDate,
         requested_window: requestedWindow,
-        status: "pending",
-        notes: notes?.trim() || null,
+        status: "confirmed",
+        notes: notesWithHour || null,
       });
       // Log full error details for debugging
       if (appointmentError) {
-        console.error("Full appointment error object:", {
+        console.error("Full appointment error object:", JSON.stringify({
           message: appointmentError.message,
           code: appointmentError.code,
           hint: appointmentError.hint,
           details: appointmentError.details,
-        });
+        }, null, 2));
       }
       return NextResponse.json(
         { 
@@ -287,6 +304,8 @@ export async function POST(req: NextRequest) {
         { status: 500 }
       );
     }
+    
+    console.log("Appointment created successfully:", appointment.id);
 
     // Send confirmation emails to both agent and family
     try {
