@@ -132,12 +132,25 @@ export async function GET(req: NextRequest) {
     // Include confirmed_at to get exact booking time for precise conflict detection
     const { data: appointments, error: appointmentsError } = await supabaseAdmin
       .from("appointments")
-      .select("requested_date, requested_window, status, created_at, confirmed_at")
+      .select("id, requested_date, requested_window, status, created_at, confirmed_at")
       .eq("agent_id", agentId)
       .in("status", ["pending", "confirmed", "booked"])
       .gte("requested_date", startDate)
       .lte("requested_date", endDate)
       .order("created_at", { ascending: false }); // Most recent first
+
+    // Debug: Log appointments to see what we're working with
+    console.log("Loaded appointments for conflict detection:", {
+      count: appointments?.length || 0,
+      appointments: appointments?.map((apt: any) => ({
+        id: apt.id,
+        date: apt.requested_date,
+        window: apt.requested_window,
+        hasConfirmedAt: !!apt.confirmed_at,
+        confirmedAt: apt.confirmed_at,
+        createdAt: apt.created_at,
+      })),
+    });
 
     if (appointmentsError) {
       console.error("Error loading appointments:", appointmentsError);
