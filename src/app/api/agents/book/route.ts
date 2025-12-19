@@ -483,11 +483,19 @@ export async function POST(req: NextRequest) {
       // Don't fail the booking if emails fail
     }
     
-    // Sync to Google Calendar if connected
+    // Sync to Google Calendar and/or Microsoft Calendar if connected
     try {
-      const { syncAgentAppointmentToGoogleCalendar } = await import('@/lib/calendarSyncAgent');
+      const { syncAgentAppointmentToGoogleCalendar, syncAgentAppointmentToMicrosoftCalendar } = await import('@/lib/calendarSyncAgent');
+      
+      // Sync to Google Calendar if connected
       await syncAgentAppointmentToGoogleCalendar(appointment.id).catch(err => {
         console.error("Error syncing to Google Calendar (non-fatal):", err);
+        // Don't fail the booking if calendar sync fails
+      });
+      
+      // Sync to Microsoft Calendar if connected
+      await syncAgentAppointmentToMicrosoftCalendar(appointment.id).catch(err => {
+        console.error("Error syncing to Microsoft Calendar (non-fatal):", err);
         // Don't fail the booking if calendar sync fails
       });
     } catch (calendarError) {

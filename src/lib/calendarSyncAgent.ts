@@ -47,6 +47,7 @@ export async function syncAgentAppointmentToGoogleCalendar(
       requested_date,
       requested_window,
       status,
+      confirmed_at,
       leads (
         first_name,
         last_name,
@@ -126,22 +127,44 @@ export async function syncAgentAppointmentToGoogleCalendar(
     }
   }
 
-  // Convert requested_date + requested_window to ISO timestamps
-  const dateStr = appointment.requested_date;
-  let startHour = 9; // Default to morning
+  // Use confirmed_at (exact booking time) if available, otherwise infer from requested_window
+  let startsAt: string;
+  let endsAt: string;
   
-  if (appointment.requested_window === "afternoon") {
-    startHour = 13; // 1 PM
-  } else if (appointment.requested_window === "evening") {
-    startHour = 17; // 5 PM
+  if (appointment.confirmed_at) {
+    // Use the exact booking time from confirmed_at
+    const confirmedDate = new Date(appointment.confirmed_at);
+    startsAt = confirmedDate.toISOString();
+    
+    // Get appointment length from agent's settings (default to 60 minutes)
+    const appointmentLengthMinutes = agentProfile?.metadata?.availability?.appointmentLength 
+      ? parseInt(agentProfile.metadata.availability.appointmentLength, 10) 
+      : 60;
+    const confirmedEnd = new Date(confirmedDate.getTime() + appointmentLengthMinutes * 60 * 1000);
+    endsAt = confirmedEnd.toISOString();
+  } else {
+    // Fallback: infer from requested_window (for old appointments without confirmed_at)
+    const dateStr = appointment.requested_date;
+    let startHour = 9; // Default to morning
+    
+    if (appointment.requested_window === "afternoon") {
+      startHour = 13; // 1 PM
+    } else if (appointment.requested_window === "evening") {
+      startHour = 17; // 5 PM
+    }
+    
+    const localDateTimeStr = `${dateStr}T${String(startHour).padStart(2, '0')}:00:00`;
+    const localStart = DateTime.fromISO(localDateTimeStr, { zone: agentTimezone });
+    
+    // Get appointment length from agent's settings (default to 60 minutes)
+    const appointmentLengthMinutes = agentProfile?.metadata?.availability?.appointmentLength 
+      ? parseInt(agentProfile.metadata.availability.appointmentLength, 10) 
+      : 60;
+    const localEnd = localStart.plus({ minutes: appointmentLengthMinutes });
+    
+    startsAt = localStart.toUTC().toISO()!;
+    endsAt = localEnd.toUTC().toISO()!;
   }
-  
-  const localDateTimeStr = `${dateStr}T${String(startHour).padStart(2, '0')}:00:00`;
-  const localStart = DateTime.fromISO(localDateTimeStr, { zone: agentTimezone });
-  const localEnd = localStart.plus({ hours: 1 });
-  
-  const startsAt = localStart.toUTC().toISO();
-  const endsAt = localEnd.toUTC().toISO();
 
   // Get family name from lead
   const lead = Array.isArray(appointment.leads) ? appointment.leads[0] : appointment.leads;
