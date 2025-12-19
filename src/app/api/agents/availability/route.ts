@@ -238,8 +238,20 @@ export async function GET(req: NextRequest) {
             const aptDateStr = apt.requested_date;
             const aptLocalStart = DateTime.fromISO(`${aptDateStr}T${String(windowStartHour).padStart(2, '0')}:00:00`, { zone: agentTimezone });
             const aptLocalEnd = aptLocalStart.plus({ hours: appointmentLength / 60 });
-            const aptStartTime = new Date(aptLocalStart.toUTC().toISO()).getTime();
-            const aptEndTime = new Date(aptLocalEnd.toUTC().toISO()).getTime();
+            
+            if (!aptLocalStart.isValid || !aptLocalEnd.isValid) {
+              return false;
+            }
+            
+            const aptStartISO = aptLocalStart.toUTC().toISO();
+            const aptEndISO = aptLocalEnd.toUTC().toISO();
+            
+            if (!aptStartISO || !aptEndISO) {
+              return false;
+            }
+            
+            const aptStartTime = new Date(aptStartISO).getTime();
+            const aptEndTime = new Date(aptEndISO).getTime();
             
             // Overlap occurs if: slotStart < aptEnd && slotEnd > aptStart
             return slotStartTime < aptEndTime && slotEndTime > aptStartTime;
