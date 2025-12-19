@@ -266,15 +266,12 @@ export default function AgentDashboardPage() {
               // Import DateTime for timezone conversion
               const { DateTime } = await import('luxon');
               
-              // Get agent timezone (reuse the same logic from above)
-              let calendarTimezone = agentTimezone; // Use the timezone we already determined
-              
               // Count appointments per day of the month
               const appointmentsByDay: Record<number, number> = {};
               (calendarAppointmentsData || []).forEach((apt: any) => {
                 // Parse the starts_at timestamp and convert to agent's timezone
                 const startDate = DateTime.fromISO(apt.starts_at, { zone: "utc" });
-                const localStart = startDate.setZone(calendarTimezone);
+                const localStart = startDate.setZone(agentTimezone);
                 const dayOfMonth = localStart.day; // Day of month (1-31)
                 appointmentsByDay[dayOfMonth] = (appointmentsByDay[dayOfMonth] || 0) + 1;
               });
