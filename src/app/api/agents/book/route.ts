@@ -121,6 +121,22 @@ export async function POST(req: NextRequest) {
 
     if (existingLead) {
       leadId = existingLead.id;
+      // Update the lead's city if the booking is for a different location
+      // This ensures the location shown matches where the appointment was booked
+      if (city && city.trim()) {
+        const { error: updateError } = await supabaseAdmin
+          .from("leads")
+          .update({ 
+            city: city.trim(),
+            province: province?.trim() || existingLead.province || null
+          })
+          .eq("id", leadId);
+        
+        if (updateError) {
+          console.warn("Failed to update lead city for booking:", updateError);
+          // Don't fail the booking if city update fails
+        }
+      }
     } else {
       // Create a new lead
       // Provide all fields that might be required, with sensible defaults

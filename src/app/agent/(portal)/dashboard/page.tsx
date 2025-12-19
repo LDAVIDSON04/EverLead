@@ -148,7 +148,7 @@ export default function AgentDashboardPage() {
         if (appointmentsFromAPI && Array.isArray(appointmentsFromAPI)) {
           const { DateTime } = await import('luxon');
           
-          // Get agent's timezone (same logic as schedule page)
+          // Get agent's timezone (same logic as schedule page) - need to define this outside the map
           let agentTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "America/Vancouver";
           const { data: profileData } = await supabaseClient
             .from("profiles")
@@ -250,30 +250,63 @@ export default function AgentDashboardPage() {
           { day: 'Fri', value: maxCount > 0 ? Math.round((dayCounts['Fri'] / maxCount) * 100) : 0 },
         ]);
 
-        // Load appointments for calendar display (current week)
-        const weekStart = new Date(today);
-        weekStart.setDate(today.getDate() - currentDay + 1);
-        weekStart.setHours(0, 0, 0, 0);
-        const weekEnd = new Date(weekStart);
-        weekEnd.setDate(weekStart.getDate() + 6);
-        weekEnd.setHours(23, 59, 59, 999);
+        // Load appointments for calendar display - use the same API as schedule page
+        const { data: { session: calendarSession } } = await supabaseClient.auth.getSession();
+        if (calendarSession?.access_token) {
+          try {
+            const calendarRes = await fetch("/api/appointments/mine", {
+              headers: {
+                Authorization: `Bearer ${calendarSession.access_token}`,
+              },
+            });
+            
+            if (calendarRes.ok) {
+              const calendarAppointmentsData = await calendarRes.json();
+              
+              // Import DateTime for timezone conversion
+              const { DateTime } = await import('luxon');
+              
+              // Get agent timezone (reuse the same logic from above)
+              let calendarTimezone = agentTimezone; // Use the timezone we already determined
+              
+              // Count appointments per day of the month
+              const appointmentsByDay: Record<number, number> = {};
+              (calendarAppointmentsData || []).forEach((apt: any) => {
+                // Parse the starts_at timestamp and convert to agent's timezone
+                const startDate = DateTime.fromISO(apt.starts_at, { zone: "utc" });
+                const localStart = startDate.setZone(calendarTimezone);
+                const dayOfMonth = localStart.day; // Day of month (1-31)
+                appointmentsByDay[dayOfMonth] = (appointmentsByDay[dayOfMonth] || 0) + 1;
+              });
+              setCalendarAppointments(appointmentsByDay);
+            }
+          } catch (err) {
+            console.error("Error loading calendar appointments:", err);
+            // Fallback to direct database query
+            const weekStart = new Date(today);
+            weekStart.setDate(today.getDate() - currentDay + 1);
+            weekStart.setHours(0, 0, 0, 0);
+            const weekEnd = new Date(weekStart);
+            weekEnd.setDate(weekStart.getDate() + 6);
+            weekEnd.setHours(23, 59, 59, 999);
 
-        const { data: weekAppointments } = await supabaseClient
-          .from("appointments")
-          .select("requested_date, created_at")
-          .eq("agent_id", agentId)
-          .gte("requested_date", weekStart.toISOString().split("T")[0])
-          .lte("requested_date", weekEnd.toISOString().split("T")[0])
-          .in("status", ["pending", "confirmed", "booked"]);
+            const { data: weekAppointments } = await supabaseClient
+              .from("appointments")
+              .select("requested_date, created_at")
+              .eq("agent_id", agentId)
+              .gte("requested_date", weekStart.toISOString().split("T")[0])
+              .lte("requested_date", weekEnd.toISOString().split("T")[0])
+              .in("status", ["pending", "confirmed", "booked"]);
 
-        // Count appointments per day of the week
-        const appointmentsByDay: Record<number, number> = {};
-        (weekAppointments || []).forEach((apt: any) => {
-          const date = apt.requested_date ? new Date(apt.requested_date) : new Date(apt.created_at);
-          const dayOfMonth = date.getDate();
-          appointmentsByDay[dayOfMonth] = (appointmentsByDay[dayOfMonth] || 0) + 1;
-        });
-        setCalendarAppointments(appointmentsByDay);
+            const appointmentsByDay: Record<number, number> = {};
+            (weekAppointments || []).forEach((apt: any) => {
+              const date = apt.requested_date ? new Date(apt.requested_date) : new Date(apt.created_at);
+              const dayOfMonth = date.getDate();
+              appointmentsByDay[dayOfMonth] = (appointmentsByDay[dayOfMonth] || 0) + 1;
+            });
+            setCalendarAppointments(appointmentsByDay);
+          }
+        }
 
         // Load availability settings
         const { data: profileData } = await supabaseClient
