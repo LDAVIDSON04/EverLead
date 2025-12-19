@@ -105,12 +105,17 @@ export async function GET(req: NextRequest) {
       locationSchedule = availabilityByLocation[locations[0]] || {};
     }
     
-    // Debug logging
+    // Debug logging - comprehensive
     console.log("Availability API Debug:", {
+      agentId,
+      requestedLocation: location,
       selectedLocation,
-      availableLocations: Object.keys(availabilityByLocation),
+      allLocations: locations,
+      availabilityByLocationKeys: Object.keys(availabilityByLocation),
       locationScheduleKeys: Object.keys(locationSchedule),
-      fridaySchedule: locationSchedule.friday,
+      fullLocationSchedule: locationSchedule,
+      appointmentLength,
+      metadataAvailability: availabilityData,
     });
 
     // Load existing appointments for this agent (get actual times if available)
@@ -220,10 +225,16 @@ export async function GET(req: NextRequest) {
       const weekday = date.getDay(); // 0 = Sunday, 6 = Saturday
       const dayName = dayNames[weekday];
 
-      // Get schedule for this day
-      const daySchedule = locationSchedule[dayName];
+      // Get schedule for this day - try both lowercase and capitalized versions
+      let daySchedule = locationSchedule[dayName];
+      if (!daySchedule) {
+        // Try capitalized version (e.g., "Friday" instead of "friday")
+        const capitalizedDay = dayName.charAt(0).toUpperCase() + dayName.slice(1);
+        daySchedule = locationSchedule[capitalizedDay];
+      }
       
       if (!daySchedule || !daySchedule.enabled) {
+        console.log(`No schedule for ${dayName} (${dateStr}):`, daySchedule);
         days.push({ date: dateStr, slots: [] });
         continue;
       }
@@ -234,12 +245,15 @@ export async function GET(req: NextRequest) {
       // Parse start and end times (format: "HH:MM" or "HH:mm")
       const startTime = daySchedule.start || "09:00";
       const endTime = daySchedule.end || "17:00";
+      
+      console.log(`Generating slots for ${dayName} (${dateStr}): ${startTime} - ${endTime}`);
+      
       const [startHour, startMin] = startTime.split(":").map(Number);
       const [endHour, endMin] = endTime.split(":").map(Number);
       
       // Validate parsed times
       if (isNaN(startHour) || isNaN(startMin) || isNaN(endHour) || isNaN(endMin)) {
-        console.error(`Invalid time format for ${dayName}: start=${startTime}, end=${endTime}`);
+        console.error(`Invalid time format for ${dayName}: start=${startTime}, end=${endTime}, daySchedule=`, daySchedule);
         days.push({ date: dateStr, slots: [] });
         continue;
       }
