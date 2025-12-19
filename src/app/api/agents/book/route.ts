@@ -234,8 +234,7 @@ export async function POST(req: NextRequest) {
       leadId = newLead.id;
     }
 
-    // Calculate exact hour in agent's timezone for conflict detection
-    const slotStartLocal = slotStartUTC.setZone(agentTimezone);
+    // Calculate exact hour in agent's timezone for conflict detection (reuse slotStartLocal from above)
     const exactHour = slotStartLocal.hour;
     
     // Store exact hour in notes for availability API to use
