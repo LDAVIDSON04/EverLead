@@ -855,14 +855,50 @@ function CalendarAvailabilitySection() {
               {googleConnected ? (
                 <>
                   <Badge className="bg-green-100 text-green-800">Connected</Badge>
-                  <button className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-1">
+                  <button
+                    onClick={async () => {
+                      try {
+                        const { data: { session } } = await supabaseClient.auth.getSession();
+                        if (!session?.access_token) {
+                          alert("Please log in to reconnect your calendar");
+                          return;
+                        }
+                        // Disconnect first, then redirect to connect
+                        await fetch("/api/integrations/google/disconnect", {
+                          method: "POST",
+                          headers: {
+                            Authorization: `Bearer ${session.access_token}`,
+                          },
+                        });
+                        // Redirect to connect (will allow account selection)
+                        window.location.href = `/api/integrations/google/connect?specialistId=${session.user.id}`;
+                      } catch (err) {
+                        console.error("Error reconnecting Google Calendar:", err);
+                        alert("Failed to reconnect. Please try again.");
+                      }
+                    }}
+                    className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-1"
+                  >
                     <RefreshCw size={14} />
                     Reconnect
                   </button>
                 </>
               ) : (
                 <button
-                  onClick={() => setGoogleConnected(true)}
+                  onClick={async () => {
+                    try {
+                      const { data: { session } } = await supabaseClient.auth.getSession();
+                      if (!session?.access_token) {
+                        alert("Please log in to connect your calendar");
+                        return;
+                      }
+                      // Redirect to connect (will allow account selection)
+                      window.location.href = `/api/integrations/google/connect?specialistId=${session.user.id}`;
+                    } catch (err) {
+                      console.error("Error connecting Google Calendar:", err);
+                      alert("Failed to connect. Please try again.");
+                    }
+                  }}
                   className="px-4 py-2 bg-green-800 text-white rounded-lg hover:bg-green-900"
                 >
                   Connect
@@ -885,14 +921,50 @@ function CalendarAvailabilitySection() {
               {microsoftConnected ? (
                 <>
                   <Badge className="bg-green-100 text-green-800">Connected</Badge>
-                  <button className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-1">
+                  <button
+                    onClick={async () => {
+                      try {
+                        const { data: { session } } = await supabaseClient.auth.getSession();
+                        if (!session?.access_token) {
+                          alert("Please log in to reconnect your calendar");
+                          return;
+                        }
+                        // Disconnect first, then redirect to connect
+                        await fetch("/api/integrations/microsoft/disconnect", {
+                          method: "POST",
+                          headers: {
+                            Authorization: `Bearer ${session.access_token}`,
+                          },
+                        });
+                        // Redirect to connect (will allow account selection)
+                        window.location.href = `/api/integrations/microsoft/connect?specialistId=${session.user.id}`;
+                      } catch (err) {
+                        console.error("Error reconnecting Microsoft Calendar:", err);
+                        alert("Failed to reconnect. Please try again.");
+                      }
+                    }}
+                    className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-1"
+                  >
                     <RefreshCw size={14} />
                     Reconnect
                   </button>
                 </>
               ) : (
                 <button
-                  onClick={() => setMicrosoftConnected(true)}
+                  onClick={async () => {
+                    try {
+                      const { data: { session } } = await supabaseClient.auth.getSession();
+                      if (!session?.access_token) {
+                        alert("Please log in to connect your calendar");
+                        return;
+                      }
+                      // Redirect to connect (will allow account selection)
+                      window.location.href = `/api/integrations/microsoft/connect?specialistId=${session.user.id}`;
+                    } catch (err) {
+                      console.error("Error connecting Microsoft Calendar:", err);
+                      alert("Failed to connect. Please try again.");
+                    }
+                  }}
                   className="px-4 py-2 bg-green-800 text-white rounded-lg hover:bg-green-900"
                 >
                   Connect

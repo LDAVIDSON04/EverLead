@@ -68,6 +68,7 @@ export async function GET(req: NextRequest) {
     authUrl.searchParams.set("response_type", "code");
     authUrl.searchParams.set("scope", scopes);
     authUrl.searchParams.set("response_mode", "query");
+    authUrl.searchParams.set("prompt", "select_account"); // Allow account selection
     authUrl.searchParams.set("state", state);
 
     // Redirect to Microsoft OAuth

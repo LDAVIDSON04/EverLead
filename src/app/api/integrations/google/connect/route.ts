@@ -68,7 +68,7 @@ export async function GET(req: NextRequest) {
     authUrl.searchParams.set("response_type", "code");
     authUrl.searchParams.set("scope", scopes);
     authUrl.searchParams.set("access_type", "offline"); // Required for refresh token
-    authUrl.searchParams.set("prompt", "consent"); // Force consent to get refresh token
+    authUrl.searchParams.set("prompt", "select_account consent"); // Allow account selection and force consent
     authUrl.searchParams.set("state", state);
 
     // Redirect to Google OAuth
