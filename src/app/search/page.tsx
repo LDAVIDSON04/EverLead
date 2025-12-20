@@ -133,7 +133,10 @@ function SearchResults() {
         .then(res => res.json())
         .then(data => {
           if (data.location) {
-            // Update URL with location so it shows in search bar and triggers search
+            // Update state immediately so it shows in search bar
+            setSearchLocation(data.location);
+            
+            // Update URL with location so it triggers search
             const params = new URLSearchParams();
             params.set("location", data.location);
             if (searchQuery) params.set("q", searchQuery);
