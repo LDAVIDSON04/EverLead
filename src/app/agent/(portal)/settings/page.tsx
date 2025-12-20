@@ -472,6 +472,10 @@ function ProfileSection({
             specialty: metadata.specialty || "",
             licenseNumber: metadata.license_number || "",
             businessAddress: metadata.business_address || "",
+            businessStreet: metadata.business_street || "",
+            businessCity: metadata.business_city || "",
+            businessProvince: metadata.business_province || "",
+            businessZip: metadata.business_zip || "",
             profilePictureUrl: updatedProfile.profile_picture_url || "",
           });
         }
