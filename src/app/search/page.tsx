@@ -76,6 +76,11 @@ function SearchResults() {
   
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
+  // Input values (what user is typing)
+  const [inputQuery, setInputQuery] = useState(query);
+  const [inputLocation, setInputLocation] = useState(location);
+  const [inputService, setInputService] = useState(service);
+  // Actual search values (what was searched/submitted)
   const [searchQuery, setSearchQuery] = useState(query);
   const [searchLocation, setSearchLocation] = useState(location);
   const [searchService, setSearchService] = useState(service);
@@ -108,15 +113,19 @@ function SearchResults() {
   // Sync state with URL params when they change
   useEffect(() => {
     setSearchQuery(query);
+    setInputQuery(query);
     // Always sync location from URL params - this ensures it shows in the search bar
     if (location) {
       setSearchLocation(location);
+      setInputLocation(location);
       setLocationDetected(true); // Mark as detected so we don't auto-detect again
     } else {
       // Clear location if it's removed from URL
       setSearchLocation("");
+      setInputLocation("");
     }
     setSearchService(service);
+    setInputService(service);
   }, [query, location, service]);
 
   // Auto-detect location on page load if no location is provided
@@ -133,8 +142,9 @@ function SearchResults() {
         .then(res => res.json())
         .then(data => {
           if (data.location) {
-            // Update state immediately so it shows in search bar
+            // Update both input and search state immediately so it shows in search bar and triggers search
             setSearchLocation(data.location);
+            setInputLocation(data.location);
             
             // Update URL with location so it triggers search
             const params = new URLSearchParams();
@@ -888,22 +898,22 @@ function SearchResults() {
                 <input
                   type="text"
                   placeholder="Service or specialist"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  value={inputQuery}
+                  onChange={(e) => setInputQuery(e.target.value)}
                   className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800"
                 />
                 <input
                   type="text"
                   placeholder="Location"
-                  value={searchLocation}
-                  onChange={(e) => setSearchLocation(e.target.value)}
+                  value={inputLocation}
+                  onChange={(e) => setInputLocation(e.target.value)}
                   className="w-32 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800"
                 />
                 <input
                   type="text"
                   placeholder="Service type"
-                  value={searchService}
-                  onChange={(e) => setSearchService(e.target.value)}
+                  value={inputService}
+                  onChange={(e) => setInputService(e.target.value)}
                   className="w-32 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800"
                 />
                 <button 
@@ -950,9 +960,13 @@ function SearchResults() {
             <div className="flex gap-3 justify-center">
               <button
                 onClick={() => {
+                  setInputLocation("");
+                  setInputQuery("");
+                  setInputService("");
                   setSearchLocation("");
                   setSearchQuery("");
                   setSearchService("");
+                  router.push("/search");
                 }}
                 className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
               >
