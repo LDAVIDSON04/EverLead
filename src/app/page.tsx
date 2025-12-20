@@ -14,6 +14,27 @@ export default function HomePage() {
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
   const [locationSuggestions, setLocationSuggestions] = useState<string[]>([]);
 
+  // Function to navigate to search page with detected location
+  const navigateToSearchWithLocation = async () => {
+    try {
+      // Try to detect location
+      const res = await fetch("/api/geolocation");
+      const data = await res.json();
+      
+      // Build search URL with location if detected
+      const params = new URLSearchParams();
+      if (data.location) {
+        params.set("location", data.location);
+      }
+      
+      router.push(`/search?${params.toString()}`);
+    } catch (error) {
+      // If detection fails, just go to search page without location
+      console.error("Error detecting location:", error);
+      router.push("/search");
+    }
+  };
+
   const cities = [
     // Alberta
     "Calgary, AB",
@@ -398,7 +419,10 @@ export default function HomePage() {
                 <p className="text-[#1A1A1A]/60 text-sm leading-relaxed mb-4">
                   Discover what families are saying about specialists in your area
                 </p>
-                <button className="bg-[#0C6F3C] text-white px-5 py-2.5 rounded-xl hover:bg-[#0C6F3C]/90 transition-all shadow-sm text-sm">
+                <button 
+                  onClick={navigateToSearchWithLocation}
+                  className="bg-[#0C6F3C] text-white px-5 py-2.5 rounded-xl hover:bg-[#0C6F3C]/90 transition-all shadow-sm text-sm"
+                >
                   See reviews
                 </button>
               </div>
