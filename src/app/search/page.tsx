@@ -1019,13 +1019,11 @@ function SearchResults() {
                         <span className="text-gray-500">· {Math.floor(Math.random() * 200 + 50)} reviews</span>
                       </div>
 
-                      {/* Address - Show searched location if available, otherwise show agent's default city */}
+                      {/* Address - Always show searched location (the city the family is searching from) */}
                       <div className="flex items-start gap-2 mb-4">
                         <MapPin className="w-4 h-4 text-gray-500 mt-1 flex-shrink-0" />
                         <span className="text-gray-600 text-sm">
-                          {searchLocation || (agent?.agent_city && agent?.agent_province 
-                            ? `${agent.agent_city}, ${agent.agent_province}`
-                            : agent?.agent_city || location || 'Location not specified')}
+                          {searchLocation || 'Location not specified'}
                         </span>
                       </div>
 
@@ -1132,12 +1130,12 @@ function SearchResults() {
                         <p className="text-gray-600 text-sm mb-2">{selectedAgentInfo.funeral_home}</p>
                       )}
                       <div className="flex items-center gap-3 flex-wrap">
-                        {/* Show searched location if available, otherwise show agent's default city */}
-                        {(searchLocation || selectedAgentInfo.agent_city || selectedAgentInfo.agent_province) && (
+                        {/* Always show searched location (the city the family is searching from) */}
+                        {searchLocation && (
                           <div className="flex items-center gap-1">
                             <MapPin className="w-4 h-4 text-gray-500" />
                             <span className="text-gray-600 text-sm">
-                              {searchLocation || [selectedAgentInfo.agent_city, selectedAgentInfo.agent_province].filter(Boolean).join(", ")}
+                              {searchLocation}
                             </span>
                           </div>
                         )}
