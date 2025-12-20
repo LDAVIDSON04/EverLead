@@ -1098,13 +1098,6 @@ function SearchResults() {
                         )}
                       </div>
 
-                      {/* Rating */}
-                      <div className="flex items-center gap-1 mb-3">
-                        <Star className="w-4 h-4 fill-green-800 text-green-800" />
-                        <span className="text-gray-900">4.9</span>
-                        <span className="text-gray-500">· {Math.floor(Math.random() * 200 + 50)} reviews</span>
-                      </div>
-
                       {/* Location - Show searched location (the city the family is searching from) */}
                       <div className="flex items-start gap-2 mb-2">
                         <MapPin className="w-4 h-4 text-gray-500 mt-1 flex-shrink-0" />
@@ -1115,7 +1108,7 @@ function SearchResults() {
 
                       {/* Company Address - Show if available (formatted like Zocdoc) */}
                       {(agent?.business_street || agent?.business_address) && (
-                        <div className="flex items-start gap-2 mb-4">
+                        <div className="flex items-start gap-2 mb-3">
                           <MapPin className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
                           <span className="text-gray-500 text-xs">
                             {agent.business_street && agent.business_city && agent.business_province && agent.business_zip
@@ -1124,6 +1117,13 @@ function SearchResults() {
                           </span>
                         </div>
                       )}
+
+                      {/* Rating */}
+                      <div className="flex items-center gap-1 mb-3">
+                        <Star className="w-4 h-4 fill-green-800 text-green-800" />
+                        <span className="text-gray-900">4.9</span>
+                        <span className="text-gray-500">· {Math.floor(Math.random() * 200 + 50)} reviews</span>
+                      </div>
 
                       {/* Availability Calendar */}
                       <div className="mt-4">
