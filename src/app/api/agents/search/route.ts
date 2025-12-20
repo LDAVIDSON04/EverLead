@@ -185,7 +185,18 @@ export async function GET(req: NextRequest) {
         return matches;
       });
       
-      console.log(`[AGENT SEARCH] After location filter "${location}" (searchCity: "${locationParts[0]}"): ${filtered.length} agents`);
+      console.log(`✅ [AGENT SEARCH] After location filter "${location}" (searchCity: "${locationParts[0]}"): ${filtered.length} agents matched`);
+      
+      if (filtered.length === 0) {
+        console.warn(`⚠️ [AGENT SEARCH] No agents found for location "${location}". Available locations in system:`, 
+          agentsWithAvailability.map(a => ({
+            id: a.id,
+            name: a.full_name,
+            locations: a.availabilityLocations,
+            byLocation: Object.keys(a.availabilityByLocation)
+          }))
+        );
+      }
     }
 
     if (service) {

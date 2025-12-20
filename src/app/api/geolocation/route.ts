@@ -9,27 +9,69 @@ export const runtime = "nodejs";
 
 export async function GET(req: NextRequest) {
   try {
-    // Get user's IP address from request headers
-    // Check various headers that might contain the real IP (for proxies/load balancers)
+    // First, try to use Vercel's built-in geolocation headers (most reliable)
+    // Vercel automatically detects location from IP and provides it in headers
+    const vercelCity = req.headers.get("x-vercel-ip-city");
+    const vercelRegion = req.headers.get("x-vercel-ip-country-region");
+    const vercelCountry = req.headers.get("x-vercel-ip-country");
+    
+    console.log("🌐 [GEOLOCATION] Checking Vercel headers:", {
+      vercelCity,
+      vercelRegion,
+      vercelCountry
+    });
+
+    // If Vercel provides location, use it (most reliable and fast)
+    if (vercelCity && vercelRegion) {
+      // Map Canadian provinces to standard abbreviations
+      const provinceMap: Record<string, string> = {
+        "Alberta": "AB",
+        "British Columbia": "BC",
+        "Manitoba": "MB",
+        "New Brunswick": "NB",
+        "Newfoundland and Labrador": "NL",
+        "Northwest Territories": "NT",
+        "Nova Scotia": "NS",
+        "Nunavut": "NU",
+        "Ontario": "ON",
+        "Prince Edward Island": "PE",
+        "Quebec": "QC",
+        "Saskatchewan": "SK",
+        "Yukon": "YT",
+      };
+
+      const province = provinceMap[vercelRegion] || vercelRegion;
+      const city = vercelCity;
+      const country = vercelCountry;
+      const locationString = `${city}, ${province}`;
+
+      console.log("✅ [GEOLOCATION] Location detected from Vercel headers:", {
+        city,
+        province,
+        country,
+        locationString
+      });
+
+      return NextResponse.json({
+        city,
+        province,
+        country,
+        location: locationString, // Pre-formatted string for the search field
+      });
+    }
+
+    // Fallback: Try external IP geolocation service if Vercel headers not available
+    console.log("⚠️ [GEOLOCATION] Vercel headers not available, trying external service...");
+    
     const forwarded = req.headers.get("x-forwarded-for");
     const realIp = req.headers.get("x-real-ip");
-    const cfConnectingIp = req.headers.get("cf-connecting-ip"); // Cloudflare
+    const cfConnectingIp = req.headers.get("cf-connecting-ip");
     
-    // Extract the first IP from x-forwarded-for (can contain multiple IPs)
     const clientIp = forwarded?.split(",")[0]?.trim() || 
                      realIp || 
                      cfConnectingIp ||
                      "unknown";
 
-    console.log("🌐 [GEOLOCATION] Detecting location for IP:", {
-      clientIp,
-      forwarded,
-      realIp,
-      cfConnectingIp,
-      allHeaders: Object.fromEntries(req.headers.entries())
-    });
-
-    // If we can't get an IP, return null
     if (clientIp === "unknown" || !clientIp) {
       console.warn("⚠️ [GEOLOCATION] Could not determine client IP");
       return NextResponse.json({ 
@@ -40,80 +82,85 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // Use ip-api.com free service (no API key needed)
-    // Returns: city, region (province), country
-    // Note: Free tier allows HTTPS but has rate limit of 45 requests/minute
-    const response = await fetch(`https://ip-api.com/json/${clientIp}?fields=status,message,city,region,regionName,country,countryCode`);
-    
-    if (!response.ok) {
-      console.error("IP geolocation service error:", response.status);
+    // Try external service as fallback
+    try {
+      const response = await fetch(`https://ip-api.com/json/${clientIp}?fields=status,message,city,region,regionName,country,countryCode`);
+      
+      if (!response.ok) {
+        console.error("IP geolocation service error:", response.status);
+        return NextResponse.json({ 
+          city: null, 
+          province: null,
+          country: null,
+          location: null
+        });
+      }
+
+      const data = await response.json();
+      
+      if (data.status === "fail") {
+        console.warn("IP geolocation failed:", data.message);
+        return NextResponse.json({ 
+          city: null, 
+          province: null,
+          country: null,
+          location: null
+        });
+      }
+
+      const provinceMap: Record<string, string> = {
+        "Alberta": "AB",
+        "British Columbia": "BC",
+        "Manitoba": "MB",
+        "New Brunswick": "NB",
+        "Newfoundland and Labrador": "NL",
+        "Northwest Territories": "NT",
+        "Nova Scotia": "NS",
+        "Nunavut": "NU",
+        "Ontario": "ON",
+        "Prince Edward Island": "PE",
+        "Quebec": "QC",
+        "Saskatchewan": "SK",
+        "Yukon": "YT",
+      };
+
+      const province = provinceMap[data.regionName] || data.region || null;
+      const city = data.city || null;
+      const country = data.country || null;
+
+      let locationString: string | null = null;
+      if (city && province) {
+        locationString = `${city}, ${province}`;
+      } else if (city) {
+        locationString = city;
+      } else if (province) {
+        locationString = province;
+      }
+
+      console.log("✅ [GEOLOCATION] Location detected from external service:", {
+        city,
+        province,
+        country,
+        locationString
+      });
+
+      return NextResponse.json({
+        city,
+        province,
+        country,
+        location: locationString,
+      });
+    } catch (externalError) {
+      console.error("❌ [GEOLOCATION] External service failed:", externalError);
       return NextResponse.json({ 
         city: null, 
         province: null,
-        country: null 
+        country: null,
+        location: null
       });
     }
-
-    const data = await response.json();
-    
-    // Check if the request was successful
-    if (data.status === "fail") {
-      console.warn("IP geolocation failed:", data.message);
-      return NextResponse.json({ 
-        city: null, 
-        province: null,
-        country: null 
-      });
-    }
-
-    // Map Canadian provinces to standard abbreviations
-    const provinceMap: Record<string, string> = {
-      "Alberta": "AB",
-      "British Columbia": "BC",
-      "Manitoba": "MB",
-      "New Brunswick": "NB",
-      "Newfoundland and Labrador": "NL",
-      "Northwest Territories": "NT",
-      "Nova Scotia": "NS",
-      "Nunavut": "NU",
-      "Ontario": "ON",
-      "Prince Edward Island": "PE",
-      "Quebec": "QC",
-      "Saskatchewan": "SK",
-      "Yukon": "YT",
-    };
-
-    const province = provinceMap[data.regionName] || data.region || null;
-    const city = data.city || null;
-    const country = data.country || null;
-
-    // Format location string (e.g., "Edmonton, AB")
-    let locationString: string | null = null;
-    if (city && province) {
-      locationString = `${city}, ${province}`;
-    } else if (city) {
-      locationString = city;
-    } else if (province) {
-      locationString = province;
-    }
-
-    console.log("✅ [GEOLOCATION] Location detected:", {
-      clientIp,
-      city,
-      province,
-      country,
-      locationString,
-      rawData: data
-    });
-
-    return NextResponse.json({
-      city,
-      province,
-      country,
-      location: locationString, // Pre-formatted string for the search field
-    });
   } catch (error: any) {
-    console.error("Error detecting location:", error);
+    console.error("❌ [GEOLOCATION] Error detecting location:", error);
     return NextResponse.json({ 
       city: null, 
       province: null,
