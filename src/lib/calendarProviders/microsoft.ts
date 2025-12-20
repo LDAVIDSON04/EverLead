@@ -24,15 +24,46 @@ export async function fetchMicrosoftCalendarEvents(
   timeMin: string,
   timeMax: string
 ): Promise<ExternalEvent[]> {
-  // TODO: Refresh token if expired
-  if (connection.expires_at && new Date(connection.expires_at) < new Date()) {
-    // TODO: Implement token refresh
-    throw new Error("Microsoft access token expired - refresh not implemented");
+  // Check if OAuth credentials are configured
+  const clientId = process.env.MICROSOFT_CLIENT_ID;
+  const clientSecret = process.env.MICROSOFT_CLIENT_SECRET;
+  
+  if (!clientId || !clientSecret) {
+    throw new Error("Microsoft OAuth not configured - MICROSOFT_CLIENT_ID and MICROSOFT_CLIENT_SECRET required");
   }
 
-  // TODO: Make actual API call to Microsoft Graph
-  // Example implementation:
-  /*
+  // Refresh token if expired
+  let accessToken = connection.access_token;
+  if (connection.expires_at && new Date(connection.expires_at) < new Date()) {
+    if (!connection.refresh_token) {
+      throw new Error("Microsoft access token expired and no refresh token available");
+    }
+
+    // Refresh the token
+    const refreshResponse = await fetch("https://login.microsoftonline.com/common/oauth2/v2.0/token", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({
+        client_id: clientId,
+        client_secret: clientSecret,
+        refresh_token: connection.refresh_token,
+        grant_type: "refresh_token",
+        scope: "https://graph.microsoft.com/Calendars.ReadWrite",
+      }),
+    });
+
+    if (!refreshResponse.ok) {
+      const error = await refreshResponse.json().catch(() => ({ error: "Unknown error" }));
+      throw new Error(`Failed to refresh Microsoft token: ${JSON.stringify(error)}`);
+    }
+
+    const tokens = await refreshResponse.json();
+    accessToken = tokens.access_token;
+  }
+
+  // Make API call to Microsoft Graph
   const url = new URL(
     `https://graph.microsoft.com/v1.0/me/calendars/${connection.external_calendar_id}/calendarView`
   );
@@ -42,12 +73,12 @@ export async function fetchMicrosoftCalendarEvents(
 
   const response = await fetch(url.toString(), {
     headers: {
-      Authorization: `Bearer ${connection.access_token}`,
+      Authorization: `Bearer ${accessToken}`,
     },
   });
 
   if (!response.ok) {
-    const error = await response.json();
+    const error = await response.json().catch(() => ({ error: "Unknown error" }));
     throw new Error(`Microsoft Graph API error: ${JSON.stringify(error)}`);
   }
 
@@ -56,7 +87,6 @@ export async function fetchMicrosoftCalendarEvents(
 
   return events.map((event: any) => {
     // Extract appointment ID from singleValueExtendedProperties if present
-    // Microsoft uses extended properties differently - you'd need to set this when creating
     const appointmentId =
       event.singleValueExtendedProperties?.find(
         (prop: any) => prop.id === "String {66f5a359-4659-4830-9070-00047ec6ac6e} Name SoradinAppointmentId"
@@ -84,12 +114,5 @@ export async function fetchMicrosoftCalendarEvents(
       appointmentId,
     };
   });
-  */
-
-  // Placeholder: Return empty array until OAuth is implemented
-  console.warn(
-    "Microsoft Calendar API not implemented yet - OAuth setup required"
-  );
-  return [];
 }
 

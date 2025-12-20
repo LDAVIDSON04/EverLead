@@ -24,15 +24,45 @@ export async function fetchGoogleCalendarEvents(
   timeMin: string,
   timeMax: string
 ): Promise<ExternalEvent[]> {
-  // TODO: Refresh token if expired
-  if (connection.expires_at && new Date(connection.expires_at) < new Date()) {
-    // TODO: Implement token refresh
-    throw new Error("Google access token expired - refresh not implemented");
+  // Check if OAuth credentials are configured
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+  
+  if (!clientId || !clientSecret) {
+    throw new Error("Google OAuth not configured - GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET required");
   }
 
-  // TODO: Make actual API call to Google Calendar
-  // Example implementation:
-  /*
+  // Refresh token if expired
+  let accessToken = connection.access_token;
+  if (connection.expires_at && new Date(connection.expires_at) < new Date()) {
+    if (!connection.refresh_token) {
+      throw new Error("Google access token expired and no refresh token available");
+    }
+
+    // Refresh the token
+    const refreshResponse = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({
+        client_id: clientId,
+        client_secret: clientSecret,
+        refresh_token: connection.refresh_token,
+        grant_type: "refresh_token",
+      }),
+    });
+
+    if (!refreshResponse.ok) {
+      const error = await refreshResponse.json().catch(() => ({ error: "Unknown error" }));
+      throw new Error(`Failed to refresh Google token: ${JSON.stringify(error)}`);
+    }
+
+    const tokens = await refreshResponse.json();
+    accessToken = tokens.access_token;
+  }
+
+  // Make API call to Google Calendar
   const url = new URL(
     `https://www.googleapis.com/calendar/v3/calendars/${connection.external_calendar_id}/events`
   );
@@ -43,12 +73,12 @@ export async function fetchGoogleCalendarEvents(
 
   const response = await fetch(url.toString(), {
     headers: {
-      Authorization: `Bearer ${connection.access_token}`,
+      Authorization: `Bearer ${accessToken}`,
     },
   });
 
   if (!response.ok) {
-    const error = await response.json();
+    const error = await response.json().catch(() => ({ error: "Unknown error" }));
     throw new Error(`Google Calendar API error: ${JSON.stringify(error)}`);
   }
 
@@ -84,12 +114,5 @@ export async function fetchGoogleCalendarEvents(
       appointmentId,
     };
   });
-  */
-
-  // Placeholder: Return empty array until OAuth is implemented
-  console.warn(
-    "Google Calendar API not implemented yet - OAuth setup required"
-  );
-  return [];
 }
 
