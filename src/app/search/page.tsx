@@ -1011,10 +1011,14 @@ function SearchResults() {
                         <span className="text-gray-500">· {Math.floor(Math.random() * 200 + 50)} reviews</span>
                       </div>
 
-                      {/* Address */}
+                      {/* Address - Show searched location if available, otherwise show agent's default city */}
                       <div className="flex items-start gap-2 mb-4">
                         <MapPin className="w-4 h-4 text-gray-500 mt-1 flex-shrink-0" />
-                        <span className="text-gray-600 text-sm">{location}</span>
+                        <span className="text-gray-600 text-sm">
+                          {searchLocation || (agent?.agent_city && agent?.agent_province 
+                            ? `${agent.agent_city}, ${agent.agent_province}`
+                            : agent?.agent_city || location || 'Location not specified')}
+                        </span>
                       </div>
 
                       {/* Availability Calendar */}
