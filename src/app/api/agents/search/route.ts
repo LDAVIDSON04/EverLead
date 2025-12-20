@@ -131,36 +131,54 @@ export async function GET(req: NextRequest) {
 
     if (location) {
       const locationLower = location.toLowerCase().trim();
-      // Handle "City, Province" format - extract city name (e.g., "Penticton, BC" -> "Penticton")
+      // Handle "City, Province" format - extract city name (e.g., "Toronto, ON" -> "Toronto", "Penticton, BC" -> "Penticton")
       const locationParts = locationLower.split(',').map(s => s.trim());
       const searchCity = locationParts[0]; // Just the city name, no province
       
       filtered = filtered.filter((agent) => {
+        // Normalize function to extract city name from "City, Province" format
+        const normalizeCity = (cityStr: string): string => {
+          return cityStr.toLowerCase().trim().split(',')[0].trim();
+        };
+        
         // Check if the agent has this city in their availability.locations array
+        // This works for ANY city: Toronto, Penticton, Kelowna, Edmonton, etc.
         const hasLocationInAvailability = agent.availabilityLocations.some((loc: string) => {
-          const normalizedLoc = loc.toLowerCase().trim();
-          return normalizedLoc === searchCity || 
-                 normalizedLoc.includes(searchCity) ||
-                 searchCity.includes(normalizedLoc);
+          const normalizedLoc = normalizeCity(loc);
+          const normalizedSearch = normalizeCity(searchCity);
+          // Exact match or the location contains the search city (e.g., "North Toronto" contains "Toronto")
+          return normalizedLoc === normalizedSearch || 
+                 normalizedLoc.includes(normalizedSearch) ||
+                 normalizedSearch.includes(normalizedLoc);
         });
         
         // Also check availabilityByLocation keys (case-insensitive)
+        // This checks the keys in the availabilityByLocation object (e.g., { "Toronto": {...}, "Penticton": {...} })
         const hasLocationInByLocation = Object.keys(agent.availabilityByLocation).some((loc: string) => {
-          const normalizedLoc = loc.toLowerCase().trim();
-          return normalizedLoc === searchCity || 
-                 normalizedLoc.includes(searchCity) ||
-                 searchCity.includes(normalizedLoc);
+          const normalizedLoc = normalizeCity(loc);
+          const normalizedSearch = normalizeCity(searchCity);
+          return normalizedLoc === normalizedSearch || 
+                 normalizedLoc.includes(normalizedSearch) ||
+                 normalizedSearch.includes(normalizedLoc);
         });
         
-        // Also check if agent's default city matches (fallback)
-        const agentCityMatch = agent.agent_city?.toLowerCase() === searchCity || 
-                              agent.agent_city?.toLowerCase().includes(searchCity) ||
-                              searchCity.includes(agent.agent_city?.toLowerCase() || '');
+        // Also check if agent's default city matches (fallback for agents who might not have explicit location in availability)
+        const agentCityNormalized = agent.agent_city ? normalizeCity(agent.agent_city) : '';
+        const normalizedSearch = normalizeCity(searchCity);
+        const agentCityMatch = agentCityNormalized === normalizedSearch || 
+                              agentCityNormalized.includes(normalizedSearch) ||
+                              normalizedSearch.includes(agentCityNormalized);
         
-        return hasLocationInAvailability || hasLocationInByLocation || agentCityMatch;
+        const matches = hasLocationInAvailability || hasLocationInByLocation || agentCityMatch;
+        
+        if (matches) {
+          console.log(`[AGENT SEARCH] Agent ${agent.id} matches location "${location}" (searchCity: "${searchCity}")`);
+        }
+        
+        return matches;
       });
       
-      console.log(`[AGENT SEARCH] After location filter "${location}": ${filtered.length} agents`);
+      console.log(`[AGENT SEARCH] After location filter "${location}" (searchCity: "${locationParts[0]}"): ${filtered.length} agents`);
     }
 
     if (service) {
