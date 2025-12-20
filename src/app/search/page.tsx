@@ -335,13 +335,17 @@ function SearchResults() {
       try {
         const { data, error } = await supabaseClient
           .from("profiles")
-          .select("full_name, profile_picture_url, job_title, funeral_home, agent_city, agent_province")
+          .select("full_name, profile_picture_url, job_title, funeral_home, agent_city, agent_province, metadata")
           .eq("id", agentId)
           .eq("role", "agent")
           .single();
         
         if (!error && data) {
-          setSelectedAgentInfo(data);
+          const metadata = data.metadata || {};
+          setSelectedAgentInfo({
+            ...data,
+            business_address: (metadata as any)?.business_address || null,
+          });
         }
       } catch (err) {
         console.error("Error loading agent info:", err);
@@ -460,13 +464,17 @@ function SearchResults() {
       try {
         const { data, error } = await supabaseClient
           .from("profiles")
-          .select("full_name, profile_picture_url, job_title, funeral_home, agent_city, agent_province")
+          .select("full_name, profile_picture_url, job_title, funeral_home, agent_city, agent_province, metadata")
           .eq("id", agentId)
           .eq("role", "agent")
           .single();
         
         if (!error && data) {
-          setSelectedAgentInfo(data);
+          const metadata = data.metadata || {};
+          setSelectedAgentInfo({
+            ...data,
+            business_address: (metadata as any)?.business_address || null,
+          });
         }
       } catch (err) {
         console.error("Error loading agent info:", err);
