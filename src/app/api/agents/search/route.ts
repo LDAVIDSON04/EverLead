@@ -20,6 +20,10 @@ type AgentSearchResult = {
   regions_served: string | null;
   specialty: string | null;
   business_address: string | null;
+  business_street: string | null;
+  business_city: string | null;
+  business_province: string | null;
+  business_zip: string | null;
   hasAvailability: boolean;
   availabilityLocations: string[];
   availabilityByLocation: Record<string, any>;
@@ -121,6 +125,10 @@ export async function GET(req: NextRequest) {
             regions_served: (metadata as any)?.regions_served || null,
             specialty: (metadata as any)?.specialty || null,
             business_address: (metadata as any)?.business_address || null,
+            business_street: (metadata as any)?.business_street || null,
+            business_city: (metadata as any)?.business_city || null,
+            business_province: (metadata as any)?.business_province || null,
+            business_zip: (metadata as any)?.business_zip || null,
             hasAvailability: true,
             // Include availability data for location filtering
             availabilityLocations: availabilityLocations,

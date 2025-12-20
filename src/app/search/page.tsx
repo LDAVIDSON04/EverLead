@@ -33,6 +33,10 @@ type Appointment = {
     agent_city?: string | null;
     agent_province?: string | null;
     business_address?: string | null;
+    business_street?: string | null;
+    business_city?: string | null;
+    business_province?: string | null;
+    business_zip?: string | null;
   } | null;
 };
 
@@ -108,6 +112,10 @@ function SearchResults() {
     agent_city: string | null;
     agent_province: string | null;
     business_address: string | null;
+    business_street: string | null;
+    business_city: string | null;
+    business_province: string | null;
+    business_zip: string | null;
   } | null>(null);
   const [dayTimeSlots, setDayTimeSlots] = useState<{ time: string; startsAt: string; endsAt: string; available: boolean }[]>([]);
   const [allAvailabilityDays, setAllAvailabilityDays] = useState<AvailabilityDay[]>([]); // Store all days with slots
@@ -214,6 +222,10 @@ function SearchResults() {
           agent: {
             ...agent,
             business_address: agent.business_address, // Include business address
+            business_street: agent.business_street,
+            business_city: agent.business_city,
+            business_province: agent.business_province,
+            business_zip: agent.business_zip,
           }, // Store full agent data
         }));
 
@@ -345,6 +357,10 @@ function SearchResults() {
           setSelectedAgentInfo({
             ...data,
             business_address: (metadata as any)?.business_address || null,
+            business_street: (metadata as any)?.business_street || null,
+            business_city: (metadata as any)?.business_city || null,
+            business_province: (metadata as any)?.business_province || null,
+            business_zip: (metadata as any)?.business_zip || null,
           });
         }
       } catch (err) {
@@ -474,6 +490,10 @@ function SearchResults() {
           setSelectedAgentInfo({
             ...data,
             business_address: (metadata as any)?.business_address || null,
+            business_street: (metadata as any)?.business_street || null,
+            business_city: (metadata as any)?.business_city || null,
+            business_province: (metadata as any)?.business_province || null,
+            business_zip: (metadata as any)?.business_zip || null,
           });
         }
       } catch (err) {
@@ -1093,12 +1113,14 @@ function SearchResults() {
                         </span>
                       </div>
 
-                      {/* Company Address - Show if available */}
-                      {agent?.business_address && (
+                      {/* Company Address - Show if available (formatted like Zocdoc) */}
+                      {(agent?.business_street || agent?.business_address) && (
                         <div className="flex items-start gap-2 mb-4">
                           <MapPin className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
                           <span className="text-gray-500 text-xs">
-                            {agent.business_address}
+                            {agent.business_street && agent.business_city && agent.business_province && agent.business_zip
+                              ? `${agent.business_street}, ${agent.business_city}, ${agent.business_province} ${agent.business_zip}`
+                              : agent.business_address || `${agent.business_street || ''}${agent.business_city ? `, ${agent.business_city}` : ''}${agent.business_province ? `, ${agent.business_province}` : ''}${agent.business_zip ? ` ${agent.business_zip}` : ''}`.trim()}
                           </span>
                         </div>
                       )}
@@ -1222,12 +1244,14 @@ function SearchResults() {
                         </div>
                       </div>
                       
-                      {/* Company Address - Show if available */}
-                      {selectedAgentInfo?.business_address && (
+                      {/* Company Address - Show if available (formatted like Zocdoc) */}
+                      {(selectedAgentInfo?.business_street || selectedAgentInfo?.business_address) && (
                         <div className="flex items-start gap-2 mb-4">
                           <MapPin className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
                           <span className="text-gray-500 text-xs">
-                            {selectedAgentInfo.business_address}
+                            {selectedAgentInfo.business_street && selectedAgentInfo.business_city && selectedAgentInfo.business_province && selectedAgentInfo.business_zip
+                              ? `${selectedAgentInfo.business_street}, ${selectedAgentInfo.business_city}, ${selectedAgentInfo.business_province} ${selectedAgentInfo.business_zip}`
+                              : selectedAgentInfo.business_address || `${selectedAgentInfo.business_street || ''}${selectedAgentInfo.business_city ? `, ${selectedAgentInfo.business_city}` : ''}${selectedAgentInfo.business_province ? `, ${selectedAgentInfo.business_province}` : ''}${selectedAgentInfo.business_zip ? ` ${selectedAgentInfo.business_zip}` : ''}`.trim()}
                           </span>
                         </div>
                       )}

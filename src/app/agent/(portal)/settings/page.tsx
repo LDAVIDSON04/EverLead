@@ -137,6 +137,10 @@ export default function SettingsPage() {
     specialty: "",
     licenseNumber: "",
     businessAddress: "",
+    businessStreet: "",
+    businessCity: "",
+    businessProvince: "",
+    businessZip: "",
     profilePictureUrl: "",
   });
 
@@ -183,6 +187,10 @@ export default function SettingsPage() {
             specialty: metadata.specialty || "",
             licenseNumber: metadata.license_number || "",
             businessAddress: metadata.business_address || "",
+            businessStreet: metadata.business_street || "",
+            businessCity: metadata.business_city || "",
+            businessProvince: metadata.business_province || "",
+            businessZip: metadata.business_zip || "",
             profilePictureUrl: profile.profile_picture_url || "",
           });
 
@@ -357,6 +365,10 @@ function ProfileSection({
             specialty: metadata.specialty || profileData.specialty,
             licenseNumber: metadata.license_number || profileData.licenseNumber,
             businessAddress: metadata.business_address || profileData.businessAddress,
+            businessStreet: metadata.business_street || profileData.businessStreet,
+            businessCity: metadata.business_city || profileData.businessCity,
+            businessProvince: metadata.business_province || profileData.businessProvince,
+            businessZip: metadata.business_zip || profileData.businessZip,
             profilePictureUrl: updatedProfile.profile_picture_url || publicUrl,
           });
         }
@@ -656,6 +668,50 @@ function ProfileSection({
           className="mt-1"
           placeholder="Optional but useful"
         />
+        <p className="text-xs text-gray-500 mt-1">Or fill in the detailed address fields below</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div>
+          <Label htmlFor="businessStreet">Street Address</Label>
+          <Input
+            id="businessStreet"
+            value={profileData.businessStreet}
+            onChange={(e) => setProfileData({ ...profileData, businessStreet: e.target.value })}
+            className="mt-1"
+            placeholder="e.g., 123 Main Street"
+          />
+        </div>
+        <div>
+          <Label htmlFor="businessCity">City</Label>
+          <Input
+            id="businessCity"
+            value={profileData.businessCity}
+            onChange={(e) => setProfileData({ ...profileData, businessCity: e.target.value })}
+            className="mt-1"
+            placeholder="e.g., Kelowna"
+          />
+        </div>
+        <div>
+          <Label htmlFor="businessProvince">Province/State</Label>
+          <Input
+            id="businessProvince"
+            value={profileData.businessProvince}
+            onChange={(e) => setProfileData({ ...profileData, businessProvince: e.target.value })}
+            className="mt-1"
+            placeholder="e.g., BC"
+          />
+        </div>
+        <div>
+          <Label htmlFor="businessZip">Postal/Zip Code</Label>
+          <Input
+            id="businessZip"
+            value={profileData.businessZip}
+            onChange={(e) => setProfileData({ ...profileData, businessZip: e.target.value })}
+            className="mt-1"
+            placeholder="e.g., V1Y 1A1"
+          />
+        </div>
       </div>
 
       {saveMessage && (

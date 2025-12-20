@@ -71,6 +71,10 @@ export async function POST(request: NextRequest) {
       regionsServed,
       specialty,
       businessAddress,
+      businessStreet,
+      businessCity,
+      businessProvince,
+      businessZip,
       profilePictureUrl,
     } = body;
 
@@ -155,6 +159,10 @@ export async function POST(request: NextRequest) {
     if (regionsServed !== undefined) metadata.regions_served = regionsServed;
     if (specialty !== undefined) metadata.specialty = specialty;
     if (businessAddress !== undefined) metadata.business_address = businessAddress;
+    if (businessStreet !== undefined) metadata.business_street = businessStreet;
+    if (businessCity !== undefined) metadata.business_city = businessCity;
+    if (businessProvince !== undefined) metadata.business_province = businessProvince;
+    if (businessZip !== undefined) metadata.business_zip = businessZip;
 
     if (Object.keys(metadata).length > 0) {
       // Get existing metadata first
