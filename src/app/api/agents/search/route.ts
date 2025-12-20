@@ -20,6 +20,8 @@ type AgentSearchResult = {
   regions_served: string | null;
   specialty: string | null;
   hasAvailability: boolean;
+  availabilityLocations: string[];
+  availabilityByLocation: Record<string, any>;
 };
 
 export async function GET(req: NextRequest) {
@@ -30,6 +32,7 @@ export async function GET(req: NextRequest) {
     const query = searchParams.get("q") || "";
 
     // Get all agents (we'll filter by approval and availability)
+    // Include metadata to check availability.locations
     const { data: profiles, error } = await supabaseAdmin
       .from("profiles")
       .select("id, full_name, first_name, last_name, profile_picture_url, funeral_home, job_title, agent_city, agent_province, metadata, approval_status")
@@ -93,6 +96,10 @@ export async function GET(req: NextRequest) {
             metadata = {};
           }
           
+          const availability = (metadata as any)?.availability || {};
+          const availabilityLocations = availability.locations || [];
+          const availabilityByLocation = availability.availabilityByLocation || {};
+          
           return {
             id: profile.id,
             full_name: profile.full_name,
@@ -106,6 +113,9 @@ export async function GET(req: NextRequest) {
             regions_served: (metadata as any)?.regions_served || null,
             specialty: (metadata as any)?.specialty || null,
             hasAvailability: true,
+            // Include availability data for location filtering
+            availabilityLocations: availabilityLocations,
+            availabilityByLocation: availabilityByLocation,
           };
         } catch (err) {
           console.error(`[AGENT SEARCH] Error mapping agent ${profile.id}:`, err);
@@ -117,10 +127,41 @@ export async function GET(req: NextRequest) {
     console.log(`[AGENT SEARCH] ${agentsWithAvailability.length} agents with availability configured`);
 
     // Apply filters
-    // NOTE: We don't filter by location here - we show ALL agents regardless of location
-    // The location parameter is passed to the availability API to show availability for that specific city
-    // The UI will display the searched location on agent cards, even if they don't have availability there
     let filtered = agentsWithAvailability;
+
+    if (location) {
+      const locationLower = location.toLowerCase().trim();
+      // Handle "City, Province" format - extract city name (e.g., "Penticton, BC" -> "Penticton")
+      const locationParts = locationLower.split(',').map(s => s.trim());
+      const searchCity = locationParts[0]; // Just the city name, no province
+      
+      filtered = filtered.filter((agent) => {
+        // Check if the agent has this city in their availability.locations array
+        const hasLocationInAvailability = agent.availabilityLocations.some((loc: string) => {
+          const normalizedLoc = loc.toLowerCase().trim();
+          return normalizedLoc === searchCity || 
+                 normalizedLoc.includes(searchCity) ||
+                 searchCity.includes(normalizedLoc);
+        });
+        
+        // Also check availabilityByLocation keys (case-insensitive)
+        const hasLocationInByLocation = Object.keys(agent.availabilityByLocation).some((loc: string) => {
+          const normalizedLoc = loc.toLowerCase().trim();
+          return normalizedLoc === searchCity || 
+                 normalizedLoc.includes(searchCity) ||
+                 searchCity.includes(normalizedLoc);
+        });
+        
+        // Also check if agent's default city matches (fallback)
+        const agentCityMatch = agent.agent_city?.toLowerCase() === searchCity || 
+                              agent.agent_city?.toLowerCase().includes(searchCity) ||
+                              searchCity.includes(agent.agent_city?.toLowerCase() || '');
+        
+        return hasLocationInAvailability || hasLocationInByLocation || agentCityMatch;
+      });
+      
+      console.log(`[AGENT SEARCH] After location filter "${location}": ${filtered.length} agents`);
+    }
 
     if (service) {
       const serviceLower = service.toLowerCase();
