@@ -110,13 +110,19 @@ async function syncConnection(
       throw new Error(`Unsupported provider: ${connection.provider}`);
     }
   } catch (error: any) {
-    // If OAuth not implemented yet, skip this connection
-    if (error.message.includes("not implemented")) {
+    // If OAuth not configured, skip this connection gracefully
+    if (error.message.includes("OAuth not configured") || 
+        error.message.includes("not configured")) {
       console.warn(
-        `Skipping ${connection.provider} sync - OAuth not configured`
+        `Skipping ${connection.provider} sync - OAuth not configured: ${error.message}`
       );
       return;
     }
+    // For other errors, log but don't fail the entire sync job
+    console.error(
+      `Error fetching ${connection.provider} calendar events:`,
+      error.message
+    );
     throw error;
   }
 
