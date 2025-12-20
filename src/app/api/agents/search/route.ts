@@ -19,6 +19,7 @@ type AgentSearchResult = {
   agent_province: string | null;
   regions_served: string | null;
   specialty: string | null;
+  business_address: string | null;
   hasAvailability: boolean;
   availabilityLocations: string[];
   availabilityByLocation: Record<string, any>;
@@ -119,6 +120,7 @@ export async function GET(req: NextRequest) {
             agent_province: profile.agent_province,
             regions_served: (metadata as any)?.regions_served || null,
             specialty: (metadata as any)?.specialty || null,
+            business_address: (metadata as any)?.business_address || null,
             hasAvailability: true,
             // Include availability data for location filtering
             availabilityLocations: availabilityLocations,

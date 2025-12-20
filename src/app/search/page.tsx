@@ -32,6 +32,7 @@ type Appointment = {
     job_title: string | null;
     agent_city?: string | null;
     agent_province?: string | null;
+    business_address?: string | null;
   } | null;
 };
 
@@ -106,6 +107,7 @@ function SearchResults() {
     funeral_home: string | null;
     agent_city: string | null;
     agent_province: string | null;
+    business_address: string | null;
   } | null>(null);
   const [dayTimeSlots, setDayTimeSlots] = useState<{ time: string; startsAt: string; endsAt: string; available: boolean }[]>([]);
   const [allAvailabilityDays, setAllAvailabilityDays] = useState<AvailabilityDay[]>([]); // Store all days with slots
@@ -209,7 +211,10 @@ function SearchResults() {
             city: agent.agent_city,
             province: agent.agent_province,
           },
-          agent: agent, // Store full agent data
+          agent: {
+            ...agent,
+            business_address: agent.business_address, // Include business address
+          }, // Store full agent data
         }));
 
         setAppointments(mappedAppointments);
@@ -1072,13 +1077,23 @@ function SearchResults() {
                         <span className="text-gray-500">· {Math.floor(Math.random() * 200 + 50)} reviews</span>
                       </div>
 
-                      {/* Address - Always show searched location (the city the family is searching from) */}
-                      <div className="flex items-start gap-2 mb-4">
+                      {/* Location - Show searched location (the city the family is searching from) */}
+                      <div className="flex items-start gap-2 mb-2">
                         <MapPin className="w-4 h-4 text-gray-500 mt-1 flex-shrink-0" />
                         <span className="text-gray-600 text-sm">
                           {searchLocation || location || 'Location not specified'}
                         </span>
                       </div>
+
+                      {/* Company Address - Show if available */}
+                      {agent?.business_address && (
+                        <div className="flex items-start gap-2 mb-4">
+                          <MapPin className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                          <span className="text-gray-500 text-xs">
+                            {agent.business_address}
+                          </span>
+                        </div>
+                      )}
 
                       {/* Availability Calendar */}
                       <div className="mt-4">
@@ -1182,7 +1197,7 @@ function SearchResults() {
                       {selectedAgentInfo.funeral_home && (
                         <p className="text-gray-600 text-sm mb-2">{selectedAgentInfo.funeral_home}</p>
                       )}
-                      <div className="flex items-center gap-3 flex-wrap">
+                      <div className="flex items-center gap-3 flex-wrap mb-3">
                         {/* Always show searched location (the city the family is searching from) */}
                         {searchLocation && (
                           <div className="flex items-center gap-1">
@@ -1198,6 +1213,16 @@ function SearchResults() {
                           <span className="text-sm text-gray-600">({Math.floor(Math.random() * 200 + 50)} reviews)</span>
                         </div>
                       </div>
+                      
+                      {/* Company Address - Show if available */}
+                      {selectedAgentInfo?.business_address && (
+                        <div className="flex items-start gap-2 mb-4">
+                          <MapPin className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                          <span className="text-gray-500 text-xs">
+                            {selectedAgentInfo.business_address}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
