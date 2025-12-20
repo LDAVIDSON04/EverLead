@@ -117,32 +117,10 @@ export async function GET(req: NextRequest) {
     console.log(`[AGENT SEARCH] ${agentsWithAvailability.length} agents with availability configured`);
 
     // Apply filters
+    // NOTE: We don't filter by location here - we show ALL agents regardless of location
+    // The location parameter is passed to the availability API to show availability for that specific city
+    // The UI will display the searched location on agent cards, even if they don't have availability there
     let filtered = agentsWithAvailability;
-
-    if (location) {
-      const locationLower = location.toLowerCase().trim();
-      // Handle "City, Province" format - extract city and province separately
-      const locationParts = locationLower.split(',').map(s => s.trim());
-      const searchCity = locationParts[0];
-      const searchProvince = locationParts[1] || '';
-      
-      filtered = filtered.filter((agent) => {
-        const cityMatch = agent.agent_city?.toLowerCase().includes(searchCity) || 
-                         searchCity.includes(agent.agent_city?.toLowerCase() || '');
-        const provinceMatch = agent.agent_province?.toLowerCase().includes(searchProvince) ||
-                             (searchProvince && agent.agent_province?.toLowerCase() === searchProvince) ||
-                             (!searchProvince && agent.agent_province);
-        const regionsMatch = agent.regions_served?.toLowerCase().includes(locationLower);
-        
-        // Also check if location string contains city or province
-        const fullLocationMatch = locationLower.includes(agent.agent_city?.toLowerCase() || '') ||
-                                 locationLower.includes(agent.agent_province?.toLowerCase() || '');
-        
-        return cityMatch || provinceMatch || regionsMatch || fullLocationMatch;
-      });
-      
-      console.log(`[AGENT SEARCH] After location filter "${location}": ${filtered.length} agents`);
-    }
 
     if (service) {
       const serviceLower = service.toLowerCase();
