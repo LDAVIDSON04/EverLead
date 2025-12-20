@@ -15,24 +15,27 @@ export default function HomePage() {
   const [locationSuggestions, setLocationSuggestions] = useState<string[]>([]);
 
   // Function to navigate to search page with detected location
-  const navigateToSearchWithLocation = async () => {
-    try {
-      // Try to detect location
-      const res = await fetch("/api/geolocation");
-      const data = await res.json();
-      
-      // Build search URL with location if detected
-      const params = new URLSearchParams();
-      if (data.location) {
-        params.set("location", data.location);
-      }
-      
-      router.push(`/search?${params.toString()}`);
-    } catch (error) {
-      // If detection fails, just go to search page without location
-      console.error("Error detecting location:", error);
-      router.push("/search");
-    }
+  const navigateToSearchWithLocation = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    
+    // Navigate immediately - location detection will happen on the search page
+    // This ensures instant navigation without waiting for geolocation API
+    router.push("/search");
+    
+    // Optionally try to detect location in background and update URL
+    // But don't block navigation
+    fetch("/api/geolocation")
+      .then(res => res.json())
+      .then(data => {
+        if (data.location) {
+          // Update URL with location without reloading
+          router.push(`/search?location=${encodeURIComponent(data.location)}`);
+        }
+      })
+      .catch(err => {
+        // Silently fail - user can still search manually
+        console.error("Error detecting location:", err);
+      });
   };
 
   const cities = [
@@ -452,7 +455,10 @@ export default function HomePage() {
                 <p className="text-[#1A1A1A]/60 text-sm leading-relaxed mb-4">
                   Schedule consultations with trusted funeral specialists online
                 </p>
-                <button className="bg-[#0C6F3C] text-white px-5 py-2.5 rounded-xl hover:bg-[#0C6F3C]/90 transition-all shadow-sm text-sm">
+                <button 
+                  onClick={navigateToSearchWithLocation}
+                  className="bg-[#0C6F3C] text-white px-5 py-2.5 rounded-xl hover:bg-[#0C6F3C]/90 transition-all shadow-sm text-sm"
+                >
                   See availability
                 </button>
               </div>

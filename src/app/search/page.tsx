@@ -106,7 +106,10 @@ function SearchResults() {
   // Sync state with URL params when they change
   useEffect(() => {
     setSearchQuery(query);
-    setSearchLocation(location);
+    // Always sync location from URL params - this ensures it shows in the search bar
+    if (location) {
+      setSearchLocation(location);
+    }
     setSearchService(service);
   }, [query, location, service]);
 
@@ -124,8 +127,14 @@ function SearchResults() {
         .then(res => res.json())
         .then(data => {
           if (data.location) {
-            // Pre-fill the location field
-            setSearchLocation(data.location);
+            // Update URL with location so it shows in search bar and triggers search
+            const params = new URLSearchParams();
+            params.set("location", data.location);
+            if (searchQuery) params.set("q", searchQuery);
+            if (searchService) params.set("service", searchService);
+            
+            // Update URL to include location
+            router.replace(`/search?${params.toString()}`);
             console.log("📍 Auto-detected location:", data.location);
           }
         })
@@ -134,7 +143,7 @@ function SearchResults() {
           // Silently fail - user can still type location manually
         });
     }
-  }, [location, searchLocation, locationDetected]);
+  }, [location, searchLocation, locationDetected, searchQuery, searchService, router]);
 
   useEffect(() => {
     async function loadAgents() {
