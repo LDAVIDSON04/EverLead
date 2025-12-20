@@ -108,6 +108,7 @@ function SearchResults() {
     agent_province: string | null;
   } | null>(null);
   const [dayTimeSlots, setDayTimeSlots] = useState<{ time: string; startsAt: string; endsAt: string; available: boolean }[]>([]);
+  const [allAvailabilityDays, setAllAvailabilityDays] = useState<AvailabilityDay[]>([]); // Store all days with slots
   const [loadingTimeSlots, setLoadingTimeSlots] = useState(false);
 
   // Sync state with URL params when they change
@@ -345,7 +346,8 @@ function SearchResults() {
     const fetchAvailability = async () => {
       try {
         const startDate = dateStr;
-        const endDate = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+        // Fetch 14 days of availability (2 weeks)
+        const endDate = new Date(today.getTime() + 14 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
         
         const locationParam = searchLocation ? `&location=${encodeURIComponent(searchLocation)}` : '';
         const res = await fetch(
@@ -354,18 +356,18 @@ function SearchResults() {
         
         if (res.ok) {
           const availabilityData: AvailabilityDay[] = await res.json();
+          
+          // Store all availability days
+          setAllAvailabilityDays(availabilityData);
+          
           if (availabilityData.length > 0) {
-            const firstDay = availabilityData[0];
-            setSelectedDayForModal(firstDay.date);
+            // Find first day with available slots
+            const firstDayWithSlots = availabilityData.find(day => day.slots.length > 0) || availabilityData[0];
+            setSelectedDayForModal(firstDayWithSlots.date);
             
-            // Get agent's timezone from the agent info (if available) or use browser timezone
-            // For now, we'll convert UTC back to local time - the API sends UTC but we need to display in agent's timezone
-            // Since we don't have agent timezone here, we'll use the browser's timezone as a fallback
-            // The API should ideally include timezone info, but for now this will work better than showing UTC
-            const formattedSlots = firstDay.slots.map(slot => {
+            // Format slots for the first day
+            const formattedSlots = firstDayWithSlots.slots.map(slot => {
               const startDate = new Date(slot.startsAt);
-              // Convert UTC to local time for display (this will show in user's browser timezone)
-              // TODO: Ideally we'd use the agent's timezone, but this is better than showing UTC
               const hours = startDate.getHours();
               const minutes = startDate.getMinutes();
               const ampm = hours >= 12 ? 'PM' : 'AM';
@@ -386,10 +388,12 @@ function SearchResults() {
           }
         } else {
           setDayTimeSlots([]);
+          setAllAvailabilityDays([]);
         }
       } catch (err) {
         console.error("Error loading time slots:", err);
         setDayTimeSlots([]);
+        setAllAvailabilityDays([]);
       } finally {
         setLoadingTimeSlots(false);
       }
@@ -543,6 +547,31 @@ function SearchResults() {
     setSelectedAgentIdForModal(null);
     setSelectedAgentInfo(null);
     setDayTimeSlots([]);
+    setAllAvailabilityDays([]);
+  };
+  
+  // Handle date selection in modal - show time slots for selected date
+  const handleDateSelectInModal = (date: string) => {
+    const selectedDay = allAvailabilityDays.find(day => day.date === date);
+    if (selectedDay) {
+      setSelectedDayForModal(date);
+      const formattedSlots = selectedDay.slots.map(slot => {
+        const startDate = new Date(slot.startsAt);
+        const hours = startDate.getHours();
+        const minutes = startDate.getMinutes();
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        const displayHours = hours % 12 || 12;
+        const timeStr = `${displayHours}:${String(minutes).padStart(2, '0')} ${ampm}`;
+        
+        return {
+          time: timeStr,
+          startsAt: slot.startsAt,
+          endsAt: slot.endsAt,
+          available: true
+        };
+      });
+      setDayTimeSlots(formattedSlots);
+    }
   };
 
   const handleShowMoreWeeks = async (agentId: string) => {
@@ -1177,87 +1206,110 @@ function SearchResults() {
 
             {/* Content */}
             <div className="p-6">
-              {selectedDayForModal && (
-                <div className="mb-6">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Calendar className="w-5 h-5 text-green-600" />
-                    <h3 className="text-lg font-semibold text-black">Select a time</h3>
-                  </div>
-                  <p className="text-gray-700 text-base ml-7">
-                    {new Date(selectedDayForModal + "T00:00:00").toLocaleDateString("en-US", {
-                      weekday: "long",
-                      month: "long",
-                      day: "numeric",
-                    })}
-                  </p>
-                </div>
-              )}
+              <div className="flex items-center gap-2 mb-4">
+                <Calendar className="w-5 h-5 text-green-600" />
+                <h3 className="text-lg font-semibold text-black">Select a date and time</h3>
+              </div>
 
               {loadingTimeSlots ? (
                 <div className="text-center py-12">
                   <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mb-4"></div>
                   <p className="text-gray-600">Loading available times...</p>
                 </div>
-              ) : dayTimeSlots.length === 0 ? (
+              ) : allAvailabilityDays.length === 0 ? (
                 <div className="text-center py-12">
                   <Clock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600">No time slots available for this day.</p>
+                  <p className="text-gray-600">No time slots available.</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                  {dayTimeSlots.map((timeSlot, idx) => {
-                    const params = new URLSearchParams({
-                      startsAt: timeSlot.startsAt,
-                      endsAt: timeSlot.endsAt,
-                      date: selectedDayForModal || '',
-                    });
-                    // Include the searched city so booking uses the correct location
-                    if (searchLocation) {
-                      params.set("city", searchLocation);
-                    }
-                    const bookingUrl = `${window.location.origin}/book/step2?agentId=${selectedAgentIdForModal}&${params.toString()}`;
-                    const timeSlotId = `time-slot-${idx}-${timeSlot.startsAt}`;
-                    
-                    return (
-                      <button
-                        key={idx}
-                        type="button"
-                        id={timeSlotId}
-                        name={timeSlotId}
-                        onMouseDown={(e) => {
-                          // Use onMouseDown for immediate response
-                          e.preventDefault();
-                          e.stopPropagation();
-                          
-                          const params = new URLSearchParams({
-                            startsAt: timeSlot.startsAt,
-                            endsAt: timeSlot.endsAt,
-                            date: selectedDayForModal || '',
-                          });
-                          // Include the searched city so booking uses the correct location
-                          if (searchLocation) {
-                            params.set("city", searchLocation);
-                          }
-                          const url = `${window.location.origin}/book/step2?agentId=${selectedAgentIdForModal}&${params.toString()}`;
-                          
-                          console.log("Time slot clicked, FORCING navigation to:", url);
-                          
-                          // Close modal
-                          setShowTimeSlotModal(false);
-                          setSelectedDayForModal(null);
-                          setSelectedAgentIdForModal(null);
-                          setSelectedAgentInfo(null);
-                          setDayTimeSlots([]);
-                          
-                          // IMMEDIATE navigation - no delays, no try/catch blocking
-                          window.location.href = url;
-                        }}
-                        className="w-full px-4 py-3 rounded-lg text-sm font-medium transition-all bg-green-100 text-black hover:bg-green-600 hover:text-white border-2 border-green-300 hover:border-green-600 shadow-sm hover:shadow-md"
-                      >
-                        {timeSlot.time}
-                      </button>
-                    );
-                  })}
+                <div className="space-y-6">
+                  {/* Show all available days with their time slots */}
+                  {allAvailabilityDays
+                    .filter(day => day.slots.length > 0) // Only show days with available slots
+                    .map((day, dayIdx) => {
+                      const date = new Date(day.date + "T00:00:00");
+                      const dayName = date.toLocaleDateString("en-US", { weekday: "long" });
+                      const monthName = date.toLocaleDateString("en-US", { month: "long" });
+                      const dayNum = date.getDate();
+                      const displayDate = `${dayName}, ${monthName} ${dayNum}`;
+                      const isSelected = selectedDayForModal === day.date;
+                      
+                      // Format time slots for this day
+                      const formattedSlots = day.slots.map(slot => {
+                        const startDate = new Date(slot.startsAt);
+                        const hours = startDate.getHours();
+                        const minutes = startDate.getMinutes();
+                        const ampm = hours >= 12 ? 'PM' : 'AM';
+                        const displayHours = hours % 12 || 12;
+                        const timeStr = `${displayHours}:${String(minutes).padStart(2, '0')} ${ampm}`;
+                        
+                        return {
+                          time: timeStr,
+                          startsAt: slot.startsAt,
+                          endsAt: slot.endsAt,
+                          available: true
+                        };
+                      });
+                      
+                      return (
+                        <div key={dayIdx} className="border-b border-gray-200 pb-6 last:border-b-0">
+                          <h4 className="text-base font-semibold text-black mb-3">{displayDate}</h4>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                            {formattedSlots.map((timeSlot, idx) => {
+                              const params = new URLSearchParams({
+                                startsAt: timeSlot.startsAt,
+                                endsAt: timeSlot.endsAt,
+                                date: day.date,
+                              });
+                              if (searchLocation) {
+                                params.set("city", searchLocation);
+                              }
+                              const bookingUrl = `${window.location.origin}/book/step2?agentId=${selectedAgentIdForModal}&${params.toString()}`;
+                              const timeSlotId = `time-slot-${dayIdx}-${idx}-${timeSlot.startsAt}`;
+                              
+                              return (
+                                <button
+                                  key={idx}
+                                  type="button"
+                                  id={timeSlotId}
+                                  name={timeSlotId}
+                                  onMouseDown={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    
+                                    const params = new URLSearchParams({
+                                      startsAt: timeSlot.startsAt,
+                                      endsAt: timeSlot.endsAt,
+                                      date: day.date,
+                                    });
+                                    if (searchLocation) {
+                                      params.set("city", searchLocation);
+                                    }
+                                    const url = `${window.location.origin}/book/step2?agentId=${selectedAgentIdForModal}&${params.toString()}`;
+                                    
+                                    console.log("Time slot clicked, FORCING navigation to:", url);
+                                    
+                                    // Close modal
+                                    setShowTimeSlotModal(false);
+                                    setSelectedDayForModal(null);
+                                    setSelectedAgentIdForModal(null);
+                                    setSelectedAgentInfo(null);
+                                    setDayTimeSlots([]);
+                                    setAllAvailabilityDays([]);
+                                    
+                                    // IMMEDIATE navigation
+                                    window.location.href = url;
+                                  }}
+                                  className="w-full px-4 py-3 rounded-lg text-sm font-medium transition-all bg-green-100 text-black hover:bg-green-600 hover:text-white border-2 border-green-300 hover:border-green-600 shadow-sm hover:shadow-md"
+                                >
+                                  {timeSlot.time}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
                 </div>
               )}
             </div>
