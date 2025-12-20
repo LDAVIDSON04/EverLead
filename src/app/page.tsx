@@ -21,21 +21,25 @@ export default function HomePage() {
     // Always detect location from IP first, then navigate with it
     // This ensures the family's location is known before showing agents
     try {
-      console.log("🔍 Detecting location from IP for family...");
+      console.log("🔍 [HOME] Detecting family location from IP...");
       const res = await fetch("/api/geolocation");
       const data = await res.json();
+      console.log("📍 [HOME] Geolocation API response:", data);
+      
       if (data.location) {
-        console.log("✅ Location detected:", data.location);
+        console.log("✅ [HOME] Location detected from IP:", data.location);
         // Navigate with location in URL - this will show agents in that city
-        router.push(`/search?location=${encodeURIComponent(data.location)}`);
+        const searchUrl = `/search?location=${encodeURIComponent(data.location)}`;
+        console.log("🚀 [HOME] Navigating to:", searchUrl);
+        router.push(searchUrl);
       } else {
-        console.warn("⚠️ Could not detect location from IP");
+        console.warn("⚠️ [HOME] Could not detect location from IP, data:", data);
         // Navigate without location if detection fails
         router.push("/search");
       }
     } catch (err) {
       // Navigate without location if detection fails
-      console.error("❌ Error detecting location:", err);
+      console.error("❌ [HOME] Error detecting location:", err);
       router.push("/search");
     }
   };

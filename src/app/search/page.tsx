@@ -190,6 +190,7 @@ function SearchResults() {
         }
 
         const { agents } = await res.json();
+        console.log(`✅ [SEARCH] Found ${agents?.length || 0} agents for location "${searchLocation}"`);
 
         // Map agents to appointment-like format for compatibility with existing UI
         const mappedAppointments: Appointment[] = (agents || []).map((agent: any) => ({
