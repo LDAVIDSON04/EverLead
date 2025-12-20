@@ -18,24 +18,22 @@ export default function HomePage() {
   const navigateToSearchWithLocation = async (e: React.MouseEvent) => {
     e.preventDefault();
     
-    // Navigate immediately - location detection will happen on the search page
-    // This ensures instant navigation without waiting for geolocation API
-    router.push("/search");
-    
-    // Optionally try to detect location in background and update URL
-    // But don't block navigation
-    fetch("/api/geolocation")
-      .then(res => res.json())
-      .then(data => {
-        if (data.location) {
-          // Update URL with location without reloading
-          router.push(`/search?location=${encodeURIComponent(data.location)}`);
-        }
-      })
-      .catch(err => {
-        // Silently fail - user can still search manually
-        console.error("Error detecting location:", err);
-      });
+    // First, try to detect location, then navigate with it
+    try {
+      const res = await fetch("/api/geolocation");
+      const data = await res.json();
+      if (data.location) {
+        // Navigate with location in URL
+        router.push(`/search?location=${encodeURIComponent(data.location)}`);
+      } else {
+        // Navigate without location if detection fails
+        router.push("/search");
+      }
+    } catch (err) {
+      // Navigate without location if detection fails
+      console.error("Error detecting location:", err);
+      router.push("/search");
+    }
   };
 
   const cities = [
