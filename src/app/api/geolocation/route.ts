@@ -19,7 +19,6 @@ export async function GET(req: NextRequest) {
     const clientIp = forwarded?.split(",")[0]?.trim() || 
                      realIp || 
                      cfConnectingIp ||
-                     req.ip ||
                      "unknown";
 
     // If we can't get an IP, return null
