@@ -14,24 +14,28 @@ export default function HomePage() {
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
   const [locationSuggestions, setLocationSuggestions] = useState<string[]>([]);
 
-  // Function to navigate to search page with detected location
+  // Function to navigate to search page with detected location from IP
   const navigateToSearchWithLocation = async (e: React.MouseEvent) => {
     e.preventDefault();
     
-    // First, try to detect location, then navigate with it
+    // Always detect location from IP first, then navigate with it
+    // This ensures the family's location is known before showing agents
     try {
+      console.log("🔍 Detecting location from IP for family...");
       const res = await fetch("/api/geolocation");
       const data = await res.json();
       if (data.location) {
-        // Navigate with location in URL
+        console.log("✅ Location detected:", data.location);
+        // Navigate with location in URL - this will show agents in that city
         router.push(`/search?location=${encodeURIComponent(data.location)}`);
       } else {
+        console.warn("⚠️ Could not detect location from IP");
         // Navigate without location if detection fails
         router.push("/search");
       }
     } catch (err) {
       // Navigate without location if detection fails
-      console.error("Error detecting location:", err);
+      console.error("❌ Error detecting location:", err);
       router.push("/search");
     }
   };

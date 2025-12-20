@@ -114,8 +114,9 @@ function SearchResults() {
   useEffect(() => {
     setSearchQuery(query);
     setInputQuery(query);
-    // Always sync location from URL params - this ensures it shows in the search bar
+    // Always sync location from URL params - this ensures it shows in the search bar and on agent cards
     if (location) {
+      console.log("📍 Syncing location from URL:", location);
       setSearchLocation(location);
       setInputLocation(location);
       setLocationDetected(true); // Mark as detected so we don't auto-detect again
@@ -137,24 +138,27 @@ function SearchResults() {
     if (!location && !searchLocation && !locationDetected) {
       setLocationDetected(true);
       
-      // Call geolocation API
+      // Call geolocation API to detect family's location from IP
       fetch("/api/geolocation")
         .then(res => res.json())
         .then(data => {
           if (data.location) {
+            console.log("📍 Auto-detected location from IP:", data.location);
+            
             // Update both input and search state immediately so it shows in search bar and triggers search
             setSearchLocation(data.location);
             setInputLocation(data.location);
             
-            // Update URL with location so it triggers search
+            // Update URL with location so it triggers search and shows in search bar
             const params = new URLSearchParams();
             params.set("location", data.location);
             if (searchQuery) params.set("q", searchQuery);
             if (searchService) params.set("service", searchService);
             
-            // Update URL to include location
+            // Update URL to include location - this will trigger the URL param sync useEffect
             router.replace(`/search?${params.toString()}`);
-            console.log("📍 Auto-detected location:", data.location);
+          } else {
+            console.warn("📍 Could not detect location from IP");
           }
         })
         .catch(err => {
@@ -1038,7 +1042,7 @@ function SearchResults() {
                       <div className="flex items-start gap-2 mb-4">
                         <MapPin className="w-4 h-4 text-gray-500 mt-1 flex-shrink-0" />
                         <span className="text-gray-600 text-sm">
-                          {searchLocation || 'Location not specified'}
+                          {searchLocation || location || 'Location not specified'}
                         </span>
                       </div>
 
