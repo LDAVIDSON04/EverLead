@@ -110,6 +110,32 @@ function SearchResults() {
     setSearchService(service);
   }, [query, location, service]);
 
+  // Auto-detect location on page load if no location is provided
+  useEffect(() => {
+    // Only detect if:
+    // 1. No location in URL params
+    // 2. No location in state
+    // 3. We haven't tried to detect yet
+    if (!location && !searchLocation && !locationDetected) {
+      setLocationDetected(true);
+      
+      // Call geolocation API
+      fetch("/api/geolocation")
+        .then(res => res.json())
+        .then(data => {
+          if (data.location) {
+            // Pre-fill the location field
+            setSearchLocation(data.location);
+            console.log("📍 Auto-detected location:", data.location);
+          }
+        })
+        .catch(err => {
+          console.error("Error detecting location:", err);
+          // Silently fail - user can still type location manually
+        });
+    }
+  }, [location, searchLocation, locationDetected]);
+
   useEffect(() => {
     async function loadAgents() {
       setLoading(true);

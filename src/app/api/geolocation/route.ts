@@ -33,7 +33,8 @@ export async function GET(req: NextRequest) {
 
     // Use ip-api.com free service (no API key needed)
     // Returns: city, region (province), country
-    const response = await fetch(`http://ip-api.com/json/${clientIp}?fields=status,message,city,region,regionName,country,countryCode`);
+    // Note: Free tier allows HTTPS but has rate limit of 45 requests/minute
+    const response = await fetch(`https://ip-api.com/json/${clientIp}?fields=status,message,city,region,regionName,country,countryCode`);
     
     if (!response.ok) {
       console.error("IP geolocation service error:", response.status);
