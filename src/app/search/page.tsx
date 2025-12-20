@@ -30,6 +30,8 @@ type Appointment = {
     profile_picture_url: string | null;
     funeral_home: string | null;
     job_title: string | null;
+    agent_city?: string | null;
+    agent_province?: string | null;
   } | null;
 };
 
@@ -1015,9 +1017,9 @@ function SearchResults() {
                       <div className="flex items-start gap-2 mb-4">
                         <MapPin className="w-4 h-4 text-gray-500 mt-1 flex-shrink-0" />
                         <span className="text-gray-600 text-sm">
-                          {searchLocation || (agent?.agent_city && agent?.agent_province 
-                            ? `${agent.agent_city}, ${agent.agent_province}`
-                            : agent?.agent_city || location || 'Location not specified')}
+                          {searchLocation || ((agent as any)?.agent_city && (agent as any)?.agent_province 
+                            ? `${(agent as any).agent_city}, ${(agent as any).agent_province}`
+                            : (agent as any)?.agent_city || location || 'Location not specified')}
                         </span>
                       </div>
 
