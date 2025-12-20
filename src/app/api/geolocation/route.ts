@@ -21,12 +21,22 @@ export async function GET(req: NextRequest) {
                      cfConnectingIp ||
                      "unknown";
 
+    console.log("🌐 [GEOLOCATION] Detecting location for IP:", {
+      clientIp,
+      forwarded,
+      realIp,
+      cfConnectingIp,
+      allHeaders: Object.fromEntries(req.headers.entries())
+    });
+
     // If we can't get an IP, return null
     if (clientIp === "unknown" || !clientIp) {
+      console.warn("⚠️ [GEOLOCATION] Could not determine client IP");
       return NextResponse.json({ 
         city: null, 
         province: null,
-        country: null 
+        country: null,
+        location: null
       });
     }
 
@@ -86,6 +96,15 @@ export async function GET(req: NextRequest) {
     } else if (province) {
       locationString = province;
     }
+
+    console.log("✅ [GEOLOCATION] Location detected:", {
+      clientIp,
+      city,
+      province,
+      country,
+      locationString,
+      rawData: data
+    });
 
     return NextResponse.json({
       city,

@@ -174,10 +174,14 @@ function SearchResults() {
       try {
         // Build query params for agent search
         const params = new URLSearchParams();
-        if (searchLocation) params.set("location", searchLocation);
+        if (searchLocation) {
+          params.set("location", searchLocation);
+          console.log("🔍 [SEARCH] Loading agents for location:", searchLocation);
+        }
         if (searchService) params.set("service", searchService);
         if (searchQuery) params.set("q", searchQuery);
 
+        console.log("🔍 [SEARCH] Fetching agents with params:", params.toString());
         const res = await fetch(`/api/agents/search?${params.toString()}`);
         
         if (!res.ok) {

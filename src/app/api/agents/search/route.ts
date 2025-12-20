@@ -30,6 +30,13 @@ export async function GET(req: NextRequest) {
     const location = searchParams.get("location") || "";
     const service = searchParams.get("service") || "";
     const query = searchParams.get("q") || "";
+    
+    console.log("🔍 [AGENT SEARCH API] Request received:", {
+      location,
+      service,
+      query,
+      allParams: Object.fromEntries(searchParams.entries())
+    });
 
     // Get all agents (we'll filter by approval and availability)
     // Include metadata to check availability.locations
