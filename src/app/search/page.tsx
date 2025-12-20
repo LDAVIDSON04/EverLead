@@ -109,6 +109,7 @@ function SearchResults() {
     // Always sync location from URL params - this ensures it shows in the search bar
     if (location) {
       setSearchLocation(location);
+      setLocationDetected(true); // Mark as detected so we don't auto-detect again
     }
     setSearchService(service);
   }, [query, location, service]);
@@ -1119,11 +1120,12 @@ function SearchResults() {
                         <p className="text-gray-600 text-sm mb-2">{selectedAgentInfo.funeral_home}</p>
                       )}
                       <div className="flex items-center gap-3 flex-wrap">
-                        {(selectedAgentInfo.agent_city || selectedAgentInfo.agent_province) && (
+                        {/* Show searched location if available, otherwise show agent's default city */}
+                        {(searchLocation || selectedAgentInfo.agent_city || selectedAgentInfo.agent_province) && (
                           <div className="flex items-center gap-1">
                             <MapPin className="w-4 h-4 text-gray-500" />
                             <span className="text-gray-600 text-sm">
-                              {[selectedAgentInfo.agent_city, selectedAgentInfo.agent_province].filter(Boolean).join(", ")}
+                              {searchLocation || [selectedAgentInfo.agent_city, selectedAgentInfo.agent_province].filter(Boolean).join(", ")}
                             </span>
                           </div>
                         )}
