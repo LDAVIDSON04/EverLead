@@ -245,16 +245,17 @@ function SearchResults() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    // Update URL with new search params and reload
+    // Update actual search values from input values (this triggers the useEffect to reload agents)
+    setSearchQuery(inputQuery);
+    setSearchLocation(inputLocation);
+    setSearchService(inputService);
+    
+    // Update URL with new search params
     const params = new URLSearchParams();
-    if (searchQuery) params.set("q", searchQuery);
-    if (searchLocation) params.set("location", searchLocation);
-    if (searchService) params.set("service", searchService);
-    window.history.pushState({}, "", `/search?${params.toString()}`);
-    // Trigger reload by updating state
-    setSearchQuery(searchQuery);
-    setSearchLocation(searchLocation);
-    setSearchService(searchService);
+    if (inputQuery) params.set("q", inputQuery);
+    if (inputLocation) params.set("location", inputLocation);
+    if (inputService) params.set("service", inputService);
+    router.push(`/search?${params.toString()}`);
   };
 
   // Generate availability slots for the calendar grid
