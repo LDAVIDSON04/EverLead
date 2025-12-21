@@ -1120,7 +1120,7 @@ function SearchResults() {
 
                       {/* Rating */}
                       <div className="flex items-center gap-1 mb-3">
-                        <Star className="w-4 h-4 fill-green-800 text-green-800" />
+                        <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                         <span className="text-gray-900">4.9</span>
                         <span className="text-gray-500">· {Math.floor(Math.random() * 200 + 50)} reviews</span>
                       </div>
@@ -1227,26 +1227,19 @@ function SearchResults() {
                       {selectedAgentInfo.funeral_home && (
                         <p className="text-gray-600 text-sm mb-2">{selectedAgentInfo.funeral_home}</p>
                       )}
-                      <div className="flex items-center gap-3 flex-wrap mb-3">
-                        {/* Always show searched location (the city the family is searching from) */}
-                        {searchLocation && (
-                          <div className="flex items-center gap-1">
-                            <MapPin className="w-4 h-4 text-gray-500" />
-                            <span className="text-gray-600 text-sm">
-                              {searchLocation}
-                            </span>
-                          </div>
-                        )}
-                        <div className="flex items-center gap-1">
-                          <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                          <span className="text-sm font-semibold text-gray-900">4.9</span>
-                          <span className="text-sm text-gray-600">({Math.floor(Math.random() * 200 + 50)} reviews)</span>
+                      {/* Location - Show searched location (the city the family is searching from) */}
+                      {searchLocation && (
+                        <div className="flex items-center gap-1 mb-2">
+                          <MapPin className="w-4 h-4 text-gray-500" />
+                          <span className="text-gray-600 text-sm">
+                            {searchLocation}
+                          </span>
                         </div>
-                      </div>
+                      )}
                       
                       {/* Company Address - Show if available (formatted like Zocdoc) */}
                       {(selectedAgentInfo?.business_street || selectedAgentInfo?.business_address) && (
-                        <div className="flex items-start gap-2 mb-4">
+                        <div className="flex items-start gap-2 mb-3">
                           <MapPin className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
                           <span className="text-gray-500 text-xs">
                             {selectedAgentInfo.business_street && selectedAgentInfo.business_city && selectedAgentInfo.business_province && selectedAgentInfo.business_zip
@@ -1255,6 +1248,13 @@ function SearchResults() {
                           </span>
                         </div>
                       )}
+
+                      {/* Rating */}
+                      <div className="flex items-center gap-1 mb-3">
+                        <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                        <span className="text-sm font-semibold text-gray-900">4.9</span>
+                        <span className="text-sm text-gray-600">({Math.floor(Math.random() * 200 + 50)} reviews)</span>
+                      </div>
                     </div>
                   </div>
                 </div>
