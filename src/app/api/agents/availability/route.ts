@@ -215,7 +215,7 @@ export async function GET(req: NextRequest) {
         // Also compare timestamps with tolerance (1 minute) as backup
         const aptStartTime = aptConfirmedDate.getTime();
         const tolerance = 60 * 1000; // 1 minute in milliseconds
-        const timeDifference = Math.abs(slotStartTime - slotStartTime);
+        const timeDifference = Math.abs(slotStartTime - aptStartTime);
         const timeMatch = timeDifference <= tolerance;
         
         // Only log if there's a potential match (to reduce log noise)
@@ -358,13 +358,18 @@ export async function GET(req: NextRequest) {
         currentTimeMinutes += appointmentLength;
       }
 
+      // CRITICAL: Always add the day, even if all slots are blocked
+      // This ensures the day still appears in the calendar, just with fewer available slots
       days.push({ date: dateStr, slots });
       
       // Log summary for this day
       if (slots.length > 0) {
         console.log(`✅ Generated ${slots.length} slots for ${dayName} (${dateStr})`);
+      } else if (daySchedule && daySchedule.enabled) {
+        // Only warn if the day was enabled but has no slots (might indicate all slots are booked)
+        console.log(`⚠️ Day enabled but no available slots for ${dayName} (${dateStr}) - all slots may be booked or schedule issue`);
       } else {
-        console.log(`⚠️ No slots generated for ${dayName} (${dateStr}) - enabled: ${daySchedule?.enabled}, schedule:`, daySchedule);
+        console.log(`ℹ️ No slots for ${dayName} (${dateStr}) - day not enabled`);
       }
     }
 
