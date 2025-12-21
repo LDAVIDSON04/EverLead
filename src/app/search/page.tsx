@@ -469,6 +469,9 @@ function SearchResults() {
     const selectedDate = new Date(currentYear, monthIndex, dayNum);
     const dateStr = selectedDate.toISOString().split("T")[0];
     
+    // Store today for use in fetchAvailability
+    const todayForFetch = today;
+    
     // Set modal state
     setSelectedDayForModal(dateStr);
     setSelectedAgentIdForModal(agentId);
@@ -504,7 +507,8 @@ function SearchResults() {
     const fetchAvailability = async () => {
       try {
         const startDate = dateStr;
-        const endDate = dateStr;
+        // Fetch 14 days of availability (2 weeks) to show multiple days in modal
+        const endDate = new Date(todayForFetch.getTime() + 14 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
         
         const locationParam = searchLocation ? `&location=${encodeURIComponent(searchLocation)}` : '';
         const res = await fetch(
@@ -513,9 +517,14 @@ function SearchResults() {
         
         if (res.ok) {
           const availabilityData: AvailabilityDay[] = await res.json();
+          
+          // Store all availability days (this is what the modal checks)
+          setAllAvailabilityDays(availabilityData);
+          
+          // Find the selected day's data
           const dayData = availabilityData.find(d => d.date === dateStr);
           
-          if (dayData) {
+          if (dayData && dayData.slots.length > 0) {
             // Format time slots with readable time and available status
             // Convert UTC times back to local time for display (will show in user's browser timezone)
             const formattedSlots = dayData.slots.map(slot => {
@@ -540,10 +549,13 @@ function SearchResults() {
             setDayTimeSlots([]);
           }
         } else {
+          console.error("Failed to fetch availability:", res.status, res.statusText);
+          setAllAvailabilityDays([]);
           setDayTimeSlots([]);
         }
       } catch (err) {
         console.error("Error loading time slots:", err);
+        setAllAvailabilityDays([]);
         setDayTimeSlots([]);
       } finally {
         setLoadingTimeSlots(false);
