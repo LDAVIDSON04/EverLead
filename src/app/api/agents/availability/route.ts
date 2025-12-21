@@ -195,72 +195,57 @@ export async function GET(req: NextRequest) {
       const slotStartISO = slotStart.toISOString();
       const slotStartTime = slotStart.getTime();
       
-      // Check if this slot conflicts with any appointment on this date
+      // Check if this slot conflicts with any appointment
+      // CRITICAL: Only check appointments that have confirmed_at and match the exact slot time
+      // We do NOT check by date first - we check by exact time match only
       return appointments.some((apt: any) => {
-        // First check if the date matches
-        if (apt.requested_date !== dateStr) {
+        // ONLY block if we have confirmed_at - this is the exact booking time
+        if (!apt.confirmed_at) {
+          // No confirmed_at means we can't be precise - don't block
           return false;
         }
         
-        console.log("🔍 Checking appointment for conflict:", {
-          appointmentId: apt.id,
-          appointmentDate: apt.requested_date,
-          slotDate: dateStr,
-          hasConfirmedAt: !!apt.confirmed_at,
-          confirmedAt: apt.confirmed_at,
-        });
+        // Convert confirmed_at to Date and get ISO string
+        const aptConfirmedDate = new Date(apt.confirmed_at);
+        const aptConfirmedISO = aptConfirmedDate.toISOString();
         
-        // ONLY block if we have confirmed_at - this is the exact booking time
-        if (apt.confirmed_at) {
-          // Convert confirmed_at to Date and get ISO string
-          const aptConfirmedDate = new Date(apt.confirmed_at);
-          const aptConfirmedISO = aptConfirmedDate.toISOString();
-          
-          // Compare ISO strings directly (most reliable - exact match)
-          const isoMatch = slotStartISO === aptConfirmedISO;
-          
-          // Also compare timestamps with tolerance (1 minute) as backup
-          const aptStartTime = aptConfirmedDate.getTime();
-          const tolerance = 60 * 1000; // 1 minute in milliseconds
-          const timeDifference = Math.abs(slotStartTime - aptStartTime);
-          const timeMatch = timeDifference <= tolerance;
-          
-          // Log comparison for debugging
-          if (isoMatch || timeMatch) {
-            console.log("✅✅✅ CONFLICT FOUND - BLOCKING SLOT:", {
-              dateStr,
-              slotStartISO,
-              slotStartTime,
-              aptConfirmedAt: apt.confirmed_at,
-              aptConfirmedISO,
-              aptStartTime,
-              isoMatch,
-              timeDifferenceMs: timeDifference,
-              timeMatch,
-              appointmentId: apt.id,
-              appointmentStatus: apt.status,
-            });
-            return true; // This exact slot is booked - block it immediately
-          } else {
-            // Log when we have confirmed_at but it doesn't match (for debugging)
-            console.log("⚠️ Appointment has confirmed_at but times don't match:", {
-              dateStr,
+        // Compare ISO strings directly (most reliable - exact match)
+        const isoMatch = slotStartISO === aptConfirmedISO;
+        
+        // Also compare timestamps with tolerance (1 minute) as backup
+        const aptStartTime = aptConfirmedDate.getTime();
+        const tolerance = 60 * 1000; // 1 minute in milliseconds
+        const timeDifference = Math.abs(slotStartTime - slotStartTime);
+        const timeMatch = timeDifference <= tolerance;
+        
+        // Only log if there's a potential match (to reduce log noise)
+        if (isoMatch || timeMatch) {
+          // Verify the date also matches (safety check)
+          const aptDateStr = aptConfirmedDate.toISOString().split("T")[0];
+          if (aptDateStr !== dateStr) {
+            // Date doesn't match - this shouldn't happen but log it
+            console.log("⚠️ Time matches but date doesn't:", {
+              slotDate: dateStr,
+              aptDate: aptDateStr,
               slotStartISO,
               aptConfirmedISO,
-              timeDifferenceMs: timeDifference,
-              appointmentId: apt.id,
             });
+            return false; // Don't block if dates don't match
           }
-        } else {
-          // Log when appointment doesn't have confirmed_at
-          console.log("⚠️ Appointment missing confirmed_at (won't block):", {
+          
+          console.log("✅✅✅ CONFLICT FOUND - BLOCKING EXACT SLOT:", {
             dateStr,
+            slotStartISO,
+            aptConfirmedISO,
+            isoMatch,
+            timeDifferenceMs: timeDifference,
             appointmentId: apt.id,
-            status: apt.status,
-            createdAt: apt.created_at,
+            appointmentStatus: apt.status,
           });
+          return true; // This exact slot is booked - block ONLY this slot
         }
-        // If no confirmed_at, don't block - we can't be precise
+        
+        // No match - this slot is available
         return false;
       });
     };
