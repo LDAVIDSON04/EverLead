@@ -518,11 +518,28 @@ function SearchResults() {
         if (res.ok) {
           const availabilityData: AvailabilityDay[] = await res.json();
           
+          console.log("📅 [MODAL] Fetched availability data:", {
+            totalDays: availabilityData.length,
+            daysWithSlots: availabilityData.filter(d => d.slots.length > 0).length,
+            selectedDate: dateStr,
+            allDays: availabilityData.map(d => ({
+              date: d.date,
+              slotCount: d.slots.length
+            }))
+          });
+          
           // Store all availability days (this is what the modal checks)
           setAllAvailabilityDays(availabilityData);
           
           // Find the selected day's data
           const dayData = availabilityData.find(d => d.date === dateStr);
+          
+          console.log("📅 [MODAL] Selected day data:", {
+            dateStr,
+            found: !!dayData,
+            slotCount: dayData?.slots.length || 0,
+            slots: dayData?.slots || []
+          });
           
           if (dayData && dayData.slots.length > 0) {
             // Format time slots with readable time and available status
@@ -1289,12 +1306,28 @@ function SearchResults() {
                 <div className="text-center py-12">
                   <Clock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-gray-600">No time slots available.</p>
+                  <p className="text-xs text-gray-400 mt-2">Debug: allAvailabilityDays is empty</p>
+                </div>
+              ) : allAvailabilityDays.filter(day => day.slots.length > 0).length === 0 ? (
+                <div className="text-center py-12">
+                  <Clock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-600">No time slots available.</p>
+                  <p className="text-xs text-gray-400 mt-2">
+                    Debug: {allAvailabilityDays.length} days loaded, but none have slots
+                  </p>
                 </div>
               ) : (
                 <div className="space-y-6">
                   {/* Show all available days with their time slots */}
-                  {allAvailabilityDays
-                    .filter(day => day.slots.length > 0) // Only show days with available slots
+                  {(() => {
+                    const daysWithSlots = allAvailabilityDays.filter(day => day.slots.length > 0);
+                    console.log("📅 [MODAL] Rendering days with slots:", {
+                      totalDays: allAvailabilityDays.length,
+                      daysWithSlots: daysWithSlots.length,
+                      days: daysWithSlots.map(d => ({ date: d.date, slotCount: d.slots.length }))
+                    });
+                    return daysWithSlots;
+                  })()
                     .map((day, dayIdx) => {
                       const date = new Date(day.date + "T00:00:00");
                       const dayName = date.toLocaleDateString("en-US", { weekday: "long" });
