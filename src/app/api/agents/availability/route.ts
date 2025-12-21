@@ -374,7 +374,19 @@ export async function GET(req: NextRequest) {
       }
 
       days.push({ date: dateStr, slots });
+      
+      // Log summary for this day
+      if (slots.length > 0) {
+        console.log(`✅ Generated ${slots.length} slots for ${dayName} (${dateStr})`);
+      } else {
+        console.log(`⚠️ No slots generated for ${dayName} (${dateStr}) - enabled: ${daySchedule?.enabled}, schedule:`, daySchedule);
+      }
     }
+
+    // Log final summary
+    const totalSlots = days.reduce((sum, day) => sum + day.slots.length, 0);
+    const daysWithSlots = days.filter(day => day.slots.length > 0).length;
+    console.log(`📊 Availability API Summary: ${days.length} days processed, ${daysWithSlots} days with slots, ${totalSlots} total slots`);
 
     return NextResponse.json(days);
   } catch (error: any) {

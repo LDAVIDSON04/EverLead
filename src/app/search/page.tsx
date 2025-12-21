@@ -524,11 +524,13 @@ function SearchResults() {
             selectedDate: dateStr,
             allDays: availabilityData.map(d => ({
               date: d.date,
-              slotCount: d.slots.length
+              slotCount: d.slots.length,
+              firstSlot: d.slots[0]?.startsAt || null
             }))
           });
           
-          // Store all availability days (this is what the modal checks)
+          // CRITICAL: Always store all availability days, even if empty
+          // This is what the modal checks to determine if slots are available
           setAllAvailabilityDays(availabilityData);
           
           // Find the selected day's data
@@ -538,9 +540,10 @@ function SearchResults() {
             dateStr,
             found: !!dayData,
             slotCount: dayData?.slots.length || 0,
-            slots: dayData?.slots || []
+            slots: dayData?.slots.slice(0, 3).map(s => s.startsAt) || [] // Show first 3 for debugging
           });
           
+          // Set dayTimeSlots for backward compatibility (though modal uses allAvailabilityDays)
           if (dayData && dayData.slots.length > 0) {
             // Format time slots with readable time and available status
             // Convert UTC times back to local time for display (will show in user's browser timezone)
@@ -563,10 +566,20 @@ function SearchResults() {
             
             setDayTimeSlots(formattedSlots);
           } else {
+            console.warn("📅 [MODAL] Selected day has no slots:", {
+              dateStr,
+              dayData: dayData ? "exists but empty slots" : "not found",
+              allDays: availabilityData.map(d => ({ date: d.date, slots: d.slots.length }))
+            });
             setDayTimeSlots([]);
           }
         } else {
-          console.error("Failed to fetch availability:", res.status, res.statusText);
+          const errorText = await res.text();
+          console.error("❌ [MODAL] Failed to fetch availability:", {
+            status: res.status,
+            statusText: res.statusText,
+            error: errorText
+          });
           setAllAvailabilityDays([]);
           setDayTimeSlots([]);
         }
