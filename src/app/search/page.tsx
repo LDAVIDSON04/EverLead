@@ -1119,7 +1119,14 @@ function SearchResults() {
 
               return (
                 <div key={appointment.id} className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
-                  <div className="flex gap-6">
+                  <div className="flex gap-6" onClick={(e) => {
+                    // Only prevent card click if clicking on a link
+                    const target = e.target as HTMLElement;
+                    if (target.closest('a')) {
+                      // Let the link handle its own navigation
+                      return;
+                    }
+                  }}>
                     {/* Agent Avatar */}
                     <div className="flex-shrink-0">
                       {agent?.profile_picture_url ? (
@@ -1141,11 +1148,13 @@ function SearchResults() {
                           <a
                             href={`/agent/${agent.id}`}
                             onClick={(e) => {
-                              e.stopPropagation();
+                              // CRITICAL: Don't stop propagation or prevent default
+                              // Let the anchor tag work naturally
                               const targetUrl = `/agent/${agent.id}`;
                               console.log("🔗 [NAV] Agent name clicked - navigating to:", targetUrl, "Agent ID:", agent.id);
-                              // Don't prevent default - let the browser handle navigation naturally
-                              // This ensures the URL changes and page loads
+                              console.log("🔗 [NAV] Event target:", e.target);
+                              console.log("🔗 [NAV] Current URL:", window.location.href);
+                              // The browser will handle navigation automatically via href
                             }}
                             className="text-xl text-gray-900 hover:underline cursor-pointer text-left font-semibold transition-all inline-block"
                             title={`View ${agentName}'s profile`}
