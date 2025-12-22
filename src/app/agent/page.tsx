@@ -667,7 +667,7 @@ export default function AgentLandingPage() {
 
                   {mode === "login" && (
                     <div className="flex items-center pt-2 relative z-20">
-                      <div className="relative">
+                      <div className="relative w-5 h-5">
                         <input
                           type="checkbox"
                           id="remember"
@@ -676,24 +676,25 @@ export default function AgentLandingPage() {
                             e.stopPropagation();
                             setRememberMe(e.target.checked);
                           }}
-                          onClick={(e) => e.stopPropagation()}
-                          className="w-5 h-5 bg-white border-2 border-zinc-400 rounded cursor-pointer appearance-none relative z-20 pointer-events-auto"
+                          className="absolute inset-0 w-5 h-5 opacity-0 cursor-pointer z-10"
                           style={{ pointerEvents: 'auto' }}
                         />
-                        {rememberMe && (
-                          <div className="absolute left-0 top-0 w-5 h-5 bg-emerald-700 border-2 border-emerald-700 rounded flex items-center justify-center pointer-events-none">
+                        <div 
+                          className={`absolute inset-0 w-5 h-5 border-2 rounded flex items-center justify-center transition-colors ${
+                            rememberMe 
+                              ? 'bg-emerald-700 border-emerald-700' 
+                              : 'bg-white border-zinc-400'
+                          }`}
+                          style={{ pointerEvents: 'none' }}
+                        >
+                          {rememberMe && (
                             <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />
-                          </div>
-                        )}
+                          )}
+                        </div>
                       </div>
                       <label 
                         htmlFor="remember" 
-                        className="ml-3 text-zinc-700 cursor-pointer relative z-20"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setRememberMe(!rememberMe);
-                        }}
+                        className="ml-3 text-zinc-700 cursor-pointer relative z-20 select-none"
                         style={{ pointerEvents: 'auto' }}
                       >
                         Remember me
