@@ -1172,12 +1172,18 @@ function SearchResults() {
                         <span className="text-gray-900">4.9</span>
                         <span className="text-gray-500">· {Math.floor(Math.random() * 200 + 50)} reviews</span>
                         {agent?.id && (
-                          <Link
+                          <a
                             href={`/agentportfolio/${agent.id}`}
+                            onClick={(e) => {
+                              // Force navigation - don't let anything stop it
+                              const url = `/agentportfolio/${agent.id}`;
+                              e.preventDefault();
+                              window.location.href = url;
+                            }}
                             className="ml-3 text-gray-900 hover:text-gray-700 underline decoration-black hover:decoration-gray-700 text-sm font-medium transition-colors cursor-pointer"
                           >
                             Learn more about {agentName}
-                          </Link>
+                          </a>
                         )}
                       </div>
 
