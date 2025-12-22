@@ -1148,13 +1148,12 @@ function SearchResults() {
                           <a
                             href={`/agentportfolio/${agent.id}`}
                             onClick={(e) => {
-                              e.preventDefault();
+                              // Don't prevent default - let anchor work naturally
                               e.stopPropagation();
                               const targetUrl = `/agentportfolio/${agent.id}`;
                               console.log("🔗 [NAV] Agent name clicked - navigating to:", targetUrl);
                               console.log("🔗 [NAV] Agent ID:", agent.id);
-                              // Force navigation
-                              window.location.href = targetUrl;
+                              // Let the browser handle navigation via href
                             }}
                             className="text-xl text-gray-900 hover:underline cursor-pointer text-left font-semibold transition-all inline-block"
                             title={`View ${agentName}'s profile`}
