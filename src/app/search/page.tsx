@@ -1137,26 +1137,28 @@ function SearchResults() {
 
                     <div className="flex-1">
                       <div className="mb-2">
-                        {agent?.id ? (
-                          <a
-                            href={`/agentportfolio/${agent.id}`}
-                            onClick={(e) => {
-                              console.log("LINK CLICKED:", agentName, agent.id);
-                              // Don't prevent default - let the browser handle it naturally
-                            }}
-                            className="text-xl text-gray-900 hover:underline cursor-pointer text-left font-semibold transition-all inline-block relative z-10"
-                            title={`View ${agentName}'s profile`}
-                          >
-                            {agentName}
-                          </a>
-                        ) : (
-                          <h3 className="text-xl text-gray-900">{agentName}</h3>
-                        )}
+                        <h3 className="text-xl text-gray-900 font-semibold">{agentName}</h3>
                         <p className="text-gray-600 mt-1">
                           {agent?.job_title || appointment.service_type || 'Pre-need Planning Specialist'}
                         </p>
                         {agent?.funeral_home && (
                           <p className="text-gray-500 text-sm mt-1">{agent.funeral_home}</p>
+                        )}
+                        {agent?.id && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              console.log("LEARN MORE CLICKED:", agentName, agent.id);
+                              const url = `/agentportfolio/${agent.id}`;
+                              console.log("NAVIGATING TO:", url);
+                              window.location.href = url;
+                            }}
+                            className="mt-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-lg transition-colors"
+                          >
+                            Learn more about {agentName.split(' ')[0]}
+                          </button>
                         )}
                       </div>
 
@@ -1177,6 +1179,26 @@ function SearchResults() {
                               ? `${agent.business_street}, ${agent.business_city}, ${agent.business_province} ${agent.business_zip}`
                               : agent.business_address || `${agent.business_street || ''}${agent.business_city ? `, ${agent.business_city}` : ''}${agent.business_province ? `, ${agent.business_province}` : ''}${agent.business_zip ? ` ${agent.business_zip}` : ''}`.trim()}
                           </span>
+                        </div>
+                      )}
+
+                      {/* Learn More Button */}
+                      {agent?.id && (
+                        <div className="mb-3">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              console.log("LEARN MORE CLICKED:", agentName, agent.id);
+                              const url = `/agentportfolio/${agent.id}`;
+                              console.log("NAVIGATING TO:", url);
+                              window.location.href = url;
+                            }}
+                            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-lg transition-colors"
+                          >
+                            Learn more about {agentName}
+                          </button>
                         </div>
                       )}
 
