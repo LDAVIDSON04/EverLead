@@ -1138,27 +1138,20 @@ function SearchResults() {
                     <div className="flex-1">
                       <div className="mb-2">
                         {agent?.id ? (
-                          <button
-                            type="button"
+                          <a
+                            href={`/agent/${agent.id}`}
                             onClick={(e) => {
-                              e.preventDefault();
                               e.stopPropagation();
                               const targetUrl = `/agent/${agent.id}`;
                               console.log("🔗 [NAV] Agent name clicked - navigating to:", targetUrl, "Agent ID:", agent.id);
-                              // Force full page navigation - use replace to ensure it works
-                              try {
-                                window.location.replace(targetUrl);
-                              } catch (err) {
-                                console.error("Navigation error:", err);
-                                // Fallback
-                                window.location.href = targetUrl;
-                              }
+                              // Don't prevent default - let the browser handle navigation naturally
+                              // This ensures the URL changes and page loads
                             }}
-                            className="text-xl text-gray-900 hover:underline cursor-pointer text-left font-semibold transition-all inline-block bg-transparent border-none p-0 m-0"
+                            className="text-xl text-gray-900 hover:underline cursor-pointer text-left font-semibold transition-all inline-block"
                             title={`View ${agentName}'s profile`}
                           >
                             {agentName}
-                          </button>
+                          </a>
                         ) : (
                           <h3 className="text-xl text-gray-900">{agentName}</h3>
                         )}

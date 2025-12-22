@@ -23,7 +23,10 @@ export default function AgentProfilePage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    console.log("🎯 [PORTFOLIO] Page mounted, agentId:", agentId);
+    console.log("🎯 [PORTFOLIO] Page component mounted");
+    console.log("🎯 [PORTFOLIO] agentId from params:", agentId);
+    console.log("🎯 [PORTFOLIO] All params:", params);
+    
     if (agentId) {
       loadAgentProfile(agentId);
     } else {
@@ -31,7 +34,7 @@ export default function AgentProfilePage() {
       setError("No agent ID provided");
       setLoading(false);
     }
-  }, [agentId]);
+  }, [agentId, params]);
 
   const loadAgentProfile = async (agentId: string) => {
     setLoading(true);
@@ -51,7 +54,7 @@ export default function AgentProfilePage() {
         setError(`Failed to load: ${fetchError.message}`);
         setAgentData(null);
       } else if (data) {
-        console.log("✅ [PORTFOLIO] Agent loaded:", data);
+        console.log("✅ [PORTFOLIO] Agent loaded successfully:", data);
         const metadata = data.metadata || {};
         const specialty = (metadata as any)?.specialty || null;
         const licenseNumber = (metadata as any)?.license_number || null;
@@ -73,7 +76,7 @@ export default function AgentProfilePage() {
           fullBio: `${data.full_name || 'This agent'}'s journey into end-of-life care is driven by a commitment to helping families during life's most challenging moments.\n\n${specialty || 'Their expertise'} allows them to address both the emotional and practical aspects of end-of-life planning.\n\nThey are known for their patient, non-judgmental approach and their ability to facilitate difficult family conversations.`,
         });
       } else {
-        console.warn("⚠️ [PORTFOLIO] Agent not found");
+        console.warn("⚠️ [PORTFOLIO] Agent not found for ID:", agentId);
         setError("Agent not found");
         setAgentData(null);
       }
@@ -92,6 +95,7 @@ export default function AgentProfilePage() {
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#1a4d2e] mb-4"></div>
           <p className="text-gray-600">Loading profile...</p>
+          <p className="text-sm text-gray-400 mt-2">Agent ID: {agentId || 'N/A'}</p>
         </div>
       </div>
     );
@@ -102,6 +106,7 @@ export default function AgentProfilePage() {
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center max-w-md px-4">
           <p className="text-gray-600 mb-4 text-lg">{error || "Agent not found"}</p>
+          <p className="text-sm text-gray-400 mb-4">Agent ID: {agentId || 'N/A'}</p>
           <Link
             href="/search"
             className="inline-block bg-[#1a4d2e] hover:bg-[#0f2e1c] text-white font-semibold px-6 py-3 rounded-lg transition-colors"
