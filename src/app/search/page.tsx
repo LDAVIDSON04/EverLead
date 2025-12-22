@@ -1144,32 +1144,16 @@ function SearchResults() {
                     <div className="flex-1">
                       <div className="mb-2">
                         {agent?.id ? (
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              console.log("CLICKED AGENT NAME:", agentName, "ID:", agent.id);
-                              const url = `/agentportfolio/${agent.id}`;
-                              console.log("NAVIGATING TO:", url);
-                              // Force full page navigation - try multiple methods
-                              try {
-                                window.location.assign(url);
-                              } catch (err) {
-                                console.error("assign failed, trying replace:", err);
-                                try {
-                                  window.location.replace(url);
-                                } catch (err2) {
-                                  console.error("replace failed, trying href:", err2);
-                                  window.location.href = url;
-                                }
-                              }
-                            }}
-                            className="text-xl text-gray-900 hover:underline cursor-pointer text-left font-semibold transition-all inline-block bg-transparent border-none p-0 m-0"
+                          <Link
+                            href={`/agentportfolio/${agent.id}`}
+                            className="text-xl text-gray-900 hover:underline cursor-pointer text-left font-semibold transition-all inline-block"
                             title={`View ${agentName}'s profile`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                            }}
                           >
                             {agentName}
-                          </button>
+                          </Link>
                         ) : (
                           <h3 className="text-xl text-gray-900">{agentName}</h3>
                         )}
