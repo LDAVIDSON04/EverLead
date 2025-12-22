@@ -6,7 +6,7 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabaseClient } from "@/lib/supabaseClient";
-import { Lock, User, Eye, EyeOff } from "lucide-react";
+import { Lock, User, Eye, EyeOff, Check } from "lucide-react";
 
 type Mode = "login" | "signup";
 
@@ -667,18 +667,25 @@ export default function AgentLandingPage() {
 
                   {mode === "login" && (
                     <div className="flex items-center pt-2 relative z-20">
-                      <input
-                        type="checkbox"
-                        id="remember"
-                        checked={rememberMe}
-                        onChange={(e) => {
-                          e.stopPropagation();
-                          setRememberMe(e.target.checked);
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                        className="w-5 h-5 text-emerald-700 bg-white border-2 border-zinc-400 rounded cursor-pointer appearance-none checked:bg-emerald-700 checked:border-emerald-700 relative z-20 pointer-events-auto"
-                        style={{ pointerEvents: 'auto' }}
-                      />
+                      <div className="relative">
+                        <input
+                          type="checkbox"
+                          id="remember"
+                          checked={rememberMe}
+                          onChange={(e) => {
+                            e.stopPropagation();
+                            setRememberMe(e.target.checked);
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                          className="w-5 h-5 bg-white border-2 border-zinc-400 rounded cursor-pointer appearance-none relative z-20 pointer-events-auto"
+                          style={{ pointerEvents: 'auto' }}
+                        />
+                        {rememberMe && (
+                          <div className="absolute left-0 top-0 w-5 h-5 bg-emerald-700 border-2 border-emerald-700 rounded flex items-center justify-center pointer-events-none">
+                            <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />
+                          </div>
+                        )}
+                      </div>
                       <label 
                         htmlFor="remember" 
                         className="ml-3 text-zinc-700 cursor-pointer relative z-20"
