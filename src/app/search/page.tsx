@@ -1138,17 +1138,21 @@ function SearchResults() {
                     <div className="flex-1">
                       <div className="mb-2">
                         {agent?.id ? (
-                          <Link
-                            href={`/agentportfolio/${agent.id}`}
-                            className="text-xl text-gray-900 hover:underline cursor-pointer text-left font-semibold transition-all inline-block relative z-10"
-                            title={`View ${agentName}'s profile`}
+                          <button
+                            type="button"
                             onClick={(e) => {
-                              console.log("LINK CLICKED:", agentName, agent.id);
+                              e.preventDefault();
                               e.stopPropagation();
+                              console.log("LINK CLICKED:", agentName, agent.id);
+                              const url = `/agentportfolio/${agent.id}`;
+                              console.log("NAVIGATING TO:", url);
+                              router.push(url);
                             }}
+                            className="text-xl text-gray-900 hover:underline cursor-pointer text-left font-semibold transition-all inline-block relative z-10 bg-transparent border-none p-0 m-0"
+                            title={`View ${agentName}'s profile`}
                           >
                             {agentName}
-                          </Link>
+                          </button>
                         ) : (
                           <h3 className="text-xl text-gray-900">{agentName}</h3>
                         )}
