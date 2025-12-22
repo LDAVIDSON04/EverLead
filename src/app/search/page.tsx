@@ -1143,11 +1143,26 @@ function SearchResults() {
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
+                              e.stopImmediatePropagation();
                               console.log("LINK CLICKED:", agentName, agent.id);
                               const url = `/agentportfolio/${agent.id}`;
                               console.log("NAVIGATING TO:", url);
-                              // Force hard navigation - bypass Next.js router completely
-                              window.location.href = url;
+                              console.log("Current URL:", window.location.href);
+                              // Try multiple navigation methods
+                              try {
+                                window.location.assign(url);
+                                console.log("Used window.location.assign");
+                              } catch (err) {
+                                console.error("assign failed:", err);
+                                try {
+                                  window.location.replace(url);
+                                  console.log("Used window.location.replace");
+                                } catch (err2) {
+                                  console.error("replace failed:", err2);
+                                  window.location.href = url;
+                                  console.log("Used window.location.href");
+                                }
+                              }
                             }}
                             className="text-xl text-gray-900 hover:underline cursor-pointer text-left font-semibold transition-all inline-block relative z-10 bg-transparent border-none p-0 m-0"
                             title={`View ${agentName}'s profile`}
