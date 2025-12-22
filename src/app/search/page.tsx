@@ -1144,7 +1144,7 @@ function SearchResults() {
                             title={`View ${agentName}'s profile`}
                             onClick={(e) => {
                               e.stopPropagation();
-                              router.push(`/agent/${agent.id}`);
+                              // Let Link handle navigation naturally
                             }}
                           >
                             {agentName}
