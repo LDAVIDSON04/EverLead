@@ -35,7 +35,7 @@ export function FAQs() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   
   return (
-    <div id="faqs" className="mb-12">
+    <div className="mb-12">
       <h3 className="text-xl font-medium text-gray-900 mb-4">Frequently Asked Questions</h3>
       <div className="space-y-3">
         {faqs.map((faq, index) => (

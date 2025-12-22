@@ -16,7 +16,7 @@ import { BookingPanel } from "./components/BookingPanel";
 
 export default function AgentProfilePage() {
   const params = useParams();
-  const agentId = params.agentId as string;
+  const agentId = params?.agentId as string;
 
   const [agentData, setAgentData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -25,6 +25,9 @@ export default function AgentProfilePage() {
   useEffect(() => {
     if (agentId) {
       loadAgentProfile(agentId);
+    } else {
+      setError("No agent ID provided");
+      setLoading(false);
     }
   }, [agentId]);
 
@@ -32,7 +35,7 @@ export default function AgentProfilePage() {
     setLoading(true);
     setError(null);
     try {
-      console.log("🔍 Loading agent profile for ID:", agentId);
+      console.log("🔍 [PORTFOLIO] Loading agent profile for ID:", agentId);
       
       const { data, error: fetchError } = await supabaseClient
         .from("profiles")
@@ -42,11 +45,11 @@ export default function AgentProfilePage() {
         .maybeSingle();
       
       if (fetchError) {
-        console.error("❌ Error loading agent profile:", fetchError);
-        setError("Failed to load agent profile: " + fetchError.message);
+        console.error("❌ [PORTFOLIO] Error loading agent profile:", fetchError);
+        setError(`Failed to load agent profile: ${fetchError.message}`);
         setAgentData(null);
       } else if (data) {
-        console.log("✅ Agent profile loaded:", data);
+        console.log("✅ [PORTFOLIO] Agent profile loaded successfully:", data);
         const metadata = data.metadata || {};
         const specialty = (metadata as any)?.specialty || null;
         const licenseNumber = (metadata as any)?.license_number || null;
@@ -61,7 +64,6 @@ export default function AgentProfilePage() {
           regions_served: (metadata as any)?.regions_served || null,
           specialty: specialty,
           license_number: licenseNumber,
-          // Mock data for design (can be replaced with real data later)
           credentials: licenseNumber ? `LFD, ${licenseNumber}` : 'LFD',
           rating: 4.9,
           reviewCount: Math.floor(Math.random() * 200 + 50),
@@ -70,13 +72,13 @@ export default function AgentProfilePage() {
           fullBio: `${data.full_name || 'This agent'}'s journey into end-of-life care is driven by a commitment to helping families during life's most challenging moments.\n\n${specialty || 'Their expertise'} allows them to address both the emotional and practical aspects of end-of-life planning.\n\nThey are known for their patient, non-judgmental approach and their ability to facilitate difficult family conversations.`,
         });
       } else {
-        console.warn("⚠️ Agent not found for ID:", agentId);
+        console.warn("⚠️ [PORTFOLIO] Agent not found for ID:", agentId);
         setError("Agent not found");
         setAgentData(null);
       }
-    } catch (err) {
-      console.error("❌ Error loading agent profile:", err);
-      setError("An error occurred while loading the profile");
+    } catch (err: any) {
+      console.error("❌ [PORTFOLIO] Error loading agent profile:", err);
+      setError(`An error occurred: ${err?.message || 'Unknown error'}`);
       setAgentData(null);
     } finally {
       setLoading(false);
@@ -97,8 +99,8 @@ export default function AgentProfilePage() {
   if (error || !agentData) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-gray-600 mb-4">{error || "Agent not found"}</p>
+        <div className="text-center max-w-md px-4">
+          <p className="text-gray-600 mb-4 text-lg">{error || "Agent not found"}</p>
           <Link
             href="/search"
             className="inline-block bg-[#1a4d2e] hover:bg-[#0f2e1c] text-white font-semibold px-6 py-3 rounded-lg transition-colors"
@@ -117,7 +119,7 @@ export default function AgentProfilePage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Header with Back Button */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <Link
             href="/search"
@@ -129,12 +131,13 @@ export default function AgentProfilePage() {
         </div>
       </header>
 
-      {/* Container */}
+      {/* Main Container */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Two-column layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Left Column - Main Content */}
+          {/* Left Column - Main Content (7 columns) */}
           <div className="lg:col-span-7">
+            {/* About Section */}
             <div id="about">
               <AgentHeader 
                 name={agentData.full_name || "Agent"}
@@ -151,12 +154,14 @@ export default function AgentProfilePage() {
                 fullBio={agentData.fullBio} 
               />
             </div>
+            
+            {/* Trust Highlights Section */}
             <div id="highlights" className="mt-8">
               <TrustHighlights />
             </div>
           </div>
 
-          {/* Right Column - Sticky Booking Panel */}
+          {/* Right Column - Sticky Booking Panel (5 columns) */}
           <div className="lg:col-span-5">
             <div className="sticky top-24">
               <BookingPanel agentId={agentId} />
@@ -165,15 +170,20 @@ export default function AgentProfilePage() {
         </div>
 
         {/* Full-width sections below two-column layout */}
-        <div className="mt-8">
+        <div className="mt-12">
+          {/* Locations Section */}
           <div id="locations">
             <Credentials agentData={agentData} />
             <OfficeLocations agentData={agentData} />
           </div>
-          <div id="reviews" className="mt-8">
+          
+          {/* Reviews Section */}
+          <div id="reviews" className="mt-12">
             <Reviews reviewCount={agentData.reviewCount} />
           </div>
-          <div id="faqs" className="mt-8">
+          
+          {/* FAQs Section */}
+          <div id="faqs" className="mt-12">
             <FAQs />
           </div>
         </div>
