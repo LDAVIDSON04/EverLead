@@ -1120,10 +1120,10 @@ function SearchResults() {
               return (
                 <div key={appointment.id} className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
                   <div className="flex gap-6" onClick={(e) => {
-                    // Only prevent card click if clicking on a span with navigation
+                    // Only prevent card click if clicking on a link
                     const target = e.target as HTMLElement;
-                    if (target.closest('span[data-nav]')) {
-                      // Let the span handle its own navigation
+                    if (target.closest('a')) {
+                      // Let the link handle its own navigation
                       return;
                     }
                   }}>
@@ -1146,19 +1146,15 @@ function SearchResults() {
                       <div className="mb-2">
                         {agent?.id ? (
                           <a
-                            href={`/agent/${agent.id}`}
+                            href={`/agentportfolio/${agent.id}`}
                             onClick={(e) => {
-                              // Don't prevent default - let browser handle it
-                              const targetUrl = `/agent/${agent.id}`;
+                              e.preventDefault();
+                              e.stopPropagation();
+                              const targetUrl = `/agentportfolio/${agent.id}`;
                               console.log("🔗 [NAV] Agent name clicked - navigating to:", targetUrl);
                               console.log("🔗 [NAV] Agent ID:", agent.id);
-                              // If href doesn't work, force it
-                              setTimeout(() => {
-                                if (window.location.pathname !== targetUrl) {
-                                  console.log("🔗 [NAV] href didn't work, forcing navigation");
-                                  window.location.href = targetUrl;
-                                }
-                              }, 100);
+                              // Force navigation
+                              window.location.href = targetUrl;
                             }}
                             className="text-xl text-gray-900 hover:underline cursor-pointer text-left font-semibold transition-all inline-block"
                             title={`View ${agentName}'s profile`}
