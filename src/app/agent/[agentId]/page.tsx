@@ -23,9 +23,10 @@ export default function AgentProfilePage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    console.log("🎯 [PORTFOLIO] Page component mounted");
+    console.log("🎯 [PORTFOLIO] ========== PAGE MOUNTED ==========");
     console.log("🎯 [PORTFOLIO] agentId from params:", agentId);
     console.log("🎯 [PORTFOLIO] All params:", params);
+    console.log("🎯 [PORTFOLIO] Current URL:", typeof window !== 'undefined' ? window.location.href : 'N/A');
     
     if (agentId) {
       loadAgentProfile(agentId);
@@ -89,6 +90,7 @@ export default function AgentProfilePage() {
     }
   };
 
+  // Show loading state
   if (loading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
@@ -101,6 +103,7 @@ export default function AgentProfilePage() {
     );
   }
 
+  // Show error state
   if (error || !agentData) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
