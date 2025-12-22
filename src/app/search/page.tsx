@@ -105,12 +105,6 @@ function SearchResults() {
   const [selectedDayForModal, setSelectedDayForModal] = useState<string | null>(null);
   const [selectedAgentIdForModal, setSelectedAgentIdForModal] = useState<string | null>(null);
   
-  // Profile portfolio modal state
-  const [showProfileModal, setShowProfileModal] = useState(false);
-  const [selectedProfileAgentId, setSelectedProfileAgentId] = useState<string | null>(null);
-  const [profileAgentData, setProfileAgentData] = useState<any>(null);
-  const [loadingProfile, setLoadingProfile] = useState(false);
-  
   const [selectedAgentInfo, setSelectedAgentInfo] = useState<{
     full_name: string | null;
     profile_picture_url: string | null;
@@ -632,48 +626,6 @@ function SearchResults() {
     setAllAvailabilityDays([]);
   };
   
-  // Load full agent profile for portfolio modal
-  const loadAgentProfile = async (agentId: string) => {
-    setLoadingProfile(true);
-    try {
-      const { data, error } = await supabaseClient
-        .from("profiles")
-        .select("id, full_name, first_name, last_name, profile_picture_url, job_title, funeral_home, agent_city, agent_province, email, phone, metadata")
-        .eq("id", agentId)
-        .eq("role", "agent")
-        .single();
-      
-      if (!error && data) {
-        const metadata = data.metadata || {};
-        setProfileAgentData({
-          ...data,
-          business_address: (metadata as any)?.business_address || null,
-          business_street: (metadata as any)?.business_street || null,
-          business_city: (metadata as any)?.business_city || null,
-          business_province: (metadata as any)?.business_province || null,
-          business_zip: (metadata as any)?.business_zip || null,
-          regions_served: (metadata as any)?.regions_served || null,
-          specialty: (metadata as any)?.specialty || null,
-          license_number: (metadata as any)?.license_number || null,
-        });
-      } else {
-        console.error("Error loading agent profile:", error);
-        setProfileAgentData(null);
-      }
-    } catch (err) {
-      console.error("Error loading agent profile:", err);
-      setProfileAgentData(null);
-    } finally {
-      setLoadingProfile(false);
-    }
-  };
-  
-  const closeProfileModal = () => {
-    setShowProfileModal(false);
-    setSelectedProfileAgentId(null);
-    setProfileAgentData(null);
-  };
-  
   // Handle date selection in modal - show time slots for selected date
   const handleDateSelectInModal = (date: string) => {
     const selectedDay = allAvailabilityDays.find(day => day.date === date);
@@ -1180,19 +1132,13 @@ function SearchResults() {
 
                     <div className="flex-1">
                       <div className="mb-2">
-                        <button
-                          onClick={() => {
-                            if (agent?.id) {
-                              setSelectedProfileAgentId(agent.id);
-                              setShowProfileModal(true);
-                              loadAgentProfile(agent.id);
-                            }
-                          }}
-                          className="text-xl text-gray-900 hover:underline cursor-pointer text-left font-semibold transition-all"
+                        <Link
+                          href={`/agent/${agent?.id}`}
+                          className="text-xl text-gray-900 hover:underline cursor-pointer text-left font-semibold transition-all inline-block"
                           title={`View ${agentName}'s profile`}
                         >
                           {agentName}
-                        </button>
+                        </Link>
                         <p className="text-gray-600 mt-1">
                           {agent?.job_title || appointment.service_type || 'Pre-need Planning Specialist'}
                         </p>
@@ -1493,155 +1439,6 @@ function SearchResults() {
         </div>
       )}
 
-      {/* Agent Profile Portfolio Modal */}
-      {showProfileModal && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
-          onClick={closeProfileModal}
-        >
-          <div
-            className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto relative z-50"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div className="bg-gradient-to-r from-green-50 to-white p-6 border-b border-gray-200 sticky top-0 z-10">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-bold text-black">Agent Profile</h2>
-                <button
-                  onClick={closeProfileModal}
-                  className="text-gray-500 hover:text-black transition-colors p-2 rounded-full hover:bg-gray-100"
-                >
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
-            </div>
-
-            {/* Profile Content */}
-            <div className="p-6">
-              {loadingProfile ? (
-                <div className="text-center py-12">
-                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mb-4"></div>
-                  <p className="text-gray-600">Loading profile...</p>
-                </div>
-              ) : profileAgentData ? (
-                <div className="space-y-6">
-                  {/* Profile Header */}
-                  <div className="flex items-start gap-6">
-                    {profileAgentData.profile_picture_url ? (
-                      <img
-                        src={profileAgentData.profile_picture_url}
-                        alt={profileAgentData.full_name || "Agent"}
-                        className="w-32 h-32 rounded-full object-cover border-4 border-green-600"
-                      />
-                    ) : (
-                      <div className="w-32 h-32 bg-green-100 rounded-full flex items-center justify-center border-4 border-green-600">
-                        <span className="text-green-700 text-4xl font-semibold">
-                          {(profileAgentData.full_name || "A")[0].toUpperCase()}
-                        </span>
-                      </div>
-                    )}
-                    <div className="flex-1">
-                      <h3 className="text-3xl font-bold text-black mb-2">
-                        {profileAgentData.full_name || "Agent"}
-                      </h3>
-                      {profileAgentData.job_title && (
-                        <p className="text-xl text-gray-700 font-medium mb-1">{profileAgentData.job_title}</p>
-                      )}
-                      {profileAgentData.funeral_home && (
-                        <p className="text-lg text-gray-600 mb-4">{profileAgentData.funeral_home}</p>
-                      )}
-                      <div className="flex items-center gap-1 mb-4">
-                        <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                        <span className="text-lg font-semibold text-gray-900">4.9</span>
-                        <span className="text-lg text-gray-600">({Math.floor(Math.random() * 200 + 50)} reviews)</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Contact Information */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {profileAgentData.agent_city && profileAgentData.agent_province && (
-                      <div className="flex items-start gap-2">
-                        <MapPin className="w-5 h-5 text-gray-500 mt-1 flex-shrink-0" />
-                        <div>
-                          <p className="text-sm font-medium text-gray-700">Location</p>
-                          <p className="text-gray-600">
-                            {profileAgentData.agent_city}, {profileAgentData.agent_province}
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                    
-                    {(profileAgentData.business_street || profileAgentData.business_address) && (
-                      <div className="flex items-start gap-2">
-                        <MapPin className="w-5 h-5 text-gray-500 mt-1 flex-shrink-0" />
-                        <div>
-                          <p className="text-sm font-medium text-gray-700">Business Address</p>
-                          <p className="text-gray-600 text-sm">
-                            {profileAgentData.business_street && profileAgentData.business_city && profileAgentData.business_province && profileAgentData.business_zip
-                              ? `${profileAgentData.business_street}, ${profileAgentData.business_city}, ${profileAgentData.business_province} ${profileAgentData.business_zip}`
-                              : profileAgentData.business_address || `${profileAgentData.business_street || ''}${profileAgentData.business_city ? `, ${profileAgentData.business_city}` : ''}${profileAgentData.business_province ? `, ${profileAgentData.business_province}` : ''}${profileAgentData.business_zip ? ` ${profileAgentData.business_zip}` : ''}`.trim()}
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                    
-                    {profileAgentData.phone && (
-                      <div className="flex items-start gap-2">
-                        <span className="text-gray-500">📞</span>
-                        <div>
-                          <p className="text-sm font-medium text-gray-700">Phone</p>
-                          <p className="text-gray-600">{profileAgentData.phone}</p>
-                        </div>
-                      </div>
-                    )}
-                    
-                    {profileAgentData.email && (
-                      <div className="flex items-start gap-2">
-                        <span className="text-gray-500">✉️</span>
-                        <div>
-                          <p className="text-sm font-medium text-gray-700">Email</p>
-                          <p className="text-gray-600">{profileAgentData.email}</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Additional Information */}
-                  {(profileAgentData.specialty || profileAgentData.regions_served || profileAgentData.license_number) && (
-                    <div className="border-t border-gray-200 pt-6 space-y-4">
-                      {profileAgentData.specialty && (
-                        <div>
-                          <p className="text-sm font-medium text-gray-700 mb-1">Specialty / Services</p>
-                          <p className="text-gray-600">{profileAgentData.specialty}</p>
-                        </div>
-                      )}
-                      
-                      {profileAgentData.regions_served && (
-                        <div>
-                          <p className="text-sm font-medium text-gray-700 mb-1">Regions Served</p>
-                          <p className="text-gray-600">{profileAgentData.regions_served}</p>
-                        </div>
-                      )}
-                      
-                      {profileAgentData.license_number && (
-                        <div>
-                          <p className="text-sm font-medium text-gray-700 mb-1">License Number</p>
-                          <p className="text-gray-600">{profileAgentData.license_number}</p>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <p className="text-gray-600">Failed to load profile information.</p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
