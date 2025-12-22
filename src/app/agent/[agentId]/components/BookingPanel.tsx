@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, ChevronDown, Check, MapPin } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { supabaseClient } from '@/lib/supabaseClient';
 
 interface DayAvailability {
   dayOfWeek: string;
@@ -39,46 +40,62 @@ export function BookingPanel({ agentId }: BookingPanelProps) {
   useEffect(() => {
     const fetchAgentData = async () => {
       try {
-        const { data } = await fetch(`/api/agents/search?agentId=${agentId}`).then(r => r.json());
-        if (data && data.length > 0) {
-          const agent = data[0];
-          const locations: OfficeLocation[] = [];
-          
-          // Build locations from agent's availability settings
-          if (agent.availabilityLocations && agent.availabilityLocations.length > 0) {
-            agent.availabilityLocations.forEach((loc: string, index: number) => {
-              const address = agent.business_street && agent.business_city && agent.business_province && agent.business_zip
-                ? `${agent.business_street}, ${agent.business_city}, ${agent.business_province} ${agent.business_zip}`
-                : agent.business_address || `${agent.business_city || ''}, ${agent.business_province || ''}`;
-              
-              locations.push({
-                id: String(index + 1),
-                name: `${agent.funeral_home || 'Office'} - ${loc}`,
-                address: address || `${loc}`,
-                nextAvailable: 'Next available tomorrow'
-              });
-            });
-          } else {
-            // Default location
-            const address = agent.business_street && agent.business_city && agent.business_province && agent.business_zip
-              ? `${agent.business_street}, ${agent.business_city}, ${agent.business_province} ${agent.business_zip}`
-              : agent.business_address || `${agent.agent_city || ''}, ${agent.agent_province || ''}`;
+        const { data: agent, error } = await supabaseClient
+          .from("profiles")
+          .select("id, funeral_home, agent_city, agent_province, metadata")
+          .eq("id", agentId)
+          .eq("role", "agent")
+          .single();
+        
+        if (error || !agent) {
+          console.error("Error fetching agent data:", error);
+          return;
+        }
+        
+        const metadata = agent.metadata || {};
+        const availabilityLocations = (metadata as any)?.availability?.locations || [];
+        const business_street = (metadata as any)?.business_street;
+        const business_city = (metadata as any)?.business_city;
+        const business_province = (metadata as any)?.business_province;
+        const business_zip = (metadata as any)?.business_zip;
+        const business_address = (metadata as any)?.business_address;
+        
+        const locations: OfficeLocation[] = [];
+        
+        // Build locations from agent's availability settings
+        if (availabilityLocations.length > 0) {
+          availabilityLocations.forEach((loc: string, index: number) => {
+            const address = business_street && business_city && business_province && business_zip
+              ? `${business_street}, ${business_city}, ${business_province} ${business_zip}`
+              : business_address || `${business_city || agent.agent_city || ''}, ${business_province || agent.agent_province || ''}`;
             
             locations.push({
-              id: '1',
-              name: agent.funeral_home || 'Main Office',
-              address: address || 'Location not specified',
+              id: String(index + 1),
+              name: `${agent.funeral_home || 'Office'} - ${loc}`,
+              address: address || `${loc}`,
               nextAvailable: 'Next available tomorrow'
             });
-          }
+          });
+        } else {
+          // Default location
+          const address = business_street && business_city && business_province && business_zip
+            ? `${business_street}, ${business_city}, ${business_province} ${business_zip}`
+            : business_address || `${agent.agent_city || ''}, ${agent.agent_province || ''}`;
           
-          setOfficeLocations(locations.length > 0 ? locations : [{
+          locations.push({
             id: '1',
             name: agent.funeral_home || 'Main Office',
-            address: `${agent.agent_city || ''}, ${agent.agent_province || ''}`,
+            address: address || 'Location not specified',
             nextAvailable: 'Next available tomorrow'
-          }]);
+          });
         }
+        
+        setOfficeLocations(locations.length > 0 ? locations : [{
+          id: '1',
+          name: agent.funeral_home || 'Main Office',
+          address: `${agent.agent_city || ''}, ${agent.agent_province || ''}`,
+          nextAvailable: 'Next available tomorrow'
+        }]);
       } catch (err) {
         console.error("Error fetching agent data:", err);
       }
