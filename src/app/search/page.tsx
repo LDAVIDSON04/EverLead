@@ -1120,10 +1120,10 @@ function SearchResults() {
               return (
                 <div key={appointment.id} className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
                   <div className="flex gap-6" onClick={(e) => {
-                    // Only prevent card click if clicking on a button
+                    // Only prevent card click if clicking on a span with navigation
                     const target = e.target as HTMLElement;
-                    if (target.closest('button')) {
-                      // Let the button handle its own navigation
+                    if (target.closest('span[data-nav]')) {
+                      // Let the span handle its own navigation
                       return;
                     }
                   }}>
@@ -1146,18 +1146,28 @@ function SearchResults() {
                       <div className="mb-2">
                         {agent?.id ? (
                           <span
+                            data-nav="true"
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
                               const targetUrl = `/agent/${agent.id}`;
                               console.log("🔗 [NAV] Agent name clicked - FORCING navigation to:", targetUrl);
                               console.log("🔗 [NAV] Agent ID:", agent.id);
-                              console.log("🔗 [NAV] About to set window.location.href");
-                              // Force full page navigation - use setTimeout to ensure it happens
-                              setTimeout(() => {
-                                console.log("🔗 [NAV] Setting window.location.href now");
-                                window.location.href = targetUrl;
-                              }, 0);
+                              // Force navigation using multiple methods
+                              try {
+                                // Method 1: window.location.assign
+                                window.location.assign(targetUrl);
+                              } catch (err1) {
+                                console.error("assign failed, trying replace:", err1);
+                                try {
+                                  // Method 2: window.location.replace
+                                  window.location.replace(targetUrl);
+                                } catch (err2) {
+                                  console.error("replace failed, trying href:", err2);
+                                  // Method 3: window.location.href
+                                  window.location.href = targetUrl;
+                                }
+                              }
                             }}
                             className="text-xl text-gray-900 hover:underline cursor-pointer text-left font-semibold transition-all inline-block"
                             title={`View ${agentName}'s profile`}

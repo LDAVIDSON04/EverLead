@@ -90,7 +90,6 @@ export default function AgentProfilePage() {
     }
   };
 
-  // Show loading state
   if (loading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
@@ -103,7 +102,6 @@ export default function AgentProfilePage() {
     );
   }
 
-  // Show error state
   if (error || !agentData) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
