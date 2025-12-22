@@ -1152,7 +1152,18 @@ function SearchResults() {
                               console.log("CLICKED AGENT NAME:", agentName, "ID:", agent.id);
                               const url = `/agentportfolio/${agent.id}`;
                               console.log("NAVIGATING TO:", url);
-                              window.location.href = url;
+                              // Force full page navigation - try multiple methods
+                              try {
+                                window.location.assign(url);
+                              } catch (err) {
+                                console.error("assign failed, trying replace:", err);
+                                try {
+                                  window.location.replace(url);
+                                } catch (err2) {
+                                  console.error("replace failed, trying href:", err2);
+                                  window.location.href = url;
+                                }
+                              }
                             }}
                             className="text-xl text-gray-900 hover:underline cursor-pointer text-left font-semibold transition-all inline-block bg-transparent border-none p-0 m-0"
                             title={`View ${agentName}'s profile`}
