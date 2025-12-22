@@ -1172,29 +1172,23 @@ function SearchResults() {
                         <span className="text-gray-900">4.9</span>
                         <span className="text-gray-500">· {Math.floor(Math.random() * 200 + 50)} reviews</span>
                         {agent?.id && (
-                          <button
-                            type="button"
-                            onClick={(e) => {
+                          <form
+                            action={`/agentportfolio/${agent.id}`}
+                            method="get"
+                            onSubmit={(e) => {
                               e.preventDefault();
-                              e.stopPropagation();
                               const url = `/agentportfolio/${agent.id}`;
-                              console.log("🔗 BUTTON CLICKED - Navigating to:", url);
-                              console.log("🔗 Agent ID:", agent.id);
-                              console.log("🔗 Current URL:", window.location.href);
-                              // Force full page reload - bypass everything
-                              try {
-                                window.location.href = url;
-                                console.log("🔗 window.location.href set to:", url);
-                              } catch (err) {
-                                console.error("🔗 Navigation error:", err);
-                                // Fallback
-                                window.location.assign(url);
-                              }
+                              window.location.href = url;
                             }}
-                            className="ml-3 text-gray-900 hover:text-gray-700 underline decoration-black hover:decoration-gray-700 text-sm font-medium transition-colors bg-transparent border-none p-0 cursor-pointer"
+                            className="inline"
                           >
-                            Learn more about {agentName}
-                          </button>
+                            <button
+                              type="submit"
+                              className="ml-3 text-gray-900 hover:text-gray-700 underline decoration-black hover:decoration-gray-700 text-sm font-medium transition-colors bg-transparent border-none p-0 cursor-pointer"
+                            >
+                              Learn more about {agentName}
+                            </button>
+                          </form>
                         )}
                       </div>
 
