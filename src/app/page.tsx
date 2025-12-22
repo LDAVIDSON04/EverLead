@@ -228,6 +228,9 @@ export default function HomePage() {
             <Link href="/create-account" className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors">
               List your Specialty
             </Link>
+            <Link href="/what-is-pre-need-funeral-planning" className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors">
+              What is pre-need funeral planning?
+            </Link>
             <Link href="/agent" className="bg-[#0C6F3C] text-white px-6 py-2.5 rounded-xl hover:bg-[#0C6F3C]/90 transition-all shadow-sm">
               Log in
             </Link>
@@ -280,16 +283,6 @@ export default function HomePage() {
             <h1 className="text-6xl mb-8 text-[#1A1A1A] font-semibold tracking-tight leading-tight text-left">
               Book local funeral professionals
             </h1>
-
-            {/* What is pre-need funeral planning link */}
-            <div className="mb-6">
-              <Link 
-                href="/what-is-pre-need-funeral-planning"
-                className="text-[#0C6F3C] hover:text-[#0C6F3C]/80 underline text-lg font-medium transition-colors"
-              >
-                What is pre-need funeral planning?
-              </Link>
-            </div>
 
             {/* Horizontal search bar */}
             <form onSubmit={handleSearch} className="bg-white rounded-2xl p-3 shadow-lg border border-[#1A1A1A]/5 relative z-30">
