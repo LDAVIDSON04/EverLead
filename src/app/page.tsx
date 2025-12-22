@@ -281,6 +281,16 @@ export default function HomePage() {
               Book local funeral professionals
             </h1>
 
+            {/* What is pre-need funeral planning link */}
+            <div className="mb-6">
+              <Link 
+                href="/what-is-pre-need-funeral-planning"
+                className="text-[#0C6F3C] hover:text-[#0C6F3C]/80 underline text-lg font-medium transition-colors"
+              >
+                What is pre-need funeral planning?
+              </Link>
+            </div>
+
             {/* Horizontal search bar */}
             <form onSubmit={handleSearch} className="bg-white rounded-2xl p-3 shadow-lg border border-[#1A1A1A]/5 relative z-30">
               <div className="flex flex-col lg:flex-row items-stretch gap-0">
