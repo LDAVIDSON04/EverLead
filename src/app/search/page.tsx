@@ -1146,12 +1146,18 @@ function SearchResults() {
                       <div className="mb-2">
                         {agent?.id ? (
                           <span
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
                               const targetUrl = `/agent/${agent.id}`;
                               console.log("🔗 [NAV] Agent name clicked - FORCING navigation to:", targetUrl);
                               console.log("🔗 [NAV] Agent ID:", agent.id);
-                              // Force full page navigation - bypass everything
-                              window.location.href = targetUrl;
+                              console.log("🔗 [NAV] About to set window.location.href");
+                              // Force full page navigation - use setTimeout to ensure it happens
+                              setTimeout(() => {
+                                console.log("🔗 [NAV] Setting window.location.href now");
+                                window.location.href = targetUrl;
+                              }, 0);
                             }}
                             className="text-xl text-gray-900 hover:underline cursor-pointer text-left font-semibold transition-all inline-block"
                             title={`View ${agentName}'s profile`}
