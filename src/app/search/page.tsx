@@ -79,15 +79,18 @@ function SearchResults() {
   const location = searchParams.get("location") || "";
   const service = searchParams.get("service") || "";
   
+  // Decode URL-encoded location for display
+  const decodedLocation = location ? decodeURIComponent(location.replace(/\+/g, ' ')) : "";
+  
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   // Input values (what user is typing)
   const [inputQuery, setInputQuery] = useState(query);
-  const [inputLocation, setInputLocation] = useState(location);
+  const [inputLocation, setInputLocation] = useState(decodedLocation);
   const [inputService, setInputService] = useState(service);
   // Actual search values (what was searched/submitted)
   const [searchQuery, setSearchQuery] = useState(query);
-  const [searchLocation, setSearchLocation] = useState(location);
+  const [searchLocation, setSearchLocation] = useState(decodedLocation);
   const [searchService, setSearchService] = useState(service);
   const [locationDetected, setLocationDetected] = useState(false); // Track if we've tried to detect location
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
@@ -156,15 +159,16 @@ function SearchResults() {
         .then(res => res.json())
         .then(data => {
           if (data.location) {
-            console.log("📍 Auto-detected location from IP:", data.location);
+            const decodedLocation = decodeURIComponent(data.location.replace(/\+/g, ' '));
+            console.log("📍 Auto-detected location from IP:", decodedLocation);
             
             // Update both input and search state immediately so it shows in search bar and triggers search
-            setSearchLocation(data.location);
-            setInputLocation(data.location);
+            setSearchLocation(decodedLocation);
+            setInputLocation(decodedLocation);
             
             // Update URL with location so it triggers search and shows in search bar
             const params = new URLSearchParams();
-            params.set("location", data.location);
+            params.set("location", decodedLocation);
             if (searchQuery) params.set("q", searchQuery);
             if (searchService) params.set("service", searchService);
             
