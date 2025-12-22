@@ -1144,22 +1144,6 @@ function SearchResults() {
                         {agent?.funeral_home && (
                           <p className="text-gray-500 text-sm mt-1">{agent.funeral_home}</p>
                         )}
-                        {agent?.id && (
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              console.log("LEARN MORE CLICKED:", agentName, agent.id);
-                              const url = `/agentportfolio/${agent.id}`;
-                              console.log("NAVIGATING TO:", url);
-                              window.location.href = url;
-                            }}
-                            className="mt-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-lg transition-colors"
-                          >
-                            Learn more about {agentName.split(' ')[0]}
-                          </button>
-                        )}
                       </div>
 
                       {/* Location - Show searched location (the city the family is searching from) */}
