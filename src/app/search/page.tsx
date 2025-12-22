@@ -1119,7 +1119,13 @@ function SearchResults() {
 
               return (
                 <div key={appointment.id} className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
-                  <div className="flex gap-6">
+                  <div className="flex gap-6" onClick={(e) => {
+                    // Prevent card click from interfering with link clicks
+                    const target = e.target as HTMLElement;
+                    if (target.closest('a')) {
+                      return; // Let link handle it
+                    }
+                  }}>
                     {/* Agent Avatar */}
                     <div className="flex-shrink-0">
                       {agent?.profile_picture_url ? (
@@ -1144,7 +1150,9 @@ function SearchResults() {
                             title={`View ${agentName}'s profile`}
                             onClick={(e) => {
                               e.stopPropagation();
-                              // Let Link handle navigation naturally
+                              e.preventDefault();
+                              // Force navigation
+                              window.location.href = `/agent/${agent.id}`;
                             }}
                           >
                             {agentName}
