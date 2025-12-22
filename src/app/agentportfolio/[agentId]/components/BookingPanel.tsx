@@ -308,14 +308,13 @@ export function BookingPanel({ agentId }: BookingPanelProps) {
                   key={index}
                   onClick={() => handleDayClick(index)}
                   disabled={day.appointmentCount === 0}
-                  className={`rounded-lg text-center px-2 py-1 transition-all border-2 flex flex-col justify-center items-center w-full ${
+                  className={`rounded-lg text-center px-2 py-1 transition-all border-2 flex flex-col justify-center items-center w-full h-16 ${
                     day.appointmentCount === 0
                       ? 'bg-gray-50 border-gray-200 cursor-not-allowed'
                       : selectedDayIndex === index
                       ? 'bg-[#2d7a4a] border-[#2d7a4a] shadow-md'
                       : 'bg-[#2d7a4a] border-gray-200 hover:border-gray-300 hover:shadow-sm'
                   }`}
-                  style={{ aspectRatio: '2 / 1', height: 'auto' }}
                 >
                   <div className={`text-[10px] font-medium leading-tight ${
                     day.appointmentCount === 0 ? 'text-gray-400' : 'text-white'
@@ -350,31 +349,30 @@ export function BookingPanel({ agentId }: BookingPanelProps) {
                     key={actualIndex}
                     onClick={() => handleDayClick(actualIndex)}
                     disabled={day.appointmentCount === 0}
-                    className={`rounded-lg text-center px-2 py-1 transition-all border-2 flex flex-col justify-center items-center w-full ${
+                    className={`rounded-lg text-center px-2 py-1 transition-all border-2 flex flex-col justify-center items-center w-full h-16 ${
                       day.appointmentCount === 0
                         ? 'bg-gray-50 border-gray-200 cursor-not-allowed'
                         : selectedDayIndex === actualIndex
                         ? 'bg-[#2d7a4a] border-[#2d7a4a] shadow-md'
                         : 'bg-[#2d7a4a] border-gray-200 hover:border-gray-300 hover:shadow-sm'
                     }`}
-                    style={{ aspectRatio: '2 / 1', height: 'auto' }}
                   >
-                    <div className={`text-xs font-medium mb-0.5 ${
+                    <div className={`text-[10px] font-medium leading-tight ${
                       day.appointmentCount === 0 ? 'text-gray-400' : 'text-white'
                     }`}>
                       {day.dayOfWeek}
                     </div>
-                    <div className={`text-xs mb-1 ${
+                    <div className={`text-[10px] leading-tight ${
                       day.appointmentCount === 0 ? 'text-gray-400' : 'text-white'
                     }`}>
                       {day.month} {day.date}
                     </div>
-                    <div className={`text-xl font-medium mb-0.5 ${
+                    <div className={`text-base font-medium leading-tight ${
                       day.appointmentCount === 0 ? 'text-gray-400' : 'text-white'
                     }`}>
                       {day.appointmentCount === 0 ? 'No' : day.appointmentCount}
                     </div>
-                    <div className={`text-xs ${
+                    <div className={`text-[10px] leading-tight ${
                       day.appointmentCount === 0 ? 'text-gray-400' : 'text-white'
                     }`}>
                       appts
