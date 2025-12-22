@@ -23,6 +23,21 @@ interface OfficeLocation {
   nextAvailable: string;
 }
 
+interface AvailabilityDay {
+  date: string;
+  slots: Array<{
+    startsAt: string;
+    endsAt: string;
+  }>;
+}
+
+interface TimeSlot {
+  time: string;
+  startsAt: string;
+  endsAt: string;
+  available: boolean;
+}
+
 interface BookingPanelProps {
   agentId: string;
 }
