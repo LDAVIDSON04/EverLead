@@ -339,7 +339,7 @@ export default function AgentLandingPage() {
             </div>
 
             {/* Right Side - Form */}
-            <div className="flex flex-col p-8 lg:p-16">
+            <div className="flex flex-col p-8 lg:p-16 relative z-20">
               <h1 className="text-black mb-8 lg:mb-12 text-4xl lg:text-5xl font-bold">
                 {mode === "login" ? "Log In" : "Create Account"}
               </h1>
@@ -413,7 +413,7 @@ export default function AgentLandingPage() {
                   )}
                 </form>
               ) : (
-                <form onSubmit={handleSubmit} className="space-y-6 lg:space-y-8">
+                <form onSubmit={handleSubmit} className="space-y-6 lg:space-y-8 relative z-20">
                   {mode === "signup" && (
                     <>
                       <div className="relative">
@@ -666,15 +666,29 @@ export default function AgentLandingPage() {
                   )}
 
                   {mode === "login" && (
-                    <div className="flex items-center pt-2">
+                    <div className="flex items-center pt-2 relative z-20">
                       <input
                         type="checkbox"
                         id="remember"
                         checked={rememberMe}
-                        onChange={(e) => setRememberMe(e.target.checked)}
-                        className="w-5 h-5 text-emerald-700 bg-white border-2 border-zinc-400 rounded cursor-pointer appearance-none checked:bg-emerald-700 checked:border-emerald-700"
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          setRememberMe(e.target.checked);
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        className="w-5 h-5 text-emerald-700 bg-white border-2 border-zinc-400 rounded cursor-pointer appearance-none checked:bg-emerald-700 checked:border-emerald-700 relative z-20 pointer-events-auto"
+                        style={{ pointerEvents: 'auto' }}
                       />
-                      <label htmlFor="remember" className="ml-3 text-zinc-700 cursor-pointer">
+                      <label 
+                        htmlFor="remember" 
+                        className="ml-3 text-zinc-700 cursor-pointer relative z-20"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setRememberMe(!rememberMe);
+                        }}
+                        style={{ pointerEvents: 'auto' }}
+                      >
                         Remember me
                       </label>
                     </div>
@@ -687,11 +701,13 @@ export default function AgentLandingPage() {
                   )}
 
                   {/* Submit Button */}
-                  <div className="pt-6">
+                  <div className="pt-6 relative z-20">
                     <button
                       type="submit"
                       disabled={submitting}
-                      className="bg-emerald-700 hover:bg-emerald-800 text-white px-14 py-3 rounded-lg transition-all shadow-md hover:shadow-lg disabled:opacity-70 disabled:cursor-not-allowed"
+                      onClick={(e) => e.stopPropagation()}
+                      className="bg-emerald-700 hover:bg-emerald-800 text-white px-14 py-3 rounded-lg transition-all shadow-md hover:shadow-lg disabled:opacity-70 disabled:cursor-not-allowed relative z-20"
+                      style={{ pointerEvents: 'auto', zIndex: 20 }}
                     >
                       {submitting
                         ? "Please wait..."
