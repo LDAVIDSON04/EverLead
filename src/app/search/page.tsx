@@ -1140,8 +1140,12 @@ function SearchResults() {
                         {agent?.id ? (
                           <Link
                             href={`/agentportfolio/${agent.id}`}
-                            className="text-xl text-gray-900 hover:underline cursor-pointer text-left font-semibold transition-all inline-block"
+                            className="text-xl text-gray-900 hover:underline cursor-pointer text-left font-semibold transition-all inline-block relative z-10"
                             title={`View ${agentName}'s profile`}
+                            onClick={(e) => {
+                              console.log("LINK CLICKED:", agentName, agent.id);
+                              e.stopPropagation();
+                            }}
                           >
                             {agentName}
                           </Link>
