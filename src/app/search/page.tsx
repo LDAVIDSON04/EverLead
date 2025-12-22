@@ -1120,10 +1120,10 @@ function SearchResults() {
               return (
                 <div key={appointment.id} className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
                   <div className="flex gap-6" onClick={(e) => {
-                    // Only prevent card click if clicking on a link
+                    // Only prevent card click if clicking on a button
                     const target = e.target as HTMLElement;
-                    if (target.closest('a')) {
-                      // Let the link handle its own navigation
+                    if (target.closest('button')) {
+                      // Let the button handle its own navigation
                       return;
                     }
                   }}>
@@ -1145,22 +1145,19 @@ function SearchResults() {
                     <div className="flex-1">
                       <div className="mb-2">
                         {agent?.id ? (
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
+                          <span
+                            onClick={() => {
                               const targetUrl = `/agent/${agent.id}`;
                               console.log("🔗 [NAV] Agent name clicked - FORCING navigation to:", targetUrl);
                               console.log("🔗 [NAV] Agent ID:", agent.id);
-                              // Force full page navigation - bypass Next.js router completely
+                              // Force full page navigation - bypass everything
                               window.location.href = targetUrl;
                             }}
-                            className="text-xl text-gray-900 hover:underline cursor-pointer text-left font-semibold transition-all inline-block bg-transparent border-none p-0 m-0"
+                            className="text-xl text-gray-900 hover:underline cursor-pointer text-left font-semibold transition-all inline-block"
                             title={`View ${agentName}'s profile`}
                           >
                             {agentName}
-                          </button>
+                          </span>
                         ) : (
                           <h3 className="text-xl text-gray-900">{agentName}</h3>
                         )}
