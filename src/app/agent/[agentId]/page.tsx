@@ -23,9 +23,11 @@ export default function AgentProfilePage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    console.log("🎯 [PORTFOLIO] Page mounted, agentId:", agentId);
     if (agentId) {
       loadAgentProfile(agentId);
     } else {
+      console.warn("⚠️ [PORTFOLIO] No agentId provided");
       setError("No agent ID provided");
       setLoading(false);
     }

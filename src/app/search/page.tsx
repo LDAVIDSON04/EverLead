@@ -1145,8 +1145,14 @@ function SearchResults() {
                               e.stopPropagation();
                               const targetUrl = `/agent/${agent.id}`;
                               console.log("🔗 [NAV] Agent name clicked - navigating to:", targetUrl, "Agent ID:", agent.id);
-                              // Force full page navigation
-                              window.location.href = targetUrl;
+                              // Force full page navigation - use replace to ensure it works
+                              try {
+                                window.location.replace(targetUrl);
+                              } catch (err) {
+                                console.error("Navigation error:", err);
+                                // Fallback
+                                window.location.href = targetUrl;
+                              }
                             }}
                             className="text-xl text-gray-900 hover:underline cursor-pointer text-left font-semibold transition-all inline-block bg-transparent border-none p-0 m-0"
                             title={`View ${agentName}'s profile`}

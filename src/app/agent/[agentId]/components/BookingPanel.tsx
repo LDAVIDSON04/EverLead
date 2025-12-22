@@ -53,6 +53,7 @@ export function BookingPanel({ agentId }: BookingPanelProps) {
         }
         
         const metadata = agent.metadata || {};
+        // Don't log empty availability - it's expected if not set
         const availabilityLocations = (metadata as any)?.availability?.locations || [];
         const business_street = (metadata as any)?.business_street;
         const business_city = (metadata as any)?.business_city;
