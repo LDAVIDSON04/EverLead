@@ -1138,13 +1138,13 @@ function SearchResults() {
                     <div className="flex-1">
                       <div className="mb-2">
                         {agent?.id ? (
-                          <a
+                          <Link
                             href={`/agentportfolio/${agent.id}`}
                             className="text-xl text-gray-900 hover:underline cursor-pointer text-left font-semibold transition-all inline-block"
                             title={`View ${agentName}'s profile`}
                           >
                             {agentName}
-                          </a>
+                          </Link>
                         ) : (
                           <h3 className="text-xl text-gray-900">{agentName}</h3>
                         )}
