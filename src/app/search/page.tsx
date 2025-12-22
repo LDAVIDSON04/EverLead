@@ -1172,23 +1172,22 @@ function SearchResults() {
                         <span className="text-gray-900">4.9</span>
                         <span className="text-gray-500">· {Math.floor(Math.random() * 200 + 50)} reviews</span>
                         {agent?.id && (
-                          <form
-                            action={`/agentportfolio/${agent.id}`}
-                            method="get"
-                            onSubmit={(e) => {
-                              e.preventDefault();
+                          <a
+                            href={`/agentportfolio/${agent.id}`}
+                            onClick={(e) => {
+                              // Don't prevent default - let browser handle it
+                              // But also force navigation programmatically
                               const url = `/agentportfolio/${agent.id}`;
-                              window.location.href = url;
+                              setTimeout(() => {
+                                if (window.location.pathname !== url) {
+                                  window.location.replace(url);
+                                }
+                              }, 0);
                             }}
-                            className="inline"
+                            className="ml-3 text-gray-900 hover:text-gray-700 underline decoration-black hover:decoration-gray-700 text-sm font-medium transition-colors cursor-pointer"
                           >
-                            <button
-                              type="submit"
-                              className="ml-3 text-gray-900 hover:text-gray-700 underline decoration-black hover:decoration-gray-700 text-sm font-medium transition-colors bg-transparent border-none p-0 cursor-pointer"
-                            >
-                              Learn more about {agentName}
-                            </button>
-                          </form>
+                            Learn more about {agentName}
+                          </a>
                         )}
                       </div>
 
