@@ -1138,37 +1138,17 @@ function SearchResults() {
                     <div className="flex-1">
                       <div className="mb-2">
                         {agent?.id ? (
-                          <button
-                            type="button"
+                          <Link
+                            href={`/agent/${agent.id}`}
                             onClick={(e) => {
-                              e.preventDefault();
                               e.stopPropagation();
-                              const targetUrl = `/agent/${agent.id}`;
-                              console.log("🔗 [NAV] Agent name clicked - FORCING navigation to:", targetUrl);
-                              console.log("🔗 [NAV] Agent ID:", agent.id);
-                              
-                              // Force navigation using multiple methods
-                              try {
-                                // Method 1: Try router.push
-                                router.push(targetUrl);
-                                
-                                // Method 2: Fallback to window.location after short delay
-                                setTimeout(() => {
-                                  if (window.location.pathname !== targetUrl) {
-                                    console.log("⚠️ Router.push didn't work, forcing window.location");
-                                    window.location.href = targetUrl;
-                                  }
-                                }, 50);
-                              } catch (err) {
-                                console.error("Navigation error:", err);
-                                window.location.href = targetUrl;
-                              }
+                              console.log("🔗 [NAV] Agent name clicked - navigating to:", `/agent/${agent.id}`, "Agent ID:", agent.id);
                             }}
-                            className="text-xl text-gray-900 hover:underline cursor-pointer text-left font-semibold transition-all inline-block bg-transparent border-none p-0 m-0"
+                            className="text-xl text-gray-900 hover:underline cursor-pointer text-left font-semibold transition-all inline-block"
                             title={`View ${agentName}'s profile`}
                           >
                             {agentName}
-                          </button>
+                          </Link>
                         ) : (
                           <h3 className="text-xl text-gray-900">{agentName}</h3>
                         )}
