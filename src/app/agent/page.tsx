@@ -51,6 +51,15 @@ export default function AgentLandingPage() {
           console.error('Error parsing signup data:', e);
         }
       }
+      
+      // Load remembered credentials if they exist
+      const rememberedEmail = localStorage.getItem('rememberedEmail');
+      const rememberedPassword = localStorage.getItem('rememberedPassword');
+      if (rememberedEmail && rememberedPassword) {
+        setEmail(rememberedEmail);
+        setPassword(rememberedPassword);
+        setRememberMe(true);
+      }
     }
 
     async function checkAuth() {
@@ -220,8 +229,26 @@ export default function AgentLandingPage() {
         }
 
         if (profile.role === "admin") {
+          // Save credentials if remember me is checked
+          if (rememberMe) {
+            localStorage.setItem('rememberedEmail', email);
+            localStorage.setItem('rememberedPassword', password);
+          } else {
+            // Clear saved credentials if remember me is unchecked
+            localStorage.removeItem('rememberedEmail');
+            localStorage.removeItem('rememberedPassword');
+          }
           router.push("/admin/dashboard");
         } else {
+          // Save credentials if remember me is checked
+          if (rememberMe) {
+            localStorage.setItem('rememberedEmail', email);
+            localStorage.setItem('rememberedPassword', password);
+          } else {
+            // Clear saved credentials if remember me is unchecked
+            localStorage.removeItem('rememberedEmail');
+            localStorage.removeItem('rememberedPassword');
+          }
           router.push("/agent/dashboard");
         }
       }
