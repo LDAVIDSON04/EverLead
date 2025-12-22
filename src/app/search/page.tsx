@@ -1142,14 +1142,14 @@ function SearchResults() {
                             href={`/agent/${agent.id}`}
                             onClick={(e) => {
                               e.stopPropagation();
-                              console.log("🔗 Agent name clicked, navigating to:", `/agent/${agent.id}`, "Agent ID:", agent.id);
-                              // Force navigation if default doesn't work
-                              setTimeout(() => {
-                                if (window.location.pathname !== `/agent/${agent.id}`) {
-                                  console.log("⚠️ Navigation didn't work, forcing with window.location");
-                                  window.location.href = `/agent/${agent.id}`;
-                                }
-                              }, 100);
+                              console.log("🔗 [NAV] Agent name clicked:", {
+                                agentId: agent.id,
+                                agentName: agentName,
+                                href: `/agent/${agent.id}`,
+                                currentPath: window.location.pathname
+                              });
+                              // Immediately navigate
+                              window.location.href = `/agent/${agent.id}`;
                             }}
                             className="text-xl text-gray-900 hover:underline cursor-pointer text-left font-semibold transition-all inline-block"
                             title={`View ${agentName}'s profile`}
