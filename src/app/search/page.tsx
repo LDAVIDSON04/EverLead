@@ -1138,18 +1138,20 @@ function SearchResults() {
                     <div className="flex-1">
                       <div className="mb-2">
                         {agent?.id ? (
-                          <Link
+                          <a
                             href={`/agent/${agent.id}`}
                             onClick={(e) => {
                               e.stopPropagation();
                               console.log("🔗 [NAV] Agent name clicked - navigating to:", `/agent/${agent.id}`, "Agent ID:", agent.id);
-                              // Don't prevent default - let Link handle it
+                              // Use window.location for guaranteed navigation
+                              e.preventDefault();
+                              window.location.href = `/agent/${agent.id}`;
                             }}
                             className="text-xl text-gray-900 hover:underline cursor-pointer text-left font-semibold transition-all inline-block"
                             title={`View ${agentName}'s profile`}
                           >
                             {agentName}
-                          </Link>
+                          </a>
                         ) : (
                           <h3 className="text-xl text-gray-900">{agentName}</h3>
                         )}
