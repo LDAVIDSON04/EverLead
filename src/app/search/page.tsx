@@ -1119,13 +1119,7 @@ function SearchResults() {
 
               return (
                 <div key={appointment.id} className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
-                  <div className="flex gap-6" onClick={(e) => {
-                    // Don't prevent navigation if clicking on agent name link
-                    const target = e.target as HTMLElement;
-                    if (target.closest('button[type="button"]') || target.tagName === 'BUTTON') {
-                      return; // Let the button handle it
-                    }
-                  }}>
+                  <div className="flex gap-6">
                     {/* Agent Avatar */}
                     <div className="flex-shrink-0">
                       {agent?.profile_picture_url ? (
@@ -1148,9 +1142,6 @@ function SearchResults() {
                             href={`/agentportfolio/${agent.id}`}
                             className="text-xl text-gray-900 hover:underline cursor-pointer text-left font-semibold transition-all inline-block"
                             title={`View ${agentName}'s profile`}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                            }}
                           >
                             {agentName}
                           </Link>
