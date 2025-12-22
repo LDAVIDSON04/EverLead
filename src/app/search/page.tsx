@@ -1178,9 +1178,18 @@ function SearchResults() {
                               e.preventDefault();
                               e.stopPropagation();
                               const url = `/agentportfolio/${agent.id}`;
-                              console.log("NAVIGATING TO:", url);
-                              // Force full page reload
-                              window.location.href = url;
+                              console.log("🔗 BUTTON CLICKED - Navigating to:", url);
+                              console.log("🔗 Agent ID:", agent.id);
+                              console.log("🔗 Current URL:", window.location.href);
+                              // Force full page reload - bypass everything
+                              try {
+                                window.location.href = url;
+                                console.log("🔗 window.location.href set to:", url);
+                              } catch (err) {
+                                console.error("🔗 Navigation error:", err);
+                                // Fallback
+                                window.location.assign(url);
+                              }
                             }}
                             className="ml-3 text-gray-900 hover:text-gray-700 underline decoration-black hover:decoration-gray-700 text-sm font-medium transition-colors bg-transparent border-none p-0 cursor-pointer"
                           >
