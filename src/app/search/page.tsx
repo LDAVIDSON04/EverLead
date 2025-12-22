@@ -1146,12 +1146,8 @@ function SearchResults() {
                               console.log("LINK CLICKED:", agentName, agent.id);
                               const url = `/agentportfolio/${agent.id}`;
                               console.log("NAVIGATING TO:", url);
-                              // Try router first, then fallback to window.location
-                              router.push(url).catch((err) => {
-                                console.error("Router push failed:", err);
-                                console.log("Falling back to window.location.href");
-                                window.location.href = url;
-                              });
+                              // Force hard navigation - bypass Next.js router completely
+                              window.location.href = url;
                             }}
                             className="text-xl text-gray-900 hover:underline cursor-pointer text-left font-semibold transition-all inline-block relative z-10 bg-transparent border-none p-0 m-0"
                             title={`View ${agentName}'s profile`}
