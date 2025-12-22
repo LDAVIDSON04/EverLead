@@ -8,6 +8,7 @@ import Image from "next/image";
 import { Suspense, useState, useEffect } from "react";
 import { Search, Star, MapPin, Calendar, Clock, Stethoscope, Video, SlidersHorizontal, ChevronRight, X, ArrowLeft, Shield } from "lucide-react";
 import { supabaseClient } from "@/lib/supabaseClient";
+import { BookingPanel } from "@/app/agentportfolio/[agentId]/components/BookingPanel";
 
 type Appointment = {
   id: string;
@@ -1631,17 +1632,9 @@ function SearchResults() {
 
                     {/* Right Column - Sticky Booking Panel (5 columns) */}
                     <div className="lg:col-span-5">
-                      <div className="bg-white border border-gray-200 rounded-xl shadow-sm sticky top-24">
-                        <div className="p-10">
-                          <h2 className="text-3xl mb-3">Book an appointment</h2>
-                          <p className="text-gray-600 mb-10 text-lg">
-                            Select a date and time to schedule your appointment
-                          </p>
-                          <div className="text-center py-8">
-                            <p className="text-gray-500">Booking panel will be available here</p>
-                          </div>
-                        </div>
-                      </div>
+                      {portfolioAgentData?.id && (
+                        <BookingPanel agentId={portfolioAgentData.id} />
+                      )}
                     </div>
                   </div>
 
