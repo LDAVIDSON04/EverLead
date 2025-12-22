@@ -1140,7 +1140,7 @@ function SearchResults() {
                         {agent?.id ? (
                           <button
                             type="button"
-                            onClick={(e) => {
+                            onClick={async (e) => {
                               e.preventDefault();
                               e.stopPropagation();
                               const targetUrl = `/agent/${agent.id}`;
@@ -1148,8 +1148,20 @@ function SearchResults() {
                               console.log("🔗 [NAV] Agent ID:", agent.id);
                               console.log("🔗 [NAV] Current path:", window.location.pathname);
                               
-                              // Force immediate navigation - no delays
-                              window.location.href = targetUrl;
+                              // Try router.push first, then fallback to window.location
+                              try {
+                                router.push(targetUrl);
+                                // Double-check with window.location after a brief delay
+                                setTimeout(() => {
+                                  if (window.location.pathname !== targetUrl) {
+                                    console.log("⚠️ Router.push didn't work, using window.location.href");
+                                    window.location.href = targetUrl;
+                                  }
+                                }, 100);
+                              } catch (err) {
+                                console.error("Navigation error:", err);
+                                window.location.href = targetUrl;
+                              }
                             }}
                             className="text-xl text-gray-900 hover:underline cursor-pointer text-left font-semibold transition-all inline-block bg-transparent border-none p-0"
                             title={`View ${agentName}'s profile`}
