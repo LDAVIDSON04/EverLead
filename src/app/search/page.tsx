@@ -1145,22 +1145,22 @@ function SearchResults() {
                     <div className="flex-1">
                       <div className="mb-2">
                         {agent?.id ? (
-                          <a
-                            href={`/agent/${agent.id}`}
+                          <button
+                            type="button"
                             onClick={(e) => {
-                              // CRITICAL: Don't stop propagation or prevent default
-                              // Let the anchor tag work naturally
+                              e.preventDefault();
+                              e.stopPropagation();
                               const targetUrl = `/agent/${agent.id}`;
-                              console.log("🔗 [NAV] Agent name clicked - navigating to:", targetUrl, "Agent ID:", agent.id);
-                              console.log("🔗 [NAV] Event target:", e.target);
-                              console.log("🔗 [NAV] Current URL:", window.location.href);
-                              // The browser will handle navigation automatically via href
+                              console.log("🔗 [NAV] Agent name clicked - FORCING navigation to:", targetUrl);
+                              console.log("🔗 [NAV] Agent ID:", agent.id);
+                              // Force full page navigation - bypass Next.js router completely
+                              window.location.href = targetUrl;
                             }}
-                            className="text-xl text-gray-900 hover:underline cursor-pointer text-left font-semibold transition-all inline-block"
+                            className="text-xl text-gray-900 hover:underline cursor-pointer text-left font-semibold transition-all inline-block bg-transparent border-none p-0 m-0"
                             title={`View ${agentName}'s profile`}
                           >
                             {agentName}
-                          </a>
+                          </button>
                         ) : (
                           <h3 className="text-xl text-gray-900">{agentName}</h3>
                         )}
