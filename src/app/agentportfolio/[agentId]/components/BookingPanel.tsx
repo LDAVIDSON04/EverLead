@@ -308,13 +308,14 @@ export function BookingPanel({ agentId }: BookingPanelProps) {
                   key={index}
                   onClick={() => handleDayClick(index)}
                   disabled={day.appointmentCount === 0}
-                  className={`rounded-lg text-center px-2 py-3 transition-all border-2 aspect-square flex flex-col justify-center items-center ${
+                  className={`rounded-lg text-center px-3 py-2 transition-all border-2 flex flex-col justify-center items-center ${
                     day.appointmentCount === 0
                       ? 'bg-gray-50 border-gray-200 cursor-not-allowed'
                       : selectedDayIndex === index
                       ? 'bg-[#2d7a4a] border-[#2d7a4a] shadow-md'
                       : 'bg-[#2d7a4a] border-gray-200 hover:border-gray-300 hover:shadow-sm'
                   }`}
+                  style={{ aspectRatio: '2 / 1' }}
                 >
                   <div className={`text-xs font-medium mb-0.5 ${
                     day.appointmentCount === 0 ? 'text-gray-400' : 'text-white'
@@ -349,13 +350,14 @@ export function BookingPanel({ agentId }: BookingPanelProps) {
                     key={actualIndex}
                     onClick={() => handleDayClick(actualIndex)}
                     disabled={day.appointmentCount === 0}
-                    className={`rounded-lg text-center px-2 py-3 transition-all border-2 aspect-square flex flex-col justify-center items-center ${
+                    className={`rounded-lg text-center px-3 py-2 transition-all border-2 flex flex-col justify-center items-center ${
                       day.appointmentCount === 0
                         ? 'bg-gray-50 border-gray-200 cursor-not-allowed'
                         : selectedDayIndex === actualIndex
                         ? 'bg-[#2d7a4a] border-[#2d7a4a] shadow-md'
                         : 'bg-[#2d7a4a] border-gray-200 hover:border-gray-300 hover:shadow-sm'
                     }`}
+                    style={{ aspectRatio: '2 / 1' }}
                   >
                     <div className={`text-xs font-medium mb-0.5 ${
                       day.appointmentCount === 0 ? 'text-gray-400' : 'text-white'
