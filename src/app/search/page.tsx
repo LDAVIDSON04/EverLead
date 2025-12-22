@@ -1166,26 +1166,6 @@ function SearchResults() {
                         </div>
                       )}
 
-                      {/* Learn More Button */}
-                      {agent?.id && (
-                        <div className="mb-3">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              console.log("LEARN MORE CLICKED:", agentName, agent.id);
-                              const url = `/agentportfolio/${agent.id}`;
-                              console.log("NAVIGATING TO:", url);
-                              window.location.href = url;
-                            }}
-                            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-lg transition-colors"
-                          >
-                            Learn more about {agentName}
-                          </button>
-                        </div>
-                      )}
-
                       {/* Rating */}
                       <div className="flex items-center gap-1 mb-3">
                         <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
@@ -1197,12 +1177,14 @@ function SearchResults() {
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
+                              e.stopImmediatePropagation();
                               console.log("LEARN MORE CLICKED:", agentName, agent.id);
                               const url = `/agentportfolio/${agent.id}`;
                               console.log("NAVIGATING TO:", url);
-                              window.location.href = url;
+                              // Force navigation immediately
+                              window.location.assign(url);
                             }}
-                            className="ml-3 text-green-600 hover:text-green-700 underline text-sm font-medium transition-colors bg-transparent border-none p-0 cursor-pointer"
+                            className="ml-3 text-gray-900 hover:text-gray-700 underline decoration-black hover:decoration-gray-700 text-sm font-medium transition-colors bg-transparent border-none p-0 cursor-pointer"
                           >
                             Learn more about {agentName}
                           </button>
