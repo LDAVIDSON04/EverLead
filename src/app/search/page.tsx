@@ -1172,22 +1172,25 @@ function SearchResults() {
                         <span className="text-gray-900">4.9</span>
                         <span className="text-gray-500">· {Math.floor(Math.random() * 200 + 50)} reviews</span>
                         {agent?.id && (
-                          <a
-                            href={`/agentportfolio/${agent.id}`}
+                          <button
+                            type="button"
                             onClick={(e) => {
-                              // Don't prevent default - let browser handle it
-                              // But also force navigation programmatically
+                              e.preventDefault();
+                              e.stopPropagation();
                               const url = `/agentportfolio/${agent.id}`;
+                              // Use Next.js router
+                              router.push(url);
+                              // Force navigation as backup
                               setTimeout(() => {
                                 if (window.location.pathname !== url) {
-                                  window.location.replace(url);
+                                  window.location.href = url;
                                 }
-                              }, 0);
+                              }, 100);
                             }}
-                            className="ml-3 text-gray-900 hover:text-gray-700 underline decoration-black hover:decoration-gray-700 text-sm font-medium transition-colors cursor-pointer"
+                            className="ml-3 text-gray-900 hover:text-gray-700 underline decoration-black hover:decoration-gray-700 text-sm font-medium transition-colors bg-transparent border-none p-0 cursor-pointer"
                           >
                             Learn more about {agentName}
-                          </a>
+                          </button>
                         )}
                       </div>
 
