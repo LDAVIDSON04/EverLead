@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { supabaseClient } from "@/lib/supabaseClient";
 import Link from "next/link";
@@ -16,7 +16,6 @@ import { BookingPanel } from "./components/BookingPanel";
 
 export default function AgentProfilePage() {
   const params = useParams();
-  const router = useRouter();
   const agentId = params.agentId as string;
 
   const [agentData, setAgentData] = useState<any>(null);
@@ -33,18 +32,21 @@ export default function AgentProfilePage() {
     setLoading(true);
     setError(null);
     try {
+      console.log("🔍 Loading agent profile for ID:", agentId);
+      
       const { data, error: fetchError } = await supabaseClient
         .from("profiles")
         .select("id, full_name, first_name, last_name, profile_picture_url, job_title, funeral_home, agent_city, agent_province, email, phone, metadata")
         .eq("id", agentId)
         .eq("role", "agent")
-        .single();
+        .maybeSingle();
       
       if (fetchError) {
-        console.error("Error loading agent profile:", fetchError);
-        setError("Failed to load agent profile");
+        console.error("❌ Error loading agent profile:", fetchError);
+        setError("Failed to load agent profile: " + fetchError.message);
         setAgentData(null);
       } else if (data) {
+        console.log("✅ Agent profile loaded:", data);
         const metadata = data.metadata || {};
         const specialty = (metadata as any)?.specialty || null;
         const licenseNumber = (metadata as any)?.license_number || null;
@@ -68,11 +70,12 @@ export default function AgentProfilePage() {
           fullBio: `${data.full_name || 'This agent'}'s journey into end-of-life care is driven by a commitment to helping families during life's most challenging moments.\n\n${specialty || 'Their expertise'} allows them to address both the emotional and practical aspects of end-of-life planning.\n\nThey are known for their patient, non-judgmental approach and their ability to facilitate difficult family conversations.`,
         });
       } else {
+        console.warn("⚠️ Agent not found for ID:", agentId);
         setError("Agent not found");
         setAgentData(null);
       }
     } catch (err) {
-      console.error("Error loading agent profile:", err);
+      console.error("❌ Error loading agent profile:", err);
       setError("An error occurred while loading the profile");
       setAgentData(null);
     } finally {
@@ -132,35 +135,47 @@ export default function AgentProfilePage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Left Column - Main Content */}
           <div className="lg:col-span-7">
-            <AgentHeader 
-              name={agentData.full_name || "Agent"}
-              credentials={agentData.credentials}
-              specialty={agentData.specialty || agentData.job_title || "Pre-need Planning Specialist"}
-              location={location}
-              rating={agentData.rating}
-              reviewCount={agentData.reviewCount}
-              imageUrl={agentData.profile_picture_url || ""}
-              verified={agentData.verified}
-            />
-            <AboutSection 
-              summary={agentData.summary} 
-              fullBio={agentData.fullBio} 
-            />
-            <TrustHighlights />
+            <div id="about">
+              <AgentHeader 
+                name={agentData.full_name || "Agent"}
+                credentials={agentData.credentials}
+                specialty={agentData.specialty || agentData.job_title || "Pre-need Planning Specialist"}
+                location={location}
+                rating={agentData.rating}
+                reviewCount={agentData.reviewCount}
+                imageUrl={agentData.profile_picture_url || ""}
+                verified={agentData.verified}
+              />
+              <AboutSection 
+                summary={agentData.summary} 
+                fullBio={agentData.fullBio} 
+              />
+            </div>
+            <div id="highlights" className="mt-8">
+              <TrustHighlights />
+            </div>
           </div>
 
           {/* Right Column - Sticky Booking Panel */}
           <div className="lg:col-span-5">
-            <BookingPanel agentId={agentId} />
+            <div className="sticky top-24">
+              <BookingPanel agentId={agentId} />
+            </div>
           </div>
         </div>
 
         {/* Full-width sections below two-column layout */}
         <div className="mt-8">
-          <Credentials agentData={agentData} />
-          <OfficeLocations agentData={agentData} />
-          <Reviews reviewCount={agentData.reviewCount} />
-          <FAQs />
+          <div id="locations">
+            <Credentials agentData={agentData} />
+            <OfficeLocations agentData={agentData} />
+          </div>
+          <div id="reviews" className="mt-8">
+            <Reviews reviewCount={agentData.reviewCount} />
+          </div>
+          <div id="faqs" className="mt-8">
+            <FAQs />
+          </div>
         </div>
       </div>
     </div>
