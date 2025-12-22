@@ -1138,17 +1138,22 @@ function SearchResults() {
                     <div className="flex-1">
                       <div className="mb-2">
                         {agent?.id ? (
-                          <Link
-                            href={`/agentportfolio/${agent.id}`}
+                          <span
                             onClick={(e) => {
+                              e.preventDefault();
                               e.stopPropagation();
-                              console.log("🔗 [NAV] Agent name clicked - using Next.js Link to:", `/agentportfolio/${agent.id}`);
+                              const url = `/agentportfolio/${agent.id}`;
+                              console.log("🔗 [NAV] Agent name clicked - FORCING navigation to:", url);
+                              // Force hard navigation - bypass everything
+                              if (typeof window !== 'undefined') {
+                                window.location.href = url;
+                              }
                             }}
                             className="text-xl text-gray-900 hover:underline cursor-pointer text-left font-semibold transition-all inline-block"
                             title={`View ${agentName}'s profile`}
                           >
                             {agentName}
-                          </Link>
+                          </span>
                         ) : (
                           <h3 className="text-xl text-gray-900">{agentName}</h3>
                         )}
