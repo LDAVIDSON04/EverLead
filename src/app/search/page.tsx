@@ -1066,7 +1066,7 @@ function SearchResults() {
         {/* Results Header */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl text-gray-900">
-            {loading ? "Loading..." : `${appointments.length} ${appointments.length === 1 ? 'appointment' : 'appointments'} available`}
+            {loading ? "Loading..." : `${appointments.length} ${appointments.length === 1 ? 'provider' : 'providers'} available`}
           </h2>
           <button className="flex items-center gap-2 text-gray-700 hover:text-gray-900">
             <span>Today, {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {new Date(Date.now() + 13 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
