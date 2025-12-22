@@ -22,24 +22,29 @@ export default function AgentProfilePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Add error boundary state
+  const [hasError, setHasError] = useState(false);
+
   useEffect(() => {
     console.log("🎯 [PORTFOLIO] ========== PAGE MOUNTED ==========");
     console.log("🎯 [PORTFOLIO] agentId from params:", agentId);
     console.log("🎯 [PORTFOLIO] All params:", params);
     console.log("🎯 [PORTFOLIO] Current URL:", typeof window !== 'undefined' ? window.location.href : 'N/A');
     
-    if (agentId) {
-      loadAgentProfile(agentId);
-    } else {
+    if (!agentId) {
       console.warn("⚠️ [PORTFOLIO] No agentId provided");
       setError("No agent ID provided");
       setLoading(false);
+      return;
     }
-  }, [agentId, params]);
+    
+    loadAgentProfile(agentId);
+  }, [agentId]);
 
   const loadAgentProfile = async (agentId: string) => {
     setLoading(true);
     setError(null);
+    setHasError(false);
     try {
       console.log("🔍 [PORTFOLIO] Loading agent profile for ID:", agentId);
       
@@ -85,10 +90,29 @@ export default function AgentProfilePage() {
       console.error("❌ [PORTFOLIO] Error:", err);
       setError(`Error: ${err?.message || 'Unknown'}`);
       setAgentData(null);
+      setHasError(true);
     } finally {
       setLoading(false);
     }
   };
+
+  // Error boundary catch
+  if (hasError) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center p-4">
+        <div className="text-center max-w-md">
+          <p className="text-red-600 mb-4 text-lg">Something went wrong</p>
+          <p className="text-sm text-gray-400 mb-4">Agent ID: {agentId || 'N/A'}</p>
+          <Link
+            href="/search"
+            className="inline-block bg-[#1a4d2e] hover:bg-[#0f2e1c] text-white font-semibold px-6 py-3 rounded-lg transition-colors"
+          >
+            Return to Search
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -123,58 +147,76 @@ export default function AgentProfilePage() {
     ? `${agentData.agent_city}, ${agentData.agent_province}`
     : agentData.agent_city || agentData.agent_province || 'Location not specified';
 
-  return (
-    <div className="min-h-screen bg-white">
-      {/* Header with Back Button */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <Link
-            href="/search"
-            className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            <span>Back to Search</span>
-          </Link>
-        </div>
-      </header>
+  try {
+    return (
+      <div className="min-h-screen bg-white">
+        {/* Header with Back Button */}
+        <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <Link
+              href="/search"
+              className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              <span>Back to Search</span>
+            </Link>
+          </div>
+        </header>
 
-      {/* Main Container - Matching Design */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Two-column layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Left Column - Main Content (7 columns) */}
-          <div className="lg:col-span-7">
-            <AgentHeader 
-              name={agentData.full_name || "Agent"}
-              credentials={agentData.credentials}
-              specialty={agentData.specialty || agentData.job_title || "Pre-need Planning Specialist"}
-              location={location}
-              rating={agentData.rating}
-              reviewCount={agentData.reviewCount}
-              imageUrl={agentData.profile_picture_url || ""}
-              verified={agentData.verified}
-            />
-            <AboutSection 
-              summary={agentData.summary} 
-              fullBio={agentData.fullBio} 
-            />
-            <TrustHighlights />
+        {/* Main Container - Matching Design */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Two-column layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            {/* Left Column - Main Content (7 columns) */}
+            <div className="lg:col-span-7">
+              <AgentHeader 
+                name={agentData.full_name || "Agent"}
+                credentials={agentData.credentials}
+                specialty={agentData.specialty || agentData.job_title || "Pre-need Planning Specialist"}
+                location={location}
+                rating={agentData.rating}
+                reviewCount={agentData.reviewCount}
+                imageUrl={agentData.profile_picture_url || ""}
+                verified={agentData.verified}
+              />
+              <AboutSection 
+                summary={agentData.summary} 
+                fullBio={agentData.fullBio} 
+              />
+              <TrustHighlights />
+            </div>
+
+            {/* Right Column - Sticky Booking Panel (5 columns) */}
+            <div className="lg:col-span-5">
+              <BookingPanel agentId={agentId} />
+            </div>
           </div>
 
-          {/* Right Column - Sticky Booking Panel (5 columns) */}
-          <div className="lg:col-span-5">
-            <BookingPanel agentId={agentId} />
+          {/* Full-width sections below two-column layout */}
+          <div className="mt-8">
+            <Credentials agentData={agentData} />
+            <OfficeLocations agentData={agentData} />
+            <Reviews reviewCount={agentData.reviewCount} />
+            <FAQs />
           </div>
-        </div>
-
-        {/* Full-width sections below two-column layout */}
-        <div className="mt-8">
-          <Credentials agentData={agentData} />
-          <OfficeLocations agentData={agentData} />
-          <Reviews reviewCount={agentData.reviewCount} />
-          <FAQs />
         </div>
       </div>
-    </div>
-  );
+    );
+  } catch (renderError: any) {
+    console.error("❌ [PORTFOLIO] Render error:", renderError);
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center p-4">
+        <div className="text-center max-w-md">
+          <p className="text-red-600 mb-4 text-lg">Error rendering page</p>
+          <p className="text-sm text-gray-400 mb-4">{renderError?.message || 'Unknown error'}</p>
+          <Link
+            href="/search"
+            className="inline-block bg-[#1a4d2e] hover:bg-[#0f2e1c] text-white font-semibold px-6 py-3 rounded-lg transition-colors"
+          >
+            Return to Search
+          </Link>
+        </div>
+      </div>
+    );
+  }
 }
