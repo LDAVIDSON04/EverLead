@@ -128,9 +128,10 @@ function SearchResults() {
     setInputQuery(query);
     // Always sync location from URL params - this ensures it shows in the search bar and on agent cards
     if (location) {
-      console.log("📍 Syncing location from URL:", location);
-      setSearchLocation(location);
-      setInputLocation(location);
+      const decoded = decodeURIComponent(location.replace(/\+/g, ' '));
+      console.log("📍 Syncing location from URL:", decoded);
+      setSearchLocation(decoded);
+      setInputLocation(decoded);
       setLocationDetected(true); // Mark as detected so we don't auto-detect again
     } else {
       // Clear location if it's removed from URL
