@@ -1138,27 +1138,17 @@ function SearchResults() {
                     <div className="flex-1">
                       <div className="mb-2">
                         {agent?.id ? (
-                          <button
-                            type="button"
+                          <a
+                            href={`/agentportfolio/${agent.id}`}
                             onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              e.stopImmediatePropagation();
                               console.log("LINK CLICKED:", agentName, agent.id);
-                              const url = `/agentportfolio/${agent.id}`;
-                              console.log("NAVIGATING TO:", url);
-                              console.log("Current URL:", window.location.href);
-                              // Use setTimeout to ensure navigation happens after event handling
-                              setTimeout(() => {
-                                console.log("Executing navigation now...");
-                                window.location.href = url;
-                              }, 0);
+                              // Don't prevent default - let the browser handle it naturally
                             }}
-                            className="text-xl text-gray-900 hover:underline cursor-pointer text-left font-semibold transition-all inline-block relative z-10 bg-transparent border-none p-0 m-0"
+                            className="text-xl text-gray-900 hover:underline cursor-pointer text-left font-semibold transition-all inline-block relative z-10"
                             title={`View ${agentName}'s profile`}
                           >
                             {agentName}
-                          </button>
+                          </a>
                         ) : (
                           <h3 className="text-xl text-gray-900">{agentName}</h3>
                         )}
