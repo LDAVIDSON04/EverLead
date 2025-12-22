@@ -1142,7 +1142,8 @@ function SearchResults() {
                             href={`/agent/${agent.id}`}
                             onClick={(e) => {
                               e.stopPropagation();
-                              console.log("🔗 [NAV] Agent name clicked - navigating to:", `/agent/${agent.id}`);
+                              console.log("🔗 [NAV] Agent name clicked - navigating to:", `/agent/${agent.id}`, "Agent ID:", agent.id);
+                              // Don't prevent default - let Link handle it
                             }}
                             className="text-xl text-gray-900 hover:underline cursor-pointer text-left font-semibold transition-all inline-block"
                             title={`View ${agentName}'s profile`}
