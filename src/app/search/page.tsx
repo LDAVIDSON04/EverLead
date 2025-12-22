@@ -1119,14 +1119,7 @@ function SearchResults() {
 
               return (
                 <div key={appointment.id} className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
-                  <div className="flex gap-6" onClick={(e) => {
-                    // Only prevent card click if clicking on a link
-                    const target = e.target as HTMLElement;
-                    if (target.closest('a')) {
-                      // Let the link handle its own navigation
-                      return;
-                    }
-                  }}>
+                  <div className="flex gap-6">
                     {/* Agent Avatar */}
                     <div className="flex-shrink-0">
                       {agent?.profile_picture_url ? (
@@ -1145,21 +1138,28 @@ function SearchResults() {
                     <div className="flex-1">
                       <div className="mb-2">
                         {agent?.id ? (
-                          <a
-                            href={`/agentportfolio/${agent.id}`}
+                          <button
+                            type="button"
                             onClick={(e) => {
-                              // Don't prevent default - let anchor work naturally
+                              e.preventDefault();
                               e.stopPropagation();
                               const targetUrl = `/agentportfolio/${agent.id}`;
-                              console.log("🔗 [NAV] Agent name clicked - navigating to:", targetUrl);
+                              console.log("🔗 [NAV] Agent name clicked - FORCING full page navigation to:", targetUrl);
                               console.log("🔗 [NAV] Agent ID:", agent.id);
-                              // Let the browser handle navigation via href
+                              // Force full page navigation - bypass Next.js router completely
+                              // Use assign first, then fallback to href
+                              try {
+                                window.location.assign(targetUrl);
+                              } catch (err) {
+                                console.error("assign failed, using href:", err);
+                                window.location.href = targetUrl;
+                              }
                             }}
-                            className="text-xl text-gray-900 hover:underline cursor-pointer text-left font-semibold transition-all inline-block"
+                            className="text-xl text-gray-900 hover:underline cursor-pointer text-left font-semibold transition-all inline-block bg-transparent border-none p-0 m-0"
                             title={`View ${agentName}'s profile`}
                           >
                             {agentName}
-                          </a>
+                          </button>
                         ) : (
                           <h3 className="text-xl text-gray-900">{agentName}</h3>
                         )}
