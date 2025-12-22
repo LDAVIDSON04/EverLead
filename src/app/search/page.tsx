@@ -1145,35 +1145,26 @@ function SearchResults() {
                     <div className="flex-1">
                       <div className="mb-2">
                         {agent?.id ? (
-                          <span
-                            data-nav="true"
+                          <a
+                            href={`/agent/${agent.id}`}
                             onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
+                              // Don't prevent default - let browser handle it
                               const targetUrl = `/agent/${agent.id}`;
-                              console.log("🔗 [NAV] Agent name clicked - FORCING navigation to:", targetUrl);
+                              console.log("🔗 [NAV] Agent name clicked - navigating to:", targetUrl);
                               console.log("🔗 [NAV] Agent ID:", agent.id);
-                              // Force navigation using multiple methods
-                              try {
-                                // Method 1: window.location.assign
-                                window.location.assign(targetUrl);
-                              } catch (err1) {
-                                console.error("assign failed, trying replace:", err1);
-                                try {
-                                  // Method 2: window.location.replace
-                                  window.location.replace(targetUrl);
-                                } catch (err2) {
-                                  console.error("replace failed, trying href:", err2);
-                                  // Method 3: window.location.href
+                              // If href doesn't work, force it
+                              setTimeout(() => {
+                                if (window.location.pathname !== targetUrl) {
+                                  console.log("🔗 [NAV] href didn't work, forcing navigation");
                                   window.location.href = targetUrl;
                                 }
-                              }
+                              }, 100);
                             }}
                             className="text-xl text-gray-900 hover:underline cursor-pointer text-left font-semibold transition-all inline-block"
                             title={`View ${agentName}'s profile`}
                           >
                             {agentName}
-                          </span>
+                          </a>
                         ) : (
                           <h3 className="text-xl text-gray-900">{agentName}</h3>
                         )}
