@@ -1177,7 +1177,6 @@ function SearchResults() {
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
-                              e.stopImmediatePropagation();
                               console.log("LEARN MORE CLICKED:", agentName, agent.id);
                               const url = `/agentportfolio/${agent.id}`;
                               console.log("NAVIGATING TO:", url);
