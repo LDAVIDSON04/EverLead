@@ -1119,13 +1119,7 @@ function SearchResults() {
 
               return (
                 <div key={appointment.id} className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
-                  <div className="flex gap-6" onClick={(e) => {
-                    // Prevent card click from interfering with link clicks
-                    const target = e.target as HTMLElement;
-                    if (target.closest('a')) {
-                      return; // Let link handle it
-                    }
-                  }}>
+                  <div className="flex gap-6">
                     {/* Agent Avatar */}
                     <div className="flex-shrink-0">
                       {agent?.profile_picture_url ? (
@@ -1144,19 +1138,24 @@ function SearchResults() {
                     <div className="flex-1">
                       <div className="mb-2">
                         {agent?.id ? (
-                          <button
-                            type="button"
+                          <a
+                            href={`/agent/${agent.id}`}
                             onClick={(e) => {
                               e.stopPropagation();
-                              e.preventDefault();
-                              // Force navigation to portfolio page
-                              window.location.href = `/agent/${agent.id}`;
+                              console.log("🔗 Agent name clicked, navigating to:", `/agent/${agent.id}`, "Agent ID:", agent.id);
+                              // Force navigation if default doesn't work
+                              setTimeout(() => {
+                                if (window.location.pathname !== `/agent/${agent.id}`) {
+                                  console.log("⚠️ Navigation didn't work, forcing with window.location");
+                                  window.location.href = `/agent/${agent.id}`;
+                                }
+                              }, 100);
                             }}
                             className="text-xl text-gray-900 hover:underline cursor-pointer text-left font-semibold transition-all inline-block"
                             title={`View ${agentName}'s profile`}
                           >
                             {agentName}
-                          </button>
+                          </a>
                         ) : (
                           <h3 className="text-xl text-gray-900">{agentName}</h3>
                         )}
