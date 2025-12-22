@@ -1191,6 +1191,22 @@ function SearchResults() {
                         <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                         <span className="text-gray-900">4.9</span>
                         <span className="text-gray-500">· {Math.floor(Math.random() * 200 + 50)} reviews</span>
+                        {agent?.id && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              console.log("LEARN MORE CLICKED:", agentName, agent.id);
+                              const url = `/agentportfolio/${agent.id}`;
+                              console.log("NAVIGATING TO:", url);
+                              window.location.href = url;
+                            }}
+                            className="ml-3 text-green-600 hover:text-green-700 underline text-sm font-medium transition-colors bg-transparent border-none p-0 cursor-pointer"
+                          >
+                            Learn more about {agentName}
+                          </button>
+                        )}
                       </div>
 
                       {/* Availability Calendar */}
