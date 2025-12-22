@@ -6,7 +6,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Suspense, useState, useEffect } from "react";
-import { Search, Star, MapPin, Calendar, Clock, Stethoscope, Video, SlidersHorizontal, ChevronRight, X } from "lucide-react";
+import { Search, Star, MapPin, Calendar, Clock, Stethoscope, Video, SlidersHorizontal, ChevronRight, X, ArrowLeft, Shield } from "lucide-react";
 import { supabaseClient } from "@/lib/supabaseClient";
 
 type Appointment = {
@@ -125,6 +125,16 @@ function SearchResults() {
 
   const [allAvailabilityDays, setAllAvailabilityDays] = useState<AvailabilityDay[]>([]); // Store all days with slots
   const [loadingTimeSlots, setLoadingTimeSlots] = useState(false);
+  
+  // Portfolio modal state
+  const [showPortfolioModal, setShowPortfolioModal] = useState(false);
+  const [portfolioAgentData, setPortfolioAgentData] = useState<any>(null);
+  const [portfolioLoading, setPortfolioLoading] = useState(false);
+  
+  // Debug: Log modal state changes
+  useEffect(() => {
+    console.log("Portfolio modal state changed:", { showPortfolioModal, hasData: !!portfolioAgentData, loading: portfolioLoading });
+  }, [showPortfolioModal, portfolioAgentData, portfolioLoading]);
 
   // Sync state with URL params when they change
   useEffect(() => {
@@ -1173,12 +1183,69 @@ function SearchResults() {
                         <span className="text-gray-900">4.9</span>
                         <span className="text-gray-500">· {Math.floor(Math.random() * 200 + 50)} reviews</span>
                         {agent?.id && (
-                          <a
-                            href={`/agentportfolio/${agent.id}`}
-                            className="ml-3 text-gray-900 hover:text-gray-700 underline decoration-black hover:decoration-gray-700 text-sm font-medium transition-colors cursor-pointer"
+                          <button
+                            type="button"
+                            onClick={async (e) => {
+                              console.log("Portfolio button clicked for agent:", agent.id);
+                              e.preventDefault();
+                              e.stopPropagation();
+                              
+                              console.log("Setting modal to show");
+                              setShowPortfolioModal(true);
+                              setPortfolioLoading(true);
+                              setPortfolioAgentData(null);
+                              
+                              try {
+                                console.log("Fetching agent data for:", agent.id);
+                                const { data, error } = await supabaseClient
+                                  .from("profiles")
+                                  .select("id, full_name, first_name, last_name, profile_picture_url, job_title, funeral_home, agent_city, agent_province, email, phone, metadata")
+                                  .eq("id", agent.id)
+                                  .eq("role", "agent")
+                                  .maybeSingle();
+                                
+                                if (error) {
+                                  console.error("Error loading agent:", error);
+                                } else if (data) {
+                                  console.log("Agent data loaded:", data);
+                                  const metadata = data.metadata || {};
+                                  const specialty = (metadata as any)?.specialty || null;
+                                  const licenseNumber = (metadata as any)?.license_number || null;
+                                  const location = data.agent_city && data.agent_province
+                                    ? `${data.agent_city}, ${data.agent_province}`
+                                    : data.agent_city || data.agent_province || 'Location not specified';
+                                  
+                                  setPortfolioAgentData({
+                                    ...data,
+                                    business_address: (metadata as any)?.business_address || null,
+                                    business_street: (metadata as any)?.business_street || null,
+                                    business_city: (metadata as any)?.business_city || null,
+                                    business_province: (metadata as any)?.business_province || null,
+                                    business_zip: (metadata as any)?.business_zip || null,
+                                    specialty: specialty,
+                                    license_number: licenseNumber,
+                                    credentials: licenseNumber ? `LFD, ${licenseNumber}` : 'LFD',
+                                    rating: 4.9,
+                                    reviewCount: Math.floor(Math.random() * 200 + 50),
+                                    verified: true,
+                                    location: location,
+                                    summary: `${data.full_name || 'This agent'} brings years of compassionate expertise in end-of-life planning and grief support. ${specialty || 'They help'} families navigate difficult decisions with dignity and care.`,
+                                    fullBio: `${data.full_name || 'This agent'}'s journey into end-of-life care is driven by a commitment to helping families during life's most challenging moments.\n\n${specialty || 'Their expertise'} allows them to address both the emotional and practical aspects of end-of-life planning.\n\nThey are known for their patient, non-judgmental approach and their ability to facilitate difficult family conversations.`,
+                                  });
+                                }
+                              } catch (err) {
+                                console.error("Error:", err);
+                              } finally {
+                                setPortfolioLoading(false);
+                              }
+                            }}
+                            onMouseDown={(e) => {
+                              e.stopPropagation();
+                            }}
+                            className="ml-3 text-gray-900 hover:text-gray-700 underline decoration-black hover:decoration-gray-700 text-sm font-medium transition-colors cursor-pointer bg-transparent border-none p-0 relative z-10"
                           >
                             Learn more about {agentName}
-                          </a>
+                          </button>
                         )}
                       </div>
 
@@ -1447,6 +1514,250 @@ function SearchResults() {
         </div>
       )}
 
+      {/* Portfolio Modal - Full Screen */}
+      {showPortfolioModal && (
+        <div 
+          className="fixed inset-0 bg-white z-[9999] overflow-y-auto"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowPortfolioModal(false);
+              setPortfolioAgentData(null);
+            }
+          }}
+        >
+          <div className="min-h-screen bg-white">
+            {/* Header with Back Button */}
+            <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                <button
+                  onClick={() => {
+                    setShowPortfolioModal(false);
+                    setPortfolioAgentData(null);
+                  }}
+                  className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                  <span>Back to Search</span>
+                </button>
+              </div>
+            </header>
+
+            {/* Main Container - Matching Design */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+              {portfolioLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="text-center">
+                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#1a4d2e] mb-4"></div>
+                    <p className="text-gray-600">Loading profile...</p>
+                  </div>
+                </div>
+              ) : portfolioAgentData ? (
+                <>
+                  {/* Two-column layout */}
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                    {/* Left Column - Main Content (7 columns) */}
+                    <div className="lg:col-span-7">
+                      {/* Agent Header */}
+                      <div className="mb-6">
+                        <div className="flex gap-6 pb-6">
+                          <div className="flex-shrink-0">
+                            {portfolioAgentData.profile_picture_url ? (
+                              <img
+                                src={portfolioAgentData.profile_picture_url}
+                                alt={portfolioAgentData.full_name || "Agent"}
+                                className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
+                              />
+                            ) : (
+                              <div className="w-24 h-24 rounded-full bg-[#1a4d2e] flex items-center justify-center border-4 border-white shadow-lg">
+                                <span className="text-white text-3xl font-semibold">
+                                  {(portfolioAgentData.full_name || "A")[0].toUpperCase()}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <h1 className="mb-1">{portfolioAgentData.full_name || "Agent"}, {portfolioAgentData.credentials}</h1>
+                            <p className="text-gray-600 mb-2">{portfolioAgentData.specialty || portfolioAgentData.job_title || "Pre-need Planning Specialist"}</p>
+                            <div className="flex items-center gap-1 text-gray-700">
+                              <MapPin className="w-4 h-4 text-gray-500" />
+                              <span>{portfolioAgentData.location}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* About Section */}
+                      <div id="about" className="py-8 border-t border-gray-200">
+                        <div className="text-gray-700 leading-relaxed">
+                          <p className="mb-4">{portfolioAgentData.summary}</p>
+                          <button
+                            onClick={() => {
+                              // Toggle expanded state - simplified for modal
+                            }}
+                            className="text-gray-700 hover:text-gray-900 underline mt-3 text-sm"
+                          >
+                            show more
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Trust Highlights */}
+                      <div id="highlights" className="py-8">
+                        <div className="space-y-6">
+                          <div className="flex items-start gap-4">
+                            <Star className="w-8 h-8" style={{ color: '#2d7a4a' }} fill="#2d7a4a" />
+                            <div>
+                              <h3 className="font-semibold text-gray-900 mb-1">Highly recommended</h3>
+                              <p className="text-gray-600 text-sm">100% of patients give this specialist 5 stars</p>
+                            </div>
+                          </div>
+                          <div className="flex items-start gap-4">
+                            <Clock className="w-8 h-8" style={{ color: '#2d7a4a' }} />
+                            <div>
+                              <h3 className="font-semibold text-gray-900 mb-1">Excellent response time</h3>
+                              <p className="text-gray-600 text-sm">100% of inquiries answered within 2 hours</p>
+                            </div>
+                          </div>
+                          <div className="flex items-start gap-4">
+                            <Shield className="w-8 h-8" style={{ color: '#2d7a4a' }} />
+                            <div>
+                              <h3 className="font-semibold text-gray-900 mb-1">Verified by Soradin</h3>
+                              <p className="text-gray-600 text-sm">All credentials and background checks verified</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right Column - Sticky Booking Panel (5 columns) */}
+                    <div className="lg:col-span-5">
+                      <div className="bg-white border border-gray-200 rounded-xl shadow-sm sticky top-24">
+                        <div className="p-10">
+                          <h2 className="text-3xl mb-3">Book an appointment</h2>
+                          <p className="text-gray-600 mb-10 text-lg">
+                            Select a date and time to schedule your appointment
+                          </p>
+                          <div className="text-center py-8">
+                            <p className="text-gray-500">Booking panel will be available here</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Full-width sections below two-column layout */}
+                  <div className="mt-8">
+                    {/* Credentials */}
+                    <div id="credentials" className="mb-12">
+                      <h3 className="mb-2">Credentials & Verification</h3>
+                      <p className="text-sm text-gray-600 mb-6">
+                        Reviewed and approved through Soradin's professional verification process
+                      </p>
+                      <div className="space-y-4">
+                        <div className="flex gap-4">
+                          <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-gray-50 flex items-center justify-center">
+                            <Shield className="w-5 h-5 text-gray-600" />
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="text-gray-900 mb-1">Licensed Professional</h4>
+                            <p className="text-sm text-gray-600">Verified by Soradin • Current</p>
+                          </div>
+                          <div className="flex items-center">
+                            <div className="flex items-center gap-2 px-3 py-1 bg-green-50 rounded-full text-sm" style={{ color: '#1a4d2e' }}>
+                              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#1a4d2e' }}></div>
+                              Verified
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Office Locations */}
+                    {portfolioAgentData.business_street && (
+                      <div id="locations" className="mb-12">
+                        <h2 className="text-3xl font-medium text-gray-900 mb-6">Office locations</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                          <div className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+                            <div className="flex items-start gap-3 mb-4">
+                              <MapPin className="w-5 h-5 text-[#1a4d2e] mt-0.5 flex-shrink-0" />
+                              <h3 className="font-semibold text-gray-900">{portfolioAgentData.funeral_home || 'Main Office'}</h3>
+                            </div>
+                            <p className="text-gray-700 text-sm mb-4">
+                              {portfolioAgentData.business_street}
+                              {portfolioAgentData.business_city && `, ${portfolioAgentData.business_city}`}
+                              {portfolioAgentData.business_province && `, ${portfolioAgentData.business_province}`}
+                              {portfolioAgentData.business_zip && ` ${portfolioAgentData.business_zip}`}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Reviews */}
+                    <div id="reviews" className="mb-12">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3>Reviews & Testimonials</h3>
+                        <div className="text-sm text-gray-500">Based on {portfolioAgentData.reviewCount} verified clients</div>
+                      </div>
+                      <div className="space-y-4">
+                        <div className="p-4 bg-gray-50 rounded-lg">
+                          <div className="flex items-start justify-between mb-3">
+                            <div>
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="text-gray-900 font-medium">Jennifer M.</span>
+                                <span className="px-2 py-0.5 text-xs rounded-full" style={{ backgroundColor: '#e8f5e9', color: '#1a4d2e' }}>
+                                  Verified Client
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <div className="flex">
+                                  {[...Array(5)].map((_, i) => (
+                                    <Star key={i} className={`w-3 h-3 ${i < 5 ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} />
+                                  ))}
+                                </div>
+                                <span className="text-sm text-gray-500">November 2024</span>
+                              </div>
+                            </div>
+                          </div>
+                          <p className="text-gray-700">Incredibly compassionate during one of the most difficult times of our lives. Helped us plan everything with care and respect.</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* FAQs */}
+                    <div id="faqs" className="mb-12">
+                      <h3 className="mb-4">Frequently Asked Questions</h3>
+                      <div className="space-y-3">
+                        <div className="border border-gray-200 rounded-lg overflow-hidden">
+                          <button className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors">
+                            <span className="text-gray-900 pr-4">What happens after I book an appointment?</span>
+                            <ChevronRight className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="flex items-center justify-center py-12">
+                  <div className="text-center">
+                    <p className="text-gray-600 mb-4 text-lg">Failed to load agent profile</p>
+                    <button
+                      onClick={() => {
+                        setShowPortfolioModal(false);
+                        setPortfolioAgentData(null);
+                      }}
+                      className="px-4 py-2 bg-[#1a4d2e] hover:bg-[#0f2e1c] text-white font-semibold rounded-lg transition-colors"
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

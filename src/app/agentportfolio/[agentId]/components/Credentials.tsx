@@ -40,7 +40,7 @@ export function Credentials({ agentData }: CredentialsProps) {
 
   return (
     <div id="credentials" className="mb-12">
-      <h3 className="text-xl font-medium text-gray-900 mb-2">Credentials & Verification</h3>
+      <h3 className="mb-2">Credentials & Verification</h3>
       <p className="text-sm text-gray-600 mb-6">
         Reviewed and approved through Soradin's professional verification process
       </p>
