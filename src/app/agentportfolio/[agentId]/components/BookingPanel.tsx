@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, ChevronDown, Check, MapPin } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronDown, Check, MapPin, X, Calendar, Clock } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { supabaseClient } from '@/lib/supabaseClient';
+import Image from 'next/image';
 
 interface DayAvailability {
   dayOfWeek: string;
@@ -35,6 +36,13 @@ export function BookingPanel({ agentId }: BookingPanelProps) {
   const [weekAvailability, setWeekAvailability] = useState<DayAvailability[]>([]);
   const [loading, setLoading] = useState(true);
   const [officeLocations, setOfficeLocations] = useState<OfficeLocation[]>([]);
+  
+  // Time slot modal state
+  const [showTimeSlotModal, setShowTimeSlotModal] = useState(false);
+  const [selectedDayForModal, setSelectedDayForModal] = useState<string | null>(null);
+  const [allAvailabilityDays, setAllAvailabilityDays] = useState<AvailabilityDay[]>([]);
+  const [loadingTimeSlots, setLoadingTimeSlots] = useState(false);
+  const [agentInfo, setAgentInfo] = useState<any>(null);
 
   // Fetch agent data to build office locations
   useEffect(() => {
@@ -182,13 +190,69 @@ export function BookingPanel({ agentId }: BookingPanelProps) {
     setSelectedDayIndex(null);
   };
   
-  const handleDayClick = (index: number) => {
+  const handleDayClick = async (index: number) => {
     if (weekAvailability[index]?.appointmentCount > 0) {
       setSelectedDayIndex(index);
       const selectedDay = weekAvailability[index];
-      // Navigate to booking page
-      router.push(`/book/step2?agentId=${agentId}&date=${selectedDay.dateStr}`);
+      
+      // Open time slot modal instead of navigating
+      setSelectedDayForModal(selectedDay.dateStr);
+      setLoadingTimeSlots(true);
+      setShowTimeSlotModal(true);
+      
+      // Fetch agent info
+      try {
+        const { data, error } = await supabaseClient
+          .from("profiles")
+          .select("full_name, profile_picture_url, job_title, funeral_home, agent_city, agent_province, metadata")
+          .eq("id", agentId)
+          .eq("role", "agent")
+          .single();
+        
+        if (!error && data) {
+          const metadata = data.metadata || {};
+          setAgentInfo({
+            ...data,
+            business_address: (metadata as any)?.business_address || null,
+            business_street: (metadata as any)?.business_street || null,
+            business_city: (metadata as any)?.business_city || null,
+            business_province: (metadata as any)?.business_province || null,
+            business_zip: (metadata as any)?.business_zip || null,
+          });
+        }
+      } catch (err) {
+        console.error("Error loading agent info:", err);
+      }
+      
+      // Fetch availability for 14 days starting from selected day
+      try {
+        const startDate = selectedDay.dateStr;
+        const endDate = new Date(new Date(startDate).getTime() + 14 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+        
+        const res = await fetch(
+          `/api/agents/availability?agentId=${agentId}&startDate=${startDate}&endDate=${endDate}`
+        );
+        
+        if (res.ok) {
+          const availabilityData: AvailabilityDay[] = await res.json();
+          setAllAvailabilityDays(availabilityData);
+        } else {
+          setAllAvailabilityDays([]);
+        }
+      } catch (err) {
+        console.error("Error loading time slots:", err);
+        setAllAvailabilityDays([]);
+      } finally {
+        setLoadingTimeSlots(false);
+      }
     }
+  };
+  
+  const closeTimeSlotModal = () => {
+    setShowTimeSlotModal(false);
+    setSelectedDayForModal(null);
+    setAllAvailabilityDays([]);
+    setAgentInfo(null);
   };
 
   if (officeLocations.length === 0) {
@@ -396,6 +460,180 @@ export function BookingPanel({ agentId }: BookingPanelProps) {
           </>
         )}
       </div>
+      
+      {/* Time Slot Selection Modal */}
+      {showTimeSlotModal && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-[10000] flex items-center justify-center p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              closeTimeSlotModal();
+            }
+          }}
+        >
+          <div 
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto relative z-[10001]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header with Agent Info */}
+            <div className="bg-gradient-to-r from-green-50 to-white p-6 border-b border-gray-200 sticky top-0 z-10">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-bold text-black">Book an appointment</h2>
+                <button
+                  onClick={closeTimeSlotModal}
+                  className="text-gray-500 hover:text-black transition-colors p-2 rounded-full hover:bg-gray-100"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+              
+              {/* Agent Profile Card */}
+              {agentInfo && (
+                <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
+                  <div className="flex items-center gap-4">
+                    {agentInfo.profile_picture_url ? (
+                      <Image
+                        src={agentInfo.profile_picture_url}
+                        alt={agentInfo.full_name || "Agent"}
+                        width={80}
+                        height={80}
+                        className="rounded-full object-cover border-2 border-green-600"
+                        unoptimized
+                      />
+                    ) : (
+                      <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center border-2 border-green-600">
+                        <span className="text-green-700 text-2xl font-semibold">
+                          {(agentInfo.full_name || "A")[0].toUpperCase()}
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      <h3 className="text-xl font-bold text-black mb-1">
+                        {agentInfo.full_name || "Agent"}
+                      </h3>
+                      {agentInfo.job_title && (
+                        <p className="text-gray-700 font-medium text-sm mb-1">{agentInfo.job_title}</p>
+                      )}
+                      {agentInfo.funeral_home && (
+                        <p className="text-gray-600 text-sm mb-2">{agentInfo.funeral_home}</p>
+                      )}
+                      {agentInfo.agent_city && agentInfo.agent_province && (
+                        <div className="flex items-center gap-1 mb-2">
+                          <MapPin className="w-4 h-4 text-gray-500" />
+                          <span className="text-gray-600 text-sm">
+                            {agentInfo.agent_city}, {agentInfo.agent_province}
+                          </span>
+                        </div>
+                      )}
+                      {(agentInfo.business_street || agentInfo.business_address) && (
+                        <div className="flex items-start gap-2 mb-3">
+                          <MapPin className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                          <span className="text-gray-500 text-xs">
+                            {agentInfo.business_street && agentInfo.business_city && agentInfo.business_province && agentInfo.business_zip
+                              ? `${agentInfo.business_street}, ${agentInfo.business_city}, ${agentInfo.business_province} ${agentInfo.business_zip}`
+                              : agentInfo.business_address || `${agentInfo.business_street || ''}${agentInfo.business_city ? `, ${agentInfo.business_city}` : ''}${agentInfo.business_province ? `, ${agentInfo.business_province}` : ''}${agentInfo.business_zip ? ` ${agentInfo.business_zip}` : ''}`.trim()}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Content */}
+            <div className="p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <Calendar className="w-5 h-5 text-green-600" />
+                <h3 className="text-lg font-semibold text-black">Select a date and time</h3>
+              </div>
+
+              {loadingTimeSlots ? (
+                <div className="text-center py-12">
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mb-4"></div>
+                  <p className="text-gray-600">Loading available times...</p>
+                </div>
+              ) : allAvailabilityDays.length === 0 ? (
+                <div className="text-center py-12">
+                  <Clock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-600">No time slots available.</p>
+                </div>
+              ) : allAvailabilityDays.filter(day => day.slots.length > 0).length === 0 ? (
+                <div className="text-center py-12">
+                  <Clock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-600">No time slots available.</p>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {/* Show all available days with their time slots */}
+                  {allAvailabilityDays
+                    .filter(day => day.slots.length > 0)
+                    .map((day, dayIdx) => {
+                      const date = new Date(day.date + "T00:00:00");
+                      const dayName = date.toLocaleDateString("en-US", { weekday: "long" });
+                      const monthName = date.toLocaleDateString("en-US", { month: "long" });
+                      const dayNum = date.getDate();
+                      const displayDate = `${dayName}, ${monthName} ${dayNum}`;
+                      
+                      // Format time slots for this day
+                      const formattedSlots: TimeSlot[] = day.slots.map(slot => {
+                        const startDate = new Date(slot.startsAt);
+                        const hours = startDate.getHours();
+                        const minutes = startDate.getMinutes();
+                        const ampm = hours >= 12 ? 'PM' : 'AM';
+                        const displayHours = hours % 12 || 12;
+                        const timeStr = `${displayHours}:${String(minutes).padStart(2, '0')} ${ampm}`;
+                        
+                        return {
+                          time: timeStr,
+                          startsAt: slot.startsAt,
+                          endsAt: slot.endsAt,
+                          available: true
+                        };
+                      });
+                      
+                      return (
+                        <div key={dayIdx} className="border-b border-gray-200 pb-6 last:border-b-0">
+                          <h4 className="text-base font-semibold text-black mb-3">{displayDate}</h4>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                            {formattedSlots.map((timeSlot, idx) => {
+                              const params = new URLSearchParams({
+                                startsAt: timeSlot.startsAt,
+                                endsAt: timeSlot.endsAt,
+                                date: day.date,
+                              });
+                              const bookingUrl = `${window.location.origin}/book/step2?agentId=${agentId}&${params.toString()}`;
+                              
+                              return (
+                                <button
+                                  key={idx}
+                                  type="button"
+                                  onMouseDown={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    
+                                    // Close modal
+                                    closeTimeSlotModal();
+                                    
+                                    // Navigate to booking page
+                                    window.location.href = bookingUrl;
+                                  }}
+                                  className="px-4 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors text-sm"
+                                >
+                                  {timeSlot.time}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
