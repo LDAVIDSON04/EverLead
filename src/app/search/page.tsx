@@ -1132,13 +1132,21 @@ function SearchResults() {
 
                     <div className="flex-1">
                       <div className="mb-2">
-                        <Link
-                          href={`/agent/${agent?.id}`}
-                          className="text-xl text-gray-900 hover:underline cursor-pointer text-left font-semibold transition-all inline-block"
-                          title={`View ${agentName}'s profile`}
-                        >
-                          {agentName}
-                        </Link>
+                        {agent?.id ? (
+                          <Link
+                            href={`/agent/${agent.id}`}
+                            className="text-xl text-gray-900 hover:underline cursor-pointer text-left font-semibold transition-all inline-block"
+                            title={`View ${agentName}'s profile`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              router.push(`/agent/${agent.id}`);
+                            }}
+                          >
+                            {agentName}
+                          </Link>
+                        ) : (
+                          <h3 className="text-xl text-gray-900">{agentName}</h3>
+                        )}
                         <p className="text-gray-600 mt-1">
                           {agent?.job_title || appointment.service_type || 'Pre-need Planning Specialist'}
                         </p>
@@ -1151,7 +1159,7 @@ function SearchResults() {
                       <div className="flex items-start gap-2 mb-2">
                         <MapPin className="w-4 h-4 text-gray-500 mt-1 flex-shrink-0" />
                         <span className="text-gray-600 text-sm">
-                          {searchLocation || location || 'Location not specified'}
+                          {searchLocation ? decodeURIComponent(searchLocation.replace(/\+/g, ' ')) : location ? decodeURIComponent(location.replace(/\+/g, ' ')) : 'Location not specified'}
                         </span>
                       </div>
 
@@ -1281,7 +1289,7 @@ function SearchResults() {
                         <div className="flex items-center gap-1 mb-2">
                           <MapPin className="w-4 h-4 text-gray-500" />
                           <span className="text-gray-600 text-sm">
-                            {searchLocation}
+                            {decodeURIComponent(searchLocation.replace(/\+/g, ' '))}
                           </span>
                         </div>
                       )}
