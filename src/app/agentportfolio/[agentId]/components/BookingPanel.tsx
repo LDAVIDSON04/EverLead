@@ -302,13 +302,13 @@ export function BookingPanel({ agentId }: BookingPanelProps) {
         ) : (
           <>
             {/* First Week - 7 days */}
-            <div className="grid grid-cols-7 gap-8 mb-6 -ml-8">
+            <div className="grid grid-cols-7 gap-2 mb-4">
               {weekAvailability.slice(0, 7).map((day, index) => (
                 <button
                   key={index}
                   onClick={() => handleDayClick(index)}
                   disabled={day.appointmentCount === 0}
-                  className={`rounded-lg text-left pl-3 pr-13 py-1 transition-all border-2 ${
+                  className={`rounded-lg text-center px-2 py-3 transition-all border-2 aspect-square flex flex-col justify-center items-center ${
                     day.appointmentCount === 0
                       ? 'bg-gray-50 border-gray-200 cursor-not-allowed'
                       : selectedDayIndex === index
@@ -341,7 +341,7 @@ export function BookingPanel({ agentId }: BookingPanelProps) {
             </div>
             
             {/* Second Week - 7 days */}
-            <div className="grid grid-cols-7 gap-8 mb-6 -ml-8">
+            <div className="grid grid-cols-7 gap-2 mb-4">
               {weekAvailability.slice(7, 14).map((day, index) => {
                 const actualIndex = index + 7;
                 return (
@@ -349,7 +349,7 @@ export function BookingPanel({ agentId }: BookingPanelProps) {
                     key={actualIndex}
                     onClick={() => handleDayClick(actualIndex)}
                     disabled={day.appointmentCount === 0}
-                    className={`rounded-lg text-left pl-3 pr-13 py-1 transition-all border-2 ${
+                    className={`rounded-lg text-center px-2 py-3 transition-all border-2 aspect-square flex flex-col justify-center items-center ${
                       day.appointmentCount === 0
                         ? 'bg-gray-50 border-gray-200 cursor-not-allowed'
                         : selectedDayIndex === actualIndex
