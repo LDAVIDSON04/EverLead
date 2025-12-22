@@ -225,11 +225,11 @@ export default function HomePage() {
 
           {/* Right Side Navigation */}
           <div className="flex items-center gap-6">
-            <Link href="/create-account" className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors">
-              List your Specialty
-            </Link>
             <Link href="/what-is-pre-need-funeral-planning" className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors">
               What is pre-need funeral planning?
+            </Link>
+            <Link href="/create-account" className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors">
+              List your Specialty
             </Link>
             <Link href="/agent" className="bg-[#0C6F3C] text-white px-6 py-2.5 rounded-xl hover:bg-[#0C6F3C]/90 transition-all shadow-sm">
               Log in
