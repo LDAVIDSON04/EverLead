@@ -11,7 +11,7 @@ export function AboutSection({ summary, fullBio }: AboutSectionProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
-    <div className="py-8 border-t border-gray-200">
+    <div id="about" className="py-8 border-t border-gray-200">
       <div className="text-gray-700 leading-relaxed">
         <p className="mb-4">{summary}</p>
         

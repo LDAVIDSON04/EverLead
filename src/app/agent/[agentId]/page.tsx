@@ -45,11 +45,11 @@ export default function AgentProfilePage() {
         .maybeSingle();
       
       if (fetchError) {
-        console.error("❌ [PORTFOLIO] Error loading agent profile:", fetchError);
-        setError(`Failed to load agent profile: ${fetchError.message}`);
+        console.error("❌ [PORTFOLIO] Error:", fetchError);
+        setError(`Failed to load: ${fetchError.message}`);
         setAgentData(null);
       } else if (data) {
-        console.log("✅ [PORTFOLIO] Agent profile loaded successfully:", data);
+        console.log("✅ [PORTFOLIO] Agent loaded:", data);
         const metadata = data.metadata || {};
         const specialty = (metadata as any)?.specialty || null;
         const licenseNumber = (metadata as any)?.license_number || null;
@@ -61,7 +61,6 @@ export default function AgentProfilePage() {
           business_city: (metadata as any)?.business_city || null,
           business_province: (metadata as any)?.business_province || null,
           business_zip: (metadata as any)?.business_zip || null,
-          regions_served: (metadata as any)?.regions_served || null,
           specialty: specialty,
           license_number: licenseNumber,
           credentials: licenseNumber ? `LFD, ${licenseNumber}` : 'LFD',
@@ -72,13 +71,13 @@ export default function AgentProfilePage() {
           fullBio: `${data.full_name || 'This agent'}'s journey into end-of-life care is driven by a commitment to helping families during life's most challenging moments.\n\n${specialty || 'Their expertise'} allows them to address both the emotional and practical aspects of end-of-life planning.\n\nThey are known for their patient, non-judgmental approach and their ability to facilitate difficult family conversations.`,
         });
       } else {
-        console.warn("⚠️ [PORTFOLIO] Agent not found for ID:", agentId);
+        console.warn("⚠️ [PORTFOLIO] Agent not found");
         setError("Agent not found");
         setAgentData(null);
       }
     } catch (err: any) {
-      console.error("❌ [PORTFOLIO] Error loading agent profile:", err);
-      setError(`An error occurred: ${err?.message || 'Unknown error'}`);
+      console.error("❌ [PORTFOLIO] Error:", err);
+      setError(`Error: ${err?.message || 'Unknown'}`);
       setAgentData(null);
     } finally {
       setLoading(false);
@@ -131,61 +130,41 @@ export default function AgentProfilePage() {
         </div>
       </header>
 
-      {/* Main Container */}
+      {/* Main Container - Matching Design */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Two-column layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Left Column - Main Content (7 columns) */}
           <div className="lg:col-span-7">
-            {/* About Section */}
-            <div id="about">
-              <AgentHeader 
-                name={agentData.full_name || "Agent"}
-                credentials={agentData.credentials}
-                specialty={agentData.specialty || agentData.job_title || "Pre-need Planning Specialist"}
-                location={location}
-                rating={agentData.rating}
-                reviewCount={agentData.reviewCount}
-                imageUrl={agentData.profile_picture_url || ""}
-                verified={agentData.verified}
-              />
-              <AboutSection 
-                summary={agentData.summary} 
-                fullBio={agentData.fullBio} 
-              />
-            </div>
-            
-            {/* Trust Highlights Section */}
-            <div id="highlights" className="mt-8">
-              <TrustHighlights />
-            </div>
+            <AgentHeader 
+              name={agentData.full_name || "Agent"}
+              credentials={agentData.credentials}
+              specialty={agentData.specialty || agentData.job_title || "Pre-need Planning Specialist"}
+              location={location}
+              rating={agentData.rating}
+              reviewCount={agentData.reviewCount}
+              imageUrl={agentData.profile_picture_url || ""}
+              verified={agentData.verified}
+            />
+            <AboutSection 
+              summary={agentData.summary} 
+              fullBio={agentData.fullBio} 
+            />
+            <TrustHighlights />
           </div>
 
           {/* Right Column - Sticky Booking Panel (5 columns) */}
           <div className="lg:col-span-5">
-            <div className="sticky top-24">
-              <BookingPanel agentId={agentId} />
-            </div>
+            <BookingPanel agentId={agentId} />
           </div>
         </div>
 
         {/* Full-width sections below two-column layout */}
-        <div className="mt-12">
-          {/* Locations Section */}
-          <div id="locations">
-            <Credentials agentData={agentData} />
-            <OfficeLocations agentData={agentData} />
-          </div>
-          
-          {/* Reviews Section */}
-          <div id="reviews" className="mt-12">
-            <Reviews reviewCount={agentData.reviewCount} />
-          </div>
-          
-          {/* FAQs Section */}
-          <div id="faqs" className="mt-12">
-            <FAQs />
-          </div>
+        <div className="mt-8">
+          <Credentials agentData={agentData} />
+          <OfficeLocations agentData={agentData} />
+          <Reviews reviewCount={agentData.reviewCount} />
+          <FAQs />
         </div>
       </div>
     </div>

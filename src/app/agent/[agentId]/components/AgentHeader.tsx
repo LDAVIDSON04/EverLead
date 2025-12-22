@@ -30,7 +30,7 @@ export function AgentHeader({
     setActiveTab(sectionId);
     const element = document.getElementById(sectionId);
     if (element) {
-      const offset = 100;
+      const offset = 20;
       const elementPosition = element.getBoundingClientRect().top + window.pageYOffset;
       window.scrollTo({
         top: elementPosition - offset,
