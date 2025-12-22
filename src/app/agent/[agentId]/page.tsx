@@ -46,6 +46,9 @@ export default function AgentProfilePage() {
         setAgentData(null);
       } else if (data) {
         const metadata = data.metadata || {};
+        const specialty = (metadata as any)?.specialty || null;
+        const licenseNumber = (metadata as any)?.license_number || null;
+        
         setAgentData({
           ...data,
           business_address: (metadata as any)?.business_address || null,
@@ -54,15 +57,15 @@ export default function AgentProfilePage() {
           business_province: (metadata as any)?.business_province || null,
           business_zip: (metadata as any)?.business_zip || null,
           regions_served: (metadata as any)?.regions_served || null,
-          specialty: (metadata as any)?.specialty || null,
-          license_number: (metadata as any)?.license_number || null,
+          specialty: specialty,
+          license_number: licenseNumber,
           // Mock data for design (can be replaced with real data later)
-          credentials: (metadata as any)?.license_number ? `LFD, ${(metadata as any)?.license_number}` : 'LFD',
+          credentials: licenseNumber ? `LFD, ${licenseNumber}` : 'LFD',
           rating: 4.9,
           reviewCount: Math.floor(Math.random() * 200 + 50),
           verified: true,
-          summary: `${data.full_name || 'This agent'} brings years of compassionate expertise in end-of-life planning and grief support. ${data.specialty || 'They help'} families navigate difficult decisions with dignity and care.`,
-          fullBio: `${data.full_name || 'This agent'}'s journey into end-of-life care is driven by a commitment to helping families during life's most challenging moments.\n\n${data.specialty || 'Their expertise'} allows them to address both the emotional and practical aspects of end-of-life planning.\n\nThey are known for their patient, non-judgmental approach and their ability to facilitate difficult family conversations.`,
+          summary: `${data.full_name || 'This agent'} brings years of compassionate expertise in end-of-life planning and grief support. ${specialty || 'They help'} families navigate difficult decisions with dignity and care.`,
+          fullBio: `${data.full_name || 'This agent'}'s journey into end-of-life care is driven by a commitment to helping families during life's most challenging moments.\n\n${specialty || 'Their expertise'} allows them to address both the emotional and practical aspects of end-of-life planning.\n\nThey are known for their patient, non-judgmental approach and their ability to facilitate difficult family conversations.`,
         });
       } else {
         setError("Agent not found");
