@@ -45,9 +45,9 @@ const mockReviews: Review[] = [
 
 export function Reviews({ reviewCount }: ReviewsProps) {
   return (
-    <div className="mb-12">
+    <div id="reviews" className="mb-12">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-xl font-medium text-gray-900">Reviews & Testimonials</h3>
+        <h3>Reviews & Testimonials</h3>
         <div className="text-sm text-gray-500">Based on {reviewCount} verified clients</div>
       </div>
       

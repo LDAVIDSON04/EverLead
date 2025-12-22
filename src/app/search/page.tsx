@@ -123,10 +123,6 @@ function SearchResults() {
   } | null>(null);
   const [dayTimeSlots, setDayTimeSlots] = useState<{ time: string; startsAt: string; endsAt: string; available: boolean }[]>([]);
 
-  // Portfolio modal state
-  const [showPortfolioModal, setShowPortfolioModal] = useState(false);
-  const [portfolioAgentData, setPortfolioAgentData] = useState<any>(null);
-  const [portfolioLoading, setPortfolioLoading] = useState(false);
   const [allAvailabilityDays, setAllAvailabilityDays] = useState<AvailabilityDay[]>([]); // Store all days with slots
   const [loadingTimeSlots, setLoadingTimeSlots] = useState(false);
 
@@ -1177,49 +1173,12 @@ function SearchResults() {
                         <span className="text-gray-900">4.9</span>
                         <span className="text-gray-500">· {Math.floor(Math.random() * 200 + 50)} reviews</span>
                         {agent?.id && (
-                          <button
-                            type="button"
-                            onClick={async (e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              // Open portfolio modal
-                              setShowPortfolioModal(true);
-                              setPortfolioLoading(true);
-                              setPortfolioAgentData(null);
-                              
-                              // Load agent data
-                              try {
-                                const { data, error } = await supabaseClient
-                                  .from("profiles")
-                                  .select("id, full_name, first_name, last_name, profile_picture_url, job_title, funeral_home, agent_city, agent_province, email, phone, metadata")
-                                  .eq("id", agent.id)
-                                  .eq("role", "agent")
-                                  .maybeSingle();
-                                
-                                if (error) {
-                                  console.error("Error loading agent:", error);
-                                } else if (data) {
-                                  const metadata = data.metadata || {};
-                                  setPortfolioAgentData({
-                                    ...data,
-                                    specialty: metadata?.specialty || null,
-                                    license_number: metadata?.license_number || null,
-                                    business_street: metadata?.business_street || null,
-                                    business_city: metadata?.business_city || null,
-                                    business_province: metadata?.business_province || null,
-                                    business_zip: metadata?.business_zip || null,
-                                  });
-                                }
-                              } catch (err) {
-                                console.error("Error:", err);
-                              } finally {
-                                setPortfolioLoading(false);
-                              }
-                            }}
-                            className="ml-3 text-gray-900 hover:text-gray-700 underline decoration-black hover:decoration-gray-700 text-sm font-medium transition-colors bg-transparent border-none p-0 cursor-pointer"
+                          <a
+                            href={`/agentportfolio/${agent.id}`}
+                            className="ml-3 text-gray-900 hover:text-gray-700 underline decoration-black hover:decoration-gray-700 text-sm font-medium transition-colors cursor-pointer"
                           >
                             Learn more about {agentName}
-                          </button>
+                          </a>
                         )}
                       </div>
 
@@ -1488,139 +1447,6 @@ function SearchResults() {
         </div>
       )}
 
-      {/* Portfolio Modal */}
-      {showPortfolioModal && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setShowPortfolioModal(false);
-              setPortfolioAgentData(null);
-            }
-          }}
-        >
-          <div 
-            className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto relative z-50"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div className="bg-gradient-to-r from-green-50 to-white p-6 border-b border-gray-200 sticky top-0 z-10">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-bold text-black">Agent Profile</h2>
-                <button
-                  onClick={() => {
-                    setShowPortfolioModal(false);
-                    setPortfolioAgentData(null);
-                  }}
-                  className="text-gray-500 hover:text-black transition-colors p-2 rounded-full hover:bg-gray-100"
-                >
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
-            </div>
-
-            {/* Content */}
-            <div className="p-6">
-              {portfolioLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <div className="text-center">
-                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mb-4"></div>
-                    <p className="text-gray-600">Loading profile...</p>
-                  </div>
-                </div>
-              ) : portfolioAgentData ? (
-                <div className="space-y-6">
-                  {/* Agent Header */}
-                  <div className="flex items-start gap-6">
-                    {portfolioAgentData.profile_picture_url ? (
-                      <Image
-                        src={portfolioAgentData.profile_picture_url}
-                        alt={portfolioAgentData.full_name || "Agent"}
-                        width={120}
-                        height={120}
-                        className="rounded-full object-cover border-2 border-green-600"
-                        unoptimized
-                      />
-                    ) : (
-                      <div className="w-30 h-30 bg-green-100 rounded-full flex items-center justify-center border-2 border-green-600">
-                        <span className="text-green-700 text-4xl font-semibold">
-                          {(portfolioAgentData.full_name || "A")[0].toUpperCase()}
-                        </span>
-                      </div>
-                    )}
-                    <div className="flex-1">
-                      <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                        {portfolioAgentData.full_name || "Agent"}
-                      </h1>
-                      <p className="text-lg text-gray-600 mb-1">
-                        {portfolioAgentData.job_title || "Pre-need Planning Specialist"}
-                      </p>
-                      {portfolioAgentData.funeral_home && (
-                        <p className="text-gray-500 mb-2">{portfolioAgentData.funeral_home}</p>
-                      )}
-                      {portfolioAgentData.agent_city && portfolioAgentData.agent_province && (
-                        <p className="text-gray-600">
-                          {portfolioAgentData.agent_city}, {portfolioAgentData.agent_province}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* About Section */}
-                  <div className="border-t border-gray-200 pt-6">
-                    <h2 className="text-xl font-semibold text-gray-900 mb-4">About</h2>
-                    <p className="text-gray-600 leading-relaxed">
-                      {portfolioAgentData.full_name || "This agent"} brings years of compassionate expertise in end-of-life planning and grief support. 
-                      {portfolioAgentData.specialty && ` They specialize in ${portfolioAgentData.specialty}.`} 
-                      They help families navigate difficult decisions with dignity and care.
-                    </p>
-                  </div>
-
-                  {/* Office Location */}
-                  {portfolioAgentData.business_street && (
-                    <div className="border-t border-gray-200 pt-6">
-                      <h2 className="text-xl font-semibold text-gray-900 mb-4">Office Location</h2>
-                      <div className="flex items-start gap-2">
-                        <MapPin className="w-5 h-5 text-gray-500 mt-0.5 flex-shrink-0" />
-                        <p className="text-gray-600">
-                          {portfolioAgentData.business_street}
-                          {portfolioAgentData.business_city && `, ${portfolioAgentData.business_city}`}
-                          {portfolioAgentData.business_province && `, ${portfolioAgentData.business_province}`}
-                          {portfolioAgentData.business_zip && ` ${portfolioAgentData.business_zip}`}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Rating */}
-                  <div className="border-t border-gray-200 pt-6">
-                    <div className="flex items-center gap-1">
-                      <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                      <span className="text-xl font-semibold text-gray-900">4.9</span>
-                      <span className="text-gray-600">({Math.floor(Math.random() * 200 + 50)} reviews)</span>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex items-center justify-center py-12">
-                  <div className="text-center">
-                    <p className="text-gray-600 mb-4 text-lg">Failed to load agent profile</p>
-                    <button
-                      onClick={() => {
-                        setShowPortfolioModal(false);
-                        setPortfolioAgentData(null);
-                      }}
-                      className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors"
-                    >
-                      Close
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
 
     </div>
   );

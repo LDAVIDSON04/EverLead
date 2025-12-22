@@ -1,7 +1,7 @@
 "use client";
 
 import { MapPin, Star, Shield } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 interface AgentHeaderProps {
   name: string;
@@ -38,29 +38,6 @@ export function AgentHeader({
       });
     }
   };
-
-  // Update active tab based on scroll position
-  useEffect(() => {
-    const handleScroll = () => {
-      const sections = ['about', 'highlights', 'locations', 'reviews', 'faqs'];
-      const scrollPosition = window.scrollY + 150;
-
-      for (const section of sections) {
-        const element = document.getElementById(section);
-        if (element) {
-          const offsetTop = element.offsetTop;
-          const offsetBottom = offsetTop + element.offsetHeight;
-          if (scrollPosition >= offsetTop && scrollPosition < offsetBottom) {
-            setActiveTab(section);
-            break;
-          }
-        }
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
   
   return (
     <div className="mb-6">
@@ -83,23 +60,11 @@ export function AgentHeader({
         </div>
         
         <div className="flex-1">
-          <div className="flex items-center gap-2 mb-1">
-            <h1 className="text-2xl font-medium text-gray-900">{name}, {credentials}</h1>
-            {verified && (
-              <Shield className="w-5 h-5 text-[#1a4d2e]" />
-            )}
-          </div>
+          <h1 className="mb-1">{name}, {credentials}</h1>
           <p className="text-gray-600 mb-2">{specialty}</p>
-          <div className="flex items-center gap-4 mb-2">
-            <div className="flex items-center gap-1 text-gray-700">
-              <MapPin className="w-4 h-4 text-gray-500" />
-              <span className="text-sm">{location}</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-              <span className="text-sm font-medium text-gray-900">{rating}</span>
-              <span className="text-sm text-gray-600">({reviewCount} reviews)</span>
-            </div>
+          <div className="flex items-center gap-1 text-gray-700">
+            <MapPin className="w-4 h-4 text-gray-500" />
+            <span>{location}</span>
           </div>
         </div>
       </div>

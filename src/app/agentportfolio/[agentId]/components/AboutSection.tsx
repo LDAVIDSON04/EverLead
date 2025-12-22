@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from 'react';
+import { ChevronDown } from 'lucide-react';
 
 interface AboutSectionProps {
   summary: string;
@@ -17,7 +18,7 @@ export function AboutSection({ summary, fullBio }: AboutSectionProps) {
         
         {isExpanded && (
           <div className="space-y-4">
-            {fullBio.split('\n\n').map((paragraph, index) => (
+            {fullBio.split('\\n\\n').map((paragraph, index) => (
               <p key={index}>{paragraph}</p>
             ))}
           </div>

@@ -35,8 +35,8 @@ export function FAQs() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   
   return (
-    <div className="mb-12">
-      <h3 className="text-xl font-medium text-gray-900 mb-4">Frequently Asked Questions</h3>
+    <div id="faqs" className="mb-12">
+      <h3 className="mb-4">Frequently Asked Questions</h3>
       <div className="space-y-3">
         {faqs.map((faq, index) => (
           <div key={index} className="border border-gray-200 rounded-lg overflow-hidden">
