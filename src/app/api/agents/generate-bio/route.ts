@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     // Get agent profile with structured bio inputs
     const { data: profile, error: profileError } = await supabaseClient
       .from('profiles')
-      .select('id, full_name, job_title, funeral_home, agent_city, agent_province, metadata, bio_approval_status, ai_generated_bio')
+      .select('id, full_name, job_title, funeral_home, agent_city, agent_province, metadata, bio_approval_status, ai_generated_bio, bio_audit_log')
       .eq('id', agentId)
       .eq('role', 'agent')
       .single();
@@ -23,6 +23,9 @@ export async function POST(request: NextRequest) {
     if (profileError || !profile) {
       return NextResponse.json({ error: 'Agent not found' }, { status: 404 });
     }
+
+    // Type assertion for TypeScript
+    const profileWithAudit = profile as typeof profile & { bio_audit_log?: any[] };
 
     const metadata = profile.metadata || {};
     const bioData = metadata.bio || {};
@@ -135,7 +138,7 @@ ${practicePhilosophyAppreciate || 'Clients value their thoughtful approach, clea
     }
 
     // Save the generated bio with 'pending' status
-    const auditLog = Array.isArray(profile.bio_audit_log) ? profile.bio_audit_log : [];
+    const auditLog = Array.isArray(profileWithAudit.bio_audit_log) ? profileWithAudit.bio_audit_log : [];
     const newAuditEntry = {
       action: 'generated',
       timestamp: new Date().toISOString(),
