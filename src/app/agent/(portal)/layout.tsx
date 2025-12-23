@@ -15,6 +15,7 @@ const menuItems = [
   { href: '/agent/dashboard', label: 'Home', icon: Home },
   { href: '/agent/schedule', label: 'Schedule', icon: Calendar },
   { href: '/agent/my-appointments', label: 'Files', icon: File },
+  { href: '/agent/profile-bio', label: 'Profile Bio', icon: FileText },
   { href: '/agent/settings', label: 'Settings', icon: Settings },
 ];
 
