@@ -523,9 +523,12 @@ export default function HomePage() {
               </div>
 
               <div>
-                <button className="bg-[#0C6F3C] text-white px-8 py-4 rounded-2xl hover:bg-[#0C6F3C]/90 transition-all text-lg shadow-sm">
+                <Link 
+                  href="/learn-more-about-starting"
+                  className="inline-block bg-[#0C6F3C] text-white px-8 py-4 rounded-2xl hover:bg-[#0C6F3C]/90 transition-all text-lg shadow-sm"
+                >
                   Learn more about starting with us
-                </button>
+                </Link>
               </div>
             </div>
           </div>
