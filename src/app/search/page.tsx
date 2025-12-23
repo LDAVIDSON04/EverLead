@@ -1596,15 +1596,41 @@ function SearchResults() {
                       {/* About Section */}
                       <div id="about" className="py-8 border-t border-gray-200">
                         <div className="text-gray-700 leading-relaxed">
-                          <p className="mb-4">{portfolioAgentData.summary}</p>
-                          <button
-                            onClick={() => {
-                              // Toggle expanded state - simplified for modal
-                            }}
-                            className="text-gray-700 hover:text-gray-900 underline mt-3 text-sm"
-                          >
-                            show more
-                          </button>
+                          {portfolioAgentData.aiGeneratedBio ? (
+                            <>
+                              <p className="mb-4">{portfolioAgentData.aiGeneratedBio.split('\n\n')[0] || portfolioAgentData.aiGeneratedBio}</p>
+                              {portfolioAgentData.aiGeneratedBio.split('\n\n').length > 1 && (
+                                <details className="mt-3">
+                                  <summary className="text-gray-700 hover:text-gray-900 underline cursor-pointer text-sm">
+                                    show more
+                                  </summary>
+                                  <div className="mt-3 space-y-4">
+                                    {portfolioAgentData.aiGeneratedBio.split('\n\n').slice(1).filter((p: string) => p.trim()).map((paragraph: string, index: number) => (
+                                      <p key={index}>{paragraph}</p>
+                                    ))}
+                                  </div>
+                                </details>
+                              )}
+                            </>
+                          ) : portfolioAgentData.summary ? (
+                            <>
+                              <p className="mb-4">{portfolioAgentData.summary}</p>
+                              {portfolioAgentData.fullBio && portfolioAgentData.fullBio !== portfolioAgentData.summary && portfolioAgentData.fullBio.trim() && (
+                                <details className="mt-3">
+                                  <summary className="text-gray-700 hover:text-gray-900 underline cursor-pointer text-sm">
+                                    show more
+                                  </summary>
+                                  <div className="mt-3 space-y-4">
+                                    {portfolioAgentData.fullBio.split('\n\n').filter((p: string) => p.trim()).map((paragraph: string, index: number) => (
+                                      <p key={index}>{paragraph}</p>
+                                    ))}
+                                  </div>
+                                </details>
+                              )}
+                            </>
+                          ) : (
+                            <p className="mb-4">This professional brings years of compassionate expertise in end-of-life planning and grief support. They help families navigate difficult decisions with dignity and care.</p>
+                          )}
                         </div>
                       </div>
 
