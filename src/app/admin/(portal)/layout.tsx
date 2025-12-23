@@ -4,7 +4,7 @@ import { ReactNode, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { supabaseClient } from '@/lib/supabaseClient';
-import { CheckCircle, Users, Calendar, DollarSign, User, XCircle } from 'lucide-react';
+import { CheckCircle, Users, Calendar, DollarSign, User, XCircle, FileText } from 'lucide-react';
 
 type AdminLayoutProps = {
   children: ReactNode;
@@ -13,6 +13,7 @@ type AdminLayoutProps = {
 const menuItems = [
   // Note: (portal) is a route group; the public path omits it.
   { href: '/admin/agent-approval', label: 'Approvals', icon: CheckCircle, badge: true },
+  { href: '/admin/profile-bios', label: 'Profile Bios', icon: FileText, badge: true },
   { href: '/admin/specialists', label: 'Specialists', icon: Users },
   { href: '/admin/appointments', label: 'Appointments', icon: Calendar },
   { href: '/admin/payments', label: 'Payments', icon: DollarSign },
@@ -23,7 +24,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const pathname = usePathname();
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [userName, setUserName] = useState<string>('');
-  const [pendingCount, setPendingCount] = useState<number>(0);
+  const [pendingAgentCount, setPendingAgentCount] = useState<number>(0);
+  const [pendingBioCount, setPendingBioCount] = useState<number>(0);
 
   useEffect(() => {
     async function checkAuth() {
@@ -58,20 +60,33 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   }, [router]);
 
   useEffect(() => {
-    async function loadPendingCount() {
+    async function loadPendingCounts() {
       try {
-        const res = await fetch("/api/admin/pending-agents");
-        if (res.ok) {
-          const data = await res.json();
-          setPendingCount(data.agents?.length || 0);
+        // Load pending agents count
+        const agentsRes = await fetch("/api/admin/pending-agents");
+        if (agentsRes.ok) {
+          const agentsData = await agentsRes.json();
+          setPendingAgentCount(agentsData.agents?.length || 0);
+        }
+
+        // Load pending bios count
+        const { data: biosData, error: biosError } = await supabaseClient
+          .from('profiles')
+          .select('id', { count: 'exact', head: true })
+          .eq('role', 'agent')
+          .eq('bio_approval_status', 'pending')
+          .not('ai_generated_bio', 'is', null);
+
+        if (!biosError && biosData !== null) {
+          setPendingBioCount(biosData.length || 0);
         }
       } catch (error) {
-        console.error('Error loading pending count:', error);
+        console.error('Error loading pending counts:', error);
       }
     }
 
     if (!checkingAuth) {
-      loadPendingCount();
+      loadPendingCounts();
     }
   }, [checkingAuth]);
 
@@ -120,13 +135,22 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                   >
                     <Icon className="w-5 h-5 flex-shrink-0" />
                     <span className="flex-1 text-left">{item.label}</span>
-                    {item.badge && pendingCount > 0 && (
+                    {item.badge && item.href === '/admin/agent-approval' && pendingAgentCount > 0 && (
                       <span className={`px-2 py-0.5 text-xs rounded-full ${
                         isActive 
                           ? 'bg-emerald-900 text-emerald-100' 
                           : 'bg-emerald-700 text-white'
                       }`}>
-                        {pendingCount}
+                        {pendingAgentCount}
+                      </span>
+                    )}
+                    {item.badge && item.href === '/admin/profile-bios' && pendingBioCount > 0 && (
+                      <span className={`px-2 py-0.5 text-xs rounded-full ${
+                        isActive 
+                          ? 'bg-emerald-900 text-emerald-100' 
+                          : 'bg-emerald-700 text-white'
+                      }`}>
+                        {pendingBioCount}
                       </span>
                     )}
                   </Link>

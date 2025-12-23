@@ -1200,7 +1200,7 @@ function SearchResults() {
                                 console.log("Fetching agent data for:", agent.id);
                                 const { data, error } = await supabaseClient
                                   .from("profiles")
-                                  .select("id, full_name, first_name, last_name, profile_picture_url, job_title, funeral_home, agent_city, agent_province, email, phone, metadata")
+                                  .select("id, full_name, first_name, last_name, profile_picture_url, job_title, funeral_home, agent_city, agent_province, email, phone, metadata, ai_generated_bio, bio_approval_status")
                                   .eq("id", agent.id)
                                   .eq("role", "agent")
                                   .maybeSingle();
@@ -1216,6 +1216,11 @@ function SearchResults() {
                                     ? `${data.agent_city}, ${data.agent_province}`
                                     : data.agent_city || data.agent_province || 'Location not specified';
                                   
+                                  // Use AI-generated bio if approved, otherwise use fallback
+                                  const hasApprovedBio = data.bio_approval_status === 'approved' && data.ai_generated_bio;
+                                  const fallbackSummary = `${data.full_name || 'This agent'} brings years of compassionate expertise in end-of-life planning and grief support. ${specialty || 'They help'} families navigate difficult decisions with dignity and care.`;
+                                  const fallbackFullBio = `${data.full_name || 'This agent'}'s journey into end-of-life care is driven by a commitment to helping families during life's most challenging moments.\n\n${specialty || 'Their expertise'} allows them to address both the emotional and practical aspects of end-of-life planning.\n\nThey are known for their patient, non-judgmental approach and their ability to facilitate difficult family conversations.`;
+                                  
                                   setPortfolioAgentData({
                                     ...data,
                                     business_address: (metadata as any)?.business_address || null,
@@ -1230,8 +1235,9 @@ function SearchResults() {
                                     reviewCount: Math.floor(Math.random() * 200 + 50),
                                     verified: true,
                                     location: location,
-                                    summary: `${data.full_name || 'This agent'} brings years of compassionate expertise in end-of-life planning and grief support. ${specialty || 'They help'} families navigate difficult decisions with dignity and care.`,
-                                    fullBio: `${data.full_name || 'This agent'}'s journey into end-of-life care is driven by a commitment to helping families during life's most challenging moments.\n\n${specialty || 'Their expertise'} allows them to address both the emotional and practical aspects of end-of-life planning.\n\nThey are known for their patient, non-judgmental approach and their ability to facilitate difficult family conversations.`,
+                                    summary: hasApprovedBio ? data.ai_generated_bio.split('\n\n')[0] || data.ai_generated_bio : fallbackSummary,
+                                    fullBio: hasApprovedBio ? data.ai_generated_bio : fallbackFullBio,
+                                    aiGeneratedBio: hasApprovedBio ? data.ai_generated_bio : null,
                                   });
                                 }
                               } catch (err) {
