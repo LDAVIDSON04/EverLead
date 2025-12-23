@@ -133,14 +133,14 @@ export function BookingPanel({ agentId }: BookingPanelProps) {
       setLoading(true);
       try {
         const startDate = weekStartDate.toISOString().split("T")[0];
-        const endDate = new Date(weekStartDate.getTime() + 13 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+        const endDate = new Date(weekStartDate.getTime() + 6 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
         
         const res = await fetch(`/api/agents/availability?agentId=${agentId}&startDate=${startDate}&endDate=${endDate}`);
         if (res.ok) {
           const availabilityData: any[] = await res.json();
           
           const days: DayAvailability[] = [];
-          for (let i = 0; i < 14; i++) {
+          for (let i = 0; i < 7; i++) {
             const date = new Date(weekStartDate);
             date.setDate(weekStartDate.getDate() + i);
             const dateStr = date.toISOString().split("T")[0];
@@ -187,20 +187,20 @@ export function BookingPanel({ agentId }: BookingPanelProps) {
   const getDateRangeText = () => {
     if (weekAvailability.length === 0) return '';
     const firstDay = weekAvailability[0];
-    const lastDay = weekAvailability[13];
+    const lastDay = weekAvailability[6];
     return `${firstDay.dayOfWeek}, ${firstDay.month} ${firstDay.date} - ${lastDay.dayOfWeek}, ${lastDay.month} ${lastDay.date}`;
   };
   
   const goToPreviousWeek = () => {
     const newDate = new Date(weekStartDate);
-    newDate.setDate(weekStartDate.getDate() - 14);
+    newDate.setDate(weekStartDate.getDate() - 7);
     setWeekStartDate(newDate);
     setSelectedDayIndex(null);
   };
   
   const goToNextWeek = () => {
     const newDate = new Date(weekStartDate);
-    newDate.setDate(weekStartDate.getDate() + 14);
+    newDate.setDate(weekStartDate.getDate() + 7);
     setWeekStartDate(newDate);
     setSelectedDayIndex(null);
   };
@@ -380,9 +380,9 @@ export function BookingPanel({ agentId }: BookingPanelProps) {
           </div>
         ) : (
           <>
-            {/* First Week - 7 days */}
-            <div className="grid grid-cols-7 gap-3 mb-4">
-              {weekAvailability.slice(0, 7).map((day, index) => (
+            {/* Top Row - 3 days */}
+            <div className="grid grid-cols-3 gap-3 mb-3">
+              {weekAvailability.slice(0, 3).map((day, index) => (
                 <button
                   key={index}
                   onClick={() => handleDayClick(index)}
@@ -420,10 +420,10 @@ export function BookingPanel({ agentId }: BookingPanelProps) {
               ))}
             </div>
             
-            {/* Second Week - 7 days */}
-            <div className="grid grid-cols-7 gap-3 mb-4">
-              {weekAvailability.slice(7, 14).map((day, index) => {
-                const actualIndex = index + 7;
+            {/* Bottom Row - 4 days */}
+            <div className="grid grid-cols-4 gap-3 mb-4">
+              {weekAvailability.slice(3, 7).map((day, index) => {
+                const actualIndex = index + 3;
                 return (
                   <button
                     key={actualIndex}
