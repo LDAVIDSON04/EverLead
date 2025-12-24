@@ -21,6 +21,18 @@ export async function POST(req: NextRequest) {
           password,
           full_name,
           phone,
+          address,
+          certificates_licenses,
+          professional_groups,
+          community_organizations,
+          llqp_exclusive_quebec,
+          llqp_including_quebec,
+          trustage_enroller_number,
+          independent_agent,
+          funeral_homes,
+          services_provided,
+          funeral_home_services,
+          // Legacy fields for backward compatibility
           funeral_home,
           licensed_in_province,
           licensed_funeral_director,
@@ -30,30 +42,47 @@ export async function POST(req: NextRequest) {
     console.log("Agent signup request received:", { email, full_name, hasPassword: !!password });
 
         // Validate required fields
-        if (!email || !password || !full_name || !phone || !funeral_home || licensed_in_province === undefined || licensed_funeral_director === undefined) {
-          console.error("Missing required fields:", { email: !!email, password: !!password, full_name: !!full_name, phone: !!phone, funeral_home: !!funeral_home, licensed_in_province, licensed_funeral_director });
+        if (!email || !password || !full_name || !phone || !address) {
+          console.error("Missing required fields:", { email: !!email, password: !!password, full_name: !!full_name, phone: !!phone, address: !!address });
           return NextResponse.json(
-            { error: "All fields are required." },
+            { error: "All required fields must be filled." },
             { status: 400 }
           );
         }
 
-        // Validate notification_cities
-        if (!notification_cities || !Array.isArray(notification_cities) || notification_cities.length === 0) {
+        // Validate address fields
+        if (!address.street || !address.city || !address.province || !address.postalCode) {
           return NextResponse.json(
-            { error: "Please add at least one city where you'd like to receive notifications." },
+            { error: "Please provide complete address information (street, city, province, postal code)." },
+            { status: 400 }
+          );
+        }
+
+        // Validate notification_cities (use from address if not provided)
+        const cities = notification_cities || (address.city ? [{ city: address.city, province: address.province }] : []);
+        if (!cities || !Array.isArray(cities) || cities.length === 0) {
+          return NextResponse.json(
+            { error: "Please provide at least one city for notifications." },
             { status: 400 }
           );
         }
 
         // Validate each city has city and province
-        for (const cityObj of notification_cities) {
+        for (const cityObj of cities) {
           if (!cityObj.city || !cityObj.province) {
             return NextResponse.json(
               { error: "Each city must have both city name and province." },
               { status: 400 }
             );
           }
+        }
+
+        // Validate funeral homes if not independent agent
+        if (independent_agent === false && (!funeral_homes || !Array.isArray(funeral_homes) || funeral_homes.length === 0)) {
+          return NextResponse.json(
+            { error: "Please add at least one funeral home if you are not an independent agent." },
+            { status: 400 }
+          );
         }
 
     // Validate supabaseAdmin is available
@@ -195,23 +224,87 @@ export async function POST(req: NextRequest) {
       approval_status: "pending",
     };
 
-    // Add optional fields if they exist in the database
+    // Add basic fields
     if (phone) profileData.phone = phone;
-    if (funeral_home) profileData.funeral_home = funeral_home;
+    
+    // Add address fields
+    if (address) {
+      profileData.agent_city = address.city;
+      profileData.agent_province = address.province.toUpperCase().trim();
+      // Store full address in metadata
+      if (!profileData.metadata) profileData.metadata = {};
+      profileData.metadata.address = {
+        street: address.street,
+        city: address.city,
+        province: address.province,
+        postalCode: address.postalCode,
+      };
+    }
+
+    // Add notification cities
+    if (cities && Array.isArray(cities) && cities.length > 0) {
+      profileData.notification_cities = cities;
+      // Extract province from first notification city (agents are restricted to their province)
+      const firstCity = cities[0];
+      if (firstCity && firstCity.province) {
+        profileData.agent_province = firstCity.province.toUpperCase().trim();
+      }
+    }
+
+    // Build metadata object with all additional fields
+    const metadata: any = profileData.metadata || {};
+    
+    // Certificates/Licenses
+    if (certificates_licenses) metadata.certificates_licenses = certificates_licenses;
+    
+    // Professional Groups
+    if (professional_groups) metadata.professional_groups = professional_groups;
+    
+    // Community Organizations
+    if (community_organizations) metadata.community_organizations = community_organizations;
+    
+    // LLQP License
+    if (llqp_exclusive_quebec !== undefined) metadata.llqp_exclusive_quebec = llqp_exclusive_quebec === true || llqp_exclusive_quebec === "yes";
+    if (llqp_including_quebec !== undefined) metadata.llqp_including_quebec = llqp_including_quebec === true || llqp_including_quebec === "yes";
+    
+    // TruStage
+    if (trustage_enroller_number !== undefined) metadata.trustage_enroller_number = trustage_enroller_number === true || trustage_enroller_number === "yes";
+    
+    // Independent Agent
+    if (independent_agent !== undefined) metadata.independent_agent = independent_agent === true || independent_agent === "yes";
+    
+    // Funeral Homes
+    if (funeral_homes && Array.isArray(funeral_homes)) {
+      metadata.funeral_homes = funeral_homes;
+      // For backward compatibility, set funeral_home to first one
+      if (funeral_homes.length > 0 && funeral_homes[0].name) {
+        profileData.funeral_home = funeral_homes[0].name;
+      }
+    } else if (funeral_home) {
+      // Legacy support
+      profileData.funeral_home = funeral_home;
+    }
+    
+    // Services Provided
+    if (services_provided && Array.isArray(services_provided)) {
+      metadata.services_provided = services_provided;
+    }
+    
+    // Funeral Home Services
+    if (funeral_home_services && Array.isArray(funeral_home_services)) {
+      metadata.funeral_home_services = funeral_home_services;
+    }
+    
+    // Legacy fields for backward compatibility
     if (licensed_in_province !== undefined) {
       profileData.licensed_in_province = licensed_in_province === true || licensed_in_province === "yes";
     }
     if (licensed_funeral_director !== undefined) {
       profileData.licensed_funeral_director = licensed_funeral_director === true || licensed_funeral_director === "yes";
     }
-    if (notification_cities && Array.isArray(notification_cities) && notification_cities.length > 0) {
-      profileData.notification_cities = notification_cities;
-      // Extract province from first notification city (agents are restricted to their province)
-      const firstCity = notification_cities[0];
-      if (firstCity && firstCity.province) {
-        profileData.agent_province = firstCity.province.toUpperCase().trim();
-      }
-    }
+    
+    // Store metadata
+    profileData.metadata = metadata;
 
     console.log("Attempting to create profile:", { userId, email, full_name });
 
@@ -251,21 +344,62 @@ export async function POST(req: NextRequest) {
             role: "agent",
             approval_status: "pending",
           };
+          
+          // Add basic fields
           if (phone) updateData.phone = phone;
-          if (funeral_home) updateData.funeral_home = funeral_home;
+          
+          // Build metadata with all additional fields
+          const existingMetadata = existingProfile.metadata || {};
+          const metadata: any = { ...existingMetadata };
+          
+          // Add address fields
+          if (address) {
+            updateData.agent_city = address.city;
+            updateData.agent_province = address.province.toUpperCase().trim();
+            metadata.address = {
+              street: address.street,
+              city: address.city,
+              province: address.province,
+              postalCode: address.postalCode,
+            };
+          }
+          
+          // Add notification cities
+          if (cities && Array.isArray(cities) && cities.length > 0) {
+            updateData.notification_cities = cities;
+            const firstCity = cities[0];
+            if (firstCity && firstCity.province) {
+              updateData.agent_province = firstCity.province.toUpperCase().trim();
+            }
+          }
+          
+          // Add all other metadata fields
+          if (certificates_licenses) metadata.certificates_licenses = certificates_licenses;
+          if (professional_groups) metadata.professional_groups = professional_groups;
+          if (community_organizations) metadata.community_organizations = community_organizations;
+          if (llqp_exclusive_quebec !== undefined) metadata.llqp_exclusive_quebec = llqp_exclusive_quebec === true || llqp_exclusive_quebec === "yes";
+          if (llqp_including_quebec !== undefined) metadata.llqp_including_quebec = llqp_including_quebec === true || llqp_including_quebec === "yes";
+          if (trustage_enroller_number !== undefined) metadata.trustage_enroller_number = trustage_enroller_number === true || trustage_enroller_number === "yes";
+          if (independent_agent !== undefined) metadata.independent_agent = independent_agent === true || independent_agent === "yes";
+          if (funeral_homes && Array.isArray(funeral_homes)) {
+            metadata.funeral_homes = funeral_homes;
+            if (funeral_homes.length > 0 && funeral_homes[0].name) {
+              updateData.funeral_home = funeral_homes[0].name;
+            }
+          } else if (funeral_home) {
+            updateData.funeral_home = funeral_home;
+          }
+          if (services_provided && Array.isArray(services_provided)) metadata.services_provided = services_provided;
+          if (funeral_home_services && Array.isArray(funeral_home_services)) metadata.funeral_home_services = funeral_home_services;
+          
+          updateData.metadata = metadata;
+          
+          // Legacy fields
           if (licensed_in_province !== undefined) {
             updateData.licensed_in_province = licensed_in_province === true || licensed_in_province === "yes";
           }
           if (licensed_funeral_director !== undefined) {
             updateData.licensed_funeral_director = licensed_funeral_director === true || licensed_funeral_director === "yes";
-          }
-          if (notification_cities && Array.isArray(notification_cities) && notification_cities.length > 0) {
-            updateData.notification_cities = notification_cities;
-            // Extract province from first notification city (agents are restricted to their province)
-            const firstCity = notification_cities[0];
-            if (firstCity && firstCity.province) {
-              updateData.agent_province = firstCity.province.toUpperCase().trim();
-            }
           }
 
           const { data: updatedProfile, error: updateError } = await supabaseAdmin
