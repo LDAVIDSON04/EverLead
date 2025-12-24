@@ -69,12 +69,14 @@ export async function GET(req: NextRequest) {
       .select(
         `
         id,
+        lead_id,
         requested_date,
         requested_window,
         status,
         created_at,
         confirmed_at,
         leads (
+          id,
           first_name,
           last_name,
           full_name,
@@ -227,6 +229,7 @@ export async function GET(req: NextRequest) {
       
       return {
       id: apt.id,
+        lead_id: apt.lead_id || (lead?.id || null),
         starts_at: startsAt,
         ends_at: endsAt,
       status: apt.status,

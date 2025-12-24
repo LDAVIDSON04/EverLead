@@ -4,9 +4,11 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabaseClient } from "@/lib/supabaseClient";
 import { useRequireRole } from "@/lib/hooks/useRequireRole";
-import { Calendar, Clock, User, X, Loader2, ChevronLeft, ChevronRight, Search, Settings, Bell, Check, Eye, RefreshCw, Plus } from "lucide-react";
+import { Calendar, Clock, User, X, Loader2, ChevronLeft, ChevronRight, Search, Settings, Bell, Check, Eye, Download, Plus } from "lucide-react";
 import { DateTime } from "luxon";
 import Link from "next/link";
+import { ClientInfoModal } from "../my-appointments/components/ClientInfoModal";
+import { downloadClientInfo } from "@/lib/downloadClientInfo";
 
 type Specialist = {
   id: string;
@@ -17,6 +19,7 @@ type Specialist = {
 
 type Appointment = {
   id: string;
+  lead_id?: string | null;
   starts_at: string;
   ends_at: string;
   status: string;
@@ -51,6 +54,8 @@ export default function SchedulePage() {
     timeZone: string;
   } | null>(null);
   const [agentTimezone, setAgentTimezone] = useState<string>("America/Vancouver"); // Default to PST
+  const [viewingLeadId, setViewingLeadId] = useState<string | null>(null);
+  const [viewingAppointmentId, setViewingAppointmentId] = useState<string | null>(null);
 
   const hours = Array.from({ length: 13 }, (_, i) => i + 8); // 8 AM to 8 PM
   const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -421,7 +426,8 @@ export default function SchedulePage() {
           day,
           startTime: hour,
           duration,
-          color: apt.status === 'confirmed' ? '#16a34a' : apt.status === 'pending' ? '#059669' : '#ef4444'
+          color: apt.status === 'confirmed' ? '#16a34a' : apt.status === 'pending' ? '#059669' : '#ef4444',
+          lead_id: apt.lead_id,
         };
       }
       return null;
@@ -655,15 +661,35 @@ export default function SchedulePage() {
 
                           {/* Actions */}
                           <div className="flex items-center gap-2">
-                            <Link
-                              href={`/agent/my-appointments`}
-                              className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-all"
-                              title="View"
+                            <button
+                              onClick={() => {
+                                if (appointment.lead_id) {
+                                  setViewingLeadId(appointment.lead_id);
+                                  setViewingAppointmentId(appointment.id);
+                                }
+                              }}
+                              disabled={!appointment.lead_id}
+                              className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                              title={appointment.lead_id ? "View client information" : "No client information available"}
                             >
-                              <Eye className="w-5 h-5" />
-                            </Link>
-                            <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-all" title="Reschedule">
-                              <RefreshCw className="w-5 h-5" />
+                              <Eye className={`w-5 h-5 ${appointment.lead_id ? '' : 'text-gray-300'}`} />
+                            </button>
+                            <button
+                              onClick={async () => {
+                                if (appointment.lead_id) {
+                                  try {
+                                    await downloadClientInfo(appointment.lead_id, appointment.family_name);
+                                  } catch (error) {
+                                    console.error('Error downloading client info:', error);
+                                    alert('Failed to download client information. Please try again.');
+                                  }
+                                }
+                              }}
+                              disabled={!appointment.lead_id}
+                              className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                              title={appointment.lead_id ? "Download client information" : "No client information available"}
+                            >
+                              <Download className={`w-5 h-5 ${appointment.lead_id ? '' : 'text-gray-300'}`} />
                             </button>
                             <button className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all" title="Cancel">
                               <X className="w-5 h-5" />
@@ -722,6 +748,12 @@ export default function SchedulePage() {
                             .map((apt: any) => (
                               <div
                                 key={apt.id}
+                                onClick={() => {
+                                  if (apt.lead_id) {
+                                    setViewingLeadId(apt.lead_id);
+                                    setViewingAppointmentId(apt.id);
+                                  }
+                                }}
                                 className="absolute left-2 right-2 rounded-lg p-3 text-white shadow-md cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02] z-10"
                                 style={{
                                   backgroundColor: apt.color,
@@ -878,6 +910,17 @@ export default function SchedulePage() {
           </div>
         </div>
       )}
+
+      {/* Client Info Modal */}
+      <ClientInfoModal
+        isOpen={viewingLeadId !== null}
+        onClose={() => {
+          setViewingLeadId(null);
+          setViewingAppointmentId(null);
+        }}
+        leadId={viewingLeadId}
+        appointmentId={viewingAppointmentId}
+      />
     </div>
   );
 }
