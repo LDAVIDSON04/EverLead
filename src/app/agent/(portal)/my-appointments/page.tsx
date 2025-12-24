@@ -111,6 +111,8 @@ export default function FilesPage() {
             client: clientName,
             uploadedBy: 'Agent',
             date: formattedDate,
+            leadId: lead?.id || null,
+            appointmentId: apt.id,
           };
         });
 
@@ -147,6 +149,8 @@ export default function FilesPage() {
         client: clientName,
         uploadedBy: 'Agent',
         date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        leadId: lead?.id || null,
+        appointmentId: appointment.id,
       };
 
       setFiles([newFile, ...files]);
