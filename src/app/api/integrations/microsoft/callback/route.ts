@@ -152,7 +152,7 @@ export async function GET(req: NextRequest) {
     // Values are now set from OAuth flow above
 
     // Upsert calendar connection
-    const { error: upsertError } = await supabaseServer
+    const { data: savedConnection, error: upsertError } = await supabaseServer
       .from("calendar_connections")
       .upsert(
         {
@@ -167,7 +167,9 @@ export async function GET(req: NextRequest) {
         {
           onConflict: "specialist_id,provider",
         }
-      );
+      )
+      .select()
+      .single();
 
     if (upsertError) {
       console.error("Error saving calendar connection:", upsertError);
@@ -176,6 +178,15 @@ export async function GET(req: NextRequest) {
       return NextResponse.redirect(
         `${baseUrl}/agent?error=${encodeURIComponent("Failed to save calendar connection. Please log in and try again.")}`
       );
+    }
+
+    // Set up webhook subscription for real-time updates (async, don't wait)
+    if (savedConnection) {
+      import("@/lib/calendarWebhooks").then(({ setupMicrosoftWebhook }) => {
+        setupMicrosoftWebhook(savedConnection as any).catch((err) => {
+          console.error("Failed to set up Microsoft webhook (non-blocking):", err);
+        });
+      });
     }
 
     // Redirect to login page with success message - user can log back in and go to settings

@@ -138,6 +138,9 @@ async function syncConnection(
       // Continue with other events even if one fails
     }
   }
+  
+  // Also trigger an immediate sync after processing to ensure availability is updated
+  // This ensures that even if webhooks fail, polling will catch changes quickly
 
   // Clean up old events outside the sync window (optional)
   // This keeps the external_events table from growing indefinitely

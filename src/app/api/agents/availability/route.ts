@@ -139,7 +139,19 @@ export async function GET(req: NextRequest) {
       .lte("requested_date", endDate)
       .order("created_at", { ascending: false }); // Most recent first
 
-    // Debug: Log appointments to see what we're working with
+    // Load external calendar events (from Google/Microsoft) that block time slots
+    // These are events created by the front desk or other external sources
+    // Note: external_events uses specialist_id which matches the agent's user ID
+    const { data: externalEvents, error: externalEventsError } = await supabaseAdmin
+      .from("external_events")
+      .select("id, starts_at, ends_at, status, is_soradin_created")
+      .eq("specialist_id", agentId) // specialist_id in external_events = agent_id (user ID)
+      .eq("status", "confirmed") // Only block confirmed events
+      .eq("is_soradin_created", false) // Only block external events (not Soradin-created)
+      .gte("starts_at", `${startDate}T00:00:00Z`)
+      .lte("ends_at", `${endDate}T23:59:59Z`);
+
+    // Debug: Log appointments and external events
     console.log("📋 Loaded appointments for conflict detection:", {
       agentId,
       startDate,
@@ -157,8 +169,23 @@ export async function GET(req: NextRequest) {
       })),
     });
 
+    console.log("📅 Loaded external events for conflict detection:", {
+      agentId,
+      count: externalEvents?.length || 0,
+      externalEvents: externalEvents?.map((evt: any) => ({
+        id: evt.id,
+        startsAt: evt.starts_at,
+        endsAt: evt.ends_at,
+        status: evt.status,
+      })),
+    });
+
     if (appointmentsError) {
       console.error("Error loading appointments:", appointmentsError);
+    }
+
+    if (externalEventsError) {
+      console.error("Error loading external events:", externalEventsError);
     }
 
     // Note: timeToDate helper removed - now using DateTime from luxon directly in slot generation
@@ -186,68 +213,88 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // Helper to check if a time slot conflicts with an appointment
+    // Helper to check if a time slot conflicts with an appointment or external event
     // SIMPLE LOGIC: Only block if we have confirmed_at and it matches the slot time
     // Compare ISO strings directly for exact matching
     const hasConflict = (slotStart: Date, slotEnd: Date, dateStr: string, slotHour: number): boolean => {
-      if (!appointments || appointments.length === 0) return false;
-      
       const slotStartISO = slotStart.toISOString();
       const slotStartTime = slotStart.getTime();
+      const slotEndTime = slotEnd.getTime();
       
       // Check if this slot conflicts with any appointment
-      // CRITICAL: Only check appointments that have confirmed_at and match the exact slot time
-      // We do NOT check by date first - we check by exact time match only
-      return appointments.some((apt: any) => {
-        // ONLY block if we have confirmed_at - this is the exact booking time
-        if (!apt.confirmed_at) {
-          // No confirmed_at means we can't be precise - don't block
-          return false;
-        }
-        
-        // Convert confirmed_at to Date and get ISO string
-        const aptConfirmedDate = new Date(apt.confirmed_at);
-        const aptConfirmedISO = aptConfirmedDate.toISOString();
-        
-        // Compare ISO strings directly (most reliable - exact match)
-        const isoMatch = slotStartISO === aptConfirmedISO;
-        
-        // Also compare timestamps with tolerance (1 minute) as backup
-        const aptStartTime = aptConfirmedDate.getTime();
-        const tolerance = 60 * 1000; // 1 minute in milliseconds
-        const timeDifference = Math.abs(slotStartTime - aptStartTime);
-        const timeMatch = timeDifference <= tolerance;
-        
-        // Only log if there's a potential match (to reduce log noise)
-        if (isoMatch || timeMatch) {
-          // Verify the date also matches (safety check)
-          const aptDateStr = aptConfirmedDate.toISOString().split("T")[0];
-          if (aptDateStr !== dateStr) {
-            // Date doesn't match - this shouldn't happen but log it
-            console.log("⚠️ Time matches but date doesn't:", {
-              slotDate: dateStr,
-              aptDate: aptDateStr,
-              slotStartISO,
-              aptConfirmedISO,
-            });
-            return false; // Don't block if dates don't match
+      if (appointments && appointments.length > 0) {
+        const appointmentConflict = appointments.some((apt: any) => {
+          // ONLY block if we have confirmed_at - this is the exact booking time
+          if (!apt.confirmed_at) {
+            return false;
           }
           
-          console.log("✅✅✅ CONFLICT FOUND - BLOCKING EXACT SLOT:", {
-            dateStr,
-            slotStartISO,
-            aptConfirmedISO,
-            isoMatch,
-            timeDifferenceMs: timeDifference,
-            appointmentId: apt.id,
-            appointmentStatus: apt.status,
-          });
-          return true; // This exact slot is booked - block ONLY this slot
-        }
+          // Convert confirmed_at to Date and get ISO string
+          const aptConfirmedDate = new Date(apt.confirmed_at);
+          const aptConfirmedISO = aptConfirmedDate.toISOString();
+          
+          // Compare ISO strings directly (most reliable - exact match)
+          const isoMatch = slotStartISO === aptConfirmedISO;
+          
+          // Also compare timestamps with tolerance (1 minute) as backup
+          const aptStartTime = aptConfirmedDate.getTime();
+          const tolerance = 60 * 1000; // 1 minute in milliseconds
+          const timeDifference = Math.abs(slotStartTime - aptStartTime);
+          const timeMatch = timeDifference <= tolerance;
+          
+          if (isoMatch || timeMatch) {
+            // Verify the date also matches (safety check)
+            const aptDateStr = aptConfirmedDate.toISOString().split("T")[0];
+            if (aptDateStr !== dateStr) {
+              return false;
+            }
+            
+            console.log("✅ CONFLICT FOUND (Appointment) - BLOCKING SLOT:", {
+              dateStr,
+              slotStartISO,
+              aptConfirmedISO,
+              appointmentId: apt.id,
+            });
+            return true;
+          }
+          
+          return false;
+        });
         
-        // No match - this slot is available
-        return false;
-      });
+        if (appointmentConflict) return true;
+      }
+      
+      // Check if this slot conflicts with any external calendar event
+      if (externalEvents && externalEvents.length > 0) {
+        const externalEventConflict = externalEvents.some((evt: any) => {
+          const evtStart = new Date(evt.starts_at);
+          const evtEnd = new Date(evt.ends_at);
+          const evtStartTime = evtStart.getTime();
+          const evtEndTime = evtEnd.getTime();
+          
+          // Check if slot overlaps with external event
+          // Slot overlaps if: slotStart < evtEnd AND slotEnd > evtStart
+          const overlaps = slotStartTime < evtEndTime && slotEndTime > evtStartTime;
+          
+          if (overlaps) {
+            console.log("✅ CONFLICT FOUND (External Event) - BLOCKING SLOT:", {
+              dateStr,
+              slotStartISO,
+              evtStartsAt: evt.starts_at,
+              evtEndsAt: evt.ends_at,
+              externalEventId: evt.id,
+            });
+            return true;
+          }
+          
+          return false;
+        });
+        
+        if (externalEventConflict) return true;
+      }
+      
+      // No conflicts - slot is available
+      return false;
     };
 
     // Generate availability days

@@ -829,20 +829,20 @@ function SearchResults() {
                     className="w-16 h-16 rounded-full object-cover flex-shrink-0"
                   />
                 ) : (
-                  <div className={`w-16 h-16 ${avatarColors[selectedAppointmentIndex % avatarColors.length]} rounded-full flex items-center justify-center flex-shrink-0`}>
-                    <span className="text-white text-2xl">
+                <div className={`w-16 h-16 ${avatarColors[selectedAppointmentIndex % avatarColors.length]} rounded-full flex items-center justify-center flex-shrink-0`}>
+                  <span className="text-white text-2xl">
                       {selectedAppointment.agent?.full_name?.[0]?.toUpperCase() ||
                        selectedAppointment.leads?.first_name?.[0]?.toUpperCase() ||
                        'A'}
-                    </span>
-                  </div>
+                  </span>
+                </div>
                 )}
                 
                 <div className="flex-1">
                   <h3 className="text-black mb-1 text-lg font-semibold">
                     {selectedAppointment.agent?.full_name ||
                      (selectedAppointment.leads 
-                       ? `${selectedAppointment.leads.first_name || ''} ${selectedAppointment.leads.last_name || ''}`.trim() || 'Pre-need Specialist'
+                      ? `${selectedAppointment.leads.first_name || ''} ${selectedAppointment.leads.last_name || ''}`.trim() || 'Pre-need Specialist'
                        : 'Pre-need Specialist')}
                   </h3>
                   <p className="text-gray-600 text-sm mb-2">
@@ -933,21 +933,21 @@ function SearchResults() {
                           })();
                           
                           if (!bookingUrl) {
-                            return (
-                              <button
-                                key={timeIdx}
+                    return (
+                      <button
+                        key={timeIdx}
                                 type="button"
                                 disabled
                                 className="px-4 py-2 rounded-md text-sm bg-gray-200 text-gray-400 cursor-not-allowed"
                               >
                                 {timeSlot.time}
-                              </button>
-                            );
+                      </button>
+                    );
                           }
-                          
-                          return (
+                    
+                    return (
                             <form
-                              key={timeIdx}
+                                key={timeIdx}
                               action={bookingUrl || '#'}
                               method="get"
                               onSubmit={(e) => {
@@ -977,11 +977,11 @@ function SearchResults() {
                                 {timeSlot.time}
                               </button>
                             </form>
-                          );
-                        })}
+                            );
+                          })}
+                        </div>
                       </div>
-                    </div>
-                  );
+                    );
                 });
               })()}
               
@@ -1104,12 +1104,12 @@ function SearchResults() {
               >
                 Clear Filters
               </button>
-              <Link
-                href="/"
-                className="inline-block bg-green-800 hover:bg-green-900 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
-              >
-                Return to Homepage
-              </Link>
+            <Link
+              href="/"
+              className="inline-block bg-green-800 hover:bg-green-900 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
+            >
+              Return to Homepage
+            </Link>
             </div>
           </div>
         ) : (
@@ -1128,7 +1128,7 @@ function SearchResults() {
                 ? `${agent.full_name || ''}`.trim() || `${appointment.leads?.first_name || ''} ${appointment.leads?.last_name || ''}`.trim()
                 : specialistName;
               const agentId = agent?.id || appointment.id;
-
+              
               return (
                 <div key={appointment.id} className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
                   <div className="flex gap-6">
@@ -1141,9 +1141,9 @@ function SearchResults() {
                           className="w-16 h-16 rounded-full object-cover"
                         />
                       ) : (
-                        <div className={`w-16 h-16 ${avatarColors[index % avatarColors.length]} rounded-full flex items-center justify-center`}>
+                      <div className={`w-16 h-16 ${avatarColors[index % avatarColors.length]} rounded-full flex items-center justify-center`}>
                           <span className="text-white text-2xl">{agentName[0]?.toUpperCase() || 'A'}</span>
-                        </div>
+                      </div>
                       )}
                     </div>
 
@@ -1326,7 +1326,7 @@ function SearchResults() {
                 >
                   <X className="w-6 h-6" />
                 </button>
-              </div>
+    </div>
               
               {/* Agent Profile Card */}
               {selectedAgentInfo && (
