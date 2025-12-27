@@ -70,10 +70,41 @@ export async function setupGoogleWebhook(connection: CalendarConnection): Promis
         .eq("id", connection.id);
     }
 
-    // Generate unique channel ID (use specialist_id which matches calendar_connections table)
-    const channelId = `soradin-${connection.specialist_id}-${Date.now()}`;
+    // Stop existing webhook if there is one (using resource_id if available)
+    if (connection.webhook_resource_id) {
+      try {
+        await fetch("https://www.googleapis.com/calendar/v3/channels/stop", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            id: connection.webhook_channel_id || undefined,
+            resourceId: connection.webhook_resource_id,
+          }),
+        });
+        console.log(`Stopped existing webhook for specialist ${connection.specialist_id}`);
+      } catch (stopError) {
+        // Ignore errors when stopping - webhook might already be expired
+        console.warn(`Could not stop existing webhook:`, stopError);
+      }
+    }
+
+    // Generate unique channel ID
+    // Channel ID must be a string, max 64 chars
+    // Google prefers UUID-like format, but accepts any string
+    // Using a clean format: soradin-{short-specialist-id}-{timestamp}
+    const shortId = connection.specialist_id.substring(0, 8);
+    const timestamp = Date.now();
+    const channelId = `soradin-${shortId}-${timestamp}`;
     const webhookUrl = `${BASE_URL}/api/integrations/google/webhook`;
     const webhookSecret = process.env.GOOGLE_WEBHOOK_SECRET || "soradin-webhook-secret";
+
+    // Calculate expiration (must be between now and 7 days from now, in seconds since epoch)
+    // Google allows max 7 days, but let's use 6 days to be safe and account for timezone issues
+    const nowSeconds = Math.floor(Date.now() / 1000);
+    const expirationSeconds = nowSeconds + (6 * 24 * 60 * 60); // 6 days from now (safer than 7)
 
     // Subscribe to calendar push notifications
     const watchResponse = await fetch(
@@ -89,8 +120,8 @@ export async function setupGoogleWebhook(connection: CalendarConnection): Promis
           type: "web_hook",
           address: webhookUrl,
           token: webhookSecret,
-          // Watch for 7 days (Google max is 7 days, we'll renew before expiry)
-          expiration: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60,
+          // Expiration must be in seconds since epoch, max 7 days from now
+          expiration: expirationSeconds,
         }),
       }
     );
