@@ -40,11 +40,34 @@ export async function setupGoogleWebhook(connection: CalendarConnection): Promis
       });
 
       if (!refreshResponse.ok) {
-        throw new Error("Failed to refresh Google token");
+        const error = await refreshResponse.json().catch(() => ({ error: "Unknown error" }));
+        // If refresh token is invalid, connection needs reconnection
+        if (error.error === "invalid_grant") {
+          await supabaseAdmin
+            .from("calendar_connections")
+            .update({ sync_enabled: false })
+            .eq("id", connection.id);
+          throw new Error("Refresh token expired or revoked - calendar needs to be reconnected");
+        }
+        throw new Error(`Failed to refresh Google token: ${JSON.stringify(error)}`);
       }
 
       const tokens = await refreshResponse.json();
       accessToken = tokens.access_token;
+      
+      // Save refreshed tokens back to database
+      const expiresAt = tokens.expires_in 
+        ? new Date(Date.now() + tokens.expires_in * 1000).toISOString()
+        : connection.expires_at;
+      
+      await supabaseAdmin
+        .from("calendar_connections")
+        .update({
+          access_token: tokens.access_token,
+          refresh_token: tokens.refresh_token || connection.refresh_token,
+          expires_at: expiresAt,
+        })
+        .eq("id", connection.id);
     }
 
     // Generate unique channel ID (use specialist_id which matches calendar_connections table)
@@ -135,11 +158,34 @@ export async function setupMicrosoftWebhook(connection: CalendarConnection): Pro
       );
 
       if (!refreshResponse.ok) {
-        throw new Error("Failed to refresh Microsoft token");
+        const error = await refreshResponse.json().catch(() => ({ error: "Unknown error" }));
+        // If refresh token is invalid, connection needs reconnection
+        if (error.error === "invalid_grant" || error.error === "invalid_request") {
+          await supabaseAdmin
+            .from("calendar_connections")
+            .update({ sync_enabled: false })
+            .eq("id", connection.id);
+          throw new Error("Refresh token expired or revoked - calendar needs to be reconnected");
+        }
+        throw new Error(`Failed to refresh Microsoft token: ${JSON.stringify(error)}`);
       }
 
       const tokens = await refreshResponse.json();
       accessToken = tokens.access_token;
+      
+      // Save refreshed tokens back to database
+      const expiresAt = tokens.expires_in 
+        ? new Date(Date.now() + tokens.expires_in * 1000).toISOString()
+        : connection.expires_at;
+      
+      await supabaseAdmin
+        .from("calendar_connections")
+        .update({
+          access_token: tokens.access_token,
+          refresh_token: tokens.refresh_token || connection.refresh_token,
+          expires_at: expiresAt,
+        })
+        .eq("id", connection.id);
     }
 
     const webhookUrl = `${BASE_URL}/api/integrations/microsoft/webhook`;
@@ -184,6 +230,103 @@ export async function setupMicrosoftWebhook(connection: CalendarConnection): Pro
   } catch (error: any) {
     console.error("Error setting up Microsoft Calendar webhook:", error);
     // Don't throw - webhook setup is optional, polling will still work
+  }
+}
+
+/**
+ * Check if a webhook is expired or about to expire (within 24 hours)
+ */
+export function isWebhookExpiredOrExpiring(connection: CalendarConnection): boolean {
+  if (!connection.webhook_expires_at) {
+    return true; // No webhook set up
+  }
+  
+  const expiresAt = new Date(connection.webhook_expires_at);
+  const now = new Date();
+  const hoursUntilExpiry = (expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60);
+  
+  // Consider expired if already expired or expiring within 24 hours
+  return hoursUntilExpiry <= 24;
+}
+
+/**
+ * Renew expired or expiring webhooks for all active connections
+ * This should be called periodically (e.g., daily via cron)
+ */
+export async function renewExpiredWebhooks(): Promise<{
+  renewed: number;
+  failed: number;
+  errors: string[];
+}> {
+  const results = {
+    renewed: 0,
+    failed: 0,
+    errors: [] as string[],
+  };
+
+  try {
+    // Get all active connections with webhooks that are expired or expiring
+    const { data: connections, error } = await supabaseAdmin
+      .from("calendar_connections")
+      .select("*")
+      .eq("sync_enabled", true)
+      .in("provider", ["google", "microsoft"])
+      .or("webhook_expires_at.is.null,webhook_expires_at.lt.now()");
+
+    if (error) {
+      throw new Error(`Failed to load connections: ${error.message}`);
+    }
+
+    if (!connections || connections.length === 0) {
+      return results;
+    }
+
+    // Also check for connections expiring within 24 hours
+    const now = new Date();
+    const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    
+    const { data: expiringConnections, error: expiringError } = await supabaseAdmin
+      .from("calendar_connections")
+      .select("*")
+      .eq("sync_enabled", true)
+      .in("provider", ["google", "microsoft"])
+      .gte("webhook_expires_at", now.toISOString())
+      .lte("webhook_expires_at", tomorrow.toISOString());
+
+    if (!expiringError && expiringConnections) {
+      connections.push(...expiringConnections);
+    }
+
+    // Remove duplicates
+    const uniqueConnections = Array.from(
+      new Map(connections.map((conn: any) => [conn.id, conn])).values()
+    );
+
+    for (const connection of uniqueConnections as CalendarConnection[]) {
+      if (isWebhookExpiredOrExpiring(connection)) {
+        try {
+          if (connection.provider === "google") {
+            await setupGoogleWebhook(connection);
+          } else if (connection.provider === "microsoft") {
+            await setupMicrosoftWebhook(connection);
+          }
+          results.renewed++;
+          console.log(
+            `✅ Renewed ${connection.provider} webhook for specialist ${connection.specialist_id}`
+          );
+        } catch (error: any) {
+          results.failed++;
+          const errorMsg = `Failed to renew ${connection.provider} webhook for specialist ${connection.specialist_id}: ${error.message}`;
+          results.errors.push(errorMsg);
+          console.error(errorMsg, error);
+        }
+      }
+    }
+
+    return results;
+  } catch (error: any) {
+    console.error("Error renewing expired webhooks:", error);
+    throw error;
   }
 }
 

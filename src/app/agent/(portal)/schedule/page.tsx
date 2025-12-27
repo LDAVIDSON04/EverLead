@@ -24,6 +24,9 @@ type Appointment = {
   ends_at: string;
   status: string;
   family_name: string;
+  location?: string;
+  is_external?: boolean;
+  provider?: string;
 };
 
 type ViewType = 'upcoming' | 'week';
@@ -643,9 +646,13 @@ export default function SchedulePage() {
                             {/* Details */}
                             <div className="flex-1">
                               <div className="flex items-center gap-3 mb-2">
-                                <h3 className="text-gray-900">Appointment with {appointment.family_name || 'Family'}</h3>
+                                <h3 className="text-gray-900">
+                                  {appointment.is_external 
+                                    ? appointment.family_name || 'External Meeting'
+                                    : `Appointment with ${appointment.family_name || 'Family'}`}
+                                </h3>
                                 <span className={`px-3 py-1 rounded-full text-xs ${getStatusColor(appointment.status)}`}>
-                                  {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
+                                  {appointment.is_external ? 'External' : appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
                                 </span>
                               </div>
                               <div className="flex items-center gap-4 text-sm text-gray-600">
@@ -653,47 +660,64 @@ export default function SchedulePage() {
                                   <Clock className="w-4 h-4" />
                                   {localStart.toLocaleString(DateTime.TIME_SIMPLE)} - {localEnd.toLocaleString(DateTime.TIME_SIMPLE)}
                                 </span>
-                                <span>•</span>
-                                <span>{appointment.family_name || 'Unknown'}</span>
+                                {appointment.is_external && appointment.provider && (
+                                  <>
+                                    <span>•</span>
+                                    <span className="text-xs text-gray-500">{appointment.provider === 'google' ? 'Google' : appointment.provider === 'microsoft' ? 'Microsoft' : 'External'}</span>
+                                  </>
+                                )}
+                                {!appointment.is_external && (
+                                  <>
+                                    <span>•</span>
+                                    <span>{appointment.family_name || 'Unknown'}</span>
+                                  </>
+                                )}
                               </div>
                             </div>
                           </div>
 
                           {/* Actions */}
                           <div className="flex items-center gap-2">
-                            <button
-                              onClick={() => {
-                                if (appointment.lead_id) {
-                                  setViewingLeadId(appointment.lead_id);
-                                  setViewingAppointmentId(appointment.id);
-                                }
-                              }}
-                              disabled={!appointment.lead_id}
-                              className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                              title={appointment.lead_id ? "View client information" : "No client information available"}
-                            >
-                              <Eye className={`w-5 h-5 ${appointment.lead_id ? '' : 'text-gray-300'}`} />
-                            </button>
-                            <button
-                              onClick={async () => {
-                                if (appointment.lead_id) {
-                                  try {
-                                    await downloadClientInfo(appointment.lead_id, appointment.family_name);
-                                  } catch (error) {
-                                    console.error('Error downloading client info:', error);
-                                    alert('Failed to download client information. Please try again.');
-                                  }
-                                }
-                              }}
-                              disabled={!appointment.lead_id}
-                              className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                              title={appointment.lead_id ? "Download client information" : "No client information available"}
-                            >
-                              <Download className={`w-5 h-5 ${appointment.lead_id ? '' : 'text-gray-300'}`} />
-                            </button>
-                            <button className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all" title="Cancel">
-                              <X className="w-5 h-5" />
-                            </button>
+                            {!appointment.is_external && (
+                              <>
+                                <button
+                                  onClick={() => {
+                                    if (appointment.lead_id) {
+                                      setViewingLeadId(appointment.lead_id);
+                                      setViewingAppointmentId(appointment.id);
+                                    }
+                                  }}
+                                  disabled={!appointment.lead_id}
+                                  className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                  title={appointment.lead_id ? "View client information" : "No client information available"}
+                                >
+                                  <Eye className={`w-5 h-5 ${appointment.lead_id ? '' : 'text-gray-300'}`} />
+                                </button>
+                                <button
+                                  onClick={async () => {
+                                    if (appointment.lead_id) {
+                                      try {
+                                        await downloadClientInfo(appointment.lead_id, appointment.family_name);
+                                      } catch (error) {
+                                        console.error('Error downloading client info:', error);
+                                        alert('Failed to download client information. Please try again.');
+                                      }
+                                    }
+                                  }}
+                                  disabled={!appointment.lead_id}
+                                  className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                  title={appointment.lead_id ? "Download client information" : "No client information available"}
+                                >
+                                  <Download className={`w-5 h-5 ${appointment.lead_id ? '' : 'text-gray-300'}`} />
+                                </button>
+                                <button className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all" title="Cancel">
+                                  <X className="w-5 h-5" />
+                                </button>
+                              </>
+                            )}
+                            {appointment.is_external && (
+                              <span className="text-xs text-gray-500 italic">Booked externally</span>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -767,6 +791,9 @@ export default function SchedulePage() {
                                     .toLocaleString(DateTime.TIME_SIMPLE)}
                                 </div>
                                 <div className="mt-1">{apt.family_name || 'Appointment'}</div>
+                                {apt.is_external && (
+                                  <div className="mt-1 text-xs opacity-75">External</div>
+                                )}
                               </div>
                             ))}
                         </div>

@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabaseServer";
 import { fetchGoogleCalendarEvents } from "@/lib/calendarProviders/google";
 import { fetchMicrosoftCalendarEvents } from "@/lib/calendarProviders/microsoft";
+import { renewExpiredWebhooks, isWebhookExpiredOrExpiring } from "@/lib/calendarWebhooks";
 import type { CalendarConnection } from "@/lib/calendarProviders/types";
 
 export const dynamic = "force-dynamic";
@@ -55,9 +56,40 @@ export async function GET(req: NextRequest) {
     let totalSynced = 0;
     const errors: string[] = [];
 
+    // Check and renew expired webhooks before syncing
+    // This ensures webhooks are active for real-time updates
+    try {
+      const renewalResults = await renewExpiredWebhooks();
+      if (renewalResults.renewed > 0) {
+        console.log(`✅ Renewed ${renewalResults.renewed} expired webhooks`);
+      }
+      if (renewalResults.failed > 0) {
+        console.warn(`⚠️ Failed to renew ${renewalResults.failed} webhooks`);
+        errors.push(...renewalResults.errors);
+      }
+    } catch (renewalError: any) {
+      console.error("Error renewing webhooks:", renewalError);
+      // Don't fail the sync if webhook renewal fails
+    }
+
     // Sync each connection
     for (const connection of connections as CalendarConnection[]) {
       try {
+        // Check if webhook is missing or expired - try to set it up
+        if (isWebhookExpiredOrExpiring(connection)) {
+          try {
+            const { setupGoogleWebhook, setupMicrosoftWebhook } = await import("@/lib/calendarWebhooks");
+            if (connection.provider === "google") {
+              await setupGoogleWebhook(connection);
+            } else if (connection.provider === "microsoft") {
+              await setupMicrosoftWebhook(connection);
+            }
+          } catch (webhookError: any) {
+            console.warn(`Failed to set up webhook for ${connection.provider} connection ${connection.id}:`, webhookError);
+            // Continue with sync even if webhook setup fails
+          }
+        }
+
         await syncConnection(connection, timeMin, timeMax);
         totalSynced++;
       } catch (error: any) {

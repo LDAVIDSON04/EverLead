@@ -177,13 +177,18 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Set up webhook subscription for real-time updates (async, don't wait)
+    // Set up webhook subscription for real-time updates
+    // This is critical for instant sync when coworkers book meetings
     if (savedConnection) {
-      import("@/lib/calendarWebhooks").then(({ setupGoogleWebhook }) => {
-        setupGoogleWebhook(savedConnection as any).catch((err) => {
-          console.error("Failed to set up Google webhook (non-blocking):", err);
-        });
-      });
+      try {
+        const { setupGoogleWebhook } = await import("@/lib/calendarWebhooks");
+        await setupGoogleWebhook(savedConnection as any);
+        console.log(`✅ Google Calendar webhook set up successfully for specialist ${specialistId}`);
+      } catch (webhookError: any) {
+        // Log error but don't fail the connection - polling will still work
+        console.error("⚠️ Failed to set up Google webhook (non-blocking):", webhookError);
+        // Connection is still saved, webhook can be set up later via utility endpoint
+      }
     }
 
     // Redirect to login page with success message - user can log back in and go to settings

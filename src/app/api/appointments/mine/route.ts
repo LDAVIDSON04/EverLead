@@ -92,6 +92,22 @@ export async function GET(req: NextRequest) {
       .order("requested_date", { ascending: true })
       .order("created_at", { ascending: true });
 
+    // Also fetch external calendar events (booked by coworkers/front desk)
+    // These should appear in the agent's schedule alongside Soradin appointments
+    const { data: externalEvents, error: externalEventsError } = await supabaseServer
+      .from("external_events")
+      .select("id, starts_at, ends_at, status, provider, is_soradin_created")
+      .eq("specialist_id", userId) // specialist_id in external_events = agent_id (user ID)
+      .eq("status", "confirmed") // Only show confirmed events
+      .eq("is_soradin_created", false) // Only show external events (not Soradin-created)
+      .gte("starts_at", now.toISOString()) // Only future events
+      .order("starts_at", { ascending: true });
+
+    if (externalEventsError) {
+      console.error("Error fetching external events:", externalEventsError);
+      // Don't fail the request if external events fail to load
+    }
+
     if (appointmentsError) {
       console.error("Error fetching appointments:", appointmentsError);
       return NextResponse.json(
@@ -241,7 +257,35 @@ export async function GET(req: NextRequest) {
     // Filter out any null entries from failed date conversions
     const validAppointments = mappedAppointments.filter((apt): apt is NonNullable<typeof apt> => apt !== null);
 
-    return NextResponse.json(validAppointments);
+    // Map external events to the same format as appointments
+    // These represent meetings booked by coworkers/front desk in external calendars
+    const mappedExternalEvents = (externalEvents || []).map((evt: any) => {
+      const providerName = evt.provider === "google" ? "Google Calendar" : 
+                          evt.provider === "microsoft" ? "Microsoft Calendar" : 
+                          evt.provider === "ics" ? "ICS Calendar" : 
+                          "External Calendar";
+      
+      return {
+        id: `external-${evt.id}`, // Prefix to distinguish from Soradin appointments
+        lead_id: null, // External events don't have leads
+        starts_at: evt.starts_at,
+        ends_at: evt.ends_at,
+        status: "confirmed", // External events are always confirmed
+        family_name: `External Meeting (${providerName})`, // Indicate it's an external booking
+        location: "External Calendar", // Indicate it's from external calendar
+        is_external: true, // Flag to identify external events in the UI
+        provider: evt.provider,
+      };
+    });
+
+    // Combine appointments and external events, sort by start time
+    const allEvents = [...validAppointments, ...mappedExternalEvents].sort((a, b) => {
+      const aStart = new Date(a.starts_at).getTime();
+      const bStart = new Date(b.starts_at).getTime();
+      return aStart - bStart;
+    });
+
+    return NextResponse.json(allEvents);
   } catch (error: any) {
     console.error("Error in GET /api/appointments/mine:", error);
     return NextResponse.json(

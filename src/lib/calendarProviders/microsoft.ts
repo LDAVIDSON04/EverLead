@@ -1,6 +1,7 @@
 // src/lib/calendarProviders/microsoft.ts
 // Microsoft Graph Calendar API integration for fetching events
 
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import type { CalendarConnection } from "./types";
 
 export type ExternalEvent = {
@@ -56,11 +57,33 @@ export async function fetchMicrosoftCalendarEvents(
 
     if (!refreshResponse.ok) {
       const error = await refreshResponse.json().catch(() => ({ error: "Unknown error" }));
+      // If refresh token is invalid, mark connection as needing reconnection
+      if (error.error === "invalid_grant" || error.error === "invalid_request") {
+        await supabaseAdmin
+          .from("calendar_connections")
+          .update({ sync_enabled: false })
+          .eq("id", connection.id);
+        throw new Error("Refresh token expired or revoked - calendar needs to be reconnected");
+      }
       throw new Error(`Failed to refresh Microsoft token: ${JSON.stringify(error)}`);
     }
 
     const tokens = await refreshResponse.json();
     accessToken = tokens.access_token;
+    
+    // Save refreshed tokens back to database
+    const expiresAt = tokens.expires_in 
+      ? new Date(Date.now() + tokens.expires_in * 1000).toISOString()
+      : connection.expires_at;
+    
+    await supabaseAdmin
+      .from("calendar_connections")
+      .update({
+        access_token: tokens.access_token,
+        refresh_token: tokens.refresh_token || connection.refresh_token, // Keep existing if not provided
+        expires_at: expiresAt,
+      })
+      .eq("id", connection.id);
   }
 
   // Make API call to Microsoft Graph
