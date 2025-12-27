@@ -15,6 +15,7 @@ const WEBHOOK_SECRET = process.env.GOOGLE_WEBHOOK_SECRET || "soradin-webhook-sec
 
 /**
  * GET: Verify webhook subscription (Google requires this for initial setup)
+ * Also handles browser access for testing
  */
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -25,7 +26,12 @@ export async function GET(req: NextRequest) {
     return new NextResponse(challenge, { status: 200 });
   }
   
-  return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  // Return a helpful message for browser access
+  return NextResponse.json({ 
+    message: "Google Calendar webhook endpoint",
+    status: "active",
+    note: "This endpoint receives POST requests from Google Calendar. Direct browser access is for verification only."
+  }, { status: 200 });
 }
 
 /**

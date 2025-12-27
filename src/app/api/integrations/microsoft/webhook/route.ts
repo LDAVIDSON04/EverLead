@@ -11,6 +11,17 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 /**
+ * GET: Handle browser access / health check
+ */
+export async function GET(req: NextRequest) {
+  return NextResponse.json({ 
+    message: "Microsoft Calendar webhook endpoint",
+    status: "active",
+    note: "This endpoint receives POST requests from Microsoft Graph. Direct browser access is for verification only."
+  }, { status: 200 });
+}
+
+/**
  * POST: Handle webhook notifications from Microsoft Graph
  */
 export async function POST(req: NextRequest) {
