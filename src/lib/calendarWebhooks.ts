@@ -93,20 +93,38 @@ export async function setupGoogleWebhook(connection: CalendarConnection): Promis
 
     // Generate unique channel ID
     // Channel ID must be a string, max 64 chars
-    // Google prefers UUID-like format, but accepts any string
-    // Using a clean format: soradin-{short-specialist-id}-{timestamp}
-    const shortId = connection.specialist_id.substring(0, 8);
-    const timestamp = Date.now();
-    const channelId = `soradin-${shortId}-${timestamp}`;
+    // Use a simple UUID-like format to avoid any parsing issues
+    const uuid = connection.specialist_id.replace(/-/g, '');
+    const timestamp = Date.now().toString(36); // Base36 for shorter string
+    const channelId = `soradin-${uuid.substring(0, 16)}-${timestamp}`.substring(0, 64);
     const webhookUrl = `${BASE_URL}/api/integrations/google/webhook`;
     const webhookSecret = process.env.GOOGLE_WEBHOOK_SECRET || "soradin-webhook-secret";
 
     // Calculate expiration (must be between now and 7 days from now, in seconds since epoch)
-    // Google allows max 7 days, but let's use 6 days to be safe and account for timezone issues
+    // Google allows max 7 days, but let's use 6 days to be safe
     const nowSeconds = Math.floor(Date.now() / 1000);
-    const expirationSeconds = nowSeconds + (6 * 24 * 60 * 60); // 6 days from now (safer than 7)
+    const expirationSeconds = nowSeconds + (6 * 24 * 60 * 60); // 6 days from now
+
+    // Ensure expiration is a valid positive integer
+    if (!Number.isInteger(expirationSeconds) || expirationSeconds <= nowSeconds) {
+      throw new Error(`Invalid expiration calculation: ${expirationSeconds} (now: ${nowSeconds})`);
+    }
 
     // Subscribe to calendar push notifications
+    const watchPayload = {
+      id: channelId,
+      type: "web_hook",
+      address: webhookUrl,
+      token: webhookSecret,
+      expiration: expirationSeconds, // Must be integer seconds since epoch
+    };
+
+    console.log(`Setting up Google webhook with payload:`, {
+      channelId,
+      expiration: expirationSeconds,
+      expirationDate: new Date(expirationSeconds * 1000).toISOString(),
+    });
+
     const watchResponse = await fetch(
       `https://www.googleapis.com/calendar/v3/calendars/${connection.external_calendar_id}/events/watch`,
       {
@@ -115,14 +133,7 @@ export async function setupGoogleWebhook(connection: CalendarConnection): Promis
           Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          id: channelId,
-          type: "web_hook",
-          address: webhookUrl,
-          token: webhookSecret,
-          // Expiration must be in seconds since epoch, max 7 days from now
-          expiration: expirationSeconds,
-        }),
+        body: JSON.stringify(watchPayload),
       }
     );
 
