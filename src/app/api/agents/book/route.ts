@@ -396,10 +396,10 @@ export async function POST(req: NextRequest) {
       if (leadData?.postal_code) locationParts.push(leadData.postal_code);
       const locationAddress = locationParts.length > 0 ? locationParts.join(", ") : "Location to be confirmed";
       
-      // Get agent name and address
+      // Get agent name, address, and timezone
       const { data: agentProfile } = await supabaseAdmin
         .from("profiles")
-        .select("full_name, first_name, last_name, agent_city, agent_province")
+        .select("full_name, first_name, last_name, agent_city, agent_province, metadata")
         .eq("id", agentId)
         .single();
       
@@ -412,19 +412,55 @@ export async function POST(req: NextRequest) {
       if (agentProfile?.agent_province) agentLocationParts.push(agentProfile.agent_province);
       const agentLocationAddress = agentLocationParts.length > 0 ? agentLocationParts.join(", ") : "Location to be confirmed";
       
-      // Format appointment date/time using confirmed_at for exact time
-      const confirmedAt = appointment.confirmed_at ? new Date(appointment.confirmed_at) : new Date(requestedDate + "T00:00:00");
+      // Get agent's timezone from profile or infer from province
+      let agentTimezone = "America/Vancouver"; // Default fallback
+      if (agentProfile?.metadata?.timezone) {
+        agentTimezone = agentProfile.metadata.timezone;
+      } else if (agentProfile?.metadata?.availability?.timezone) {
+        agentTimezone = agentProfile.metadata.availability.timezone;
+      } else if (agentProfile?.agent_province) {
+        // Infer from province
+        const province = agentProfile.agent_province.toUpperCase();
+        if (province === "BC" || province === "BRITISH COLUMBIA") {
+          agentTimezone = "America/Vancouver";
+        } else if (province === "AB" || province === "ALBERTA") {
+          agentTimezone = "America/Edmonton";
+        } else if (province === "SK" || province === "SASKATCHEWAN") {
+          agentTimezone = "America/Regina";
+        } else if (province === "MB" || province === "MANITOBA") {
+          agentTimezone = "America/Winnipeg";
+        } else if (province === "ON" || province === "ONTARIO") {
+          agentTimezone = "America/Toronto";
+        } else if (province === "QC" || province === "QUEBEC") {
+          agentTimezone = "America/Montreal";
+        }
+      }
       
-      // Format date with day of week
-      const formattedDate = confirmedAt.toLocaleDateString("en-US", { 
+      // Format appointment date/time using confirmed_at in agent's timezone
+      // Import DateTime from luxon for timezone conversion
+      const { DateTime } = await import('luxon');
+      
+      let confirmedAtUTC: DateTime;
+      if (appointment.confirmed_at) {
+        confirmedAtUTC = DateTime.fromISO(appointment.confirmed_at, { zone: "utc" });
+      } else {
+        // Fallback: use requested date at start of day in agent's timezone
+        confirmedAtUTC = DateTime.fromISO(`${requestedDate}T00:00:00`, { zone: agentTimezone }).toUTC();
+      }
+      
+      // Convert to agent's local timezone
+      const confirmedAtLocal = confirmedAtUTC.setZone(agentTimezone);
+      
+      // Format date with day of week in agent's timezone
+      const formattedDate = confirmedAtLocal.toLocaleString({ 
         weekday: "long", 
         year: "numeric",
         month: "long", 
         day: "numeric" 
       });
       
-      // Format exact time (e.g., "10:00 AM")
-      const formattedTime = confirmedAt.toLocaleTimeString("en-US", {
+      // Format exact time in agent's timezone (e.g., "10:00 AM")
+      const formattedTime = confirmedAtLocal.toLocaleString({
         hour: "numeric",
         minute: "2-digit",
         hour12: true
