@@ -526,14 +526,7 @@ export default function AgentDashboardPage() {
                         apt.status === 'confirmed' ? 'bg-green-50 hover:bg-green-100' : 'bg-white hover:bg-gray-50'
                       }`}
                     >
-                      <div className="col-span-3 flex items-center gap-2">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs ${
-                          idx === 0 ? 'bg-gray-200 text-gray-700' : 
-                          idx === 1 ? 'bg-green-100 text-green-800' : 
-                          'bg-gray-200 text-gray-700'
-                        }`}>
-                          {apt.name.split(' ').map(n => n[0]).join('').toUpperCase() || '?'}
-                        </div>
+                      <div className="col-span-3">
                         <span className="text-sm text-gray-900">{apt.name || 'Unknown'}</span>
                       </div>
                       <div className="col-span-2 text-sm text-gray-600">{apt.location}</div>
