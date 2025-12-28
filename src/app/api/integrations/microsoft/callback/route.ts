@@ -206,16 +206,22 @@ export async function GET(req: NextRequest) {
 
     // Set up webhook subscription for real-time updates
     // This is critical for instant sync when coworkers book meetings
+    // Note: Set up asynchronously with a delay to avoid rate limiting during initial connection
     if (savedConnection) {
-      try {
-        const { setupMicrosoftWebhook } = await import("@/lib/calendarWebhooks");
-        await setupMicrosoftWebhook(savedConnection as any);
-        console.log(`✅ Microsoft Calendar webhook set up successfully for specialist ${specialistId}`);
-      } catch (webhookError: any) {
-        // Log error but don't fail the connection - polling will still work
-        console.error("⚠️ Failed to set up Microsoft webhook (non-blocking):", webhookError);
-        // Connection is still saved, webhook can be set up later via utility endpoint
-      }
+      // Set up webhook asynchronously after a delay to avoid rate limiting
+      // The sync cron job will also attempt to set up webhooks if they're missing
+      setTimeout(async () => {
+        try {
+          const { setupMicrosoftWebhook } = await import("@/lib/calendarWebhooks");
+          await setupMicrosoftWebhook(savedConnection as any);
+          console.log(`✅ Microsoft Calendar webhook set up successfully for specialist ${specialistId}`);
+        } catch (webhookError: any) {
+          // Log error but don't fail the connection - polling will still work
+          console.error("⚠️ Failed to set up Microsoft webhook (non-blocking):", webhookError);
+          // Connection is still saved, webhook can be set up later via utility endpoint or sync cron
+        }
+      }, 5000); // Wait 5 seconds before setting up webhook to avoid rate limiting
+      console.log(`⏳ Microsoft Calendar webhook will be set up in 5 seconds (async, non-blocking)`);
     }
 
     // Redirect to login page with success message - user can log back in and go to settings
