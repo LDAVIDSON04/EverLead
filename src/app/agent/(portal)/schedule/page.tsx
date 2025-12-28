@@ -1003,6 +1003,86 @@ export default function SchedulePage() {
         leadId={viewingLeadId}
         appointmentId={viewingAppointmentId}
       />
+
+      {/* External Appointment Modal */}
+      {viewingExternalAppointment && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={() => setViewingExternalAppointment(null)}>
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-start justify-between mb-4">
+              <h2 className="text-2xl font-semibold text-gray-900">Appointment Details</h2>
+              <button
+                onClick={() => setViewingExternalAppointment(null)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <div className="text-sm text-gray-500 mb-1">Title</div>
+                <div className="text-base text-gray-900 font-medium">
+                  {viewingExternalAppointment.family_name || 'External Meeting'}
+                </div>
+              </div>
+
+              <div>
+                <div className="text-sm text-gray-500 mb-1">Date & Time</div>
+                <div className="text-base text-gray-900">
+                  {DateTime.fromISO(viewingExternalAppointment.starts_at, { zone: "utc" })
+                    .setZone(agentTimezone)
+                    .toLocaleString({ 
+                      weekday: 'long',
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                      hour: 'numeric',
+                      minute: '2-digit',
+                      hour12: true
+                    })} - {DateTime.fromISO(viewingExternalAppointment.ends_at, { zone: "utc" })
+                    .setZone(agentTimezone)
+                    .toLocaleString(DateTime.TIME_SIMPLE)}
+                </div>
+              </div>
+
+              {viewingExternalAppointment.location && viewingExternalAppointment.location !== "N/A" && viewingExternalAppointment.location !== "External Calendar" && (
+                <div>
+                  <div className="text-sm text-gray-500 mb-1">Location</div>
+                  <div className="text-base text-gray-900 flex items-center gap-2">
+                    <MapPin className="w-4 h-4" />
+                    {viewingExternalAppointment.location}
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <div className="text-sm text-gray-500 mb-1">Source</div>
+                <div className="text-base text-gray-900">
+                  {viewingExternalAppointment.provider === 'google' ? 'Google Calendar' : 
+                   viewingExternalAppointment.provider === 'microsoft' ? 'Microsoft Calendar' : 
+                   'External Calendar'}
+                </div>
+              </div>
+
+              <div>
+                <div className="text-sm text-gray-500 mb-1">Status</div>
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                  External
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-6 pt-4 border-t border-gray-200">
+              <button
+                onClick={() => setViewingExternalAppointment(null)}
+                className="w-full px-4 py-2 bg-[#064e3b] text-white rounded-lg hover:bg-[#065f46] transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
