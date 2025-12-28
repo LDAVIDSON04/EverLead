@@ -412,14 +412,22 @@ export async function POST(req: NextRequest) {
       if (agentProfile?.agent_province) agentLocationParts.push(agentProfile.agent_province);
       const agentLocationAddress = agentLocationParts.length > 0 ? agentLocationParts.join(", ") : "Location to be confirmed";
       
-      // Format appointment date/time
-      const aptDate = new Date(requestedDate + "T00:00:00");
-      const windowLabel = requestedWindow === "morning" ? "Morning" : requestedWindow === "afternoon" ? "Afternoon" : "Evening";
-      const formattedDate = aptDate.toLocaleDateString("en-US", { 
+      // Format appointment date/time using confirmed_at for exact time
+      const confirmedAt = appointment.confirmed_at ? new Date(appointment.confirmed_at) : new Date(requestedDate + "T00:00:00");
+      
+      // Format date with day of week
+      const formattedDate = confirmedAt.toLocaleDateString("en-US", { 
         weekday: "long", 
-        year: "numeric", 
+        year: "numeric",
         month: "long", 
         day: "numeric" 
+      });
+      
+      // Format exact time (e.g., "10:00 AM")
+      const formattedTime = confirmedAt.toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true
       });
       
       const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://soradin.com';
@@ -446,7 +454,7 @@ export async function POST(req: NextRequest) {
                   <p>Your appointment with <strong>${agentName}</strong> has been confirmed.</p>
                   <div style="background-color: #f7f4ef; padding: 20px; border-radius: 8px; margin: 20px 0;">
                     <p style="margin: 8px 0; color: #2a2a2a; font-size: 16px;"><strong>Date:</strong> ${formattedDate}</p>
-                    <p style="margin: 8px 0; color: #2a2a2a; font-size: 16px;"><strong>Time:</strong> ${windowLabel}</p>
+                    <p style="margin: 8px 0; color: #2a2a2a; font-size: 16px;"><strong>Time:</strong> ${formattedTime}</p>
                     <p style="margin: 8px 0; color: #2a2a2a; font-size: 16px;"><strong>Agent:</strong> ${agentName}</p>
                     <p style="margin: 8px 0; color: #2a2a2a; font-size: 16px;"><strong>Location:</strong> ${locationAddress}</p>
                   </div>
@@ -486,7 +494,7 @@ export async function POST(req: NextRequest) {
                   <p>You have a new appointment with <strong>${familyName}</strong>.</p>
                   <div style="background-color: #f7f4ef; padding: 20px; border-radius: 8px; margin: 20px 0;">
                     <p style="margin: 8px 0; color: #2a2a2a; font-size: 16px;"><strong>Date:</strong> ${formattedDate}</p>
-                    <p style="margin: 8px 0; color: #2a2a2a; font-size: 16px;"><strong>Time:</strong> ${windowLabel}</p>
+                    <p style="margin: 8px 0; color: #2a2a2a; font-size: 16px;"><strong>Time:</strong> ${formattedTime}</p>
                     <p style="margin: 8px 0; color: #2a2a2a; font-size: 16px;"><strong>Client:</strong> ${familyName}</p>
                     <p style="margin: 8px 0; color: #2a2a2a; font-size: 16px;"><strong>Email:</strong> ${familyEmail || 'N/A'}</p>
                     <p style="margin: 8px 0; color: #2a2a2a; font-size: 16px;"><strong>Location:</strong> ${locationAddress}</p>
