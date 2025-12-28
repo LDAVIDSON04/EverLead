@@ -126,7 +126,18 @@ export async function GET(req: NextRequest) {
       fullLocationSchedule: locationSchedule,
       appointmentLength,
       metadataAvailability: availabilityData,
+      scheduleDayNames: locationSchedule ? Object.keys(locationSchedule) : [],
+      scheduleDetails: locationSchedule,
     });
+    
+    // Validate that we have a valid schedule
+    if (Object.keys(locationSchedule).length === 0) {
+      console.warn("⚠️ No schedule found for location:", {
+        selectedLocation,
+        availableLocations: locations,
+        availabilityByLocationKeys: Object.keys(availabilityByLocation),
+      });
+    }
 
     // Load existing appointments for this agent
     // Include confirmed_at to get exact booking time for precise conflict detection
@@ -150,7 +161,9 @@ export async function GET(req: NextRequest) {
     
     // Fetch events that start before the range ends (could overlap)
     // Include location field to filter by matching city
-    const { data: externalEventsRaw, error: externalEventsError } = await supabaseAdmin
+    // IMPORTANT: We fetch all events first, then filter by location in code
+    // This allows us to handle events with null location (which block all locations)
+    let externalEventsQuery = supabaseAdmin
       .from("external_events")
       .select("id, starts_at, ends_at, status, is_soradin_created, location")
       .eq("specialist_id", agentId) // specialist_id in external_events = agent_id (user ID)
@@ -158,6 +171,10 @@ export async function GET(req: NextRequest) {
       .eq("is_soradin_created", false) // Only block external events (not Soradin-created)
       .lte("starts_at", rangeEnd) // Event starts before or at range end
       .gte("ends_at", rangeStart); // Event ends after or at range start
+    
+    // If a specific location is requested, we could filter here, but we'll do it in code
+    // to handle null locations (which should block all locations)
+    const { data: externalEventsRaw, error: externalEventsError } = await externalEventsQuery;
     
     // Filter to only events that actually overlap (safety check)
     // Also normalize the time strings to ensure proper Date parsing
@@ -339,13 +356,26 @@ export async function GET(req: NextRequest) {
           // If external event has a location, it must match the requested location
           // If external event has no location (null), it blocks all locations (backward compatibility)
           if (evt.location) {
-            // Normalize both locations for comparison (case-insensitive, remove province)
-            const normalizeForComparison = (loc: string) => loc.toLowerCase().split(',').map(s => s.trim())[0];
+            // Normalize both locations for comparison (case-insensitive, remove province, trim whitespace)
+            const normalizeForComparison = (loc: string) => {
+              if (!loc) return null;
+              return loc.toLowerCase().split(',').map(s => s.trim())[0].toLowerCase();
+            };
             const evtLocationNormalized = normalizeForComparison(evt.location);
             const requestedLocationNormalized = selectedLocation ? normalizeForComparison(selectedLocation) : null;
             
             // If locations don't match, don't block this slot
-            if (requestedLocationNormalized && evtLocationNormalized !== requestedLocationNormalized) {
+            if (requestedLocationNormalized && evtLocationNormalized && evtLocationNormalized !== requestedLocationNormalized) {
+              // Debug: Log when location doesn't match (for troubleshooting)
+              if (dateStr === "2026-01-01" || dateStr === "2026-01-02") {
+                console.log(`📍 Location mismatch - NOT blocking:`, {
+                  evtLocation: evt.location,
+                  evtLocationNormalized,
+                  requestedLocation: selectedLocation,
+                  requestedLocationNormalized,
+                  match: false,
+                });
+              }
               return false; // Event is for a different location, don't block
             }
           }
@@ -436,16 +466,39 @@ export async function GET(req: NextRequest) {
         });
       }
 
-      // Get schedule for this day - try both lowercase and capitalized versions
-      let daySchedule = locationSchedule[dayName];
+      // Get schedule for this day - try multiple variations to handle different formats
+      let daySchedule = locationSchedule[dayName]; // Try lowercase first (e.g., "thursday")
       if (!daySchedule) {
-        // Try capitalized version (e.g., "Friday" instead of "friday")
+        // Try capitalized version (e.g., "Thursday")
         const capitalizedDay = dayName.charAt(0).toUpperCase() + dayName.slice(1);
         daySchedule = locationSchedule[capitalizedDay];
       }
+      if (!daySchedule) {
+        // Try all lowercase with first letter capitalized (e.g., "Thursday")
+        daySchedule = locationSchedule[dayName.charAt(0).toUpperCase() + dayName.slice(1).toLowerCase()];
+      }
+      if (!daySchedule) {
+        // Try all uppercase (e.g., "THURSDAY")
+        daySchedule = locationSchedule[dayName.toUpperCase()];
+      }
+      
+      // Debug: Log what we're looking for and what we found
+      if (dateStr === "2026-01-01" || dateStr === "2026-01-02") {
+        console.log(`🔍 Looking for schedule for ${dayName} (${dateStr}):`, {
+          dayName,
+          locationScheduleKeys: Object.keys(locationSchedule),
+          found: !!daySchedule,
+          schedule: daySchedule,
+        });
+      }
       
       if (!daySchedule || !daySchedule.enabled) {
-        console.log(`No schedule for ${dayName} (${dateStr}):`, daySchedule);
+        console.log(`No schedule for ${dayName} (${dateStr}):`, {
+          dayName,
+          availableKeys: Object.keys(locationSchedule),
+          daySchedule,
+          enabled: daySchedule?.enabled,
+        });
         days.push({ date: dateStr, slots: [] });
         continue;
       }
