@@ -11,6 +11,7 @@ export type ExternalEvent = {
   isAllDay: boolean;
   status: "confirmed" | "cancelled";
   appointmentId?: string; // from our marker if present
+  location?: string | null; // Location/city from the calendar event
 };
 
 /**
@@ -141,6 +142,19 @@ export async function fetchMicrosoftCalendarEvents(
       }
     }
 
+    // Extract location from Microsoft event
+    // Microsoft can have location as a string or an object with displayName/address
+    let location: string | null = null;
+    if (event.location) {
+      if (typeof event.location === 'string') {
+        location = event.location;
+      } else if (event.location.displayName) {
+        location = event.location.displayName;
+      } else if (event.location.address) {
+        location = event.location.address;
+      }
+    }
+
     // Map status
     const status =
       event.isCancelled || event.showAs === "free"
@@ -154,6 +168,7 @@ export async function fetchMicrosoftCalendarEvents(
       isAllDay,
       status,
       appointmentId,
+      location, // Include location in the returned event
     };
   });
 }

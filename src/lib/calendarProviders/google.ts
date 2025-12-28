@@ -11,6 +11,7 @@ export type ExternalEvent = {
   isAllDay: boolean;
   status: "confirmed" | "cancelled";
   appointmentId?: string; // from our marker if present
+  location?: string | null; // Location/city from the calendar event
 };
 
 /**
@@ -124,6 +125,10 @@ export async function fetchGoogleCalendarEvents(
       ? `${event.end.date}T00:00:00Z`
       : event.end.dateTime;
 
+    // Extract location from Google event
+    // Google stores location as a simple string
+    const location: string | null = event.location || null;
+
     // Map status
     const status =
       event.status === "cancelled" ? "cancelled" : "confirmed";
@@ -135,6 +140,7 @@ export async function fetchGoogleCalendarEvents(
       isAllDay,
       status,
       appointmentId,
+      location, // Include location in the returned event
     };
   });
 }

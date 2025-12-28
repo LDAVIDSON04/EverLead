@@ -1499,7 +1499,18 @@ function SearchResults() {
                       // Parse date string (YYYY-MM-DD) in UTC to avoid timezone shifts
                       // This ensures the date displayed matches the date in the API response
                       const [year, month, dayOfMonth] = day.date.split("-").map(Number);
+                      
+                      // Validate parsed date components
+                      if (isNaN(year) || isNaN(month) || isNaN(dayOfMonth)) {
+                        console.error("Invalid date format:", day.date);
+                        return null;
+                      }
+                      
+                      // Create date in UTC to get correct day of week
                       const date = new Date(Date.UTC(year, month - 1, dayOfMonth));
+                      
+                      // Use UTC methods to get day of week and date components
+                      // This ensures the day name matches the actual calendar day
                       const dayName = date.toLocaleDateString("en-US", { weekday: "long", timeZone: "UTC" });
                       const monthName = date.toLocaleDateString("en-US", { month: "long", timeZone: "UTC" });
                       const dayNum = date.getUTCDate();

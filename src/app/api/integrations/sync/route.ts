@@ -222,9 +222,47 @@ async function processExternalEvent(
     isAllDay: boolean;
     status: "confirmed" | "cancelled";
     appointmentId?: string;
+    location?: string | null;
   }
 ): Promise<void> {
   const isSoradinCreated = !!event.appointmentId;
+
+  // Get agent's cities/locations from profile metadata
+  let matchedLocation: string | null = null;
+  if (event.location) {
+    try {
+      const { data: profile } = await supabaseAdmin
+        .from("profiles")
+        .select("metadata")
+        .eq("id", connection.specialist_id)
+        .single();
+      
+      if (profile?.metadata?.availability?.locations) {
+        const agentCities = profile.metadata.availability.locations as string[];
+        
+        // Try to match the event location to one of the agent's cities
+        // Check if any agent city appears in the event location (case-insensitive)
+        const eventLocationLower = event.location.toLowerCase();
+        for (const city of agentCities) {
+          const cityLower = city.toLowerCase();
+          // Check if city name appears in the location string
+          if (eventLocationLower.includes(cityLower)) {
+            matchedLocation = city; // Use the agent's city name (preserves casing)
+            console.log(`📍 Matched external event location "${event.location}" to agent city "${city}"`);
+            break;
+          }
+        }
+        
+        // If no match found, log it
+        if (!matchedLocation) {
+          console.log(`⚠️ Could not match external event location "${event.location}" to any agent city. Available cities: ${agentCities.join(", ")}`);
+        }
+      }
+    } catch (error) {
+      console.error("Error matching location:", error);
+      // Continue without location matching if there's an error
+    }
+  }
 
   // Upsert external_events record
   const { data: existingEvent, error: fetchError } = await supabaseServer
@@ -246,6 +284,7 @@ async function processExternalEvent(
     status: event.status,
     is_soradin_created: isSoradinCreated,
     appointment_id: event.appointmentId || null,
+    location: matchedLocation, // Store matched location
   };
 
   // Upsert the event

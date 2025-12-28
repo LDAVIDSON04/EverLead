@@ -149,9 +149,10 @@ export async function GET(req: NextRequest) {
     const rangeEnd = `${endDate}T23:59:59Z`;
     
     // Fetch events that start before the range ends (could overlap)
+    // Include location field to filter by matching city
     const { data: externalEventsRaw, error: externalEventsError } = await supabaseAdmin
       .from("external_events")
-      .select("id, starts_at, ends_at, status, is_soradin_created")
+      .select("id, starts_at, ends_at, status, is_soradin_created, location")
       .eq("specialist_id", agentId) // specialist_id in external_events = agent_id (user ID)
       .eq("status", "confirmed") // Only block confirmed events
       .eq("is_soradin_created", false) // Only block external events (not Soradin-created)
@@ -320,6 +321,8 @@ export async function GET(req: NextRequest) {
       }
       
       // Check if this slot conflicts with any external calendar event
+      // IMPORTANT: Only block if the external event location matches the requested location
+      // This allows location-aware blocking (e.g., Penticton event only blocks Penticton slots)
       if (externalEvents && externalEvents.length > 0) {
         const externalEventConflict = externalEvents.some((evt: any) => {
           // Skip if this is a Soradin-created event (shouldn't block)
@@ -331,6 +334,22 @@ export async function GET(req: NextRequest) {
           if (evt.status !== "confirmed") {
             return false;
           }
+          
+          // LOCATION-AWARE BLOCKING: Only block if locations match
+          // If external event has a location, it must match the requested location
+          // If external event has no location (null), it blocks all locations (backward compatibility)
+          if (evt.location) {
+            // Normalize both locations for comparison (case-insensitive, remove province)
+            const normalizeForComparison = (loc: string) => loc.toLowerCase().split(',').map(s => s.trim())[0];
+            const evtLocationNormalized = normalizeForComparison(evt.location);
+            const requestedLocationNormalized = selectedLocation ? normalizeForComparison(selectedLocation) : null;
+            
+            // If locations don't match, don't block this slot
+            if (requestedLocationNormalized && evtLocationNormalized !== requestedLocationNormalized) {
+              return false; // Event is for a different location, don't block
+            }
+          }
+          // If evt.location is null, block all locations (backward compatibility for events without location)
           
           const evtStart = new Date(evt.starts_at);
           const evtEnd = new Date(evt.ends_at);
@@ -354,6 +373,9 @@ export async function GET(req: NextRequest) {
               externalEventId: evt.id,
               isSoradinCreated: evt.is_soradin_created,
               status: evt.status,
+              evtLocation: evt.location,
+              requestedLocation: selectedLocation,
+              locationMatch: evt.location ? (evt.location.toLowerCase().includes(selectedLocation?.toLowerCase() || '')) : 'no location (blocks all)',
               overlap: overlaps,
             });
             return true;
@@ -372,6 +394,7 @@ export async function GET(req: NextRequest) {
             endDate,
             rangeStart,
             rangeEnd,
+            requestedLocation: selectedLocation,
           });
         }
       }
@@ -387,13 +410,20 @@ export async function GET(req: NextRequest) {
 
     const dayNames = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
 
+    // Parse start and end dates properly to avoid timezone issues
+    const startParts = startDate.split("-").map(Number);
+    const endParts = endDate.split("-").map(Number);
+    const startDateObj = new Date(Date.UTC(startParts[0], startParts[1] - 1, startParts[2]));
+    const endDateObj = new Date(Date.UTC(endParts[0], endParts[1] - 1, endParts[2]));
+    
     for (
-      let date = new Date(start);
-      date <= end;
-      date.setDate(date.getDate() + 1)
+      let date = new Date(startDateObj);
+      date <= endDateObj;
+      date.setUTCDate(date.getUTCDate() + 1)
     ) {
       const dateStr = date.toISOString().split("T")[0];
-      const weekday = date.getDay(); // 0 = Sunday, 6 = Saturday
+      // Use getUTCDay() to get day of week in UTC, avoiding timezone shifts
+      const weekday = date.getUTCDay(); // 0 = Sunday, 6 = Saturday
       const dayName = dayNames[weekday];
 
       // Get schedule for this day - try both lowercase and capitalized versions

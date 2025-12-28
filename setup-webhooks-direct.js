@@ -104,7 +104,8 @@ async function setupGoogleWebhook(connection) {
           type: "web_hook",
           address: webhookUrl,
           token: webhookSecret,
-          expiration: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60,
+          // Expiration must be in seconds since epoch, max 7 days from now
+          expiration: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60),
         }),
       }
     );
