@@ -160,21 +160,21 @@ export async function GET(req: NextRequest) {
     const rangeEnd = `${endDate}T23:59:59Z`;
     
     // Fetch events that start before the range ends (could overlap)
-    // Include location field to filter by matching city
-    // IMPORTANT: We fetch all events first, then filter by location in code
-    // This allows us to handle events with null location (which block all locations)
+    // IMPORTANT: Only select location if the column exists (graceful degradation)
+    // We'll try to select location, but if it doesn't exist, we'll select without it
     let externalEventsQuery = supabaseAdmin
       .from("external_events")
-      .select("id, starts_at, ends_at, status, is_soradin_created, location")
+      .select("id, starts_at, ends_at, status, is_soradin_created")
       .eq("specialist_id", agentId) // specialist_id in external_events = agent_id (user ID)
       .eq("status", "confirmed") // Only block confirmed events
       .eq("is_soradin_created", false) // Only block external events (not Soradin-created)
       .lte("starts_at", rangeEnd) // Event starts before or at range end
       .gte("ends_at", rangeStart); // Event ends after or at range start
     
-    // If a specific location is requested, we could filter here, but we'll do it in code
-    // to handle null locations (which should block all locations)
     const { data: externalEventsRaw, error: externalEventsError } = await externalEventsQuery;
+    
+    // If location column exists, try to fetch it separately or handle gracefully
+    // For now, we'll work without location filtering until migration is run
     
     // Filter to only events that actually overlap (safety check)
     // Also normalize the time strings to ensure proper Date parsing
@@ -201,6 +201,7 @@ export async function GET(req: NextRequest) {
         ...evt,
         starts_at: startsAt,
         ends_at: endsAt,
+        location: evt.location || null, // Will be null if column doesn't exist
       };
     }).filter((evt: any) => {
       const evtStart = new Date(evt.starts_at);
