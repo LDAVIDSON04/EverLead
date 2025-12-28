@@ -78,17 +78,37 @@ export async function GET(req: NextRequest) {
     for (const connection of connections as CalendarConnection[]) {
       try {
         // Check if webhook is missing or expired - try to set it up
+        // But skip if we recently got rate limited (429 errors) to avoid hitting rate limits repeatedly
         if (isWebhookExpiredOrExpiring(connection)) {
-          try {
-            const { setupGoogleWebhook, setupMicrosoftWebhook } = await import("@/lib/calendarWebhooks");
-            if (connection.provider === "google") {
-              await setupGoogleWebhook(connection);
-            } else if (connection.provider === "microsoft") {
-              await setupMicrosoftWebhook(connection);
+          // Check if we should skip webhook setup due to recent rate limiting
+          // Only attempt webhook setup every 10 minutes to avoid rate limits
+          const lastWebhookAttempt = connection.webhook_expires_at 
+            ? new Date(connection.webhook_expires_at).getTime() 
+            : 0;
+          const timeSinceLastAttempt = Date.now() - lastWebhookAttempt;
+          const minRetryInterval = 10 * 60 * 1000; // 10 minutes
+          
+          if (timeSinceLastAttempt < minRetryInterval && lastWebhookAttempt > 0) {
+            console.log(`Skipping webhook setup for ${connection.provider} - too soon after last attempt (rate limit protection)`);
+          } else {
+            try {
+              const { setupGoogleWebhook, setupMicrosoftWebhook } = await import("@/lib/calendarWebhooks");
+              if (connection.provider === "google") {
+                await setupGoogleWebhook(connection);
+              } else if (connection.provider === "microsoft") {
+                await setupMicrosoftWebhook(connection);
+              }
+            } catch (webhookError: any) {
+              const errorMessage = webhookError?.message || String(webhookError);
+              const isRateLimit = errorMessage.includes('429') || errorMessage.includes('rate limit') || errorMessage.includes('Rate limit');
+              
+              if (isRateLimit) {
+                console.warn(`Rate limited when setting up ${connection.provider} webhook - will retry in 10+ minutes`);
+              } else {
+                console.warn(`Failed to set up webhook for ${connection.provider} connection ${connection.id}:`, webhookError);
+              }
+              // Continue with sync even if webhook setup fails
             }
-          } catch (webhookError: any) {
-            console.warn(`Failed to set up webhook for ${connection.provider} connection ${connection.id}:`, webhookError);
-            // Continue with sync even if webhook setup fails
           }
         }
 
