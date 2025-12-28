@@ -145,14 +145,24 @@ export async function fetchMicrosoftCalendarEvents(
 
     // Extract location from Microsoft event
     // Microsoft can have location as a string or an object with displayName/address
+    // Handle empty objects and null values properly
     let location: string | null = null;
     if (event.location) {
       if (typeof event.location === 'string') {
-        location = event.location;
-      } else if (event.location.displayName) {
-        location = event.location.displayName;
-      } else if (event.location.address) {
-        location = event.location.address;
+        location = event.location.trim() || null;
+      } else if (typeof event.location === 'object') {
+        // Check if object has any properties (not empty)
+        const locationObj = event.location as any;
+        if (Object.keys(locationObj).length > 0) {
+          if (locationObj.displayName && typeof locationObj.displayName === 'string') {
+            location = locationObj.displayName.trim() || null;
+          } else if (locationObj.address && typeof locationObj.address === 'string') {
+            location = locationObj.address.trim() || null;
+          } else if (locationObj.name && typeof locationObj.name === 'string') {
+            location = locationObj.name.trim() || null;
+          }
+        }
+        // If object is empty or has no extractable properties, location remains null
       }
     }
 
