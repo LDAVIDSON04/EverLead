@@ -342,21 +342,60 @@ function SearchResults() {
     const realAvailability = agentId ? agentAvailability[agentId] : null;
     const daysToShow = agentId ? (calendarDaysToShow[agentId] || 8) : 8;
     
+    // Debug: Log what we're using
+    console.log(`📅 [GENERATE AVAILABILITY] For agent ${agentId}:`, {
+      agentId,
+      hasRealAvailability: !!realAvailability,
+      realAvailabilityLength: realAvailability?.length || 0,
+      searchLocation,
+      daysToShow,
+      availabilityKeys: Object.keys(agentAvailability),
+      firstFewDays: realAvailability?.slice(0, 3).map(d => ({
+        date: d.date,
+        slotCount: d.slots.length,
+      })) || [],
+    });
+    
     if (realAvailability && realAvailability.length > 0) {
       // Use real availability data from agent's settings
-      return realAvailability.slice(0, daysToShow).map((day) => {
+      const mapped = realAvailability.slice(0, daysToShow).map((day) => {
         // Parse date string (YYYY-MM-DD) in UTC to avoid timezone shifts
         const [year, month, dayOfMonth] = day.date.split("-").map(Number);
         const date = new Date(Date.UTC(year, month - 1, dayOfMonth));
         const dayName = date.toLocaleDateString('en-US', { weekday: 'short', timeZone: "UTC" });
         const monthName = date.toLocaleDateString('en-US', { month: 'short', timeZone: "UTC" });
         const dayNum = date.getUTCDate();
+        const fullDayName = date.toLocaleDateString('en-US', { weekday: 'long', timeZone: "UTC" });
+        
+        // Debug: Log specific dates
+        if (day.date === "2026-01-01" || day.date === "2026-01-02") {
+          console.log(`📅 [GENERATE AVAILABILITY] Mapping ${day.date}:`, {
+            date: day.date,
+            fullDayName,
+            slotCount: day.slots.length,
+            displayDate: `${dayName}\n${monthName} ${dayNum}`,
+            agentId,
+            searchLocation,
+          });
+        }
         
         return {
           date: `${dayName}\n${monthName} ${dayNum}`,
           spots: day.slots.length,
         };
       });
+      
+      // Debug: Log the full result
+      console.log(`📅 [GENERATE AVAILABILITY] Final mapped result for agent ${agentId}:`, {
+        agentId,
+        searchLocation,
+        mapped: mapped.map(m => ({
+          displayDate: m.date,
+          spots: m.spots,
+        })),
+      });
+      
+      return mapped;
     }
     
     // Fallback: generate placeholder slots if availability not loaded yet
