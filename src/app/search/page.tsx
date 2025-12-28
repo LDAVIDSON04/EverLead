@@ -316,10 +316,12 @@ function SearchResults() {
     if (realAvailability && realAvailability.length > 0) {
       // Use real availability data from agent's settings
       return realAvailability.slice(0, daysToShow).map((day) => {
-        const date = new Date(day.date + "T00:00:00");
-        const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
-        const monthName = date.toLocaleDateString('en-US', { month: 'short' });
-        const dayNum = date.getDate();
+        // Parse date string (YYYY-MM-DD) in UTC to avoid timezone shifts
+        const [year, month, dayOfMonth] = day.date.split("-").map(Number);
+        const date = new Date(Date.UTC(year, month - 1, dayOfMonth));
+        const dayName = date.toLocaleDateString('en-US', { weekday: 'short', timeZone: "UTC" });
+        const monthName = date.toLocaleDateString('en-US', { month: 'short', timeZone: "UTC" });
+        const dayNum = date.getUTCDate();
         
         return {
           date: `${dayName}\n${monthName} ${dayNum}`,
@@ -884,10 +886,12 @@ function SearchResults() {
                 
                 // Show days (7 or 14 based on showMoreWeeks) with their time slots
                 return agentAvailabilityData.slice(0, daysToShow).map((day, dayIdx) => {
-                  const date = new Date(day.date + "T00:00:00");
-                  const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
-                  const monthName = date.toLocaleDateString('en-US', { month: 'short' });
-                  const dayNum = date.getDate();
+                  // Parse date string (YYYY-MM-DD) in UTC to avoid timezone shifts
+                  const [year, month, dayOfMonth] = day.date.split("-").map(Number);
+                  const date = new Date(Date.UTC(year, month - 1, dayOfMonth));
+                  const dayName = date.toLocaleDateString('en-US', { weekday: 'short', timeZone: "UTC" });
+                  const monthName = date.toLocaleDateString('en-US', { month: 'short', timeZone: "UTC" });
+                  const dayNum = date.getUTCDate();
                   const displayDate = `${dayName}, ${monthName} ${dayNum}`;
                   
                   // Convert slots to time strings
