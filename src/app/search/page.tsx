@@ -1247,6 +1247,7 @@ function SearchResults() {
         ) : (
           <div className="space-y-4">
             {appointments.map((appointment, index) => {
+              // Add location to key to force re-render when location changes
               const availability = generateAvailability(appointment);
               const specialistName = appointment.leads 
                 ? `${appointment.leads.first_name || ''} ${appointment.leads.last_name || ''}`.trim() || 'Pre-need Specialist'
@@ -1262,7 +1263,7 @@ function SearchResults() {
               const agentId = agent?.id || appointment.id;
               
               return (
-                <div key={appointment.id} className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
+                <div key={`${appointment.id}-${searchLocation}`} className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
                   <div className="flex gap-6">
                     {/* Agent Avatar */}
                     <div className="flex-shrink-0">
