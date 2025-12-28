@@ -1463,15 +1463,35 @@ function SearchResults() {
                 </div>
               ) : (
                 <div className="space-y-6">
-                  {/* Show all available days with their time slots */}
+                  {/* Show days - prioritize showing the selected day even if it has no slots */}
                   {(() => {
+                    const normalizedSelectedDate = selectedDayForModal?.trim() || "";
+                    
+                    // Always include the selected day, even if it has no slots
+                    const selectedDay = allAvailabilityDays.find(d => d.date.trim() === normalizedSelectedDate);
                     const daysWithSlots = allAvailabilityDays.filter(day => day.slots.length > 0);
-                    console.log("📅 [MODAL] Rendering days with slots:", {
+                    
+                    // If selected day has no slots, show it first, then show days with slots
+                    // If selected day has slots, it will already be in daysWithSlots
+                    let daysToShow = [...daysWithSlots];
+                    if (selectedDay && selectedDay.slots.length === 0) {
+                      // Insert selected day at the beginning
+                      daysToShow.unshift(selectedDay);
+                    }
+                    
+                    // Remove duplicates (in case selected day is already in daysWithSlots)
+                    const uniqueDays = daysToShow.filter((day, index, self) => 
+                      index === self.findIndex(d => d.date.trim() === day.date.trim())
+                    );
+                    
+                    console.log("📅 [MODAL] Rendering days:", {
                       totalDays: allAvailabilityDays.length,
                       daysWithSlots: daysWithSlots.length,
-                      days: daysWithSlots.map(d => ({ date: d.date, slotCount: d.slots.length }))
+                      selectedDay: normalizedSelectedDate,
+                      selectedDayHasSlots: selectedDay?.slots.length || 0,
+                      daysToShow: uniqueDays.map(d => ({ date: d.date, slotCount: d.slots.length }))
                     });
-                    return daysWithSlots;
+                    return uniqueDays;
                   })()
                     .map((day, dayIdx) => {
                       // Parse date string (YYYY-MM-DD) in UTC to avoid timezone shifts
