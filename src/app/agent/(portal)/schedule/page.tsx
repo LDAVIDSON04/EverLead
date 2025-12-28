@@ -753,7 +753,67 @@ export default function SchedulePage() {
                               </>
                             )}
                             {appointment.is_external && (
-                              <span className="text-xs text-gray-500 italic">Booked externally</span>
+                              <>
+                                <button
+                                  onClick={() => {
+                                    setViewingExternalAppointment(appointment);
+                                  }}
+                                  className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-all"
+                                  title="View appointment details"
+                                >
+                                  <Eye className="w-5 h-5" />
+                                </button>
+                                <button
+                                  onClick={async () => {
+                                    try {
+                                      // Format appointment details for download
+                                      const startDate = DateTime.fromISO(appointment.starts_at, { zone: "utc" })
+                                        .setZone(agentTimezone);
+                                      const endDate = DateTime.fromISO(appointment.ends_at, { zone: "utc" })
+                                        .setZone(agentTimezone);
+                                      
+                                      const appointmentDetails = [
+                                        `External Appointment Details`,
+                                        `================================`,
+                                        ``,
+                                        `Title: ${appointment.family_name || 'External Meeting'}`,
+                                        `Date: ${startDate.toLocaleString({ 
+                                          weekday: 'long',
+                                          year: 'numeric',
+                                          month: 'long',
+                                          day: 'numeric'
+                                        })}`,
+                                        `Time: ${startDate.toLocaleString(DateTime.TIME_SIMPLE)} - ${endDate.toLocaleString(DateTime.TIME_SIMPLE)}`,
+                                        appointment.location && appointment.location !== "N/A" && appointment.location !== "External Calendar" 
+                                          ? `Location: ${appointment.location}`
+                                          : '',
+                                        `Source: ${appointment.provider === 'google' ? 'Google Calendar' : appointment.provider === 'microsoft' ? 'Microsoft Calendar' : 'External Calendar'}`,
+                                        `Status: External`,
+                                        ``,
+                                        `Note: This appointment was booked externally and synced to your Soradin calendar.`,
+                                      ].filter(Boolean).join('\n');
+
+                                      // Create and download file
+                                      const blob = new Blob([appointmentDetails], { type: 'text/plain' });
+                                      const url = URL.createObjectURL(blob);
+                                      const a = document.createElement('a');
+                                      a.href = url;
+                                      a.download = `external-appointment-${startDate.toFormat('yyyy-MM-dd')}-${appointment.family_name?.replace(/[^a-z0-9]/gi, '-').toLowerCase() || 'appointment'}.txt`;
+                                      document.body.appendChild(a);
+                                      a.click();
+                                      document.body.removeChild(a);
+                                      URL.revokeObjectURL(url);
+                                    } catch (error) {
+                                      console.error('Error downloading external appointment info:', error);
+                                      alert('Failed to download appointment information. Please try again.');
+                                    }
+                                  }}
+                                  className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-all"
+                                  title="Download appointment details"
+                                >
+                                  <Download className="w-5 h-5" />
+                                </button>
+                              </>
                             )}
                           </div>
                         </div>
