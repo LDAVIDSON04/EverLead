@@ -60,8 +60,35 @@ export default function SchedulePage() {
   const [viewingLeadId, setViewingLeadId] = useState<string | null>(null);
   const [viewingAppointmentId, setViewingAppointmentId] = useState<string | null>(null);
 
-  const hours = Array.from({ length: 13 }, (_, i) => i + 8); // 8 AM to 8 PM
   const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  
+  // Calculate dynamic hours based on appointments in the week
+  const calculateHours = () => {
+    if (view !== 'week' || weekAppointments.length === 0) {
+      // Default hours if no appointments or not in week view
+      return Array.from({ length: 13 }, (_, i) => i + 8); // 8 AM to 8 PM
+    }
+    
+    // Find earliest and latest appointment times in the week
+    const appointmentHours = weekAppointments.map((apt: any) => {
+      const startDate = DateTime.fromISO(apt.starts_at, { zone: "utc" });
+      const localStart = startDate.setZone(agentTimezone);
+      return localStart.hour;
+    });
+    
+    const earliestHour = Math.min(...appointmentHours);
+    const latestHour = Math.max(...appointmentHours);
+    
+    // Start 1 hour before earliest appointment, but not earlier than 6 AM
+    const startHour = Math.max(6, earliestHour - 1);
+    // End 1 hour after latest appointment, but not later than 11 PM
+    const endHour = Math.min(23, latestHour + 1);
+    
+    // Generate hours array
+    return Array.from({ length: endHour - startHour + 1 }, (_, i) => i + startHour);
+  };
+  
+  const hours = calculateHours();
 
   useEffect(() => {
     async function loadSpecialist() {
