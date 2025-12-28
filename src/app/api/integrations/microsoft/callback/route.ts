@@ -75,10 +75,21 @@ export async function GET(req: NextRequest) {
 
     if (!tokenResponse.ok) {
       const error = await tokenResponse.json().catch(() => ({ error: "Unknown error" }));
-      console.error("Microsoft OAuth token exchange failed:", error);
+      console.error("Microsoft OAuth token exchange failed:", {
+        error,
+        redirectUri,
+        status: tokenResponse.status,
+      });
       const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL || "http://localhost:3000";
+      
+      // Provide more helpful error message
+      let errorMessage = `Token exchange failed: ${error.error || JSON.stringify(error)}`;
+      if (error.error === "invalid_grant") {
+        errorMessage += `. Please check that the redirect URI "${redirectUri}" is exactly registered in Azure App Registration → Authentication → Redirect URIs`;
+      }
+      
       return NextResponse.redirect(
-        `${baseUrl}/agent/settings?error=${encodeURIComponent(`Token exchange failed: ${error.error || JSON.stringify(error)}`)}`
+        `${baseUrl}/agent/settings?error=${encodeURIComponent(errorMessage)}`
       );
     }
 
