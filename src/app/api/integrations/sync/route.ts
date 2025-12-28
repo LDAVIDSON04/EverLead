@@ -232,31 +232,46 @@ async function processExternalEvent(
   let matchedLocation: string | null = null;
   if (event.location) {
     try {
-      const { data: profile } = await supabaseAdmin
-        .from("profiles")
-        .select("metadata")
-        .eq("id", connection.specialist_id)
-        .single();
+      // CRITICAL FIX: Handle location that might be a string, object, or other type
+      let locationString: string | null = null;
       
-      if (profile?.metadata?.availability?.locations) {
-        const agentCities = profile.metadata.availability.locations as string[];
+      if (typeof event.location === 'string') {
+        locationString = event.location;
+      } else if (event.location && typeof event.location === 'object') {
+        // Microsoft location is an object with displayName property
+        locationString = (event.location as any)?.displayName || (event.location as any)?.name || null;
+      }
+      
+      if (!locationString) {
+        // Location exists but we can't extract a string from it - skip matching
+        console.log(`⚠️ Event location is not a string or extractable object:`, typeof event.location, event.location);
+      } else {
+        const { data: profile } = await supabaseAdmin
+          .from("profiles")
+          .select("metadata")
+          .eq("id", connection.specialist_id)
+          .single();
         
-        // Try to match the event location to one of the agent's cities
-        // Check if any agent city appears in the event location (case-insensitive)
-        const eventLocationLower = event.location.toLowerCase();
-        for (const city of agentCities) {
-          const cityLower = city.toLowerCase();
-          // Check if city name appears in the location string
-          if (eventLocationLower.includes(cityLower)) {
-            matchedLocation = city; // Use the agent's city name (preserves casing)
-            console.log(`📍 Matched external event location "${event.location}" to agent city "${city}"`);
-            break;
+        if (profile?.metadata?.availability?.locations) {
+          const agentCities = profile.metadata.availability.locations as string[];
+          
+          // Try to match the event location to one of the agent's cities
+          // Check if any agent city appears in the event location (case-insensitive)
+          const eventLocationLower = locationString.toLowerCase();
+          for (const city of agentCities) {
+            const cityLower = city.toLowerCase();
+            // Check if city name appears in the location string
+            if (eventLocationLower.includes(cityLower)) {
+              matchedLocation = city; // Use the agent's city name (preserves casing)
+              console.log(`📍 Matched external event location "${locationString}" to agent city "${city}"`);
+              break;
+            }
           }
-        }
-        
-        // If no match found, log it
-        if (!matchedLocation) {
-          console.log(`⚠️ Could not match external event location "${event.location}" to any agent city. Available cities: ${agentCities.join(", ")}`);
+          
+          // If no match found, log it
+          if (!matchedLocation) {
+            console.log(`⚠️ Could not match external event location "${locationString}" to any agent city. Available cities: ${agentCities.join(", ")}`);
+          }
         }
       }
     } catch (error) {
