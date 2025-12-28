@@ -440,7 +440,7 @@ export async function POST(req: NextRequest) {
       // Import DateTime from luxon for timezone conversion
       const { DateTime } = await import('luxon');
       
-      let confirmedAtUTC: DateTime;
+      let confirmedAtUTC;
       if (appointment.confirmed_at) {
         confirmedAtUTC = DateTime.fromISO(appointment.confirmed_at, { zone: "utc" });
       } else {
