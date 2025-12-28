@@ -421,8 +421,20 @@ export async function GET(req: NextRequest) {
     ) {
       const dateStr = date.toISOString().split("T")[0];
       // Use getUTCDay() to get day of week in UTC, avoiding timezone shifts
+      // CRITICAL: Must use getUTCDay() not getDay() to avoid timezone issues
       const weekday = date.getUTCDay(); // 0 = Sunday, 6 = Saturday
       const dayName = dayNames[weekday];
+      
+      // Debug: Verify day calculation is correct
+      if (dateStr === "2026-01-01" || dateStr === "2026-01-02") {
+        console.log(`📅 Day calculation for ${dateStr}:`, {
+          dateStr,
+          weekday,
+          dayName,
+          expectedDay: dateStr === "2026-01-01" ? "thursday" : "friday",
+          matches: dateStr === "2026-01-01" ? dayName === "thursday" : dayName === "friday"
+        });
+      }
 
       // Get schedule for this day - try both lowercase and capitalized versions
       let daySchedule = locationSchedule[dayName];
