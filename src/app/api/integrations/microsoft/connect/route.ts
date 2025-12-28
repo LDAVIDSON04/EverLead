@@ -39,9 +39,17 @@ export async function GET(req: NextRequest) {
     }
 
     const clientId = process.env.MICROSOFT_CLIENT_ID;
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL || "http://localhost:3000";
     const redirectUri =
       process.env.MICROSOFT_REDIRECT_URI ||
-      `${process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL || "http://localhost:3000"}/api/integrations/microsoft/callback`;
+      `${baseUrl}/api/integrations/microsoft/callback`;
+
+    console.log("Microsoft OAuth connect:", {
+      baseUrl,
+      redirectUri,
+      hasClientId: !!clientId,
+      hasClientSecret: !!process.env.MICROSOFT_CLIENT_SECRET,
+    });
 
     if (!clientId) {
       return NextResponse.json(

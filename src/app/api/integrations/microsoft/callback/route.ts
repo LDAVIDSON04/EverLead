@@ -43,9 +43,19 @@ export async function GET(req: NextRequest) {
 
     const clientId = process.env.MICROSOFT_CLIENT_ID;
     const clientSecret = process.env.MICROSOFT_CLIENT_SECRET;
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL || "http://localhost:3000";
     const redirectUri =
       process.env.MICROSOFT_REDIRECT_URI ||
-      `${process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL || "http://localhost:3000"}/api/integrations/microsoft/callback`;
+      `${baseUrl}/api/integrations/microsoft/callback`;
+
+    console.log("Microsoft OAuth callback:", {
+      baseUrl,
+      redirectUri,
+      hasCode: !!code,
+      hasState: !!state,
+      hasClientId: !!clientId,
+      hasClientSecret: !!clientSecret,
+    });
 
     if (!clientId || !clientSecret) {
       return NextResponse.json(
@@ -75,17 +85,25 @@ export async function GET(req: NextRequest) {
 
     if (!tokenResponse.ok) {
       const error = await tokenResponse.json().catch(() => ({ error: "Unknown error" }));
+      const errorText = await tokenResponse.text().catch(() => "");
       console.error("Microsoft OAuth token exchange failed:", {
         error,
+        errorText,
         redirectUri,
         status: tokenResponse.status,
+        requestBody: {
+          code: code ? "present" : "missing",
+          client_id: clientId ? "present" : "missing",
+          redirect_uri: redirectUri,
+          grant_type: "authorization_code",
+        },
       });
       const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL || "http://localhost:3000";
       
       // Provide more helpful error message
       let errorMessage = `Token exchange failed: ${error.error || JSON.stringify(error)}`;
       if (error.error === "invalid_grant") {
-        errorMessage += `. Please check that the redirect URI "${redirectUri}" is exactly registered in Azure App Registration → Authentication → Redirect URIs`;
+        errorMessage += `. The redirect URI "${redirectUri}" must be EXACTLY registered in Azure App Registration → Authentication → Redirect URIs. Check for typos, case sensitivity, trailing slashes, or wrong platform type.`;
       }
       
       return NextResponse.redirect(
