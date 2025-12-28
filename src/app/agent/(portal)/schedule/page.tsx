@@ -59,6 +59,7 @@ export default function SchedulePage() {
   const [agentTimezone, setAgentTimezone] = useState<string>("America/Vancouver"); // Default to PST
   const [viewingLeadId, setViewingLeadId] = useState<string | null>(null);
   const [viewingAppointmentId, setViewingAppointmentId] = useState<string | null>(null);
+  const [viewingExternalAppointment, setViewingExternalAppointment] = useState<any | null>(null);
 
   const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -810,26 +811,42 @@ export default function SchedulePage() {
                                 key={apt.id}
                                 onClick={() => {
                                   if (apt.lead_id) {
+                                    // Soradin appointment - use existing modal
                                     setViewingLeadId(apt.lead_id);
                                     setViewingAppointmentId(apt.id);
+                                  } else if (apt.is_external) {
+                                    // External appointment - use new modal
+                                    setViewingExternalAppointment(apt);
                                   }
                                 }}
-                                className="absolute left-2 right-2 rounded-lg p-3 text-white shadow-md cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02] z-10"
+                                className="absolute left-2 right-2 rounded-lg p-2 text-white shadow-md cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02] z-10 overflow-hidden"
                                 style={{
                                   backgroundColor: apt.color,
                                   height: `${apt.duration * 90 - 16}px`,
                                   top: '12px',
+                                  minHeight: '60px',
                                 }}
                               >
-                                <div className="text-xs opacity-90">
-                                  {DateTime.fromISO(apt.starts_at, { zone: "utc" })
-                                    .setZone(agentTimezone) // Use agent's timezone
-                                    .toLocaleString(DateTime.TIME_SIMPLE)}
+                                <div className="h-full flex flex-col justify-between">
+                                  <div className="text-[10px] opacity-90 leading-tight">
+                                    {DateTime.fromISO(apt.starts_at, { zone: "utc" })
+                                      .setZone(agentTimezone)
+                                      .toLocaleString(DateTime.TIME_SIMPLE)}
+                                  </div>
+                                  <div className="mt-0.5 text-xs font-medium leading-tight line-clamp-2 flex-1 overflow-hidden">
+                                    {apt.family_name || 'Appointment'}
+                                  </div>
+                                  {apt.is_external && (
+                                    <div className="mt-0.5 text-[10px] opacity-75 leading-tight">
+                                      {apt.provider === 'google' ? 'Google' : apt.provider === 'microsoft' ? 'Microsoft' : 'External'}
+                                    </div>
+                                  )}
+                                  {apt.location && apt.location !== "N/A" && apt.location !== "External Calendar" && (
+                                    <div className="mt-0.5 text-[10px] opacity-75 leading-tight truncate">
+                                      📍 {apt.location}
+                                    </div>
+                                  )}
                                 </div>
-                                <div className="mt-1">{apt.family_name || 'Appointment'}</div>
-                                {apt.is_external && (
-                                  <div className="mt-1 text-xs opacity-75">External</div>
-                                )}
                               </div>
                             ))}
                         </div>
