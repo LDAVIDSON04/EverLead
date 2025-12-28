@@ -580,6 +580,28 @@ function SearchResults() {
             slots: dayData?.slots.slice(0, 3).map(s => s.startsAt) || [] // Show first 3 for debugging
           });
           
+          // CRITICAL: Always ensure the clicked day exists in allAvailabilityDays
+          // If the clicked day has no slots, we still need to show it in the modal
+          // Add it to the array if it's missing
+          let updatedAvailabilityDays = [...availabilityData];
+          if (!dayData) {
+            // The clicked day doesn't exist in the availability data - add it with empty slots
+            console.log("📅 [MODAL] Adding clicked day with no slots to availability data:", normalizedDateStr);
+            updatedAvailabilityDays.push({
+              date: normalizedDateStr,
+              slots: []
+            });
+            // Sort by date to keep days in order
+            updatedAvailabilityDays.sort((a, b) => a.date.localeCompare(b.date));
+            setAllAvailabilityDays(updatedAvailabilityDays);
+          } else if (dayData.slots.length === 0) {
+            // Day exists but has no slots - this is fine, it will show in the modal
+            console.log("📅 [MODAL] Clicked day has no slots:", {
+              date: normalizedDateStr,
+              message: "Day will be shown in modal with 'no slots' message"
+            });
+          }
+          
           // Set dayTimeSlots for backward compatibility (though modal uses allAvailabilityDays)
           if (dayData && dayData.slots.length > 0) {
             // Format time slots with readable time and available status
@@ -604,7 +626,7 @@ function SearchResults() {
             setDayTimeSlots(formattedSlots);
           } else {
             console.warn("📅 [MODAL] Selected day has no slots:", {
-              dateStr,
+              dateStr: normalizedDateStr,
               dayData: dayData ? "exists but empty slots" : "not found",
               allDays: availabilityData.map(d => ({ date: d.date, slots: d.slots.length }))
             });
@@ -1497,11 +1519,20 @@ function SearchResults() {
                         return null;
                       }
                       
+                      // Show this day even if it has no slots (so user sees the day they clicked)
+                      const hasSlots = formattedSlots.length > 0;
+                      
                       return (
                         <div key={dayIdx} className="border-b border-gray-200 pb-6 last:border-b-0">
                           <h4 className="text-base font-semibold text-black mb-3">{displayDate}</h4>
-                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                            {formattedSlots.map((timeSlot, idx) => {
+                          {!hasSlots ? (
+                            <div className="text-center py-8 text-gray-500">
+                              <p className="text-sm">No available time slots for this date.</p>
+                              <p className="text-xs mt-2 text-gray-400">Please select another date.</p>
+                            </div>
+                          ) : (
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                              {formattedSlots.map((timeSlot, idx) => {
                               const params = new URLSearchParams({
                                 startsAt: timeSlot.startsAt,
                                 endsAt: timeSlot.endsAt,
