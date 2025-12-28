@@ -159,7 +159,32 @@ export async function GET(req: NextRequest) {
       .gte("ends_at", rangeStart); // Event ends after or at range start
     
     // Filter to only events that actually overlap (safety check)
-    const externalEvents = externalEventsRaw?.filter((evt: any) => {
+    // Also normalize the time strings to ensure proper Date parsing
+    const externalEvents = externalEventsRaw?.map((evt: any) => {
+      // Normalize time strings - handle Microsoft's .0000000 format and ensure proper ISO format
+      let startsAt = evt.starts_at;
+      let endsAt = evt.ends_at;
+      
+      // If time has more than 3 decimal places, truncate to milliseconds
+      if (startsAt && startsAt.includes('.')) {
+        const match = startsAt.match(/^(.+?\.\d{3})(\d*)(.*)$/);
+        if (match) {
+          startsAt = match[1] + (match[3] || '');
+        }
+      }
+      if (endsAt && endsAt.includes('.')) {
+        const match = endsAt.match(/^(.+?\.\d{3})(\d*)(.*)$/);
+        if (match) {
+          endsAt = match[1] + (match[3] || '');
+        }
+      }
+      
+      return {
+        ...evt,
+        starts_at: startsAt,
+        ends_at: endsAt,
+      };
+    }).filter((evt: any) => {
       const evtStart = new Date(evt.starts_at);
       const evtEnd = new Date(evt.ends_at);
       const rangeStartDate = new Date(rangeStart);

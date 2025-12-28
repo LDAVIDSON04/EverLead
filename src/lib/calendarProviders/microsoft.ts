@@ -118,9 +118,28 @@ export async function fetchMicrosoftCalendarEvents(
     // Determine if all-day event
     const isAllDay = event.isAllDay || false;
 
-    // Get start/end times
-    const startsAt = event.start.dateTime;
-    const endsAt = event.end.dateTime;
+    // Get start/end times - Microsoft returns ISO strings, normalize them
+    // Microsoft can return times with microseconds (.0000000) or timezone offsets
+    // Normalize to standard ISO format for consistent parsing
+    let startsAt = event.start.dateTime;
+    let endsAt = event.end.dateTime;
+    
+    // If the time has microseconds (7 digits), truncate to milliseconds (3 digits)
+    // This ensures consistent parsing across the system
+    if (startsAt && startsAt.includes('.')) {
+      const parts = startsAt.split('.');
+      if (parts[1] && parts[1].length > 3) {
+        const timezonePart = parts[1].substring(3);
+        startsAt = `${parts[0]}.${parts[1].substring(0, 3)}${timezonePart}`;
+      }
+    }
+    if (endsAt && endsAt.includes('.')) {
+      const parts = endsAt.split('.');
+      if (parts[1] && parts[1].length > 3) {
+        const timezonePart = parts[1].substring(3);
+        endsAt = `${parts[0]}.${parts[1].substring(0, 3)}${timezonePart}`;
+      }
+    }
 
     // Map status
     const status =
