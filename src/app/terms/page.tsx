@@ -440,7 +440,7 @@ export default function TermsPage() {
               </p>
               <div className="text-[15px] leading-relaxed text-[#5a5a5a] font-light space-y-1">
                 <p className="font-medium text-[#1a1a1a]">Soradin</p>
-                <p>Email: <a href="mailto:legal@soradin.com" className="text-[#2a2a2a] hover:underline">legal@soradin.com</a></p>
+                <p>Email: <a href="mailto:support@soradin.com" className="text-[#2a2a2a] hover:underline">support@soradin.com</a></p>
               </div>
             </div>
           </div>

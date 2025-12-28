@@ -427,7 +427,7 @@ export default function PrivacyPage() {
                 </div>
               </div>
               <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light mt-6">
-                To exercise any of these rights, you can contact us at <a href="mailto:privacy@soradin.com" className="text-[#2a2a2a] hover:underline">privacy@soradin.com</a>.
+                To exercise any of these rights, you can contact us at <a href="mailto:support@soradin.com" className="text-[#2a2a2a] hover:underline">support@soradin.com</a>.
               </p>
             </div>
 
@@ -473,7 +473,7 @@ export default function PrivacyPage() {
                 Soradin is not intended for children under 18, and we do not knowingly collect personal data from minors.
               </p>
               <p className="text-[15px] leading-relaxed text-[#5a5a5a] font-light">
-                If we learn that a child under 18 has provided personal data through the Service, we will take reasonable steps to delete it. If you believe a minor has provided personal data to us, please contact us at <a href="mailto:privacy@soradin.com" className="text-[#2a2a2a] hover:underline">privacy@soradin.com</a>.
+                If we learn that a child under 18 has provided personal data through the Service, we will take reasonable steps to delete it. If you believe a minor has provided personal data to us, please contact us at <a href="mailto:support@soradin.com" className="text-[#2a2a2a] hover:underline">support@soradin.com</a>.
               </p>
             </div>
 
@@ -538,7 +538,7 @@ export default function PrivacyPage() {
               </p>
               <div className="text-[15px] leading-relaxed text-[#5a5a5a] font-light space-y-1">
                 <p className="font-medium text-[#1a1a1a]">Soradin</p>
-                <p>Email: <a href="mailto:privacy@soradin.com" className="text-[#2a2a2a] hover:underline">privacy@soradin.com</a></p>
+                <p>Email: <a href="mailto:support@soradin.com" className="text-[#2a2a2a] hover:underline">support@soradin.com</a></p>
               </div>
             </div>
           </div>
