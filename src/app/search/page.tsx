@@ -1431,10 +1431,13 @@ function SearchResults() {
                     return daysWithSlots;
                   })()
                     .map((day, dayIdx) => {
-                      const date = new Date(day.date + "T00:00:00");
-                      const dayName = date.toLocaleDateString("en-US", { weekday: "long" });
-                      const monthName = date.toLocaleDateString("en-US", { month: "long" });
-                      const dayNum = date.getDate();
+                      // Parse date string (YYYY-MM-DD) in UTC to avoid timezone shifts
+                      // This ensures the date displayed matches the date in the API response
+                      const [year, month, dayOfMonth] = day.date.split("-").map(Number);
+                      const date = new Date(Date.UTC(year, month - 1, dayOfMonth));
+                      const dayName = date.toLocaleDateString("en-US", { weekday: "long", timeZone: "UTC" });
+                      const monthName = date.toLocaleDateString("en-US", { month: "long", timeZone: "UTC" });
+                      const dayNum = date.getUTCDate();
                       const displayDate = `${dayName}, ${monthName} ${dayNum}`;
                       const isSelected = selectedDayForModal === day.date;
                       

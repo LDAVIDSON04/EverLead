@@ -188,13 +188,26 @@ export async function GET(req: NextRequest) {
 
     console.log("📅 Loaded external events for conflict detection:", {
       agentId,
+      startDate,
+      endDate,
+      rangeStart,
+      rangeEnd,
       count: externalEvents?.length || 0,
+      rawCount: externalEventsRaw?.length || 0,
       externalEvents: externalEvents?.map((evt: any) => ({
         id: evt.id,
         startsAt: evt.starts_at,
         endsAt: evt.ends_at,
         status: evt.status,
+        isSoradinCreated: evt.is_soradin_created,
       })),
+      queryDetails: {
+        specialistId: agentId,
+        status: "confirmed",
+        isSoradinCreated: false,
+        startsAtLte: rangeEnd,
+        endsAtGte: rangeStart,
+      },
     });
 
     if (appointmentsError) {
@@ -284,6 +297,16 @@ export async function GET(req: NextRequest) {
       // Check if this slot conflicts with any external calendar event
       if (externalEvents && externalEvents.length > 0) {
         const externalEventConflict = externalEvents.some((evt: any) => {
+          // Skip if this is a Soradin-created event (shouldn't block)
+          if (evt.is_soradin_created) {
+            return false;
+          }
+          
+          // Skip if event is cancelled
+          if (evt.status !== "confirmed") {
+            return false;
+          }
+          
           const evtStart = new Date(evt.starts_at);
           const evtEnd = new Date(evt.ends_at);
           const evtStartTime = evtStart.getTime();
@@ -297,9 +320,16 @@ export async function GET(req: NextRequest) {
             console.log("✅ CONFLICT FOUND (External Event) - BLOCKING SLOT:", {
               dateStr,
               slotStartISO,
+              slotStartTime,
+              slotEndTime,
               evtStartsAt: evt.starts_at,
               evtEndsAt: evt.ends_at,
+              evtStartTime,
+              evtEndTime,
               externalEventId: evt.id,
+              isSoradinCreated: evt.is_soradin_created,
+              status: evt.status,
+              overlap: overlaps,
             });
             return true;
           }
@@ -308,6 +338,17 @@ export async function GET(req: NextRequest) {
         });
         
         if (externalEventConflict) return true;
+      } else {
+        // Log when no external events found (for debugging)
+        if (externalEventsRaw && externalEventsRaw.length === 0) {
+          console.log("ℹ️ No external events found for date range:", {
+            agentId,
+            startDate,
+            endDate,
+            rangeStart,
+            rangeEnd,
+          });
+        }
       }
       
       // No conflicts - slot is available
