@@ -98,7 +98,6 @@ export async function GET(req: NextRequest) {
           grant_type: "authorization_code",
         },
       });
-      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL || "http://localhost:3000";
       
       // Provide more helpful error message
       let errorMessage = `Token exchange failed: ${error.error || JSON.stringify(error)}`;
@@ -115,7 +114,6 @@ export async function GET(req: NextRequest) {
     const { access_token, refresh_token, expires_in } = tokens;
 
     if (!access_token) {
-      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL || "http://localhost:3000";
       return NextResponse.redirect(
         `${baseUrl}/agent/settings?error=${encodeURIComponent("Failed to get access token from Microsoft")}`
       );
@@ -151,7 +149,6 @@ export async function GET(req: NextRequest) {
 
     if (checkError) {
       console.error("Error checking specialist:", checkError);
-      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL || "http://localhost:3000";
       return NextResponse.redirect(
         `${baseUrl}/agent?error=${encodeURIComponent("Failed to verify account. Please log in and try again.")}`
       );
@@ -171,7 +168,6 @@ export async function GET(req: NextRequest) {
 
       if (createError) {
         console.error("Error creating specialist:", createError);
-        const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL || "http://localhost:3000";
         return NextResponse.redirect(
           `${baseUrl}/agent?error=${encodeURIComponent("Failed to create account. Please log in and try again.")}`
         );
@@ -203,7 +199,6 @@ export async function GET(req: NextRequest) {
     if (upsertError) {
       console.error("Error saving calendar connection:", upsertError);
       console.error("Error details:", JSON.stringify(upsertError, null, 2));
-      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL || "http://localhost:3000";
       return NextResponse.redirect(
         `${baseUrl}/agent?error=${encodeURIComponent("Failed to save calendar connection. Please log in and try again.")}`
       );
@@ -224,7 +219,6 @@ export async function GET(req: NextRequest) {
     }
 
     // Redirect to login page with success message - user can log back in and go to settings
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL || "http://localhost:3000";
     return NextResponse.redirect(
       `${baseUrl}/agent?calendarConnected=microsoft&message=${encodeURIComponent("Microsoft Calendar connected successfully! Please log in to continue.")}`
     );
