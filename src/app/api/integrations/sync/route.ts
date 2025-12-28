@@ -6,6 +6,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabaseServer";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { fetchGoogleCalendarEvents } from "@/lib/calendarProviders/google";
 import { fetchMicrosoftCalendarEvents } from "@/lib/calendarProviders/microsoft";
 import { renewExpiredWebhooks, isWebhookExpiredOrExpiring } from "@/lib/calendarWebhooks";
