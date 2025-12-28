@@ -94,14 +94,14 @@ export async function GET(req: NextRequest) {
 
     // Also fetch external calendar events (booked by coworkers/front desk)
     // These should appear in the agent's schedule alongside Soradin appointments
-    // Try to fetch with title column, but handle gracefully if column doesn't exist yet
+    // Try to fetch with title and location columns, but handle gracefully if columns don't exist yet
     let externalEvents: any[] | null = null;
     let externalEventsError: any = null;
     
     try {
       const result = await supabaseServer
         .from("external_events")
-        .select("id, starts_at, ends_at, status, provider, is_soradin_created, title")
+        .select("id, starts_at, ends_at, status, provider, is_soradin_created, title, location")
         .eq("specialist_id", userId) // specialist_id in external_events = agent_id (user ID)
         .eq("status", "confirmed") // Only show confirmed events
         .eq("is_soradin_created", false) // Only show external events (not Soradin-created)
@@ -111,9 +111,9 @@ export async function GET(req: NextRequest) {
       externalEvents = result.data;
       externalEventsError = result.error;
     } catch (err: any) {
-      // If title column doesn't exist, try without it
-      if (err?.code === '42703' || err?.message?.includes('title does not exist')) {
-        console.log("Title column not found, fetching external events without title");
+      // If title or location column doesn't exist, try without them
+      if (err?.code === '42703' || err?.message?.includes('does not exist')) {
+        console.log("Title or location column not found, fetching external events without them");
         const result = await supabaseServer
           .from("external_events")
           .select("id, starts_at, ends_at, status, provider, is_soradin_created")
@@ -297,6 +297,11 @@ export async function GET(req: NextRequest) {
         ? evt.title.trim() 
         : `External Meeting (${providerName})`;
       
+      // Use the actual location from the event if available, otherwise show provider
+      const eventLocation = evt.location && evt.location.trim()
+        ? evt.location.trim()
+        : providerName;
+      
       return {
         id: `external-${evt.id}`, // Prefix to distinguish from Soradin appointments
         lead_id: null, // External events don't have leads
@@ -304,7 +309,7 @@ export async function GET(req: NextRequest) {
         ends_at: evt.ends_at,
         status: "confirmed", // External events are always confirmed
         family_name: eventTitle, // Use the actual event title from the external calendar
-        location: "External Calendar", // Indicate it's from external calendar
+        location: eventLocation, // Use the actual location from the external calendar event
         is_external: true, // Flag to identify external events in the UI
         provider: evt.provider,
       };

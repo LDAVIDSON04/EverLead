@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabaseClient } from "@/lib/supabaseClient";
 import { useRequireRole } from "@/lib/hooks/useRequireRole";
-import { Calendar, Clock, User, X, Loader2, ChevronLeft, ChevronRight, Search, Settings, Bell, Check, Eye, Download, Plus } from "lucide-react";
+import { Calendar, Clock, User, X, Loader2, ChevronLeft, ChevronRight, Search, Settings, Bell, Check, Eye, Download, Plus, MapPin } from "lucide-react";
 import { DateTime } from "luxon";
 import Link from "next/link";
 import { ClientInfoModal } from "../my-appointments/components/ClientInfoModal";
@@ -687,6 +687,15 @@ export default function SchedulePage() {
                                   <Clock className="w-4 h-4" />
                                   {localStart.toLocaleString(DateTime.TIME_SIMPLE)} - {localEnd.toLocaleString(DateTime.TIME_SIMPLE)}
                                 </span>
+                                {appointment.location && appointment.location !== "N/A" && appointment.location !== "External Calendar" && (
+                                  <>
+                                    <span>•</span>
+                                    <span className="flex items-center gap-1">
+                                      <MapPin className="w-3 h-3" />
+                                      <span>{appointment.location}</span>
+                                    </span>
+                                  </>
+                                )}
                                 {appointment.is_external && appointment.provider && (
                                   <>
                                     <span>•</span>
