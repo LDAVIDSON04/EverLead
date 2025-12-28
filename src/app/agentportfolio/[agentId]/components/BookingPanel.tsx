@@ -135,7 +135,19 @@ export function BookingPanel({ agentId }: BookingPanelProps) {
         const startDate = weekStartDate.toISOString().split("T")[0];
         const endDate = new Date(weekStartDate.getTime() + 6 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
         
-        const res = await fetch(`/api/agents/availability?agentId=${agentId}&startDate=${startDate}&endDate=${endDate}`);
+        // CRITICAL: Extract location name from selected location and pass it to API
+        // Location format is "Office Name - City" or just "City"
+        const selectedLocation = officeLocations.find(loc => loc.id === selectedLocationId) || officeLocations[0];
+        let locationParam = '';
+        if (selectedLocation) {
+          // Extract city name from location name (format: "Office - City" or just "City")
+          const locationName = selectedLocation.name;
+          const cityMatch = locationName.match(/- (.+)$/);
+          const cityName = cityMatch ? cityMatch[1].trim() : locationName.trim();
+          locationParam = `&location=${encodeURIComponent(cityName)}`;
+        }
+        
+        const res = await fetch(`/api/agents/availability?agentId=${agentId}&startDate=${startDate}&endDate=${endDate}${locationParam}`);
         if (res.ok) {
           const availabilityData: any[] = await res.json();
           
@@ -180,7 +192,7 @@ export function BookingPanel({ agentId }: BookingPanelProps) {
     };
     
     fetchAvailability();
-  }, [agentId, weekStartDate]);
+  }, [agentId, weekStartDate, selectedLocationId, officeLocations]);
 
   const selectedLocation = officeLocations.find(loc => loc.id === selectedLocationId) || officeLocations[0];
   
@@ -244,8 +256,19 @@ export function BookingPanel({ agentId }: BookingPanelProps) {
         const startDate = selectedDay.dateStr;
         const endDate = new Date(new Date(startDate).getTime() + 14 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
         
+        // CRITICAL: Extract location name from selected location and pass it to API
+        const selectedLocation = officeLocations.find(loc => loc.id === selectedLocationId) || officeLocations[0];
+        let locationParam = '';
+        if (selectedLocation) {
+          // Extract city name from location name (format: "Office - City" or just "City")
+          const locationName = selectedLocation.name;
+          const cityMatch = locationName.match(/- (.+)$/);
+          const cityName = cityMatch ? cityMatch[1].trim() : locationName.trim();
+          locationParam = `&location=${encodeURIComponent(cityName)}`;
+        }
+        
         const res = await fetch(
-          `/api/agents/availability?agentId=${agentId}&startDate=${startDate}&endDate=${endDate}`
+          `/api/agents/availability?agentId=${agentId}&startDate=${startDate}&endDate=${endDate}${locationParam}`
         );
         
         if (res.ok) {
