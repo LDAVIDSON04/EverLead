@@ -474,8 +474,9 @@ function SearchResults() {
     const dayDate = slot.date.split('\n')[1]; // Extract date from "Wed\nDec 17" format
     
     // Parse the date to get YYYY-MM-DD format
+    // Use UTC to avoid timezone shifts that cause date mismatches
     const today = new Date();
-    const currentYear = today.getFullYear();
+    const currentYear = today.getUTCFullYear();
     const dateMatch = dayDate.match(/(\w+)\s+(\d+)/);
     if (!dateMatch) return;
     
@@ -486,7 +487,8 @@ function SearchResults() {
     
     if (monthIndex === -1) return;
     
-    const selectedDate = new Date(currentYear, monthIndex, dayNum);
+    // Create date in UTC to avoid timezone shifts
+    const selectedDate = new Date(Date.UTC(currentYear, monthIndex, dayNum));
     const dateStr = selectedDate.toISOString().split("T")[0];
     
     // Store today for use in fetchAvailability
