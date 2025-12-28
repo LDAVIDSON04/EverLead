@@ -1555,57 +1555,58 @@ function SearchResults() {
                           ) : (
                             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                               {formattedSlots.map((timeSlot, idx) => {
-                              const params = new URLSearchParams({
-                                startsAt: timeSlot.startsAt,
-                                endsAt: timeSlot.endsAt,
-                                date: day.date,
-                              });
-                              if (searchLocation) {
-                                params.set("city", searchLocation);
-                              }
-                              const bookingUrl = `${window.location.origin}/book/step2?agentId=${selectedAgentIdForModal}&${params.toString()}`;
-                              const timeSlotId = `time-slot-${dayIdx}-${idx}-${timeSlot.startsAt}`;
-                              
-                              return (
-                                <button
-                                  key={idx}
-                                  type="button"
-                                  id={timeSlotId}
-                                  name={timeSlotId}
-                                  onMouseDown={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    
-                                    const params = new URLSearchParams({
-                                      startsAt: timeSlot.startsAt,
-                                      endsAt: timeSlot.endsAt,
-                                      date: day.date,
-                                    });
-                                    if (searchLocation) {
-                                      params.set("city", searchLocation);
-                                    }
-                                    const url = `${window.location.origin}/book/step2?agentId=${selectedAgentIdForModal}&${params.toString()}`;
-                                    
-                                    console.log("Time slot clicked, FORCING navigation to:", url);
-                                    
-                                    // Close modal
-                                    setShowTimeSlotModal(false);
-                                    setSelectedDayForModal(null);
-                                    setSelectedAgentIdForModal(null);
-                                    setSelectedAgentInfo(null);
-                                    setDayTimeSlots([]);
-                                    setAllAvailabilityDays([]);
-                                    
-                                    // IMMEDIATE navigation
-                                    window.location.href = url;
-                                  }}
-                                  className="w-full px-4 py-3 rounded-lg text-sm font-medium transition-all bg-green-100 text-black hover:bg-green-600 hover:text-white border-2 border-green-300 hover:border-green-600 shadow-sm hover:shadow-md"
-                                >
-                                  {timeSlot.time}
-                                </button>
-                              );
-                            })}
-                          </div>
+                                const params = new URLSearchParams({
+                                  startsAt: timeSlot.startsAt,
+                                  endsAt: timeSlot.endsAt,
+                                  date: day.date,
+                                });
+                                if (searchLocation) {
+                                  params.set("city", searchLocation);
+                                }
+                                const bookingUrl = `${window.location.origin}/book/step2?agentId=${selectedAgentIdForModal}&${params.toString()}`;
+                                const timeSlotId = `time-slot-${dayIdx}-${idx}-${timeSlot.startsAt}`;
+                                
+                                return (
+                                  <button
+                                    key={idx}
+                                    type="button"
+                                    id={timeSlotId}
+                                    name={timeSlotId}
+                                    onMouseDown={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      
+                                      const params = new URLSearchParams({
+                                        startsAt: timeSlot.startsAt,
+                                        endsAt: timeSlot.endsAt,
+                                        date: day.date,
+                                      });
+                                      if (searchLocation) {
+                                        params.set("city", searchLocation);
+                                      }
+                                      const url = `${window.location.origin}/book/step2?agentId=${selectedAgentIdForModal}&${params.toString()}`;
+                                      
+                                      console.log("Time slot clicked, FORCING navigation to:", url);
+                                      
+                                      // Close modal
+                                      setShowTimeSlotModal(false);
+                                      setSelectedDayForModal(null);
+                                      setSelectedAgentIdForModal(null);
+                                      setSelectedAgentInfo(null);
+                                      setDayTimeSlots([]);
+                                      setAllAvailabilityDays([]);
+                                      
+                                      // IMMEDIATE navigation
+                                      window.location.href = url;
+                                    }}
+                                    className="w-full px-4 py-3 rounded-lg text-sm font-medium transition-all bg-green-100 text-black hover:bg-green-600 hover:text-white border-2 border-green-300 hover:border-green-600 shadow-sm hover:shadow-md"
+                                  >
+                                    {timeSlot.time}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
                         </div>
                       );
                     })}
