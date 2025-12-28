@@ -377,10 +377,10 @@ export async function POST(req: NextRequest) {
       const { data: agentAuth } = await supabaseAdmin.auth.admin.getUserById(agentId);
       const agentEmail = agentAuth?.user?.email;
       
-      // Get family email from lead
+      // Get family email and address from lead
       const { data: leadData } = await supabaseAdmin
         .from("leads")
-        .select("email, first_name, last_name, full_name")
+        .select("email, first_name, last_name, full_name, address_line1, city, province, postal_code")
         .eq("id", leadId)
         .single();
       
@@ -388,15 +388,29 @@ export async function POST(req: NextRequest) {
       const familyName = leadData?.full_name || 
         (leadData?.first_name && leadData?.last_name ? `${leadData.first_name} ${leadData.last_name}` : "Family");
       
-      // Get agent name
+      // Build location address from lead data
+      const locationParts = [];
+      if (leadData?.address_line1) locationParts.push(leadData.address_line1);
+      if (leadData?.city) locationParts.push(leadData.city);
+      if (leadData?.province) locationParts.push(leadData.province);
+      if (leadData?.postal_code) locationParts.push(leadData.postal_code);
+      const locationAddress = locationParts.length > 0 ? locationParts.join(", ") : "Location to be confirmed";
+      
+      // Get agent name and address
       const { data: agentProfile } = await supabaseAdmin
         .from("profiles")
-        .select("full_name, first_name, last_name")
+        .select("full_name, first_name, last_name, agent_city, agent_province")
         .eq("id", agentId)
         .single();
       
       const agentName = agentProfile?.full_name || 
         (agentProfile?.first_name && agentProfile?.last_name ? `${agentProfile.first_name} ${agentProfile.last_name}` : "Agent");
+      
+      // Build agent location address
+      const agentLocationParts = [];
+      if (agentProfile?.agent_city) agentLocationParts.push(agentProfile.agent_city);
+      if (agentProfile?.agent_province) agentLocationParts.push(agentProfile.agent_province);
+      const agentLocationAddress = agentLocationParts.length > 0 ? agentLocationParts.join(", ") : "Location to be confirmed";
       
       // Format appointment date/time
       const aptDate = new Date(requestedDate + "T00:00:00");
@@ -430,10 +444,11 @@ export async function POST(req: NextRequest) {
                   <h2 style="color: #2a2a2a;">Appointment Confirmed</h2>
                   <p>Hi ${familyName},</p>
                   <p>Your appointment with <strong>${agentName}</strong> has been confirmed.</p>
-                  <div style="background-color: #f7f4ef; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                    <p style="margin: 5px 0;"><strong>Date:</strong> ${formattedDate}</p>
-                    <p style="margin: 5px 0;"><strong>Time:</strong> ${windowLabel}</p>
-                    <p style="margin: 5px 0;"><strong>Agent:</strong> ${agentName}</p>
+                  <div style="background-color: #f7f4ef; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                    <p style="margin: 8px 0; color: #2a2a2a; font-size: 16px;"><strong>Date:</strong> ${formattedDate}</p>
+                    <p style="margin: 8px 0; color: #2a2a2a; font-size: 16px;"><strong>Time:</strong> ${windowLabel}</p>
+                    <p style="margin: 8px 0; color: #2a2a2a; font-size: 16px;"><strong>Agent:</strong> ${agentName}</p>
+                    <p style="margin: 8px 0; color: #2a2a2a; font-size: 16px;"><strong>Location:</strong> ${locationAddress}</p>
                   </div>
                   <p>We look forward to meeting with you.</p>
                   <hr style="border: none; border-top: 1px solid #e5e5e5; margin: 30px 0;" />
@@ -469,13 +484,14 @@ export async function POST(req: NextRequest) {
                   <h2 style="color: #2a2a2a;">New Appointment Booked</h2>
                   <p>Hi ${agentName},</p>
                   <p>You have a new appointment with <strong>${familyName}</strong>.</p>
-                  <div style="background-color: #f7f4ef; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                    <p style="margin: 5px 0;"><strong>Date:</strong> ${formattedDate}</p>
-                    <p style="margin: 5px 0;"><strong>Time:</strong> ${windowLabel}</p>
-                    <p style="margin: 5px 0;"><strong>Client:</strong> ${familyName}</p>
-                    <p style="margin: 5px 0;"><strong>Email:</strong> ${familyEmail || 'N/A'}</p>
+                  <div style="background-color: #f7f4ef; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                    <p style="margin: 8px 0; color: #2a2a2a; font-size: 16px;"><strong>Date:</strong> ${formattedDate}</p>
+                    <p style="margin: 8px 0; color: #2a2a2a; font-size: 16px;"><strong>Time:</strong> ${windowLabel}</p>
+                    <p style="margin: 8px 0; color: #2a2a2a; font-size: 16px;"><strong>Client:</strong> ${familyName}</p>
+                    <p style="margin: 8px 0; color: #2a2a2a; font-size: 16px;"><strong>Email:</strong> ${familyEmail || 'N/A'}</p>
+                    <p style="margin: 8px 0; color: #2a2a2a; font-size: 16px;"><strong>Location:</strong> ${locationAddress}</p>
                   </div>
-                  <p><a href="${baseUrl}/agent/dashboard" style="background-color: #00A86B; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block;">View in Dashboard</a></p>
+                  <p><a href="${baseUrl}/agent/my-appointments" style="background-color: #2a2a2a; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: 500;">View My Appointments</a></p>
                 </div>
               `,
             }),
