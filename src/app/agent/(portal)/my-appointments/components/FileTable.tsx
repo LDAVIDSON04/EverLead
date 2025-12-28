@@ -14,6 +14,7 @@ export interface FileData {
   date: string;
   leadId?: string | null;
   appointmentId?: string | null;
+  _sortDate?: number; // Internal property for sorting by date (timestamp)
 }
 
 interface FileTableProps {
