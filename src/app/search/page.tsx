@@ -1460,7 +1460,20 @@ function SearchResults() {
                       const monthName = date.toLocaleDateString("en-US", { month: "long", timeZone: "UTC" });
                       const dayNum = date.getUTCDate();
                       const displayDate = `${dayName}, ${monthName} ${dayNum}`;
-                      const isSelected = selectedDayForModal === day.date;
+                      
+                      // Compare normalized dates
+                      const normalizedSelectedDate = selectedDayForModal?.trim() || "";
+                      const normalizedDayDate = day.date.trim();
+                      const isSelected = normalizedSelectedDate === normalizedDayDate;
+                      
+                      if (isSelected) {
+                        console.log("✅ [MODAL] Day selected match:", {
+                          selectedDayForModal: normalizedSelectedDate,
+                          dayDate: normalizedDayDate,
+                          displayDate,
+                          slotCount: day.slots.length
+                        });
+                      }
                       
                       // Format time slots for this day
                       const formattedSlots = day.slots.map(slot => {
