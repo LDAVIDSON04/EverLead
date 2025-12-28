@@ -779,7 +779,16 @@ export default function HomePage() {
               </div>
 
               <div className="text-sm text-white/40 text-center md:text-left">
-                <p>© {new Date().getFullYear()} Soradin, Inc. Terms · Privacy · Site map</p>
+                <p>
+                  © {new Date().getFullYear()} Soradin, Inc.{" "}
+                  <Link href="/terms" className="hover:text-white/60 transition-colors underline">
+                    Terms
+                  </Link>
+                  {" · "}
+                  <Link href="/privacy" className="hover:text-white/60 transition-colors underline">
+                    Privacy
+                  </Link>
+                </p>
               </div>
             </div>
           </div>
