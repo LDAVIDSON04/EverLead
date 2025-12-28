@@ -59,7 +59,8 @@ export async function GET(req: NextRequest) {
     }
 
     // Microsoft Graph scopes for calendar access
-    const scopes = ["Calendars.ReadWrite"].join(" ");
+    // Must include offline_access for refresh tokens
+    const scopes = ["Calendars.ReadWrite", "offline_access"].join(" ");
 
     // Generate state parameter
     // TODO: Use a proper state generation and storage mechanism
