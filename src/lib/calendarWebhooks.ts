@@ -107,20 +107,32 @@ export async function setupGoogleWebhook(connection: CalendarConnection): Promis
     const nowSeconds = Math.floor(Date.now() / 1000);
     const expirationSeconds = nowSeconds + (6 * 24 * 60 * 60); // 6 days from now
 
-    // Ensure expiration is a valid positive integer
+    // Ensure expiration is a valid positive integer and within Google's allowed range
     if (!Number.isInteger(expirationSeconds) || expirationSeconds <= nowSeconds) {
       throw new Error(`Invalid expiration calculation: ${expirationSeconds} (now: ${nowSeconds})`);
     }
+    
+    // Google requires expiration to be at most 7 days (604800 seconds) from now
+    const maxExpiration = nowSeconds + (7 * 24 * 60 * 60);
+    if (expirationSeconds > maxExpiration) {
+      throw new Error(`Expiration ${expirationSeconds} exceeds Google's maximum of ${maxExpiration}`);
+    }
 
     // Subscribe to calendar push notifications
-    // Add expiration back - it's required by Google
+    // Note: Google's API sometimes has issues with expiration parameter
+    // We'll include it but if it fails, we'll retry without it
     const watchPayload: any = {
       id: channelId,
       type: "web_hook",
       address: webhookUrl,
       token: webhookSecret,
-      expiration: expirationSeconds, // Required by Google
     };
+    
+    // Only add expiration if it's a valid positive number
+    // Some Google API versions have issues with this parameter
+    if (expirationSeconds > 0 && expirationSeconds < maxExpiration) {
+      watchPayload.expiration = expirationSeconds.toString(); // Try as string to avoid parsing issues
+    }
 
     console.log(`Setting up Google webhook with payload:`, {
       channelId,
@@ -236,8 +248,9 @@ export async function setupMicrosoftWebhook(connection: CalendarConnection): Pro
     const webhookUrl = `${BASE_URL}/api/integrations/microsoft/webhook`;
     const subscriptionId = `soradin-${connection.specialist_id}-${Date.now()}`;
 
-    // Add a small delay to avoid rate limiting if multiple webhooks are being set up
-    await new Promise(resolve => setTimeout(resolve, 1000));
+  // Add a longer delay to avoid rate limiting if multiple webhooks are being set up
+  // Microsoft has strict rate limits for webhook subscriptions
+  await new Promise(resolve => setTimeout(resolve, 3000)); // 3 second delay
 
     // Subscribe to calendar change notifications
     const subscriptionResponse = await fetch(

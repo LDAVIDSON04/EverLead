@@ -28,19 +28,23 @@ export async function POST(req: NextRequest) {
   try {
     // Microsoft sends validation requests first
     // Check both header name variations (Microsoft sometimes uses different casing)
+    // Also check query parameters as Microsoft sometimes sends validation tokens there
     const validationToken = 
       req.headers.get("validation-token") || 
       req.headers.get("Validation-Token") ||
-      req.headers.get("VALIDATION-TOKEN");
+      req.headers.get("VALIDATION-TOKEN") ||
+      req.nextUrl.searchParams.get("validationToken");
     
     if (validationToken) {
       console.log("Microsoft webhook validation request received");
-      // Return validation token to confirm subscription
+      // Return validation token IMMEDIATELY to confirm subscription
       // Must return 200 OK with the validation token as plain text
+      // This is critical - Microsoft requires a fast response (< 3 seconds)
       return new NextResponse(validationToken, {
         status: 200,
         headers: {
           "Content-Type": "text/plain",
+          "Cache-Control": "no-cache",
         },
       });
     }
