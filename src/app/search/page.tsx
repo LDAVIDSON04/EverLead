@@ -555,13 +555,28 @@ function SearchResults() {
           // This is what the modal checks to determine if slots are available
           setAllAvailabilityDays(availabilityData);
           
-          // Find the selected day's data
-          const dayData = availabilityData.find(d => d.date === dateStr);
+          // Find the selected day's data - ensure exact string match
+          // Normalize both dates to YYYY-MM-DD format for comparison
+          const normalizedDateStr = dateStr.trim();
+          const dayData = availabilityData.find(d => {
+            const normalizedDayDate = d.date.trim();
+            const matches = normalizedDayDate === normalizedDateStr;
+            if (!matches && availabilityData.length > 0) {
+              console.log("🔍 [MODAL] Date mismatch:", {
+                lookingFor: normalizedDateStr,
+                checking: normalizedDayDate,
+                matches,
+                allDates: availabilityData.map(d => d.date)
+              });
+            }
+            return matches;
+          });
           
           console.log("📅 [MODAL] Selected day data:", {
-            dateStr,
+            dateStr: normalizedDateStr,
             found: !!dayData,
             slotCount: dayData?.slots.length || 0,
+            dayDate: dayData?.date,
             slots: dayData?.slots.slice(0, 3).map(s => s.startsAt) || [] // Show first 3 for debugging
           });
           
@@ -1463,6 +1478,11 @@ function SearchResults() {
                           available: true
                         };
                       });
+                      
+                      // Skip if date parsing failed
+                      if (!date || !dayName || !monthName) {
+                        return null;
+                      }
                       
                       return (
                         <div key={dayIdx} className="border-b border-gray-200 pb-6 last:border-b-0">
