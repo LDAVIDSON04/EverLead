@@ -257,11 +257,29 @@ function SearchResults() {
         const availabilityPromises = mappedAppointments.map(async (apt) => {
           if (!apt.agent?.id) return null;
           try {
-            const res = await fetch(
-              `/api/agents/availability?agentId=${apt.agent.id}&startDate=${startDate}&endDate=${endDate}${searchLocation ? `&location=${encodeURIComponent(searchLocation)}` : ''}`
-            );
+            const locationParam = searchLocation ? `&location=${encodeURIComponent(searchLocation)}` : '';
+            const url = `/api/agents/availability?agentId=${apt.agent.id}&startDate=${startDate}&endDate=${endDate}${locationParam}`;
+            
+            console.log(`📅 [CALENDAR] Fetching availability for agent ${apt.agent.id}:`, {
+              url,
+              searchLocation,
+              locationParam,
+            });
+            
+            const res = await fetch(url);
             if (res.ok) {
               const data: AvailabilityDay[] = await res.json();
+              
+              // Debug: Log what we got
+              console.log(`📅 [CALENDAR] Got availability for agent ${apt.agent.id}:`, {
+                totalDays: data.length,
+                daysWithSlots: data.filter(d => d.slots.length > 0).length,
+                days: data.map(d => ({
+                  date: d.date,
+                  slotCount: d.slots.length,
+                })),
+              });
+              
               return { agentId: apt.agent.id, availability: data };
             }
           } catch (err) {
