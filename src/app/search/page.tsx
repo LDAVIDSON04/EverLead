@@ -249,6 +249,15 @@ function SearchResults() {
 
         setAppointments(mappedAppointments);
 
+        // CRITICAL: Clear old availability data when location/search changes
+        // This prevents showing stale data from previous location
+        setAgentAvailability({});
+        console.log(`🔄 [CALENDAR] Cleared agentAvailability for new search`, {
+          searchLocation,
+          searchQuery,
+          agentCount: mappedAppointments.length,
+        });
+
         // Load availability for each agent to show accurate availability counts
         const today = new Date();
         const startDate = today.toISOString().split("T")[0];
@@ -342,7 +351,7 @@ function SearchResults() {
     const realAvailability = agentId ? agentAvailability[agentId] : null;
     const daysToShow = agentId ? (calendarDaysToShow[agentId] || 8) : 8;
     
-    // Debug: Log what we're using
+    // Debug: Log what we're using - CRITICAL for debugging
     console.log(`📅 [GENERATE AVAILABILITY] For agent ${agentId}:`, {
       agentId,
       hasRealAvailability: !!realAvailability,
@@ -350,10 +359,20 @@ function SearchResults() {
       searchLocation,
       daysToShow,
       availabilityKeys: Object.keys(agentAvailability),
-      firstFewDays: realAvailability?.slice(0, 3).map(d => ({
-        date: d.date,
-        slotCount: d.slots.length,
-      })) || [],
+      currentAgentData: realAvailability ? {
+        totalDays: realAvailability.length,
+        daysWithSlots: realAvailability.filter(d => d.slots.length > 0).length,
+        firstFewDays: realAvailability.slice(0, 5).map(d => {
+          const [year, month, dayOfMonth] = d.date.split("-").map(Number);
+          const date = new Date(Date.UTC(year, month - 1, dayOfMonth));
+          const dayName = date.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' });
+          return {
+            date: d.date,
+            dayName,
+            slotCount: d.slots.length,
+          };
+        }),
+      } : null,
     });
     
     if (realAvailability && realAvailability.length > 0) {
