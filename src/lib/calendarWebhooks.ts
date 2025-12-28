@@ -113,12 +113,13 @@ export async function setupGoogleWebhook(connection: CalendarConnection): Promis
     }
 
     // Subscribe to calendar push notifications
-    const watchPayload = {
+    // Add expiration back - it's required by Google
+    const watchPayload: any = {
       id: channelId,
       type: "web_hook",
       address: webhookUrl,
       token: webhookSecret,
-      expiration: expirationSeconds, // Must be integer seconds since epoch
+      expiration: expirationSeconds, // Required by Google
     };
 
     console.log(`Setting up Google webhook with payload:`, {
@@ -234,6 +235,9 @@ export async function setupMicrosoftWebhook(connection: CalendarConnection): Pro
 
     const webhookUrl = `${BASE_URL}/api/integrations/microsoft/webhook`;
     const subscriptionId = `soradin-${connection.specialist_id}-${Date.now()}`;
+
+    // Add a small delay to avoid rate limiting if multiple webhooks are being set up
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
     // Subscribe to calendar change notifications
     const subscriptionResponse = await fetch(

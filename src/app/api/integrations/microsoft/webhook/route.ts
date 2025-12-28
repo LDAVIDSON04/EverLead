@@ -27,9 +27,16 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     // Microsoft sends validation requests first
-    const validationToken = req.headers.get("validation-token");
+    // Check both header name variations (Microsoft sometimes uses different casing)
+    const validationToken = 
+      req.headers.get("validation-token") || 
+      req.headers.get("Validation-Token") ||
+      req.headers.get("VALIDATION-TOKEN");
+    
     if (validationToken) {
+      console.log("Microsoft webhook validation request received");
       // Return validation token to confirm subscription
+      // Must return 200 OK with the validation token as plain text
       return new NextResponse(validationToken, {
         status: 200,
         headers: {
@@ -39,7 +46,15 @@ export async function POST(req: NextRequest) {
     }
 
     // Parse notification body
-    const body = await req.json();
+    let body;
+    try {
+      body = await req.json();
+    } catch (parseError) {
+      // If body parsing fails, might be a validation request without proper header
+      console.warn("Failed to parse webhook body, might be validation request:", parseError);
+      return new NextResponse("OK", { status: 200 });
+    }
+    
     const notifications = body.value || [];
 
     console.log("Microsoft Calendar webhook received:", {
@@ -59,6 +74,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ received: true }, { status: 200 });
   } catch (error: any) {
     console.error("Error processing Microsoft Calendar webhook:", error);
+    // Always return 200 to Microsoft to prevent retries for transient errors
+    // But log the error for debugging
     return NextResponse.json({ error: error.message }, { status: 200 });
   }
 }
