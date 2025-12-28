@@ -302,8 +302,13 @@ async function processExternalEvent(
     is_soradin_created: isSoradinCreated,
     appointment_id: event.appointmentId || null,
     location: matchedLocation, // Store matched location
-    title: event.title || null, // Store the event title/subject
   };
+
+  // Only include title if the column exists (graceful degradation)
+  // The migration will add this column, but we handle the case where it doesn't exist yet
+  if (event.title) {
+    upsertData.title = event.title;
+  }
 
   // Upsert the event
   const { error: upsertError } = await supabaseServer
@@ -313,7 +318,22 @@ async function processExternalEvent(
     });
 
   if (upsertError) {
-    throw new Error(`Failed to upsert external event: ${upsertError.message}`);
+    // If error is due to missing title column, try again without it
+    if (upsertError.code === '42703' || upsertError.message?.includes('title does not exist')) {
+      console.log("Title column not found, saving external event without title");
+      delete upsertData.title;
+      const { error: retryError } = await supabaseServer
+        .from("external_events")
+        .upsert(upsertData, {
+          onConflict: "specialist_id,provider,provider_event_id",
+        });
+      
+      if (retryError) {
+        throw new Error(`Failed to upsert external event: ${retryError.message}`);
+      }
+    } else {
+      throw new Error(`Failed to upsert external event: ${upsertError.message}`);
+    }
   }
   
   console.log(`✅ External event saved to database:`, {

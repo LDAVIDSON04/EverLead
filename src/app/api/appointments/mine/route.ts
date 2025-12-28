@@ -94,14 +94,41 @@ export async function GET(req: NextRequest) {
 
     // Also fetch external calendar events (booked by coworkers/front desk)
     // These should appear in the agent's schedule alongside Soradin appointments
-    const { data: externalEvents, error: externalEventsError } = await supabaseServer
-      .from("external_events")
-      .select("id, starts_at, ends_at, status, provider, is_soradin_created, title")
-      .eq("specialist_id", userId) // specialist_id in external_events = agent_id (user ID)
-      .eq("status", "confirmed") // Only show confirmed events
-      .eq("is_soradin_created", false) // Only show external events (not Soradin-created)
-      .gte("starts_at", now.toISOString()) // Only future events
-      .order("starts_at", { ascending: true });
+    // Try to fetch with title column, but handle gracefully if column doesn't exist yet
+    let externalEvents: any[] | null = null;
+    let externalEventsError: any = null;
+    
+    try {
+      const result = await supabaseServer
+        .from("external_events")
+        .select("id, starts_at, ends_at, status, provider, is_soradin_created, title")
+        .eq("specialist_id", userId) // specialist_id in external_events = agent_id (user ID)
+        .eq("status", "confirmed") // Only show confirmed events
+        .eq("is_soradin_created", false) // Only show external events (not Soradin-created)
+        .gte("starts_at", now.toISOString()) // Only future events
+        .order("starts_at", { ascending: true });
+      
+      externalEvents = result.data;
+      externalEventsError = result.error;
+    } catch (err: any) {
+      // If title column doesn't exist, try without it
+      if (err?.code === '42703' || err?.message?.includes('title does not exist')) {
+        console.log("Title column not found, fetching external events without title");
+        const result = await supabaseServer
+          .from("external_events")
+          .select("id, starts_at, ends_at, status, provider, is_soradin_created")
+          .eq("specialist_id", userId)
+          .eq("status", "confirmed")
+          .eq("is_soradin_created", false)
+          .gte("starts_at", now.toISOString())
+          .order("starts_at", { ascending: true });
+        
+        externalEvents = result.data;
+        externalEventsError = result.error;
+      } else {
+        externalEventsError = err;
+      }
+    }
 
     if (externalEventsError) {
       console.error("Error fetching external events:", externalEventsError);
