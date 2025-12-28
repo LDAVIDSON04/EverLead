@@ -1,6 +1,8 @@
 // src/app/api/integrations/sync/route.ts
 // Two-way calendar sync job (polling-based)
-// This should be triggered by a cron job (e.g., Vercel Cron every 5-15 minutes)
+// Triggered by Vercel Cron every 2 minutes (see vercel.json)
+// Note: Webhooks are preferred for instant sync, but Google API has a persistent TTL error
+// Polling every 2 minutes provides near-instant sync as a workaround
 
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabaseServer";

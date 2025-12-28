@@ -93,10 +93,12 @@ export async function setupGoogleWebhook(connection: CalendarConnection): Promis
 
     // Generate unique channel ID
     // Channel ID must be a string, max 64 chars
-    // Use a simple UUID-like format to avoid any parsing issues
-    const uuid = connection.specialist_id.replace(/-/g, '');
-    const timestamp = Date.now().toString(36); // Base36 for shorter string
-    const channelId = `soradin-${uuid.substring(0, 16)}-${timestamp}`.substring(0, 64);
+    // Google recommends UUID format to avoid parsing issues
+    // Using a simple format: soradin-{short-uuid}-{timestamp}
+    const shortUuid = connection.specialist_id.substring(0, 8).replace(/-/g, '');
+    const timestamp = Date.now();
+    // Ensure channel ID is alphanumeric only to avoid any parsing issues
+    const channelId = `soradin${shortUuid}${timestamp}`.substring(0, 64);
     const webhookUrl = `${BASE_URL}/api/integrations/google/webhook`;
     const webhookSecret = process.env.GOOGLE_WEBHOOK_SECRET || "soradin-webhook-secret";
 
