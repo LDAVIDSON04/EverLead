@@ -104,7 +104,7 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
         // Fetch profile with all necessary fields
         const { data: profile, error: profileError } = await supabaseClient
           .from('profiles')
-          .select('role, full_name, first_name, last_name, profile_picture_url, onboarding_completed, email, phone, funeral_home, job_title')
+          .select('role, full_name, first_name, last_name, profile_picture_url, email, phone, funeral_home, job_title')
           .eq('id', user.id)
           .maybeSingle();
 
@@ -173,8 +173,8 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
             if (specialist.status !== 'approved') {
               setApprovalStatus(specialist.status || 'pending');
             } else {
-              // Check if onboarding is needed
-              if (!profile.onboarding_completed) {
+              // Check if onboarding is needed (column might not exist yet)
+              if (profile.onboarding_completed === false) {
                 setShowOnboarding(true);
               }
             }
