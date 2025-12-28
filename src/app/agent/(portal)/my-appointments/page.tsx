@@ -113,7 +113,16 @@ export default function FilesPage() {
             date: formattedDate,
             leadId: lead?.id || null,
             appointmentId: apt.id,
+            // Store the actual date for sorting
+            _sortDate: date.getTime(),
           };
+        });
+
+        // Sort by date (newest first)
+        fileData.sort((a, b) => {
+          const dateA = (a as any)._sortDate || 0;
+          const dateB = (b as any)._sortDate || 0;
+          return dateB - dateA; // Descending order (newest first)
         });
 
         setFiles(fileData);
@@ -142,18 +151,28 @@ export default function FilesPage() {
       const date = new Date(appointment.requested_date);
       const formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
+      const uploadDate = new Date();
       const newFile: FileData = {
         id: Date.now().toString(),
         fileName: data.file.name,
         appointment: `${clientName} – ${formattedDate}`,
         client: clientName,
         uploadedBy: 'Agent',
-        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        date: uploadDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
         leadId: lead?.id || null,
         appointmentId: appointment.id,
+        // Store the actual date for sorting
+        _sortDate: uploadDate.getTime(),
       };
 
-      setFiles([newFile, ...files]);
+      // Add new file and re-sort by date
+      const updatedFiles = [newFile, ...files];
+      updatedFiles.sort((a, b) => {
+        const dateA = (a as any)._sortDate || 0;
+        const dateB = (b as any)._sortDate || 0;
+        return dateB - dateA; // Descending order (newest first)
+      });
+      setFiles(updatedFiles);
     } catch (err) {
       console.error('Error uploading file:', err);
     }
@@ -175,6 +194,11 @@ export default function FilesPage() {
       default:
         return true;
     }
+  }).sort((a, b) => {
+    // Sort by date (newest first) after filtering
+    const dateA = (a as any)._sortDate || 0;
+    const dateB = (b as any)._sortDate || 0;
+    return dateB - dateA; // Descending order (newest first)
   });
 
   // Format appointments for the upload modal
