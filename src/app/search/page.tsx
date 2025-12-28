@@ -558,30 +558,60 @@ function SearchResults() {
     }
 
     const agentId = appointment.agent.id;
-    const dayDate = slot.date.split('\n')[1]; // Extract date from "Wed\nDec 17" format
     
-    // Parse the date to get YYYY-MM-DD format
-    // Build the date string directly to avoid any timezone conversion issues
-    const today = new Date();
-    const currentYear = today.getFullYear();
+    // CRITICAL FIX: Get the actual date from the availability data, not from parsing the display string
+    // The display string can be ambiguous (e.g., "Jan 1" could be 2025 or 2026)
+    // We need to find the matching day in agentAvailability to get the correct YYYY-MM-DD date
+    const realAvailability = agentId ? agentAvailability[agentId] : null;
+    
+    if (!realAvailability || realAvailability.length === 0) {
+      console.error("No availability data found for agent", agentId);
+      return;
+    }
+    
+    // Find the day that matches this slot's display date
+    // The slot.date is in format "Thu\nJan 1" - we need to match it to the actual date in availability
+    const dayDate = slot.date.split('\n')[1]; // Extract "Jan 1" from "Thu\nJan 1"
     const dateMatch = dayDate.match(/(\w+)\s+(\d+)/);
-    if (!dateMatch) return;
+    if (!dateMatch) {
+      console.error("Could not parse date from slot:", slot.date);
+      return;
+    }
     
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     const monthName = dateMatch[1];
     const dayNum = parseInt(dateMatch[2]);
     const monthIndex = monthNames.indexOf(monthName);
     
-    if (monthIndex === -1) return;
+    if (monthIndex === -1) {
+      console.error("Invalid month name:", monthName);
+      return;
+    }
     
-    // Build date string directly as YYYY-MM-DD to avoid timezone shifts
-    // Month is 0-indexed in JS but we want 1-indexed for the string
-    const monthStr = String(monthIndex + 1).padStart(2, '0');
-    const dayStr = String(dayNum).padStart(2, '0');
-    const dateStr = `${currentYear}-${monthStr}-${dayStr}`;
+    // Find the matching day in availability data by matching month and day
+    // This ensures we get the correct year (could be 2025, 2026, etc.)
+    const matchingDay = realAvailability.find(day => {
+      const [year, month, dayOfMonth] = day.date.split("-").map(Number);
+      return month === monthIndex + 1 && dayOfMonth === dayNum;
+    });
+    
+    if (!matchingDay) {
+      console.error("Could not find matching day in availability data:", { monthIndex, dayNum, availableDates: realAvailability.map(d => d.date) });
+      return;
+    }
+    
+    // Use the actual date from the availability data (this has the correct year!)
+    const dateStr = matchingDay.date; // This is already in YYYY-MM-DD format with correct year
+    
+    console.log("📅 [HANDLE DAY CLICK] Matched slot to date:", {
+      slotDisplay: slot.date,
+      parsedMonthDay: `${monthName} ${dayNum}`,
+      matchedDate: dateStr,
+      slotCount: matchingDay.slots.length,
+    });
     
     // Store today for use in fetchAvailability
-    const todayForFetch = today;
+    const todayForFetch = new Date();
     
     // Set modal state
     setSelectedDayForModal(dateStr);
