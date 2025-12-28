@@ -270,14 +270,25 @@ function SearchResults() {
             if (res.ok) {
               const data: AvailabilityDay[] = await res.json();
               
-              // Debug: Log what we got
+              // Debug: Log what we got - EXPANDED to see full details
               console.log(`📅 [CALENDAR] Got availability for agent ${apt.agent.id}:`, {
                 totalDays: data.length,
                 daysWithSlots: data.filter(d => d.slots.length > 0).length,
-                days: data.map(d => ({
-                  date: d.date,
-                  slotCount: d.slots.length,
-                })),
+                searchLocation,
+                locationParam,
+                days: data.map(d => {
+                  // Parse date to get day name for verification
+                  const [year, month, dayOfMonth] = d.date.split("-").map(Number);
+                  const date = new Date(Date.UTC(year, month - 1, dayOfMonth));
+                  const dayName = date.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' });
+                  return {
+                    date: d.date,
+                    dayName,
+                    slotCount: d.slots.length,
+                    slots: d.slots.slice(0, 2).map(s => s.startsAt), // First 2 slots for debugging
+                  };
+                }),
+                fullData: data, // Include full data for deep inspection
               });
               
               return { agentId: apt.agent.id, availability: data };
