@@ -4,7 +4,6 @@ import { z } from "zod";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { deleteExternalEventsForAgentAppointment } from "@/lib/calendarSyncAgent";
 import { sendAgentCancellationEmail } from "@/lib/emails";
-import { checkBotId } from 'botid/server';
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -14,14 +13,8 @@ const cancelAppointmentSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
-  // Check for bots
-  const verification = await checkBotId();
-  if (verification.isBot) {
-    return NextResponse.json(
-      { error: 'Bot detected. Access denied.' },
-      { status: 403 }
-    );
-  }
+  // Note: Bot check removed for this endpoint since it's a user-initiated action from email links
+  // Security is maintained through appointment ID validation and status checks
 
   try {
     const body = await req.json();
