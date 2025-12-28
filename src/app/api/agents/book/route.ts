@@ -436,6 +436,12 @@ export async function POST(req: NextRequest) {
                     <p style="margin: 5px 0;"><strong>Agent:</strong> ${agentName}</p>
                   </div>
                   <p>We look forward to meeting with you.</p>
+                  <hr style="border: none; border-top: 1px solid #e5e5e5; margin: 30px 0;" />
+                  <p style="margin: 20px 0 0;">
+                    <a href="${baseUrl}/book/cancel?appointmentId=${appointment.id}" style="color: #dc2626; text-decoration: underline; font-size: 14px;">
+                      Cancel this appointment
+                    </a>
+                  </p>
                 </div>
               `,
             }),
