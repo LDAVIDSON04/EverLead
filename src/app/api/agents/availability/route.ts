@@ -405,12 +405,10 @@ export async function GET(req: NextRequest) {
 
     // Generate availability days
     const days: AvailabilityDay[] = [];
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-
     const dayNames = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
 
     // Parse start and end dates properly to avoid timezone issues
+    // Use UTC to ensure correct day-of-week calculation
     const startParts = startDate.split("-").map(Number);
     const endParts = endDate.split("-").map(Number);
     const startDateObj = new Date(Date.UTC(startParts[0], startParts[1] - 1, startParts[2]));
