@@ -615,9 +615,9 @@ export default function SchedulePage() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-6 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className={`grid grid-cols-1 ${view === 'week' ? 'lg:grid-cols-1' : 'lg:grid-cols-4'} gap-6`}>
           {/* Main Content Area */}
-          <div className="lg:col-span-3">
+          <div className={view === 'week' ? 'lg:col-span-1' : 'lg:col-span-3'}>
             {view === 'upcoming' ? (
               <div className="space-y-4">
                 {loadingAppointments ? (
@@ -832,7 +832,8 @@ export default function SchedulePage() {
             )}
           </div>
 
-          {/* Right Sidebar */}
+          {/* Right Sidebar - Only show in upcoming view */}
+          {view === 'upcoming' && (
           <div className="lg:col-span-1 space-y-6">
             {/* Connected Calendars */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
@@ -906,6 +907,7 @@ export default function SchedulePage() {
               </div>
             </div>
           </div>
+          )}
         </div>
       </div>
 
