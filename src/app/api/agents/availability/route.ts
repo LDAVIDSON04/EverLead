@@ -142,15 +142,31 @@ export async function GET(req: NextRequest) {
     // Load external calendar events (from Google/Microsoft) that block time slots
     // These are events created by the front desk or other external sources
     // Note: external_events uses specialist_id which matches the agent's user ID
-    // IMPORTANT: Query for events that START or END within the date range, or span the entire range
-    // This ensures we catch all events that could block slots in the requested range
-    const { data: externalEvents, error: externalEventsError } = await supabaseAdmin
+    // IMPORTANT: Query for events that overlap with the date range
+    // An event overlaps if: starts_at <= endDate AND ends_at >= startDate
+    // We'll fetch a wider range and filter in code to ensure we catch all overlapping events
+    const rangeStart = `${startDate}T00:00:00Z`;
+    const rangeEnd = `${endDate}T23:59:59Z`;
+    
+    // Fetch events that start before the range ends (could overlap)
+    const { data: externalEventsRaw, error: externalEventsError } = await supabaseAdmin
       .from("external_events")
       .select("id, starts_at, ends_at, status, is_soradin_created")
       .eq("specialist_id", agentId) // specialist_id in external_events = agent_id (user ID)
       .eq("status", "confirmed") // Only block confirmed events
       .eq("is_soradin_created", false) // Only block external events (not Soradin-created)
-      .or(`starts_at.gte.${startDate}T00:00:00Z,ends_at.lte.${endDate}T23:59:59Z,starts_at.lte.${startDate}T00:00:00Z.ends_at.gte.${endDate}T23:59:59Z`);
+      .lte("starts_at", rangeEnd) // Event starts before or at range end
+      .gte("ends_at", rangeStart); // Event ends after or at range start
+    
+    // Filter to only events that actually overlap (safety check)
+    const externalEvents = externalEventsRaw?.filter((evt: any) => {
+      const evtStart = new Date(evt.starts_at);
+      const evtEnd = new Date(evt.ends_at);
+      const rangeStartDate = new Date(rangeStart);
+      const rangeEndDate = new Date(rangeEnd);
+      // Overlap: evtStart <= rangeEnd AND evtEnd >= rangeStart
+      return evtStart <= rangeEndDate && evtEnd >= rangeStartDate;
+    }) || [];
 
     // Debug: Log appointments and external events
     console.log("📋 Loaded appointments for conflict detection:", {
