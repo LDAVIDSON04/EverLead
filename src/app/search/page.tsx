@@ -1516,6 +1516,20 @@ function SearchResults() {
                       const dayNum = date.getUTCDate();
                       const displayDate = `${dayName}, ${monthName} ${dayNum}`;
                       
+                      // Debug: Log day calculation for verification
+                      if (day.date === "2026-01-01" || day.date === "2026-01-02") {
+                        console.log(`📅 [FRONTEND] Day display for ${day.date}:`, {
+                          dateStr: day.date,
+                          parsed: {year, month, dayOfMonth},
+                          dateISO: date.toISOString(),
+                          getUTCDay: date.getUTCDay(),
+                          dayName,
+                          displayDate,
+                          expectedDay: day.date === "2026-01-01" ? "Thursday" : "Friday",
+                          correct: day.date === "2026-01-01" ? dayName === "Thursday" : dayName === "Friday"
+                        });
+                      }
+                      
                       // Compare normalized dates
                       const normalizedSelectedDate = selectedDayForModal?.trim() || "";
                       const normalizedDayDate = day.date.trim();
