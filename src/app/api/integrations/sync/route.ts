@@ -181,12 +181,21 @@ async function syncConnection(
   }
 
   // Process each external event
+  console.log(`📅 Processing ${externalEvents.length} external events for ${connection.provider} calendar (specialist ${connection.specialist_id})`);
   for (const event of externalEvents) {
     try {
+      console.log(`  Processing event: ${event.providerEventId}`, {
+        startsAt: event.startsAt,
+        endsAt: event.endsAt,
+        status: event.status,
+        isSoradinCreated: !!event.appointmentId,
+        hasAppointmentId: !!event.appointmentId,
+      });
       await processExternalEvent(connection, event);
+      console.log(`  ✅ Saved external event: ${event.providerEventId}`);
     } catch (error: any) {
       console.error(
-        `Error processing event ${event.providerEventId}:`,
+        `  ❌ Error processing event ${event.providerEventId}:`,
         error
       );
       // Continue with other events even if one fails
@@ -249,6 +258,16 @@ async function processExternalEvent(
   if (upsertError) {
     throw new Error(`Failed to upsert external event: ${upsertError.message}`);
   }
+  
+  console.log(`✅ External event saved to database:`, {
+    specialistId: connection.specialist_id,
+    provider: connection.provider,
+    providerEventId: event.providerEventId,
+    startsAt: event.startsAt,
+    endsAt: event.endsAt,
+    status: event.status,
+    isSoradinCreated: isSoradinCreated,
+  });
 
   // ============================================
   // STRETCH GOAL: Handle external edits to Soradin-created events
