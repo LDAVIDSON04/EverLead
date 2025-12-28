@@ -96,7 +96,7 @@ export async function GET(req: NextRequest) {
     // These should appear in the agent's schedule alongside Soradin appointments
     const { data: externalEvents, error: externalEventsError } = await supabaseServer
       .from("external_events")
-      .select("id, starts_at, ends_at, status, provider, is_soradin_created")
+      .select("id, starts_at, ends_at, status, provider, is_soradin_created, title")
       .eq("specialist_id", userId) // specialist_id in external_events = agent_id (user ID)
       .eq("status", "confirmed") // Only show confirmed events
       .eq("is_soradin_created", false) // Only show external events (not Soradin-created)
@@ -265,13 +265,18 @@ export async function GET(req: NextRequest) {
                           evt.provider === "ics" ? "ICS Calendar" : 
                           "External Calendar";
       
+      // Use the actual event title if available, otherwise fall back to provider name
+      const eventTitle = evt.title && evt.title.trim() 
+        ? evt.title.trim() 
+        : `External Meeting (${providerName})`;
+      
       return {
         id: `external-${evt.id}`, // Prefix to distinguish from Soradin appointments
         lead_id: null, // External events don't have leads
         starts_at: evt.starts_at,
         ends_at: evt.ends_at,
         status: "confirmed", // External events are always confirmed
-        family_name: `External Meeting (${providerName})`, // Indicate it's an external booking
+        family_name: eventTitle, // Use the actual event title from the external calendar
         location: "External Calendar", // Indicate it's from external calendar
         is_external: true, // Flag to identify external events in the UI
         provider: evt.provider,

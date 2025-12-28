@@ -12,6 +12,7 @@ export type ExternalEvent = {
   status: "confirmed" | "cancelled";
   appointmentId?: string; // from our marker if present
   location?: string | null; // Location/city from the calendar event
+  title?: string | null; // Event title/subject from the calendar
 };
 
 /**
@@ -129,6 +130,9 @@ export async function fetchGoogleCalendarEvents(
     // Google stores location as a simple string
     const location: string | null = event.location || null;
 
+    // Extract title/subject from Google event (stored as "summary")
+    const title: string | null = event.summary || null;
+
     // Map status
     const status =
       event.status === "cancelled" ? "cancelled" : "confirmed";
@@ -141,6 +145,7 @@ export async function fetchGoogleCalendarEvents(
       status,
       appointmentId,
       location, // Include location in the returned event
+      title, // Include title in the returned event
     };
   });
 }

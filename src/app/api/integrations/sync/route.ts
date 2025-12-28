@@ -224,6 +224,7 @@ async function processExternalEvent(
     status: "confirmed" | "cancelled";
     appointmentId?: string;
     location?: string | null;
+    title?: string | null;
   }
 ): Promise<void> {
   const isSoradinCreated = !!event.appointmentId;
@@ -301,6 +302,7 @@ async function processExternalEvent(
     is_soradin_created: isSoradinCreated,
     appointment_id: event.appointmentId || null,
     location: matchedLocation, // Store matched location
+    title: event.title || null, // Store the event title/subject
   };
 
   // Upsert the event

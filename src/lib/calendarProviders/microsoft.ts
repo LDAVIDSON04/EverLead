@@ -12,6 +12,7 @@ export type ExternalEvent = {
   status: "confirmed" | "cancelled";
   appointmentId?: string; // from our marker if present
   location?: string | null; // Location/city from the calendar event
+  title?: string | null; // Event title/subject from the calendar
 };
 
 /**
@@ -155,6 +156,9 @@ export async function fetchMicrosoftCalendarEvents(
       }
     }
 
+    // Extract title/subject from Microsoft event (stored as "subject")
+    const title: string | null = event.subject || null;
+
     // Map status
     const status =
       event.isCancelled || event.showAs === "free"
@@ -169,6 +173,7 @@ export async function fetchMicrosoftCalendarEvents(
       status,
       appointmentId,
       location, // Include location in the returned event
+      title, // Include title in the returned event
     };
   });
 }
