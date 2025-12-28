@@ -102,6 +102,7 @@ export async function POST(req: NextRequest) {
       name: displayName,
       requestedDate,
       requestedWindow,
+      appointmentId: appt.id, // Include appointment ID for cancel link
     });
     
     const emailTimeout = new Promise<void>((resolve) => {

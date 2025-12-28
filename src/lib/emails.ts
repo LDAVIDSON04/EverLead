@@ -6,6 +6,7 @@ type ConsumerEmailArgs = {
   name?: string | null;
   requestedDate: string;
   requestedWindow: string;
+  appointmentId?: string; // Optional appointment ID for cancel link
 };
 
 type AgentEmailArgs = {
@@ -27,6 +28,7 @@ export async function sendConsumerBookingEmail({
   name,
   requestedDate,
   requestedWindow,
+  appointmentId,
 }: ConsumerEmailArgs) {
   if (!to) {
     console.warn('sendConsumerBookingEmail: No email address provided');
@@ -143,6 +145,14 @@ export async function sendConsumerBookingEmail({
                       <p style="color: #6b6b6b; font-size: 14px; line-height: 1.6; margin: 24px 0 0;">
                         If you didn't request this, you can ignore this email.
                       </p>
+                      
+                      ${appointmentId ? `
+                      <p style="margin: 30px 0 0; padding-top: 20px; border-top: 1px solid #e5e5e5;">
+                        <a href="${cleanSiteUrl}/book/cancel?appointmentId=${appointmentId}" style="color: #dc2626; text-decoration: underline; font-size: 14px;">
+                          Cancel this appointment
+                        </a>
+                      </p>
+                      ` : ''}
                     </td>
                   </tr>
                   
@@ -415,6 +425,181 @@ export async function sendAgentNewAppointmentEmail({
   } catch (err: any) {
     console.error('❌ Error sending agent appointment email:', err);
     // Don't throw - email failure shouldn't break appointment purchase
+  }
+}
+
+type AgentCancellationEmailArgs = {
+  to: string;
+  agentName?: string | null;
+  consumerName?: string | null;
+  requestedDate: string;
+  requestedWindow: string;
+};
+
+/**
+ * Send notification email to agent when an appointment is cancelled
+ */
+export async function sendAgentCancellationEmail({
+  to,
+  agentName,
+  consumerName,
+  requestedDate,
+  requestedWindow,
+}: AgentCancellationEmailArgs) {
+  if (!to) {
+    console.warn('sendAgentCancellationEmail: No email address provided');
+    return;
+  }
+
+  const resendApiKey = process.env.RESEND_API_KEY;
+  const resendFromEmail = process.env.RESEND_FROM_EMAIL || 'Soradin <notifications@soradin.com>';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://soradin.com';
+
+  if (!resendApiKey) {
+    console.log('📧 sendAgentCancellationEmail: RESEND_API_KEY not set, skipping email');
+    return;
+  }
+
+  // Parse date as local date to avoid timezone shift
+  const [year, month, day] = requestedDate.split('-').map(Number);
+  const date = new Date(year, month - 1, day); // month is 0-indexed
+  const prettyDate = date.toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+
+  const timeWindowLabel = requestedWindow.charAt(0).toUpperCase() + requestedWindow.slice(1);
+
+  // Format from email properly for Resend - always brand as Soradin
+  let fromEmail = resendFromEmail;
+  if (fromEmail && !fromEmail.includes('<')) {
+    fromEmail = `Soradin <${fromEmail}>`;
+  } else if (fromEmail && fromEmail.includes('<')) {
+    const emailMatch = fromEmail.match(/<(.+@.+?)>/);
+    if (emailMatch) {
+      fromEmail = `Soradin <${emailMatch[1]}>`;
+    }
+  } else {
+    fromEmail = 'Soradin <notifications@soradin.com>';
+  }
+
+  try {
+    // Clean siteUrl for logo
+    let cleanSiteUrl = (siteUrl || '').trim().replace(/\/+$/, '');
+    if (!cleanSiteUrl.startsWith('http')) {
+      cleanSiteUrl = `https://${cleanSiteUrl}`;
+    }
+
+    const resendResponse = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${resendApiKey}`,
+      },
+      body: JSON.stringify({
+        from: fromEmail,
+        to: [to],
+        subject: 'Appointment cancelled - Soradin',
+        html: `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          </head>
+          <body style="margin: 0; padding: 0; background-color: #f7f4ef; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+            <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #f7f4ef; padding: 40px 20px;">
+              <tr>
+                <td align="center">
+                  <table role="presentation" style="max-width: 600px; width: 100%; border-collapse: collapse; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); overflow: hidden;">
+                    <!-- Header with Logo -->
+                    <tr>
+                      <td style="padding: 40px 40px 30px; text-align: center; background: linear-gradient(to bottom, #faf8f5, #ffffff);">
+                        <img src="${cleanSiteUrl}/logo%20-%20white.png" alt="Soradin" style="height: 48px; width: auto; margin: 0 auto 12px; display: block; max-width: 200px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
+                        <div style="display: none;">
+                          <h1 style="color: #2a2a2a; font-size: 32px; font-weight: 300; letter-spacing: -0.5px; margin: 0;">Soradin</h1>
+                          <p style="color: #6b6b6b; font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; margin: 8px 0 0 0;">Pre-Planning</p>
+                        </div>
+                      </td>
+                    </tr>
+                    
+                    <!-- Main Content -->
+                    <tr>
+                      <td style="padding: 40px;">
+                        <h2 style="color: #2a2a2a; font-size: 24px; font-weight: 400; margin: 0 0 20px; letter-spacing: -0.3px;">Appointment cancelled</h2>
+                        
+                        <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 16px;">Hi ${agentName || 'there'},</p>
+                        
+                        <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 24px;">
+                          The family has cancelled their appointment with you.
+                        </p>
+                        
+                        <div style="background-color: #f7f4ef; padding: 20px; border-radius: 8px; margin: 24px 0;">
+                          <p style="margin: 8px 0; color: #2a2a2a; font-size: 16px;"><strong>Date:</strong> ${prettyDate}</p>
+                          <p style="margin: 8px 0; color: #2a2a2a; font-size: 16px;"><strong>Time window:</strong> ${timeWindowLabel}</p>
+                          ${consumerName ? `<p style="margin: 8px 0; color: #2a2a2a; font-size: 16px;"><strong>Client:</strong> ${consumerName}</p>` : ''}
+                        </div>
+                        
+                        <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 24px 0 16px;">
+                          This time slot is now available again in your calendar. The appointment has been removed from your connected calendars (Google/Microsoft) if they were synced.
+                        </p>
+                        
+                        <p style="margin: 30px 0 0;">
+                          <a href="${cleanSiteUrl}/agent/my-appointments" style="background-color: #2a2a2a; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: 500;">
+                            View My Appointments
+                          </a>
+                        </p>
+                      </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                      <td style="padding: 30px 40px; background-color: #faf8f5; border-top: 1px solid #e5e5e5;">
+                        <p style="color: #6b6b6b; font-size: 12px; margin: 0; text-align: center;">
+                          © ${new Date().getFullYear()} Soradin. All rights reserved.
+                        </p>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </body>
+          </html>
+        `,
+        text: [
+          `Hi ${agentName || 'there'},`,
+          '',
+          'The family has cancelled their appointment with you.',
+          '',
+          `Date: ${prettyDate}`,
+          `Time window: ${timeWindowLabel}`,
+          consumerName ? `Client: ${consumerName}` : '',
+          '',
+          'This time slot is now available again in your calendar. The appointment has been removed from your connected calendars (Google/Microsoft) if they were synced.',
+          '',
+          '— Soradin',
+        ]
+          .filter(Boolean)
+          .join('\n'),
+      }),
+    });
+
+    if (!resendResponse.ok) {
+      const errorText = await resendResponse.text();
+      console.error('❌ Resend API error for agent cancellation email:', {
+        status: resendResponse.status,
+        error: errorText,
+      });
+      throw new Error(`Resend API error: ${resendResponse.status}`);
+    }
+
+    console.log(`✅ Agent cancellation email sent to ${to}`);
+  } catch (err: any) {
+    console.error('❌ Error sending agent cancellation email:', err);
+    // Don't throw - email failure shouldn't break cancellation
   }
 }
 

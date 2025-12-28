@@ -620,3 +620,248 @@ export async function syncAgentAppointmentToMicrosoftCalendar(
     throw error;
   }
 }
+
+/**
+ * Deletes external calendar events for a cancelled appointment (agent_id/lead_id schema)
+ * @param appointmentId - The appointment ID to delete events for
+ */
+export async function deleteExternalEventsForAgentAppointment(
+  appointmentId: string
+): Promise<void> {
+  // Find external events linked to this appointment
+  const { data: externalEvents, error: fetchError } = await supabaseAdmin
+    .from("external_events")
+    .select("*")
+    .eq("appointment_id", appointmentId)
+    .eq("is_soradin_created", true);
+
+  if (fetchError) {
+    console.error("Error loading external events:", fetchError);
+    throw new Error("Failed to load external events");
+  }
+
+  if (!externalEvents || externalEvents.length === 0) {
+    // No external events to delete
+    console.log(`No external events found for appointment ${appointmentId}`);
+    return;
+  }
+
+  // Load calendar connections for each event
+  for (const event of externalEvents) {
+    try {
+      const { data: connection, error: connectionError } = await supabaseAdmin
+        .from("calendar_connections")
+        .select("*")
+        .eq("specialist_id", event.specialist_id)
+        .eq("provider", event.provider)
+        .single();
+
+      if (connectionError || !connection) {
+        console.warn(
+          `Calendar connection not found for event ${event.id}, marking as cancelled`
+        );
+        // Mark as cancelled in DB
+        await supabaseAdmin
+          .from("external_events")
+          .update({ status: "cancelled" })
+          .eq("id", event.id);
+        continue;
+      }
+
+      // Delete from external calendar
+      if (event.provider === "google") {
+        await deleteFromGoogleCalendar(event, connection as CalendarConnection);
+      } else if (event.provider === "microsoft") {
+        await deleteFromMicrosoftCalendar(
+          event,
+          connection as CalendarConnection
+        );
+      }
+
+      // Delete or mark as cancelled in our DB
+      await supabaseAdmin.from("external_events").delete().eq("id", event.id);
+      console.log(`✅ Deleted external event ${event.id} from ${event.provider} calendar`);
+    } catch (error: any) {
+      console.error(
+        `Error deleting external event ${event.id} from ${event.provider}:`,
+        error
+      );
+      // Mark as cancelled in DB even if deletion fails
+      await supabaseAdmin
+        .from("external_events")
+        .update({ status: "cancelled" })
+        .eq("id", event.id);
+    }
+  }
+}
+
+/**
+ * Deletes event from Google Calendar
+ */
+async function deleteFromGoogleCalendar(
+  event: any,
+  connection: CalendarConnection
+): Promise<void> {
+  // Check if token is expired and refresh if needed
+  let accessToken = connection.access_token;
+  if (connection.expires_at && new Date(connection.expires_at) < new Date()) {
+    console.log("Google token expired, attempting to refresh...");
+    
+    if (!connection.refresh_token) {
+      console.warn("No refresh token available, cannot refresh Google token");
+      throw new Error("Google token expired and no refresh token available");
+    }
+
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+
+    if (!clientId || !clientSecret) {
+      throw new Error("Google OAuth credentials not configured");
+    }
+
+    try {
+      const refreshResponse = await fetch("https://oauth2.googleapis.com/token", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+          client_id: clientId,
+          client_secret: clientSecret,
+          refresh_token: connection.refresh_token,
+          grant_type: "refresh_token",
+        }),
+      });
+
+      if (!refreshResponse.ok) {
+        const error = await refreshResponse.json().catch(() => ({ error: "Unknown error" }));
+        throw new Error(`Failed to refresh Google token: ${JSON.stringify(error)}`);
+      }
+
+      const tokens = await refreshResponse.json();
+      accessToken = tokens.access_token;
+      const expiresIn = tokens.expires_in || 3600;
+      const newExpiresAt = new Date(Date.now() + expiresIn * 1000);
+
+      // Update the connection with new token
+      await supabaseAdmin
+        .from("calendar_connections")
+        .update({
+          access_token: accessToken,
+          expires_at: newExpiresAt.toISOString(),
+        })
+        .eq("id", connection.id);
+    } catch (error: any) {
+      console.error("Error refreshing Google token:", error);
+      throw error;
+    }
+  }
+
+  // Make actual API call to delete from Google Calendar
+  const response = await fetch(
+    `https://www.googleapis.com/calendar/v3/calendars/${connection.external_calendar_id}/events/${event.provider_event_id}`,
+    {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
+  );
+
+  if (!response.ok && response.status !== 404) {
+    // 404 is OK (event already deleted)
+    const error = await response.json().catch(() => ({ message: "Unknown error" }));
+    throw new Error(`Google Calendar API error: ${JSON.stringify(error)}`);
+  }
+
+  console.log(`✅ Successfully deleted event ${event.provider_event_id} from Google Calendar`);
+}
+
+/**
+ * Deletes event from Microsoft Calendar
+ */
+async function deleteFromMicrosoftCalendar(
+  event: any,
+  connection: CalendarConnection
+): Promise<void> {
+  // Check if token is expired and refresh if needed
+  let accessToken = connection.access_token;
+  if (connection.expires_at && new Date(connection.expires_at) < new Date()) {
+    console.log("Microsoft token expired, attempting to refresh...");
+    
+    if (!connection.refresh_token) {
+      console.warn("No refresh token available, cannot refresh Microsoft token");
+      throw new Error("Microsoft token expired and no refresh token available");
+    }
+
+    const clientId = process.env.MICROSOFT_CLIENT_ID;
+    const clientSecret = process.env.MICROSOFT_CLIENT_SECRET;
+    const tenantId = process.env.MICROSOFT_TENANT_ID || "common";
+
+    if (!clientId || !clientSecret) {
+      throw new Error("Microsoft OAuth credentials not configured");
+    }
+
+    try {
+      const refreshResponse = await fetch(
+        `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: new URLSearchParams({
+            client_id: clientId,
+            client_secret: clientSecret,
+            refresh_token: connection.refresh_token,
+            grant_type: "refresh_token",
+            scope: "https://graph.microsoft.com/Calendars.ReadWrite offline_access",
+          }),
+        }
+      );
+
+      if (!refreshResponse.ok) {
+        const error = await refreshResponse.json().catch(() => ({ error: "Unknown error" }));
+        throw new Error(`Failed to refresh Microsoft token: ${JSON.stringify(error)}`);
+      }
+
+      const tokens = await refreshResponse.json();
+      accessToken = tokens.access_token;
+      const expiresIn = tokens.expires_in || 3600;
+      const newExpiresAt = new Date(Date.now() + expiresIn * 1000);
+
+      // Update the connection with new token
+      await supabaseAdmin
+        .from("calendar_connections")
+        .update({
+          access_token: accessToken,
+          expires_at: newExpiresAt.toISOString(),
+          refresh_token: tokens.refresh_token || connection.refresh_token,
+        })
+        .eq("id", connection.id);
+    } catch (error: any) {
+      console.error("Error refreshing Microsoft token:", error);
+      throw error;
+    }
+  }
+
+  // Make actual API call to delete from Microsoft Graph
+  const calendarId = connection.external_calendar_id || "calendar";
+  const response = await fetch(
+    `https://graph.microsoft.com/v1.0/me/calendars/${calendarId}/events/${event.provider_event_id}`,
+    {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
+  );
+
+  if (!response.ok && response.status !== 404) {
+    // 404 is OK (event already deleted)
+    const error = await response.json().catch(() => ({ message: "Unknown error" }));
+    throw new Error(`Microsoft Graph API error: ${JSON.stringify(error)}`);
+  }
+
+  console.log(`✅ Successfully deleted event ${event.provider_event_id} from Microsoft Calendar`);
+}

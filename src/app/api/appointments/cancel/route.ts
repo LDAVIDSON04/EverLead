@@ -1,18 +1,28 @@
 // src/app/api/appointments/cancel/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { supabaseServer } from "@/lib/supabaseServer";
-import { deleteExternalEventsForAppointment } from "@/lib/calendarSync";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { deleteExternalEventsForAgentAppointment } from "@/lib/calendarSyncAgent";
+import { sendAgentCancellationEmail } from "@/lib/emails";
+import { checkBotId } from 'botid/server';
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 const cancelAppointmentSchema = z.object({
   appointmentId: z.string().uuid(),
-  cancelledBy: z.enum(["family", "specialist"]),
 });
 
 export async function POST(req: NextRequest) {
+  // Check for bots
+  const verification = await checkBotId();
+  if (verification.isBot) {
+    return NextResponse.json(
+      { error: 'Bot detected. Access denied.' },
+      { status: 403 }
+    );
+  }
+
   try {
     const body = await req.json();
     const validation = cancelAppointmentSchema.safeParse(body);
@@ -24,12 +34,25 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { appointmentId, cancelledBy } = validation.data;
+    const { appointmentId } = validation.data;
 
-    // Check if appointment exists
-    const { data: appointment, error: fetchError } = await supabaseServer
+    // Get appointment with related data for email
+    const { data: appointment, error: fetchError } = await supabaseAdmin
       .from("appointments")
-      .select("id, status, notes")
+      .select(`
+        id,
+        agent_id,
+        lead_id,
+        requested_date,
+        requested_window,
+        status,
+        leads (
+          first_name,
+          last_name,
+          full_name,
+          email
+        )
+      `)
       .eq("id", appointmentId)
       .single();
 
@@ -47,19 +70,18 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Update appointment status
-    const { data: updatedAppointment, error: updateError } =
-      await supabaseServer
-        .from("appointments")
-        .update({
-          status: "cancelled",
-          notes: `Cancelled by ${cancelledBy} on ${new Date().toISOString()}. ${appointment.notes || ""}`.trim(),
-        })
-        .eq("id", appointmentId)
-        .select()
-        .single();
+    // Update appointment status to cancelled
+    const { data: updatedAppointment, error: updateError } = await supabaseAdmin
+      .from("appointments")
+      .update({
+        status: "cancelled",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", appointmentId)
+      .select()
+      .single();
 
-    if (updateError) {
+    if (updateError || !updatedAppointment) {
       console.error("Error cancelling appointment:", updateError);
       return NextResponse.json(
         { error: "Failed to cancel appointment" },
@@ -69,13 +91,53 @@ export async function POST(req: NextRequest) {
 
     // Delete from external calendars (non-blocking)
     try {
-      await deleteExternalEventsForAppointment(appointmentId);
-    } catch (syncError) {
+      await deleteExternalEventsForAgentAppointment(appointmentId);
+    } catch (syncError: any) {
       console.error("Error deleting appointment from calendars:", syncError);
       // Don't fail the cancellation if sync deletion fails
     }
 
-    return NextResponse.json(updatedAppointment);
+    // Send notification email to agent (non-blocking)
+    if (appointment.agent_id) {
+      try {
+        // Get agent email and name
+        const { data: agentAuth } = await supabaseAdmin.auth.admin.getUserById(appointment.agent_id);
+        const agentEmail = agentAuth?.user?.email;
+        
+        const { data: agentProfile } = await supabaseAdmin
+          .from("profiles")
+          .select("full_name")
+          .eq("id", appointment.agent_id)
+          .maybeSingle();
+        const agentName = agentProfile?.full_name || null;
+
+        // Get lead name
+        const lead = Array.isArray(appointment.leads) ? appointment.leads[0] : appointment.leads;
+        const consumerName = lead?.full_name || 
+          (lead?.first_name && lead?.last_name
+            ? [lead?.first_name, lead?.last_name].filter(Boolean).join(' ')
+            : null);
+
+        if (agentEmail) {
+          sendAgentCancellationEmail({
+            to: agentEmail,
+            agentName,
+            consumerName,
+            requestedDate: appointment.requested_date,
+            requestedWindow: appointment.requested_window,
+          }).catch((err) => {
+            console.error('Error sending agent cancellation email (non-fatal):', err);
+          });
+        }
+      } catch (emailError: any) {
+        console.error('Error preparing agent cancellation email (non-fatal):', emailError);
+      }
+    }
+
+    return NextResponse.json({ 
+      appointment: updatedAppointment,
+      message: "Appointment cancelled successfully"
+    });
   } catch (error: any) {
     console.error("Error in /api/appointments/cancel:", error);
     return NextResponse.json(
@@ -84,4 +146,3 @@ export async function POST(req: NextRequest) {
     );
   }
 }
-
