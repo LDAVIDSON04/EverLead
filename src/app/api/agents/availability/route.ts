@@ -142,14 +142,15 @@ export async function GET(req: NextRequest) {
     // Load external calendar events (from Google/Microsoft) that block time slots
     // These are events created by the front desk or other external sources
     // Note: external_events uses specialist_id which matches the agent's user ID
+    // IMPORTANT: Query for events that START or END within the date range, or span the entire range
+    // This ensures we catch all events that could block slots in the requested range
     const { data: externalEvents, error: externalEventsError } = await supabaseAdmin
       .from("external_events")
       .select("id, starts_at, ends_at, status, is_soradin_created")
       .eq("specialist_id", agentId) // specialist_id in external_events = agent_id (user ID)
       .eq("status", "confirmed") // Only block confirmed events
       .eq("is_soradin_created", false) // Only block external events (not Soradin-created)
-      .gte("starts_at", `${startDate}T00:00:00Z`)
-      .lte("ends_at", `${endDate}T23:59:59Z`);
+      .or(`starts_at.gte.${startDate}T00:00:00Z,ends_at.lte.${endDate}T23:59:59Z,starts_at.lte.${startDate}T00:00:00Z.ends_at.gte.${endDate}T23:59:59Z`);
 
     // Debug: Log appointments and external events
     console.log("📋 Loaded appointments for conflict detection:", {
