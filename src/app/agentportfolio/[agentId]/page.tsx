@@ -8,10 +8,8 @@ import { ArrowLeft } from "lucide-react";
 import { AgentHeader } from "./components/AgentHeader";
 import { TrustHighlights } from "./components/TrustHighlights";
 import { AboutSection } from "./components/AboutSection";
-import { Credentials } from "./components/Credentials";
 import { OfficeLocations } from "./components/OfficeLocations";
 import { Reviews } from "./components/Reviews";
-import { FAQs } from "./components/FAQs";
 import { BookingPanel } from "./components/BookingPanel";
 
 export default function AgentProfilePage() {
@@ -158,12 +156,10 @@ export default function AgentProfilePage() {
 
         {/* Full-width sections below two-column layout */}
         <div className="mt-8">
-          <Credentials agentData={agentData} />
+          <Reviews reviewCount={agentData.reviewCount} />
           <Suspense fallback={<div className="mb-12"><h2 className="text-3xl font-medium text-gray-900 mb-6">Office locations</h2><p className="text-gray-600">Loading...</p></div>}>
             <OfficeLocations agentData={agentData} />
           </Suspense>
-          <Reviews reviewCount={agentData.reviewCount} />
-          <FAQs />
         </div>
       </div>
     </div>
