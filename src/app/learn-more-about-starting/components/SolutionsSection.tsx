@@ -7,14 +7,14 @@ export function SolutionsSection() {
       description: "Reach millions of patients searching for care on Soradin.com and the Soradin app.",
       icon: "🔍",
       bgColor: "bg-white",
-      image: null,
+      image: "/cd6b39dd37848fa2e07c2d2e725d3e2c50d49696.png",
     },
     {
       title: "Website scheduling",
       description: "Ensure patients on your website can book anytime with 24/7 online scheduling.",
       icon: "🗓️",
       bgColor: "bg-white",
-      image: null,
+      image: "/f103b18d805714f0cf26707650407e7192408cbe.png",
     },
   ];
 

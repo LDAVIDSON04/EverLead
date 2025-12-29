@@ -9,9 +9,19 @@ export function CaseStudiesSection() {
       bgColor: "bg-[#FFE87C]",
       illustration: (
         <div className="relative w-full h-full flex items-center justify-center p-4">
-          <div className="w-full h-full bg-white/20 rounded-lg flex items-center justify-center">
-            <span className="text-6xl opacity-50">👥</span>
-          </div>
+          <img 
+            src="/391d87d0bfa941287dde563e9d115601074bffda.png" 
+            alt="Healthcare provider and patient" 
+            className="w-full h-full object-cover rounded-lg"
+            onError={(e) => {
+              // Fallback to placeholder if image doesn't exist
+              e.currentTarget.style.display = 'none';
+              const parent = e.currentTarget.parentElement;
+              if (parent) {
+                parent.innerHTML = '<div class="w-full h-full bg-white/20 rounded-lg flex items-center justify-center"><span class="text-6xl opacity-50">👥</span></div>';
+              }
+            }}
+          />
         </div>
       ),
     },
@@ -22,9 +32,20 @@ export function CaseStudiesSection() {
       bgColor: "bg-[#7DDFC3]",
       illustration: (
         <div className="relative w-full h-full flex items-center justify-center p-4">
-          <div className="w-full h-full bg-white/20 rounded-[2rem]" style={{ borderRadius: '2rem' }}>
-            <span className="text-6xl opacity-50">✅</span>
-          </div>
+          <img 
+            src="/aa944d0f69729d63dff1b4adab6f298d6b22262e.png" 
+            alt="Calendar with checkmark" 
+            className="w-full h-full object-cover rounded-[2rem]"
+            style={{ borderRadius: '2rem' }}
+            onError={(e) => {
+              // Fallback to placeholder if image doesn't exist
+              e.currentTarget.style.display = 'none';
+              const parent = e.currentTarget.parentElement;
+              if (parent) {
+                parent.innerHTML = '<div class="w-full h-full bg-white/20 rounded-[2rem]" style="border-radius: 2rem;"><span class="text-6xl opacity-50">✅</span></div>';
+              }
+            }}
+          />
         </div>
       ),
     },
@@ -35,9 +56,19 @@ export function CaseStudiesSection() {
       bgColor: "bg-[#FFE87C]",
       illustration: (
         <div className="relative w-full h-full flex items-center justify-center p-4">
-          <div className="w-full h-full bg-white/20 rounded-lg flex items-center justify-center">
-            <span className="text-6xl opacity-50">🏥</span>
-          </div>
+          <img 
+            src="/a478ea6f5e58a07a66b407d76c672137532df177.png" 
+            alt="Healthcare building with location pin" 
+            className="w-full h-full object-cover rounded-lg"
+            onError={(e) => {
+              // Fallback to placeholder if image doesn't exist
+              e.currentTarget.style.display = 'none';
+              const parent = e.currentTarget.parentElement;
+              if (parent) {
+                parent.innerHTML = '<div class="w-full h-full bg-white/20 rounded-lg flex items-center justify-center"><span class="text-6xl opacity-50">🏥</span></div>';
+              }
+            }}
+          />
         </div>
       ),
     },
