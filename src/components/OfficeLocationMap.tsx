@@ -6,6 +6,7 @@ interface OfficeLocationMapProps {
   city: string;
   province: string;
   address?: string;
+  postalCode?: string;
   className?: string;
 }
 
@@ -15,14 +16,21 @@ export function OfficeLocationMap({
   city,
   province,
   address,
+  postalCode,
   className = "",
 }: OfficeLocationMapProps) {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
-  // Build the address for the map
-  const mapAddress = address
-    ? `${address}, ${city}, ${province}`
-    : `${city}, ${province}`;
+  // Build the full address for the map - prioritize full address over coordinates
+  // This ensures we show the exact location, not city-level coordinates
+  let mapAddress: string;
+  if (address && postalCode) {
+    mapAddress = `${address}, ${city}, ${province} ${postalCode}`;
+  } else if (address) {
+    mapAddress = `${address}, ${city}, ${province}`;
+  } else {
+    mapAddress = `${city}, ${province}`;
+  }
 
   if (!apiKey) {
     return (
@@ -32,20 +40,24 @@ export function OfficeLocationMap({
     );
   }
 
-  // Build map URL - prefer coordinates if available, otherwise use address
-  // Use zoom level 11-12 to show the whole city
+  // Build map URL - ALWAYS use full address when available for accurate geocoding
+  // Only use coordinates if no street address is provided
+  // Use zoom level 11 to show the whole city
   // Only show the office pin (no other businesses)
   let mapUrl: string;
   let mapLink: string;
 
-  if (latitude && longitude) {
-    // Use Static Maps API with coordinates - zoomed to show whole city (zoom level 11)
-    // Style the map to remove points of interest (businesses) and make it cleaner
-    // Only show the office pin, no other businesses
+  // If we have a street address, always use it for geocoding (more accurate than stored coordinates)
+  if (address) {
+    const encodedAddress = encodeURIComponent(mapAddress);
+    mapUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${encodedAddress}&zoom=11&size=600x300&markers=color:0x1a4d2e|label:O|${encodedAddress}&style=feature:poi|visibility:off&style=feature:poi.business|visibility:off&key=${apiKey}`;
+    mapLink = `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
+  } else if (latitude && longitude) {
+    // Fallback to coordinates only if no street address
     mapUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${latitude},${longitude}&zoom=11&size=600x300&markers=color:0x1a4d2e|label:O|${latitude},${longitude}&style=feature:poi|visibility:off&style=feature:poi.business|visibility:off&key=${apiKey}`;
     mapLink = `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`;
   } else {
-    // Use Static Maps API with address - will geocode and show city
+    // Last resort: use city/province
     const encodedAddress = encodeURIComponent(mapAddress);
     mapUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${encodedAddress}&zoom=11&size=600x300&markers=color:0x1a4d2e|label:O|${encodedAddress}&style=feature:poi|visibility:off&style=feature:poi.business|visibility:off&key=${apiKey}`;
     mapLink = `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;

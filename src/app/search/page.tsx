@@ -2094,6 +2094,7 @@ function OfficeLocationsSection({ agentId, agentData }: { agentId: string; agent
                     city={location.city}
                     province={location.province}
                     address={location.street_address || undefined}
+                    postalCode={location.postal_code || undefined}
                     className="h-full"
                   />
                 </div>
