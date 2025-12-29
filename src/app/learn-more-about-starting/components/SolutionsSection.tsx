@@ -1,0 +1,67 @@
+"use client";
+
+import Image from "next/image";
+
+export function SolutionsSection() {
+  const solutions = [
+    {
+      title: "Soradin Marketplace",
+      description: "Reach millions of patients searching for care on Soradin.com and the Soradin app.",
+      icon: "🔍",
+      bgColor: "bg-white",
+      image: null, // Will use placeholder or actual image if available
+    },
+    {
+      title: "Website scheduling",
+      description: "Ensure patients on your website can book anytime with 24/7 online scheduling.",
+      icon: "🗓️",
+      bgColor: "bg-white",
+      image: null,
+    },
+  ];
+
+  return (
+    <section className="bg-white py-20">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="mb-12">
+          <p className="text-sm uppercase tracking-wider text-gray-600 mb-4">Our solutions</p>
+          <h2 className="text-4xl md:text-5xl text-black max-w-4xl">
+            Soradin solutions deliver patient demand and seamless scheduling in all the places patients find you
+          </h2>
+        </div>
+        
+        <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+          {solutions.map((solution, index) => (
+            <div
+              key={index}
+              className={`${solution.bgColor} p-6 rounded-2xl border border-gray-200 hover:border-[#0D5C3D] transition-all hover:shadow-lg group`}
+            >
+              {solution.image ? (
+                <div className="mb-6 rounded-xl overflow-hidden relative h-48">
+                  <Image 
+                    src={solution.image} 
+                    alt={solution.title} 
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+              ) : (
+                <div className="h-48 mb-6 flex items-center justify-center text-6xl bg-gray-100 rounded-xl">
+                  {solution.icon}
+                </div>
+              )}
+              <h3 className="text-black mb-3">{solution.title}</h3>
+              <p className="text-gray-600 text-sm mb-6">
+                {solution.description}
+              </p>
+              <button className="text-[#0D5C3D] text-sm hover:underline group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
+                Learn more →
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
