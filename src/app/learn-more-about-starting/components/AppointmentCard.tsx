@@ -1,7 +1,6 @@
 "use client";
 
 import { Check } from "lucide-react";
-import Image from "next/image";
 
 interface AppointmentCardProps {
   name: string;
@@ -28,22 +27,8 @@ export function AppointmentCard({
     >
       <div className="flex items-start gap-3">
         <div className="flex-shrink-0">
-          <div className="w-14 h-14 rounded-full overflow-hidden bg-gray-200 relative">
-            {imageUrl.startsWith('http') ? (
-              <img 
-                src={imageUrl} 
-                alt={name} 
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <Image 
-                src={imageUrl} 
-                alt={name} 
-                width={56}
-                height={56}
-                className="object-cover"
-              />
-            )}
+          <div className="w-14 h-14 rounded-full overflow-hidden bg-gray-200">
+            <img src={imageUrl} alt={name} className="w-full h-full object-cover" />
           </div>
         </div>
         <div className="flex-1 min-w-0">

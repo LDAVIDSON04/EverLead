@@ -1,7 +1,5 @@
 "use client";
 
-import Image from "next/image";
-
 export function SolutionsSection() {
   const solutions = [
     {
@@ -9,7 +7,7 @@ export function SolutionsSection() {
       description: "Reach millions of patients searching for care on Soradin.com and the Soradin app.",
       icon: "🔍",
       bgColor: "bg-white",
-      image: null, // Will use placeholder or actual image if available
+      image: null,
     },
     {
       title: "Website scheduling",
@@ -37,16 +35,11 @@ export function SolutionsSection() {
               className={`${solution.bgColor} p-6 rounded-2xl border border-gray-200 hover:border-[#0D5C3D] transition-all hover:shadow-lg group`}
             >
               {solution.image ? (
-                <div className="mb-6 rounded-xl overflow-hidden relative h-48">
-                  <Image 
-                    src={solution.image} 
-                    alt={solution.title} 
-                    fill
-                    className="object-cover"
-                  />
+                <div className="mb-6 rounded-xl overflow-hidden">
+                  <img src={solution.image} alt={solution.title} className="w-full h-auto object-cover" />
                 </div>
               ) : (
-                <div className="h-48 mb-6 flex items-center justify-center text-6xl bg-gray-100 rounded-xl">
+                <div className="h-48 mb-6 flex items-center justify-center text-6xl">
                   {solution.icon}
                 </div>
               )}
