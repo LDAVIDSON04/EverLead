@@ -33,17 +33,21 @@ export function OfficeLocationMap({
   }
 
   // Build map URL - prefer coordinates if available, otherwise use address
+  // Use zoom level 11-12 to show the whole city
+  // Only show the office pin (no other businesses)
   let mapUrl: string;
   let mapLink: string;
 
   if (latitude && longitude) {
-    // Use Static Maps API with coordinates - zoomed to show city (zoom level 12-13)
-    mapUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${latitude},${longitude}&zoom=13&size=600x300&markers=color:0x1a4d2e|${latitude},${longitude}&key=${apiKey}`;
+    // Use Static Maps API with coordinates - zoomed to show whole city (zoom level 11)
+    // Style the map to remove points of interest (businesses) and make it cleaner
+    // Only show the office pin, no other businesses
+    mapUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${latitude},${longitude}&zoom=11&size=600x300&markers=color:0x1a4d2e|label:O|${latitude},${longitude}&style=feature:poi|visibility:off&style=feature:poi.business|visibility:off&key=${apiKey}`;
     mapLink = `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`;
   } else {
     // Use Static Maps API with address - will geocode and show city
     const encodedAddress = encodeURIComponent(mapAddress);
-    mapUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${encodedAddress}&zoom=13&size=600x300&markers=color:0x1a4d2e|${encodedAddress}&key=${apiKey}`;
+    mapUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${encodedAddress}&zoom=11&size=600x300&markers=color:0x1a4d2e|label:O|${encodedAddress}&style=feature:poi|visibility:off&style=feature:poi.business|visibility:off&key=${apiKey}`;
     mapLink = `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
   }
 

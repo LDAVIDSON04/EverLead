@@ -57,12 +57,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "City and province are required" }, { status: 400 });
     }
 
-    // Geocode the address to get coordinates
+    // Geocode the address to get coordinates (use full address for accuracy)
     let latitude: number | null = null;
     let longitude: number | null = null;
 
     try {
-      const geocodeResult = await geocodeLocation(city, province);
+      const geocodeResult = await geocodeLocation(city, province, street_address, postal_code);
       if (geocodeResult) {
         latitude = geocodeResult.latitude;
         longitude = geocodeResult.longitude;
@@ -144,13 +144,13 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "Location not found" }, { status: 404 });
     }
 
-    // Geocode if city or province changed
+    // Geocode if address changed (use full address for accuracy)
     let latitude: number | null = null;
     let longitude: number | null = null;
 
     if (city && province) {
       try {
-        const geocodeResult = await geocodeLocation(city, province);
+        const geocodeResult = await geocodeLocation(city, province, street_address, postal_code);
         if (geocodeResult) {
           latitude = geocodeResult.latitude;
           longitude = geocodeResult.longitude;

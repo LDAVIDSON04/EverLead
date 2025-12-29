@@ -12,10 +12,13 @@ export interface GeocodeResult {
 /**
  * Geocode a city and province to get latitude/longitude
  * Uses Google Maps Geocoding API
+ * Can optionally include street_address and postal_code for more accurate results
  */
 export async function geocodeLocation(
   city: string,
-  province: string
+  province: string,
+  streetAddress?: string | null,
+  postalCode?: string | null
 ): Promise<GeocodeResult | null> {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
   
@@ -24,7 +27,16 @@ export async function geocodeLocation(
     return null;
   }
 
-  const query = `${city}, ${province}, Canada`;
+  // Build query with full address if available, otherwise just city/province
+  let query: string;
+  if (streetAddress && postalCode) {
+    query = `${streetAddress}, ${city}, ${province} ${postalCode}, Canada`;
+  } else if (streetAddress) {
+    query = `${streetAddress}, ${city}, ${province}, Canada`;
+  } else {
+    query = `${city}, ${province}, Canada`;
+  }
+  
   const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(query)}&key=${apiKey}`;
 
   try {
