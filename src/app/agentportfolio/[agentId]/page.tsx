@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { supabaseClient } from "@/lib/supabaseClient";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
@@ -159,7 +159,9 @@ export default function AgentProfilePage() {
         {/* Full-width sections below two-column layout */}
         <div className="mt-8">
           <Credentials agentData={agentData} />
-          <OfficeLocations agentData={agentData} />
+          <Suspense fallback={<div className="mb-12"><h2 className="text-3xl font-medium text-gray-900 mb-6">Office locations</h2><p className="text-gray-600">Loading...</p></div>}>
+            <OfficeLocations agentData={agentData} />
+          </Suspense>
           <Reviews reviewCount={agentData.reviewCount} />
           <FAQs />
         </div>
