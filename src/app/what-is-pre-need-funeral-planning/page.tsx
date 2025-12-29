@@ -7,8 +7,8 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="bg-[#FAF9F6] py-5 px-4 border-b border-gray-200">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+      <header className="bg-white py-5 px-4">
+        <div className="max-w-7xl mx-auto flex items-center">
           <Link href="/" className="flex items-center gap-3">
             <Image
               src="/Soradin.png"
@@ -19,17 +19,6 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
             />
             <span className="text-2xl font-semibold text-[#1A1A1A]">Soradin</span>
           </Link>
-          <div className="flex items-center gap-6">
-            <Link href="/what-is-pre-need-funeral-planning" className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors">
-              What is pre-need funeral planning?
-            </Link>
-            <Link href="/learn-more-about-starting" className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors">
-              List your Specialty
-            </Link>
-            <Link href="/agent" className="bg-[#0C6F3C] text-white px-6 py-2.5 rounded-xl hover:bg-[#0C6F3C]/90 transition-all shadow-sm">
-              Log in
-            </Link>
-          </div>
         </div>
       </header>
 
