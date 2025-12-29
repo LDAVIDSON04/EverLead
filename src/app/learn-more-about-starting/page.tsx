@@ -7,7 +7,6 @@ import { SolutionsSection } from "./components/SolutionsSection";
 import { CaseStudiesSection } from "./components/CaseStudiesSection";
 import { IntegrationSection } from "./components/IntegrationSection";
 import { CTASection } from "./components/CTASection";
-import { Footer } from "./components/Footer";
 
 export default function LearnMoreAboutStartingPage() {
   return (
@@ -21,7 +20,6 @@ export default function LearnMoreAboutStartingPage() {
         <IntegrationSection />
         <CTASection />
       </main>
-      <Footer />
     </div>
   );
 }
