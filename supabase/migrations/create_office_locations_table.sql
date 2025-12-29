@@ -90,11 +90,7 @@ USING (
     SELECT 1 FROM profiles
     WHERE profiles.id = office_locations.agent_id
     AND profiles.role = 'agent'
-    AND EXISTS (
-      SELECT 1 FROM specialists
-      WHERE specialists.specialist_id = office_locations.agent_id
-      AND specialists.status = 'approved'
-    )
+    AND profiles.approval_status = 'approved'
   )
 );
 
