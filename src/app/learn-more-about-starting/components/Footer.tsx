@@ -4,23 +4,7 @@ import Link from "next/link";
 
 export function Footer() {
   return (
-    <footer className="bg-white">
-      {/* Profile cards image section */}
-      <div className="w-full bg-[#FFF9F0] py-16">
-        <div className="max-w-7xl mx-auto px-6">
-          <img 
-            src="/1287f77558fc6a47c506a92275bdcb435d5dc5d5.png" 
-            alt="Professional team profile cards" 
-            className="w-full max-w-5xl mx-auto object-contain"
-            onError={(e) => {
-              e.currentTarget.style.display = 'none';
-            }}
-          />
-        </div>
-      </div>
-      
-      {/* Footer content */}
-      <div className="bg-[#2A2A2A] text-white py-12">
+    <footer className="bg-[#2A2A2A] text-white py-12">
         <div className="max-w-7xl mx-auto px-6">
         <div className="grid md:grid-cols-5 gap-8 mb-12">
           {/* Column 1 - Soradin */}
