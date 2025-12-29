@@ -1,6 +1,6 @@
 "use client";
 
-import { MapPin, ExternalLink, ChevronDown } from 'lucide-react';
+import { MapPin, ExternalLink } from 'lucide-react';
 import { OfficeLocationMap } from '@/components/OfficeLocationMap';
 import { useEffect, useState } from 'react';
 import { supabaseClient } from '@/lib/supabaseClient';
@@ -130,22 +130,23 @@ export function OfficeLocations({ agentData }: OfficeLocationsProps) {
     <div id="locations" className="mb-12">
       <h2 className="text-3xl font-medium text-gray-900 mb-6">Office locations</h2>
       
-      {/* Office Selector Dropdown (only show if multiple locations) */}
+      {/* Office City List (only show if multiple locations) */}
       {officeLocations.length > 1 && (
-        <div className="mb-4">
-          <div className="relative">
-            <select
-              value={currentSelectedId}
-              onChange={(e) => setSelectedLocationId(e.target.value)}
-              className="w-full md:w-auto min-w-[300px] appearance-none bg-white border border-gray-300 rounded-lg px-4 py-3 pr-10 text-gray-900 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent cursor-pointer hover:border-gray-400 transition-colors"
-            >
-              {officeLocations.map((location) => (
-                <option key={location.id} value={location.id}>
-                  {location.name} - {location.city}, {location.province}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none w-5 h-5" />
+        <div className="mb-6">
+          <div className="flex flex-wrap gap-3">
+            {officeLocations.map((location) => (
+              <button
+                key={location.id}
+                onClick={() => setSelectedLocationId(location.id)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  currentSelectedId === location.id
+                    ? 'bg-[#1a4d2e] text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                {location.city}, {location.province}
+              </button>
+            ))}
           </div>
         </div>
       )}
