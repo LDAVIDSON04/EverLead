@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { AppointmentCard } from "./AppointmentCard";
 import { Button } from "@/components/ui/button";
 
@@ -16,9 +17,11 @@ export function HeroSection() {
             <p className="text-lg text-gray-700 mb-8 max-w-md">
               Reach more patients, simplify scheduling, and get a clear view into your performance data—all with one platform.
             </p>
-            <Button className="bg-[#0D5C3D] hover:bg-[#0A4A30] text-white px-8 py-6">
-              Get started
-            </Button>
+            <Link href="/create-account">
+              <Button className="bg-[#0D5C3D] hover:bg-[#0A4A30] text-white px-8 py-6">
+                Get started
+              </Button>
+            </Link>
           </div>
 
           {/* Right content - floating appointment cards */}

@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 export function SolutionsSection() {
   const solutions = [
     {
@@ -47,9 +49,11 @@ export function SolutionsSection() {
               <p className="text-gray-600 text-sm mb-6">
                 {solution.description}
               </p>
-              <button className="text-[#0D5C3D] text-sm hover:underline group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
-                Learn more →
-              </button>
+              <Link href="/create-account">
+                <button className="text-[#0D5C3D] text-sm hover:underline group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
+                  Learn more →
+                </button>
+              </Link>
             </div>
           ))}
         </div>

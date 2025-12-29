@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 export function IntegrationSection() {
   return (
     <section className="bg-[#FFF9F0] py-20">
@@ -30,9 +32,11 @@ export function IntegrationSection() {
             <p className="text-lg text-gray-700 mb-8">
               We integrate with 175+ EHRs, practice management systems, and custom solutions
             </p>
-            <button className="bg-[#0D5C3D] hover:bg-[#0A4A30] text-white px-8 py-3 rounded-lg transition-colors">
-              Learn more
-            </button>
+            <Link href="/create-account">
+              <button className="bg-[#0D5C3D] hover:bg-[#0A4A30] text-white px-8 py-3 rounded-lg transition-colors">
+                Learn more
+              </button>
+            </Link>
           </div>
         </div>
       </div>

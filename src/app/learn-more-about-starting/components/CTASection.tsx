@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 export function CTASection() {
   return (
     <section className="bg-[#FFF9F0] py-20 relative overflow-hidden">
@@ -10,9 +12,11 @@ export function CTASection() {
             <h2 className="text-5xl md:text-6xl text-black mb-8 max-w-lg">
               Join the leading scheduling platform
             </h2>
-            <button className="bg-white hover:bg-gray-50 text-black border-4 border-black px-8 py-3 rounded-lg transition-colors shadow-lg">
-              Learn more
-            </button>
+            <Link href="/create-account">
+              <button className="bg-white hover:bg-gray-50 text-black border-4 border-black px-8 py-3 rounded-lg transition-colors shadow-lg">
+                Learn more
+              </button>
+            </Link>
           </div>
 
           {/* Right content - scattered profile cards image */}
