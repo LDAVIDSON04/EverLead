@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabaseClient } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
-import { Settings, Camera, Check, AlertCircle, Lock, Monitor, LogOut, Trash2, AlertTriangle, Bell, Mail, Smartphone, CreditCard, ExternalLink, DollarSign, Calendar, RefreshCw, MapPin, Plus, X, FileText, Clock } from "lucide-react";
+import { Settings, Camera, Check, AlertCircle, Lock, Monitor, LogOut, Trash2, AlertTriangle, Bell, Mail, Smartphone, CreditCard, ExternalLink, DollarSign, Calendar, RefreshCw, MapPin, Plus, X, FileText, Clock, Edit2 } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -779,6 +779,11 @@ function ProfileSection({
         </div>
       </div>
 
+      {/* Office Locations Section */}
+      <div className="mb-6 border-t border-gray-200 pt-6">
+        <OfficeLocationsSection />
+      </div>
+
       {saveMessage && (
         <div className={`mb-4 p-3 rounded-lg ${
           saveMessage.type === "success" ? "bg-green-50 text-green-800" : "bg-red-50 text-red-800"
@@ -796,6 +801,303 @@ function ProfileSection({
           {saving ? "Saving..." : "Save Changes"}
         </button>
       </div>
+    </div>
+  );
+}
+
+function OfficeLocationsSection() {
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [locations, setLocations] = useState<any[]>([]);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    street_address: "",
+    city: "",
+    province: "",
+    postal_code: "",
+  });
+
+  useEffect(() => {
+    loadLocations();
+  }, []);
+
+  async function loadLocations() {
+    try {
+      setLoading(true);
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session?.access_token) return;
+
+      const res = await fetch("/api/agent/settings/office-locations", {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (!res.ok) throw new Error("Failed to load office locations");
+      const { locations: fetchedLocations } = await res.json();
+      setLocations(fetchedLocations || []);
+    } catch (err) {
+      console.error("Error loading office locations:", err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleSave() {
+    try {
+      setSaving(true);
+      setSaveMessage(null);
+
+      if (!formData.city || !formData.province) {
+        setSaveMessage({ type: "error", text: "City and province are required" });
+        return;
+      }
+
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error("Not authenticated");
+      }
+
+      const url = editingId
+        ? "/api/agent/settings/office-locations"
+        : "/api/agent/settings/office-locations";
+      const method = editingId ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify(editingId ? { id: editingId, ...formData } : formData),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to save office location");
+      }
+
+      setSaveMessage({ type: "success", text: editingId ? "Office location updated!" : "Office location added!" });
+      setShowAddForm(false);
+      setEditingId(null);
+      setFormData({ name: "", street_address: "", city: "", province: "", postal_code: "" });
+      await loadLocations();
+      setTimeout(() => setSaveMessage(null), 3000);
+    } catch (err: any) {
+      console.error("Error saving office location:", err);
+      setSaveMessage({ type: "error", text: err.message || "Failed to save office location" });
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleDelete(id: string) {
+    if (!confirm("Are you sure you want to delete this office location?")) return;
+
+    try {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error("Not authenticated");
+      }
+
+      const res = await fetch(`/api/agent/settings/office-locations?id=${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to delete office location");
+      }
+
+      await loadLocations();
+      setSaveMessage({ type: "success", text: "Office location deleted!" });
+      setTimeout(() => setSaveMessage(null), 3000);
+    } catch (err: any) {
+      console.error("Error deleting office location:", err);
+      setSaveMessage({ type: "error", text: err.message || "Failed to delete office location" });
+    }
+  }
+
+  function startEdit(location: any) {
+    setEditingId(location.id);
+    setFormData({
+      name: location.name || "",
+      street_address: location.street_address || "",
+      city: location.city || "",
+      province: location.province || "",
+      postal_code: location.postal_code || "",
+    });
+    setShowAddForm(true);
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+    setShowAddForm(false);
+    setFormData({ name: "", street_address: "", city: "", province: "", postal_code: "" });
+  }
+
+  if (loading) {
+    return (
+      <div>
+        <h3 className="font-semibold mb-4 flex items-center gap-2">
+          <MapPin size={18} />
+          Office Locations
+        </h3>
+        <p className="text-sm text-gray-600">Loading office locations...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="font-semibold flex items-center gap-2">
+          <MapPin size={18} />
+          Office Locations
+        </h3>
+        {!showAddForm && (
+          <button
+            onClick={() => setShowAddForm(true)}
+            className="px-3 py-1.5 text-sm bg-green-800 text-white rounded-lg hover:bg-green-900 flex items-center gap-2"
+          >
+            <Plus size={14} />
+            Add Location
+          </button>
+        )}
+      </div>
+
+      {saveMessage && (
+        <div className={`mb-4 p-3 rounded-lg ${
+          saveMessage.type === "success" ? "bg-green-50 text-green-800" : "bg-red-50 text-red-800"
+        }`}>
+          {saveMessage.text}
+        </div>
+      )}
+
+      {/* Add/Edit Form */}
+      {showAddForm && (
+        <div className="mb-6 p-4 border border-gray-200 rounded-lg bg-gray-50">
+          <h4 className="font-medium mb-4">{editingId ? "Edit Office Location" : "Add Office Location"}</h4>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="locationName">Location Name</Label>
+              <Input
+                id="locationName"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder="e.g., Main Office, Downtown Branch"
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="locationStreet">Street Address</Label>
+              <Input
+                id="locationStreet"
+                value={formData.street_address}
+                onChange={(e) => setFormData({ ...formData, street_address: e.target.value })}
+                placeholder="e.g., 123 Main Street"
+                className="mt-1"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="locationCity">City *</Label>
+                <Input
+                  id="locationCity"
+                  value={formData.city}
+                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                  placeholder="e.g., Kelowna"
+                  className="mt-1"
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="locationProvince">Province *</Label>
+                <Input
+                  id="locationProvince"
+                  value={formData.province}
+                  onChange={(e) => setFormData({ ...formData, province: e.target.value })}
+                  placeholder="e.g., BC"
+                  className="mt-1"
+                  required
+                />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="locationPostal">Postal Code</Label>
+              <Input
+                id="locationPostal"
+                value={formData.postal_code}
+                onChange={(e) => setFormData({ ...formData, postal_code: e.target.value })}
+                placeholder="e.g., V1Y 1A1"
+                className="mt-1"
+              />
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="px-4 py-2 bg-green-800 text-white rounded-lg hover:bg-green-900 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {saving ? "Saving..." : editingId ? "Update" : "Add Location"}
+              </button>
+              <button
+                onClick={cancelEdit}
+                disabled={saving}
+                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Locations List */}
+      {locations.length === 0 && !showAddForm ? (
+        <div className="text-sm text-gray-500 py-4">
+          No office locations added yet. Click "Add Location" to get started.
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {locations.map((location) => (
+            <div key={location.id} className="border border-gray-200 rounded-lg p-4">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="font-medium text-gray-900 mb-1">{location.name || "Main Office"}</div>
+                  <div className="text-sm text-gray-600">
+                    {location.street_address && `${location.street_address}, `}
+                    {location.city}, {location.province}
+                    {location.postal_code && ` ${location.postal_code}`}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => startEdit(location)}
+                    className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                    title="Edit location"
+                  >
+                    <Edit2 size={16} />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(location.id)}
+                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    title="Delete location"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
