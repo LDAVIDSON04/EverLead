@@ -6,7 +6,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Suspense, useState, useEffect } from "react";
-import { Search, Star, MapPin, Calendar, Clock, Stethoscope, Video, SlidersHorizontal, ChevronRight, X, ArrowLeft, Shield, ExternalLink } from "lucide-react";
+import { Search, Star, MapPin, Calendar, Clock, Stethoscope, Video, SlidersHorizontal, ChevronRight, ChevronDown, X, ArrowLeft, Shield, ExternalLink } from "lucide-react";
 import { supabaseClient } from "@/lib/supabaseClient";
 import { BookingPanel } from "@/app/agentportfolio/[agentId]/components/BookingPanel";
 import { OfficeLocationMap } from "@/components/OfficeLocationMap";
@@ -1992,8 +1992,13 @@ function SearchResults() {
 }
 
 function OfficeLocationsSection({ agentId, agentData }: { agentId: string; agentData: any }) {
+  const searchParams = useSearchParams();
+  const searchLocation = searchParams?.get("location") || "";
+  const decodedSearchLocation = searchLocation ? decodeURIComponent(searchLocation.replace(/\+/g, ' ')) : "";
+  
   const [officeLocations, setOfficeLocations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedLocationId, setSelectedLocationId] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadOfficeLocations() {
@@ -2007,6 +2012,24 @@ function OfficeLocationsSection({ agentId, agentData }: { agentId: string; agent
 
         if (!error && locations && locations.length > 0) {
           setOfficeLocations(locations);
+          
+          // Find the office that matches the search location (by city)
+          if (decodedSearchLocation && locations.length > 1) {
+            const searchCity = decodedSearchLocation.split(',')[0].trim().toLowerCase();
+            const matchingLocation = locations.find((loc: any) => 
+              loc.city?.toLowerCase() === searchCity
+            );
+            if (matchingLocation) {
+              setSelectedLocationId(matchingLocation.id);
+            } else {
+              // Default to first location if no match
+              setSelectedLocationId(locations[0].id);
+            }
+          } else {
+            // Default to first location
+            setSelectedLocationId(locations[0].id);
+          }
+          
           setLoading(false);
           return;
         }
@@ -2044,6 +2067,9 @@ function OfficeLocationsSection({ agentId, agentData }: { agentId: string; agent
         }
 
         setOfficeLocations(fallbackLocations);
+        if (fallbackLocations.length > 0) {
+          setSelectedLocationId(fallbackLocations[0].id);
+        }
       } catch (err) {
         console.error('Error loading office locations:', err);
       } finally {
@@ -2054,7 +2080,7 @@ function OfficeLocationsSection({ agentId, agentData }: { agentId: string; agent
     if (agentId) {
       loadOfficeLocations();
     }
-  }, [agentId, agentData]);
+  }, [agentId, agentData, decodedSearchLocation]);
 
   if (loading) {
     return null;
@@ -2064,6 +2090,10 @@ function OfficeLocationsSection({ agentId, agentData }: { agentId: string; agent
     return null;
   }
 
+  // Get the selected location
+  const selectedLocation = officeLocations.find(loc => loc.id === selectedLocationId) || officeLocations[0];
+  const currentSelectedId = selectedLocationId || officeLocations[0].id;
+
   const getDirectionsUrl = (location: any) => {
     const address = location.postal_code 
       ? `${location.street_address || location.address}, ${location.city}, ${location.province} ${location.postal_code}`
@@ -2072,60 +2102,75 @@ function OfficeLocationsSection({ agentId, agentData }: { agentId: string; agent
       : `${location.city}, ${location.province}`;
     return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`;
   };
+
+  const fullAddress = selectedLocation.street_address
+    ? `${selectedLocation.street_address}, ${selectedLocation.city}, ${selectedLocation.province}${selectedLocation.postal_code ? ` ${selectedLocation.postal_code}` : ''}`
+    : `${selectedLocation.city}, ${selectedLocation.province}`;
   
   return (
     <div id="locations" className="mb-12">
       <h2 className="text-3xl font-medium text-gray-900 mb-6">Office locations</h2>
       
-      <div className="space-y-8">
-        {officeLocations.map((location) => {
-          const fullAddress = location.street_address
-            ? `${location.street_address}, ${location.city}, ${location.province}${location.postal_code ? ` ${location.postal_code}` : ''}`
-            : `${location.city}, ${location.province}`;
-
-          return (
-            <div key={location.id} className="border border-gray-200 rounded-lg overflow-hidden">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
-                {/* Map Section */}
-                <div className="order-2 md:order-1">
-                  <OfficeLocationMap
-                    latitude={location.latitude}
-                    longitude={location.longitude}
-                    city={location.city}
-                    province={location.province}
-                    address={location.street_address || undefined}
-                    postalCode={location.postal_code || undefined}
-                    className="h-full"
-                  />
-                </div>
-                
-                {/* Info Section */}
-                <div className="order-1 md:order-2 p-6 flex flex-col justify-between">
-                  <div>
-                    <div className="flex items-start gap-3 mb-4">
-                      <MapPin className="w-5 h-5 text-[#1a4d2e] mt-0.5 flex-shrink-0" />
-                      <h3 className="font-semibold text-gray-900 text-lg">{location.name}</h3>
-                    </div>
-                    
-                    <p className="text-gray-700 text-sm mb-4">
-                      {fullAddress}
-                    </p>
-                  </div>
-                  
-                  <a
-                    href={getDirectionsUrl(location)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 text-[#1a4d2e] hover:text-[#0f291a] font-medium text-sm transition-colors"
-                  >
-                    Get directions
-                    <ExternalLink className="w-4 h-4" />
-                  </a>
-                </div>
+      {/* Office Selector Dropdown (only show if multiple locations) */}
+      {officeLocations.length > 1 && (
+        <div className="mb-4">
+          <div className="relative">
+            <select
+              value={currentSelectedId}
+              onChange={(e) => setSelectedLocationId(e.target.value)}
+              className="w-full md:w-auto min-w-[300px] appearance-none bg-white border border-gray-300 rounded-lg px-4 py-3 pr-10 text-gray-900 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent cursor-pointer hover:border-gray-400 transition-colors"
+            >
+              {officeLocations.map((location) => (
+                <option key={location.id} value={location.id}>
+                  {location.name} - {location.city}, {location.province}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none w-5 h-5" />
+          </div>
+        </div>
+      )}
+      
+      {/* Single Map Display */}
+      <div className="border border-gray-200 rounded-lg overflow-hidden">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
+          {/* Map Section */}
+          <div className="order-2 md:order-1">
+            <OfficeLocationMap
+              latitude={selectedLocation.latitude}
+              longitude={selectedLocation.longitude}
+              city={selectedLocation.city}
+              province={selectedLocation.province}
+              address={selectedLocation.street_address || undefined}
+              postalCode={selectedLocation.postal_code || undefined}
+              className="h-full"
+            />
+          </div>
+          
+          {/* Info Section */}
+          <div className="order-1 md:order-2 p-6 flex flex-col justify-between">
+            <div>
+              <div className="flex items-start gap-3 mb-4">
+                <MapPin className="w-5 h-5 text-[#1a4d2e] mt-0.5 flex-shrink-0" />
+                <h3 className="font-semibold text-gray-900 text-lg">{selectedLocation.name}</h3>
               </div>
+              
+              <p className="text-gray-700 text-sm mb-4">
+                {fullAddress}
+              </p>
             </div>
-          );
-        })}
+            
+            <a
+              href={getDirectionsUrl(selectedLocation)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-[#1a4d2e] hover:text-[#0f291a] font-medium text-sm transition-colors"
+            >
+              Get directions
+              <ExternalLink className="w-4 h-4" />
+            </a>
+          </div>
+        </div>
       </div>
     </div>
   );
