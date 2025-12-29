@@ -1893,34 +1893,6 @@ function SearchResults() {
 
                   {/* Full-width sections below two-column layout */}
                   <div className="mt-8">
-                    {/* Credentials */}
-                    <div id="credentials" className="mb-12">
-                      <h3 className="mb-2">Credentials & Verification</h3>
-                      <p className="text-sm text-gray-600 mb-6">
-                        Reviewed and approved through Soradin's professional verification process
-                      </p>
-                      <div className="space-y-4">
-                        <div className="flex gap-4">
-                          <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-gray-50 flex items-center justify-center">
-                            <Shield className="w-5 h-5 text-gray-600" />
-                          </div>
-                          <div className="flex-1">
-                            <h4 className="text-gray-900 mb-1">Licensed Professional</h4>
-                            <p className="text-sm text-gray-600">Verified by Soradin • Current</p>
-                          </div>
-                          <div className="flex items-center">
-                            <div className="flex items-center gap-2 px-3 py-1 bg-green-50 rounded-full text-sm" style={{ color: '#1a4d2e' }}>
-                              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#1a4d2e' }}></div>
-                              Verified
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Office Locations */}
-                    <OfficeLocationsSection agentId={portfolioAgentData.id} agentData={portfolioAgentData} />
-
                     {/* Reviews */}
                     <div id="reviews" className="mb-12">
                       <div className="flex items-center justify-between mb-4">
@@ -1952,15 +1924,30 @@ function SearchResults() {
                       </div>
                     </div>
 
-                    {/* FAQs */}
-                    <div id="faqs" className="mb-12">
-                      <h3 className="mb-4">Frequently Asked Questions</h3>
-                      <div className="space-y-3">
-                        <div className="border border-gray-200 rounded-lg overflow-hidden">
-                          <button className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors">
-                            <span className="text-gray-900 pr-4">What happens after I book an appointment?</span>
-                            <ChevronRight className="w-5 h-5 text-gray-500 flex-shrink-0" />
-                          </button>
+                    {/* Office Locations */}
+                    <OfficeLocationsSection agentId={portfolioAgentData.id} agentData={portfolioAgentData} />
+
+                    {/* Credentials */}
+                    <div id="credentials" className="mb-12">
+                      <h3 className="mb-2">Credentials & Verification</h3>
+                      <p className="text-sm text-gray-600 mb-6">
+                        Reviewed and approved through Soradin's professional verification process
+                      </p>
+                      <div className="space-y-4">
+                        <div className="flex gap-4">
+                          <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-gray-50 flex items-center justify-center">
+                            <Shield className="w-5 h-5 text-gray-600" />
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="text-gray-900 mb-1">Licensed Professional</h4>
+                            <p className="text-sm text-gray-600">Verified by Soradin • Current</p>
+                          </div>
+                          <div className="flex items-center">
+                            <div className="flex items-center gap-2 px-3 py-1 bg-green-50 rounded-full text-sm" style={{ color: '#1a4d2e' }}>
+                              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#1a4d2e' }}></div>
+                              Verified
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
