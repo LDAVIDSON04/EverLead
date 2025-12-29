@@ -29,12 +29,21 @@ export function AppointmentCard({
       <div className="flex items-start gap-3">
         <div className="flex-shrink-0">
           <div className="w-14 h-14 rounded-full overflow-hidden bg-gray-200 relative">
-            <Image 
-              src={imageUrl} 
-              alt={name} 
-              fill
-              className="object-cover"
-            />
+            {imageUrl.startsWith('http') ? (
+              <img 
+                src={imageUrl} 
+                alt={name} 
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <Image 
+                src={imageUrl} 
+                alt={name} 
+                width={56}
+                height={56}
+                className="object-cover"
+              />
+            )}
           </div>
         </div>
         <div className="flex-1 min-w-0">
