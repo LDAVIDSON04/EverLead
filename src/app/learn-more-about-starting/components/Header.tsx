@@ -12,8 +12,8 @@ export function Header() {
           <Image 
             src="/logo.png" 
             alt="Soradin" 
-            width={40} 
-            height={40}
+            width={80} 
+            height={80}
             className="object-contain"
           />
           <span className="text-xl font-semibold text-black">Soradin</span>
