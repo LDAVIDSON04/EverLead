@@ -23,7 +23,7 @@ export function Header() {
 
         {/* Auth buttons */}
         <div className="flex items-center gap-3">
-          <Link href="/login">
+          <Link href="/agent">
             <Button variant="ghost" className="text-black hover:text-[#0D5C3D] hover:bg-transparent">
               Log in
             </Button>
