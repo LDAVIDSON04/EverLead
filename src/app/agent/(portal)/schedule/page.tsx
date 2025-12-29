@@ -772,7 +772,7 @@ export default function SchedulePage() {
                                       const endDate = DateTime.fromISO(appointment.ends_at, { zone: "utc" })
                                         .setZone(agentTimezone);
                                       
-                                      const appointmentTitle = appointment.family_name || appointment.title || 'External Meeting';
+                                      const appointmentTitle = appointment.family_name || 'External Meeting';
                                       const appointmentDate = startDate.toLocaleString({ 
                                         weekday: 'long',
                                         year: 'numeric',
