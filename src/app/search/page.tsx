@@ -2012,13 +2012,13 @@ function OfficeLocationsSection({ agentId, agentData }: { agentId: string; agent
         }
 
         // Fallback to legacy business address fields
-        const locations = [];
+        const fallbackLocations = [];
         if (agentData.business_street || agentData.business_address) {
           const address = agentData.business_street && agentData.business_city && agentData.business_province && agentData.business_zip
             ? `${agentData.business_street}, ${agentData.business_city}, ${agentData.business_province} ${agentData.business_zip}`
             : agentData.business_address || `${agentData.business_city || ''}, ${agentData.business_province || ''}`;
           
-          locations.push({
+          fallbackLocations.push({
             id: '1',
             name: agentData.funeral_home || 'Main Office',
             street_address: agentData.business_street || '',
@@ -2030,7 +2030,7 @@ function OfficeLocationsSection({ agentId, agentData }: { agentId: string; agent
             longitude: null,
           });
         } else if (agentData.agent_city && agentData.agent_province) {
-          locations.push({
+          fallbackLocations.push({
             id: '1',
             name: agentData.funeral_home || 'Main Office',
             street_address: '',
@@ -2043,7 +2043,7 @@ function OfficeLocationsSection({ agentId, agentData }: { agentId: string; agent
           });
         }
 
-        setOfficeLocations(locations);
+        setOfficeLocations(fallbackLocations);
       } catch (err) {
         console.error('Error loading office locations:', err);
       } finally {
