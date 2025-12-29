@@ -256,6 +256,16 @@ export default function SettingsPage() {
               Profile and business info
             </button>
             <button
+              onClick={() => setActiveTab("bio")}
+              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                activeTab === "bio"
+                  ? "border-green-800 text-green-800"
+                  : "border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300"
+              }`}
+            >
+              Profile Bio
+            </button>
+            <button
               onClick={() => setActiveTab("calendar")}
               className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                 activeTab === "calendar"
@@ -295,16 +305,6 @@ export default function SettingsPage() {
             >
               Security & Account
             </button>
-            <button
-              onClick={() => setActiveTab("bio")}
-              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
-                activeTab === "bio"
-                  ? "border-green-800 text-green-800"
-                  : "border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300"
-              }`}
-            >
-              Profile Bio
-            </button>
           </div>
         </div>
 
@@ -318,11 +318,11 @@ export default function SettingsPage() {
               verificationStatus={verificationStatus}
             />
           )}
+          {activeTab === "bio" && <ProfileBioSection />}
           {activeTab === "calendar" && <CalendarAvailabilitySection />}
           {activeTab === "billing" && <PayoutsSection />}
           {activeTab === "notifications" && <NotificationsSection email={profileData.email} phone={profileData.phone} />}
           {activeTab === "security" && <SecuritySection />}
-          {activeTab === "bio" && <ProfileBioSection />}
         </div>
 
         {/* Footer spacing */}

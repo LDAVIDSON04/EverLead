@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import { supabaseClient } from '@/lib/supabaseClient';
-import { Home, Calendar, File, Mail, FileText, User, XCircle, Upload, X, Settings } from 'lucide-react';
+import { Home, Calendar, File, Mail, User, XCircle, Upload, X, Settings } from 'lucide-react';
 
 type AgentLayoutProps = {
   children: ReactNode;
@@ -15,7 +15,6 @@ const menuItems = [
   { href: '/agent/dashboard', label: 'Home', icon: Home },
   { href: '/agent/schedule', label: 'Schedule', icon: Calendar },
   { href: '/agent/my-appointments', label: 'Files', icon: File },
-  { href: '/agent/profile-bio', label: 'Profile Bio', icon: FileText },
   { href: '/agent/settings', label: 'Settings', icon: Settings },
 ];
 
