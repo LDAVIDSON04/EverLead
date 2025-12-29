@@ -16,11 +16,15 @@ export function CTASection() {
           </div>
 
           {/* Right content - scattered profile cards image */}
-          <div className="relative min-h-[600px] hidden md:block flex items-center justify-center">
+          <div className="relative w-full h-full min-h-[700px] hidden md:flex items-center justify-center overflow-visible">
             <img 
               src="/1287f77558fc6a47c506a92275bdcb435d5dc5d5.png" 
               alt="Professional team profile cards" 
-              className="w-full h-full object-contain"
+              className="w-full h-full max-w-none object-contain scale-125"
+              style={{ 
+                mixBlendMode: 'multiply',
+                filter: 'contrast(1.1) brightness(1.05)'
+              }}
               onError={(e) => {
                 // Fallback to placeholder if image doesn't exist
                 e.currentTarget.style.display = 'none';
