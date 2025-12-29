@@ -766,39 +766,169 @@ export default function SchedulePage() {
                                 <button
                                   onClick={async () => {
                                     try {
-                                      // Format appointment details for download
+                                      // Format appointment details for download (matching Soradin format)
                                       const startDate = DateTime.fromISO(appointment.starts_at, { zone: "utc" })
                                         .setZone(agentTimezone);
                                       const endDate = DateTime.fromISO(appointment.ends_at, { zone: "utc" })
                                         .setZone(agentTimezone);
                                       
-                                      const appointmentDetails = [
-                                        `External Appointment Details`,
-                                        `================================`,
-                                        ``,
-                                        `Title: ${appointment.family_name || 'External Meeting'}`,
-                                        `Date: ${startDate.toLocaleString({ 
-                                          weekday: 'long',
-                                          year: 'numeric',
-                                          month: 'long',
-                                          day: 'numeric'
-                                        })}`,
-                                        `Time: ${startDate.toLocaleString(DateTime.TIME_SIMPLE)} - ${endDate.toLocaleString(DateTime.TIME_SIMPLE)}`,
-                                        appointment.location && appointment.location !== "N/A" && appointment.location !== "External Calendar" 
-                                          ? `Location: ${appointment.location}`
-                                          : '',
-                                        `Source: ${appointment.provider === 'google' ? 'Google Calendar' : appointment.provider === 'microsoft' ? 'Microsoft Calendar' : 'External Calendar'}`,
-                                        `Status: External`,
-                                        ``,
-                                        `Note: This appointment was booked externally and synced to your Soradin calendar.`,
-                                      ].filter(Boolean).join('\n');
+                                      const appointmentTitle = appointment.family_name || appointment.title || 'External Meeting';
+                                      const appointmentDate = startDate.toLocaleString({ 
+                                        weekday: 'long',
+                                        year: 'numeric',
+                                        month: 'long',
+                                        day: 'numeric'
+                                      });
+                                      const appointmentTime = `${startDate.toLocaleString(DateTime.TIME_SIMPLE)} - ${endDate.toLocaleString(DateTime.TIME_SIMPLE)}`;
+                                      const appointmentLocation = appointment.location && appointment.location !== "N/A" && appointment.location !== "External Calendar" 
+                                        ? appointment.location 
+                                        : null;
+                                      const appointmentSource = appointment.provider === 'google' ? 'Google Calendar' : appointment.provider === 'microsoft' ? 'Microsoft Calendar' : 'External Calendar';
 
-                                      // Create and download file
-                                      const blob = new Blob([appointmentDetails], { type: 'text/plain' });
+                                      // Build professional HTML document (matching Soradin format)
+                                      const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Appointment Details - ${appointmentTitle}</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.6;
+      color: #1f2937;
+      background: #ffffff;
+      padding: 40px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .header {
+      border-bottom: 3px solid #1a4d2e;
+      padding-bottom: 20px;
+      margin-bottom: 40px;
+    }
+    .header h1 {
+      font-size: 32px;
+      font-weight: 700;
+      color: #1a4d2e;
+      margin-bottom: 8px;
+    }
+    .header .subtitle {
+      font-size: 14px;
+      color: #6b7280;
+      font-weight: 500;
+    }
+    .section {
+      margin-bottom: 32px;
+    }
+    .section-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #1a4d2e;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    .info-grid {
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      gap: 12px 24px;
+      margin-bottom: 16px;
+    }
+    .info-label {
+      font-weight: 600;
+      color: #4b5563;
+      font-size: 14px;
+    }
+    .info-value {
+      color: #1f2937;
+      font-size: 14px;
+    }
+    .notes-section {
+      background: #f9fafb;
+      border-left: 4px solid #1a4d2e;
+      padding: 16px 20px;
+      margin-top: 8px;
+      border-radius: 4px;
+    }
+    .notes-section .content {
+      color: #374151;
+      white-space: pre-wrap;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+    .footer {
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 2px solid #e5e7eb;
+      text-align: right;
+      font-size: 12px;
+      color: #6b7280;
+    }
+    @media print {
+      body {
+        padding: 20px;
+      }
+      .section {
+        page-break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Appointment Details</h1>
+    <div class="subtitle">External Calendar Appointment</div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Appointment Information</div>
+    <div class="info-grid">
+      <div class="info-label">Title</div>
+      <div class="info-value">${appointmentTitle.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
+      
+      <div class="info-label">Date</div>
+      <div class="info-value">${appointmentDate}</div>
+      
+      <div class="info-label">Time</div>
+      <div class="info-value">${appointmentTime}</div>
+      
+      ${appointmentLocation ? `
+      <div class="info-label">Location</div>
+      <div class="info-value">${appointmentLocation.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
+      ` : ''}
+      
+      <div class="info-label">Source</div>
+      <div class="info-value">${appointmentSource}</div>
+      
+      <div class="info-label">Status</div>
+      <div class="info-value">External</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="notes-section">
+      <div class="content">This appointment was booked externally and synced to your Soradin calendar.</div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <div>Document Generated: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+  </div>
+</body>
+</html>`;
+
+                                      // Create blob and download
+                                      const blob = new Blob([html], { type: 'text/html' });
                                       const url = URL.createObjectURL(blob);
                                       const a = document.createElement('a');
                                       a.href = url;
-                                      a.download = `external-appointment-${startDate.toFormat('yyyy-MM-dd')}-${appointment.family_name?.replace(/[^a-z0-9]/gi, '-').toLowerCase() || 'appointment'}.txt`;
+                                      a.download = `${appointmentTitle.replace(/[^a-z0-9]/gi, '-')} - Appointment Details.html`;
                                       document.body.appendChild(a);
                                       a.click();
                                       document.body.removeChild(a);
