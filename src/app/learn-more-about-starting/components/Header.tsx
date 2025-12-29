@@ -9,16 +9,15 @@ export function Header() {
     <header className="w-full bg-[#FFF9F0]">
       <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2">
+        <Link href="/" className="flex items-center gap-3">
           <Image 
-            src="/logo.png" 
-            alt="Soradin" 
+            src="/Soradin.png" 
+            alt="Soradin Logo" 
             width={80} 
             height={80}
-            className="object-contain"
-            style={{ backgroundColor: 'transparent' }}
+            className="h-20 w-20 object-contain"
           />
-          <span className="text-xl font-semibold text-black">Soradin</span>
+          <span className="text-2xl font-semibold text-[#1A1A1A]">Soradin</span>
         </Link>
 
         {/* Auth buttons */}
