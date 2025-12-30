@@ -38,8 +38,8 @@ export async function GET(request: NextRequest) {
     const citiesFromOfficeLocations: string[] = Array.from(
       new Set(
         (officeLocations || [])
-          .map((loc: any) => loc.city as string)
-          .filter((city: string | null | undefined): city is string => Boolean(city))
+          .map((loc: any) => loc.city)
+          .filter((city): city is string => typeof city === 'string' && city.length > 0)
       )
     );
 
