@@ -620,22 +620,7 @@ export default function HomePage() {
                   </li>
                   <li>
                     <Link href="#" className="text-white/60 hover:text-white transition-colors">
-                      Press
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="#" className="text-white/60 hover:text-white transition-colors">
-                      Careers
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="#" className="text-white/60 hover:text-white transition-colors">
                       Contact us
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="#" className="text-white/60 hover:text-white transition-colors">
-                      Help
                     </Link>
                   </li>
                 </ul>
@@ -647,17 +632,7 @@ export default function HomePage() {
                 <ul className="space-y-3">
                   <li>
                     <Link href="#" className="text-white/60 hover:text-white transition-colors">
-                      Stories for families
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="#" className="text-white/60 hover:text-white transition-colors">
                       Resources for specialists
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="#" className="text-white/60 hover:text-white transition-colors">
-                      Community Standards
                     </Link>
                   </li>
                   <li>
@@ -685,11 +660,6 @@ export default function HomePage() {
                   <li>
                     <Link href="#" className="text-white/60 hover:text-white transition-colors">
                       Pricing
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="#" className="text-white/60 hover:text-white transition-colors">
-                      Partner resources
                     </Link>
                   </li>
                 </ul>
@@ -729,11 +699,6 @@ export default function HomePage() {
                   <li>
                     <Link href="#" className="text-white/60 hover:text-white transition-colors">
                       List your practice on Soradin
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="#" className="text-white/60 hover:text-white transition-colors">
-                      Become a partner
                     </Link>
                   </li>
                   <li>
