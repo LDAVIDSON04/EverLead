@@ -544,9 +544,15 @@ export default function HomePage() {
               <h2 className="text-5xl mb-6 text-[#1A1A1A] font-semibold tracking-tight leading-tight">
                 Built with professional standards in mind.
               </h2>
-              <p className="text-xl text-[#1A1A1A]/70 leading-relaxed">
+              <p className="text-xl text-[#1A1A1A]/70 leading-relaxed mb-8">
                 Soradin is designed to support thoughtful, ethical estate planning prioritizing clarity, consent, and family peace of mind.
               </p>
+              <button 
+                onClick={navigateToSearchWithLocation}
+                className="bg-[#0C6F3C] text-white px-8 py-4 rounded-xl hover:bg-[#0C6F3C]/90 transition-all shadow-sm text-lg"
+              >
+                Find care
+              </button>
             </div>
 
             {/* Right side - Checklist Image */}
@@ -554,9 +560,9 @@ export default function HomePage() {
               <Image
                 src="/checklist-image.jpg"
                 alt="Professional standards checklist"
-                width={400}
-                height={300}
-                className="w-full max-w-md h-auto object-contain rounded-xl"
+                width={800}
+                height={600}
+                className="w-full h-auto object-contain rounded-xl"
                 style={{
                   filter: "brightness(1.05) contrast(1.05)",
                   mixBlendMode: "multiply",
