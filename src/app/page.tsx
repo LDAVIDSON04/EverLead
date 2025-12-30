@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search, MapPin, Star, Calendar, Check, ChevronDown, Heart, Facebook, Twitter, Instagram, Linkedin } from "lucide-react";
+import { Search, MapPin, Star, Calendar, Check, ChevronDown, Heart, Facebook, Instagram } from "lucide-react";
 import { useState } from "react";
 
 export default function HomePage() {
@@ -718,13 +718,6 @@ export default function HomePage() {
                   <Link
                     href="#"
                     className="text-white/50 hover:text-white transition-colors"
-                    aria-label="Twitter"
-                  >
-                    <Twitter className="w-5 h-5" />
-                  </Link>
-                  <Link
-                    href="#"
-                    className="text-white/50 hover:text-white transition-colors"
                     aria-label="Instagram"
                   >
                     <Instagram className="w-5 h-5" />
@@ -737,13 +730,6 @@ export default function HomePage() {
                     rel="noopener noreferrer"
                   >
                     <Facebook className="w-5 h-5" />
-                  </Link>
-                  <Link
-                    href="#"
-                    className="text-white/50 hover:text-white transition-colors"
-                    aria-label="LinkedIn"
-                  >
-                    <Linkedin className="w-5 h-5" />
                   </Link>
                 </div>
               </div>
