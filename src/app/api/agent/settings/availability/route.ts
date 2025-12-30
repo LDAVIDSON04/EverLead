@@ -44,13 +44,15 @@ export async function GET(request: NextRequest) {
     const existingLocations = availabilityData.locations || [];
     const existingAvailabilityByLocation = availabilityData.availabilityByLocation || {};
 
-    // Merge: use cities from office locations, but preserve existing availability data
-    // Only include cities that exist in office locations
-    const validLocations = citiesFromOfficeLocations.length > 0 
-      ? citiesFromOfficeLocations 
-      : existingLocations; // Fallback if no office locations yet
+    // Merge: combine cities from office locations with manually added cities
+    // Office location cities are always included, plus any manually added cities from existing data
+    const allLocationsSet = new Set<string>();
+    citiesFromOfficeLocations.forEach(city => allLocationsSet.add(city));
+    existingLocations.forEach(city => allLocationsSet.add(city)); // Include manually added cities
+    
+    const validLocations = Array.from(allLocationsSet);
 
-    // Ensure availabilityByLocation only contains valid locations
+    // Include availability data for all valid locations (both office locations and manually added)
     const validAvailabilityByLocation: Record<string, any> = {};
     validLocations.forEach((city: string) => {
       if (existingAvailabilityByLocation[city]) {
@@ -91,26 +93,28 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { locations, availabilityByLocation, appointmentLength } = body;
 
-    // Verify that all locations in availabilityByLocation exist in office_locations
-    const { data: officeLocations, error: officeLocationsError } = await supabaseAdmin
+    // Get cities from office locations for reference
+    const { data: officeLocations } = await supabaseAdmin
       .from("office_locations")
       .select("city")
       .eq("agent_id", user.id);
 
-    const validCities = Array.from(
+    const officeLocationCities = Array.from(
       new Set((officeLocations || []).map((loc: any) => loc.city).filter(Boolean))
     );
 
-    // Filter availabilityByLocation to only include cities from office locations
+    // Allow both office location cities and manually added cities
+    // Filter availabilityByLocation to only include cities in the locations array
     const filteredAvailabilityByLocation: Record<string, any> = {};
+    const validLocationsSet = new Set(locations || []);
     Object.keys(availabilityByLocation || {}).forEach((city) => {
-      if (validCities.includes(city)) {
+      if (validLocationsSet.has(city)) {
         filteredAvailabilityByLocation[city] = availabilityByLocation[city];
       }
     });
 
-    // Use validCities as the locations array (cities from office locations)
-    const validLocations = validCities;
+    // Use the locations array provided (includes both office location cities and manually added ones)
+    const validLocations = locations || [];
 
     // Store availability in agent's profile metadata or a separate table
     // For now, we'll store it in a JSONB field

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabaseClient } from "@/lib/supabaseClient";
-import { MapPin } from "lucide-react";
+import { MapPin, Plus } from "lucide-react";
 import Link from "next/link";
 
 function Input({ className = "", ...props }: React.InputHTMLAttributes<HTMLInputElement>) {
@@ -41,6 +41,8 @@ export default function AvailabilityPage() {
   const [saveMessage, setSaveMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [selectedLocation, setSelectedLocation] = useState("");
   const [locations, setLocations] = useState<string[]>([]);
+  const [newLocationName, setNewLocationName] = useState("");
+  const [showAddLocation, setShowAddLocation] = useState(false);
   const [appointmentLength, setAppointmentLength] = useState("30");
 
   const defaultSchedule = {
@@ -93,7 +95,19 @@ export default function AvailabilityPage() {
     loadAvailability();
   }, []);
 
-  // Removed addLocation function - cities come from office locations automatically
+  const addLocation = () => {
+    if (newLocationName.trim() && !locations.includes(newLocationName.trim())) {
+      const locationName = newLocationName.trim();
+      setLocations([...locations, locationName]);
+      setAvailabilityByLocation({
+        ...availabilityByLocation,
+        [locationName]: { ...defaultSchedule },
+      });
+      setSelectedLocation(locationName);
+      setNewLocationName("");
+      setShowAddLocation(false);
+    }
+  };
 
   const handleSaveAvailability = async () => {
     setSaving(true);
@@ -170,33 +184,66 @@ export default function AvailabilityPage() {
           </div>
 
           <div className="mb-4">
-            {locations.length === 0 ? (
+            {locations.length === 0 && !showAddLocation ? (
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                <p className="text-sm text-blue-900">
-                  <strong>No office locations found.</strong> Please add office locations in{" "}
-                  <Link href="/agent/settings" className="text-blue-600 underline">
-                    Settings
-                  </Link>{" "}
-                  to set availability for those cities.
+                <p className="text-sm text-blue-900 mb-2">
+                  <strong>No cities found.</strong> Cities from your office locations will appear here automatically. You can also add cities manually if you serve areas where you don't have an office.
                 </p>
               </div>
-            ) : (
-              <div className="flex items-center gap-2 mb-4 flex-wrap">
-                {locations.map((location) => (
+            ) : null}
+            <div className="flex items-center gap-2 mb-4 flex-wrap">
+              {locations.map((location) => (
+                <button
+                  key={location}
+                  onClick={() => setSelectedLocation(location)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    selectedLocation === location
+                      ? "bg-green-800 text-white"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
+                >
+                  {location}
+                </button>
+              ))}
+              {!showAddLocation ? (
+                <button
+                  onClick={() => setShowAddLocation(true)}
+                  className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-1 text-sm"
+                >
+                  <Plus size={16} />
+                  Add City
+                </button>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="text"
+                    value={newLocationName}
+                    onChange={(e) => setNewLocationName(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === "Enter") addLocation();
+                    }}
+                    placeholder="City name"
+                    className="w-40"
+                    autoFocus
+                  />
                   <button
-                    key={location}
-                    onClick={() => setSelectedLocation(location)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      selectedLocation === location
-                        ? "bg-green-800 text-white"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    }`}
+                    onClick={addLocation}
+                    className="px-3 py-2 bg-green-800 text-white rounded-lg hover:bg-green-900 text-sm"
                   >
-                    {location}
+                    Add
                   </button>
-                ))}
-              </div>
-            )}
+                  <button
+                    onClick={() => {
+                      setShowAddLocation(false);
+                      setNewLocationName("");
+                    }}
+                    className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
+            </div>
 
             <div className="bg-gray-50 rounded-lg p-4 mb-4">
               <p className="text-sm text-gray-700">
