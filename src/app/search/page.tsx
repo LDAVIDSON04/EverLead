@@ -274,11 +274,12 @@ function SearchResults() {
           const stats = agentId ? reviewStats[agentId] : null;
           return {
             ...apt,
-            agent: {
+            agent: apt.agent ? {
               ...apt.agent,
+              id: apt.agent.id, // Ensure id is always defined
               rating: stats?.averageRating || 0,
               reviewCount: stats?.totalReviews || 0,
-            },
+            } : undefined,
           };
         });
 
