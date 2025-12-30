@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
     }
 
     const agentId = user.id;
-    const pricePerAppointment = 29.0;
+    const pricePerAppointment = 0.01; // Testing price - change back to 29.0 for production
 
     // Get current month appointments
     const now = new Date();

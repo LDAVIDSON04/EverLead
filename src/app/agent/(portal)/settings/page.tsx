@@ -125,6 +125,19 @@ function TabsContent({ value, children }: { value: string; children: React.React
 export default function SettingsPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("profile");
+
+  // Check for tab query parameter on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const tab = params.get('tab');
+      if (tab && ['profile', 'bio', 'calendar', 'billing', 'notifications', 'security'].includes(tab)) {
+        setActiveTab(tab);
+        // Clean up URL
+        window.history.replaceState({}, '', window.location.pathname);
+      }
+    }
+  }, []);
   const [loading, setLoading] = useState(true);
   const [profileData, setProfileData] = useState({
     fullName: "",

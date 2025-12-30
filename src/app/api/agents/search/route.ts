@@ -1,8 +1,9 @@
 // API to search for available agents for public booking
-// Returns agents who have availability set up and are approved
+// Returns agents who have availability set up, are approved, and have a payment method
 
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { stripe } from "@/lib/stripe";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -145,8 +146,72 @@ export async function GET(req: NextRequest) {
 
     console.log(`[AGENT SEARCH] ${agentsWithAvailability.length} agents with availability configured`);
 
+    // Filter out agents without payment methods
+    // Agents must have a valid payment method to appear in search results
+    const agentsWithPaymentMethods = await Promise.all(
+      agentsWithAvailability.map(async (agent) => {
+        try {
+          // Get agent's email from auth.users to check Stripe customer
+          let agentEmail: string | null = null;
+          try {
+            const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(agent.id);
+            agentEmail = authUser?.user?.email || null;
+          } catch (authError) {
+            console.error(`[AGENT SEARCH] Error fetching email for agent ${agent.id}:`, authError);
+            return null;
+          }
+
+          if (!agentEmail) {
+            console.log(`[AGENT SEARCH] Agent ${agent.id} has no email - excluding from results`);
+            return null;
+          }
+
+          // Check if agent has a payment method via Stripe
+          let hasPaymentMethod = false;
+          try {
+            const customers = await stripe.customers.list({
+              email: agentEmail,
+              limit: 1,
+            });
+
+            if (customers.data.length > 0) {
+              const customer = customers.data[0];
+              // Check if customer has payment methods
+              const paymentMethods = await stripe.paymentMethods.list({
+                customer: customer.id,
+                type: 'card',
+              });
+
+              hasPaymentMethod = paymentMethods.data.length > 0;
+            }
+          } catch (stripeError: any) {
+            console.error(`[AGENT SEARCH] Error checking Stripe payment methods for agent ${agent.id}:`, stripeError);
+            // If Stripe check fails, exclude agent (safer default)
+            hasPaymentMethod = false;
+          }
+
+          if (!hasPaymentMethod) {
+            console.log(`[AGENT SEARCH] Agent ${agent.id} has no payment method - excluding from results`);
+            return null;
+          }
+
+          return agent;
+        } catch (error: any) {
+          console.error(`[AGENT SEARCH] Error processing payment method check for agent ${agent.id}:`, error);
+          return null;
+        }
+      })
+    );
+
+    // Filter out null results
+    const agentsWithPayment = agentsWithPaymentMethods.filter(
+      (agent): agent is AgentSearchResult => agent !== null
+    );
+
+    console.log(`[AGENT SEARCH] ${agentsWithPayment.length} agents with payment methods`);
+
     // Apply filters
-    let filtered = agentsWithAvailability;
+    let filtered = agentsWithPayment;
 
     if (location) {
       const locationLower = location.toLowerCase().trim();

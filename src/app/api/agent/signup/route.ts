@@ -37,6 +37,15 @@ export async function POST(req: NextRequest) {
           licensed_in_province,
           licensed_funeral_director,
           notification_cities,
+          // New multi-step fields
+          job_title,
+          business_address,
+          business_street,
+          business_city,
+          business_province,
+          business_zip,
+          metadata: metadataFromBody,
+          office_locations,
         } = body;
 
     console.log("Agent signup request received:", { email, full_name, hasPassword: !!password });
@@ -252,7 +261,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Build metadata object with all additional fields
-    const metadata: any = profileData.metadata || {};
+    const metadata: any = metadataFromBody || profileData.metadata || {};
     
     // Certificates/Licenses
     if (certificates_licenses) metadata.certificates_licenses = certificates_licenses;
@@ -295,12 +304,24 @@ export async function POST(req: NextRequest) {
       metadata.funeral_home_services = funeral_home_services;
     }
     
+    // Business address fields from metadata
+    if (business_street) metadata.business_street = business_street;
+    if (business_city) metadata.business_city = business_city;
+    if (business_province) metadata.business_province = business_province;
+    if (business_zip) metadata.business_zip = business_zip;
+    if (business_address) metadata.business_address = business_address;
+    
     // Legacy fields for backward compatibility
     if (licensed_in_province !== undefined) {
       profileData.licensed_in_province = licensed_in_province === true || licensed_in_province === "yes";
     }
     if (licensed_funeral_director !== undefined) {
       profileData.licensed_funeral_director = licensed_funeral_director === true || licensed_funeral_director === "yes";
+    }
+    
+    // Add job_title if provided
+    if (job_title) {
+      profileData.job_title = job_title;
     }
     
     // Store metadata
@@ -392,7 +413,24 @@ export async function POST(req: NextRequest) {
           if (services_provided && Array.isArray(services_provided)) metadata.services_provided = services_provided;
           if (funeral_home_services && Array.isArray(funeral_home_services)) metadata.funeral_home_services = funeral_home_services;
           
+          // Merge metadata from body if provided (contains bio, license_number, etc.)
+          if (metadataFromBody && typeof metadataFromBody === 'object') {
+            Object.assign(metadata, metadataFromBody);
+          }
+          
+          // Business address fields
+          if (business_street) metadata.business_street = business_street;
+          if (business_city) metadata.business_city = business_city;
+          if (business_province) metadata.business_province = business_province;
+          if (business_zip) metadata.business_zip = business_zip;
+          if (business_address) metadata.business_address = business_address;
+          
           updateData.metadata = metadata;
+          
+          // Add job_title if provided
+          if (job_title) {
+            updateData.job_title = job_title;
+          }
           
           // Legacy fields
           if (licensed_in_province !== undefined) {
@@ -422,6 +460,41 @@ export async function POST(req: NextRequest) {
           
           // Success - profile updated
           console.log("✅ Profile updated successfully:", { userId, email, profileId: updatedProfile?.id });
+
+          // Create office locations if provided
+          if (office_locations && Array.isArray(office_locations) && office_locations.length > 0) {
+            try {
+              // Delete existing office locations for this agent first
+              await supabaseAdmin
+                .from("office_locations")
+                .delete()
+                .eq("agent_id", userId);
+
+              const locationInserts = office_locations.map((loc: any) => ({
+                agent_id: userId,
+                name: loc.name,
+                street_address: loc.street_address || null,
+                city: loc.city,
+                province: loc.province,
+                postal_code: loc.postal_code || null,
+              }));
+
+              const { error: locationsError } = await supabaseAdmin
+                .from("office_locations")
+                .insert(locationInserts);
+
+              if (locationsError) {
+                console.error("Error creating office locations:", locationsError);
+                // Don't fail the signup if office locations fail
+              } else {
+                console.log(`✅ Created ${office_locations.length} office location(s) for agent ${userId}`);
+              }
+            } catch (locationsErr: any) {
+              console.error("Error processing office locations:", locationsErr);
+              // Don't fail the signup if office locations fail
+            }
+          }
+
           return NextResponse.json(
             { 
               success: true,
@@ -471,6 +544,34 @@ export async function POST(req: NextRequest) {
     }
 
     console.log("✅ Profile created successfully:", { userId, email, profileId: profileDataResult.id });
+
+    // Create office locations if provided (using admin client since user isn't authenticated yet)
+    if (office_locations && Array.isArray(office_locations) && office_locations.length > 0) {
+      try {
+        const locationInserts = office_locations.map((loc: any) => ({
+          agent_id: userId,
+          name: loc.name,
+          street_address: loc.street_address || null,
+          city: loc.city,
+          province: loc.province,
+          postal_code: loc.postal_code || null,
+        }));
+
+        const { error: locationsError } = await supabaseAdmin
+          .from("office_locations")
+          .insert(locationInserts);
+
+        if (locationsError) {
+          console.error("Error creating office locations:", locationsError);
+          // Don't fail the signup if office locations fail - can be added later
+        } else {
+          console.log(`✅ Created ${office_locations.length} office location(s) for agent ${userId}`);
+        }
+      } catch (locationsErr: any) {
+        console.error("Error processing office locations:", locationsErr);
+        // Don't fail the signup if office locations fail
+      }
+    }
 
     return NextResponse.json(
       { 

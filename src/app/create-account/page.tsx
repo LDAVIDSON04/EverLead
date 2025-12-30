@@ -4,177 +4,251 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Eye, EyeOff, User, Lock, Mail, Phone, MapPin, Plus, X, Upload } from 'lucide-react';
+import { Eye, EyeOff, User, Lock, Mail, Phone, MapPin, ChevronRight, ChevronLeft, Plus, X, Check } from 'lucide-react';
 
-interface FuneralHome {
+type Step = 1 | 2 | 3;
+
+interface OfficeLocation {
   name: string;
-  address: string;
-  logo: File | null;
-  logoUrl?: string;
+  street_address: string;
+  city: string;
+  province: string;
+  postal_code: string;
 }
 
 export default function CreateAccountPage() {
   const router = useRouter();
+  const [currentStep, setCurrentStep] = useState<Step>(1);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [formData, setFormData] = useState({
-    // Basic Info
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+
+  // Step 1: Basic Info
+  const [basicInfo, setBasicInfo] = useState({
     fullName: '',
-    phone: '',
     email: '',
+    phone: '',
     password: '',
     confirmPassword: '',
     street: '',
     city: '',
     province: 'BC',
     postalCode: '',
-    
-    // Certificates/Licenses
-    certificatesLicenses: '',
-    
-    // Professional Groups
-    professionalGroups: '',
-    
-    // Community Organizations
-    communityOrganizations: '',
-    
-    // LLQP License Questions
-    llqpExclusiveQuebec: 'no',
-    llqpIncludingQuebec: 'no',
-    
-    // TruStage
-    trustageEnrollerNumber: 'no',
-    
-    // Independent Agent
-    independentAgent: 'no',
-    
-    // Services Provided
-    servicesProvided: [] as string[],
-    
-    // Funeral Home Services
-    funeralHomeServices: [] as string[],
   });
-  
-  const [funeralHomes, setFuneralHomes] = useState<FuneralHome[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
+
+  // Step 2: Business Info & Office Locations
+  const [businessInfo, setBusinessInfo] = useState({
+    businessName: '',
+    professionalTitle: '',
+    licenseNumber: '',
+    regionsServed: '',
+    specialty: '',
+    businessStreet: '',
+    businessCity: '',
+    businessProvince: '',
+    businessZip: '',
+  });
+  const [officeLocations, setOfficeLocations] = useState<OfficeLocation[]>([]);
+  const [showAddLocation, setShowAddLocation] = useState(false);
+  const [newLocation, setNewLocation] = useState<OfficeLocation>({
+    name: '',
+    street_address: '',
+    city: '',
+    province: 'BC',
+    postal_code: '',
+  });
+
+  // Step 3: Profile Bio
+  const [bioData, setBioData] = useState({
+    years_of_experience: '',
+    specialties: [] as string[],
+    practice_philosophy_help: '',
+    practice_philosophy_appreciate: '',
+    practice_philosophy_situations: [] as string[],
+    languages_spoken: [] as string[],
+    typical_response_time: '',
+  });
 
   const provinces = ['AB', 'BC', 'MB', 'NB', 'NL', 'NS', 'NT', 'NU', 'ON', 'PE', 'QC', 'SK', 'YT'];
+  
+  const specialtyOptions = [
+    'Pre-need planning',
+    'Estate planning support',
+    'Grief counseling',
+    'Family facilitation',
+    'Cremation planning',
+    'Cultural/religious planning',
+  ];
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+  const situationOptions = [
+    'Immediate planning needs',
+    'Future planning',
+    'Family discussions',
+    'Estate coordination',
+    'Cultural/religious considerations',
+  ];
+
+  const languageOptions = ['English', 'French', 'Spanish', 'Mandarin', 'Cantonese', 'Punjabi', 'Tagalog', 'Arabic', 'Other'];
+
+  // Validation
+  const validateStep1 = (): boolean => {
+    if (!basicInfo.fullName || !basicInfo.email || !basicInfo.phone || !basicInfo.password || !basicInfo.confirmPassword ||
+        !basicInfo.street || !basicInfo.city || !basicInfo.province || !basicInfo.postalCode) {
+      setError('Please fill in all required fields.');
+      return false;
+    }
+    if (basicInfo.password !== basicInfo.confirmPassword) {
+      setError('Passwords do not match.');
+      return false;
+    }
+    if (basicInfo.password.length < 6) {
+      setError('Password must be at least 6 characters long.');
+      return false;
+    }
+    return true;
+  };
+
+  const validateStep2 = (): boolean => {
+    if (!businessInfo.businessName || !businessInfo.professionalTitle || !businessInfo.licenseNumber ||
+        !businessInfo.regionsServed || !businessInfo.specialty) {
+      setError('Please fill in all required fields.');
+      return false;
+    }
+    return true;
+  };
+
+  const validateStep3 = (): boolean => {
+    if (!bioData.years_of_experience || bioData.specialties.length === 0 ||
+        !bioData.practice_philosophy_help || !bioData.practice_philosophy_appreciate) {
+      setError('Please fill in all required fields.');
+      return false;
+    }
+    return true;
+  };
+
+  const handleNext = () => {
+    setError(null);
+    if (currentStep === 1) {
+      if (validateStep1()) {
+        setCurrentStep(2);
+      }
+    } else if (currentStep === 2) {
+      if (validateStep2()) {
+        setCurrentStep(3);
+      }
+    }
+  };
+
+  const handleBack = () => {
+    setError(null);
+    if (currentStep > 1) {
+      setCurrentStep((currentStep - 1) as Step);
+    }
+  };
+
+  const addOfficeLocation = () => {
+    if (!newLocation.name || !newLocation.city || !newLocation.province) {
+      setError('Please fill in at least name, city, and province for the office location.');
+      return;
+    }
+    setOfficeLocations([...officeLocations, { ...newLocation }]);
+    setNewLocation({
+      name: '',
+      street_address: '',
+      city: '',
+      province: 'BC',
+      postal_code: '',
+    });
+    setShowAddLocation(false);
     setError(null);
   };
 
-  const handleCheckboxChange = (name: 'servicesProvided' | 'funeralHomeServices', value: string) => {
-    setFormData(prev => {
-      const current = prev[name];
-      const updated = current.includes(value)
-        ? current.filter(item => item !== value)
-        : [...current, value];
-      return { ...prev, [name]: updated };
-    });
+  const removeOfficeLocation = (index: number) => {
+    setOfficeLocations(officeLocations.filter((_, i) => i !== index));
   };
 
-  const addFuneralHome = () => {
-    setFuneralHomes([...funeralHomes, { name: '', address: '', logo: null }]);
+  const toggleSpecialty = (specialty: string) => {
+    setBioData(prev => ({
+      ...prev,
+      specialties: prev.specialties.includes(specialty)
+        ? prev.specialties.filter(s => s !== specialty)
+        : prev.specialties.length < 5
+        ? [...prev.specialties, specialty]
+        : prev.specialties
+    }));
   };
 
-  const removeFuneralHome = (index: number) => {
-    setFuneralHomes(funeralHomes.filter((_, i) => i !== index));
+  const toggleSituation = (situation: string) => {
+    setBioData(prev => ({
+      ...prev,
+      practice_philosophy_situations: prev.practice_philosophy_situations.includes(situation)
+        ? prev.practice_philosophy_situations.filter(s => s !== situation)
+        : [...prev.practice_philosophy_situations, situation]
+    }));
   };
 
-  const updateFuneralHome = (index: number, field: keyof FuneralHome, value: string | File | null) => {
-    const updated = [...funeralHomes];
-    updated[index] = { ...updated[index], [field]: value };
-    setFuneralHomes(updated);
-  };
-
-  const handleLogoUpload = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      updateFuneralHome(index, 'logo', file);
-      // Create preview URL
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        updateFuneralHome(index, 'logoUrl', reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
+  const toggleLanguage = (language: string) => {
+    setBioData(prev => ({
+      ...prev,
+      languages_spoken: prev.languages_spoken.includes(language)
+        ? prev.languages_spoken.filter(l => l !== language)
+        : [...prev.languages_spoken, language]
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
-    // Validation
-    if (!formData.fullName || !formData.email || !formData.password || !formData.confirmPassword || 
-        !formData.phone || !formData.street || !formData.city || !formData.province || !formData.postalCode) {
-      setError('Please fill in all required fields.');
-      return;
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match. Please try again.');
-      return;
-    }
-
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters long.');
-      return;
-    }
-
-    if (formData.independentAgent === 'no' && funeralHomes.length === 0) {
-      setError('Please add at least one funeral home if you are not an independent agent.');
+    if (!validateStep3()) {
       return;
     }
 
     setSubmitting(true);
 
     try {
-      // Prepare funeral homes data (without file uploads for now - can be added later)
-      const funeralHomesData = funeralHomes.map(fh => ({
-        name: fh.name,
-        address: fh.address,
-        logo: fh.logoUrl || null, // For now, just store the preview URL
-      }));
+      // Prepare the complete signup data
+      const signupData = {
+        // Basic Info
+        email: basicInfo.email,
+        password: basicInfo.password,
+        full_name: basicInfo.fullName,
+        phone: basicInfo.phone,
+        address: {
+          street: basicInfo.street,
+          city: basicInfo.city,
+          province: basicInfo.province,
+          postalCode: basicInfo.postalCode,
+        },
+        notification_cities: [{ city: basicInfo.city, province: basicInfo.province }],
+        
+        // Business Info
+        funeral_home: businessInfo.businessName,
+        job_title: businessInfo.professionalTitle,
+        business_address: businessInfo.businessStreet || undefined,
+        business_street: businessInfo.businessStreet || undefined,
+        business_city: businessInfo.businessCity || undefined,
+        business_province: businessInfo.businessProvince || undefined,
+        business_zip: businessInfo.businessZip || undefined,
+        
+        // Metadata fields
+        metadata: {
+          license_number: businessInfo.licenseNumber,
+          regions_served: businessInfo.regionsServed,
+          specialty: businessInfo.specialty,
+          bio: bioData,
+        },
+        
+        // Office locations (will be handled separately via API)
+        office_locations: officeLocations,
+      };
 
-      // Call the agent signup API
       const response = await fetch('/api/agent/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-          full_name: formData.fullName,
-          phone: formData.phone,
-          address: {
-            street: formData.street,
-            city: formData.city,
-            province: formData.province,
-            postalCode: formData.postalCode,
-          },
-          certificates_licenses: formData.certificatesLicenses,
-          professional_groups: formData.professionalGroups,
-          community_organizations: formData.communityOrganizations,
-          llqp_exclusive_quebec: formData.llqpExclusiveQuebec === 'yes',
-          llqp_including_quebec: formData.llqpIncludingQuebec === 'yes',
-          trustage_enroller_number: formData.trustageEnrollerNumber === 'yes',
-          independent_agent: formData.independentAgent === 'yes',
-          funeral_homes: funeralHomesData,
-          services_provided: formData.servicesProvided,
-          funeral_home_services: formData.funeralHomeServices,
-          // For backward compatibility
-          funeral_home: funeralHomes.length > 0 ? funeralHomes[0].name : '',
-          licensed_in_province: true, // Default
-          licensed_funeral_director: true, // Default
-          notification_cities: [{ city: formData.city, province: formData.province }],
-        }),
+        body: JSON.stringify(signupData),
       });
 
       const data = await response.json();
@@ -200,7 +274,7 @@ export default function CreateAccountPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 py-8 px-4">
+    <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl mx-auto p-8 md:p-12">
         {/* Logo */}
         <div className="flex justify-start mb-8">
@@ -216,8 +290,34 @@ export default function CreateAccountPage() {
         </div>
 
         {/* Header */}
-        <h1 className="text-4xl font-bold text-center mb-8 text-black">Create Account</h1>
-        <p className="text-center text-gray-600 mb-8">Please fill out all fields to submit your account for approval</p>
+        <h1 className="text-4xl font-bold text-center mb-4 text-black">Create Account</h1>
+        <p className="text-center text-gray-600 mb-8">Please complete all steps to submit your account for approval</p>
+
+        {/* Progress Indicator */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-2">
+            <div className={`flex items-center gap-2 ${currentStep >= 1 ? 'text-green-700' : 'text-gray-400'}`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${currentStep >= 1 ? 'bg-green-700 text-white' : 'bg-gray-200'}`}>
+                {currentStep > 1 ? <Check className="w-5 h-5" /> : '1'}
+              </div>
+              <span className="font-medium">Basic Info</span>
+            </div>
+            <div className={`flex-1 h-1 mx-4 ${currentStep >= 2 ? 'bg-green-700' : 'bg-gray-200'}`} />
+            <div className={`flex items-center gap-2 ${currentStep >= 2 ? 'text-green-700' : 'text-gray-400'}`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${currentStep >= 2 ? 'bg-green-700 text-white' : 'bg-gray-200'}`}>
+                {currentStep > 2 ? <Check className="w-5 h-5" /> : '2'}
+              </div>
+              <span className="font-medium">Business Info</span>
+            </div>
+            <div className={`flex-1 h-1 mx-4 ${currentStep >= 3 ? 'bg-green-700' : 'bg-gray-200'}`} />
+            <div className={`flex items-center gap-2 ${currentStep >= 3 ? 'text-green-700' : 'text-gray-400'}`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${currentStep >= 3 ? 'bg-green-700 text-white' : 'bg-gray-200'}`}>
+                3
+              </div>
+              <span className="font-medium">Profile Bio</span>
+            </div>
+          </div>
+        </div>
 
         {/* Error Message */}
         {error && (
@@ -226,428 +326,507 @@ export default function CreateAccountPage() {
           </div>
         )}
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Basic Information Section */}
-          <div className="border-b border-gray-200 pb-6">
-            <h2 className="text-2xl font-semibold mb-4 text-black">Basic Information</h2>
-            <div className="space-y-4">
+        {/* Form Steps */}
+        <form onSubmit={currentStep === 3 ? handleSubmit : (e) => { e.preventDefault(); handleNext(); }}>
+          {/* Step 1: Basic Info */}
+          {currentStep === 1 && (
+            <div className="space-y-6">
+              <h2 className="text-2xl font-semibold mb-4 text-black">Step 1: Basic Information</h2>
+              
               <div className="relative">
-                <User className="absolute left-0 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
                   type="text"
-                  name="fullName"
-                  value={formData.fullName}
-                  onChange={handleChange}
+                  value={basicInfo.fullName}
+                  onChange={(e) => setBasicInfo({ ...basicInfo, fullName: e.target.value })}
                   placeholder="Full Name *"
-                  className="w-full pl-8 pr-4 py-3 border-b-2 border-gray-300 focus:border-green-700 outline-none transition-colors bg-transparent"
+                  className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-700 outline-none transition-colors"
                   required
                 />
               </div>
 
               <div className="relative">
-                <Phone className="absolute left-0 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  placeholder="Phone *"
-                  className="w-full pl-8 pr-4 py-3 border-b-2 border-gray-300 focus:border-green-700 outline-none transition-colors bg-transparent"
-                  required
-                />
-              </div>
-
-              <div className="relative">
-                <Mail className="absolute left-0 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
                   type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
+                  value={basicInfo.email}
+                  onChange={(e) => setBasicInfo({ ...basicInfo, email: e.target.value })}
                   placeholder="Email *"
-                  className="w-full pl-8 pr-4 py-3 border-b-2 border-gray-300 focus:border-green-700 outline-none transition-colors bg-transparent"
+                  className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-700 outline-none transition-colors"
                   required
                 />
               </div>
 
               <div className="relative">
-                <MapPin className="absolute left-0 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
-                  type="text"
-                  name="street"
-                  value={formData.street}
-                  onChange={handleChange}
-                  placeholder="Street Address *"
-                  className="w-full pl-8 pr-4 py-3 border-b-2 border-gray-300 focus:border-green-700 outline-none transition-colors bg-transparent"
+                  type="tel"
+                  value={basicInfo.phone}
+                  onChange={(e) => setBasicInfo({ ...basicInfo, phone: e.target.value })}
+                  placeholder="Phone *"
+                  className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-700 outline-none transition-colors"
                   required
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                   <input
-                    type="text"
-                    name="city"
-                    value={formData.city}
-                    onChange={handleChange}
-                    placeholder="City *"
-                    className="w-full px-4 py-3 border-b-2 border-gray-300 focus:border-green-700 outline-none transition-colors bg-transparent"
+                    type={showPassword ? 'text' : 'password'}
+                    value={basicInfo.password}
+                    onChange={(e) => setBasicInfo({ ...basicInfo, password: e.target.value })}
+                    placeholder="Password *"
+                    className="w-full pl-10 pr-12 py-3 border-2 border-gray-300 rounded-lg focus:border-green-700 outline-none transition-colors"
                     required
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
                 </div>
                 <div className="relative">
-                  <select
-                    name="province"
-                    value={formData.province}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 border-b-2 border-gray-300 focus:border-green-700 outline-none transition-colors bg-transparent"
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    value={basicInfo.confirmPassword}
+                    onChange={(e) => setBasicInfo({ ...basicInfo, confirmPassword: e.target.value })}
+                    placeholder="Confirm Password *"
+                    className="w-full pl-10 pr-12 py-3 border-2 border-gray-300 rounded-lg focus:border-green-700 outline-none transition-colors"
                     required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                   >
-                    {provinces.map(prov => (
-                      <option key={prov} value={prov}>{prov}</option>
-                    ))}
-                  </select>
+                    {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
                 </div>
               </div>
 
               <div className="relative">
+                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
                   type="text"
-                  name="postalCode"
-                  value={formData.postalCode}
-                  onChange={handleChange}
+                  value={basicInfo.street}
+                  onChange={(e) => setBasicInfo({ ...basicInfo, street: e.target.value })}
+                  placeholder="Street Address *"
+                  className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-700 outline-none transition-colors"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <input
+                  type="text"
+                  value={basicInfo.city}
+                  onChange={(e) => setBasicInfo({ ...basicInfo, city: e.target.value })}
+                  placeholder="City *"
+                  className="px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-700 outline-none transition-colors"
+                  required
+                />
+                <select
+                  value={basicInfo.province}
+                  onChange={(e) => setBasicInfo({ ...basicInfo, province: e.target.value })}
+                  className="px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-700 outline-none transition-colors"
+                  required
+                >
+                  {provinces.map(prov => (
+                    <option key={prov} value={prov}>{prov}</option>
+                  ))}
+                </select>
+                <input
+                  type="text"
+                  value={basicInfo.postalCode}
+                  onChange={(e) => setBasicInfo({ ...basicInfo, postalCode: e.target.value })}
                   placeholder="Postal Code *"
-                  className="w-full px-4 py-3 border-b-2 border-gray-300 focus:border-green-700 outline-none transition-colors bg-transparent"
+                  className="px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-700 outline-none transition-colors"
                   required
                 />
               </div>
             </div>
-          </div>
+          )}
 
-          {/* Certificates/Licenses Section */}
-          <div className="border-b border-gray-200 pb-6">
-            <h2 className="text-2xl font-semibold mb-4 text-black">Certificates/Licenses</h2>
-            <textarea
-              name="certificatesLicenses"
-              value={formData.certificatesLicenses}
-              onChange={handleChange}
-              placeholder="List your certificates and licenses"
-              rows={4}
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-700 outline-none transition-colors resize-none"
-            />
-          </div>
-
-          {/* Professional Groups Section */}
-          <div className="border-b border-gray-200 pb-6">
-            <h2 className="text-2xl font-semibold mb-4 text-black">Professional Groups</h2>
-            <textarea
-              name="professionalGroups"
-              value={formData.professionalGroups}
-              onChange={handleChange}
-              placeholder="List your professional groups"
-              rows={4}
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-700 outline-none transition-colors resize-none"
-            />
-          </div>
-
-          {/* Community Organizations Section */}
-          <div className="border-b border-gray-200 pb-6">
-            <h2 className="text-2xl font-semibold mb-4 text-black">Community Organizations</h2>
-            <textarea
-              name="communityOrganizations"
-              value={formData.communityOrganizations}
-              onChange={handleChange}
-              placeholder="List your community organizations"
-              rows={4}
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-700 outline-none transition-colors resize-none"
-            />
-          </div>
-
-          {/* LLQP License Questions */}
-          <div className="border-b border-gray-200 pb-6">
-            <h2 className="text-2xl font-semibold mb-4 text-black">LLQP License</h2>
-            <div className="space-y-4">
+          {/* Step 2: Business Info & Office Locations */}
+          {currentStep === 2 && (
+            <div className="space-y-6">
+              <h2 className="text-2xl font-semibold mb-4 text-black">Step 2: Business Information & Office Locations</h2>
+              
               <div>
-                <label className="block mb-2 text-gray-700">LLQP license in Canada (exclusive of Quebec)</label>
-                <div className="flex gap-4">
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="radio"
-                      name="llqpExclusiveQuebec"
-                      value="yes"
-                      checked={formData.llqpExclusiveQuebec === 'yes'}
-                      onChange={handleChange}
-                      className="w-4 h-4"
-                    />
-                    <span>Yes</span>
-                  </label>
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="radio"
-                      name="llqpExclusiveQuebec"
-                      value="no"
-                      checked={formData.llqpExclusiveQuebec === 'no'}
-                      onChange={handleChange}
-                      className="w-4 h-4"
-                    />
-                    <span>No</span>
-                  </label>
-                </div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Business / Firm Name *</label>
+                <input
+                  type="text"
+                  value={businessInfo.businessName}
+                  onChange={(e) => setBusinessInfo({ ...businessInfo, businessName: e.target.value })}
+                  placeholder="e.g., Smith Funeral Home"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-700 outline-none transition-colors"
+                  required
+                />
               </div>
 
               <div>
-                <label className="block mb-2 text-gray-700">LLQP license in Canada including Quebec</label>
-                <div className="flex gap-4">
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="radio"
-                      name="llqpIncludingQuebec"
-                      value="yes"
-                      checked={formData.llqpIncludingQuebec === 'yes'}
-                      onChange={handleChange}
-                      className="w-4 h-4"
-                    />
-                    <span>Yes</span>
-                  </label>
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="radio"
-                      name="llqpIncludingQuebec"
-                      value="no"
-                      checked={formData.llqpIncludingQuebec === 'no'}
-                      onChange={handleChange}
-                      className="w-4 h-4"
-                    />
-                    <span>No</span>
-                  </label>
-                </div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Professional Title *</label>
+                <input
+                  type="text"
+                  value={businessInfo.professionalTitle}
+                  onChange={(e) => setBusinessInfo({ ...businessInfo, professionalTitle: e.target.value })}
+                  placeholder="e.g., Funeral Director, Pre-need Specialist"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-700 outline-none transition-colors"
+                  required
+                />
               </div>
 
               <div>
-                <label className="block mb-2 text-gray-700">Do you have a TruStage Life of Canada enroller number?</label>
-                <div className="flex gap-4">
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="radio"
-                      name="trustageEnrollerNumber"
-                      value="yes"
-                      checked={formData.trustageEnrollerNumber === 'yes'}
-                      onChange={handleChange}
-                      className="w-4 h-4"
-                    />
-                    <span>Yes</span>
-                  </label>
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="radio"
-                      name="trustageEnrollerNumber"
-                      value="no"
-                      checked={formData.trustageEnrollerNumber === 'no'}
-                      onChange={handleChange}
-                      className="w-4 h-4"
-                    />
-                    <span>No</span>
-                  </label>
-                </div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">License Number(s) *</label>
+                <input
+                  type="text"
+                  value={businessInfo.licenseNumber}
+                  onChange={(e) => setBusinessInfo({ ...businessInfo, licenseNumber: e.target.value })}
+                  placeholder="Enter your license number(s)"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-700 outline-none transition-colors"
+                  required
+                />
               </div>
-            </div>
-          </div>
 
-          {/* Independent Agent */}
-          <div className="border-b border-gray-200 pb-6">
-            <h2 className="text-2xl font-semibold mb-4 text-black">Agent Status</h2>
-            <div>
-              <label className="block mb-2 text-gray-700">Are you an independent agent?</label>
-              <div className="flex gap-4">
-                <label className="flex items-center gap-2">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Region(s) Served *</label>
+                <input
+                  type="text"
+                  value={businessInfo.regionsServed}
+                  onChange={(e) => setBusinessInfo({ ...businessInfo, regionsServed: e.target.value })}
+                  placeholder="e.g., Toronto, GTA, Mississauga"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-700 outline-none transition-colors"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Specialty / Services Offered *</label>
+                <textarea
+                  value={businessInfo.specialty}
+                  onChange={(e) => setBusinessInfo({ ...businessInfo, specialty: e.target.value })}
+                  placeholder="Describe your specialties and services..."
+                  rows={3}
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-700 outline-none transition-colors resize-none"
+                  required
+                />
+              </div>
+
+              {/* Business Address (Optional) */}
+              <div className="border-t pt-6">
+                <h3 className="text-lg font-semibold mb-4">Business Address (Optional)</h3>
+                <div className="grid grid-cols-2 gap-4">
                   <input
-                    type="radio"
-                    name="independentAgent"
-                    value="yes"
-                    checked={formData.independentAgent === 'yes'}
-                    onChange={handleChange}
-                    className="w-4 h-4"
+                    type="text"
+                    value={businessInfo.businessStreet}
+                    onChange={(e) => setBusinessInfo({ ...businessInfo, businessStreet: e.target.value })}
+                    placeholder="Street Address"
+                    className="px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-700 outline-none transition-colors"
                   />
-                  <span>Yes</span>
-                </label>
-                <label className="flex items-center gap-2">
                   <input
-                    type="radio"
-                    name="independentAgent"
-                    value="no"
-                    checked={formData.independentAgent === 'no'}
-                    onChange={handleChange}
-                    className="w-4 h-4"
+                    type="text"
+                    value={businessInfo.businessCity}
+                    onChange={(e) => setBusinessInfo({ ...businessInfo, businessCity: e.target.value })}
+                    placeholder="City"
+                    className="px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-700 outline-none transition-colors"
                   />
-                  <span>No</span>
-                </label>
-              </div>
-            </div>
-          </div>
-
-          {/* Funeral Homes Section */}
-          {formData.independentAgent === 'no' && (
-            <div className="border-b border-gray-200 pb-6">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl font-semibold text-black">Funeral Homes</h2>
-                <button
-                  type="button"
-                  onClick={addFuneralHome}
-                  className="flex items-center gap-2 px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-800 transition-colors"
-                >
-                  <Plus className="w-4 h-4" />
-                  Add Funeral Home
-                </button>
+                  <input
+                    type="text"
+                    value={businessInfo.businessProvince}
+                    onChange={(e) => setBusinessInfo({ ...businessInfo, businessProvince: e.target.value })}
+                    placeholder="Province"
+                    className="px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-700 outline-none transition-colors"
+                  />
+                  <input
+                    type="text"
+                    value={businessInfo.businessZip}
+                    onChange={(e) => setBusinessInfo({ ...businessInfo, businessZip: e.target.value })}
+                    placeholder="Postal Code"
+                    className="px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-700 outline-none transition-colors"
+                  />
+                </div>
               </div>
 
-              {funeralHomes.map((fh, index) => (
-                <div key={index} className="mb-4 p-4 border-2 border-gray-200 rounded-lg">
-                  <div className="flex justify-between items-start mb-4">
-                    <h3 className="font-semibold text-gray-700">Funeral Home {index + 1}</h3>
+              {/* Office Locations */}
+              <div className="border-t pt-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-semibold">Office Locations</h3>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddLocation(!showAddLocation)}
+                    className="flex items-center gap-2 px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-800 transition-colors"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add Location
+                  </button>
+                </div>
+
+                {showAddLocation && (
+                  <div className="mb-4 p-4 border-2 border-gray-300 rounded-lg bg-gray-50">
+                    <h4 className="font-medium mb-3">New Office Location</h4>
+                    <div className="space-y-3">
+                      <input
+                        type="text"
+                        value={newLocation.name}
+                        onChange={(e) => setNewLocation({ ...newLocation, name: e.target.value })}
+                        placeholder="Location Name *"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-green-700 outline-none"
+                      />
+                      <input
+                        type="text"
+                        value={newLocation.street_address}
+                        onChange={(e) => setNewLocation({ ...newLocation, street_address: e.target.value })}
+                        placeholder="Street Address"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-green-700 outline-none"
+                      />
+                      <div className="grid grid-cols-3 gap-3">
+                        <input
+                          type="text"
+                          value={newLocation.city}
+                          onChange={(e) => setNewLocation({ ...newLocation, city: e.target.value })}
+                          placeholder="City *"
+                          className="px-4 py-2 border border-gray-300 rounded-lg focus:border-green-700 outline-none"
+                        />
+                        <select
+                          value={newLocation.province}
+                          onChange={(e) => setNewLocation({ ...newLocation, province: e.target.value })}
+                          className="px-4 py-2 border border-gray-300 rounded-lg focus:border-green-700 outline-none"
+                        >
+                          {provinces.map(prov => (
+                            <option key={prov} value={prov}>{prov}</option>
+                          ))}
+                        </select>
+                        <input
+                          type="text"
+                          value={newLocation.postal_code}
+                          onChange={(e) => setNewLocation({ ...newLocation, postal_code: e.target.value })}
+                          placeholder="Postal Code"
+                          className="px-4 py-2 border border-gray-300 rounded-lg focus:border-green-700 outline-none"
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={addOfficeLocation}
+                          className="px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-800"
+                        >
+                          Add
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowAddLocation(false);
+                            setNewLocation({
+                              name: '',
+                              street_address: '',
+                              city: '',
+                              province: 'BC',
+                              postal_code: '',
+                            });
+                          }}
+                          className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {officeLocations.map((loc, index) => (
+                  <div key={index} className="mb-3 p-3 border border-gray-300 rounded-lg flex justify-between items-start">
+                    <div>
+                      <div className="font-medium">{loc.name}</div>
+                      <div className="text-sm text-gray-600">
+                        {loc.street_address && `${loc.street_address}, `}
+                        {loc.city}, {loc.province} {loc.postal_code}
+                      </div>
+                    </div>
                     <button
                       type="button"
-                      onClick={() => removeFuneralHome(index)}
+                      onClick={() => removeOfficeLocation(index)}
                       className="text-red-600 hover:text-red-800"
                     >
                       <X className="w-5 h-5" />
                     </button>
                   </div>
-                  
-                  <div className="space-y-4">
-                    <input
-                      type="text"
-                      placeholder="Funeral Home Name"
-                      value={fh.name}
-                      onChange={(e) => updateFuneralHome(index, 'name', e.target.value)}
-                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-700 outline-none transition-colors"
-                    />
-                    
-                    <textarea
-                      placeholder="Address"
-                      value={fh.address}
-                      onChange={(e) => updateFuneralHome(index, 'address', e.target.value)}
-                      rows={2}
-                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-700 outline-none transition-colors resize-none"
-                    />
-                    
-                    <div>
-                      <label className="block mb-2 text-gray-700">Logo</label>
-                      <div className="flex items-center gap-4">
-                        <label className="flex items-center gap-2 px-4 py-2 border-2 border-gray-300 rounded-lg cursor-pointer hover:border-green-700 transition-colors">
-                          <Upload className="w-4 h-4" />
-                          <span>Upload Logo</span>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => handleLogoUpload(index, e)}
-                            className="hidden"
-                          />
-                        </label>
-                        {fh.logoUrl && (
-                          <img src={fh.logoUrl} alt="Logo preview" className="w-16 h-16 object-cover rounded" />
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           )}
 
-          {/* Services Provided */}
-          <div className="border-b border-gray-200 pb-6">
-            <h2 className="text-2xl font-semibold mb-4 text-black">What services do you provide?</h2>
-            <div className="space-y-2">
-              {['Prearranged funeral planning', 'Travel protection', 'Documentation Services'].map(service => (
-                <label key={service} className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={formData.servicesProvided.includes(service)}
-                    onChange={() => handleCheckboxChange('servicesProvided', service)}
-                    className="w-4 h-4"
-                  />
-                  <span>{service}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Funeral Home Services */}
-          <div className="border-b border-gray-200 pb-6">
-            <h2 className="text-2xl font-semibold mb-4 text-black">What services does your funeral home provide?</h2>
-            <div className="space-y-2">
-              {['Cremation', 'Burial', 'Green Burial', 'Scattering Garden', 'Cemetery Services', 'Other'].map(service => (
-                <label key={service} className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={formData.funeralHomeServices.includes(service)}
-                    onChange={() => handleCheckboxChange('funeralHomeServices', service)}
-                    className="w-4 h-4"
-                  />
-                  <span>{service}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Password Section */}
-          <div className="border-b border-gray-200 pb-6">
-            <h2 className="text-2xl font-semibold mb-4 text-black">Account Security</h2>
-            <div className="space-y-4">
-              <div className="relative">
-                <Lock className="absolute left-0 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  placeholder="Password *"
-                  className="w-full pl-8 pr-12 py-3 border-b-2 border-gray-300 focus:border-green-700 outline-none transition-colors bg-transparent"
+          {/* Step 3: Profile Bio */}
+          {currentStep === 3 && (
+            <div className="space-y-6">
+              <h2 className="text-2xl font-semibold mb-4 text-black">Step 3: Profile Bio</h2>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Years of Experience *</label>
+                <select
+                  value={bioData.years_of_experience}
+                  onChange={(e) => setBioData({ ...bioData, years_of_experience: e.target.value })}
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-700 outline-none transition-colors"
                   required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
+                  <option value="">Select...</option>
+                  <option value="1-3">1-3 years</option>
+                  <option value="4-7">4-7 years</option>
+                  <option value="8-12">8-12 years</option>
+                  <option value="12+">12+ years</option>
+                </select>
               </div>
 
-              <div className="relative">
-                <Lock className="absolute left-0 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  type={showConfirmPassword ? 'text' : 'password'}
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  placeholder="Confirm Password *"
-                  className="w-full pl-8 pr-12 py-3 border-b-2 border-gray-300 focus:border-green-700 outline-none transition-colors bg-transparent"
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Specialties (Select up to 5) *</label>
+                <div className="grid grid-cols-2 gap-3">
+                  {specialtyOptions.map((specialty) => (
+                    <label key={specialty} className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={bioData.specialties.includes(specialty)}
+                        onChange={() => toggleSpecialty(specialty)}
+                        className="w-4 h-4 text-green-800 border-gray-300 rounded focus:ring-green-800"
+                      />
+                      <span className="text-sm text-gray-700">{specialty}</span>
+                    </label>
+                  ))}
+                </div>
+                {bioData.specialties.length >= 5 && (
+                  <p className="text-xs text-gray-500 mt-2">Maximum 5 specialties selected</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  How do you typically help families? (200 chars max) *
+                </label>
+                <textarea
+                  value={bioData.practice_philosophy_help}
+                  onChange={(e) => {
+                    if (e.target.value.length <= 200) {
+                      setBioData({ ...bioData, practice_philosophy_help: e.target.value });
+                    }
+                  }}
+                  placeholder="Describe your approach to helping families..."
+                  rows={3}
+                  maxLength={200}
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-700 outline-none transition-colors resize-none"
                   required
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                <p className="text-xs text-gray-500 mt-1">{bioData.practice_philosophy_help.length}/200 characters</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  What do families appreciate most about your approach? (200 chars max) *
+                </label>
+                <textarea
+                  value={bioData.practice_philosophy_appreciate}
+                  onChange={(e) => {
+                    if (e.target.value.length <= 200) {
+                      setBioData({ ...bioData, practice_philosophy_appreciate: e.target.value });
+                    }
+                  }}
+                  placeholder="What families value about working with you..."
+                  rows={3}
+                  maxLength={200}
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-700 outline-none transition-colors resize-none"
+                  required
+                />
+                <p className="text-xs text-gray-500 mt-1">{bioData.practice_philosophy_appreciate.length}/200 characters</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  What situations are you best suited for? (Select all that apply)
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  {situationOptions.map((situation) => (
+                    <label key={situation} className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={bioData.practice_philosophy_situations.includes(situation)}
+                        onChange={() => toggleSituation(situation)}
+                        className="w-4 h-4 text-green-800 border-gray-300 rounded focus:ring-green-800"
+                      />
+                      <span className="text-sm text-gray-700">{situation}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Languages Spoken</label>
+                <div className="flex flex-wrap gap-3">
+                  {languageOptions.map((lang) => (
+                    <label key={lang} className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={bioData.languages_spoken.includes(lang)}
+                        onChange={() => toggleLanguage(lang)}
+                        className="w-4 h-4 text-green-800 border-gray-300 rounded focus:ring-green-800"
+                      />
+                      <span className="text-sm text-gray-700">{lang}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Typical Response Time</label>
+                <select
+                  value={bioData.typical_response_time}
+                  onChange={(e) => setBioData({ ...bioData, typical_response_time: e.target.value })}
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-700 outline-none transition-colors"
                 >
-                  {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
+                  <option value="">Select...</option>
+                  <option value="within-1-hour">Within 1 hour</option>
+                  <option value="within-2-hours">Within 2 hours</option>
+                  <option value="within-4-hours">Within 4 hours</option>
+                  <option value="within-24-hours">Within 24 hours</option>
+                  <option value="within-48-hours">Within 48 hours</option>
+                </select>
               </div>
             </div>
-          </div>
+          )}
 
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={submitting}
-            className="w-full bg-green-700 hover:bg-green-800 text-white py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-lg font-semibold"
-          >
-            {submitting ? 'Submitting...' : 'Submit for Approval'}
-          </button>
+          {/* Navigation Buttons */}
+          <div className="flex justify-between items-center mt-8 pt-6 border-t">
+            <button
+              type="button"
+              onClick={handleBack}
+              disabled={currentStep === 1}
+              className="flex items-center gap-2 px-6 py-3 border-2 border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronLeft className="w-5 h-5" />
+              Back
+            </button>
+            
+            {currentStep < 3 ? (
+              <button
+                type="submit"
+                className="flex items-center gap-2 px-6 py-3 bg-green-700 text-white rounded-lg hover:bg-green-800 transition-colors"
+              >
+                Next
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            ) : (
+              <button
+                type="submit"
+                disabled={submitting}
+                className="px-8 py-3 bg-green-700 text-white rounded-lg hover:bg-green-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-semibold"
+              >
+                {submitting ? 'Submitting...' : 'Submit for Approval'}
+              </button>
+            )}
+          </div>
 
           {/* Login Link */}
-          <p className="text-center text-gray-600 text-sm">
+          <p className="text-center text-gray-600 text-sm mt-6">
             Already have an account?{' '}
             <Link href="/agent" className="text-green-700 hover:underline">
               log in
