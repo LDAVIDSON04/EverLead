@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
     const agentId = user.id;
     const pricePerAppointment = 0.01; // Testing price - change back to 29.0 for production
 
-    // Get current month appointments
+    // Get current month appointments (booked/confirmed appointments)
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
@@ -33,17 +33,18 @@ export async function GET(request: NextRequest) {
       .from("appointments")
       .select("id", { count: "exact", head: true })
       .eq("agent_id", agentId)
+      .in("status", ["booked", "confirmed"])
       .gte("created_at", startOfMonth.toISOString())
       .lte("created_at", endOfMonth.toISOString());
 
-    // Get past payments (from appointments with price_cents)
+    // Get all paid appointments (appointments with price_cents set, indicating successful payment)
     const { data: pastAppointments } = await supabaseAdmin
       .from("appointments")
-      .select("created_at, price_cents")
+      .select("created_at, price_cents, status")
       .eq("agent_id", agentId)
       .not("price_cents", "is", null)
       .order("created_at", { ascending: false })
-      .limit(10);
+      .limit(50);
 
     // Group by month
     const paymentsByMonth: Record<string, { appointments: number; amount: number }> = {};

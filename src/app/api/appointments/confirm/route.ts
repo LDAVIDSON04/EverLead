@@ -87,10 +87,9 @@ export async function POST(req: NextRequest) {
       .eq("id", appointmentId)
       .single();
     
-    // Use existing price_cents if set, otherwise default to 1 cent (for testing)
-    const finalPriceCents = currentAppt?.price_cents !== null && currentAppt?.price_cents !== undefined
-      ? Number(currentAppt.price_cents)
-      : 1; // Default $0.01 (1 cent for testing)
+    // Use price from Stripe session (already paid via checkout)
+    const sessionAmountCents = session.amount_total || 0;
+    const finalPriceCents = sessionAmountCents > 0 ? sessionAmountCents : 1; // Fallback to 1 cent
     
     const { data: updated, error: updateError } = await supabaseAdmin
       .from("appointments")

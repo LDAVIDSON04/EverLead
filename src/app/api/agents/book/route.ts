@@ -4,6 +4,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getLeadPriceFromUrgency } from "@/lib/leads/pricing";
+import { chargeAgentForAppointment } from "@/lib/chargeAgentForAppointment";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -355,13 +356,17 @@ export async function POST(req: NextRequest) {
       slotStartTime: slotStart.getTime(),
     });
     
+    // Get price per appointment from billing settings (default to 1 cent for testing)
+    const pricePerAppointment = 0.01; // $0.01 - change to 29.0 for production
+    const priceCents = Math.round(pricePerAppointment * 100);
+
     const appointmentData: any = {
       lead_id: leadId,
       agent_id: agentId,
       requested_date: requestedDate,
       requested_window: requestedWindow,
       status: "confirmed", // Mark as confirmed immediately after booking
-      price_cents: null, // Can be set later
+      price_cents: priceCents, // Set price when booking
       confirmed_at: confirmedAtISO, // Store exact booking time - MUST match slot startsAt for conflict detection
     };
     
@@ -406,6 +411,51 @@ export async function POST(req: NextRequest) {
     }
     
     console.log("Appointment created successfully:", appointment.id);
+
+    // Charge agent's saved payment method for the appointment
+    const chargeResult = await chargeAgentForAppointment(agentId, priceCents, appointment.id);
+    
+    if (!chargeResult.success) {
+      console.error("Failed to charge agent for appointment:", chargeResult.error);
+      
+      // Update appointment to indicate payment failed (but keep appointment - can retry payment later)
+      await supabaseAdmin
+        .from("appointments")
+        .update({ 
+          price_cents: null, // Clear price to indicate payment failed
+          notes: `Payment failed: ${chargeResult.error}`,
+        })
+        .eq("id", appointment.id);
+      
+      // Return error but don't fail the appointment creation
+      // The appointment exists but payment needs to be retried
+      return NextResponse.json(
+        { 
+          error: "Appointment created but payment failed. Please update your payment method in settings.",
+          appointment: appointment,
+          paymentError: chargeResult.error,
+        },
+        { status: 500 }
+      );
+    }
+
+    // Update appointment with payment intent ID if successful
+    if (chargeResult.paymentIntentId) {
+      await supabaseAdmin
+        .from("appointments")
+        .update({ 
+          price_cents: priceCents,
+          notes: `Payment successful: ${chargeResult.paymentIntentId}`,
+        })
+        .eq("id", appointment.id);
+      
+      console.log("✅ Agent charged successfully for appointment:", {
+        appointmentId: appointment.id,
+        agentId,
+        amountCents: priceCents,
+        paymentIntentId: chargeResult.paymentIntentId,
+      });
+    }
 
     // Send confirmation emails to both agent and family
     try {
