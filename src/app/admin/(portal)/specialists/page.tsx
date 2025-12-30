@@ -5,12 +5,20 @@ import { supabaseClient } from "@/lib/supabaseClient";
 import { useRequireRole } from "@/lib/hooks/useRequireRole";
 import { Search, Calendar, Eye, UserX, User, Building, MapPin, Mail, Phone, Clock, CalendarCheck, X } from "lucide-react";
 
+type OfficeLocation = {
+  id: string;
+  city: string;
+  province: string;
+  name: string;
+};
+
 type SpecialistRow = {
   id: string;
   display_name: string | null;
   email: string | null;
   funeral_home: string | null;
   region: string | null;
+  regions: string[]; // All locations
   specialty: string | null;
   calendar_google: boolean;
   calendar_microsoft: boolean;
@@ -21,6 +29,7 @@ type SpecialistRow = {
   agent_city: string | null;
   agent_province: string | null;
   metadata: any;
+  office_locations: OfficeLocation[];
 };
 
 export default function AdminSpecialistsPage() {
@@ -38,11 +47,12 @@ export default function AdminSpecialistsPage() {
       setLoading(true);
       setError(null);
       try {
-        // Get all agents from profiles table
+        // Get only approved agents from profiles table (only agents visible to families)
         const { data: profilesData, error: profilesError } = await supabaseClient
           .from("profiles")
           .select("id, full_name, email, phone, funeral_home, agent_city, agent_province, approval_status, created_at, metadata")
           .eq("role", "agent")
+          .eq("approval_status", "approved")
           .order("created_at", { ascending: false });
 
         if (profilesError) throw profilesError;
@@ -51,6 +61,7 @@ export default function AdminSpecialistsPage() {
         const agentIds = (profilesData || []).map((p: any) => p.id);
         let calendarByAgent: Record<string, { google: boolean; microsoft: boolean }> = {};
         let appointmentsByAgent: Record<string, number> = {};
+        let officeLocationsByAgent: Record<string, OfficeLocation[]> = {};
 
         if (agentIds.length > 0) {
           // Get calendar connections (uses specialist_id which is the agent's user id)
@@ -76,14 +87,61 @@ export default function AdminSpecialistsPage() {
           (appointmentsData || []).forEach((apt: any) => {
             appointmentsByAgent[apt.agent_id] = (appointmentsByAgent[apt.agent_id] || 0) + 1;
           });
+
+          // Get all office locations for each agent
+          const { data: officeLocationsData } = await supabaseClient
+            .from("office_locations")
+            .select("id, agent_id, city, province, name")
+            .in("agent_id", agentIds)
+            .order("display_order", { ascending: true });
+          
+          (officeLocationsData || []).forEach((loc: any) => {
+            if (!officeLocationsByAgent[loc.agent_id]) {
+              officeLocationsByAgent[loc.agent_id] = [];
+            }
+            officeLocationsByAgent[loc.agent_id].push({
+              id: loc.id,
+              city: loc.city,
+              province: loc.province,
+              name: loc.name,
+            });
+          });
         }
 
         const rows: SpecialistRow[] = (profilesData || []).map((profile: any) => {
           const metadata = profile.metadata || {};
           const specialty = metadata.specialty || null;
-          const region = profile.agent_city && profile.agent_province
+          
+          // Get office locations for this agent
+          const officeLocations = officeLocationsByAgent[profile.id] || [];
+          
+          // Build list of all regions/locations
+          const regions: string[] = [];
+          
+          // Add office locations first
+          officeLocations.forEach((loc) => {
+            const locationStr = `${loc.city}, ${loc.province}`;
+            if (!regions.includes(locationStr)) {
+              regions.push(locationStr);
+            }
+          });
+          
+          // Add default location if not already in list
+          if (profile.agent_city && profile.agent_province) {
+            const defaultLocation = `${profile.agent_city}, ${profile.agent_province}`;
+            if (!regions.includes(defaultLocation)) {
+              regions.push(defaultLocation);
+            }
+          } else if (profile.agent_province) {
+            if (!regions.includes(profile.agent_province)) {
+              regions.push(profile.agent_province);
+            }
+          }
+          
+          // Primary region for display (first one or fallback)
+          const region = regions.length > 0 ? regions[0] : (profile.agent_city && profile.agent_province
             ? `${profile.agent_city}, ${profile.agent_province}`
-            : profile.agent_province || profile.agent_city || null;
+            : profile.agent_province || profile.agent_city || null);
 
           return {
             id: profile.id,
@@ -92,8 +150,9 @@ export default function AdminSpecialistsPage() {
             phone: profile.phone || null,
             funeral_home: profile.funeral_home || null,
             region: region,
+            regions: regions, // All locations
             specialty: specialty,
-            status: profile.approval_status || "pending",
+            status: profile.approval_status || "approved", // Should always be approved since we filter
             calendar_google: calendarByAgent[profile.id]?.google ?? false,
             calendar_microsoft: calendarByAgent[profile.id]?.microsoft ?? false,
             created_at: profile.created_at,
@@ -101,6 +160,7 @@ export default function AdminSpecialistsPage() {
             agent_city: profile.agent_city,
             agent_province: profile.agent_province,
             metadata: metadata,
+            office_locations: officeLocations,
           };
         });
 
@@ -199,7 +259,19 @@ export default function AdminSpecialistsPage() {
                       <p className="text-xs text-neutral-500">{specialist.email || "—"}</p>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-neutral-700">{specialist.region || "—"}</td>
+                  <td className="px-6 py-4">
+                    <div className="space-y-1">
+                      {specialist.regions && specialist.regions.length > 0 ? (
+                        specialist.regions.map((loc, idx) => (
+                          <div key={idx} className="text-sm text-neutral-700">
+                            {loc}
+                          </div>
+                        ))
+                      ) : (
+                        <span className="text-sm text-neutral-400">—</span>
+                      )}
+                    </div>
+                  </td>
                   <td className="px-6 py-4 text-sm text-neutral-700">{specialist.specialty || "—"}</td>
                   <td className="px-6 py-4">
                     {specialist.calendar_google && (
@@ -314,13 +386,17 @@ export default function AdminSpecialistsPage() {
                       </p>
                     </div>
                   )}
-                  {selectedSpecialist.region && (
-                    <div>
-                      <p className="text-xs text-neutral-500 mb-1">Location</p>
-                      <p className="text-sm text-neutral-900 flex items-center gap-2">
-                        <MapPin className="w-4 h-4" />
-                        {selectedSpecialist.region}
-                      </p>
+                  {selectedSpecialist.regions && selectedSpecialist.regions.length > 0 && (
+                    <div className="col-span-2">
+                      <p className="text-xs text-neutral-500 mb-1">Service Locations</p>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedSpecialist.regions.map((loc, idx) => (
+                          <span key={idx} className="text-sm text-neutral-900 flex items-center gap-1 px-2 py-1 bg-neutral-100 rounded">
+                            <MapPin className="w-3 h-3" />
+                            {loc}
+                          </span>
+                        ))}
+                      </div>
                     </div>
                   )}
                   {selectedSpecialist.specialty && (
