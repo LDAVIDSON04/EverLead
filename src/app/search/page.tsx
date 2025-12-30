@@ -1517,7 +1517,6 @@ function SearchResults() {
                         </button>
                       </div>
                     </div>
-                  </div>
                 </div>
               );
             })}
