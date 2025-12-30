@@ -1,6 +1,7 @@
 // src/app/api/appointments/[appointmentId]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { DateTime } from "luxon";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -72,30 +73,64 @@ export async function GET(
       }
     }
 
-    // Format date
-    const [year, month, day] = appointment.requested_date.split('-').map(Number);
-    const date = new Date(year, month - 1, day);
-    const formattedDate = date.toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
+    // Get agent's timezone for proper time conversion
+    let agentTimezone = "America/Vancouver"; // Default
+    if (agentInfo?.agent_province) {
+      const province = agentInfo.agent_province.toUpperCase();
+      if (province === "BC" || province === "BRITISH COLUMBIA") {
+        agentTimezone = "America/Vancouver";
+      } else if (province === "AB" || province === "ALBERTA") {
+        agentTimezone = "America/Edmonton";
+      } else if (province === "SK" || province === "SASKATCHEWAN") {
+        agentTimezone = "America/Regina";
+      } else if (province === "MB" || province === "MANITOBA") {
+        agentTimezone = "America/Winnipeg";
+      } else if (province === "ON" || province === "ONTARIO") {
+        agentTimezone = "America/Toronto";
+      } else if (province === "QC" || province === "QUEBEC") {
+        agentTimezone = "America/Montreal";
+      }
+    }
 
-    // Get exact time if confirmed_at exists, otherwise use time window
+    // Format date and time using agent's timezone
+    let formattedDate = '';
     let exactTime = null;
     let timeDisplay = 'Not specified';
     
     if (appointment.confirmed_at) {
-      const confirmedDate = new Date(appointment.confirmed_at);
-      const hours = confirmedDate.getHours();
-      const minutes = confirmedDate.getMinutes();
+      // Use confirmed_at (exact booking time) and convert to agent's timezone
+      const confirmedAtUTC = DateTime.fromISO(appointment.confirmed_at, { zone: "utc" });
+      const confirmedAtLocal = confirmedAtUTC.setZone(agentTimezone);
+      
+      // Format date with day of week in agent's timezone
+      formattedDate = confirmedAtLocal.toLocaleString({ 
+        weekday: "long", 
+        year: "numeric",
+        month: "long", 
+        day: "numeric" 
+      });
+      
+      // Format exact time in agent's timezone (e.g., "10:00 AM")
+      const hours = confirmedAtLocal.hour;
+      const minutes = confirmedAtLocal.minute;
       const ampm = hours >= 12 ? 'PM' : 'AM';
       const displayHours = hours % 12 || 12;
-      exactTime = appointment.confirmed_at;
       timeDisplay = `${displayHours}:${String(minutes).padStart(2, '0')} ${ampm}`;
-    } else if (appointment.requested_window) {
-      timeDisplay = appointment.requested_window.charAt(0).toUpperCase() + appointment.requested_window.slice(1);
+      exactTime = appointment.confirmed_at;
+    } else {
+      // Fallback: use requested_date and requested_window
+      const [year, month, day] = appointment.requested_date.split('-').map(Number);
+      const date = new Date(year, month - 1, day);
+      formattedDate = date.toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      });
+      
+      if (appointment.requested_window) {
+        timeDisplay = appointment.requested_window.charAt(0).toUpperCase() + appointment.requested_window.slice(1);
+      }
     }
 
     const lead = Array.isArray(appointment.leads) ? appointment.leads[0] : appointment.leads;

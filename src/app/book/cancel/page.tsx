@@ -6,6 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Calendar, Clock, MapPin, X, Star } from "lucide-react";
 import { supabaseClient } from "@/lib/supabaseClient";
+import { DateTime } from "luxon";
 
 type AppointmentData = {
   id: string;
@@ -559,10 +560,32 @@ function CancelAppointmentContent() {
                       const normalizedDayDate = day.date.trim();
                       const isSelected = normalizedSelectedDate === normalizedDayDate;
                       
+                      // Get agent's timezone for proper time conversion
+                      let agentTimezone = "America/Vancouver"; // Default
+                      if (appointmentData.agent?.agent_province) {
+                        const province = appointmentData.agent.agent_province.toUpperCase();
+                        if (province === "BC" || province === "BRITISH COLUMBIA") {
+                          agentTimezone = "America/Vancouver";
+                        } else if (province === "AB" || province === "ALBERTA") {
+                          agentTimezone = "America/Edmonton";
+                        } else if (province === "SK" || province === "SASKATCHEWAN") {
+                          agentTimezone = "America/Regina";
+                        } else if (province === "MB" || province === "MANITOBA") {
+                          agentTimezone = "America/Winnipeg";
+                        } else if (province === "ON" || province === "ONTARIO") {
+                          agentTimezone = "America/Toronto";
+                        } else if (province === "QC" || province === "QUEBEC") {
+                          agentTimezone = "America/Montreal";
+                        }
+                      }
+                      
                       const formattedSlots = day.slots.map(slot => {
-                        const startDate = new Date(slot.startsAt);
-                        const hours = startDate.getHours();
-                        const minutes = startDate.getMinutes();
+                        // Convert UTC to agent's local timezone using Luxon
+                        const utcDate = DateTime.fromISO(slot.startsAt, { zone: "utc" });
+                        const localDate = utcDate.setZone(agentTimezone);
+                        
+                        const hours = localDate.hour;
+                        const minutes = localDate.minute;
                         const ampm = hours >= 12 ? 'PM' : 'AM';
                         const displayHours = hours % 12 || 12;
                         const timeStr = `${displayHours}:${String(minutes).padStart(2, '0')} ${ampm}`;
