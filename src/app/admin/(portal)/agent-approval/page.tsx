@@ -287,13 +287,15 @@ export default function AgentApprovalPage() {
                               {doc.name === 'Profile Bio' && specialist.bio ? (
                                 <button 
                                   onClick={() => {
+                                    const bioText = specialist.bio || '';
+                                    const escapedBio = bioText.replace(/</g, '&lt;').replace(/>/g, '&gt;');
                                     const modal = document.createElement('div');
                                     modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
                                     modal.innerHTML = `
                                       <div class="bg-white rounded-lg p-6 max-w-2xl max-h-[80vh] overflow-auto">
                                         <h3 class="text-lg font-semibold mb-4">Profile Bio for ${specialist.name}</h3>
                                         <div class="bg-gray-50 rounded-lg p-4 mb-4">
-                                          <p class="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">${specialist.bio.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>
+                                          <p class="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">${escapedBio}</p>
                                         </div>
                                         <div class="flex gap-2">
                                           <button onclick="this.closest('.fixed').remove()" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 text-sm">Close</button>
