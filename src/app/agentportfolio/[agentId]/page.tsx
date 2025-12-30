@@ -49,7 +49,22 @@ function AgentProfileContent() {
           }
           const metadata = data.metadata || {};
           const specialty = (metadata as any)?.specialty || null;
-          const licenseNumber = (metadata as any)?.license_number || null;
+          const regionsServed = (metadata as any)?.regions_served_array || 
+            ((metadata as any)?.regions_served ? (metadata as any).regions_served.split(',').map((r: string) => r.trim()) : []);
+          const trustageEnroller = (metadata as any)?.trustage_enroller_number === true || (metadata as any)?.trustage_enroller_number === 'yes';
+          const llqpLicense = (metadata as any)?.llqp_license === true || (metadata as any)?.llqp_license === 'yes';
+          const llqpQuebec = (metadata as any)?.llqp_quebec || null;
+          
+          // Build credentials string
+          let credentialsParts = [];
+          if (trustageEnroller) credentialsParts.push('TruStage Enroller');
+          if (llqpLicense) {
+            credentialsParts.push('LLQP Licensed');
+            if (llqpQuebec && llqpQuebec !== 'non-applicable') {
+              credentialsParts.push(`Quebec: ${llqpQuebec === 'yes' ? 'Valid' : 'Not Valid'}`);
+            }
+          }
+          const credentials = credentialsParts.length > 0 ? credentialsParts.join(', ') : 'Licensed Professional';
           
           // Use AI-generated bio if approved, otherwise use fallback
           const hasApprovedBio = data.bio_approval_status === 'approved' && data.ai_generated_bio;
@@ -72,14 +87,12 @@ function AgentProfileContent() {
 
           setAgentData({
             ...data,
-            business_address: (metadata as any)?.business_address || null,
-            business_street: (metadata as any)?.business_street || null,
-            business_city: (metadata as any)?.business_city || null,
-            business_province: (metadata as any)?.business_province || null,
-            business_zip: (metadata as any)?.business_zip || null,
             specialty: specialty,
-            license_number: licenseNumber,
-            credentials: licenseNumber ? `LFD, ${licenseNumber}` : 'LFD',
+            regionsServed: regionsServed,
+            trustageEnroller: trustageEnroller,
+            llqpLicense: llqpLicense,
+            llqpQuebec: llqpQuebec,
+            credentials: credentials,
             rating: rating,
             reviewCount: reviewCount,
             verified: true,

@@ -9,11 +9,26 @@ interface CredentialsProps {
 export function Credentials({ agentData }: CredentialsProps) {
   const credentials = [];
   
-  if (agentData.license_number) {
+  // TruStage Enroller Number
+  if (agentData.trustageEnroller === true || agentData.trustageEnroller === 'yes') {
+    credentials.push({
+      type: 'certification',
+      name: 'TruStage Life Of Canada Enroller',
+      issuer: 'TruStage',
+      year: 'Current'
+    });
+  }
+  
+  // LLQP License
+  if (agentData.llqpLicense === true || agentData.llqpLicense === 'yes') {
+    let llqpName = 'LLQP Licensed';
+    if (agentData.llqpQuebec && agentData.llqpQuebec !== 'non-applicable') {
+      llqpName += ` (Quebec: ${agentData.llqpQuebec === 'yes' ? 'Valid' : 'Not Valid'})`;
+    }
     credentials.push({
       type: 'license',
-      name: 'Licensed Funeral Director',
-      issuer: 'Professional Licensing Board',
+      name: llqpName,
+      issuer: 'Licensing Authority',
       year: 'Current'
     });
   }

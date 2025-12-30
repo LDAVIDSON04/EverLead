@@ -24,6 +24,7 @@ export default function CreateAccountPage() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [acknowledgmentChecked, setAcknowledgmentChecked] = useState(false);
 
   // Step 1: Basic Info
   const [basicInfo, setBasicInfo] = useState({
@@ -42,14 +43,13 @@ export default function CreateAccountPage() {
   const [businessInfo, setBusinessInfo] = useState({
     businessName: '',
     professionalTitle: '',
-    licenseNumber: '',
-    regionsServed: '',
+    regionsServed: [] as string[],
     specialty: '',
-    businessStreet: '',
-    businessCity: '',
-    businessProvince: '',
-    businessZip: '',
+    trustageEnrollerNumber: 'no' as 'yes' | 'no',
+    llqpLicense: 'no' as 'yes' | 'no',
+    llqpQuebec: 'non-applicable' as 'yes' | 'no' | 'non-applicable',
   });
+  const [newRegion, setNewRegion] = useState('');
   const [officeLocations, setOfficeLocations] = useState<OfficeLocation[]>([]);
   const [showAddLocation, setShowAddLocation] = useState(false);
   const [newLocation, setNewLocation] = useState<OfficeLocation>({
@@ -72,7 +72,7 @@ export default function CreateAccountPage() {
   });
 
   const provinces = ['AB', 'BC', 'MB', 'NB', 'NL', 'NS', 'NT', 'NU', 'ON', 'PE', 'QC', 'SK', 'YT'];
-  
+
   const specialtyOptions = [
     'Pre-need planning',
     'Estate planning support',
@@ -111,18 +111,43 @@ export default function CreateAccountPage() {
   };
 
   const validateStep2 = (): boolean => {
-    if (!businessInfo.businessName || !businessInfo.professionalTitle || !businessInfo.licenseNumber ||
-        !businessInfo.regionsServed || !businessInfo.specialty) {
+    if (!businessInfo.businessName || !businessInfo.professionalTitle ||
+        businessInfo.regionsServed.length === 0 || !businessInfo.specialty) {
       setError('Please fill in all required fields.');
       return false;
     }
     return true;
   };
 
+  const addRegion = () => {
+    if (!newRegion.trim()) {
+      setError('Please enter a region name.');
+      return;
+    }
+    if (businessInfo.regionsServed.includes(newRegion.trim())) {
+      setError('This region has already been added.');
+      return;
+    }
+    setBusinessInfo({ ...businessInfo, regionsServed: [...businessInfo.regionsServed, newRegion.trim()] });
+    setNewRegion('');
+    setError(null);
+  };
+
+  const removeRegion = (index: number) => {
+    setBusinessInfo({
+      ...businessInfo,
+      regionsServed: businessInfo.regionsServed.filter((_, i) => i !== index),
+    });
+  };
+
   const validateStep3 = (): boolean => {
     if (!bioData.years_of_experience || bioData.specialties.length === 0 ||
         !bioData.practice_philosophy_help || !bioData.practice_philosophy_appreciate) {
       setError('Please fill in all required fields.');
+      return false;
+    }
+    if (!acknowledgmentChecked) {
+      setError('Please acknowledge that you have answered all questions to the best of your knowledge.');
       return false;
     }
     return true;
@@ -227,17 +252,15 @@ export default function CreateAccountPage() {
         // Business Info
         funeral_home: businessInfo.businessName,
         job_title: businessInfo.professionalTitle,
-        business_address: businessInfo.businessStreet || undefined,
-        business_street: businessInfo.businessStreet || undefined,
-        business_city: businessInfo.businessCity || undefined,
-        business_province: businessInfo.businessProvince || undefined,
-        business_zip: businessInfo.businessZip || undefined,
         
         // Metadata fields
         metadata: {
-          license_number: businessInfo.licenseNumber,
-          regions_served: businessInfo.regionsServed,
+          regions_served: businessInfo.regionsServed.join(', '),
+          regions_served_array: businessInfo.regionsServed,
           specialty: businessInfo.specialty,
+          trustage_enroller_number: businessInfo.trustageEnrollerNumber === 'yes',
+          llqp_license: businessInfo.llqpLicense === 'yes',
+          llqp_quebec: businessInfo.llqpQuebec,
           bio: bioData,
         },
         
@@ -465,8 +488,8 @@ export default function CreateAccountPage() {
                   placeholder="e.g., Smith Funeral Home"
                   className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-700 outline-none transition-colors"
                   required
-                />
-              </div>
+            />
+          </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Professional Title *</label>
@@ -477,31 +500,146 @@ export default function CreateAccountPage() {
                   placeholder="e.g., Funeral Director, Pre-need Specialist"
                   className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-700 outline-none transition-colors"
                   required
-                />
+            />
+          </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Do you have a valid TruStage Life Of Canada enroller number? *</label>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="trustageEnroller"
+                      value="yes"
+                      checked={businessInfo.trustageEnrollerNumber === 'yes'}
+                      onChange={(e) => setBusinessInfo({ ...businessInfo, trustageEnrollerNumber: e.target.value as 'yes' | 'no' })}
+                      className="w-4 h-4 text-green-800 border-gray-300 focus:ring-green-800"
+                    />
+                    <span className="text-sm text-gray-700">Yes</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="trustageEnroller"
+                      value="no"
+                      checked={businessInfo.trustageEnrollerNumber === 'no'}
+                      onChange={(e) => setBusinessInfo({ ...businessInfo, trustageEnrollerNumber: e.target.value as 'yes' | 'no' })}
+                      className="w-4 h-4 text-green-800 border-gray-300 focus:ring-green-800"
+                    />
+                    <span className="text-sm text-gray-700">No</span>
+                  </label>
+                </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">License Number(s) *</label>
-                <input
-                  type="text"
-                  value={businessInfo.licenseNumber}
-                  onChange={(e) => setBusinessInfo({ ...businessInfo, licenseNumber: e.target.value })}
-                  placeholder="Enter your license number(s)"
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-700 outline-none transition-colors"
-                  required
-                />
+                <label className="block text-sm font-medium text-gray-700 mb-2">Do you have a valid LLQP license? *</label>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="llqpLicense"
+                      value="yes"
+                      checked={businessInfo.llqpLicense === 'yes'}
+                      onChange={(e) => setBusinessInfo({ ...businessInfo, llqpLicense: e.target.value as 'yes' | 'no' })}
+                      className="w-4 h-4 text-green-800 border-gray-300 focus:ring-green-800"
+                    />
+                    <span className="text-sm text-gray-700">Yes</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="llqpLicense"
+                      value="no"
+                      checked={businessInfo.llqpLicense === 'no'}
+                      onChange={(e) => setBusinessInfo({ ...businessInfo, llqpLicense: e.target.value as 'yes' | 'no' })}
+                      className="w-4 h-4 text-green-800 border-gray-300 focus:ring-green-800"
+                    />
+                    <span className="text-sm text-gray-700">No</span>
+                  </label>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Is your LLQP valid in Quebec? *</label>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="llqpQuebec"
+                      value="yes"
+                      checked={businessInfo.llqpQuebec === 'yes'}
+                      onChange={(e) => setBusinessInfo({ ...businessInfo, llqpQuebec: e.target.value as 'yes' | 'no' | 'non-applicable' })}
+                      className="w-4 h-4 text-green-800 border-gray-300 focus:ring-green-800"
+                    />
+                    <span className="text-sm text-gray-700">Yes</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="llqpQuebec"
+                      value="no"
+                      checked={businessInfo.llqpQuebec === 'no'}
+                      onChange={(e) => setBusinessInfo({ ...businessInfo, llqpQuebec: e.target.value as 'yes' | 'no' | 'non-applicable' })}
+                      className="w-4 h-4 text-green-800 border-gray-300 focus:ring-green-800"
+                    />
+                    <span className="text-sm text-gray-700">No</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="llqpQuebec"
+                      value="non-applicable"
+                      checked={businessInfo.llqpQuebec === 'non-applicable'}
+                      onChange={(e) => setBusinessInfo({ ...businessInfo, llqpQuebec: e.target.value as 'yes' | 'no' | 'non-applicable' })}
+                      className="w-4 h-4 text-green-800 border-gray-300 focus:ring-green-800"
+                    />
+                    <span className="text-sm text-gray-700">Non Applicable</span>
+                  </label>
+                </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Region(s) Served *</label>
-                <input
-                  type="text"
-                  value={businessInfo.regionsServed}
-                  onChange={(e) => setBusinessInfo({ ...businessInfo, regionsServed: e.target.value })}
-                  placeholder="e.g., Toronto, GTA, Mississauga"
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-700 outline-none transition-colors"
-                  required
-                />
+                <div className="space-y-3">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={newRegion}
+                      onChange={(e) => setNewRegion(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          addRegion();
+                        }
+                      }}
+                      placeholder="e.g., Toronto, GTA, Mississauga"
+                      className="flex-1 px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-green-700 outline-none transition-colors"
+                    />
+                    <button
+                      type="button"
+                      onClick={addRegion}
+                      className="px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-800 transition-colors"
+                    >
+                      Add
+                    </button>
+                  </div>
+                  {businessInfo.regionsServed.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {businessInfo.regionsServed.map((region, index) => (
+                        <div key={index} className="flex items-center gap-2 px-3 py-1 bg-green-50 border border-green-200 rounded-lg">
+                          <span className="text-sm text-gray-700">{region}</span>
+                          <button
+                            type="button"
+                            onClick={() => removeRegion(index)}
+                            className="text-red-600 hover:text-red-800"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div>
@@ -514,56 +652,21 @@ export default function CreateAccountPage() {
                   className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-700 outline-none transition-colors resize-none"
                   required
                 />
-              </div>
-
-              {/* Business Address (Optional) */}
-              <div className="border-t pt-6">
-                <h3 className="text-lg font-semibold mb-4">Business Address (Optional)</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <input
-                    type="text"
-                    value={businessInfo.businessStreet}
-                    onChange={(e) => setBusinessInfo({ ...businessInfo, businessStreet: e.target.value })}
-                    placeholder="Street Address"
-                    className="px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-700 outline-none transition-colors"
-                  />
-                  <input
-                    type="text"
-                    value={businessInfo.businessCity}
-                    onChange={(e) => setBusinessInfo({ ...businessInfo, businessCity: e.target.value })}
-                    placeholder="City"
-                    className="px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-700 outline-none transition-colors"
-                  />
-                  <input
-                    type="text"
-                    value={businessInfo.businessProvince}
-                    onChange={(e) => setBusinessInfo({ ...businessInfo, businessProvince: e.target.value })}
-                    placeholder="Province"
-                    className="px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-700 outline-none transition-colors"
-                  />
-                  <input
-                    type="text"
-                    value={businessInfo.businessZip}
-                    onChange={(e) => setBusinessInfo({ ...businessInfo, businessZip: e.target.value })}
-                    placeholder="Postal Code"
-                    className="px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-700 outline-none transition-colors"
-                  />
-                </div>
-              </div>
+          </div>
 
               {/* Office Locations */}
               <div className="border-t pt-6">
-                <div className="flex justify-between items-center mb-4">
+              <div className="flex justify-between items-center mb-4">
                   <h3 className="text-lg font-semibold">Office Locations</h3>
-                  <button
-                    type="button"
+                <button
+                  type="button"
                     onClick={() => setShowAddLocation(!showAddLocation)}
-                    className="flex items-center gap-2 px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-800 transition-colors"
-                  >
-                    <Plus className="w-4 h-4" />
+                  className="flex items-center gap-2 px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-800 transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
                     Add Location
-                  </button>
-                </div>
+                </button>
+              </div>
 
                 {showAddLocation && (
                   <div className="mb-4 p-4 border-2 border-gray-300 rounded-lg bg-gray-50">
@@ -655,7 +758,7 @@ export default function CreateAccountPage() {
                     </button>
                   </div>
                 ))}
-              </div>
+                </div>
             </div>
           )}
 
@@ -685,20 +788,20 @@ export default function CreateAccountPage() {
                 <div className="grid grid-cols-2 gap-3">
                   {specialtyOptions.map((specialty) => (
                     <label key={specialty} className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
+                  <input
+                    type="checkbox"
                         checked={bioData.specialties.includes(specialty)}
                         onChange={() => toggleSpecialty(specialty)}
                         className="w-4 h-4 text-green-800 border-gray-300 rounded focus:ring-green-800"
                       />
                       <span className="text-sm text-gray-700">{specialty}</span>
-                    </label>
-                  ))}
-                </div>
+                </label>
+              ))}
+            </div>
                 {bioData.specialties.length >= 5 && (
                   <p className="text-xs text-gray-500 mt-2">Maximum 5 specialties selected</p>
                 )}
-              </div>
+          </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -794,6 +897,24 @@ export default function CreateAccountPage() {
             </div>
           )}
 
+          {/* Acknowledgment Checkbox (Step 3 only) */}
+          {currentStep === 3 && (
+            <div className="mt-6 p-4 border-2 border-gray-300 rounded-lg bg-gray-50">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={acknowledgmentChecked}
+                  onChange={(e) => setAcknowledgmentChecked(e.target.checked)}
+                  className="mt-1 w-5 h-5 text-green-800 border-gray-300 rounded focus:ring-green-800"
+                  required
+                />
+                <span className="text-sm text-gray-700">
+                  I have answered all questions with the best of my knowledge *
+                </span>
+              </label>
+            </div>
+          )}
+
           {/* Navigation Buttons */}
           <div className="flex justify-between items-center mt-8 pt-6 border-t">
             <button
@@ -815,13 +936,13 @@ export default function CreateAccountPage() {
                 <ChevronRight className="w-5 h-5" />
               </button>
             ) : (
-              <button
-                type="submit"
-                disabled={submitting}
+          <button
+            type="submit"
+            disabled={submitting}
                 className="px-8 py-3 bg-green-700 text-white rounded-lg hover:bg-green-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-semibold"
-              >
-                {submitting ? 'Submitting...' : 'Submit for Approval'}
-              </button>
+          >
+            {submitting ? 'Submitting...' : 'Submit for Approval'}
+          </button>
             )}
           </div>
 

@@ -10,6 +10,7 @@ type PendingAgent = {
   email: string | null;
   phone: string | null;
   funeral_home: string | null;
+  job_title: string | null;
   licensed_in_province: boolean;
   licensed_funeral_director: boolean;
   notification_cities: Array<{ city: string; province: string }> | null;
@@ -641,39 +642,84 @@ export default function AgentApprovalPage() {
                       </div>
                     </div>
                   )}
+                  {/* Regions Served (from metadata) */}
+                  {(() => {
+                    const metadata = selectedAgent.metadata || {};
+                    const regionsServed = metadata.regions_served_array || 
+                      (metadata.regions_served ? metadata.regions_served.split(',').map((r: string) => r.trim()) : []);
+                    if (regionsServed.length > 0) {
+                      return (
+                        <div className="col-span-2">
+                          <p className="text-xs text-neutral-500 mb-1">Regions Served</p>
+                          <div className="flex flex-wrap gap-2">
+                            {regionsServed.map((region: string, idx: number) => (
+                              <span key={idx} className="text-sm text-neutral-900 px-2 py-1 bg-neutral-100 rounded">
+                                {region}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
+                  {/* Professional Title */}
+                  {selectedAgent.job_title && (
+                    <div className="col-span-2">
+                      <p className="text-xs text-neutral-500 mb-1">Professional Title</p>
+                      <p className="text-sm text-neutral-900">{selectedAgent.job_title}</p>
+                    </div>
+                  )}
+                  {/* Specialty */}
+                  {(() => {
+                    const metadata = selectedAgent.metadata || {};
+                    const specialty = metadata.specialty;
+                    if (specialty) {
+                      return (
+                        <div className="col-span-2">
+                          <p className="text-xs text-neutral-500 mb-1">Specialty / Services Offered</p>
+                          <p className="text-sm text-neutral-900">{specialty}</p>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
                 </div>
               </div>
 
-              {/* Documents */}
+              {/* Business Information & Credentials */}
               <div>
                 <h3 className="text-lg font-semibold text-black mb-4 flex items-center gap-2">
                   <FileText className="w-5 h-5" />
-                  Documents & Credentials
+                  Business Information & Credentials
                 </h3>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    {selectedAgent.licensed_in_province ? (
-                      <Check className="w-4 h-4 text-emerald-700" />
-                    ) : (
-                      <X className="w-4 h-4 text-red-500" />
-                    )}
-                    <span className="text-sm text-neutral-700">License Verification</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {selectedAgent.licensed_funeral_director ? (
-                      <Check className="w-4 h-4 text-emerald-700" />
-                    ) : (
-                      <X className="w-4 h-4 text-red-500" />
-                    )}
-                    <span className="text-sm text-neutral-700">Funeral Director License</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {selectedAgent.funeral_home ? (
-                      <Check className="w-4 h-4 text-emerald-700" />
-                    ) : (
-                      <X className="w-4 h-4 text-red-500" />
-                    )}
-                    <span className="text-sm text-neutral-700">Business Registration</span>
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-4">
+                    {(() => {
+                      const metadata = selectedAgent.metadata || {};
+                      return (
+                        <>
+                          <div>
+                            <p className="text-xs text-neutral-500 mb-1">TruStage Enroller Number</p>
+                            <p className="text-sm text-neutral-900">
+                              {metadata.trustage_enroller_number === true || metadata.trustage_enroller_number === 'yes' ? 'Yes' : 'No'}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-neutral-500 mb-1">LLQP License</p>
+                            <p className="text-sm text-neutral-900">
+                              {metadata.llqp_license === true || metadata.llqp_license === 'yes' ? 'Yes' : 'No'}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-neutral-500 mb-1">LLQP Valid in Quebec</p>
+                            <p className="text-sm text-neutral-900 capitalize">
+                              {metadata.llqp_quebec || 'N/A'}
+                            </p>
+                          </div>
+                        </>
+                      );
+                    })()}
                   </div>
                 </div>
               </div>

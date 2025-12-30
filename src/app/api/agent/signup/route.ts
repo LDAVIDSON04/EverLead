@@ -275,9 +275,20 @@ export async function POST(req: NextRequest) {
     // LLQP License
     if (llqp_exclusive_quebec !== undefined) metadata.llqp_exclusive_quebec = llqp_exclusive_quebec === true || llqp_exclusive_quebec === "yes";
     if (llqp_including_quebec !== undefined) metadata.llqp_including_quebec = llqp_including_quebec === true || llqp_including_quebec === "yes";
+    // New LLQP fields from create account form
+    if (metadataFromBody?.llqp_license !== undefined) {
+      metadata.llqp_license = metadataFromBody.llqp_license === true || metadataFromBody.llqp_license === "yes";
+    }
+    if (metadataFromBody?.llqp_quebec !== undefined) {
+      metadata.llqp_quebec = metadataFromBody.llqp_quebec;
+    }
     
     // TruStage
     if (trustage_enroller_number !== undefined) metadata.trustage_enroller_number = trustage_enroller_number === true || trustage_enroller_number === "yes";
+    // New TruStage field from create account form
+    if (metadataFromBody?.trustage_enroller_number !== undefined) {
+      metadata.trustage_enroller_number = metadataFromBody.trustage_enroller_number === true || metadataFromBody.trustage_enroller_number === "yes";
+    }
     
     // Independent Agent
     if (independent_agent !== undefined) metadata.independent_agent = independent_agent === true || independent_agent === "yes";
@@ -304,12 +315,13 @@ export async function POST(req: NextRequest) {
       metadata.funeral_home_services = funeral_home_services;
     }
     
-    // Business address fields from metadata
-    if (business_street) metadata.business_street = business_street;
-    if (business_city) metadata.business_city = business_city;
-    if (business_province) metadata.business_province = business_province;
-    if (business_zip) metadata.business_zip = business_zip;
-    if (business_address) metadata.business_address = business_address;
+    // Handle regions_served_array if provided (new format)
+    if (metadataFromBody?.regions_served_array && Array.isArray(metadataFromBody.regions_served_array)) {
+      metadata.regions_served = metadataFromBody.regions_served_array.join(', ');
+      metadata.regions_served_array = metadataFromBody.regions_served_array;
+    } else if (metadataFromBody?.regions_served) {
+      metadata.regions_served = metadataFromBody.regions_served;
+    }
     
     // Legacy fields for backward compatibility
     if (licensed_in_province !== undefined) {
