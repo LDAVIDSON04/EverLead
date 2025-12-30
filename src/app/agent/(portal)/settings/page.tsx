@@ -158,8 +158,6 @@ export default function SettingsPage() {
     profilePictureUrl: "",
   });
 
-  const [profileCompleteness, setProfileCompleteness] = useState(0);
-  const [verificationStatus, setVerificationStatus] = useState<"approved" | "pending" | "needs_info">("pending");
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
@@ -208,22 +206,6 @@ export default function SettingsPage() {
             profilePictureUrl: profile.profile_picture_url || "",
           });
 
-          // Calculate completeness
-          let filled = 0;
-          const total = 9;
-          if (profile.full_name) filled++;
-          if (profile.funeral_home) filled++;
-          if (profile.job_title) filled++;
-          if (profile.email) filled++;
-          if (profile.phone) filled++;
-          if (metadata.license_number) filled++;
-          if (metadata.regions_served) filled++;
-          if (metadata.specialty) filled++;
-          if (profile.profile_picture_url) filled++;
-          setProfileCompleteness(Math.round((filled / total) * 100));
-
-          // Set verification status (assuming agents are approved by default, or check a status field)
-          setVerificationStatus(profile.status === "approved" ? "approved" : "pending");
         }
       } catch (err) {
         console.error("Error loading profile:", err);
@@ -327,8 +309,6 @@ export default function SettingsPage() {
             <ProfileSection
               profileData={profileData}
               setProfileData={setProfileData}
-              profileCompleteness={profileCompleteness}
-              verificationStatus={verificationStatus}
             />
           )}
           {activeTab === "bio" && <ProfileBioSection />}
@@ -348,13 +328,9 @@ export default function SettingsPage() {
 function ProfileSection({
   profileData,
   setProfileData,
-  profileCompleteness,
-  verificationStatus,
 }: {
   profileData: any;
   setProfileData: (data: any) => void;
-  profileCompleteness: number;
-  verificationStatus: "approved" | "pending" | "needs_info";
 }) {
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -575,40 +551,6 @@ function ProfileSection({
         <p className="text-gray-600 text-sm">Manage your professional profile and business information</p>
       </div>
 
-      {/* Status Indicators */}
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        <div className="bg-gray-50 rounded-lg p-4">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-gray-600">Profile Completeness</span>
-            <span className="font-semibold text-sm">{profileCompleteness}%</span>
-          </div>
-          <Progress value={profileCompleteness} className="h-2" />
-        </div>
-
-        <div className="bg-gray-50 rounded-lg p-4 flex items-center justify-between">
-          <div>
-            <span className="text-sm text-gray-600 block mb-1">Verification Status</span>
-            {verificationStatus === "approved" && (
-              <Badge className="bg-green-800 text-white">
-                <Check size={12} className="mr-1" />
-                Approved
-              </Badge>
-            )}
-            {verificationStatus === "pending" && (
-              <Badge className="bg-yellow-100 text-yellow-800">
-                <AlertCircle size={12} className="mr-1" />
-                Under Review
-              </Badge>
-            )}
-            {verificationStatus === "needs_info" && (
-              <Badge className="bg-red-100 text-red-800">
-                <AlertCircle size={12} className="mr-1" />
-                Needs Info
-              </Badge>
-            )}
-          </div>
-        </div>
-      </div>
 
       {/* Profile Photo */}
       <div className="mb-6">
@@ -1298,10 +1240,7 @@ function CalendarAvailabilitySection() {
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-6">
       <div className="mb-6">
-        <div className="flex items-center gap-2 mb-2">
-          <h2 className="text-xl">Calendar & Availability</h2>
-          <Badge className="bg-green-800 text-white">MOST IMPORTANT</Badge>
-        </div>
+        <h2 className="text-xl mb-2">Calendar & Availability</h2>
         <p className="text-gray-600 text-sm">Manage calendar connections and set your availability rules</p>
       </div>
 
@@ -1880,7 +1819,7 @@ function PayoutsSection() {
           <div className="bg-green-50 rounded-lg p-4 border border-green-200">
             <div className="text-sm text-gray-600 mb-1">Estimated Charge</div>
             <div className="text-2xl font-semibold text-green-800">${currentMonthTotal}</div>
-            <div className="text-xs text-gray-500 mt-1">Due next month</div>
+            <div className="text-xs text-gray-500 mt-1">Charged immediately when appointments are booked</div>
           </div>
         </div>
       </div>
@@ -1922,6 +1861,7 @@ function NotificationsSection({ email, phone }: { email: string; phone: string }
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [agentEmail, setAgentEmail] = useState<string>("");
   const [notifications, setNotifications] = useState({
     newAppointment: { email: true, sms: false },
     appointmentCancelled: { email: true, sms: true },
@@ -1933,6 +1873,11 @@ function NotificationsSection({ email, phone }: { email: string; phone: string }
   useEffect(() => {
     async function loadNotifications() {
       try {
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        if (user?.email) {
+          setAgentEmail(user.email);
+        }
+
         const { data: { session } } = await supabaseClient.auth.getSession();
         if (!session?.access_token) return;
 
@@ -2112,7 +2057,7 @@ function NotificationsSection({ email, phone }: { email: string; phone: string }
             <span className="font-medium text-sm">Email Notifications</span>
           </div>
           <p className="text-xs text-gray-600">
-            Email notifications are sent to: <strong>{email || "Not set"}</strong>
+            Email notifications are sent to: <strong>{agentEmail || email || "Not set"}</strong>
           </p>
         </div>
 
@@ -2386,7 +2331,6 @@ function ProfileBioSection() {
     languages_spoken: [] as string[],
     typical_response_time: '',
   });
-  const [bioStatus, setBioStatus] = useState<'pending' | 'approved' | 'rejected' | null>(null);
   const [generatedBio, setGeneratedBio] = useState<string | null>(null);
 
   const specialtyOptions = [
@@ -2418,7 +2362,7 @@ function ProfileBioSection() {
 
       const { data: profile } = await supabaseClient
         .from('profiles')
-        .select('metadata, bio_approval_status, ai_generated_bio')
+        .select('metadata, ai_generated_bio')
         .eq('id', user.id)
         .single();
 
@@ -2436,7 +2380,6 @@ function ProfileBioSection() {
           typical_response_time: bio.typical_response_time || '',
         });
 
-        setBioStatus(profile.bio_approval_status as any);
         setGeneratedBio(profile.ai_generated_bio);
       }
     } catch (err) {
@@ -2519,8 +2462,7 @@ function ProfileBioSection() {
 
       const data = await res.json();
       setGeneratedBio(data.bio);
-      setBioStatus('pending');
-      setSaveMessage({ type: 'success', text: 'Bio generated successfully! It will be reviewed by admin before being published.' });
+      setSaveMessage({ type: 'success', text: 'Bio generated successfully!' });
       
       // Reload to get updated status
       await loadBioData();
@@ -2588,35 +2530,6 @@ function ProfileBioSection() {
         </div>
       )}
 
-      {/* Bio Status */}
-      {bioStatus && (
-        <div className={`mb-6 p-4 rounded-lg ${
-          bioStatus === 'approved' 
-            ? 'bg-green-50 border border-green-200' 
-            : bioStatus === 'rejected'
-            ? 'bg-red-50 border border-red-200'
-            : 'bg-yellow-50 border border-yellow-200'
-        }`}>
-          <div className="flex items-center gap-2">
-            {bioStatus === 'approved' ? (
-              <Check className="w-5 h-5 text-green-600" />
-            ) : bioStatus === 'rejected' ? (
-              <X className="w-5 h-5 text-red-600" />
-            ) : (
-              <Clock className="w-5 h-5 text-yellow-600" />
-            )}
-            <p className={`text-sm font-medium ${
-              bioStatus === 'approved' ? 'text-green-800' : bioStatus === 'rejected' ? 'text-red-800' : 'text-yellow-800'
-            }`}>
-              {bioStatus === 'approved' 
-                ? 'Your bio has been approved and is live on your profile.'
-                : bioStatus === 'rejected'
-                ? 'Your bio was rejected. Please update your information and generate a new bio.'
-                : 'Your bio is pending admin approval.'}
-            </p>
-          </div>
-        </div>
-      )}
 
       {/* Generated Bio Preview */}
       {generatedBio && (
