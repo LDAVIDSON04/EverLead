@@ -541,21 +541,26 @@ export default function HomePage() {
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             {/* Left side - Content */}
             <div>
-              <h2 className="text-5xl mb-8 text-[#1A1A1A] font-semibold tracking-tight leading-tight">
-                Trusted by top funeral homes
+              <h2 className="text-5xl mb-6 text-[#1A1A1A] font-semibold tracking-tight leading-tight">
+                Built with professional standards in mind.
               </h2>
+              <p className="text-xl text-[#1A1A1A]/70 leading-relaxed">
+                Soradin is designed to support thoughtful, ethical estate planning prioritizing clarity, consent, and family peace of mind.
+              </p>
             </div>
 
-            {/* Right side - Logo Grid */}
-            <div className="grid grid-cols-3 gap-8">
-              {[1, 2, 3, 4, 5, 6].map((index) => (
-                <div key={index} className="flex items-center justify-center">
-                  {/* Empty bubble logo placeholder */}
-                  <div className="w-24 h-24 rounded-full bg-white border-2 border-[#1A1A1A]/10 shadow-sm flex items-center justify-center">
-                    <span className="text-xs text-[#1A1A1A]/30">Logo {index}</span>
-                  </div>
-                </div>
-              ))}
+            {/* Right side - Checklist Image */}
+            <div className="relative w-full flex items-center justify-center">
+              <Image
+                src="/checklist-image.png"
+                alt="Professional standards checklist"
+                width={600}
+                height={600}
+                className="w-full h-auto object-contain"
+                style={{
+                  mixBlendMode: "multiply",
+                }}
+              />
             </div>
           </div>
         </div>
