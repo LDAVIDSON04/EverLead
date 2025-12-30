@@ -747,9 +747,6 @@ export default function SchedulePage() {
                                 >
                                   <Download className={`w-5 h-5 ${appointment.lead_id ? '' : 'text-gray-300'}`} />
                                 </button>
-                                <button className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all" title="Cancel">
-                                  <X className="w-5 h-5" />
-                                </button>
                               </>
                             )}
                             {appointment.is_external && (
