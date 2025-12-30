@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
     }
 
     const agentId = user.id;
-    const pricePerAppointment = 0.01; // Testing price - change back to 29.0 for production
+    const pricePerAppointment = 0.50; // Testing price - Stripe minimum is $0.50, change to 29.0 for production
 
     // Get current month appointments (booked/confirmed appointments)
     const now = new Date();
