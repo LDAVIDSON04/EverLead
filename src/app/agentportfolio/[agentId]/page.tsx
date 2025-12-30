@@ -1,10 +1,10 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { useState, useEffect, Suspense } from "react";
 import { supabaseClient } from "@/lib/supabaseClient";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Calendar } from "lucide-react";
 import { AgentHeader } from "./components/AgentHeader";
 import { TrustHighlights } from "./components/TrustHighlights";
 import { AboutSection } from "./components/AboutSection";
@@ -12,9 +12,11 @@ import { OfficeLocations } from "./components/OfficeLocations";
 import { Reviews } from "./components/Reviews";
 import { BookingPanel } from "./components/BookingPanel";
 
-export default function AgentProfilePage() {
+function AgentProfileContent() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const agentId = params?.agentId as string;
+  const isReschedule = searchParams?.get("reschedule") === "true";
 
   const [agentData, setAgentData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -130,6 +132,21 @@ export default function AgentProfilePage() {
         </div>
       </header>
 
+      {/* Reschedule Banner */}
+      {isReschedule && (
+        <div className="bg-[#0D5C3D] text-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="flex items-center gap-3">
+              <Calendar className="w-5 h-5" />
+              <div>
+                <p className="font-semibold">Rescheduling Your Appointment</p>
+                <p className="text-sm text-green-100">Select a new date and time below. Your previous appointment has been cancelled.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Main Container - Matching Design */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Two-column layout */}
@@ -169,5 +186,20 @@ export default function AgentProfilePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function AgentProfilePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#1a4d2e] mb-4"></div>
+          <p className="text-gray-600">Loading profile...</p>
+        </div>
+      </div>
+    }>
+      <AgentProfileContent />
+    </Suspense>
   );
 }

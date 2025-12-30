@@ -65,10 +65,10 @@ function CancelAppointmentContent() {
         // Get agent ID from response if not already set
         const responseAgentId = data.agentId || agentId;
         setStatus("rebooking");
-        // Redirect to search page with agent ID
+        // Redirect to agent portfolio page where they can see available dates and book
         if (responseAgentId) {
           setTimeout(() => {
-            router.push(`/search?agentId=${responseAgentId}`);
+            router.push(`/agentportfolio/${responseAgentId}?reschedule=true`);
           }, 1000);
         } else {
           setTimeout(() => {
