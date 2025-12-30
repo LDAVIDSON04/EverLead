@@ -47,7 +47,7 @@ export async function GET(
     // Calculate average rating and total count
     const totalReviews = reviews?.length || 0;
     const averageRating = totalReviews > 0
-      ? reviews!.reduce((sum, review) => sum + review.rating, 0) / totalReviews
+      ? reviews!.reduce((sum: number, review: any) => sum + review.rating, 0) / totalReviews
       : 0;
 
     // Format reviews for frontend
