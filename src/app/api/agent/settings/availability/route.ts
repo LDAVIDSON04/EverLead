@@ -39,9 +39,9 @@ export async function GET(request: NextRequest) {
       new Set(
         (officeLocations || [])
           .map((loc: any) => loc.city)
-          .filter((city): city is string => typeof city === 'string' && city.length > 0)
+          .filter((city: any) => city && typeof city === 'string')
       )
-    );
+    ) as string[];
 
     const metadata = profile?.metadata || {};
     const availabilityData = metadata.availability || {};
