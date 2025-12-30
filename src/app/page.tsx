@@ -554,12 +554,14 @@ export default function HomePage() {
               <Image
                 src="/checklist-image.png"
                 alt="Professional standards checklist"
-                width={600}
+                width={800}
                 height={600}
-                className="w-full h-auto object-contain"
+                className="w-full max-w-xl h-auto object-contain"
                 style={{
+                  filter: "brightness(1.05) contrast(1.05)",
                   mixBlendMode: "multiply",
                 }}
+                unoptimized
               />
             </div>
           </div>
