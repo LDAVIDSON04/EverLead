@@ -47,8 +47,8 @@ export async function GET(request: NextRequest) {
     // Merge: combine cities from office locations with manually added cities
     // Office location cities are always included, plus any manually added cities from existing data
     const allLocationsSet = new Set<string>();
-    citiesFromOfficeLocations.forEach(city => allLocationsSet.add(city));
-    existingLocations.forEach(city => allLocationsSet.add(city)); // Include manually added cities
+    citiesFromOfficeLocations.forEach((city: string) => allLocationsSet.add(city));
+    (existingLocations as string[]).forEach((city: string) => allLocationsSet.add(city)); // Include manually added cities
     
     const validLocations = Array.from(allLocationsSet);
 
