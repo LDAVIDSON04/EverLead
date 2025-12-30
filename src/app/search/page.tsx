@@ -1405,6 +1405,7 @@ function SearchResults() {
                               setShowPortfolioModal(true);
                               setPortfolioLoading(true);
                               setPortfolioAgentData(null);
+                              setPortfolioReviews([]);
                               
                               try {
                                 console.log("Fetching agent data for:", agent.id);
