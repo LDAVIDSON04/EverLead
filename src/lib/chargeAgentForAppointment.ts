@@ -26,16 +26,56 @@ export async function chargeAgentForAppointment(
       return { success: false, error: "Agent profile not found" };
     }
 
-    const stripeCustomerId = (profile.metadata as any)?.stripe_customer_id;
+    let stripeCustomerId = (profile.metadata as any)?.stripe_customer_id;
     console.log("🔍 [chargeAgentForAppointment] Stripe customer ID:", stripeCustomerId ? "Found" : "NOT FOUND", {
       agentId,
       hasMetadata: !!profile.metadata,
       stripeCustomerId: stripeCustomerId || "MISSING",
     });
 
+    // If no customer ID in metadata, try to find or create one by email
     if (!stripeCustomerId) {
-      console.error("❌ [chargeAgentForAppointment] Agent has no Stripe customer ID");
-      return { success: false, error: "Agent has no Stripe customer ID. Please add a payment method." };
+      console.log("⚠️ [chargeAgentForAppointment] No customer ID in metadata, attempting to find by email...");
+      
+      // Get agent's email
+      let agentEmail: string | null = null;
+      try {
+        const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(agentId);
+        agentEmail = authUser?.user?.email || null;
+      } catch (authError) {
+        console.error("❌ [chargeAgentForAppointment] Error fetching agent email:", authError);
+        return { success: false, error: "Failed to fetch agent email" };
+      }
+
+      if (!agentEmail) {
+        console.error("❌ [chargeAgentForAppointment] Agent email not found");
+        return { success: false, error: "Agent email not found" };
+      }
+
+      // Try to find existing Stripe customer by email
+      const customers = await stripe.customers.list({
+        email: agentEmail,
+        limit: 1,
+      });
+
+      if (customers.data.length > 0) {
+        stripeCustomerId = customers.data[0].id;
+        console.log("✅ [chargeAgentForAppointment] Found existing Stripe customer by email:", stripeCustomerId);
+        
+        // Save the customer ID to profile metadata for future use
+        await supabaseAdmin
+          .from("profiles")
+          .update({
+            metadata: {
+              ...(profile.metadata || {}),
+              stripe_customer_id: stripeCustomerId,
+            },
+          })
+          .eq("id", agentId);
+      } else {
+        console.error("❌ [chargeAgentForAppointment] No Stripe customer found for email:", agentEmail);
+        return { success: false, error: "No Stripe customer found. Please add a payment method." };
+      }
     }
 
     // Get the agent's payment methods
