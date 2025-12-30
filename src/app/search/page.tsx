@@ -1430,6 +1430,20 @@ function SearchResults() {
                                   const fallbackSummary = `${data.full_name || 'This agent'} brings years of compassionate expertise in end-of-life planning and grief support. ${specialty || 'They help'} families navigate difficult decisions with dignity and care.`;
                                   const fallbackFullBio = `${data.full_name || 'This agent'}'s journey into end-of-life care is driven by a commitment to helping families during life's most challenging moments.\n\n${specialty || 'Their expertise'} allows them to address both the emotional and practical aspects of end-of-life planning.\n\nThey are known for their patient, non-judgmental approach and their ability to facilitate difficult family conversations.`;
                                   
+                                  // Fetch review stats
+                                  let rating = 0;
+                                  let reviewCount = 0;
+                                  try {
+                                    const reviewResponse = await fetch(`/api/reviews/agent/${agent.id}`);
+                                    if (reviewResponse.ok) {
+                                      const reviewData = await reviewResponse.json();
+                                      rating = reviewData.averageRating || 0;
+                                      reviewCount = reviewData.totalReviews || 0;
+                                    }
+                                  } catch (err) {
+                                    console.error("Error fetching review stats:", err);
+                                  }
+                                  
                                   setPortfolioAgentData({
                                     ...data,
                                     business_address: (metadata as any)?.business_address || null,
@@ -1440,14 +1454,8 @@ function SearchResults() {
                                     specialty: specialty,
                                     license_number: licenseNumber,
                                     credentials: licenseNumber ? `LFD, ${licenseNumber}` : 'LFD',
-                                    rating: (() => {
-                                      const agentAppointment = appointments.find(apt => apt.agent?.id === agent.id);
-                                      return agentAppointment?.agent?.rating || 0;
-                                    })(),
-                                    reviewCount: (() => {
-                                      const agentAppointment = appointments.find(apt => apt.agent?.id === agent.id);
-                                      return agentAppointment?.agent?.reviewCount || 0;
-                                    })(),
+                                    rating: rating,
+                                    reviewCount: reviewCount,
                                     verified: true,
                                     location: location,
                                     summary: hasApprovedBio ? data.ai_generated_bio.split('\n\n')[0] || data.ai_generated_bio : fallbackSummary,
