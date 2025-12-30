@@ -36,7 +36,11 @@ export async function GET(request: NextRequest) {
 
     // Extract unique cities from office locations
     const citiesFromOfficeLocations: string[] = Array.from(
-      new Set((officeLocations || []).map((loc: any) => loc.city).filter(Boolean) as string[])
+      new Set(
+        (officeLocations || [])
+          .map((loc: any) => loc.city)
+          .filter((city): city is string => Boolean(city))
+      )
     );
 
     const metadata = profile?.metadata || {};
