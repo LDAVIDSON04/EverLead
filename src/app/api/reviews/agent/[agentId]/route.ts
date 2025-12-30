@@ -51,7 +51,7 @@ export async function GET(
       : 0;
 
     // Format reviews for frontend
-    const formattedReviews = (reviews || []).map((review) => {
+    const formattedReviews = (reviews || []).map((review: any) => {
       const lead = Array.isArray(review.leads) ? review.leads[0] : review.leads;
       const reviewerName = lead?.full_name || 
         (lead?.first_name && lead?.last_name
