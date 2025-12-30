@@ -1501,6 +1501,7 @@ function SearchResults() {
                       )}
                       </div>
                     </div>
+                  </div>
 
                     {/* Availability Calendar */}
                     <div className="mt-4">
