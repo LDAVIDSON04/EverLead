@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { supabaseClient } from "@/lib/supabaseClient";
-import { MapPin, Plus } from "lucide-react";
+import { MapPin } from "lucide-react";
+import Link from "next/link";
 
 function Input({ className = "", ...props }: React.InputHTMLAttributes<HTMLInputElement>) {
   return (
@@ -40,8 +41,6 @@ export default function AvailabilityPage() {
   const [saveMessage, setSaveMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [selectedLocation, setSelectedLocation] = useState("");
   const [locations, setLocations] = useState<string[]>([]);
-  const [newLocationName, setNewLocationName] = useState("");
-  const [showAddLocation, setShowAddLocation] = useState(false);
   const [appointmentLength, setAppointmentLength] = useState("30");
 
   const defaultSchedule = {
@@ -78,17 +77,14 @@ export default function AvailabilityPage() {
           setAvailabilityByLocation(data.availabilityByLocation || {});
           setAppointmentLength(data.appointmentLength || "30");
         } else {
-          // Initialize with default location if none exist
-          setLocations(["Kelowna"]);
-          setSelectedLocation("Kelowna");
-          setAvailabilityByLocation({ Kelowna: defaultSchedule });
+          // No office locations yet - show empty state
+          setLocations([]);
+          setAvailabilityByLocation({});
         }
       } catch (err) {
         console.error("Error loading availability:", err);
-        // Set defaults on error
-        setLocations(["Kelowna"]);
-        setSelectedLocation("Kelowna");
-        setAvailabilityByLocation({ Kelowna: defaultSchedule });
+        setLocations([]);
+        setAvailabilityByLocation({});
       } finally {
         setLoading(false);
       }
@@ -97,19 +93,7 @@ export default function AvailabilityPage() {
     loadAvailability();
   }, []);
 
-  const addLocation = () => {
-    if (newLocationName.trim() && !locations.includes(newLocationName.trim())) {
-      const locationName = newLocationName.trim();
-      setLocations([...locations, locationName]);
-      setAvailabilityByLocation({
-        ...availabilityByLocation,
-        [locationName]: { ...defaultSchedule },
-      });
-      setSelectedLocation(locationName);
-      setNewLocationName("");
-      setShowAddLocation(false);
-    }
-  };
+  // Removed addLocation function - cities come from office locations automatically
 
   const handleSaveAvailability = async () => {
     setSaving(true);
@@ -121,6 +105,12 @@ export default function AvailabilityPage() {
         throw new Error("Not authenticated");
       }
 
+      // Ensure all locations have availability data (initialize with default if missing)
+      const completeAvailabilityByLocation: Record<string, any> = {};
+      locations.forEach((loc: string) => {
+        completeAvailabilityByLocation[loc] = availabilityByLocation[loc] || defaultSchedule;
+      });
+
       const res = await fetch("/api/agent/settings/availability", {
         method: "POST",
         headers: {
@@ -129,7 +119,7 @@ export default function AvailabilityPage() {
         },
         body: JSON.stringify({
           locations,
-          availabilityByLocation,
+          availabilityByLocation: completeAvailabilityByLocation,
           appointmentLength,
         }),
       });
@@ -180,59 +170,33 @@ export default function AvailabilityPage() {
           </div>
 
           <div className="mb-4">
-            <div className="flex items-center gap-2 mb-4 flex-wrap">
-              {locations.map((location) => (
-                <button
-                  key={location}
-                  onClick={() => setSelectedLocation(location)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    selectedLocation === location
-                      ? "bg-green-800 text-white"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  }`}
-                >
-                  {location}
-                </button>
-              ))}
-              {!showAddLocation ? (
-                <button
-                  onClick={() => setShowAddLocation(true)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-1 text-sm"
-                >
-                  <Plus size={16} />
-                  Add City
-                </button>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <Input
-                    type="text"
-                    value={newLocationName}
-                    onChange={(e) => setNewLocationName(e.target.value)}
-                    onKeyPress={(e) => {
-                      if (e.key === "Enter") addLocation();
-                    }}
-                    placeholder="City name"
-                    className="w-40"
-                    autoFocus
-                  />
+            {locations.length === 0 ? (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                <p className="text-sm text-blue-900">
+                  <strong>No office locations found.</strong> Please add office locations in{" "}
+                  <Link href="/agent/settings" className="text-blue-600 underline">
+                    Settings
+                  </Link>{" "}
+                  to set availability for those cities.
+                </p>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 mb-4 flex-wrap">
+                {locations.map((location) => (
                   <button
-                    onClick={addLocation}
-                    className="px-3 py-2 bg-green-800 text-white rounded-lg hover:bg-green-900 text-sm"
+                    key={location}
+                    onClick={() => setSelectedLocation(location)}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      selectedLocation === location
+                        ? "bg-green-800 text-white"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
                   >
-                    Add
+                    {location}
                   </button>
-                  <button
-                    onClick={() => {
-                      setShowAddLocation(false);
-                      setNewLocationName("");
-                    }}
-                    className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              )}
-            </div>
+                ))}
+              </div>
+            )}
 
             <div className="bg-gray-50 rounded-lg p-4 mb-4">
               <p className="text-sm text-gray-700">
@@ -245,7 +209,9 @@ export default function AvailabilityPage() {
               <Label className="mb-3 block">Weekly Availability</Label>
               <div className="space-y-2">
                 {days.map((day) => {
-                  const dayData = availabilityByLocation[selectedLocation]?.[day as keyof typeof defaultSchedule] || defaultSchedule[day as keyof typeof defaultSchedule];
+                  // Initialize with default schedule if no data exists for this location
+                  const locationAvailability = availabilityByLocation[selectedLocation] || defaultSchedule;
+                  const dayData = locationAvailability[day as keyof typeof defaultSchedule] || defaultSchedule[day as keyof typeof defaultSchedule];
                   return (
                     <div key={day} className="flex items-center gap-4 p-3 border border-gray-200 rounded-lg bg-white">
                       <input
@@ -255,7 +221,7 @@ export default function AvailabilityPage() {
                           setAvailabilityByLocation({
                             ...availabilityByLocation,
                             [selectedLocation]: {
-                              ...availabilityByLocation[selectedLocation],
+                              ...(availabilityByLocation[selectedLocation] || defaultSchedule),
                               [day]: { ...dayData, enabled: e.target.checked },
                             },
                           });
@@ -268,30 +234,30 @@ export default function AvailabilityPage() {
                           <Input
                             type="time"
                             value={dayData.start}
-                            onChange={(e) => {
-                              setAvailabilityByLocation({
-                                ...availabilityByLocation,
-                                [selectedLocation]: {
-                                  ...availabilityByLocation[selectedLocation],
-                                  [day]: { ...dayData, start: e.target.value },
-                                },
-                              });
-                            }}
+                              onChange={(e) => {
+                                setAvailabilityByLocation({
+                                  ...availabilityByLocation,
+                                  [selectedLocation]: {
+                                    ...(availabilityByLocation[selectedLocation] || defaultSchedule),
+                                    [day]: { ...dayData, start: e.target.value },
+                                  },
+                                });
+                              }}
                             className="w-32"
                           />
                           <span className="text-gray-500">to</span>
                           <Input
                             type="time"
                             value={dayData.end}
-                            onChange={(e) => {
-                              setAvailabilityByLocation({
-                                ...availabilityByLocation,
-                                [selectedLocation]: {
-                                  ...availabilityByLocation[selectedLocation],
-                                  [day]: { ...dayData, end: e.target.value },
-                                },
-                              });
-                            }}
+                              onChange={(e) => {
+                                setAvailabilityByLocation({
+                                  ...availabilityByLocation,
+                                  [selectedLocation]: {
+                                    ...(availabilityByLocation[selectedLocation] || defaultSchedule),
+                                    [day]: { ...dayData, end: e.target.value },
+                                  },
+                                });
+                              }}
                             className="w-32"
                           />
                         </div>

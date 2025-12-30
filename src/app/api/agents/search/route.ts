@@ -236,24 +236,32 @@ export async function GET(req: NextRequest) {
                  normalizedSearch.includes(normalizedLoc);
         });
         
-        // Also check availabilityByLocation keys (case-insensitive)
-        // This checks the keys in the availabilityByLocation object (e.g., { "Toronto": {...}, "Penticton": {...} })
+        // Check availabilityByLocation keys (case-insensitive)
+        // Only match if the city has actual availability set with time slots (at least one day enabled)
+        const normalizedSearch = normalizeCity(searchCity);
         const hasLocationInByLocation = Object.keys(agent.availabilityByLocation).some((loc: string) => {
           const normalizedLoc = normalizeCity(loc);
-          const normalizedSearch = normalizeCity(searchCity);
-          return normalizedLoc === normalizedSearch || 
+          const cityMatches = normalizedLoc === normalizedSearch || 
                  normalizedLoc.includes(normalizedSearch) ||
                  normalizedSearch.includes(normalizedLoc);
+          
+          if (!cityMatches) return false;
+          
+          // Check if this city has actual availability set (at least one day enabled)
+          const cityAvailability = agent.availabilityByLocation[loc];
+          if (!cityAvailability) return false;
+          
+          // Check if at least one day has enabled: true
+          const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+          const hasEnabledDay = days.some((day: string) => {
+            const dayData = cityAvailability[day];
+            return dayData && dayData.enabled === true;
+          });
+          
+          return hasEnabledDay;
         });
         
-        // Also check if agent's default city matches (fallback for agents who might not have explicit location in availability)
-        const agentCityNormalized = agent.agent_city ? normalizeCity(agent.agent_city) : '';
-        const normalizedSearch = normalizeCity(searchCity);
-        const agentCityMatch = agentCityNormalized === normalizedSearch || 
-                              agentCityNormalized.includes(normalizedSearch) ||
-                              normalizedSearch.includes(agentCityNormalized);
-        
-        const matches = hasLocationInAvailability || hasLocationInByLocation || agentCityMatch;
+        const matches = hasLocationInByLocation;
         
         if (matches) {
           console.log(`[AGENT SEARCH] Agent ${agent.id} matches location "${location}" (searchCity: "${searchCity}")`);

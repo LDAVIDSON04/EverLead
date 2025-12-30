@@ -27,12 +27,40 @@ export async function GET(request: NextRequest) {
       .eq("id", user.id)
       .maybeSingle();
 
+    // Fetch office locations to get cities
+    const { data: officeLocations, error: officeLocationsError } = await supabaseAdmin
+      .from("office_locations")
+      .select("city")
+      .eq("agent_id", user.id)
+      .order("display_order", { ascending: true });
+
+    // Extract unique cities from office locations
+    const citiesFromOfficeLocations = Array.from(
+      new Set((officeLocations || []).map((loc: any) => loc.city).filter(Boolean))
+    );
+
     const metadata = profile?.metadata || {};
     const availabilityData = metadata.availability || {};
+    const existingLocations = availabilityData.locations || [];
+    const existingAvailabilityByLocation = availabilityData.availabilityByLocation || {};
+
+    // Merge: use cities from office locations, but preserve existing availability data
+    // Only include cities that exist in office locations
+    const validLocations = citiesFromOfficeLocations.length > 0 
+      ? citiesFromOfficeLocations 
+      : existingLocations; // Fallback if no office locations yet
+
+    // Ensure availabilityByLocation only contains valid locations
+    const validAvailabilityByLocation: Record<string, any> = {};
+    validLocations.forEach((city: string) => {
+      if (existingAvailabilityByLocation[city]) {
+        validAvailabilityByLocation[city] = existingAvailabilityByLocation[city];
+      }
+    });
 
     return NextResponse.json({
-      locations: availabilityData.locations || [],
-      availabilityByLocation: availabilityData.availabilityByLocation || {},
+      locations: validLocations,
+      availabilityByLocation: validAvailabilityByLocation,
       appointmentLength: availabilityData.appointmentLength || "30",
     });
   } catch (err: any) {
@@ -63,6 +91,27 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { locations, availabilityByLocation, appointmentLength } = body;
 
+    // Verify that all locations in availabilityByLocation exist in office_locations
+    const { data: officeLocations, error: officeLocationsError } = await supabaseAdmin
+      .from("office_locations")
+      .select("city")
+      .eq("agent_id", user.id);
+
+    const validCities = Array.from(
+      new Set((officeLocations || []).map((loc: any) => loc.city).filter(Boolean))
+    );
+
+    // Filter availabilityByLocation to only include cities from office locations
+    const filteredAvailabilityByLocation: Record<string, any> = {};
+    Object.keys(availabilityByLocation || {}).forEach((city) => {
+      if (validCities.includes(city)) {
+        filteredAvailabilityByLocation[city] = availabilityByLocation[city];
+      }
+    });
+
+    // Use validCities as the locations array (cities from office locations)
+    const validLocations = validCities;
+
     // Store availability in agent's profile metadata or a separate table
     // For now, we'll store it in a JSONB field
     // Get existing metadata
@@ -80,8 +129,8 @@ export async function POST(request: NextRequest) {
         metadata: {
           ...existingMetadata,
           availability: {
-            locations,
-            availabilityByLocation,
+            locations: validLocations,
+            availabilityByLocation: filteredAvailabilityByLocation,
             appointmentLength,
           },
         },
