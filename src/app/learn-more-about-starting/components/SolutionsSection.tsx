@@ -26,7 +26,7 @@ export function SolutionsSection() {
         <div className="mb-12">
           <p className="text-sm uppercase tracking-wider text-gray-600 mb-4">Our solutions</p>
           <h2 className="text-4xl md:text-5xl text-black max-w-4xl">
-            Soradin solutions deliver patient demand and seamless scheduling in all the places patients find you
+            How Soradin Helps Families Plan Ahead
           </h2>
         </div>
         
