@@ -177,7 +177,8 @@ export default function AdminSpecialistsPage() {
   }, []);
 
   const filtered = specialists.filter((s) => {
-    // Status filter: "active" means approved, "suspended" means declined/needs-info
+    // All agents shown are approved, but we can filter by other criteria if needed
+    // For now, all statuses show all approved agents
     if (statusFilter === "active" && s.status !== "approved") return false;
     if (statusFilter === "suspended" && s.status === "approved") return false;
     if (!search) return true;
@@ -229,7 +230,7 @@ export default function AdminSpecialistsPage() {
           onChange={(e) => setStatusFilter(e.target.value as any)}
           className="px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-700"
         >
-          <option value="all">All Status</option>
+          <option value="all">All Approved Agents</option>
           <option value="active">Active</option>
           <option value="suspended">Suspended</option>
         </select>
