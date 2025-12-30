@@ -35,20 +35,20 @@ export async function GET(request: NextRequest) {
       .order("display_order", { ascending: true });
 
     // Extract unique cities from office locations
-    const citiesFromOfficeLocations = Array.from(
-      new Set((officeLocations || []).map((loc: any) => loc.city).filter(Boolean))
+    const citiesFromOfficeLocations: string[] = Array.from(
+      new Set((officeLocations || []).map((loc: any) => loc.city).filter(Boolean) as string[])
     );
 
     const metadata = profile?.metadata || {};
     const availabilityData = metadata.availability || {};
-    const existingLocations = availabilityData.locations || [];
+    const existingLocations = (availabilityData.locations || []) as string[];
     const existingAvailabilityByLocation = availabilityData.availabilityByLocation || {};
 
     // Merge: combine cities from office locations with manually added cities
     // Office location cities are always included, plus any manually added cities from existing data
     const allLocationsSet = new Set<string>();
-    citiesFromOfficeLocations.forEach((city: string) => allLocationsSet.add(city));
-    (existingLocations as string[]).forEach((city: string) => allLocationsSet.add(city)); // Include manually added cities
+    citiesFromOfficeLocations.forEach(city => allLocationsSet.add(city));
+    existingLocations.forEach(city => allLocationsSet.add(city)); // Include manually added cities
     
     const validLocations = Array.from(allLocationsSet);
 
