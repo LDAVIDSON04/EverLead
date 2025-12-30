@@ -730,9 +730,11 @@ export default function HomePage() {
                     <Instagram className="w-5 h-5" />
                   </Link>
                   <Link
-                    href="#"
+                    href="https://www.facebook.com/Soradin/"
                     className="text-white/50 hover:text-white transition-colors"
                     aria-label="Facebook"
+                    target="_blank"
+                    rel="noopener noreferrer"
                   >
                     <Facebook className="w-5 h-5" />
                   </Link>
