@@ -225,17 +225,6 @@ export async function GET(req: NextRequest) {
           return cityStr.toLowerCase().trim().split(',')[0].trim();
         };
         
-        // Check if the agent has this city in their availability.locations array
-        // This works for ANY city: Toronto, Penticton, Kelowna, Edmonton, etc.
-        const hasLocationInAvailability = agent.availabilityLocations.some((loc: string) => {
-          const normalizedLoc = normalizeCity(loc);
-          const normalizedSearch = normalizeCity(searchCity);
-          // Exact match or the location contains the search city (e.g., "North Toronto" contains "Toronto")
-          return normalizedLoc === normalizedSearch || 
-                 normalizedLoc.includes(normalizedSearch) ||
-                 normalizedSearch.includes(normalizedLoc);
-        });
-        
         // Check availabilityByLocation keys (case-insensitive)
         // Only match if the city has actual availability set with time slots (at least one day enabled)
         const normalizedSearch = normalizeCity(searchCity);
