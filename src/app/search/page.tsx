@@ -1382,7 +1382,7 @@ function SearchResults() {
                       )}
 
                       {/* Rating */}
-                      {agent.rating > 0 && agent.reviewCount > 0 && (
+                      {agent && agent.rating && agent.rating > 0 && agent.reviewCount && agent.reviewCount > 0 && (
                         <div className="flex items-center gap-1 mb-3">
                           <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                           <span className="text-gray-900">{agent.rating.toFixed(1)}</span>
