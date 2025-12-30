@@ -414,7 +414,19 @@ export async function POST(req: NextRequest) {
 
     // Charge agent's saved payment method immediately when appointment is booked
     // Note: Payment failures are handled internally - family always sees success
+    console.log("🔄 Attempting to charge agent for appointment:", {
+      agentId,
+      appointmentId: appointment.id,
+      amountCents: priceCents,
+    });
+    
     const chargeResult = await chargeAgentForAppointment(agentId, priceCents, appointment.id);
+    
+    console.log("💳 Charge result:", {
+      success: chargeResult.success,
+      paymentIntentId: chargeResult.paymentIntentId,
+      error: chargeResult.error,
+    });
     
     if (chargeResult.success && chargeResult.paymentIntentId) {
       // Payment succeeded - update appointment with payment details
