@@ -1385,7 +1385,7 @@ function SearchResults() {
 
                       {/* Review count with gold star */}
                       {agent?.id && (
-                        <div className="mb-2" style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                        <div className="mb-2" style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', width: '100%' }}>
                           <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                           <span className="text-gray-900 text-sm">{agent.reviewCount ?? 0}</span>
                         </div>
@@ -1401,6 +1401,7 @@ function SearchResults() {
                       )}
                       
                       {/* Learn more about button */}
+                      <div style={{ display: 'block', width: '100%' }}>
                       {agent?.id && (
                         <button
                           type="button"
