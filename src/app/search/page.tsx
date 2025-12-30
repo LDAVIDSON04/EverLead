@@ -1384,10 +1384,10 @@ function SearchResults() {
                       )}
 
                       {/* Review count with gold star */}
-                      {agent?.id && agent.reviewCount !== undefined && (
-                        <div className="flex items-center gap-1 mb-2 block">
+                      {agent?.id && (
+                        <div className="mb-2" style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                           <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                          <span className="text-gray-900 text-sm">{agent.reviewCount || 0}</span>
+                          <span className="text-gray-900 text-sm">{agent.reviewCount ?? 0}</span>
                         </div>
                       )}
 
