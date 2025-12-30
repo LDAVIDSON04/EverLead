@@ -3,13 +3,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { deleteExternalEventsForAgentAppointment } from "@/lib/calendarSyncAgent";
-import { sendAgentCancellationEmail } from "@/lib/emails";
+import { sendAgentCancellationEmail, sendAgentRebookingEmail } from "@/lib/emails";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 const cancelAppointmentSchema = z.object({
   appointmentId: z.string().uuid(),
+  action: z.enum(["cancel", "rebook"]).optional().default("cancel"),
 });
 
 export async function POST(req: NextRequest) {
@@ -27,7 +28,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { appointmentId } = validation.data;
+    const { appointmentId, action } = validation.data;
 
     // Get appointment with related data for email
     const { data: appointment, error: fetchError } = await supabaseAdmin
@@ -112,15 +113,29 @@ export async function POST(req: NextRequest) {
             : null);
 
         if (agentEmail) {
-          sendAgentCancellationEmail({
-            to: agentEmail,
-            agentName,
-            consumerName,
-            requestedDate: appointment.requested_date,
-            requestedWindow: appointment.requested_window,
-          }).catch((err) => {
-            console.error('Error sending agent cancellation email (non-fatal):', err);
-          });
+          if (action === "rebook") {
+            // Send rebooking notification
+            sendAgentRebookingEmail({
+              to: agentEmail,
+              agentName,
+              consumerName,
+              requestedDate: appointment.requested_date,
+              requestedWindow: appointment.requested_window,
+            }).catch((err) => {
+              console.error('Error sending agent rebooking email (non-fatal):', err);
+            });
+          } else {
+            // Send cancellation notification
+            sendAgentCancellationEmail({
+              to: agentEmail,
+              agentName,
+              consumerName,
+              requestedDate: appointment.requested_date,
+              requestedWindow: appointment.requested_window,
+            }).catch((err) => {
+              console.error('Error sending agent cancellation email (non-fatal):', err);
+            });
+          }
         }
       } catch (emailError: any) {
         console.error('Error preparing agent cancellation email (non-fatal):', emailError);
@@ -129,7 +144,10 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ 
       appointment: updatedAppointment,
-      message: "Appointment cancelled successfully"
+      message: action === "rebook" 
+        ? "Appointment cancelled. You can now reschedule."
+        : "Appointment cancelled successfully",
+      agentId: appointment.agent_id,
     });
   } catch (error: any) {
     console.error("Error in /api/appointments/cancel:", error);
