@@ -45,9 +45,10 @@ export async function GET(req: NextRequest) {
     const { agentId, startDate, endDate, location } = validation.data;
 
     // Load agent profile with availability settings
+    // Check both approval_status and bio_approval_status
     const { data: profile, error: profileError } = await supabaseAdmin
       .from("profiles")
-      .select("id, metadata, agent_city, agent_province")
+      .select("id, metadata, agent_city, agent_province, approval_status, ai_generated_bio, bio_approval_status")
       .eq("id", agentId)
       .eq("role", "agent")
       .maybeSingle();
@@ -56,6 +57,22 @@ export async function GET(req: NextRequest) {
       return NextResponse.json(
         { error: "Agent not found" },
         { status: 404 }
+      );
+    }
+
+    // Check both approvals - agent must be fully approved to show availability
+    if (profile.approval_status !== "approved") {
+      return NextResponse.json(
+        { error: "Agent not approved" },
+        { status: 403 }
+      );
+    }
+    
+    // If agent has a bio, it must also be approved
+    if (profile.ai_generated_bio && profile.bio_approval_status !== "approved") {
+      return NextResponse.json(
+        { error: "Agent bio not approved" },
+        { status: 403 }
       );
     }
 

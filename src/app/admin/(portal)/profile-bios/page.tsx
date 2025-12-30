@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { supabaseClient } from "@/lib/supabaseClient";
-import { Check, X, AlertCircle, Eye, Clock, FileText, RefreshCw } from "lucide-react";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 type ProfileBio = {
   id: string;
@@ -19,16 +18,18 @@ type ProfileBio = {
 };
 
 export default function ProfileBiosPage() {
-  const [bios, setBios] = useState<ProfileBio[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [processing, setProcessing] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [selectedBio, setSelectedBio] = useState<ProfileBio | null>(null);
-  const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('pending');
+  const router = useRouter();
 
   useEffect(() => {
-    loadBios();
-  }, [filter]);
+    // Redirect to unified approvals page
+    router.replace('/admin/agent-approval');
+  }, [router]);
+
+  return (
+    <div className="p-8">
+      <p className="text-sm text-neutral-600">Redirecting to Approvals page...</p>
+    </div>
+  );
 
   async function loadBios() {
     try {

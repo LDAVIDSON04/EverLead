@@ -1364,7 +1364,7 @@ function SearchResults() {
                                 console.log("Fetching agent data for:", agent.id);
                                 const { data, error } = await supabaseClient
                                   .from("profiles")
-                                  .select("id, full_name, first_name, last_name, profile_picture_url, job_title, funeral_home, agent_city, agent_province, email, phone, metadata, ai_generated_bio, bio_approval_status")
+                                  .select("id, full_name, first_name, last_name, profile_picture_url, job_title, funeral_home, agent_city, agent_province, email, phone, metadata, ai_generated_bio, bio_approval_status, approval_status")
                                   .eq("id", agent.id)
                                   .eq("role", "agent")
                                   .maybeSingle();
@@ -1379,6 +1379,18 @@ function SearchResults() {
                                   const location = data.agent_city && data.agent_province
                                     ? `${data.agent_city}, ${data.agent_province}`
                                     : data.agent_city || data.agent_province || 'Location not specified';
+                                  
+                                  // Check both approvals - agent must be fully approved to be visible
+                                  if (data.approval_status !== "approved") {
+                                    setPortfolioAgentData(null);
+                                    return;
+                                  }
+                                  
+                                  // If agent has a bio, it must also be approved
+                                  if (data.ai_generated_bio && data.bio_approval_status !== "approved") {
+                                    setPortfolioAgentData(null);
+                                    return;
+                                  }
                                   
                                   // Use AI-generated bio if approved, otherwise use fallback
                                   const hasApprovedBio = data.bio_approval_status === 'approved' && data.ai_generated_bio;

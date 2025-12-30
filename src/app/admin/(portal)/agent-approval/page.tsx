@@ -15,6 +15,9 @@ type PendingAgent = {
   notification_cities: Array<{ city: string; province: string }> | null;
   created_at: string;
   approval_status: string | null;
+  ai_generated_bio: string | null;
+  bio_approval_status: string | null;
+  bio_last_updated: string | null;
 };
 
 type Specialist = {
@@ -29,6 +32,9 @@ type Specialist = {
   documents: Array<{ name: string; uploaded: boolean }>;
   notes: string;
   tags: string[];
+  bio: string | null;
+  bioStatus: string | null;
+  profileStatus: string | null;
 };
 
 export default function AgentApprovalPage() {
@@ -159,25 +165,36 @@ export default function AgentApprovalPage() {
   };
 
   // Convert agents to specialists format for display
-  const specialists: Specialist[] = pendingAgents.map((agent) => ({
-    id: agent.id,
-    name: agent.full_name || 'Unknown',
-    company: agent.funeral_home || 'N/A',
-    region: agent.notification_cities && agent.notification_cities.length > 0
-      ? `${agent.notification_cities[0].city}, ${agent.notification_cities[0].province}`
-      : 'N/A',
-    specialty: 'Funeral Services',
-    email: agent.email || 'N/A',
-    submittedDate: new Date(agent.created_at).toISOString().split('T')[0],
-    status: (agent.approval_status as any) || 'pending',
-    documents: [
-      { name: 'License Verification', uploaded: agent.licensed_in_province },
-      { name: 'Funeral Director License', uploaded: agent.licensed_funeral_director },
-      { name: 'Business Registration', uploaded: !!agent.funeral_home },
-    ],
-    notes: '',
-    tags: [],
-  }));
+  const specialists: Specialist[] = pendingAgents.map((agent) => {
+    // Determine overall status: pending if either profile or bio is pending
+    const profilePending = !agent.approval_status || agent.approval_status === 'pending';
+    const bioPending = !agent.bio_approval_status || agent.bio_approval_status === 'pending';
+    const overallStatus = (profilePending || bioPending) ? 'pending' : (agent.approval_status as any) || 'pending';
+    
+    return {
+      id: agent.id,
+      name: agent.full_name || 'Unknown',
+      company: agent.funeral_home || 'N/A',
+      region: agent.notification_cities && agent.notification_cities.length > 0
+        ? `${agent.notification_cities[0].city}, ${agent.notification_cities[0].province}`
+        : 'N/A',
+      specialty: 'Funeral Services',
+      email: agent.email || 'N/A',
+      submittedDate: new Date(agent.created_at).toISOString().split('T')[0],
+      status: overallStatus,
+      documents: [
+        { name: 'License Verification', uploaded: agent.licensed_in_province },
+        { name: 'Funeral Director License', uploaded: agent.licensed_funeral_director },
+        { name: 'Business Registration', uploaded: !!agent.funeral_home },
+        { name: 'Profile Bio', uploaded: !!agent.ai_generated_bio },
+      ],
+      notes: '',
+      tags: [],
+      bio: agent.ai_generated_bio || null,
+      bioStatus: agent.bio_approval_status || 'pending',
+      profileStatus: agent.approval_status || 'pending',
+    };
+  });
 
   const pendingCount = specialists.filter(s => s.status === 'pending').length;
   const needsInfoCount = specialists.filter(s => s.status === 'needs-info').length;
@@ -267,12 +284,44 @@ export default function AgentApprovalPage() {
                             <>
                               <Check className="w-4 h-4 text-emerald-700" />
                               <span className="text-neutral-700">{doc.name}</span>
-                              <button className="text-emerald-700 hover:text-emerald-800">
-                                <Download className="w-3 h-3" />
-                              </button>
-                              <button className="text-emerald-700 hover:text-emerald-800">
-                                <Eye className="w-3 h-3" />
-                              </button>
+                              {doc.name === 'Profile Bio' && specialist.bio ? (
+                                <button 
+                                  onClick={() => {
+                                    const modal = document.createElement('div');
+                                    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+                                    modal.innerHTML = `
+                                      <div class="bg-white rounded-lg p-6 max-w-2xl max-h-[80vh] overflow-auto">
+                                        <h3 class="text-lg font-semibold mb-4">Profile Bio for ${specialist.name}</h3>
+                                        <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                                          <p class="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">${specialist.bio.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>
+                                        </div>
+                                        <div class="flex gap-2">
+                                          <button onclick="this.closest('.fixed').remove()" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 text-sm">Close</button>
+                                        </div>
+                                      </div>
+                                    `;
+                                    document.body.appendChild(modal);
+                                    modal.querySelector('button')?.addEventListener('click', () => modal.remove());
+                                    // Close on background click
+                                    modal.addEventListener('click', (e) => {
+                                      if (e.target === modal) modal.remove();
+                                    });
+                                  }}
+                                  className="text-emerald-700 hover:text-emerald-800"
+                                  title="View Profile Bio"
+                                >
+                                  <Eye className="w-3 h-3" />
+                                </button>
+                              ) : (
+                                <>
+                                  <button className="text-emerald-700 hover:text-emerald-800">
+                                    <Download className="w-3 h-3" />
+                                  </button>
+                                  <button className="text-emerald-700 hover:text-emerald-800">
+                                    <Eye className="w-3 h-3" />
+                                  </button>
+                                </>
+                              )}
                             </>
                           ) : (
                             <>
@@ -282,6 +331,11 @@ export default function AgentApprovalPage() {
                           )}
                         </div>
                       ))}
+                    </div>
+                    {/* Show approval status breakdown */}
+                    <div className="mt-2 text-xs text-neutral-500">
+                      <div>Profile: <span className={specialist.profileStatus === 'approved' ? 'text-emerald-700' : 'text-yellow-600'}>{specialist.profileStatus}</span></div>
+                      <div>Bio: <span className={specialist.bioStatus === 'approved' ? 'text-emerald-700' : 'text-yellow-600'}>{specialist.bioStatus}</span></div>
                     </div>
                   </td>
                   <td className="px-6 py-4">

@@ -31,7 +31,7 @@ export default function AgentProfilePage() {
       try {
         const { data, error: fetchError } = await supabaseClient
           .from("profiles")
-          .select("id, full_name, first_name, last_name, profile_picture_url, job_title, funeral_home, agent_city, agent_province, email, phone, metadata, ai_generated_bio, bio_approval_status")
+          .select("id, full_name, first_name, last_name, profile_picture_url, job_title, funeral_home, agent_city, agent_province, email, phone, metadata, ai_generated_bio, bio_approval_status, approval_status")
           .eq("id", agentId)
           .eq("role", "agent")
           .maybeSingle();
@@ -39,6 +39,19 @@ export default function AgentProfilePage() {
         if (fetchError) {
           setError(fetchError.message);
         } else if (data) {
+          // Check both approvals - agent must be fully approved to be visible
+          if (data.approval_status !== "approved") {
+            setError("Agent profile not available");
+            setLoading(false);
+            return;
+          }
+          
+          // If agent has a bio, it must also be approved
+          if (data.ai_generated_bio && data.bio_approval_status !== "approved") {
+            setError("Agent profile not available");
+            setLoading(false);
+            return;
+          }
           const metadata = data.metadata || {};
           const specialty = (metadata as any)?.specialty || null;
           const licenseNumber = (metadata as any)?.license_number || null;

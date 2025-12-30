@@ -142,9 +142,10 @@ export async function POST(req: NextRequest) {
     }
 
     // Get agent profile (email is in auth.users, not profiles)
+    // Include bio information for unified approval
     const { data: agentProfile, error: agentError } = await supabaseAdmin
       .from("profiles")
-      .select("id, full_name, approval_status")
+      .select("id, full_name, approval_status, ai_generated_bio, bio_approval_status, bio_audit_log")
       .eq("id", agentId)
       .eq("role", "agent")
       .maybeSingle();
@@ -171,12 +172,28 @@ export async function POST(req: NextRequest) {
       console.warn(`No email found for agent ${agentId} - approval will proceed but no email will be sent`);
     }
 
-    // Update approval status
+    // Update both approval_status and bio_approval_status together for unified approval
     const updateData: any = {
       approval_status: action === "approve" ? "approved" : "declined",
       approved_at: action === "approve" ? new Date().toISOString() : null,
       approved_by: action === "approve" && adminUserId ? adminUserId : null,
     };
+
+    // Also update bio_approval_status if bio exists
+    if (agentProfile.ai_generated_bio) {
+      updateData.bio_approval_status = action === "approve" ? "approved" : "rejected";
+      updateData.bio_last_updated = new Date().toISOString();
+      
+      // Update bio audit log
+      const auditLog = agentProfile.bio_audit_log || [];
+      const newAuditEntry = {
+        action: action === "approve" ? "approved" : "rejected",
+        timestamp: new Date().toISOString(),
+        admin_id: adminUserId || null,
+        bio: agentProfile.ai_generated_bio,
+      };
+      updateData.bio_audit_log = [...auditLog, newAuditEntry];
+    }
 
     if (notes) {
       updateData.approval_notes = notes;

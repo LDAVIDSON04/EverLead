@@ -40,10 +40,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Validate agent exists and is approved
+    // Validate agent exists and is approved (both profile and bio)
     const { data: agent, error: agentError } = await supabaseAdmin
       .from("profiles")
-      .select("id, role, approval_status")
+      .select("id, role, approval_status, ai_generated_bio, bio_approval_status")
       .eq("id", agentId)
       .eq("role", "agent")
       .maybeSingle();
@@ -55,9 +55,18 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Check both approvals - agent must be fully approved to accept bookings
     if (agent.approval_status !== "approved") {
       return NextResponse.json(
         { error: "Agent is not approved for bookings" },
+        { status: 403 }
+      );
+    }
+    
+    // If agent has a bio, it must also be approved
+    if (agent.ai_generated_bio && agent.bio_approval_status !== "approved") {
+      return NextResponse.json(
+        { error: "Agent bio is not approved for bookings" },
         { status: 403 }
       );
     }
