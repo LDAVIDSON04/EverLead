@@ -131,7 +131,7 @@ export default function SettingsPage() {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const tab = params.get('tab');
-      if (tab && ['profile', 'bio', 'calendar', 'billing', 'notifications', 'security'].includes(tab)) {
+      if (tab && ['profile', 'bio', 'notifications', 'security'].includes(tab)) {
         setActiveTab(tab);
         // Clean up URL
         window.history.replaceState({}, '', window.location.pathname);
@@ -261,26 +261,6 @@ export default function SettingsPage() {
               Profile Bio
             </button>
             <button
-              onClick={() => setActiveTab("calendar")}
-              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
-                activeTab === "calendar"
-                  ? "border-green-800 text-green-800"
-                  : "border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300"
-              }`}
-            >
-              Calendar & Availability
-            </button>
-            <button
-              onClick={() => setActiveTab("billing")}
-              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
-                activeTab === "billing"
-                  ? "border-green-800 text-green-800"
-                  : "border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300"
-              }`}
-            >
-              Billing & Payments
-            </button>
-            <button
               onClick={() => setActiveTab("notifications")}
               className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                 activeTab === "notifications"
@@ -312,8 +292,6 @@ export default function SettingsPage() {
             />
           )}
           {activeTab === "bio" && <ProfileBioSection />}
-          {activeTab === "calendar" && <CalendarAvailabilitySection />}
-          {activeTab === "billing" && <PayoutsSection />}
           {activeTab === "notifications" && <NotificationsSection email={profileData.email} phone={profileData.phone} />}
           {activeTab === "security" && <SecuritySection />}
         </div>

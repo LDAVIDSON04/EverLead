@@ -115,8 +115,8 @@ export async function POST(request: NextRequest) {
       mode: 'setup',
       customer: stripeCustomerId,
       payment_method_types: ['card'],
-      success_url: `${baseUrl}/agent/settings?tab=billing&payment_method=success`,
-      cancel_url: `${baseUrl}/agent/settings?tab=billing&payment_method=cancelled`,
+      success_url: `${baseUrl}/agent/billing?payment_method=success`,
+      cancel_url: `${baseUrl}/agent/billing?payment_method=cancelled`,
       metadata: {
         agentId: agentId,
       },

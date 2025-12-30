@@ -1,20 +1,315 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { supabaseClient } from "@/lib/supabaseClient";
+import { CreditCard, Calendar, DollarSign, AlertCircle } from "lucide-react";
 
-export default function BillingPage() {
-  const router = useRouter();
-
-  useEffect(() => {
-    // Redirect to settings page with billing tab
-    router.replace("/agent/settings?tab=billing");
-  }, [router]);
-
+function Badge({ className = "", children, ...props }: React.HTMLAttributes<HTMLSpanElement>) {
   return (
-    <div className="flex items-center justify-center h-full">
-      <p className="text-sm text-gray-600">Redirecting to billing settings...</p>
-    </div>
+    <span
+      className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${className}`}
+      {...props}
+    >
+      {children}
+    </span>
   );
 }
 
+export default function BillingPage() {
+  const [loading, setLoading] = useState(true);
+  const [addingPaymentMethod, setAddingPaymentMethod] = useState(false);
+  const [paymentMethods, setPaymentMethods] = useState<any[]>([]);
+  const [pricePerAppointment, setPricePerAppointment] = useState(0);
+  const [currentMonthAppointments, setCurrentMonthAppointments] = useState(0);
+  const [currentMonthTotal, setCurrentMonthTotal] = useState("0.00");
+  const [pastPayments, setPastPayments] = useState<any[]>([]);
+
+  const loadBilling = async () => {
+    try {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session?.access_token) return;
+
+      // Load billing data
+      const billingRes = await fetch("/api/agent/settings/billing", {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+      if (!billingRes.ok) throw new Error("Failed to load billing data");
+
+      const billingData = await billingRes.json();
+      setPricePerAppointment(billingData.pricePerAppointment);
+      setCurrentMonthAppointments(billingData.currentMonthAppointments);
+      setCurrentMonthTotal(billingData.currentMonthTotal);
+      setPastPayments(billingData.pastPayments || []);
+
+      // Load payment methods
+      const pmRes = await fetch("/api/agent/settings/payment-methods/list", {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+      if (pmRes.ok) {
+        const pmData = await pmRes.json();
+        setPaymentMethods(pmData.paymentMethods || []);
+      }
+    } catch (err) {
+      console.error("Error loading billing:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadBilling();
+
+    // Check for payment method success/cancel in URL
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const paymentMethodStatus = params.get('payment_method');
+      
+      if (paymentMethodStatus === 'success') {
+        // Reload payment methods
+        setTimeout(() => {
+          loadBilling();
+          // Clean up URL
+          window.history.replaceState({}, '', window.location.pathname);
+        }, 1000);
+      } else if (paymentMethodStatus === 'cancelled') {
+        // Clean up URL
+        window.history.replaceState({}, '', window.location.pathname);
+      }
+    }
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="p-8">
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <p className="text-sm text-gray-600">Loading billing data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-8">
+      <div className="mb-6">
+        <h1 className="text-2xl font-semibold text-gray-900 mb-2">Billing & Payments</h1>
+        <p className="text-gray-600 text-sm">Manage your payment method and view billing history</p>
+      </div>
+
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="mb-6">
+          <h3 className="font-semibold mb-4">Payment Method</h3>
+
+          {paymentMethods.length === 0 ? (
+            <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                  <CreditCard size={20} className="text-purple-600" />
+                </div>
+                <div>
+                  <div className="font-medium">No payment method</div>
+                  <div className="text-sm text-gray-500">Add a payment method to get started</div>
+                </div>
+              </div>
+              <button
+                onClick={async () => {
+                  setAddingPaymentMethod(true);
+                  try {
+                    const { data: { session } } = await supabaseClient.auth.getSession();
+                    if (!session?.access_token) return;
+
+                    const res = await fetch("/api/agent/settings/payment-methods/setup", {
+                      method: "POST",
+                      headers: {
+                        Authorization: `Bearer ${session.access_token}`,
+                      },
+                    });
+
+                    if (!res.ok) {
+                      const error = await res.json();
+                      throw new Error(error.error || "Failed to start payment method setup");
+                    }
+
+                    const data = await res.json();
+                    if (data.url) {
+                      window.location.href = data.url;
+                    }
+                  } catch (err: any) {
+                    console.error("Error setting up payment method:", err);
+                    alert(err.message || "Failed to add payment method. Please try again.");
+                    setAddingPaymentMethod(false);
+                  }
+                }}
+                disabled={addingPaymentMethod}
+                className="px-4 py-2 bg-green-800 text-white rounded-lg hover:bg-green-900 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {addingPaymentMethod ? "Loading..." : "Add Payment Method"}
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-3 mb-4">
+              {paymentMethods.map((pm: any) => (
+                <div key={pm.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                      <CreditCard size={20} className="text-purple-600" />
+                    </div>
+                    <div>
+                      <div className="font-medium">
+                        {pm.card.brand.charAt(0).toUpperCase() + pm.card.brand.slice(1)} •••• {pm.card.last4}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        Expires {pm.card.exp_month}/{pm.card.exp_year}
+                        {pm.isDefault && " • Default"}
+                      </div>
+                    </div>
+                  </div>
+                  {paymentMethods.length > 1 && (
+                    <button
+                      onClick={async () => {
+                        if (!confirm("Are you sure you want to remove this payment method? You must have at least one payment method on file.")) {
+                          return;
+                        }
+                        
+                        try {
+                          const { data: { session } } = await supabaseClient.auth.getSession();
+                          if (!session?.access_token) return;
+
+                          const res = await fetch("/api/agent/settings/payment-methods", {
+                            method: "DELETE",
+                            headers: {
+                              Authorization: `Bearer ${session.access_token}`,
+                              "Content-Type": "application/json",
+                            },
+                            body: JSON.stringify({ paymentMethodId: pm.id }),
+                          });
+
+                          if (!res.ok) {
+                            const error = await res.json();
+                            throw new Error(error.error || "Failed to remove payment method");
+                          }
+
+                          // Reload payment methods
+                          await loadBilling();
+                        } catch (err: any) {
+                          console.error("Error removing payment method:", err);
+                          alert(err.message || "Failed to remove payment method. Please try again.");
+                        }
+                      }}
+                      className="px-3 py-1 text-sm text-red-600 hover:text-red-800"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+              ))}
+              <button
+                onClick={async () => {
+                  setAddingPaymentMethod(true);
+                  try {
+                    const { data: { session } } = await supabaseClient.auth.getSession();
+                    if (!session?.access_token) return;
+
+                    const res = await fetch("/api/agent/settings/payment-methods/setup", {
+                      method: "POST",
+                      headers: {
+                        Authorization: `Bearer ${session.access_token}`,
+                      },
+                    });
+
+                    if (!res.ok) {
+                      const error = await res.json();
+                      throw new Error(error.error || "Failed to start payment method setup");
+                    }
+
+                    const data = await res.json();
+                    if (data.url) {
+                      window.location.href = data.url;
+                    }
+                  } catch (err: any) {
+                    console.error("Error setting up payment method:", err);
+                    alert(err.message || "Failed to add payment method. Please try again.");
+                    setAddingPaymentMethod(false);
+                  }
+                }}
+                disabled={addingPaymentMethod}
+                className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {addingPaymentMethod ? "Loading..." : "Add Another Payment Method"}
+              </button>
+            </div>
+          )}
+
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex gap-3">
+            <AlertCircle size={20} className="text-blue-600 flex-shrink-0 mt-0.5" />
+            <div className="text-sm text-blue-900">
+              <strong>How billing works:</strong> You are charged ${pricePerAppointment.toFixed(2)} per appointment
+              booked through the platform. Your saved payment method is automatically charged immediately when an appointment is confirmed.
+            </div>
+          </div>
+        </div>
+
+        <div className="mb-6">
+          <h3 className="font-semibold mb-4">Current Month</h3>
+
+          <div className="grid grid-cols-3 gap-4">
+            <div className="bg-gray-50 rounded-lg p-4">
+              <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
+                <Calendar size={16} />
+                Appointments Booked
+              </div>
+              <div className="text-2xl font-semibold">{currentMonthAppointments}</div>
+            </div>
+
+            <div className="bg-gray-50 rounded-lg p-4">
+              <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
+                <DollarSign size={16} />
+                Price Per Appointment
+              </div>
+              <div className="text-2xl font-semibold">${pricePerAppointment.toFixed(2)}</div>
+            </div>
+
+            <div className="bg-green-50 rounded-lg p-4 border border-green-200">
+              <div className="text-sm text-gray-600 mb-1">Estimated Charge</div>
+              <div className="text-2xl font-semibold text-green-800">${currentMonthTotal}</div>
+              <div className="text-xs text-gray-500 mt-1">Charged immediately when appointments are booked</div>
+            </div>
+          </div>
+        </div>
+
+        {pastPayments.length > 0 && (
+          <div>
+            <h3 className="font-semibold mb-4">Payment History</h3>
+            <div className="border border-gray-200 rounded-lg overflow-hidden">
+              <table className="w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="text-left px-4 py-3 text-sm text-gray-600">Date</th>
+                    <th className="text-left px-4 py-3 text-sm text-gray-600">Appointments</th>
+                    <th className="text-left px-4 py-3 text-sm text-gray-600">Amount</th>
+                    <th className="text-left px-4 py-3 text-sm text-gray-600">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {pastPayments.map((payment) => (
+                    <tr key={payment.id} className="hover:bg-gray-50">
+                      <td className="px-4 py-3 text-sm">{payment.date}</td>
+                      <td className="px-4 py-3 text-sm">{payment.appointments}</td>
+                      <td className="px-4 py-3 text-sm font-medium">{payment.amount}</td>
+                      <td className="px-4 py-3 text-sm">
+                        <Badge className="bg-green-100 text-green-800">{payment.status}</Badge>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
