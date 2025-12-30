@@ -89,6 +89,8 @@ function CancelAppointmentContent() {
     if (!showRescheduleModal || !appointmentData?.agent_id) return;
 
     async function fetchAvailability() {
+      if (!appointmentData) return;
+      
       setLoadingAvailability(true);
       try {
         const startDate = weekStartDate.toISOString().split("T")[0];
