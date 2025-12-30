@@ -1478,43 +1478,43 @@ function SearchResults() {
                           </button>
                         )}
                       </div>
+                    </div>
 
-                      {/* Availability Calendar */}
-                      <div className="mt-4">
-                        <div className="grid grid-cols-4 gap-2">
-                          {availability.map((slot, slotIndex) => {
-                            const hasSpots = slot.spots > 0;
-                            return (
-                              <button
-                                key={slotIndex}
-                                type="button"
-                                onClick={(e) => {
-                                  if (hasSpots && appointment.agent?.id) {
-                                    handleDayClick(e, appointment, slot, index);
-                                  }
-                                }}
-                                disabled={!hasSpots}
-                                className={`
-                                  px-3 py-2 rounded-lg border text-center text-sm transition-colors
-                                  ${hasSpots 
-                                    ? 'bg-green-800 text-white border-green-800 hover:bg-green-900 cursor-pointer' 
-                                    : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'}
-                                `}
-                              >
-                                <div className="whitespace-pre-line leading-tight">{slot.date}</div>
-                                <div className="text-xs mt-1 whitespace-pre-line">
-                                  {hasSpots ? slot.spots + '\nappointments' : 'No\nappointments'}
-                                </div>
-                              </button>
-                            );
-                          })}
-                          <button 
-                            onClick={() => handleMoreButtonClick(appointment, index)}
-                            className="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:border-green-800 hover:bg-green-50 text-sm flex items-center justify-center"
-                          >
-                            More
-                          </button>
-                        </div>
+                    {/* Availability Calendar */}
+                    <div className="mt-4">
+                      <div className="grid grid-cols-4 gap-2">
+                        {availability.map((slot, slotIndex) => {
+                          const hasSpots = slot.spots > 0;
+                          return (
+                            <button
+                              key={slotIndex}
+                              type="button"
+                              onClick={(e) => {
+                                if (hasSpots && appointment.agent?.id) {
+                                  handleDayClick(e, appointment, slot, index);
+                                }
+                              }}
+                              disabled={!hasSpots}
+                              className={`
+                                px-3 py-2 rounded-lg border text-center text-sm transition-colors
+                                ${hasSpots 
+                                  ? 'bg-green-800 text-white border-green-800 hover:bg-green-900 cursor-pointer' 
+                                  : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'}
+                              `}
+                            >
+                              <div className="whitespace-pre-line leading-tight">{slot.date}</div>
+                              <div className="text-xs mt-1 whitespace-pre-line">
+                                {hasSpots ? slot.spots + '\nappointments' : 'No\nappointments'}
+                              </div>
+                            </button>
+                          );
+                        })}
+                        <button 
+                          onClick={() => handleMoreButtonClick(appointment, index)}
+                          className="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:border-green-800 hover:bg-green-50 text-sm flex items-center justify-center"
+                        >
+                          More
+                        </button>
                       </div>
                     </div>
                   </div>
