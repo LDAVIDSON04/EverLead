@@ -26,16 +26,17 @@ export default function CalendarSyncPage() {
         const { data: { user } } = await supabaseClient.auth.getUser();
         if (!user) return;
 
-        const { data: profile } = await supabaseClient
-          .from("profiles")
-          .select("metadata")
-          .eq("id", user.id)
-          .maybeSingle();
+        // Check calendar_connections table (where connections are actually stored)
+        const { data: connections, error } = await supabaseClient
+          .from("calendar_connections")
+          .select("provider")
+          .eq("specialist_id", user.id);
 
-        if (profile?.metadata) {
-          const metadata = profile.metadata as any;
-          setGoogleConnected(!!metadata.google_calendar_access_token);
-          setMicrosoftConnected(!!metadata.microsoft_calendar_access_token);
+        if (error) {
+          console.error("Error fetching calendar connections:", error);
+        } else if (connections) {
+          setGoogleConnected(connections.some((c: any) => c.provider === "google"));
+          setMicrosoftConnected(connections.some((c: any) => c.provider === "microsoft"));
         }
       } catch (error) {
         console.error("Error checking calendar connections:", error);
