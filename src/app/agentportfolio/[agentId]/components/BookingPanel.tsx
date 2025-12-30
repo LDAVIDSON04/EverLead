@@ -21,6 +21,7 @@ interface OfficeLocation {
   name: string;
   address: string;
   nextAvailable: string;
+  city?: string;
 }
 
 interface AvailabilityDay {
@@ -59,19 +60,45 @@ export function BookingPanel({ agentId }: BookingPanelProps) {
   const [loadingTimeSlots, setLoadingTimeSlots] = useState(false);
   const [agentInfo, setAgentInfo] = useState<any>(null);
 
-  // Fetch agent data to build office locations
+  // Fetch office locations from office_locations table
   useEffect(() => {
-    const fetchAgentData = async () => {
+    const fetchOfficeLocations = async () => {
       try {
-        const { data: agent, error } = await supabaseClient
+        // First try to load from office_locations table
+        const { data: locations, error } = await supabaseClient
+          .from('office_locations')
+          .select('*')
+          .eq('agent_id', agentId)
+          .order('city', { ascending: true }); // Sort alphabetically by city
+
+        if (!error && locations && locations.length > 0) {
+          const officeLocationsList: OfficeLocation[] = locations.map((loc: any) => ({
+            id: loc.id,
+            name: loc.name || `${loc.city}, ${loc.province}`,
+            address: loc.street_address 
+              ? `${loc.street_address}, ${loc.city}, ${loc.province}${loc.postal_code ? ` ${loc.postal_code}` : ''}`
+              : `${loc.city}, ${loc.province}`,
+            nextAvailable: 'Next available tomorrow',
+            city: loc.city, // Store city for matching with availability
+          }));
+          
+          setOfficeLocations(officeLocationsList);
+          if (officeLocationsList.length > 0) {
+            setSelectedLocationId(officeLocationsList[0].id);
+          }
+          return;
+        }
+
+        // Fallback: Use agent profile metadata
+        const { data: agent, error: agentError } = await supabaseClient
           .from("profiles")
           .select("id, funeral_home, agent_city, agent_province, metadata")
           .eq("id", agentId)
           .eq("role", "agent")
           .single();
         
-        if (error || !agent) {
-          console.error("Error fetching agent data:", error);
+        if (agentError || !agent) {
+          console.error("Error fetching agent data:", agentError);
           return;
         }
         
@@ -83,7 +110,7 @@ export function BookingPanel({ agentId }: BookingPanelProps) {
         const business_zip = (metadata as any)?.business_zip;
         const business_address = (metadata as any)?.business_address;
         
-        const locations: OfficeLocation[] = [];
+        const locationsList: OfficeLocation[] = [];
         
         // Build locations from agent's availability settings
         if (availabilityLocations.length > 0) {
@@ -92,11 +119,12 @@ export function BookingPanel({ agentId }: BookingPanelProps) {
               ? `${business_street}, ${business_city}, ${business_province} ${business_zip}`
               : business_address || `${business_city || agent.agent_city || ''}, ${business_province || agent.agent_province || ''}`;
             
-            locations.push({
+            locationsList.push({
               id: String(index + 1),
               name: `${agent.funeral_home || 'Office'} - ${loc}`,
               address: address || `${loc}`,
-              nextAvailable: 'Next available tomorrow'
+              nextAvailable: 'Next available tomorrow',
+              city: loc, // Store city for matching
             });
           });
         } else {
@@ -105,26 +133,28 @@ export function BookingPanel({ agentId }: BookingPanelProps) {
             ? `${business_street}, ${business_city}, ${business_province} ${business_zip}`
             : business_address || `${agent.agent_city || ''}, ${agent.agent_province || ''}`;
           
-          locations.push({
+          locationsList.push({
             id: '1',
             name: agent.funeral_home || 'Main Office',
             address: address || 'Location not specified',
-            nextAvailable: 'Next available tomorrow'
+            nextAvailable: 'Next available tomorrow',
+            city: agent.agent_city || '',
           });
         }
         
-        setOfficeLocations(locations.length > 0 ? locations : [{
+        setOfficeLocations(locationsList.length > 0 ? locationsList : [{
           id: '1',
           name: agent.funeral_home || 'Main Office',
           address: `${agent.agent_city || ''}, ${agent.agent_province || ''}`,
-          nextAvailable: 'Next available tomorrow'
+          nextAvailable: 'Next available tomorrow',
+          city: agent.agent_city || '',
         }]);
       } catch (err) {
-        console.error("Error fetching agent data:", err);
+        console.error("Error fetching office locations:", err);
       }
     };
     
-    fetchAgentData();
+    fetchOfficeLocations();
   }, [agentId]);
 
   // Fetch availability
@@ -135,15 +165,12 @@ export function BookingPanel({ agentId }: BookingPanelProps) {
         const startDate = weekStartDate.toISOString().split("T")[0];
         const endDate = new Date(weekStartDate.getTime() + 6 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
         
-        // CRITICAL: Extract location name from selected location and pass it to API
-        // Location format is "Office Name - City" or just "City"
+        // CRITICAL: Extract city from selected location and pass it to API
         const selectedLocation = officeLocations.find(loc => loc.id === selectedLocationId) || officeLocations[0];
         let locationParam = '';
         if (selectedLocation) {
-          // Extract city name from location name (format: "Office - City" or just "City")
-          const locationName = selectedLocation.name;
-          const cityMatch = locationName.match(/- (.+)$/);
-          const cityName = cityMatch ? cityMatch[1].trim() : locationName.trim();
+          // Use the city property if available, otherwise extract from name
+          const cityName = selectedLocation.city || selectedLocation.name.split('-').pop()?.trim() || selectedLocation.name.trim();
           locationParam = `&location=${encodeURIComponent(cityName)}`;
         }
         

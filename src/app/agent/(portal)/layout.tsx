@@ -177,8 +177,11 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
           const status = await onboardingRes.json();
           if (status && isMounted) {
             setOnboardingStatus(status);
-            if (status.needsOnboarding) {
+            // Only show onboarding if needsOnboarding is true AND not already completed
+            if (status.needsOnboarding && !status.onboardingCompleted) {
               setShowOnboarding(true);
+            } else {
+              setShowOnboarding(false);
             }
           }
         }
@@ -515,6 +518,34 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
             <div className="flex gap-3 pt-4 border-t">
               <button
                 onClick={async () => {
+                  // Mark onboarding as completed when user clicks "Continue"
+                  if (onboardingStatus.hasPaymentMethod && onboardingStatus.hasAvailability) {
+                    try {
+                      const { data: { session } } = await supabaseClient.auth.getSession();
+                      if (session?.access_token) {
+                        const { data: { user } } = await supabaseClient.auth.getUser();
+                        if (user) {
+                          const { data: profile } = await supabaseClient
+                            .from("profiles")
+                            .select("metadata")
+                            .eq("id", user.id)
+                            .maybeSingle();
+                          
+                          await supabaseClient
+                            .from("profiles")
+                            .update({
+                              metadata: {
+                                ...(profile?.metadata || {}),
+                                onboarding_completed: true,
+                              },
+                            })
+                            .eq("id", user.id);
+                        }
+                      }
+                    } catch (err) {
+                      console.error("Error marking onboarding as completed:", err);
+                    }
+                  }
                   // Refresh onboarding status
                   const { data: { session } } = await supabaseClient.auth.getSession();
                   if (session?.access_token) {

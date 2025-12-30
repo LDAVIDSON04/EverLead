@@ -47,12 +47,23 @@ export async function GET(request: NextRequest) {
     // Check for availability in metadata
     const metadata = profile.metadata || {};
     const availabilityData = metadata.availability || {};
-    const hasAvailability = 
-      availabilityData.locations && 
-      Array.isArray(availabilityData.locations) && 
-      availabilityData.locations.length > 0 &&
-      availabilityData.availabilityByLocation &&
-      Object.keys(availabilityData.availabilityByLocation).length > 0;
+    
+    // Check that availability has locations AND at least one location has time slots enabled
+    const locations = availabilityData.locations || [];
+    const availabilityByLocation = availabilityData.availabilityByLocation || {};
+    
+    let hasAvailability = false;
+    if (locations.length > 0 && Object.keys(availabilityByLocation).length > 0) {
+      // Check if at least one location has at least one day enabled
+      const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+      hasAvailability = Object.keys(availabilityByLocation).some((locationKey) => {
+        const locationSchedule = availabilityByLocation[locationKey];
+        return days.some((day: string) => {
+          const dayData = locationSchedule[day];
+          return dayData && dayData.enabled === true;
+        });
+      });
+    }
 
     // Check for payment method via Stripe
     // First, try to find Stripe customer by email
@@ -83,10 +94,14 @@ export async function GET(request: NextRequest) {
 
     const needsOnboarding = !hasPaymentMethod || !hasAvailability;
 
+    // Check if onboarding has been marked as completed
+    const onboardingCompleted = (metadata as any)?.onboarding_completed === true;
+
     return NextResponse.json({
-      needsOnboarding,
+      needsOnboarding: needsOnboarding && !onboardingCompleted,
       hasPaymentMethod,
       hasAvailability,
+      onboardingCompleted,
     });
   } catch (err: any) {
     console.error("Error in GET /api/agent/onboarding-status:", err);

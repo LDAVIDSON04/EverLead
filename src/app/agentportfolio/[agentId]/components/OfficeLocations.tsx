@@ -27,7 +27,7 @@ export function OfficeLocations({ agentData }: OfficeLocationsProps) {
           .from('office_locations')
           .select('*')
           .eq('agent_id', agentData.id)
-          .order('display_order', { ascending: true });
+          .order('city', { ascending: true }); // Sort alphabetically by city
 
         if (!error && locations && locations.length > 0) {
           setOfficeLocations(locations);
