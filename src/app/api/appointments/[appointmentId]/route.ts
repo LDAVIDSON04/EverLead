@@ -27,10 +27,15 @@ export async function GET(
         status,
         requested_date,
         requested_window,
+        lead_id,
         leads (
+          id,
           first_name,
           last_name,
-          full_name
+          full_name,
+          email,
+          city,
+          province
         )
       `)
       .eq("id", appointmentId)
@@ -80,6 +85,8 @@ export async function GET(
       ? appointment.requested_window.charAt(0).toUpperCase() + appointment.requested_window.slice(1)
       : 'Not specified';
 
+    const lead = Array.isArray(appointment.leads) ? appointment.leads[0] : appointment.leads;
+
     return NextResponse.json({
       id: appointment.id,
       agent_id: appointment.agent_id,
@@ -89,7 +96,8 @@ export async function GET(
       formatted_date: formattedDate,
       time_window_label: timeWindowLabel,
       agent: agentInfo,
-      lead: Array.isArray(appointment.leads) ? appointment.leads[0] : appointment.leads,
+      lead: lead,
+      lead_id: appointment.lead_id,
     });
   } catch (error: any) {
     console.error("Error fetching appointment:", error);
