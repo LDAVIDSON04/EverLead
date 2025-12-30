@@ -26,6 +26,9 @@ export function IntegrationSection() {
 
           {/* Right - Content */}
           <div>
+            <h2 className="text-4xl md:text-5xl text-black mb-6">
+              Soradin works with your existing scheduling software
+            </h2>
             <p className="text-lg text-gray-700 mb-8">
               Soradin connects directly with your existing Google and Microsoft calendars — syncing availability in real time so appointments flow seamlessly without changing how you work.
             </p>
