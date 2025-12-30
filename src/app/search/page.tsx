@@ -1502,8 +1502,8 @@ function SearchResults() {
                                 `}
                               >
                                 <div className="whitespace-pre-line leading-tight">{slot.date}</div>
-                                <div className="text-xs mt-1">
-                                  {hasSpots ? `${slot.spots}\nappointments` : 'No\nappointments'}
+                                <div className="text-xs mt-1 whitespace-pre-line">
+                                  {hasSpots ? slot.spots + '\nappointments' : 'No\nappointments'}
                                 </div>
                               </button>
                             );
