@@ -7,6 +7,7 @@ type ConsumerEmailArgs = {
   requestedDate: string;
   requestedWindow: string;
   appointmentId?: string; // Optional appointment ID for cancel link
+  confirmedAt?: string; // Exact appointment time
 };
 
 type AgentEmailArgs = {
@@ -18,6 +19,17 @@ type AgentEmailArgs = {
   city?: string | null;
   province?: string | null;
   serviceType?: string | null;
+  confirmedAt?: string; // Exact appointment time
+  locationAddress?: string | null;
+  clientEmail?: string | null;
+};
+
+type ReviewFollowUpEmailArgs = {
+  to: string;
+  familyName?: string | null;
+  agentName?: string | null;
+  appointmentId: string;
+  token: string; // Token for review submission
 };
 
 /**
@@ -29,6 +41,7 @@ export async function sendConsumerBookingEmail({
   requestedDate,
   requestedWindow,
   appointmentId,
+  confirmedAt,
 }: ConsumerEmailArgs) {
   if (!to) {
     console.warn('sendConsumerBookingEmail: No email address provided');
@@ -98,68 +111,60 @@ export async function sendConsumerBookingEmail({
     const emailBody = {
       from: fromEmail,
       to: [to],
-      subject: 'Your pre-need planning call is booked',
+      subject: `Appointment Confirmed - ${prettyDate}`,
       html: `
         <!DOCTYPE html>
         <html>
         <head>
           <meta charset="utf-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Appointment Confirmed</title>
         </head>
-        <body style="margin: 0; padding: 0; background-color: #f7f4ef; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
-          <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #f7f4ef; padding: 40px 20px;">
+        <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f5f5f5;">
+          <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 40px 20px;">
             <tr>
               <td align="center">
-                <table role="presentation" style="max-width: 600px; width: 100%; border-collapse: collapse; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); overflow: hidden;">
-                  <!-- Header with Logo -->
+                <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                  <!-- Header -->
                   <tr>
-                    <td style="padding: 40px 40px 30px; text-align: center; background: linear-gradient(to bottom, #faf8f5, #ffffff);">
-                      <img src="${cleanSiteUrl}/logo%20-%20white.png" alt="Soradin" style="height: 48px; width: auto; margin: 0 auto 12px; display: block; max-width: 200px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
-                      <div style="display: none;">
-                        <h1 style="color: #2a2a2a; font-size: 32px; font-weight: 300; letter-spacing: -0.5px; margin: 0;">Soradin</h1>
-                        <p style="color: #6b6b6b; font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; margin: 8px 0 0 0;">Pre-Planning</p>
-                      </div>
+                    <td style="background-color: #0D5C3D; padding: 30px; text-align: center;">
+                      <img src="${cleanSiteUrl}/logo.png" alt="Soradin" style="max-width: 150px; height: auto;" />
                     </td>
                   </tr>
                   
-                  <!-- Main Content -->
+                  <!-- Content -->
                   <tr>
-                    <td style="padding: 40px;">
-                      <h2 style="color: #2a2a2a; font-size: 24px; font-weight: 400; margin: 0 0 20px; letter-spacing: -0.3px;">Your planning call is booked</h2>
-                      
-                      <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 16px;">Hi ${name || 'there'},</p>
-                      
-                      <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 24px;">
-                        Thank you for using Soradin to start your pre-need planning. We've received your request for a call on <strong>${prettyDate}</strong> (${timeWindowLabel}).
+                    <td style="padding: 40px 30px;">
+                      <h1 style="color: #2a2a2a; font-size: 24px; margin: 0 0 20px 0;">Appointment Confirmed</h1>
+                      <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                        Hi ${name || 'there'},
                       </p>
-                      
-                      <div style="background-color: #f7f4ef; padding: 20px; border-radius: 8px; margin: 24px 0;">
-                        <p style="margin: 8px 0; color: #2a2a2a; font-size: 16px;"><strong>Date:</strong> ${prettyDate}</p>
-                        <p style="margin: 8px 0; color: #2a2a2a; font-size: 16px;"><strong>Time:</strong> ${timeWindowLabel}</p>
-                      </div>
-                      
-                      <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 24px 0 16px;">
-                        A licensed specialist will contact you at that time to walk you through options, answer questions, and help you move at your own pace.
-                      </p>
-                      
-                      <p style="color: #6b6b6b; font-size: 14px; line-height: 1.6; margin: 24px 0 0;">
-                        If you didn't request this, you can ignore this email.
+                      <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 0 0 30px 0;">
+                        Your appointment has been confirmed for <strong>${prettyDate}</strong> during the <strong>${timeWindowLabel}</strong>.
                       </p>
                       
                       ${appointmentId ? `
-                      <p style="margin: 30px 0 0; padding-top: 20px; border-top: 1px solid #e5e5e5;">
-                        <a href="${cleanSiteUrl}/book/cancel?appointmentId=${appointmentId}" style="color: #dc2626; text-decoration: underline; font-size: 14px;">
-                          Cancel this appointment
-                        </a>
-                      </p>
+                      <div style="background-color: #f9f9f9; border-left: 4px solid #0D5C3D; padding: 15px 20px; margin: 30px 0;">
+                        <p style="color: #666666; font-size: 14px; margin: 0;">
+                          Need to cancel or reschedule? <a href="${cleanSiteUrl}/book/cancel?appointmentId=${appointmentId}" style="color: #0D5C3D; text-decoration: none;">Click here</a>
+                        </p>
+                      </div>
                       ` : ''}
+                      
+                      <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 30px 0 0 0;">
+                        We look forward to meeting with you.
+                      </p>
+                      <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 20px 0 0 0;">
+                        Best regards,<br>
+                        The Soradin Team
+                      </p>
                     </td>
                   </tr>
                   
                   <!-- Footer -->
                   <tr>
-                    <td style="padding: 30px 40px; background-color: #faf8f5; border-top: 1px solid #e5e5e5;">
-                      <p style="color: #6b6b6b; font-size: 12px; margin: 0; text-align: center;">
+                    <td style="background-color: #f9f9f9; padding: 20px 30px; text-align: center; border-top: 1px solid #e0e0e0;">
+                      <p style="color: #999999; font-size: 12px; margin: 0;">
                         © ${new Date().getFullYear()} Soradin. All rights reserved.
                       </p>
                     </td>
@@ -171,89 +176,53 @@ export async function sendConsumerBookingEmail({
         </body>
         </html>
       `,
-      text: [
-        `Hi ${name || 'there'},`,
-        '',
-        `Thank you for using Soradin to start your pre-need planning.`,
-        `We've received your request for a call on ${prettyDate} (${timeWindowLabel}).`,
-        '',
-        'A licensed specialist will contact you at that time to walk you through options, answer questions, and help you move at your own pace.',
-        '',
-        `If you didn't request this, you can ignore this email.`,
-        '',
-        '— Soradin',
-      ].join('\n'),
     };
-    
+
     const fetchPromise = fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${resendApiKey}`,
+        'Authorization': `Bearer ${resendApiKey}`,
       },
       body: JSON.stringify(emailBody),
     });
 
-    let resendResponse: Response;
-    try {
-      resendResponse = await Promise.race([fetchPromise, timeoutPromise]);
-      if (timeoutId) clearTimeout(timeoutId);
-    } catch (raceError: any) {
-      if (timeoutId) clearTimeout(timeoutId);
-      console.error('❌ Promise.race error:', {
-        error: raceError?.message || raceError,
-        name: raceError?.name,
-        code: raceError?.code,
-        to,
-        timestamp: new Date().toISOString(),
-      });
-      throw raceError;
-    }
+    const response = await Promise.race([fetchPromise, timeoutPromise]);
     
-    const fetchDuration = Date.now() - fetchStartTime;
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
 
-    if (!resendResponse.ok) {
-      const errorText = await resendResponse.text();
+    if (!response.ok) {
+      const errorText = await response.text();
       console.error('❌ Resend API error for consumer booking email:', {
-        status: resendResponse.status,
+        status: response.status,
+        statusText: response.statusText,
         error: errorText,
         to,
       });
-      throw new Error(`Resend API error: ${resendResponse.status} - ${errorText}`);
+      throw new Error(`Resend API error: ${response.status} ${response.statusText}`);
     }
 
-    const responseData = await resendResponse.json().catch(() => ({}));
-    console.log(`✅ Consumer booking email sent successfully to ${to}`, {
-      emailId: responseData?.id,
-      status: resendResponse.status,
+    const result = await response.json();
+    console.log('✅ Consumer booking email sent successfully:', {
+      emailId: result.id,
+      to,
     });
-  } catch (err: any) {
-    // Check if it's an abort error (timeout)
-    if (err?.name === 'AbortError' || err?.code === 'ECONNRESET') {
-      console.error('❌ Resend API request failed (network/timeout):', {
-        error: err?.message || err,
-        code: err?.code,
-        name: err?.name,
-        to,
-        suggestion: 'Check network connectivity, firewall settings, or Resend API status',
-      });
-    } else {
-      console.error('❌ Error sending consumer booking email:', {
-        error: err?.message || err,
-        cause: err?.cause,
-        code: err?.code,
-        name: err?.name,
-        stack: err?.stack,
-        to,
-      });
-    }
-    // Re-throw so the caller knows it failed
-    throw err;
+    
+    return result;
+  } catch (error: any) {
+    console.error('❌ Error sending consumer booking email:', {
+      error: error.message,
+      stack: error.stack,
+      to,
+    });
+    throw error;
   }
 }
 
 /**
- * Send notification email to agent when they purchase an appointment
+ * Send booking notification email to agent
  */
 export async function sendAgentNewAppointmentEmail({
   to,
@@ -264,6 +233,9 @@ export async function sendAgentNewAppointmentEmail({
   city,
   province,
   serviceType,
+  confirmedAt,
+  locationAddress,
+  clientEmail,
 }: AgentEmailArgs) {
   if (!to) {
     console.warn('sendAgentNewAppointmentEmail: No email address provided');
@@ -279,21 +251,46 @@ export async function sendAgentNewAppointmentEmail({
     return;
   }
 
-      // Parse date as local date to avoid timezone shift
-      // requestedDate is in YYYY-MM-DD format from database
-      const [year, month, day] = requestedDate.split('-').map(Number);
-      const date = new Date(year, month - 1, day); // month is 0-indexed
-      const prettyDate = date.toLocaleDateString('en-US', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-      });
+  // Parse date
+  const [year, month, day] = requestedDate.split('-').map(Number);
+  const date = new Date(year, month - 1, day);
+  const prettyDate = date.toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
 
   const timeWindowLabel = requestedWindow.charAt(0).toUpperCase() + requestedWindow.slice(1);
-  const location = city && province ? `${city}, ${province}` : city || province || 'Location not specified';
 
-  // Format from email properly for Resend - always brand as Soradin
+  // Format time if confirmedAt is provided
+  let timeDisplay = timeWindowLabel;
+  if (confirmedAt) {
+    try {
+      const { DateTime } = await import('luxon');
+      const confirmedDate = DateTime.fromISO(confirmedAt, { zone: "utc" });
+      // Infer timezone from province
+      let timezone = "America/Vancouver";
+      if (province) {
+        const prov = province.toUpperCase();
+        if (prov === "BC" || prov === "BRITISH COLUMBIA") timezone = "America/Vancouver";
+        else if (prov === "AB" || prov === "ALBERTA") timezone = "America/Edmonton";
+        else if (prov === "SK" || prov === "SASKATCHEWAN") timezone = "America/Regina";
+        else if (prov === "MB" || prov === "MANITOBA") timezone = "America/Winnipeg";
+        else if (prov === "ON" || prov === "ONTARIO") timezone = "America/Toronto";
+        else if (prov === "QC" || prov === "QUEBEC") timezone = "America/Montreal";
+      }
+      const localDate = confirmedDate.setZone(timezone);
+      const hours = localDate.hour;
+      const minutes = localDate.minute;
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      const displayHours = hours % 12 || 12;
+      timeDisplay = `${displayHours}:${String(minutes).padStart(2, '0')} ${ampm}`;
+    } catch (error) {
+      console.error('Error formatting time:', error);
+    }
+  }
+
   let fromEmail = resendFromEmail;
   if (fromEmail && !fromEmail.includes('<')) {
     fromEmail = `Soradin <${fromEmail}>`;
@@ -307,137 +304,112 @@ export async function sendAgentNewAppointmentEmail({
   }
 
   try {
-    // Clean siteUrl for logo
     let cleanSiteUrl = (siteUrl || '').trim().replace(/\/+$/, '');
     if (!cleanSiteUrl.startsWith('http')) {
       cleanSiteUrl = `https://${cleanSiteUrl}`;
     }
 
-    const resendResponse = await fetch('https://api.resend.com/emails', {
+    const emailBody = {
+      from: fromEmail,
+      to: [to],
+      subject: `New Appointment: ${consumerName || 'Client'} - ${prettyDate}`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>New Appointment</title>
+        </head>
+        <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f5f5f5;">
+          <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 40px 20px;">
+            <tr>
+              <td align="center">
+                <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                  <tr>
+                    <td style="background-color: #0D5C3D; padding: 30px; text-align: center;">
+                      <img src="${cleanSiteUrl}/logo.png" alt="Soradin" style="max-width: 150px; height: auto;" />
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 40px 30px;">
+                      <h1 style="color: #2a2a2a; font-size: 24px; margin: 0 0 20px 0;">New Appointment Scheduled</h1>
+                      <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                        Hi ${agentName || 'there'},
+                      </p>
+                      <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 0 0 30px 0;">
+                        You have a new appointment scheduled:
+                      </p>
+                      <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                        <p style="color: #2a2a2a; font-size: 16px; margin: 8px 0;"><strong>Client:</strong> ${consumerName || 'Not specified'}</p>
+                        <p style="color: #2a2a2a; font-size: 16px; margin: 8px 0;"><strong>Date:</strong> ${prettyDate}</p>
+                        <p style="color: #2a2a2a; font-size: 16px; margin: 8px 0;"><strong>Time:</strong> ${timeDisplay}</p>
+                        ${locationAddress ? `<p style="color: #2a2a2a; font-size: 16px; margin: 8px 0;"><strong>Location:</strong> ${locationAddress}</p>` : ''}
+                        ${city || province ? `<p style="color: #2a2a2a; font-size: 16px; margin: 8px 0;"><strong>Area:</strong> ${[city, province].filter(Boolean).join(', ')}</p>` : ''}
+                        ${serviceType ? `<p style="color: #2a2a2a; font-size: 16px; margin: 8px 0;"><strong>Service:</strong> ${serviceType}</p>` : ''}
+                        ${clientEmail ? `<p style="color: #2a2a2a; font-size: 16px; margin: 8px 0;"><strong>Client Email:</strong> ${clientEmail}</p>` : ''}
+                      </div>
+                      <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 30px 0 0 0;">
+                        Best regards,<br>
+                        The Soradin Team
+                      </p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="background-color: #f9f9f9; padding: 20px 30px; text-align: center; border-top: 1px solid #e0e0e0;">
+                      <p style="color: #999999; font-size: 12px; margin: 0;">
+                        © ${new Date().getFullYear()} Soradin. All rights reserved.
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
+      `,
+    };
+
+    const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${resendApiKey}`,
+        'Authorization': `Bearer ${resendApiKey}`,
       },
-      body: JSON.stringify({
-        from: fromEmail,
-        to: [to],
-        subject: 'New Soradin appointment booked',
-        html: `
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <meta charset="utf-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          </head>
-          <body style="margin: 0; padding: 0; background-color: #f7f4ef; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
-            <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #f7f4ef; padding: 40px 20px;">
-              <tr>
-                <td align="center">
-                  <table role="presentation" style="max-width: 600px; width: 100%; border-collapse: collapse; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); overflow: hidden;">
-                    <!-- Header with Logo -->
-                    <tr>
-                      <td style="padding: 40px 40px 30px; text-align: center; background: linear-gradient(to bottom, #faf8f5, #ffffff);">
-                        <img src="${cleanSiteUrl}/logo%20-%20white.png" alt="Soradin" style="height: 48px; width: auto; margin: 0 auto 12px; display: block; max-width: 200px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
-                        <div style="display: none;">
-                          <h1 style="color: #2a2a2a; font-size: 32px; font-weight: 300; letter-spacing: -0.5px; margin: 0;">Soradin</h1>
-                          <p style="color: #6b6b6b; font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; margin: 8px 0 0 0;">Pre-Planning</p>
-                        </div>
-                      </td>
-                    </tr>
-                    
-                    <!-- Main Content -->
-                    <tr>
-                      <td style="padding: 40px;">
-                        <h2 style="color: #2a2a2a; font-size: 24px; font-weight: 400; margin: 0 0 20px; letter-spacing: -0.3px;">New appointment booked</h2>
-                        
-                        <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 16px;">Hi ${agentName || 'there'},</p>
-                        
-                        <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 24px;">
-                          You have a new booked Soradin appointment.
-                        </p>
-                        
-                        <div style="background-color: #f7f4ef; padding: 20px; border-radius: 8px; margin: 24px 0;">
-                          <p style="margin: 8px 0; color: #2a2a2a; font-size: 16px;"><strong>Date:</strong> ${prettyDate}</p>
-                          <p style="margin: 8px 0; color: #2a2a2a; font-size: 16px;"><strong>Time window:</strong> ${timeWindowLabel}</p>
-                          ${location ? `<p style="margin: 8px 0; color: #2a2a2a; font-size: 16px;"><strong>Location:</strong> ${location}</p>` : ''}
-                          ${serviceType ? `<p style="margin: 8px 0; color: #2a2a2a; font-size: 16px;"><strong>Service type:</strong> ${serviceType}</p>` : ''}
-                          ${consumerName ? `<p style="margin: 8px 0; color: #2a2a2a; font-size: 16px;"><strong>Client:</strong> ${consumerName}</p>` : ''}
-                        </div>
-                        
-                        <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 24px 0 16px;">
-                          Log in to your Soradin agent portal to see full details and contact information.
-                        </p>
-                        
-                        <p style="margin: 30px 0 0;">
-                          <a href="${cleanSiteUrl}/agent/my-appointments" style="background-color: #2a2a2a; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: 500;">
-                            View My Appointments
-                          </a>
-                        </p>
-                      </td>
-                    </tr>
-                    
-                    <!-- Footer -->
-                    <tr>
-                      <td style="padding: 30px 40px; background-color: #faf8f5; border-top: 1px solid #e5e5e5;">
-                        <p style="color: #6b6b6b; font-size: 12px; margin: 0; text-align: center;">
-                          © ${new Date().getFullYear()} Soradin. All rights reserved.
-                        </p>
-                      </td>
-                    </tr>
-                  </table>
-                </td>
-              </tr>
-            </table>
-          </body>
-          </html>
-        `,
-        text: [
-          `Hi ${agentName || 'there'},`,
-          '',
-          'You have a new booked Soradin appointment.',
-          '',
-          `Date: ${prettyDate}`,
-          `Time window: ${timeWindowLabel}`,
-          location !== 'Location not specified' ? `Location: ${location}` : '',
-          serviceType ? `Service type: ${serviceType}` : '',
-          consumerName ? `Client: ${consumerName}` : '',
-          '',
-          'Log in to Soradin to see full details and contact information.',
-          '',
-          '— Soradin',
-        ]
-          .filter(Boolean)
-          .join('\n'),
-      }),
+      body: JSON.stringify(emailBody),
     });
 
-    if (!resendResponse.ok) {
-      const errorText = await resendResponse.text();
+    if (!response.ok) {
+      const errorText = await response.text();
       console.error('❌ Resend API error for agent appointment email:', {
-        status: resendResponse.status,
+        status: response.status,
+        statusText: response.statusText,
         error: errorText,
+        to,
       });
-      throw new Error(`Resend API error: ${resendResponse.status}`);
+      throw new Error(`Resend API error: ${response.status} ${response.statusText}`);
     }
 
-    console.log(`✅ Agent appointment email sent to ${to}`);
-  } catch (err: any) {
-    console.error('❌ Error sending agent appointment email:', err);
-    // Don't throw - email failure shouldn't break appointment purchase
+    const result = await response.json();
+    console.log('✅ Agent appointment email sent successfully:', {
+      emailId: result.id,
+      to,
+    });
+    
+    return result;
+  } catch (error: any) {
+    console.error('❌ Error sending agent appointment email:', {
+      error: error.message,
+      stack: error.stack,
+      to,
+    });
+    throw error;
   }
 }
 
-type AgentCancellationEmailArgs = {
-  to: string;
-  agentName?: string | null;
-  consumerName?: string | null;
-  requestedDate: string;
-  requestedWindow: string;
-};
-
 /**
- * Send notification email to agent when an appointment is cancelled
+ * Send cancellation notification email to agent
  */
 export async function sendAgentCancellationEmail({
   to,
@@ -445,7 +417,7 @@ export async function sendAgentCancellationEmail({
   consumerName,
   requestedDate,
   requestedWindow,
-}: AgentCancellationEmailArgs) {
+}: AgentEmailArgs) {
   if (!to) {
     console.warn('sendAgentCancellationEmail: No email address provided');
     return;
@@ -460,9 +432,8 @@ export async function sendAgentCancellationEmail({
     return;
   }
 
-  // Parse date as local date to avoid timezone shift
   const [year, month, day] = requestedDate.split('-').map(Number);
-  const date = new Date(year, month - 1, day); // month is 0-indexed
+  const date = new Date(year, month - 1, day);
   const prettyDate = date.toLocaleDateString('en-US', {
     weekday: 'long',
     year: 'numeric',
@@ -472,7 +443,6 @@ export async function sendAgentCancellationEmail({
 
   const timeWindowLabel = requestedWindow.charAt(0).toUpperCase() + requestedWindow.slice(1);
 
-  // Format from email properly for Resend - always brand as Soradin
   let fromEmail = resendFromEmail;
   if (fromEmail && !fromEmail.includes('<')) {
     fromEmail = `Soradin <${fromEmail}>`;
@@ -486,125 +456,108 @@ export async function sendAgentCancellationEmail({
   }
 
   try {
-    // Clean siteUrl for logo
     let cleanSiteUrl = (siteUrl || '').trim().replace(/\/+$/, '');
     if (!cleanSiteUrl.startsWith('http')) {
       cleanSiteUrl = `https://${cleanSiteUrl}`;
     }
 
-    const resendResponse = await fetch('https://api.resend.com/emails', {
+    const emailBody = {
+      from: fromEmail,
+      to: [to],
+      subject: `Appointment Cancelled: ${consumerName || 'Client'} - ${prettyDate}`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Appointment Cancelled</title>
+        </head>
+        <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f5f5f5;">
+          <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 40px 20px;">
+            <tr>
+              <td align="center">
+                <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                  <tr>
+                    <td style="background-color: #0D5C3D; padding: 30px; text-align: center;">
+                      <img src="${cleanSiteUrl}/logo.png" alt="Soradin" style="max-width: 150px; height: auto;" />
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 40px 30px;">
+                      <h1 style="color: #2a2a2a; font-size: 24px; margin: 0 0 20px 0;">Appointment Cancelled</h1>
+                      <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                        Hi ${agentName || 'there'},
+                      </p>
+                      <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 0 0 30px 0;">
+                        The following appointment has been cancelled:
+                      </p>
+                      <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                        <p style="color: #2a2a2a; font-size: 16px; margin: 8px 0;"><strong>Client:</strong> ${consumerName || 'Not specified'}</p>
+                        <p style="color: #2a2a2a; font-size: 16px; margin: 8px 0;"><strong>Date:</strong> ${prettyDate}</p>
+                        <p style="color: #2a2a2a; font-size: 16px; margin: 8px 0;"><strong>Time:</strong> ${timeWindowLabel}</p>
+                      </div>
+                      <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 30px 0 0 0;">
+                        Best regards,<br>
+                        The Soradin Team
+                      </p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="background-color: #f9f9f9; padding: 20px 30px; text-align: center; border-top: 1px solid #e0e0e0;">
+                      <p style="color: #999999; font-size: 12px; margin: 0;">
+                        © ${new Date().getFullYear()} Soradin. All rights reserved.
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
+      `,
+    };
+
+    const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${resendApiKey}`,
+        'Authorization': `Bearer ${resendApiKey}`,
       },
-      body: JSON.stringify({
-        from: fromEmail,
-        to: [to],
-        subject: 'Appointment cancelled - Soradin',
-        html: `
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <meta charset="utf-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          </head>
-          <body style="margin: 0; padding: 0; background-color: #f7f4ef; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
-            <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #f7f4ef; padding: 40px 20px;">
-              <tr>
-                <td align="center">
-                  <table role="presentation" style="max-width: 600px; width: 100%; border-collapse: collapse; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); overflow: hidden;">
-                    <!-- Header with Logo -->
-                    <tr>
-                      <td style="padding: 40px 40px 30px; text-align: center; background: linear-gradient(to bottom, #faf8f5, #ffffff);">
-                        <img src="${cleanSiteUrl}/logo%20-%20white.png" alt="Soradin" style="height: 48px; width: auto; margin: 0 auto 12px; display: block; max-width: 200px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
-                        <div style="display: none;">
-                          <h1 style="color: #2a2a2a; font-size: 32px; font-weight: 300; letter-spacing: -0.5px; margin: 0;">Soradin</h1>
-                          <p style="color: #6b6b6b; font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; margin: 8px 0 0 0;">Pre-Planning</p>
-                        </div>
-                      </td>
-                    </tr>
-                    
-                    <!-- Main Content -->
-                    <tr>
-                      <td style="padding: 40px;">
-                        <h2 style="color: #2a2a2a; font-size: 24px; font-weight: 400; margin: 0 0 20px; letter-spacing: -0.3px;">Appointment cancelled</h2>
-                        
-                        <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 16px;">Hi ${agentName || 'there'},</p>
-                        
-                        <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 24px;">
-                          The family has cancelled their appointment with you.
-                        </p>
-                        
-                        <div style="background-color: #f7f4ef; padding: 20px; border-radius: 8px; margin: 24px 0;">
-                          <p style="margin: 8px 0; color: #2a2a2a; font-size: 16px;"><strong>Date:</strong> ${prettyDate}</p>
-                          <p style="margin: 8px 0; color: #2a2a2a; font-size: 16px;"><strong>Time window:</strong> ${timeWindowLabel}</p>
-                          ${consumerName ? `<p style="margin: 8px 0; color: #2a2a2a; font-size: 16px;"><strong>Client:</strong> ${consumerName}</p>` : ''}
-                        </div>
-                        
-                        <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 24px 0 16px;">
-                          This time slot is now available again in your calendar. The appointment has been removed from your connected calendars (Google/Microsoft) if they were synced.
-                        </p>
-                        
-                        <p style="margin: 30px 0 0;">
-                          <a href="${cleanSiteUrl}/agent/my-appointments" style="background-color: #2a2a2a; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: 500;">
-                            View My Appointments
-                          </a>
-                        </p>
-                      </td>
-                    </tr>
-                    
-                    <!-- Footer -->
-                    <tr>
-                      <td style="padding: 30px 40px; background-color: #faf8f5; border-top: 1px solid #e5e5e5;">
-                        <p style="color: #6b6b6b; font-size: 12px; margin: 0; text-align: center;">
-                          © ${new Date().getFullYear()} Soradin. All rights reserved.
-                        </p>
-                      </td>
-                    </tr>
-                  </table>
-                </td>
-              </tr>
-            </table>
-          </body>
-          </html>
-        `,
-        text: [
-          `Hi ${agentName || 'there'},`,
-          '',
-          'The family has cancelled their appointment with you.',
-          '',
-          `Date: ${prettyDate}`,
-          `Time window: ${timeWindowLabel}`,
-          consumerName ? `Client: ${consumerName}` : '',
-          '',
-          'This time slot is now available again in your calendar. The appointment has been removed from your connected calendars (Google/Microsoft) if they were synced.',
-          '',
-          '— Soradin',
-        ]
-          .filter(Boolean)
-          .join('\n'),
-      }),
+      body: JSON.stringify(emailBody),
     });
 
-    if (!resendResponse.ok) {
-      const errorText = await resendResponse.text();
+    if (!response.ok) {
+      const errorText = await response.text();
       console.error('❌ Resend API error for agent cancellation email:', {
-        status: resendResponse.status,
+        status: response.status,
+        statusText: response.statusText,
         error: errorText,
+        to,
       });
-      throw new Error(`Resend API error: ${resendResponse.status}`);
+      throw new Error(`Resend API error: ${response.status} ${response.statusText}`);
     }
 
-    console.log(`✅ Agent cancellation email sent to ${to}`);
-  } catch (err: any) {
-    console.error('❌ Error sending agent cancellation email:', err);
-    // Don't throw - email failure shouldn't break cancellation
+    const result = await response.json();
+    console.log('✅ Agent cancellation email sent successfully:', {
+      emailId: result.id,
+      to,
+    });
+    
+    return result;
+  } catch (error: any) {
+    console.error('❌ Error sending agent cancellation email:', {
+      error: error.message,
+      stack: error.stack,
+      to,
+    });
+    throw error;
   }
 }
 
 /**
- * Send notification email to agent when an appointment is being rescheduled
+ * Send rebooking notification email to agent
  */
 export async function sendAgentRebookingEmail({
   to,
@@ -612,7 +565,7 @@ export async function sendAgentRebookingEmail({
   consumerName,
   requestedDate,
   requestedWindow,
-}: AgentCancellationEmailArgs) {
+}: AgentEmailArgs) {
   if (!to) {
     console.warn('sendAgentRebookingEmail: No email address provided');
     return;
@@ -627,9 +580,8 @@ export async function sendAgentRebookingEmail({
     return;
   }
 
-  // Parse date as local date to avoid timezone shift
   const [year, month, day] = requestedDate.split('-').map(Number);
-  const date = new Date(year, month - 1, day); // month is 0-indexed
+  const date = new Date(year, month - 1, day);
   const prettyDate = date.toLocaleDateString('en-US', {
     weekday: 'long',
     year: 'numeric',
@@ -639,7 +591,6 @@ export async function sendAgentRebookingEmail({
 
   const timeWindowLabel = requestedWindow.charAt(0).toUpperCase() + requestedWindow.slice(1);
 
-  // Format from email properly for Resend - always brand as Soradin
   let fromEmail = resendFromEmail;
   if (fromEmail && !fromEmail.includes('<')) {
     fromEmail = `Soradin <${fromEmail}>`;
@@ -653,120 +604,251 @@ export async function sendAgentRebookingEmail({
   }
 
   try {
-    // Clean siteUrl for logo
     let cleanSiteUrl = (siteUrl || '').trim().replace(/\/+$/, '');
     if (!cleanSiteUrl.startsWith('http')) {
       cleanSiteUrl = `https://${cleanSiteUrl}`;
     }
 
-    const resendResponse = await fetch('https://api.resend.com/emails', {
+    const emailBody = {
+      from: fromEmail,
+      to: [to],
+      subject: `Appointment Reschedule Request: ${consumerName || 'Client'} - ${prettyDate}`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Appointment Reschedule Request</title>
+        </head>
+        <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f5f5f5;">
+          <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 40px 20px;">
+            <tr>
+              <td align="center">
+                <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                  <tr>
+                    <td style="background-color: #0D5C3D; padding: 30px; text-align: center;">
+                      <img src="${cleanSiteUrl}/logo.png" alt="Soradin" style="max-width: 150px; height: auto;" />
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 40px 30px;">
+                      <h1 style="color: #2a2a2a; font-size: 24px; margin: 0 0 20px 0;">Appointment Reschedule Request</h1>
+                      <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                        Hi ${agentName || 'there'},
+                      </p>
+                      <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 0 0 30px 0;">
+                        ${consumerName || 'A client'} has requested to reschedule their appointment:
+                      </p>
+                      <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                        <p style="color: #2a2a2a; font-size: 16px; margin: 8px 0;"><strong>Client:</strong> ${consumerName || 'Not specified'}</p>
+                        <p style="color: #2a2a2a; font-size: 16px; margin: 8px 0;"><strong>Original Date:</strong> ${prettyDate}</p>
+                        <p style="color: #2a2a2a; font-size: 16px; margin: 8px 0;"><strong>Original Time:</strong> ${timeWindowLabel}</p>
+                      </div>
+                      <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 30px 0 0 0;">
+                        They will be selecting a new time slot. Please check your calendar for the updated appointment.
+                      </p>
+                      <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 20px 0 0 0;">
+                        Best regards,<br>
+                        The Soradin Team
+                      </p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="background-color: #f9f9f9; padding: 20px 30px; text-align: center; border-top: 1px solid #e0e0e0;">
+                      <p style="color: #999999; font-size: 12px; margin: 0;">
+                        © ${new Date().getFullYear()} Soradin. All rights reserved.
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
+      `,
+    };
+
+    const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${resendApiKey}`,
+        'Authorization': `Bearer ${resendApiKey}`,
       },
-      body: JSON.stringify({
-        from: fromEmail,
-        to: [to],
-        subject: 'Appointment rescheduling request - Soradin',
-        html: `
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <meta charset="utf-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          </head>
-          <body style="margin: 0; padding: 0; background-color: #f7f4ef; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
-            <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #f7f4ef; padding: 40px 20px;">
-              <tr>
-                <td align="center">
-                  <table role="presentation" style="max-width: 600px; width: 100%; border-collapse: collapse; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); overflow: hidden;">
-                    <!-- Header with Logo -->
-                    <tr>
-                      <td style="padding: 40px 40px 30px; text-align: center; background: linear-gradient(to bottom, #faf8f5, #ffffff);">
-                        <img src="${cleanSiteUrl}/logo%20-%20white.png" alt="Soradin" style="height: 48px; width: auto; margin: 0 auto 12px; display: block; max-width: 200px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
-                        <div style="display: none;">
-                          <h1 style="color: #2a2a2a; font-size: 32px; font-weight: 300; letter-spacing: -0.5px; margin: 0;">Soradin</h1>
-                          <p style="color: #6b6b6b; font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; margin: 8px 0 0 0;">Pre-Planning</p>
-                        </div>
-                      </td>
-                    </tr>
-                    
-                    <!-- Main Content -->
-                    <tr>
-                      <td style="padding: 40px;">
-                        <h2 style="color: #2a2a2a; font-size: 24px; font-weight: 400; margin: 0 0 20px; letter-spacing: -0.3px;">Appointment rescheduling request</h2>
-                        
-                        <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 16px;">Hi ${agentName || 'there'},</p>
-                        
-                        <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 24px;">
-                          A family has requested to reschedule their appointment with you. The original appointment has been cancelled and they are now looking to book a new time.
-                        </p>
-                        
-                        <div style="background-color: #f7f4ef; padding: 20px; border-radius: 8px; margin: 24px 0;">
-                          <p style="margin: 8px 0; color: #2a2a2a; font-size: 16px;"><strong>Original appointment date:</strong> ${prettyDate}</p>
-                          <p style="margin: 8px 0; color: #2a2a2a; font-size: 16px;"><strong>Time window:</strong> ${timeWindowLabel}</p>
-                          ${consumerName ? `<p style="margin: 8px 0; color: #2a2a2a; font-size: 16px;"><strong>Client:</strong> ${consumerName}</p>` : ''}
-                        </div>
-                        
-                        <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 24px 0 16px;">
-                          The family will be able to view your available times and select a new appointment slot. This original time slot is now available again in your calendar.
-                        </p>
-                        
-                        <p style="margin: 30px 0 0;">
-                          <a href="${cleanSiteUrl}/agent/my-appointments" style="background-color: #2a2a2a; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: 500;">
-                            View My Appointments
-                          </a>
-                        </p>
-                      </td>
-                    </tr>
-                    
-                    <!-- Footer -->
-                    <tr>
-                      <td style="padding: 30px 40px; background-color: #faf8f5; border-top: 1px solid #e5e5e5;">
-                        <p style="color: #6b6b6b; font-size: 12px; margin: 0; text-align: center;">
-                          © ${new Date().getFullYear()} Soradin. All rights reserved.
-                        </p>
-                      </td>
-                    </tr>
-                  </table>
-                </td>
-              </tr>
-            </table>
-          </body>
-          </html>
-        `,
-        text: [
-          `Hi ${agentName || 'there'},`,
-          '',
-          'A family has requested to reschedule their appointment with you. The original appointment has been cancelled and they are now looking to book a new time.',
-          '',
-          `Original appointment date: ${prettyDate}`,
-          `Time window: ${timeWindowLabel}`,
-          consumerName ? `Client: ${consumerName}` : '',
-          '',
-          'The family will be able to view your available times and select a new appointment slot. This original time slot is now available again in your calendar.',
-          '',
-          '— Soradin',
-        ]
-          .filter(Boolean)
-          .join('\n'),
-      }),
+      body: JSON.stringify(emailBody),
     });
 
-    if (!resendResponse.ok) {
-      const errorText = await resendResponse.text();
+    if (!response.ok) {
+      const errorText = await response.text();
       console.error('❌ Resend API error for agent rebooking email:', {
-        status: resendResponse.status,
+        status: response.status,
+        statusText: response.statusText,
         error: errorText,
+        to,
       });
-      throw new Error(`Resend API error: ${resendResponse.status}`);
+      throw new Error(`Resend API error: ${response.status} ${response.statusText}`);
     }
 
-    console.log(`✅ Agent rebooking email sent to ${to}`);
-  } catch (err: any) {
-    console.error('❌ Error sending agent rebooking email:', err);
-    // Don't throw - email failure shouldn't break rebooking
+    const result = await response.json();
+    console.log('✅ Agent rebooking email sent successfully:', {
+      emailId: result.id,
+      to,
+    });
+    
+    return result;
+  } catch (error: any) {
+    console.error('❌ Error sending agent rebooking email:', {
+      error: error.message,
+      stack: error.stack,
+      to,
+    });
+    throw error;
   }
 }
 
+/**
+ * Send review follow-up email to family (24 hours after appointment)
+ */
+export async function sendReviewFollowUpEmail({
+  to,
+  familyName,
+  agentName,
+  appointmentId,
+  token,
+}: ReviewFollowUpEmailArgs) {
+  if (!to) {
+    console.warn('sendReviewFollowUpEmail: No email address provided');
+    return;
+  }
+
+  const resendApiKey = process.env.RESEND_API_KEY;
+  const resendFromEmail = process.env.RESEND_FROM_EMAIL || 'Soradin <notifications@soradin.com>';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://soradin.com';
+
+  if (!resendApiKey) {
+    console.log('📧 sendReviewFollowUpEmail: RESEND_API_KEY not set, skipping email');
+    return;
+  }
+
+  let fromEmail = resendFromEmail;
+  if (fromEmail && !fromEmail.includes('<')) {
+    fromEmail = `Soradin <${fromEmail}>`;
+  } else if (fromEmail && fromEmail.includes('<')) {
+    const emailMatch = fromEmail.match(/<(.+@.+?)>/);
+    if (emailMatch) {
+      fromEmail = `Soradin <${emailMatch[1]}>`;
+    }
+  } else {
+    fromEmail = 'Soradin <notifications@soradin.com>';
+  }
+
+  try {
+    let cleanSiteUrl = (siteUrl || '').trim().replace(/\/+$/, '');
+    if (!cleanSiteUrl.startsWith('http')) {
+      cleanSiteUrl = `https://${cleanSiteUrl}`;
+    }
+
+    const reviewUrl = `${cleanSiteUrl}/review?appointmentId=${appointmentId}&token=${token}`;
+
+    const emailBody = {
+      from: fromEmail,
+      to: [to],
+      subject: `How was your appointment with ${agentName || 'your specialist'}?`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Share Your Experience</title>
+        </head>
+        <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f5f5f5;">
+          <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 40px 20px;">
+            <tr>
+              <td align="center">
+                <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                  <tr>
+                    <td style="background-color: #0D5C3D; padding: 30px; text-align: center;">
+                      <img src="${cleanSiteUrl}/logo.png" alt="Soradin" style="max-width: 150px; height: auto;" />
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 40px 30px;">
+                      <h1 style="color: #2a2a2a; font-size: 24px; margin: 0 0 20px 0;">How was your appointment?</h1>
+                      <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                        Hi ${familyName || 'there'},
+                      </p>
+                      <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 0 0 30px 0;">
+                        We hope your appointment with <strong>${agentName || 'your specialist'}</strong> went well. Your feedback helps us improve and helps other families find the right specialist.
+                      </p>
+                      <div style="text-align: center; margin: 30px 0;">
+                        <a href="${reviewUrl}" style="display: inline-block; background-color: #0D5C3D; color: #ffffff; padding: 15px 30px; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 600;">
+                          Share Your Experience
+                        </a>
+                      </div>
+                      <p style="color: #666666; font-size: 14px; line-height: 1.6; margin: 30px 0 0 0; text-align: center;">
+                        This link will expire in 30 days.
+                      </p>
+                      <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 30px 0 0 0;">
+                        Thank you for choosing Soradin.
+                      </p>
+                      <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 20px 0 0 0;">
+                        Best regards,<br>
+                        The Soradin Team
+                      </p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="background-color: #f9f9f9; padding: 20px 30px; text-align: center; border-top: 1px solid #e0e0e0;">
+                      <p style="color: #999999; font-size: 12px; margin: 0;">
+                        © ${new Date().getFullYear()} Soradin. All rights reserved.
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
+      `,
+    };
+
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${resendApiKey}`,
+      },
+      body: JSON.stringify(emailBody),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ Resend API error for review follow-up email:', {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorText,
+        to,
+      });
+      throw new Error(`Resend API error: ${response.status} ${response.statusText}`);
+    }
+
+    const result = await response.json();
+    console.log('✅ Review follow-up email sent successfully:', {
+      emailId: result.id,
+      to,
+      appointmentId,
+    });
+    
+    return result;
+  } catch (error: any) {
+    console.error('❌ Error sending review follow-up email:', {
+      error: error.message,
+      stack: error.stack,
+      to,
+    });
+    throw error;
+  }
+}

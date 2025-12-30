@@ -56,6 +56,20 @@ function AgentProfileContent() {
           const fallbackSummary = `${data.full_name || 'This agent'} brings years of compassionate expertise in end-of-life planning and grief support. ${specialty || 'They help'} families navigate difficult decisions with dignity and care.`;
           const fallbackFullBio = `${data.full_name || 'This agent'}'s journey into end-of-life care is driven by a commitment to helping families during life's most challenging moments.\n\n${specialty || 'Their expertise'} allows them to address both the emotional and practical aspects of end-of-life planning.\n\nThey are known for their patient, non-judgmental approach and their ability to facilitate difficult family conversations.`;
           
+          // Fetch review stats
+          let rating = 0;
+          let reviewCount = 0;
+          try {
+            const reviewResponse = await fetch(`/api/reviews/agent/${agentId}`);
+            if (reviewResponse.ok) {
+              const reviewData = await reviewResponse.json();
+              rating = reviewData.averageRating || 0;
+              reviewCount = reviewData.totalReviews || 0;
+            }
+          } catch (err) {
+            console.error("Error fetching review stats:", err);
+          }
+
           setAgentData({
             ...data,
             business_address: (metadata as any)?.business_address || null,
@@ -66,8 +80,8 @@ function AgentProfileContent() {
             specialty: specialty,
             license_number: licenseNumber,
             credentials: licenseNumber ? `LFD, ${licenseNumber}` : 'LFD',
-            rating: 4.9,
-            reviewCount: Math.floor(Math.random() * 200 + 50),
+            rating: rating,
+            reviewCount: reviewCount,
             verified: true,
             summary: hasApprovedBio ? data.ai_generated_bio.split('\n\n')[0] || data.ai_generated_bio : fallbackSummary,
             fullBio: hasApprovedBio ? data.ai_generated_bio : fallbackFullBio,
@@ -179,7 +193,7 @@ function AgentProfileContent() {
 
         {/* Full-width sections below two-column layout */}
         <div className="mt-8">
-          <Reviews reviewCount={agentData.reviewCount} />
+          <Reviews agentId={agentId} reviewCount={agentData.reviewCount} />
           <Suspense fallback={<div className="mb-12"><h2 className="text-3xl font-medium text-gray-900 mb-6">Office locations</h2><p className="text-gray-600">Loading...</p></div>}>
             <OfficeLocations agentData={agentData} />
           </Suspense>

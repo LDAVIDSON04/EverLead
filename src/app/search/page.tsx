@@ -248,7 +248,41 @@ function SearchResults() {
           }, // Store full agent data
         }));
 
-        setAppointments(mappedAppointments);
+        // Fetch review stats for all agents
+        const agentIds = mappedAppointments.map((apt) => apt.agent?.id).filter(Boolean) as string[];
+        let reviewStats: Record<string, { averageRating: number; totalReviews: number }> = {};
+        
+        if (agentIds.length > 0) {
+          try {
+            const reviewResponse = await fetch("/api/reviews/agents", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ agentIds }),
+            });
+            if (reviewResponse.ok) {
+              const reviewData = await reviewResponse.json();
+              reviewStats = reviewData.stats || {};
+            }
+          } catch (err) {
+            console.error("Error fetching review stats:", err);
+          }
+        }
+
+        // Add review stats to appointments
+        const appointmentsWithReviews = mappedAppointments.map((apt) => {
+          const agentId = apt.agent?.id;
+          const stats = agentId ? reviewStats[agentId] : null;
+          return {
+            ...apt,
+            agent: {
+              ...apt.agent,
+              rating: stats?.averageRating || 0,
+              reviewCount: stats?.totalReviews || 0,
+            },
+          };
+        });
+
+        setAppointments(appointmentsWithReviews);
 
         // CRITICAL: Clear old availability data when location/search changes
         // This prevents showing stale data from previous location
@@ -1015,11 +1049,13 @@ function SearchResults() {
                     <p className="text-gray-500 text-xs mb-2">{selectedAppointment.agent.funeral_home}</p>
                   )}
                   
-                  <div className="flex items-center gap-1">
-                    <Star className="w-4 h-4 fill-green-600 text-green-600" />
-                    <span className="text-sm text-black">4.9</span>
-                    <span className="text-sm text-gray-500">· {Math.floor(Math.random() * 200 + 50)} reviews</span>
-                  </div>
+                  {selectedAppointment.agent?.rating > 0 && selectedAppointment.agent?.reviewCount > 0 && (
+                    <div className="flex items-center gap-1">
+                      <Star className="w-4 h-4 fill-green-600 text-green-600" />
+                      <span className="text-sm text-black">{selectedAppointment.agent.rating.toFixed(1)}</span>
+                      <span className="text-sm text-gray-500">· {selectedAppointment.agent.reviewCount} {selectedAppointment.agent.reviewCount === 1 ? 'review' : 'reviews'}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -1343,10 +1379,13 @@ function SearchResults() {
                       )}
 
                       {/* Rating */}
-                      <div className="flex items-center gap-1 mb-3">
-                        <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                        <span className="text-gray-900">4.9</span>
-                        <span className="text-gray-500">· {Math.floor(Math.random() * 200 + 50)} reviews</span>
+                      {agent.rating > 0 && agent.reviewCount > 0 && (
+                        <div className="flex items-center gap-1 mb-3">
+                          <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                          <span className="text-gray-900">{agent.rating.toFixed(1)}</span>
+                          <span className="text-gray-500">· {agent.reviewCount} {agent.reviewCount === 1 ? 'review' : 'reviews'}</span>
+                        </div>
+                      )}
                         {agent?.id && (
                           <button
                             type="button"
@@ -1401,8 +1440,14 @@ function SearchResults() {
                                     specialty: specialty,
                                     license_number: licenseNumber,
                                     credentials: licenseNumber ? `LFD, ${licenseNumber}` : 'LFD',
-                                    rating: 4.9,
-                                    reviewCount: Math.floor(Math.random() * 200 + 50),
+                                    rating: (() => {
+                                      const agentAppointment = appointments.find(apt => apt.agent?.id === agent.id);
+                                      return agentAppointment?.agent?.rating || 0;
+                                    })(),
+                                    reviewCount: (() => {
+                                      const agentAppointment = appointments.find(apt => apt.agent?.id === agent.id);
+                                      return agentAppointment?.agent?.reviewCount || 0;
+                                    })(),
                                     verified: true,
                                     location: location,
                                     summary: hasApprovedBio ? data.ai_generated_bio.split('\n\n')[0] || data.ai_generated_bio : fallbackSummary,
@@ -1551,11 +1596,23 @@ function SearchResults() {
                       )}
 
                       {/* Rating */}
-                      <div className="flex items-center gap-1 mb-3">
-                        <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                        <span className="text-sm font-semibold text-gray-900">4.9</span>
-                        <span className="text-sm text-gray-600">({Math.floor(Math.random() * 200 + 50)} reviews)</span>
-                      </div>
+                      {selectedAgentInfo && (
+                        <div className="flex items-center gap-1 mb-3">
+                          <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                          <span className="text-sm font-semibold text-gray-900">
+                            {(() => {
+                              // Get rating from appointments if available
+                              const agentAppointment = appointments.find(apt => apt.agent?.id === selectedAgentIdForModal);
+                              const rating = agentAppointment?.agent?.rating || 0;
+                              const reviewCount = agentAppointment?.agent?.reviewCount || 0;
+                              if (rating > 0 && reviewCount > 0) {
+                                return `${rating.toFixed(1)} (${reviewCount} ${reviewCount === 1 ? 'review' : 'reviews'})`;
+                              }
+                              return 'No reviews yet';
+                            })()}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
