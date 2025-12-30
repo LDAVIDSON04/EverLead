@@ -1052,7 +1052,7 @@ function SearchResults() {
                     <p className="text-gray-500 text-xs mb-2">{selectedAppointment.agent.funeral_home}</p>
                   )}
                   
-                  {selectedAppointment.agent?.rating > 0 && selectedAppointment.agent?.reviewCount > 0 && (
+                  {selectedAppointment.agent?.rating && selectedAppointment.agent.rating > 0 && selectedAppointment.agent?.reviewCount && selectedAppointment.agent.reviewCount > 0 && (
                     <div className="flex items-center gap-1">
                       <Star className="w-4 h-4 fill-green-600 text-green-600" />
                       <span className="text-sm text-black">{selectedAppointment.agent.rating.toFixed(1)}</span>
