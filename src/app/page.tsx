@@ -552,7 +552,7 @@ export default function HomePage() {
             {/* Right side - Checklist Image */}
             <div className="relative w-full flex items-center justify-center">
               <Image
-                src="/checklist-image.png"
+                src="/checklist-image.jpg"
                 alt="Professional standards checklist"
                 width={800}
                 height={600}
