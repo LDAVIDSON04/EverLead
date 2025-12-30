@@ -50,6 +50,9 @@ export default function CreateAccountPage() {
     llqpQuebec: 'non-applicable' as 'yes' | 'no' | 'non-applicable',
   });
   const [newRegion, setNewRegion] = useState('');
+  const [regionSuggestions, setRegionSuggestions] = useState<string[]>([]);
+  const [showRegionSuggestions, setShowRegionSuggestions] = useState(false);
+  const [highlightedSuggestionIndex, setHighlightedSuggestionIndex] = useState(-1);
   const [officeLocations, setOfficeLocations] = useState<OfficeLocation[]>([]);
   const [showAddLocation, setShowAddLocation] = useState(false);
   const [newLocation, setNewLocation] = useState<OfficeLocation>({
@@ -72,6 +75,55 @@ export default function CreateAccountPage() {
   });
 
   const provinces = ['AB', 'BC', 'MB', 'NB', 'NL', 'NS', 'NT', 'NU', 'ON', 'PE', 'QC', 'SK', 'YT'];
+  
+  // Comprehensive list of Canadian cities and regions for autocomplete
+  const canadianRegions = [
+    // Ontario
+    'Toronto', 'GTA', 'Greater Toronto Area', 'Mississauga', 'Brampton', 'Oakville', 'Burlington',
+    'Hamilton', 'Ottawa', 'London', 'Kitchener', 'Waterloo', 'Cambridge', 'Windsor', 'Oshawa',
+    'Sudbury', 'Barrie', 'Guelph', 'Kingston', 'Thunder Bay', 'Sarnia', 'St. Catharines', 'Niagara Falls',
+    'Peterborough', 'Belleville', 'Sault Ste. Marie', 'North Bay', 'Cornwall', 'Orillia', 'Brantford',
+    'Markham', 'Richmond Hill', 'Vaughan', 'Ajax', 'Pickering', 'Whitby', 'Newmarket', 'Aurora',
+    'Milton', 'Caledon', 'Halton Hills', 'Grimsby', 'Stoney Creek', 'Dundas', 'Ancaster',
+    // British Columbia
+    'Vancouver', 'Victoria', 'Surrey', 'Burnaby', 'Richmond', 'Coquitlam', 'Kelowna', 'Abbotsford',
+    'Langley', 'North Vancouver', 'West Vancouver', 'New Westminster', 'Port Coquitlam', 'Maple Ridge',
+    'Nanaimo', 'Chilliwack', 'Kamloops', 'Prince George', 'Vernon', 'Penticton', 'Campbell River',
+    'Courtenay', 'Port Alberni', 'Salmon Arm', 'Fort St. John', 'Prince Rupert', 'Duncan',
+    'Lower Mainland', 'Fraser Valley', 'Okanagan Valley', 'Vancouver Island',
+    // Alberta
+    'Calgary', 'Edmonton', 'Red Deer', 'Lethbridge', 'St. Albert', 'Medicine Hat', 'Grande Prairie',
+    'Airdrie', 'Spruce Grove', 'Leduc', 'Fort McMurray', 'Sherwood Park', 'Okotoks', 'Cochrane',
+    'Canmore', 'Banff', 'Jasper', 'Strathcona County',
+    // Quebec
+    'Montreal', 'Quebec City', 'Laval', 'Gatineau', 'Longueuil', 'Sherbrooke', 'Saguenay', 'Levis',
+    'Trois-Rivieres', 'Terrebonne', 'Brossard', 'Repentigny', 'Drummondville', 'Saint-Jean-sur-Richelieu',
+    'Granby', 'Blainville', 'Saint-Jerome', 'Chateauguay', 'Mirabel', 'Saint-Hyacinthe', 'Shawinigan',
+    'Dollard-des-Ormeaux', 'Pointe-Claire', 'Westmount', 'Outremont', 'Verdun',
+    // Manitoba
+    'Winnipeg', 'Brandon', 'Steinbach', 'Thompson', 'Portage la Prairie', 'Winkler', 'Selkirk',
+    'Morden', 'Dauphin', 'The Pas',
+    // Saskatchewan
+    'Saskatoon', 'Regina', 'Prince Albert', 'Moose Jaw', 'Swift Current', 'Yorkton', 'North Battleford',
+    'Estevan', 'Weyburn', 'Melfort', 'Lloydminster',
+    // Nova Scotia
+    'Halifax', 'Dartmouth', 'Sydney', 'Truro', 'New Glasgow', 'Glace Bay', 'Kentville', 'Amherst',
+    'Bridgewater', 'Yarmouth', 'Liverpool',
+    // New Brunswick
+    'Saint John', 'Moncton', 'Fredericton', 'Dieppe', 'Miramichi', 'Edmundston', 'Riverview',
+    'Bathurst', 'Campbellton', 'Sackville',
+    // Newfoundland and Labrador
+    'St. John\'s', 'Mount Pearl', 'Corner Brook', 'Conception Bay South', 'Grand Falls-Windsor',
+    'Gander', 'Happy Valley-Goose Bay', 'Labrador City', 'Stephenville',
+    // Prince Edward Island
+    'Charlottetown', 'Summerside', 'Stratford', 'Cornwall',
+    // Yukon
+    'Whitehorse', 'Dawson City', 'Watson Lake',
+    // Northwest Territories
+    'Yellowknife', 'Hay River', 'Inuvik', 'Fort Smith',
+    // Nunavut
+    'Iqaluit', 'Rankin Inlet', 'Arviat',
+  ].sort();
 
   const specialtyOptions = [
     'Pre-need planning',
@@ -119,18 +171,45 @@ export default function CreateAccountPage() {
     return true;
   };
 
+  const handleRegionInputChange = (value: string) => {
+    setNewRegion(value);
+    if (value.trim().length > 0) {
+      const filtered = canadianRegions.filter(region =>
+        region.toLowerCase().includes(value.toLowerCase()) &&
+        !businessInfo.regionsServed.includes(region)
+      ).slice(0, 8); // Limit to 8 suggestions
+      setRegionSuggestions(filtered);
+      setShowRegionSuggestions(filtered.length > 0);
+      setHighlightedSuggestionIndex(-1);
+    } else {
+      setRegionSuggestions([]);
+      setShowRegionSuggestions(false);
+    }
+    setError(null);
+  };
+
+  const selectRegion = (region: string) => {
+    if (!businessInfo.regionsServed.includes(region)) {
+      setBusinessInfo({ ...businessInfo, regionsServed: [...businessInfo.regionsServed, region] });
+    }
+    setNewRegion('');
+    setRegionSuggestions([]);
+    setShowRegionSuggestions(false);
+    setHighlightedSuggestionIndex(-1);
+    setError(null);
+  };
+
   const addRegion = () => {
-    if (!newRegion.trim()) {
+    const trimmedRegion = newRegion.trim();
+    if (!trimmedRegion) {
       setError('Please enter a region name.');
       return;
     }
-    if (businessInfo.regionsServed.includes(newRegion.trim())) {
+    if (businessInfo.regionsServed.includes(trimmedRegion)) {
       setError('This region has already been added.');
       return;
     }
-    setBusinessInfo({ ...businessInfo, regionsServed: [...businessInfo.regionsServed, newRegion.trim()] });
-    setNewRegion('');
-    setError(null);
+    selectRegion(trimmedRegion);
   };
 
   const removeRegion = (index: number) => {
@@ -601,37 +680,84 @@ export default function CreateAccountPage() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Region(s) Served *</label>
                 <div className="space-y-3">
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={newRegion}
-                      onChange={(e) => setNewRegion(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          addRegion();
-                        }
-                      }}
-                      placeholder="e.g., Toronto, GTA, Mississauga"
-                      className="flex-1 px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-green-700 outline-none transition-colors"
-                    />
-                    <button
-                      type="button"
-                      onClick={addRegion}
-                      className="px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-800 transition-colors"
-                    >
-                      Add
-                    </button>
+                  <div className="relative">
+                    <div className="flex gap-2">
+                      <div className="flex-1 relative">
+                        <input
+                          type="text"
+                          value={newRegion}
+                          onChange={(e) => handleRegionInputChange(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              if (highlightedSuggestionIndex >= 0 && regionSuggestions[highlightedSuggestionIndex]) {
+                                selectRegion(regionSuggestions[highlightedSuggestionIndex]);
+                              } else {
+                                addRegion();
+                              }
+                            } else if (e.key === 'ArrowDown') {
+                              e.preventDefault();
+                              setHighlightedSuggestionIndex(prev => 
+                                prev < regionSuggestions.length - 1 ? prev + 1 : prev
+                              );
+                            } else if (e.key === 'ArrowUp') {
+                              e.preventDefault();
+                              setHighlightedSuggestionIndex(prev => prev > 0 ? prev - 1 : -1);
+                            } else if (e.key === 'Escape') {
+                              setShowRegionSuggestions(false);
+                              setHighlightedSuggestionIndex(-1);
+                            }
+                          }}
+                          onFocus={() => {
+                            if (newRegion.trim().length > 0 && regionSuggestions.length > 0) {
+                              setShowRegionSuggestions(true);
+                            }
+                          }}
+                          onBlur={() => {
+                            // Delay hiding suggestions to allow click events
+                            setTimeout(() => setShowRegionSuggestions(false), 200);
+                          }}
+                          placeholder="Start typing to see suggestions..."
+                          className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-700 outline-none transition-colors"
+                        />
+                        {showRegionSuggestions && regionSuggestions.length > 0 && (
+                          <div className="absolute z-10 w-full mt-1 bg-white border-2 border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto">
+                            {regionSuggestions.map((suggestion, index) => (
+                              <button
+                                key={suggestion}
+                                type="button"
+                                onClick={() => selectRegion(suggestion)}
+                                className={`w-full text-left px-4 py-2 hover:bg-green-50 transition-colors ${
+                                  index === highlightedSuggestionIndex ? 'bg-green-100' : ''
+                                } ${index === 0 ? 'rounded-t-lg' : ''} ${index === regionSuggestions.length - 1 ? 'rounded-b-lg' : ''}`}
+                              >
+                                <span className="text-sm text-gray-700">{suggestion}</span>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={addRegion}
+                        disabled={!newRegion.trim()}
+                        className="px-6 py-3 bg-green-700 text-white rounded-lg hover:bg-green-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                      >
+                        Add
+                      </button>
+                    </div>
+                    <p className="mt-1 text-xs text-gray-500">Type to search Canadian cities and regions, or enter your own</p>
                   </div>
                   {businessInfo.regionsServed.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-2 pt-2">
                       {businessInfo.regionsServed.map((region, index) => (
-                        <div key={index} className="flex items-center gap-2 px-3 py-1 bg-green-50 border border-green-200 rounded-lg">
-                          <span className="text-sm text-gray-700">{region}</span>
+                        <div key={index} className="flex items-center gap-2 px-3 py-1.5 bg-green-50 border border-green-200 rounded-lg shadow-sm">
+                          <span className="text-sm font-medium text-gray-700">{region}</span>
                           <button
                             type="button"
                             onClick={() => removeRegion(index)}
-                            className="text-red-600 hover:text-red-800"
+                            className="text-red-600 hover:text-red-800 transition-colors"
+                            aria-label={`Remove ${region}`}
                           >
                             <X className="w-4 h-4" />
                           </button>
