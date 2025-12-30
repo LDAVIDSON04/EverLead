@@ -46,23 +46,40 @@ export async function GET(request: NextRequest) {
       .order("created_at", { ascending: false })
       .limit(50);
 
-    // Return individual appointments with full dates
-    const pastPayments = (pastAppointments || []).map((apt: any) => {
+    // Group by day
+    const paymentsByDay: Record<string, { appointments: number; amount: number; ids: string[] }> = {};
+    (pastAppointments || []).forEach((apt: any) => {
       const date = new Date(apt.created_at);
-      const formattedDate = date.toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      });
+      // Create a day key in format "YYYY-MM-DD" for grouping
+      const dayKey = date.toISOString().split('T')[0];
       
-      return {
-        id: apt.id,
-        date: formattedDate,
-        appointments: 1, // Each row is one appointment
-        amount: `$${(apt.price_cents / 100).toFixed(2)}`,
-        status: "Paid",
-      };
+      if (!paymentsByDay[dayKey]) {
+        paymentsByDay[dayKey] = { appointments: 0, amount: 0, ids: [] };
+      }
+      paymentsByDay[dayKey].appointments++;
+      paymentsByDay[dayKey].amount += apt.price_cents / 100;
+      paymentsByDay[dayKey].ids.push(apt.id);
     });
+
+    // Convert to array with formatted dates, sorted by date (most recent first)
+    const pastPayments = Object.entries(paymentsByDay)
+      .sort(([dateA], [dateB]) => dateB.localeCompare(dateA)) // Sort descending (newest first)
+      .map(([dayKey, data]) => {
+        const date = new Date(dayKey);
+        const formattedDate = date.toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        });
+        
+        return {
+          id: data.ids[0], // Use first appointment ID as the row ID
+          date: formattedDate,
+          appointments: data.appointments,
+          amount: `$${data.amount.toFixed(2)}`,
+          status: "Paid",
+        };
+      });
 
     return NextResponse.json({
       pricePerAppointment,
