@@ -218,10 +218,8 @@ export default function AgentApprovalPage() {
 
   // Convert agents to specialists format for display
   const specialists: Specialist[] = pendingAgents.map((agent) => {
-    // Determine overall status: pending if either profile or bio is pending
-    const profilePending = !agent.approval_status || agent.approval_status === 'pending';
-    const bioPending = !agent.bio_approval_status || agent.bio_approval_status === 'pending';
-    const overallStatus = (profilePending || bioPending) ? 'pending' : (agent.approval_status as any) || 'pending';
+    // Single unified approval status
+    const status = agent.approval_status || 'pending';
     
     return {
       id: agent.id,
@@ -233,18 +231,18 @@ export default function AgentApprovalPage() {
       specialty: 'Funeral Services',
       email: agent.email || 'N/A',
       submittedDate: new Date(agent.created_at).toISOString().split('T')[0],
-      status: overallStatus,
+      status: status as 'pending' | 'approved' | 'rejected' | 'needs-info',
       documents: [
         { name: 'License Verification', uploaded: agent.licensed_in_province },
         { name: 'Funeral Director License', uploaded: agent.licensed_funeral_director },
         { name: 'Business Registration', uploaded: !!agent.funeral_home },
         { name: 'Profile Bio', uploaded: !!agent.ai_generated_bio },
       ],
-      notes: '',
+      notes: agent.approval_notes || '',
       tags: [],
       bio: agent.ai_generated_bio || null,
-      bioStatus: agent.bio_approval_status || 'pending',
-      profileStatus: agent.approval_status || 'pending',
+      bioStatus: agent.bio_approval_status || null,
+      profileStatus: agent.approval_status || null,
     };
   });
 
@@ -385,11 +383,6 @@ export default function AgentApprovalPage() {
                           )}
                         </div>
                       ))}
-                    </div>
-                    {/* Show approval status breakdown */}
-                    <div className="mt-2 text-xs text-neutral-500">
-                      <div>Profile: <span className={specialist.profileStatus === 'approved' ? 'text-emerald-700' : 'text-yellow-600'}>{specialist.profileStatus}</span></div>
-                      <div>Bio: <span className={specialist.bioStatus === 'approved' ? 'text-emerald-700' : 'text-yellow-600'}>{specialist.bioStatus}</span></div>
                     </div>
                   </td>
                   <td className="px-6 py-4">
