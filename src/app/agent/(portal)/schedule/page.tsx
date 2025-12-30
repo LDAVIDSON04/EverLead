@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabaseClient } from "@/lib/supabaseClient";
 import { useRequireRole } from "@/lib/hooks/useRequireRole";
-import { Calendar, Clock, User, X, Loader2, ChevronLeft, ChevronRight, Search, Settings, Bell, Check, Eye, Download, Plus, MapPin } from "lucide-react";
+import { Calendar, Clock, User, Loader2, ChevronLeft, ChevronRight, Search, Settings, Bell, Check, Eye, Download, Plus, MapPin } from "lucide-react";
 import { DateTime } from "luxon";
 import Link from "next/link";
 import { ClientInfoModal } from "../my-appointments/components/ClientInfoModal";
