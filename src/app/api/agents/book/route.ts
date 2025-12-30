@@ -413,31 +413,11 @@ export async function POST(req: NextRequest) {
     console.log("Appointment created successfully:", appointment.id);
 
     // Charge agent's saved payment method immediately when appointment is booked
+    // Note: Payment failures are handled internally - family always sees success
     const chargeResult = await chargeAgentForAppointment(agentId, priceCents, appointment.id);
     
-    if (!chargeResult.success) {
-      console.error("❌ Failed to charge agent for appointment:", chargeResult.error);
-      
-      // Delete the appointment since payment failed (we require immediate payment)
-      await supabaseAdmin
-        .from("appointments")
-        .delete()
-        .eq("id", appointment.id);
-      
-      // Return error - booking fails if payment fails
-      return NextResponse.json(
-        { 
-          error: "Booking failed: Payment could not be processed. Please ensure you have a valid payment method on file.",
-          paymentError: chargeResult.error,
-        },
-        { status: 402 } // 402 Payment Required
-      );
-    }
-
-    // Update appointment with payment details if successful
-    if (chargeResult.paymentIntentId) {
-      // Note: stripe_payment_intent_id column may need to be added to appointments table
-      // For now, we'll store it in notes if the column doesn't exist
+    if (chargeResult.success && chargeResult.paymentIntentId) {
+      // Payment succeeded - update appointment with payment details
       await supabaseAdmin
         .from("appointments")
         .update({ 
@@ -451,6 +431,27 @@ export async function POST(req: NextRequest) {
         amountCents: priceCents,
         paymentIntentId: chargeResult.paymentIntentId,
       });
+    } else {
+      // Payment failed - mark appointment internally but don't fail the booking for the family
+      console.error("❌ Failed to charge agent for appointment:", {
+        appointmentId: appointment.id,
+        agentId,
+        error: chargeResult.error,
+        amountCents: priceCents,
+      });
+      
+      // Store payment failure info in appointment notes for internal tracking
+      // The appointment remains active - family sees successful booking
+      await supabaseAdmin
+        .from("appointments")
+        .update({ 
+          price_cents: null, // No price charged
+          notes: `Payment failed: ${chargeResult.error || 'Unknown error'}. Appointment created but agent payment needs to be processed.`,
+        })
+        .eq("id", appointment.id);
+      
+      // TODO: Send notification to agent about payment failure
+      // TODO: Queue payment retry or admin notification
     }
 
     // Send confirmation emails to both agent and family
