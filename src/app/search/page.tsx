@@ -1389,7 +1389,16 @@ function SearchResults() {
                           <span className="text-gray-500">· {agent.reviewCount} {agent.reviewCount === 1 ? 'review' : 'reviews'}</span>
                         </div>
                       )}
-                        {agent?.id && (
+                      
+                      {/* Review count with star before "Learn more about" */}
+                      {agent?.id && (
+                        <div className="flex items-center gap-1 mb-2">
+                          {agent.reviewCount !== undefined && (
+                            <>
+                              <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                              <span className="text-gray-900 text-sm">{agent.reviewCount || 0}</span>
+                            </>
+                          )}
                           <button
                             type="button"
                             onClick={async (e) => {
@@ -1479,7 +1488,8 @@ function SearchResults() {
                           >
                             Learn more about {agentName}
                           </button>
-                        )}
+                        </div>
+                      )}
                       </div>
                     </div>
 

@@ -62,9 +62,8 @@ export function Reviews({ agentId, reviewCount }: ReviewsProps) {
       <div id="reviews" className="mb-12">
         <div className="flex items-center justify-between mb-4">
           <h3>Reviews & Testimonials</h3>
-          <div className="text-sm text-gray-500">No reviews yet</div>
         </div>
-        <p className="text-gray-600">Be the first to leave a review!</p>
+        <p className="text-gray-600">This agent has no reviews.</p>
       </div>
     );
   }
