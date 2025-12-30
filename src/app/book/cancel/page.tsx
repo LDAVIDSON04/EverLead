@@ -4,7 +4,8 @@ import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { Calendar, Clock, MapPin, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Calendar, Clock, MapPin, X, Star } from "lucide-react";
+import { supabaseClient } from "@/lib/supabaseClient";
 
 type AppointmentData = {
   id: string;
@@ -13,7 +14,8 @@ type AppointmentData = {
   requested_date: string;
   requested_window: string;
   formatted_date: string;
-  time_window_label: string;
+  time_display: string;
+  exact_time: string | null;
   agent: {
     id: string;
     full_name: string | null;
@@ -22,6 +24,11 @@ type AppointmentData = {
     agent_city: string | null;
     agent_province: string | null;
     business_address: string | null;
+    business_street: string | null;
+    business_city: string | null;
+    business_province: string | null;
+    business_zip: string | null;
+    job_title: string | null;
   } | null;
   lead: {
     id: string;
@@ -48,17 +55,15 @@ function CancelAppointmentContent() {
   const router = useRouter();
   const appointmentId = searchParams.get("appointmentId");
   
-  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error" | "rebooking">("idle");
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [message, setMessage] = useState<string>("");
   const [appointmentData, setAppointmentData] = useState<AppointmentData | null>(null);
   const [loadingAppointment, setLoadingAppointment] = useState(true);
   const [showRescheduleModal, setShowRescheduleModal] = useState(false);
-  const [weekStartDate, setWeekStartDate] = useState(new Date());
   const [availabilityDays, setAvailabilityDays] = useState<AvailabilityDay[]>([]);
   const [loadingAvailability, setLoadingAvailability] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [selectedTimeSlot, setSelectedTimeSlot] = useState<{ startsAt: string; endsAt: string } | null>(null);
-  const [booking, setBooking] = useState(false);
+  const [selectedDayForModal, setSelectedDayForModal] = useState<string | null>(null);
+  const [selectedAgentInfo, setSelectedAgentInfo] = useState<any>(null);
 
   // Fetch appointment details on mount
   useEffect(() => {
@@ -84,17 +89,44 @@ function CancelAppointmentContent() {
     fetchAppointment();
   }, [appointmentId]);
 
-  // Fetch availability when reschedule modal opens
+  // Fetch availability and agent info when reschedule modal opens
   useEffect(() => {
     if (!showRescheduleModal || !appointmentData?.agent_id) return;
 
-    async function fetchAvailability() {
+    async function fetchData() {
       if (!appointmentData) return;
       
       setLoadingAvailability(true);
+      
+      // Fetch agent info
       try {
-        const startDate = weekStartDate.toISOString().split("T")[0];
-        const endDate = new Date(weekStartDate.getTime() + 13 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+        const { data, error } = await supabaseClient
+          .from("profiles")
+          .select("full_name, profile_picture_url, job_title, funeral_home, agent_city, agent_province, metadata")
+          .eq("id", appointmentData.agent_id)
+          .eq("role", "agent")
+          .single();
+        
+        if (!error && data) {
+          const metadata = data.metadata || {};
+          setSelectedAgentInfo({
+            ...data,
+            business_address: (metadata as any)?.business_address || null,
+            business_street: (metadata as any)?.business_street || null,
+            business_city: (metadata as any)?.business_city || null,
+            business_province: (metadata as any)?.business_province || null,
+            business_zip: (metadata as any)?.business_zip || null,
+          });
+        }
+      } catch (err) {
+        console.error("Error loading agent info:", err);
+      }
+      
+      // Fetch availability
+      try {
+        const today = new Date();
+        const startDate = today.toISOString().split("T")[0];
+        const endDate = new Date(today.getTime() + 14 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
         
         const location = appointmentData.agent?.agent_city || '';
         const locationParam = location ? `&location=${encodeURIComponent(location)}` : '';
@@ -104,8 +136,14 @@ function CancelAppointmentContent() {
         );
         
         if (res.ok) {
-          const data: AvailabilityDay[] = await res.json();
-          setAvailabilityDays(data);
+          const availabilityData: AvailabilityDay[] = await res.json();
+          setAvailabilityDays(availabilityData);
+          
+          // Set first day with slots as selected
+          if (availabilityData.length > 0) {
+            const firstDayWithSlots = availabilityData.find(day => day.slots.length > 0) || availabilityData[0];
+            setSelectedDayForModal(firstDayWithSlots.date);
+          }
         }
       } catch (error) {
         console.error("Error fetching availability:", error);
@@ -114,18 +152,13 @@ function CancelAppointmentContent() {
       }
     }
 
-    fetchAvailability();
-  }, [showRescheduleModal, weekStartDate, appointmentData]);
+    fetchData();
+  }, [showRescheduleModal, appointmentData]);
 
-  const handleCancel = async (action: "cancel" | "rebook") => {
+  const handleCancel = async () => {
     if (!appointmentId) {
       setStatus("error");
       setMessage("Invalid appointment ID");
-      return;
-    }
-
-    if (action === "rebook") {
-      setShowRescheduleModal(true);
       return;
     }
 
@@ -138,7 +171,7 @@ function CancelAppointmentContent() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ appointmentId, action }),
+        body: JSON.stringify({ appointmentId, action: "cancel" }),
       });
 
       const data = await response.json();
@@ -158,90 +191,30 @@ function CancelAppointmentContent() {
     }
   };
 
-  const handleReschedule = async () => {
-    if (!selectedTimeSlot || !appointmentData?.agent_id || !appointmentId || !appointmentData.lead) return;
+  const handleTimeSlotClick = (timeSlot: { startsAt: string; endsAt: string }, date: string) => {
+    if (!appointmentData || !appointmentId) return;
 
-    setBooking(true);
-    try {
-      // First cancel the old appointment
-      const cancelResponse = await fetch("/api/appointments/cancel", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ appointmentId, action: "rebook" }),
-      });
-
-      if (!cancelResponse.ok) {
-        throw new Error("Failed to cancel old appointment");
-      }
-
-      // Get lead information from the original appointment
-      const lead = appointmentData.lead;
-      const firstName = lead.first_name || '';
-      const lastName = lead.last_name || '';
-      const fullName = lead.full_name || `${firstName} ${lastName}`.trim();
-      
-      // Split full name if we don't have first/last
-      const nameParts = fullName ? fullName.split(' ') : [];
-      const finalFirstName = firstName || nameParts[0] || '';
-      const finalLastName = lastName || nameParts.slice(1).join(' ') || '';
-
-      // Then book the new appointment
-      const bookingResponse = await fetch("/api/agents/book", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          agentId: appointmentData.agent_id,
-          startsAt: selectedTimeSlot.startsAt,
-          endsAt: selectedTimeSlot.endsAt,
-          firstName: finalFirstName,
-          lastName: finalLastName,
-          email: lead.email || '',
-          city: lead.city || appointmentData.agent?.agent_city || '',
-          province: lead.province || appointmentData.agent?.agent_province || '',
-        }),
-      });
-
-      if (!bookingResponse.ok) {
-        const errorData = await bookingResponse.json();
-        throw new Error(errorData.error || "Failed to book new appointment");
-      }
-
-      setStatus("success");
-      setMessage("Your appointment has been successfully rescheduled!");
-      setShowRescheduleModal(false);
-    } catch (error: any) {
-      setStatus("error");
-      setMessage(error.message || "Failed to reschedule appointment. Please try again.");
-      setBooking(false);
+    // Navigate to booking page with the selected time slot
+    const params = new URLSearchParams({
+      startsAt: timeSlot.startsAt,
+      endsAt: timeSlot.endsAt,
+      date: date,
+      rescheduleAppointmentId: appointmentId,
+    });
+    
+    if (appointmentData.agent?.agent_city) {
+      params.set("city", appointmentData.agent.agent_city);
     }
+    
+    const bookingUrl = `/book/step2?agentId=${appointmentData.agent_id}&${params.toString()}`;
+    window.location.href = bookingUrl;
   };
 
-  const formatTime = (isoString: string) => {
-    const date = new Date(isoString);
-    const hours = date.getHours();
-    const minutes = date.getMinutes();
-    const ampm = hours >= 12 ? 'PM' : 'AM';
-    const displayHours = hours % 12 || 12;
-    return `${displayHours}:${String(minutes).padStart(2, '0')} ${ampm}`;
-  };
-
-  const getWeekDays = () => {
-    const days = [];
-    for (let i = 0; i < 7; i++) {
-      const date = new Date(weekStartDate);
-      date.setDate(weekStartDate.getDate() + i);
-      days.push(date);
-    }
-    return days;
-  };
-
-  const getAvailabilityForDate = (date: Date) => {
-    const dateStr = date.toISOString().split("T")[0];
-    return availabilityDays.find(d => d.date === dateStr);
+  const closeRescheduleModal = () => {
+    setShowRescheduleModal(false);
+    setSelectedDayForModal(null);
+    setAvailabilityDays([]);
+    setSelectedAgentInfo(null);
   };
 
   if (!appointmentId) {
@@ -350,7 +323,7 @@ function CancelAppointmentContent() {
               <Clock className="w-5 h-5 text-gray-400" />
               <div>
                 <p className="text-sm text-gray-500">Time</p>
-                <p className="text-gray-900 font-medium">{appointmentData.time_window_label}</p>
+                <p className="text-gray-900 font-medium">{appointmentData.time_display}</p>
               </div>
             </div>
           </div>
@@ -363,13 +336,13 @@ function CancelAppointmentContent() {
             </p>
             <div className="space-y-3">
               <button
-                onClick={() => handleCancel("rebook")}
+                onClick={() => setShowRescheduleModal(true)}
                 className="w-full bg-[#0D5C3D] text-white px-6 py-3 rounded hover:bg-[#0A4A30] transition-colors font-medium"
               >
                 Reschedule Appointment
               </button>
               <button
-                onClick={() => handleCancel("cancel")}
+                onClick={handleCancel}
                 className="w-full bg-red-600 text-white px-6 py-3 rounded hover:bg-red-700 transition-colors font-medium"
               >
                 Cancel Appointment
@@ -441,166 +414,200 @@ function CancelAppointmentContent() {
         )}
       </div>
 
-      {/* Reschedule Modal */}
+      {/* Reschedule Modal - Same as search page */}
       {showRescheduleModal && appointmentData.agent && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-auto">
-            <div className="p-6 border-b border-gray-200 sticky top-0 bg-white">
-              <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-gray-900">Reschedule Appointment</h2>
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              closeRescheduleModal();
+            }
+          }}
+        >
+          <div 
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto relative z-50"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header with Agent Info */}
+            <div className="bg-gradient-to-r from-green-50 to-white p-6 border-b border-gray-200 sticky top-0 z-10">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-bold text-black">Reschedule Appointment</h2>
                 <button
-                  onClick={() => {
-                    setShowRescheduleModal(false);
-                    setSelectedDate(null);
-                    setSelectedTimeSlot(null);
-                  }}
-                  className="text-gray-400 hover:text-gray-600"
+                  onClick={closeRescheduleModal}
+                  className="text-gray-500 hover:text-black transition-colors p-2 rounded-full hover:bg-gray-100"
                 >
                   <X className="w-6 h-6" />
                 </button>
               </div>
-              <p className="text-gray-600 mt-2">Select a new date and time for your appointment</p>
+              
+              {/* Agent Profile Card */}
+              {selectedAgentInfo && (
+                <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
+                  <div className="flex items-center gap-4">
+                    {selectedAgentInfo.profile_picture_url ? (
+                      <Image
+                        src={selectedAgentInfo.profile_picture_url}
+                        alt={selectedAgentInfo.full_name || "Agent"}
+                        width={80}
+                        height={80}
+                        className="rounded-full object-cover border-2 border-green-600"
+                        unoptimized
+                      />
+                    ) : (
+                      <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center border-2 border-green-600">
+                        <span className="text-green-700 text-2xl font-semibold">
+                          {(selectedAgentInfo.full_name || "A")[0].toUpperCase()}
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      <h3 className="text-xl font-bold text-black mb-1">
+                        {selectedAgentInfo.full_name || "Agent"}
+                      </h3>
+                      {selectedAgentInfo.job_title && (
+                        <p className="text-gray-700 font-medium text-sm mb-1">{selectedAgentInfo.job_title}</p>
+                      )}
+                      {selectedAgentInfo.funeral_home && (
+                        <p className="text-gray-600 text-sm mb-2">{selectedAgentInfo.funeral_home}</p>
+                      )}
+                      {appointmentData.agent?.agent_city && (
+                        <div className="flex items-center gap-1 mb-2">
+                          <MapPin className="w-4 h-4 text-gray-500" />
+                          <span className="text-gray-600 text-sm">
+                            {appointmentData.agent.agent_city}
+                            {appointmentData.agent.agent_province && `, ${appointmentData.agent.agent_province}`}
+                          </span>
+                        </div>
+                      )}
+                      
+                      {(selectedAgentInfo?.business_street || selectedAgentInfo?.business_address) && (
+                        <div className="flex items-start gap-2 mb-3">
+                          <MapPin className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                          <span className="text-gray-500 text-xs">
+                            {selectedAgentInfo.business_street && selectedAgentInfo.business_city && selectedAgentInfo.business_province && selectedAgentInfo.business_zip
+                              ? `${selectedAgentInfo.business_street}, ${selectedAgentInfo.business_city}, ${selectedAgentInfo.business_province} ${selectedAgentInfo.business_zip}`
+                              : selectedAgentInfo.business_address || `${selectedAgentInfo.business_street || ''}${selectedAgentInfo.business_city ? `, ${selectedAgentInfo.business_city}` : ''}${selectedAgentInfo.business_province ? `, ${selectedAgentInfo.business_province}` : ''}${selectedAgentInfo.business_zip ? ` ${selectedAgentInfo.business_zip}` : ''}`.trim()}
+                          </span>
+                        </div>
+                      )}
+
+                      <div className="flex items-center gap-1 mb-3">
+                        <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                        <span className="text-sm font-semibold text-gray-900">4.9</span>
+                        <span className="text-sm text-gray-600">({Math.floor(Math.random() * 200 + 50)} reviews)</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
+            {/* Content */}
             <div className="p-6">
-              {/* Week Navigation */}
-              <div className="flex items-center justify-between mb-6">
-                <button
-                  onClick={() => {
-                    const newDate = new Date(weekStartDate);
-                    newDate.setDate(weekStartDate.getDate() - 7);
-                    setWeekStartDate(newDate);
-                  }}
-                  className="p-2 hover:bg-gray-100 rounded-lg"
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
-                <span className="font-medium text-gray-900">
-                  {weekStartDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-                </span>
-                <button
-                  onClick={() => {
-                    const newDate = new Date(weekStartDate);
-                    newDate.setDate(weekStartDate.getDate() + 7);
-                    setWeekStartDate(newDate);
-                  }}
-                  className="p-2 hover:bg-gray-100 rounded-lg"
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </button>
+              <div className="flex items-center gap-2 mb-4">
+                <Calendar className="w-5 h-5 text-green-600" />
+                <h3 className="text-lg font-semibold text-black">Select a date and time</h3>
               </div>
 
               {loadingAvailability ? (
                 <div className="text-center py-12">
-                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#0D5C3D] mb-4"></div>
-                  <p className="text-gray-600">Loading availability...</p>
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mb-4"></div>
+                  <p className="text-gray-600">Loading available times...</p>
+                </div>
+              ) : availabilityDays.length === 0 ? (
+                <div className="text-center py-12">
+                  <Clock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-600">No time slots available.</p>
+                </div>
+              ) : availabilityDays.filter(day => day.slots.length > 0).length === 0 ? (
+                <div className="text-center py-12">
+                  <Clock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-600">No time slots available.</p>
                 </div>
               ) : (
-                <>
-                  {/* Calendar Grid */}
-                  <div className="grid grid-cols-7 gap-3 mb-6">
-                    {getWeekDays().map((date, index) => {
-                      const dayAvailability = getAvailabilityForDate(date);
-                      const dateStr = date.toISOString().split("T")[0];
-                      const isSelected = selectedDate === dateStr;
-                      const hasSlots = dayAvailability && dayAvailability.slots.length > 0;
-
+                <div className="space-y-6">
+                  {(() => {
+                    const normalizedSelectedDate = selectedDayForModal?.trim() || "";
+                    const daysWithSlots = availabilityDays.filter(day => day.slots.length > 0);
+                    const selectedDay = availabilityDays.find(d => d.date.trim() === normalizedSelectedDate);
+                    
+                    let daysToShow = [...daysWithSlots];
+                    if (selectedDay && selectedDay.slots.length === 0) {
+                      daysToShow.unshift(selectedDay);
+                    }
+                    
+                    const uniqueDays = daysToShow.filter((day, index, self) => 
+                      index === self.findIndex(d => d.date.trim() === day.date.trim())
+                    );
+                    
+                    return uniqueDays;
+                  })()
+                    .map((day, dayIdx) => {
+                      const [year, month, dayOfMonth] = day.date.split("-").map(Number);
+                      
+                      if (isNaN(year) || isNaN(month) || isNaN(dayOfMonth)) {
+                        return null;
+                      }
+                      
+                      const date = new Date(Date.UTC(year, month - 1, dayOfMonth));
+                      const dayName = date.toLocaleDateString("en-US", { weekday: "long", timeZone: "UTC" });
+                      const monthName = date.toLocaleDateString("en-US", { month: "long", timeZone: "UTC" });
+                      const dayNum = date.getUTCDate();
+                      const displayDate = `${dayName}, ${monthName} ${dayNum}`;
+                      
+                      const normalizedSelectedDate = selectedDayForModal?.trim() || "";
+                      const normalizedDayDate = day.date.trim();
+                      const isSelected = normalizedSelectedDate === normalizedDayDate;
+                      
+                      const formattedSlots = day.slots.map(slot => {
+                        const startDate = new Date(slot.startsAt);
+                        const hours = startDate.getHours();
+                        const minutes = startDate.getMinutes();
+                        const ampm = hours >= 12 ? 'PM' : 'AM';
+                        const displayHours = hours % 12 || 12;
+                        const timeStr = `${displayHours}:${String(minutes).padStart(2, '0')} ${ampm}`;
+                        
+                        return {
+                          time: timeStr,
+                          startsAt: slot.startsAt,
+                          endsAt: slot.endsAt,
+                          available: true
+                        };
+                      });
+                      
+                      if (!date || !dayName || !monthName) {
+                        return null;
+                      }
+                      
+                      const hasSlots = formattedSlots.length > 0;
+                      
                       return (
-                        <button
-                          key={index}
-                          onClick={() => {
-                            if (hasSlots) {
-                              setSelectedDate(dateStr);
-                              setSelectedTimeSlot(null);
-                            }
-                          }}
-                          disabled={!hasSlots}
-                          className={`p-3 rounded-lg border-2 text-center transition-all ${
-                            !hasSlots
-                              ? 'bg-gray-50 border-gray-200 cursor-not-allowed opacity-50'
-                              : isSelected
-                              ? 'bg-[#0D5C3D] border-[#0D5C3D] text-white'
-                              : 'bg-white border-gray-200 hover:border-[#0D5C3D]'
-                          }`}
-                        >
-                          <div className={`text-xs font-medium ${isSelected ? 'text-white' : 'text-gray-500'}`}>
-                            {date.toLocaleDateString('en-US', { weekday: 'short' })}
-                          </div>
-                          <div className={`text-lg font-semibold mt-1 ${isSelected ? 'text-white' : 'text-gray-900'}`}>
-                            {date.getDate()}
-                          </div>
-                          {hasSlots && (
-                            <div className={`text-xs mt-1 ${isSelected ? 'text-white' : 'text-[#0D5C3D]'}`}>
-                              {dayAvailability.slots.length} {dayAvailability.slots.length === 1 ? 'slot' : 'slots'}
+                        <div key={dayIdx} className={`border-b border-gray-200 pb-6 last:border-b-0 ${isSelected ? 'bg-green-50 -mx-6 px-6 pt-4 rounded-lg' : ''}`}>
+                          <h4 className="text-base font-semibold text-black mb-3">{displayDate}</h4>
+                          {!hasSlots ? (
+                            <div className="text-center py-8 text-gray-500">
+                              <p className="text-sm">No available time slots for this date.</p>
+                            </div>
+                          ) : (
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                              {formattedSlots.map((timeSlot, idx) => {
+                                return (
+                                  <button
+                                    key={idx}
+                                    type="button"
+                                    onClick={() => handleTimeSlotClick(timeSlot, day.date)}
+                                    className="w-full px-4 py-3 rounded-lg text-sm font-medium transition-all bg-green-100 text-black hover:bg-green-600 hover:text-white border-2 border-green-300 hover:border-green-600 shadow-sm hover:shadow-md"
+                                  >
+                                    {timeSlot.time}
+                                  </button>
+                                );
+                              })}
                             </div>
                           )}
-                        </button>
+                        </div>
                       );
                     })}
-                  </div>
-
-                  {/* Time Slots */}
-                  {selectedDate && (
-                    <div className="mb-6">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                        Available Times for {new Date(selectedDate).toLocaleDateString('en-US', { 
-                          weekday: 'long', 
-                          month: 'long', 
-                          day: 'numeric' 
-                        })}
-                      </h3>
-                      {(() => {
-                        const dayAvailability = availabilityDays.find(d => d.date === selectedDate);
-                        if (!dayAvailability || dayAvailability.slots.length === 0) {
-                          return <p className="text-gray-500">No available times for this date.</p>;
-                        }
-                        return (
-                          <div className="grid grid-cols-3 gap-3">
-                            {dayAvailability.slots.map((slot, index) => {
-                              const isSelected = selectedTimeSlot?.startsAt === slot.startsAt;
-                              return (
-                                <button
-                                  key={index}
-                                  onClick={() => setSelectedTimeSlot(slot)}
-                                  className={`p-3 rounded-lg border-2 text-center transition-all ${
-                                    isSelected
-                                      ? 'bg-[#0D5C3D] border-[#0D5C3D] text-white'
-                                      : 'bg-white border-gray-200 hover:border-[#0D5C3D]'
-                                  }`}
-                                >
-                                  {formatTime(slot.startsAt)}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        );
-                      })()}
-                    </div>
-                  )}
-
-                  {/* Book Button */}
-                  {selectedTimeSlot && (
-                    <div className="flex gap-3">
-                      <button
-                        onClick={() => {
-                          setShowRescheduleModal(false);
-                          setSelectedDate(null);
-                          setSelectedTimeSlot(null);
-                        }}
-                        className="flex-1 bg-gray-200 text-gray-800 px-6 py-3 rounded hover:bg-gray-300 transition-colors font-medium"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        onClick={handleReschedule}
-                        disabled={booking}
-                        className="flex-1 bg-[#0D5C3D] text-white px-6 py-3 rounded hover:bg-[#0A4A30] transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {booking ? "Rescheduling..." : "Confirm Reschedule"}
-                      </button>
-                    </div>
-                  )}
-                </>
+                </div>
               )}
             </div>
           </div>

@@ -18,6 +18,7 @@ function BookingStep2Content() {
   const endsAt = searchParams.get("endsAt") || "";
   const date = searchParams.get("date") || "";
   const searchedCity = searchParams.get("city") || ""; // City from search (e.g., Penticton)
+  const rescheduleAppointmentId = searchParams.get("rescheduleAppointmentId") || null; // ID of appointment being rescheduled
 
   const [agentInfo, setAgentInfo] = useState<{
     full_name: string | null;
@@ -207,6 +208,7 @@ function BookingStep2Content() {
           province: agentInfo?.agent_province || null,
           serviceType: selectedService,
           notes: `Date of Birth: ${formData.dateOfBirth}, Sex: ${formData.sex}`,
+          ...(rescheduleAppointmentId ? { rescheduleAppointmentId } : {}),
         }),
       });
 

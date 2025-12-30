@@ -27,6 +27,7 @@ export async function GET(
         status,
         requested_date,
         requested_window,
+        confirmed_at,
         lead_id,
         leads (
           id,
@@ -81,9 +82,21 @@ export async function GET(
       day: 'numeric',
     });
 
-    const timeWindowLabel = appointment.requested_window
-      ? appointment.requested_window.charAt(0).toUpperCase() + appointment.requested_window.slice(1)
-      : 'Not specified';
+    // Get exact time if confirmed_at exists, otherwise use time window
+    let exactTime = null;
+    let timeDisplay = 'Not specified';
+    
+    if (appointment.confirmed_at) {
+      const confirmedDate = new Date(appointment.confirmed_at);
+      const hours = confirmedDate.getHours();
+      const minutes = confirmedDate.getMinutes();
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      const displayHours = hours % 12 || 12;
+      exactTime = appointment.confirmed_at;
+      timeDisplay = `${displayHours}:${String(minutes).padStart(2, '0')} ${ampm}`;
+    } else if (appointment.requested_window) {
+      timeDisplay = appointment.requested_window.charAt(0).toUpperCase() + appointment.requested_window.slice(1);
+    }
 
     const lead = Array.isArray(appointment.leads) ? appointment.leads[0] : appointment.leads;
 
@@ -93,8 +106,10 @@ export async function GET(
       status: appointment.status,
       requested_date: appointment.requested_date,
       requested_window: appointment.requested_window,
+      confirmed_at: appointment.confirmed_at,
       formatted_date: formattedDate,
-      time_window_label: timeWindowLabel,
+      time_display: timeDisplay,
+      exact_time: exactTime,
       agent: agentInfo,
       lead: lead,
       lead_id: appointment.lead_id,

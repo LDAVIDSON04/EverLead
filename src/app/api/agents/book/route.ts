@@ -30,6 +30,7 @@ export async function POST(req: NextRequest) {
       province,
       serviceType,
       notes,
+      rescheduleAppointmentId, // ID of appointment being rescheduled
     } = body;
 
     // Validate required fields (phone is optional for now)
@@ -193,6 +194,40 @@ export async function POST(req: NextRequest) {
       requestedWindow = "afternoon";
     } else {
       requestedWindow = "evening";
+    }
+
+    // Handle rescheduling: cancel old appointment if rescheduleAppointmentId is provided
+    if (rescheduleAppointmentId) {
+      try {
+        // Get the old appointment to get its lead_id
+        const { data: oldAppointment } = await supabaseAdmin
+          .from("appointments")
+          .select("id, lead_id, agent_id, status")
+          .eq("id", rescheduleAppointmentId)
+          .single();
+
+        if (oldAppointment && oldAppointment.status !== "cancelled") {
+          // Cancel the old appointment
+          await supabaseAdmin
+            .from("appointments")
+            .update({
+              status: "cancelled",
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", rescheduleAppointmentId);
+
+          // Delete from external calendars
+          try {
+            const { deleteExternalEventsForAgentAppointment } = await import("@/lib/calendarSyncAgent");
+            await deleteExternalEventsForAgentAppointment(rescheduleAppointmentId);
+          } catch (syncError: any) {
+            console.error("Error deleting old appointment from calendars:", syncError);
+          }
+        }
+      } catch (rescheduleError: any) {
+        console.error("Error handling reschedule:", rescheduleError);
+        // Continue with booking even if reschedule cancellation fails
+      }
     }
 
     // Create or find a lead for this booking
