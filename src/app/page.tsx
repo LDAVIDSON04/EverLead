@@ -609,7 +609,7 @@ export default function HomePage() {
                 <h4 className="mb-6 text-lg font-medium">Soradin</h4>
                 <ul className="space-y-3">
                   <li>
-                    <Link href="#" className="text-white/60 hover:text-white transition-colors">
+                    <Link href="/" className="text-white/60 hover:text-white transition-colors">
                       Home
                     </Link>
                   </li>
@@ -619,7 +619,7 @@ export default function HomePage() {
                     </Link>
                   </li>
                   <li>
-                    <Link href="#" className="text-white/60 hover:text-white transition-colors">
+                    <Link href="mailto:support@soradin.com" className="text-white/60 hover:text-white transition-colors">
                       Contact us
                     </Link>
                   </li>
@@ -631,12 +631,12 @@ export default function HomePage() {
                 <h4 className="mb-6 text-lg font-medium">Discover</h4>
                 <ul className="space-y-3">
                   <li>
-                    <Link href="#" className="text-white/60 hover:text-white transition-colors">
+                    <Link href="/learn-more-about-starting" className="text-white/60 hover:text-white transition-colors">
                       Resources for specialists
                     </Link>
                   </li>
                   <li>
-                    <Link href="#" className="text-white/60 hover:text-white transition-colors">
+                    <Link href="/privacy" className="text-white/60 hover:text-white transition-colors">
                       Data and privacy
                     </Link>
                   </li>
@@ -653,13 +653,8 @@ export default function HomePage() {
                 <h4 className="mb-6 text-lg font-medium">For Specialists</h4>
                 <ul className="space-y-3">
                   <li>
-                    <Link href="#" className="text-white/60 hover:text-white transition-colors">
+                    <Link href="/learn-more-about-starting" className="text-white/60 hover:text-white transition-colors">
                       List your practice
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="#" className="text-white/60 hover:text-white transition-colors">
-                      Pricing
                     </Link>
                   </li>
                 </ul>
@@ -697,13 +692,8 @@ export default function HomePage() {
                 <h4 className="mb-6 text-lg font-medium">Are you a funeral specialist?</h4>
                 <ul className="space-y-3">
                   <li>
-                    <Link href="#" className="text-white/60 hover:text-white transition-colors">
-                      List your practice on Soradin
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="#" className="text-white/60 hover:text-white transition-colors">
-                      Learn about solutions
+                    <Link href="/learn-more-about-starting" className="text-white/60 hover:text-white transition-colors">
+                      List your availability on Soradin
                     </Link>
                   </li>
                 </ul>
