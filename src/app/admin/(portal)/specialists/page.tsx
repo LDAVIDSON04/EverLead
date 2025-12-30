@@ -53,18 +53,18 @@ export default function AdminSpecialistsPage() {
         let appointmentsByAgent: Record<string, number> = {};
 
         if (agentIds.length > 0) {
-          // Get calendar connections
+          // Get calendar connections (uses specialist_id which is the agent's user id)
           const { data: connections } = await supabaseClient
             .from("calendar_connections")
-            .select("agent_id, provider")
-            .in("agent_id", agentIds);
+            .select("specialist_id, provider")
+            .in("specialist_id", agentIds);
 
           (connections || []).forEach((c: any) => {
-            if (!calendarByAgent[c.agent_id]) {
-              calendarByAgent[c.agent_id] = { google: false, microsoft: false };
+            if (!calendarByAgent[c.specialist_id]) {
+              calendarByAgent[c.specialist_id] = { google: false, microsoft: false };
             }
-            if (c.provider === "google") calendarByAgent[c.agent_id].google = true;
-            if (c.provider === "microsoft") calendarByAgent[c.agent_id].microsoft = true;
+            if (c.provider === "google") calendarByAgent[c.specialist_id].google = true;
+            if (c.provider === "microsoft") calendarByAgent[c.specialist_id].microsoft = true;
           });
 
           // Get appointment counts for each agent
