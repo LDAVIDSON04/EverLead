@@ -567,7 +567,35 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
               </button>
               {(onboardingStatus.hasPaymentMethod && onboardingStatus.hasAvailability) && (
                 <button
-                  onClick={() => setShowOnboarding(false)}
+                  onClick={async () => {
+                    // Mark onboarding as completed when user clicks "Continue"
+                    try {
+                      const { data: { session } } = await supabaseClient.auth.getSession();
+                      if (session?.access_token) {
+                        const { data: { user } } = await supabaseClient.auth.getUser();
+                        if (user) {
+                          const { data: profile } = await supabaseClient
+                            .from("profiles")
+                            .select("metadata")
+                            .eq("id", user.id)
+                            .maybeSingle();
+                          
+                          await supabaseClient
+                            .from("profiles")
+                            .update({
+                              metadata: {
+                                ...(profile?.metadata || {}),
+                                onboarding_completed: true,
+                              },
+                            })
+                            .eq("id", user.id);
+                        }
+                      }
+                    } catch (err) {
+                      console.error("Error marking onboarding as completed:", err);
+                    }
+                    setShowOnboarding(false);
+                  }}
                   className="flex-1 bg-green-800 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-900 transition-colors"
                 >
                   Continue
