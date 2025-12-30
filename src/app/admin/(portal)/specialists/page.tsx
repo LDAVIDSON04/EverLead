@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabaseClient } from "@/lib/supabaseClient";
 import { useRequireRole } from "@/lib/hooks/useRequireRole";
-import { Search, Calendar, Eye, UserX } from "lucide-react";
+import { Search, Calendar, Eye, UserX, User, Building, MapPin, Mail, Phone, Clock, CalendarCheck, X } from "lucide-react";
 
 type SpecialistRow = {
   id: string;
@@ -15,6 +15,12 @@ type SpecialistRow = {
   calendar_google: boolean;
   calendar_microsoft: boolean;
   status: string | null;
+  created_at: string;
+  total_appointments: number;
+  phone: string | null;
+  agent_city: string | null;
+  agent_province: string | null;
+  metadata: any;
 };
 
 export default function AdminSpecialistsPage() {
@@ -25,69 +31,76 @@ export default function AdminSpecialistsPage() {
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "suspended">("all");
+  const [selectedSpecialist, setSelectedSpecialist] = useState<SpecialistRow | null>(null);
 
   useEffect(() => {
     async function load() {
       setLoading(true);
       setError(null);
       try {
-        // First get specialists
-        const { data: specialistsData, error: specialistsError } = await supabaseClient
-          .from("specialists")
-          .select("id, display_name, is_active, location_city, location_region");
+        // Get all agents from profiles table
+        const { data: profilesData, error: profilesError } = await supabaseClient
+          .from("profiles")
+          .select("id, full_name, email, phone, funeral_home, agent_city, agent_province, approval_status, created_at, metadata")
+          .eq("role", "agent")
+          .order("created_at", { ascending: false });
 
-        if (specialistsError) throw specialistsError;
+        if (profilesError) throw profilesError;
 
-        // Then get profiles for those specialist IDs
-        const specialistIds = (specialistsData || []).map((s: any) => s.id);
-        let profilesMap: Record<string, any> = {};
-        
-        if (specialistIds.length > 0) {
-          const { data: profilesData } = await supabaseClient
-            .from("profiles")
-            .select("id, email, full_name")
-            .in("id", specialistIds);
-          
-          (profilesData || []).forEach((profile: any) => {
-            profilesMap[profile.id] = profile;
-          });
-        }
+        // Get emails from auth.users for agents that don't have email in profiles
+        const agentIds = (profilesData || []).map((p: any) => p.id);
+        let calendarByAgent: Record<string, { google: boolean; microsoft: boolean }> = {};
+        let appointmentsByAgent: Record<string, number> = {};
 
-        const data = specialistsData;
-        const error = null;
-
-        if (error) throw error;
-
-        const ids = (data || []).map((s: any) => s.id);
-        let calendarBySpecialist: Record<string, { google: boolean; microsoft: boolean }> = {};
-
-        if (ids.length > 0) {
+        if (agentIds.length > 0) {
+          // Get calendar connections
           const { data: connections } = await supabaseClient
             .from("calendar_connections")
-            .select("specialist_id, provider")
-            .in("specialist_id", ids);
+            .select("agent_id, provider")
+            .in("agent_id", agentIds);
 
           (connections || []).forEach((c: any) => {
-            if (!calendarBySpecialist[c.specialist_id]) {
-              calendarBySpecialist[c.specialist_id] = { google: false, microsoft: false };
+            if (!calendarByAgent[c.agent_id]) {
+              calendarByAgent[c.agent_id] = { google: false, microsoft: false };
             }
-            if (c.provider === "google") calendarBySpecialist[c.specialist_id].google = true;
-            if (c.provider === "microsoft") calendarBySpecialist[c.specialist_id].microsoft = true;
+            if (c.provider === "google") calendarByAgent[c.agent_id].google = true;
+            if (c.provider === "microsoft") calendarByAgent[c.agent_id].microsoft = true;
+          });
+
+          // Get appointment counts for each agent
+          const { data: appointmentsData } = await supabaseClient
+            .from("appointments")
+            .select("agent_id")
+            .in("agent_id", agentIds);
+
+          (appointmentsData || []).forEach((apt: any) => {
+            appointmentsByAgent[apt.agent_id] = (appointmentsByAgent[apt.agent_id] || 0) + 1;
           });
         }
 
-        const rows: SpecialistRow[] = (data || []).map((s: any) => {
-          const profile = profilesMap[s.id];
+        const rows: SpecialistRow[] = (profilesData || []).map((profile: any) => {
+          const metadata = profile.metadata || {};
+          const specialty = metadata.specialty || null;
+          const region = profile.agent_city && profile.agent_province
+            ? `${profile.agent_city}, ${profile.agent_province}`
+            : profile.agent_province || profile.agent_city || null;
+
           return {
-            id: s.id,
-            display_name: s.display_name || profile?.full_name || null,
-            email: profile?.email || null,
-            funeral_home: s.location_city || null, // Using location_city as funeral_home
-            region: s.location_region || null,
-            specialty: null, // Column doesn't exist in table
-            status: s.is_active ? "approved" : "pending", // Convert is_active to status
-            calendar_google: calendarBySpecialist[s.id]?.google ?? false,
-            calendar_microsoft: calendarBySpecialist[s.id]?.microsoft ?? false,
+            id: profile.id,
+            display_name: profile.full_name || null,
+            email: profile.email || null,
+            phone: profile.phone || null,
+            funeral_home: profile.funeral_home || null,
+            region: region,
+            specialty: specialty,
+            status: profile.approval_status || "pending",
+            calendar_google: calendarByAgent[profile.id]?.google ?? false,
+            calendar_microsoft: calendarByAgent[profile.id]?.microsoft ?? false,
+            created_at: profile.created_at,
+            total_appointments: appointmentsByAgent[profile.id] || 0,
+            agent_city: profile.agent_city,
+            agent_province: profile.agent_province,
+            metadata: metadata,
           };
         });
 
@@ -104,6 +117,7 @@ export default function AdminSpecialistsPage() {
   }, []);
 
   const filtered = specialists.filter((s) => {
+    // Status filter: "active" means approved, "suspended" means declined/needs-info
     if (statusFilter === "active" && s.status !== "approved") return false;
     if (statusFilter === "suspended" && s.status === "approved") return false;
     if (!search) return true;
@@ -111,7 +125,9 @@ export default function AdminSpecialistsPage() {
     return (
       s.display_name?.toLowerCase().includes(q) ||
       s.email?.toLowerCase().includes(q) ||
-      s.funeral_home?.toLowerCase().includes(q)
+      s.funeral_home?.toLowerCase().includes(q) ||
+      s.region?.toLowerCase().includes(q) ||
+      s.specialty?.toLowerCase().includes(q)
     );
   });
 
@@ -215,14 +231,19 @@ export default function AdminSpecialistsPage() {
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex gap-2">
-                      <button className="px-3 py-1.5 border border-neutral-300 text-neutral-700 rounded-md hover:bg-neutral-50 text-sm flex items-center gap-1">
+                      <button 
+                        onClick={() => setSelectedSpecialist(specialist)}
+                        className="px-3 py-1.5 border border-neutral-300 text-neutral-700 rounded-md hover:bg-neutral-50 text-sm flex items-center gap-1"
+                      >
                         <Eye className="w-3 h-3" />
                         View
                       </button>
-                      <button className="px-3 py-1.5 border border-neutral-300 text-neutral-700 rounded-md hover:bg-neutral-50 text-sm flex items-center gap-1">
-                        <UserX className="w-3 h-3" />
-                        {specialist.status === "approved" ? "Suspend" : "Activate"}
-                      </button>
+                      {specialist.status !== "approved" && (
+                        <button className="px-3 py-1.5 border border-neutral-300 text-neutral-700 rounded-md hover:bg-neutral-50 text-sm flex items-center gap-1">
+                          <UserX className="w-3 h-3" />
+                          Activate
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -238,6 +259,178 @@ export default function AdminSpecialistsPage() {
           </table>
         </div>
       </div>
+
+      {/* View Specialist Modal */}
+      {selectedSpecialist && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-4xl max-h-[90vh] overflow-auto w-full">
+            <div className="p-6 border-b border-neutral-200">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-semibold text-black">Agent Details</h2>
+                <button
+                  onClick={() => setSelectedSpecialist(null)}
+                  className="text-neutral-500 hover:text-neutral-700"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <p className="text-sm text-neutral-600 mt-1">{selectedSpecialist.display_name || 'Unknown Agent'}</p>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Agent Information */}
+              <div>
+                <h3 className="text-lg font-semibold text-black mb-4 flex items-center gap-2">
+                  <User className="w-5 h-5" />
+                  Agent Information
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-neutral-500 mb-1">Full Name</p>
+                    <p className="text-sm text-neutral-900">{selectedSpecialist.display_name || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-neutral-500 mb-1">Email</p>
+                    <p className="text-sm text-neutral-900 flex items-center gap-2">
+                      <Mail className="w-4 h-4" />
+                      {selectedSpecialist.email || 'N/A'}
+                    </p>
+                  </div>
+                  {selectedSpecialist.phone && (
+                    <div>
+                      <p className="text-xs text-neutral-500 mb-1">Phone</p>
+                      <p className="text-sm text-neutral-900 flex items-center gap-2">
+                        <Phone className="w-4 h-4" />
+                        {selectedSpecialist.phone}
+                      </p>
+                    </div>
+                  )}
+                  {selectedSpecialist.funeral_home && (
+                    <div>
+                      <p className="text-xs text-neutral-500 mb-1">Funeral Home</p>
+                      <p className="text-sm text-neutral-900 flex items-center gap-2">
+                        <Building className="w-4 h-4" />
+                        {selectedSpecialist.funeral_home}
+                      </p>
+                    </div>
+                  )}
+                  {selectedSpecialist.region && (
+                    <div>
+                      <p className="text-xs text-neutral-500 mb-1">Location</p>
+                      <p className="text-sm text-neutral-900 flex items-center gap-2">
+                        <MapPin className="w-4 h-4" />
+                        {selectedSpecialist.region}
+                      </p>
+                    </div>
+                  )}
+                  {selectedSpecialist.specialty && (
+                    <div>
+                      <p className="text-xs text-neutral-500 mb-1">Specialty</p>
+                      <p className="text-sm text-neutral-900">{selectedSpecialist.specialty}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Statistics */}
+              <div>
+                <h3 className="text-lg font-semibold text-black mb-4 flex items-center gap-2">
+                  <CalendarCheck className="w-5 h-5" />
+                  Statistics
+                </h3>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="bg-neutral-50 rounded-lg p-4">
+                    <p className="text-xs text-neutral-500 mb-1">Total Appointments</p>
+                    <p className="text-2xl font-semibold text-neutral-900">{selectedSpecialist.total_appointments}</p>
+                    <p className="text-xs text-neutral-500 mt-1">Booked through Soradin</p>
+                  </div>
+                  <div className="bg-neutral-50 rounded-lg p-4">
+                    <p className="text-xs text-neutral-500 mb-1">Member Since</p>
+                    <p className="text-lg font-semibold text-neutral-900">
+                      {new Date(selectedSpecialist.created_at).toLocaleDateString('en-US', { 
+                        month: 'short', 
+                        year: 'numeric' 
+                      })}
+                    </p>
+                    <p className="text-xs text-neutral-500 mt-1">
+                      {(() => {
+                        const created = new Date(selectedSpecialist.created_at);
+                        const now = new Date();
+                        const months = Math.floor((now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24 * 30));
+                        const years = Math.floor(months / 12);
+                        const remainingMonths = months % 12;
+                        if (years > 0) {
+                          return `${years} year${years > 1 ? 's' : ''}${remainingMonths > 0 ? `, ${remainingMonths} month${remainingMonths > 1 ? 's' : ''}` : ''}`;
+                        }
+                        return `${months} month${months !== 1 ? 's' : ''}`;
+                      })()} on platform
+                    </p>
+                  </div>
+                  <div className="bg-neutral-50 rounded-lg p-4">
+                    <p className="text-xs text-neutral-500 mb-1">Status</p>
+                    <span
+                      className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${
+                        selectedSpecialist.status === "approved"
+                          ? "bg-emerald-100 text-emerald-700"
+                          : selectedSpecialist.status === "needs-info"
+                          ? "bg-orange-100 text-orange-700"
+                          : "bg-red-100 text-red-700"
+                      }`}
+                    >
+                      {selectedSpecialist.status || "pending"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Calendar Integrations */}
+              <div>
+                <h3 className="text-lg font-semibold text-black mb-4 flex items-center gap-2">
+                  <Calendar className="w-5 h-5" />
+                  Calendar Integrations
+                </h3>
+                <div className="flex gap-4">
+                  {selectedSpecialist.calendar_google ? (
+                    <div className="flex items-center gap-2 px-4 py-2 bg-emerald-50 rounded-lg">
+                      <Calendar className="w-4 h-4 text-emerald-700" />
+                      <span className="text-sm text-emerald-700 font-medium">Google Calendar</span>
+                      <span className="text-xs text-emerald-600">Connected</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 px-4 py-2 bg-neutral-100 rounded-lg">
+                      <Calendar className="w-4 h-4 text-neutral-400" />
+                      <span className="text-sm text-neutral-500">Google Calendar</span>
+                      <span className="text-xs text-neutral-400">Not connected</span>
+                    </div>
+                  )}
+                  {selectedSpecialist.calendar_microsoft ? (
+                    <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 rounded-lg">
+                      <Calendar className="w-4 h-4 text-blue-600" />
+                      <span className="text-sm text-blue-700 font-medium">Microsoft Calendar</span>
+                      <span className="text-xs text-blue-600">Connected</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 px-4 py-2 bg-neutral-100 rounded-lg">
+                      <Calendar className="w-4 h-4 text-neutral-400" />
+                      <span className="text-sm text-neutral-500">Microsoft Calendar</span>
+                      <span className="text-xs text-neutral-400">Not connected</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 border-t border-neutral-200 flex justify-end">
+              <button
+                onClick={() => setSelectedSpecialist(null)}
+                className="px-4 py-2 bg-neutral-200 text-neutral-700 rounded-md hover:bg-neutral-300 text-sm"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
