@@ -1489,7 +1489,6 @@ function SearchResults() {
                           >
                             Learn more about {agentName}
                           </button>
-                        </div>
                       )}
                       </div>
                     </div>
