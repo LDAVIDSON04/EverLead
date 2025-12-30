@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { supabaseClient } from "@/lib/supabaseClient";
-import { Check, X, AlertCircle, Download, Eye, Clock } from "lucide-react";
+import { Check, X, AlertCircle, Download, Eye, Clock, FileText, User, Building, MapPin, Mail, Phone } from "lucide-react";
 
 type PendingAgent = {
   id: string;
@@ -42,6 +42,9 @@ export default function AgentApprovalPage() {
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [selectedAgent, setSelectedAgent] = useState<PendingAgent | null>(null);
+  const [showRequestInfoModal, setShowRequestInfoModal] = useState(false);
+  const [requestInfoText, setRequestInfoText] = useState("");
 
   useEffect(() => {
     loadPendingAgents();
@@ -144,8 +147,57 @@ export default function AgentApprovalPage() {
   }
 
   async function handleRequestInfo(id: string) {
-    // This would be implemented to request additional info
-    alert("Request info functionality to be implemented");
+    if (processing) return;
+
+    const agent = pendingAgents.find(a => a.id === id);
+    if (!agent) return;
+
+    setSelectedAgent(agent);
+    setShowRequestInfoModal(true);
+    setRequestInfoText("");
+  }
+
+  async function submitRequestInfo() {
+    if (!selectedAgent || !requestInfoText.trim()) {
+      setError("Please provide information about what is needed.");
+      return;
+    }
+
+    try {
+      setProcessing(selectedAgent.id);
+      setError(null);
+
+      const { data: { user } } = await supabaseClient.auth.getUser();
+      if (!user) {
+        throw new Error("You must be logged in to request information.");
+      }
+
+      const res = await fetch("/api/admin/approve-agent", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          agentId: selectedAgent.id,
+          action: "request-info",
+          notes: requestInfoText.trim(),
+          adminUserId: user.id,
+        }),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Failed to request information");
+      }
+
+      setShowRequestInfoModal(false);
+      setSelectedAgent(null);
+      setRequestInfoText("");
+      await loadPendingAgents();
+    } catch (err: any) {
+      console.error("Error requesting info:", err);
+      setError(err.message || "Failed to request information. Please try again.");
+    } finally {
+      setProcessing(null);
+    }
   }
 
   const getStatusColor = (status: string | null) => {
@@ -354,28 +406,15 @@ export default function AgentApprovalPage() {
                   <td className="px-6 py-4">
                     <div className="flex gap-2">
                       <button
-                        onClick={() => handleApprove(specialist.id)}
-                        disabled={processing === specialist.id}
-                        className="px-3 py-1.5 bg-emerald-700 text-white rounded-md hover:bg-emerald-800 text-sm flex items-center gap-1 disabled:opacity-50"
+                        onClick={() => {
+                          const agent = pendingAgents.find(a => a.id === specialist.id);
+                          if (agent) setSelectedAgent(agent);
+                        }}
+                        className="px-3 py-1.5 border border-neutral-300 text-neutral-700 rounded-md hover:bg-neutral-50 text-sm flex items-center gap-1"
+                        title="View Full Submission"
                       >
-                        <Check className="w-3 h-3" />
-                        Approve
-                      </button>
-                      <button
-                        onClick={() => handleReject(specialist.id)}
-                        disabled={processing === specialist.id}
-                        className="px-3 py-1.5 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm flex items-center gap-1 disabled:opacity-50"
-                      >
-                        <X className="w-3 h-3" />
-                        Reject
-                      </button>
-                      <button
-                        onClick={() => handleRequestInfo(specialist.id)}
-                        disabled={processing === specialist.id}
-                        className="px-3 py-1.5 border border-neutral-300 text-neutral-700 rounded-md hover:bg-neutral-50 text-sm flex items-center gap-1 disabled:opacity-50"
-                      >
-                        <AlertCircle className="w-3 h-3" />
-                        Request Info
+                        <Eye className="w-3 h-3" />
+                        View
                       </button>
                     </div>
                   </td>
@@ -415,6 +454,190 @@ export default function AgentApprovalPage() {
           </li>
         </ul>
       </div>
+
+      {/* View Submission Modal */}
+      {selectedAgent && !showRequestInfoModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-4xl max-h-[90vh] overflow-auto w-full">
+            <div className="p-6 border-b border-neutral-200">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-semibold text-black">Agent Submission Review</h2>
+                <button
+                  onClick={() => setSelectedAgent(null)}
+                  className="text-neutral-500 hover:text-neutral-700"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <p className="text-sm text-neutral-600 mt-1">{selectedAgent.full_name || 'Unknown Agent'}</p>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Profile Information */}
+              <div>
+                <h3 className="text-lg font-semibold text-black mb-4 flex items-center gap-2">
+                  <User className="w-5 h-5" />
+                  Profile Information
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-neutral-500 mb-1">Full Name</p>
+                    <p className="text-sm text-neutral-900">{selectedAgent.full_name || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-neutral-500 mb-1">Email</p>
+                    <p className="text-sm text-neutral-900 flex items-center gap-2">
+                      <Mail className="w-4 h-4" />
+                      {selectedAgent.email || 'N/A'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-neutral-500 mb-1">Phone</p>
+                    <p className="text-sm text-neutral-900 flex items-center gap-2">
+                      <Phone className="w-4 h-4" />
+                      {selectedAgent.phone || 'N/A'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-neutral-500 mb-1">Funeral Home</p>
+                    <p className="text-sm text-neutral-900 flex items-center gap-2">
+                      <Building className="w-4 h-4" />
+                      {selectedAgent.funeral_home || 'N/A'}
+                    </p>
+                  </div>
+                  {selectedAgent.notification_cities && selectedAgent.notification_cities.length > 0 && (
+                    <div className="col-span-2">
+                      <p className="text-xs text-neutral-500 mb-1">Service Locations</p>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedAgent.notification_cities.map((city, idx) => (
+                          <span key={idx} className="text-sm text-neutral-900 flex items-center gap-1 px-2 py-1 bg-neutral-100 rounded">
+                            <MapPin className="w-3 h-3" />
+                            {city.city}, {city.province}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Documents */}
+              <div>
+                <h3 className="text-lg font-semibold text-black mb-4 flex items-center gap-2">
+                  <FileText className="w-5 h-5" />
+                  Documents & Credentials
+                </h3>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    {selectedAgent.licensed_in_province ? (
+                      <Check className="w-4 h-4 text-emerald-700" />
+                    ) : (
+                      <X className="w-4 h-4 text-red-500" />
+                    )}
+                    <span className="text-sm text-neutral-700">License Verification</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {selectedAgent.licensed_funeral_director ? (
+                      <Check className="w-4 h-4 text-emerald-700" />
+                    ) : (
+                      <X className="w-4 h-4 text-red-500" />
+                    )}
+                    <span className="text-sm text-neutral-700">Funeral Director License</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {selectedAgent.funeral_home ? (
+                      <Check className="w-4 h-4 text-emerald-700" />
+                    ) : (
+                      <X className="w-4 h-4 text-red-500" />
+                    )}
+                    <span className="text-sm text-neutral-700">Business Registration</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Profile Bio */}
+              {selectedAgent.ai_generated_bio && (
+                <div>
+                  <h3 className="text-lg font-semibold text-black mb-4">Profile Bio</h3>
+                  <div className="bg-neutral-50 rounded-lg p-4">
+                    <p className="text-sm text-neutral-700 whitespace-pre-wrap leading-relaxed">
+                      {selectedAgent.ai_generated_bio}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Actions */}
+              <div className="flex gap-3 pt-4 border-t border-neutral-200">
+                <button
+                  onClick={() => handleApprove(selectedAgent.id)}
+                  disabled={processing === selectedAgent.id}
+                  className="flex-1 px-4 py-2 bg-emerald-700 text-white rounded-md hover:bg-emerald-800 text-sm flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  <Check className="w-4 h-4" />
+                  Approve
+                </button>
+                <button
+                  onClick={() => handleReject(selectedAgent.id)}
+                  disabled={processing === selectedAgent.id}
+                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  <X className="w-4 h-4" />
+                  Decline
+                </button>
+                <button
+                  onClick={() => {
+                    setShowRequestInfoModal(true);
+                  }}
+                  disabled={processing === selectedAgent.id}
+                  className="flex-1 px-4 py-2 border border-neutral-300 text-neutral-700 rounded-md hover:bg-neutral-50 text-sm flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  <AlertCircle className="w-4 h-4" />
+                  Request More Info
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Request More Info Modal */}
+      {showRequestInfoModal && selectedAgent && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full">
+            <div className="p-6 border-b border-neutral-200">
+              <h2 className="text-xl font-semibold text-black">Request More Information</h2>
+              <p className="text-sm text-neutral-600 mt-1">What information does {selectedAgent.full_name || 'this agent'} need to provide?</p>
+            </div>
+            <div className="p-6">
+              <textarea
+                value={requestInfoText}
+                onChange={(e) => setRequestInfoText(e.target.value)}
+                placeholder="Please specify what additional information or documents are needed for approval..."
+                className="w-full h-32 px-3 py-2 border border-neutral-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-emerald-700"
+              />
+            </div>
+            <div className="p-6 border-t border-neutral-200 flex gap-3 justify-end">
+              <button
+                onClick={() => {
+                  setShowRequestInfoModal(false);
+                  setRequestInfoText("");
+                }}
+                className="px-4 py-2 border border-neutral-300 text-neutral-700 rounded-md hover:bg-neutral-50 text-sm"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={submitRequestInfo}
+                disabled={!requestInfoText.trim() || processing === selectedAgent.id}
+                className="px-4 py-2 bg-emerald-700 text-white rounded-md hover:bg-emerald-800 text-sm disabled:opacity-50"
+              >
+                {processing === selectedAgent.id ? 'Sending...' : 'Send Request'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -134,9 +134,9 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    if (!agentId || !action || !["approve", "decline"].includes(action)) {
+    if (!agentId || !action || !["approve", "decline", "request-info"].includes(action)) {
       return NextResponse.json(
-        { error: "Invalid request. agentId and action (approve/decline) are required." },
+        { error: "Invalid request. agentId and action (approve/decline/request-info) are required." },
         { status: 400 }
       );
     }
@@ -172,31 +172,42 @@ export async function POST(req: NextRequest) {
       console.warn(`No email found for agent ${agentId} - approval will proceed but no email will be sent`);
     }
 
-    // Update both approval_status and bio_approval_status together for unified approval
-    const updateData: any = {
-      approval_status: action === "approve" ? "approved" : "declined",
-      approved_at: action === "approve" ? new Date().toISOString() : null,
-      approved_by: action === "approve" && adminUserId ? adminUserId : null,
-    };
-
-    // Also update bio_approval_status if bio exists
-    if (agentProfile.ai_generated_bio) {
-      updateData.bio_approval_status = action === "approve" ? "approved" : "rejected";
-      updateData.bio_last_updated = new Date().toISOString();
+    // Single unified approval - approve/decline the entire submission (profile + bio)
+    const updateData: any = {};
+    
+    if (action === "approve") {
+      // Approve everything at once
+      updateData.approval_status = "approved";
+      updateData.approved_at = new Date().toISOString();
+      updateData.approved_by = adminUserId || null;
       
-      // Update bio audit log
-      const auditLog = agentProfile.bio_audit_log || [];
-      const newAuditEntry = {
-        action: action === "approve" ? "approved" : "rejected",
-        timestamp: new Date().toISOString(),
-        admin_id: adminUserId || null,
-        bio: agentProfile.ai_generated_bio,
-      };
-      updateData.bio_audit_log = [...auditLog, newAuditEntry];
-    }
-
-    if (notes) {
-      updateData.approval_notes = notes;
+      // Also approve bio if it exists
+      if (agentProfile.ai_generated_bio) {
+        updateData.bio_approval_status = "approved";
+        updateData.bio_last_updated = new Date().toISOString();
+      }
+    } else if (action === "decline") {
+      // Decline everything at once
+      updateData.approval_status = "declined";
+      updateData.approved_at = null;
+      updateData.approved_by = null;
+      
+      // Also decline bio if it exists
+      if (agentProfile.ai_generated_bio) {
+        updateData.bio_approval_status = "rejected";
+        updateData.bio_last_updated = new Date().toISOString();
+      }
+      
+      if (notes) {
+        updateData.approval_notes = notes;
+      }
+    } else if (action === "request-info") {
+      // Request more information - set status to needs-info
+      updateData.approval_status = "needs-info";
+      
+      if (notes) {
+        updateData.approval_notes = notes;
+      }
     }
 
     const { error: updateError } = await supabaseAdmin
@@ -213,13 +224,17 @@ export async function POST(req: NextRequest) {
     }
 
     // Send email notification (if email is available)
-    if (agentEmail) {
+    // Only send for approve/decline, not for request-info (that will be handled separately if needed)
+    if (agentEmail && (action === "approve" || action === "decline")) {
       await sendApprovalEmail(
         agentEmail,
         agentProfile.full_name,
         action === "approve",
         notes
       );
+    } else if (agentEmail && action === "request-info") {
+      // TODO: Send "request more info" email notification
+      console.log(`Request more info email should be sent to ${agentEmail} with notes: ${notes}`);
     } else {
       console.warn(`Skipping email notification for agent ${agentId} - no email found`);
     }

@@ -1380,14 +1380,8 @@ function SearchResults() {
                                     ? `${data.agent_city}, ${data.agent_province}`
                                     : data.agent_city || data.agent_province || 'Location not specified';
                                   
-                                  // Check both approvals - agent must be fully approved to be visible
+                                  // Single unified approval - check only approval_status
                                   if (data.approval_status !== "approved") {
-                                    setPortfolioAgentData(null);
-                                    return;
-                                  }
-                                  
-                                  // If agent has a bio, it must also be approved
-                                  if (data.ai_generated_bio && data.bio_approval_status !== "approved") {
                                     setPortfolioAgentData(null);
                                     return;
                                   }

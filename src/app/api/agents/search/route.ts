@@ -65,15 +65,10 @@ export async function GET(req: NextRequest) {
     const agentsWithAvailability: AgentSearchResult[] = (profiles || [])
       .filter((profile: any) => {
         try {
-          // Check both approval statuses - both must be approved for agent to be visible
+          // Single unified approval - check only approval_status
+          // When admin approves, both profile and bio are approved together
           if (profile.approval_status !== "approved") {
-            console.log(`[AGENT SEARCH] Agent ${profile.id} profile not approved: ${profile.approval_status}`);
-            return false;
-          }
-          
-          // If agent has a bio, it must also be approved
-          if (profile.ai_generated_bio && profile.bio_approval_status !== "approved") {
-            console.log(`[AGENT SEARCH] Agent ${profile.id} bio not approved: ${profile.bio_approval_status}`);
+            console.log(`[AGENT SEARCH] Agent ${profile.id} not approved: ${profile.approval_status}`);
             return false;
           }
 

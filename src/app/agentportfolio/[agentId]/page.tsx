@@ -39,15 +39,8 @@ export default function AgentProfilePage() {
         if (fetchError) {
           setError(fetchError.message);
         } else if (data) {
-          // Check both approvals - agent must be fully approved to be visible
+          // Single unified approval - check only approval_status
           if (data.approval_status !== "approved") {
-            setError("Agent profile not available");
-            setLoading(false);
-            return;
-          }
-          
-          // If agent has a bio, it must also be approved
-          if (data.ai_generated_bio && data.bio_approval_status !== "approved") {
             setError("Agent profile not available");
             setLoading(false);
             return;

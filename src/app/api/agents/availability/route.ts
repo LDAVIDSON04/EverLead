@@ -60,18 +60,10 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Check both approvals - agent must be fully approved to show availability
+    // Single unified approval - check only approval_status
     if (profile.approval_status !== "approved") {
       return NextResponse.json(
         { error: "Agent not approved" },
-        { status: 403 }
-      );
-    }
-    
-    // If agent has a bio, it must also be approved
-    if (profile.ai_generated_bio && profile.bio_approval_status !== "approved") {
-      return NextResponse.json(
-        { error: "Agent bio not approved" },
         { status: 403 }
       );
     }

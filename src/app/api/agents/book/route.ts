@@ -55,18 +55,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check both approvals - agent must be fully approved to accept bookings
+    // Single unified approval - check only approval_status
     if (agent.approval_status !== "approved") {
       return NextResponse.json(
         { error: "Agent is not approved for bookings" },
-        { status: 403 }
-      );
-    }
-    
-    // If agent has a bio, it must also be approved
-    if (agent.ai_generated_bio && agent.bio_approval_status !== "approved") {
-      return NextResponse.json(
-        { error: "Agent bio is not approved for bookings" },
         { status: 403 }
       );
     }

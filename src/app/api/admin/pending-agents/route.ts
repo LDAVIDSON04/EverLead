@@ -7,22 +7,14 @@ export const runtime = "nodejs";
 
 export async function GET(req: NextRequest) {
   try {
-    // Get all agents with pending approval (either profile or bio)
-    // Include bio information for unified approval
+    // Get all agents with pending approval (single unified approval)
+    // Include bio information for display in approval modal
     const { data: agents, error: agentsError } = await supabaseAdmin
       .from("profiles")
       .select("*")
       .eq("role", "agent")
-      .or("approval_status.is.null,approval_status.eq.pending,bio_approval_status.is.null,bio_approval_status.eq.pending")
+      .or("approval_status.is.null,approval_status.eq.pending,approval_status.eq.needs-info")
       .order("created_at", { ascending: false });
-    
-    // Filter to only show agents where at least one approval is pending
-    // (not both approved)
-    const pendingAgents = (agents || []).filter((agent: any) => {
-      const profilePending = !agent.approval_status || agent.approval_status === 'pending';
-      const bioPending = !agent.bio_approval_status || agent.bio_approval_status === 'pending';
-      return profilePending || bioPending;
-    });
 
     if (agentsError) {
       console.error("Error fetching pending agents:", agentsError);
@@ -34,7 +26,7 @@ export async function GET(req: NextRequest) {
 
     // Get emails from auth.users
     const agentsWithEmail = await Promise.all(
-      pendingAgents.map(async (agent: any) => {
+      (agents || []).map(async (agent: any) => {
         try {
           const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(agent.id);
           return {
