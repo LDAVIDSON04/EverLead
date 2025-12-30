@@ -39,23 +39,71 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Agent email not found" }, { status: 404 });
     }
 
-    // Find or create Stripe customer
-    let customer;
-    const customers = await stripe.customers.list({
-      email: agentEmail,
-      limit: 1,
-    });
+    // Get agent's profile to check for existing Stripe Customer ID
+    const { data: profile, error: profileError } = await supabaseAdmin
+      .from("profiles")
+      .select("metadata")
+      .eq("id", agentId)
+      .maybeSingle();
 
-    if (customers.data.length > 0) {
-      customer = customers.data[0];
-    } else {
-      // Create new Stripe customer
-      customer = await stripe.customers.create({
+    if (profileError) {
+      console.error("Error fetching agent profile:", profileError);
+      return NextResponse.json({ error: "Failed to fetch agent profile" }, { status: 500 });
+    }
+
+    let customer;
+    let stripeCustomerId = (profile?.metadata as any)?.stripe_customer_id;
+
+    // If we already have a customer ID, use it
+    if (stripeCustomerId) {
+      try {
+        customer = await stripe.customers.retrieve(stripeCustomerId);
+        // If customer was deleted or doesn't exist, create a new one
+        if (customer.deleted) {
+          stripeCustomerId = null;
+        }
+      } catch (err) {
+        // Customer doesn't exist, create a new one
+        stripeCustomerId = null;
+      }
+    }
+
+    // If no valid customer ID, find or create Stripe customer
+    if (!stripeCustomerId) {
+      const customers = await stripe.customers.list({
         email: agentEmail,
-        metadata: {
-          agent_id: agentId,
-        },
+        limit: 1,
       });
+
+      if (customers.data.length > 0) {
+        customer = customers.data[0];
+        stripeCustomerId = customer.id;
+      } else {
+        // Create new Stripe customer
+        customer = await stripe.customers.create({
+          email: agentEmail,
+          metadata: {
+            supabase_user_id: agentId,
+          },
+        });
+        stripeCustomerId = customer.id;
+      }
+
+      // Save Stripe Customer ID to profile metadata
+      const { error: updateProfileError } = await supabaseAdmin
+        .from("profiles")
+        .update({
+          metadata: {
+            ...(profile?.metadata || {}),
+            stripe_customer_id: stripeCustomerId,
+          },
+        })
+        .eq("id", agentId);
+
+      if (updateProfileError) {
+        console.error("Error saving Stripe Customer ID to profile:", updateProfileError);
+        // Non-fatal, but log it
+      }
     }
 
     // Get base URL
@@ -65,10 +113,13 @@ export async function POST(request: NextRequest) {
     // Create a Checkout Session in setup mode to collect payment method
     const session = await stripe.checkout.sessions.create({
       mode: 'setup',
-      customer: customer.id,
+      customer: stripeCustomerId,
       payment_method_types: ['card'],
       success_url: `${baseUrl}/agent/settings?tab=billing&payment_method=success`,
       cancel_url: `${baseUrl}/agent/settings?tab=billing&payment_method=cancelled`,
+      metadata: {
+        agentId: agentId,
+      },
     });
 
     return NextResponse.json({

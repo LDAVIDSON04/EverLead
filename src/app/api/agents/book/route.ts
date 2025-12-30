@@ -412,40 +412,36 @@ export async function POST(req: NextRequest) {
     
     console.log("Appointment created successfully:", appointment.id);
 
-    // Charge agent's saved payment method for the appointment
+    // Charge agent's saved payment method immediately when appointment is booked
     const chargeResult = await chargeAgentForAppointment(agentId, priceCents, appointment.id);
     
     if (!chargeResult.success) {
-      console.error("Failed to charge agent for appointment:", chargeResult.error);
+      console.error("❌ Failed to charge agent for appointment:", chargeResult.error);
       
-      // Update appointment to indicate payment failed (but keep appointment - can retry payment later)
+      // Delete the appointment since payment failed (we require immediate payment)
       await supabaseAdmin
         .from("appointments")
-        .update({ 
-          price_cents: null, // Clear price to indicate payment failed
-          notes: `Payment failed: ${chargeResult.error}`,
-        })
+        .delete()
         .eq("id", appointment.id);
       
-      // Return error but don't fail the appointment creation
-      // The appointment exists but payment needs to be retried
+      // Return error - booking fails if payment fails
       return NextResponse.json(
         { 
-          error: "Appointment created but payment failed. Please update your payment method in settings.",
-          appointment: appointment,
+          error: "Booking failed: Payment could not be processed. Please ensure you have a valid payment method on file.",
           paymentError: chargeResult.error,
         },
-        { status: 500 }
+        { status: 402 } // 402 Payment Required
       );
     }
 
-    // Update appointment with payment intent ID if successful
+    // Update appointment with payment details if successful
     if (chargeResult.paymentIntentId) {
+      // Note: stripe_payment_intent_id column may need to be added to appointments table
+      // For now, we'll store it in notes if the column doesn't exist
       await supabaseAdmin
         .from("appointments")
         .update({ 
           price_cents: priceCents,
-          notes: `Payment successful: ${chargeResult.paymentIntentId}`,
         })
         .eq("id", appointment.id);
       
