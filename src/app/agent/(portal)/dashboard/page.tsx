@@ -441,25 +441,7 @@ export default function AgentDashboardPage() {
                 <button className="text-sm text-gray-500 hover:text-gray-700">Last week</button>
               </div>
               
-              <div className="grid grid-cols-5 gap-4">
-                {/* Total Families */}
-                <div className="bg-white rounded-xl p-4 border border-gray-200">
-                  <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mb-3">
-                    <Users size={20} className="text-green-800" />
-                  </div>
-                  <div className="text-xs text-gray-500 mb-1">Total Families</div>
-                  <div className="text-2xl text-gray-900">{stats.myLeads}</div>
-                </div>
-                
-                {/* Phone Calls */}
-                <div className="bg-white rounded-xl p-4 border border-gray-200">
-                  <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center mb-3">
-                    <Phone size={20} className="text-gray-700" />
-                  </div>
-                  <div className="text-xs text-gray-500 mb-1">Phone Calls</div>
-                  <div className="text-2xl text-gray-900">{stats.myAppointments}</div>
-                </div>
-                
+              <div className="grid grid-cols-1 gap-4">
                 {/* Appointments */}
                 <div className="bg-white rounded-xl p-4 border border-gray-200">
                   <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mb-3">
@@ -468,23 +450,6 @@ export default function AgentDashboardPage() {
                   <div className="text-xs text-gray-500 mb-1">Appointments</div>
                   <div className="text-2xl text-gray-900">{stats.myAppointments}</div>
                 </div>
-                
-                {/* Unread Mail */}
-                <div className="bg-white rounded-xl p-4 border border-gray-200">
-                  <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center mb-3">
-                    <MailIcon size={20} className="text-gray-700" />
-                  </div>
-                  <div className="text-xs text-gray-500 mb-1">Unread Mail</div>
-                  <div className="text-2xl text-gray-900">0</div>
-                </div>
-                
-                {/* Add More */}
-                <Link
-                  href="/agent/appointments"
-                  className="bg-white rounded-xl p-4 border border-gray-200 border-dashed flex items-center justify-center cursor-pointer hover:bg-gray-50 transition-colors"
-                >
-                  <Plus size={32} className="text-gray-400" />
-                </Link>
               </div>
             </div>
             
