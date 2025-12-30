@@ -39,6 +39,8 @@ type Appointment = {
     business_city?: string | null;
     business_province?: string | null;
     business_zip?: string | null;
+    rating?: number;
+    reviewCount?: number;
   } | null;
 };
 
