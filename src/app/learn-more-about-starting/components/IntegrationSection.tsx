@@ -26,11 +26,8 @@ export function IntegrationSection() {
 
           {/* Right - Content */}
           <div>
-            <h2 className="text-4xl md:text-5xl text-black mb-6">
-              Soradin works with your scheduling software
-            </h2>
             <p className="text-lg text-gray-700 mb-8">
-              We integrate with 175+ EHRs, practice management systems, and custom solutions
+              Soradin connects directly with your existing Google and Microsoft calendars — syncing availability in real time so appointments flow seamlessly without changing how you work.
             </p>
             <Link href="/create-account">
               <button className="bg-[#0D5C3D] hover:bg-[#0A4A30] text-white px-8 py-3 rounded-lg transition-colors">
