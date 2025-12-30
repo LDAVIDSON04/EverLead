@@ -554,9 +554,9 @@ export default function HomePage() {
               <Image
                 src="/checklist-image.jpg"
                 alt="Professional standards checklist"
-                width={800}
-                height={600}
-                className="w-full max-w-xl h-auto object-contain"
+                width={400}
+                height={300}
+                className="w-full max-w-md h-auto object-contain rounded-xl"
                 style={{
                   filter: "brightness(1.05) contrast(1.05)",
                   mixBlendMode: "multiply",
