@@ -134,6 +134,8 @@ function SearchResults() {
   const [showPortfolioModal, setShowPortfolioModal] = useState(false);
   const [portfolioAgentData, setPortfolioAgentData] = useState<any>(null);
   const [portfolioLoading, setPortfolioLoading] = useState(false);
+  const [portfolioReviews, setPortfolioReviews] = useState<any[]>([]);
+  const [portfolioReviewsLoading, setPortfolioReviewsLoading] = useState(false);
   
   // Debug: Log modal state changes
   useEffect(() => {
@@ -1390,18 +1392,11 @@ function SearchResults() {
                         </div>
                       )}
                       
-                      {/* Review count with star before "Learn more about" */}
+                      {/* Learn more about button */}
                       {agent?.id && (
-                        <div className="flex items-center gap-1 mb-2">
-                          {agent.reviewCount !== undefined && (
-                            <>
-                              <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                              <span className="text-gray-900 text-sm">{agent.reviewCount || 0}</span>
-                            </>
-                          )}
-                          <button
-                            type="button"
-                            onClick={async (e) => {
+                        <button
+                          type="button"
+                          onClick={async (e) => {
                               console.log("Portfolio button clicked for agent:", agent.id);
                               e.preventDefault();
                               e.stopPropagation();
@@ -1451,9 +1446,14 @@ function SearchResults() {
                                       const reviewData = await reviewResponse.json();
                                       rating = reviewData.averageRating || 0;
                                       reviewCount = reviewData.totalReviews || 0;
+                                      // Set the reviews for display
+                                      setPortfolioReviews(reviewData.reviews || []);
+                                    } else {
+                                      setPortfolioReviews([]);
                                     }
                                   } catch (err) {
                                     console.error("Error fetching review stats:", err);
+                                    setPortfolioReviews([]);
                                   }
                                   
                                   setPortfolioAgentData({
@@ -1980,31 +1980,43 @@ function SearchResults() {
                     <div id="reviews" className="mb-12">
                       <div className="flex items-center justify-between mb-4">
                         <h3>Reviews & Testimonials</h3>
-                        <div className="text-sm text-gray-500">Based on {portfolioAgentData.reviewCount} verified clients</div>
+                        {portfolioAgentData.reviewCount > 0 && (
+                          <div className="text-sm text-gray-500">Based on {portfolioAgentData.reviewCount} verified {portfolioAgentData.reviewCount === 1 ? 'client' : 'clients'}</div>
+                        )}
                       </div>
-                      <div className="space-y-4">
-                        <div className="p-4 bg-gray-50 rounded-lg">
-                          <div className="flex items-start justify-between mb-3">
-                            <div>
-                              <div className="flex items-center gap-2 mb-1">
-                                <span className="text-gray-900 font-medium">Jennifer M.</span>
-                                <span className="px-2 py-0.5 text-xs rounded-full" style={{ backgroundColor: '#e8f5e9', color: '#1a4d2e' }}>
-                                  Verified Client
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <div className="flex">
-                                  {[...Array(5)].map((_, i) => (
-                                    <Star key={i} className={`w-3 h-3 ${i < 5 ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} />
-                                  ))}
+                      {portfolioAgentData.reviewCount === 0 ? (
+                        <p className="text-gray-600">This agent has no reviews.</p>
+                      ) : (
+                        <div className="space-y-4">
+                          {portfolioReviews.map((review) => (
+                            <div key={review.id} className="p-4 bg-gray-50 rounded-lg">
+                              <div className="flex items-start justify-between mb-3">
+                                <div>
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <span className="text-gray-900 font-medium">{review.author}</span>
+                                    {review.verified && (
+                                      <span className="px-2 py-0.5 text-xs rounded-full" style={{ backgroundColor: '#e8f5e9', color: '#1a4d2e' }}>
+                                        Verified Client
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <div className="flex">
+                                      {[...Array(5)].map((_, i) => (
+                                        <Star key={i} className={`w-3 h-3 ${i < review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} />
+                                      ))}
+                                    </div>
+                                    <span className="text-sm text-gray-500">{review.date}</span>
+                                  </div>
                                 </div>
-                                <span className="text-sm text-gray-500">November 2024</span>
                               </div>
+                              {review.comment && (
+                                <p className="text-gray-700">{review.comment}</p>
+                              )}
                             </div>
-                          </div>
-                          <p className="text-gray-700">Incredibly compassionate during one of the most difficult times of our lives. Helped us plan everything with care and respect.</p>
+                          ))}
                         </div>
-                      </div>
+                      )}
                     </div>
 
                     {/* Office Locations */}
