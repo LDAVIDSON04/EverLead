@@ -183,7 +183,7 @@ function CancelAppointmentContent() {
             </div>
             <div className="flex gap-4">
               <button
-                onClick={handleCancel}
+                onClick={() => handleCancel("cancel")}
                 className="flex-1 bg-red-600 text-white px-6 py-2 rounded hover:bg-red-700 transition-colors"
               >
                 Try Again
