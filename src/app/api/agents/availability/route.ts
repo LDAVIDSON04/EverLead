@@ -45,10 +45,10 @@ export async function GET(req: NextRequest) {
     const { agentId, startDate, endDate, location } = validation.data;
 
     // Load agent profile with availability settings
-    // Check both approval_status and bio_approval_status
+    // Check approval_status (bios are auto-approved on creation)
     const { data: profile, error: profileError } = await supabaseAdmin
       .from("profiles")
-      .select("id, metadata, agent_city, agent_province, approval_status, ai_generated_bio, bio_approval_status")
+      .select("id, metadata, agent_city, agent_province, approval_status, ai_generated_bio")
       .eq("id", agentId)
       .eq("role", "agent")
       .maybeSingle();

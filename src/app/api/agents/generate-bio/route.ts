@@ -149,7 +149,7 @@ ${practicePhilosophyAppreciate || 'Clients value their thoughtful approach, clea
       .from('profiles')
       .update({
         ai_generated_bio: generatedBio,
-        bio_approval_status: 'pending',
+        bio_approval_status: 'approved', // Auto-approve bios - no separate approval needed
         bio_last_updated: new Date().toISOString(),
         bio_audit_log: [...auditLog, newAuditEntry],
       })
@@ -162,7 +162,7 @@ ${practicePhilosophyAppreciate || 'Clients value their thoughtful approach, clea
 
     return NextResponse.json({ 
       bio: generatedBio,
-      status: 'pending'
+      status: 'approved'
     });
 
   } catch (error: any) {

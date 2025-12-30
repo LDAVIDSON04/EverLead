@@ -42,10 +42,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Validate agent exists and is approved (both profile and bio)
+    // Validate agent exists and is approved
     const { data: agent, error: agentError } = await supabaseAdmin
       .from("profiles")
-      .select("id, role, approval_status, ai_generated_bio, bio_approval_status")
+      .select("id, role, approval_status, ai_generated_bio")
       .eq("id", agentId)
       .eq("role", "agent")
       .maybeSingle();
