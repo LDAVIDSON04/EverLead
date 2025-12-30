@@ -542,7 +542,7 @@ export default function HomePage() {
             {/* Left side - Content */}
             <div>
               <h2 className="text-5xl mb-6 text-[#1A1A1A] font-semibold tracking-tight leading-tight">
-                Built with professional standards in mind.
+                Built with professional standards in mind
               </h2>
               <p className="text-xl text-[#1A1A1A]/70 leading-relaxed mb-8">
                 Soradin is designed to support thoughtful, ethical estate planning prioritizing clarity, consent, and family peace of mind.
@@ -555,11 +555,11 @@ export default function HomePage() {
               </button>
             </div>
 
-            {/* Right side - Checklist Image */}
+            {/* Right side - Estate Planning Image */}
             <div className="relative w-full flex items-center justify-center">
               <Image
-                src="/checklist-image.jpg"
-                alt="Professional standards checklist"
+                src="/estate-planning-image.webp"
+                alt="Estate planning professionals"
                 width={800}
                 height={600}
                 className="w-full h-auto object-contain rounded-xl"
