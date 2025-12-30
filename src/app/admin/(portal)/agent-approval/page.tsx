@@ -15,6 +15,7 @@ type PendingAgent = {
   notification_cities: Array<{ city: string; province: string }> | null;
   created_at: string;
   approval_status: string | null;
+  approval_notes: string | null;
   ai_generated_bio: string | null;
   bio_approval_status: string | null;
   bio_last_updated: string | null;
