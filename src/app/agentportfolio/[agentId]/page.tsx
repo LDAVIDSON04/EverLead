@@ -195,7 +195,7 @@ function AgentProfileContent() {
               summary={agentData.summary} 
               fullBio={agentData.fullBio} 
             />
-            <TrustHighlights />
+            <TrustHighlights agentId={agentId} />
           </div>
 
           {/* Right Column - Sticky Booking Panel (5 columns) */}
