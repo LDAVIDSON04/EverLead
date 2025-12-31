@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { supabaseClient } from "@/lib/supabaseClient";
-import { CreditCard, Calendar, DollarSign, AlertCircle } from "lucide-react";
+import { CreditCard, Calendar, DollarSign, AlertCircle, FileText } from "lucide-react";
+import { StatementModal } from "@/components/billing/StatementModal";
 
 function Badge({ className = "", children, ...props }: React.HTMLAttributes<HTMLSpanElement>) {
   return (
@@ -23,6 +24,11 @@ export default function BillingPage() {
   const [currentMonthAppointments, setCurrentMonthAppointments] = useState(0);
   const [currentMonthTotal, setCurrentMonthTotal] = useState("0.00");
   const [pastPayments, setPastPayments] = useState<any[]>([]);
+  const [statementModalOpen, setStatementModalOpen] = useState(false);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
+  const [statementData, setStatementData] = useState<any>(null);
+  const [loadingStatement, setLoadingStatement] = useState(false);
 
   const loadBilling = async () => {
     try {
@@ -339,7 +345,95 @@ export default function BillingPage() {
             </div>
           </div>
         )}
+
+        {/* Monthly Statements Section */}
+        <div className="mt-6">
+          <h3 className="font-semibold mb-4">Monthly Statements</h3>
+          
+          {/* Year Selector */}
+          <div className="mb-4">
+            <label className="block text-sm text-gray-600 mb-2">Year</label>
+            <select
+              value={selectedYear}
+              onChange={(e) => {
+                setSelectedYear(parseInt(e.target.value));
+                setSelectedMonth(null);
+                setStatementModalOpen(false);
+              }}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800"
+            >
+              {Array.from({ length: 5 }, (_, i) => {
+                const year = new Date().getFullYear() - i;
+                return (
+                  <option key={year} value={year}>
+                    {year}
+                  </option>
+                );
+              })}
+            </select>
+          </div>
+
+          {/* Month Grid */}
+          <div className="grid grid-cols-4 gap-3">
+            {Array.from({ length: 12 }, (_, i) => {
+              const month = i + 1;
+              const monthNames = [
+                "January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"
+              ];
+              return (
+                <button
+                  key={month}
+                  onClick={async () => {
+                    setSelectedMonth(month);
+                    setStatementModalOpen(true);
+                    setLoadingStatement(true);
+                    
+                    try {
+                      const { data: { session } } = await supabaseClient.auth.getSession();
+                      if (!session?.access_token) return;
+
+                      const res = await fetch(`/api/agent/statements/${selectedYear}/${month}`, {
+                        headers: {
+                          Authorization: `Bearer ${session.access_token}`,
+                        },
+                      });
+
+                      if (res.ok) {
+                        const data = await res.json();
+                        setStatementData(data);
+                      } else {
+                        console.error("Failed to load statement");
+                        setStatementData(null);
+                      }
+                    } catch (err) {
+                      console.error("Error loading statement:", err);
+                      setStatementData(null);
+                    } finally {
+                      setLoadingStatement(false);
+                    }
+                  }}
+                  className="flex flex-col items-center justify-center p-4 border border-gray-200 rounded-lg hover:border-green-800 hover:bg-green-50 transition-colors"
+                >
+                  <FileText size={24} className="text-gray-600 mb-2" />
+                  <span className="text-sm font-medium text-gray-900">{monthNames[i].substring(0, 3)}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
       </div>
+
+      {/* Statement Modal */}
+      <StatementModal
+        open={statementModalOpen}
+        onClose={() => {
+          setStatementModalOpen(false);
+          setSelectedMonth(null);
+        }}
+        data={statementData}
+        loading={loadingStatement}
+      />
     </div>
   );
 }
