@@ -115,6 +115,24 @@ export async function sendConsumerBookingEmail({
       }, 30000);
     });
     
+    // Format time if confirmedAt is provided
+    let timeDisplay = timeWindowLabel;
+    if (confirmedAt) {
+      try {
+        const { DateTime } = await import('luxon');
+        const confirmedDate = DateTime.fromISO(confirmedAt, { zone: "utc" });
+        const localDate = confirmedDate.setZone("America/Vancouver");
+        const hours = localDate.hour;
+        const minutes = localDate.minute;
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        const displayHours = hours % 12 || 12;
+        const endHours = (hours + 1) % 12 || 12;
+        timeDisplay = `${displayHours}:${String(minutes).padStart(2, '0')} ${ampm} - ${endHours}:${String(minutes).padStart(2, '0')} ${ampm}`;
+      } catch (error) {
+        console.error('Error formatting time:', error);
+      }
+    }
+
     // Build email body
     const emailBody = {
       from: fromEmail,
@@ -132,49 +150,87 @@ export async function sendConsumerBookingEmail({
           <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 40px 20px;">
             <tr>
               <td align="center">
-                <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <table width="800" cellpadding="0" cellspacing="0" style="background-color: #ffffff; max-width: 800px;">
                   <!-- Header -->
                   <tr>
-                    <td style="background-color: #0D5C3D; padding: 30px; text-align: center;">
-                      <img src="${cleanSiteUrl}/logo.png" alt="Soradin" style="max-width: 150px; height: auto;" />
+                    <td style="background-color: #1a4d2e; padding: 24px;">
+                      <table width="100%" cellpadding="0" cellspacing="0">
+                        <tr>
+                          <td width="80" style="vertical-align: middle;">
+                            <table cellpadding="0" cellspacing="0" style="width: 80px; height: 80px; background-color: #ffffff; border-radius: 50%;">
+                              <tr>
+                                <td align="center" style="vertical-align: middle;">
+                                  <img src="${cleanSiteUrl}/logo%20-%20white.png" alt="Soradin Logo" width="60" height="60" style="display: block; max-width: 60px; max-height: 60px;" />
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                          <td style="vertical-align: middle; padding-left: 24px;">
+                            <h1 style="color: #ffffff; font-size: 32px; font-weight: bold; margin: 0;">SORADIN</h1>
+                          </td>
+                        </tr>
+                      </table>
                     </td>
                   </tr>
                   
                   <!-- Content -->
                   <tr>
-                    <td style="padding: 40px 30px;">
-                      <h1 style="color: #2a2a2a; font-size: 24px; margin: 0 0 20px 0;">Appointment Confirmed</h1>
-                      <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-                        Hi ${name || 'there'},
-                      </p>
-                      <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 0 0 30px 0;">
-                        Your appointment has been confirmed for <strong>${prettyDate}</strong> during the <strong>${timeWindowLabel}</strong>.
-                      </p>
+                    <td style="padding: 32px;">
+                      <h2 style="color: #000000; font-size: 24px; margin: 0 0 24px 0; font-weight: normal;">Appointment Confirmation</h2>
                       
-                      ${appointmentId ? `
-                      <div style="background-color: #f9f9f9; border-left: 4px solid #0D5C3D; padding: 15px 20px; margin: 30px 0;">
-                        <p style="color: #666666; font-size: 14px; margin: 0;">
-                          Need to cancel or reschedule? <a href="${cleanSiteUrl}/book/cancel?appointmentId=${appointmentId}" style="color: #0D5C3D; text-decoration: none;">Click here</a>
-                        </p>
-                      </div>
-                      ` : ''}
+                      <!-- Two Column Layout for Details -->
+                      <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 32px;">
+                        <tr>
+                          <td width="50%" style="padding-right: 12px; padding-bottom: 16px;">
+                            <table cellpadding="0" cellspacing="0" style="border-left: 4px solid #1a4d2e; padding-left: 16px;">
+                              <tr>
+                                <td style="padding-top: 8px; padding-bottom: 8px;">
+                                  <p style="color: #666666; font-size: 14px; margin: 0 0 4px 0;">Date</p>
+                                  <p style="color: #000000; font-size: 16px; margin: 0; font-weight: normal;">${prettyDate}</p>
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                          <td width="50%" style="padding-left: 12px; padding-bottom: 16px;">
+                            <table cellpadding="0" cellspacing="0" style="border-left: 4px solid #1a4d2e; padding-left: 16px;">
+                              <tr>
+                                <td style="padding-top: 8px; padding-bottom: 8px;">
+                                  <p style="color: #666666; font-size: 14px; margin: 0 0 4px 0;">Time</p>
+                                  <p style="color: #000000; font-size: 16px; margin: 0; font-weight: normal;">${timeDisplay}</p>
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                        </tr>
+                      </table>
                       
-                      <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 30px 0 0 0;">
-                        We look forward to meeting with you.
-                      </p>
-                      <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 20px 0 0 0;">
-                        Best regards,<br>
-                        The Soradin Team
-                      </p>
+                      <!-- Additional Message Box -->
+                      <table width="100%" cellpadding="0" cellspacing="0" style="margin-top: 24px;">
+                        <tr>
+                          <td style="padding: 16px; background-color: #f3f4f6; border: 1px solid #e5e7eb;">
+                            <p style="color: #374151; font-size: 16px; margin: 0; line-height: 1.5;">
+                              Please arrive 10 minutes before your scheduled appointment time. 
+                              ${appointmentId ? `If you need to reschedule or cancel, please click this link: <a href="${cleanSiteUrl}/book/cancel?appointmentId=${appointmentId}" style="color: #1a4d2e; text-decoration: underline;">Cancel Or Reschedule Appointment</a>` : ''}
+                            </p>
+                          </td>
+                        </tr>
+                      </table>
                     </td>
                   </tr>
                   
                   <!-- Footer -->
                   <tr>
-                    <td style="background-color: #f9f9f9; padding: 20px 30px; text-align: center; border-top: 1px solid #e0e0e0;">
-                      <p style="color: #999999; font-size: 12px; margin: 0;">
-                        © ${new Date().getFullYear()} Soradin. All rights reserved.
-                      </p>
+                    <td style="background-color: #000000; padding: 16px;">
+                      <table width="100%" cellpadding="0" cellspacing="0">
+                        <tr>
+                          <td style="color: #ffffff; font-size: 12px;">
+                            © ${new Date().getFullYear()} Soradin. All rights reserved.
+                          </td>
+                          <td align="right" style="color: #9ca3af; font-size: 12px;">
+                            This is an automated message, please do not reply.
+                          </td>
+                        </tr>
+                      </table>
                     </td>
                   </tr>
                 </table>
@@ -293,7 +349,8 @@ export async function sendAgentNewAppointmentEmail({
       const minutes = localDate.minute;
       const ampm = hours >= 12 ? 'PM' : 'AM';
       const displayHours = hours % 12 || 12;
-      timeDisplay = `${displayHours}:${String(minutes).padStart(2, '0')} ${ampm}`;
+      const endHours = (hours + 1) % 12 || 12;
+      timeDisplay = `${displayHours}:${String(minutes).padStart(2, '0')} ${ampm} - ${endHours}:${String(minutes).padStart(2, '0')} ${ampm}`;
     } catch (error) {
       console.error('Error formatting time:', error);
     }
@@ -333,41 +390,129 @@ export async function sendAgentNewAppointmentEmail({
           <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 40px 20px;">
             <tr>
               <td align="center">
-                <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <table width="800" cellpadding="0" cellspacing="0" style="background-color: #ffffff; max-width: 800px;">
+                  <!-- Header -->
                   <tr>
-                    <td style="background-color: #0D5C3D; padding: 30px; text-align: center;">
-                      <img src="${cleanSiteUrl}/logo.png" alt="Soradin" style="max-width: 150px; height: auto;" />
+                    <td style="background-color: #1a4d2e; padding: 24px;">
+                      <table width="100%" cellpadding="0" cellspacing="0">
+                        <tr>
+                          <td width="80" style="vertical-align: middle;">
+                            <table cellpadding="0" cellspacing="0" style="width: 80px; height: 80px; background-color: #ffffff; border-radius: 50%;">
+                              <tr>
+                                <td align="center" style="vertical-align: middle;">
+                                  <img src="${cleanSiteUrl}/logo%20-%20white.png" alt="Soradin Logo" width="60" height="60" style="display: block; max-width: 60px; max-height: 60px;" />
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                          <td style="vertical-align: middle; padding-left: 24px;">
+                            <h1 style="color: #ffffff; font-size: 32px; font-weight: bold; margin: 0;">SORADIN</h1>
+                          </td>
+                        </tr>
+                      </table>
                     </td>
                   </tr>
+                  
+                  <!-- Content -->
                   <tr>
-                    <td style="padding: 40px 30px;">
-                      <h1 style="color: #2a2a2a; font-size: 24px; margin: 0 0 20px 0;">New Appointment Scheduled</h1>
-                      <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-                        Hi ${agentName || 'there'},
-                      </p>
-                      <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 0 0 30px 0;">
-                        You have a new appointment scheduled:
-                      </p>
-                      <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                        <p style="color: #2a2a2a; font-size: 16px; margin: 8px 0;"><strong>Client:</strong> ${consumerName || 'Not specified'}</p>
-                        <p style="color: #2a2a2a; font-size: 16px; margin: 8px 0;"><strong>Date:</strong> ${prettyDate}</p>
-                        <p style="color: #2a2a2a; font-size: 16px; margin: 8px 0;"><strong>Time:</strong> ${timeDisplay}</p>
-                        ${locationAddress ? `<p style="color: #2a2a2a; font-size: 16px; margin: 8px 0;"><strong>Location:</strong> ${locationAddress}</p>` : ''}
-                        ${city || province ? `<p style="color: #2a2a2a; font-size: 16px; margin: 8px 0;"><strong>Area:</strong> ${[city, province].filter(Boolean).join(', ')}</p>` : ''}
-                        ${serviceType ? `<p style="color: #2a2a2a; font-size: 16px; margin: 8px 0;"><strong>Service:</strong> ${serviceType}</p>` : ''}
-                        ${clientEmail ? `<p style="color: #2a2a2a; font-size: 16px; margin: 8px 0;"><strong>Client Email:</strong> ${clientEmail}</p>` : ''}
-                      </div>
-                      <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 30px 0 0 0;">
-                        Best regards,<br>
-                        The Soradin Team
-                      </p>
+                    <td style="padding: 32px;">
+                      <h2 style="color: #000000; font-size: 24px; margin: 0 0 24px 0; font-weight: normal;">New Appointment Scheduled</h2>
+                      
+                      <!-- Two Column Layout for Details -->
+                      <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 32px;">
+                        <tr>
+                          <td width="50%" style="padding-right: 12px; padding-bottom: 16px;">
+                            <table cellpadding="0" cellspacing="0" style="border-left: 4px solid #1a4d2e; padding-left: 16px;">
+                              <tr>
+                                <td style="padding-top: 8px; padding-bottom: 8px;">
+                                  <p style="color: #666666; font-size: 14px; margin: 0 0 4px 0;">Date</p>
+                                  <p style="color: #000000; font-size: 16px; margin: 0; font-weight: normal;">${prettyDate}</p>
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                          <td width="50%" style="padding-left: 12px; padding-bottom: 16px;">
+                            <table cellpadding="0" cellspacing="0" style="border-left: 4px solid #1a4d2e; padding-left: 16px;">
+                              <tr>
+                                <td style="padding-top: 8px; padding-bottom: 8px;">
+                                  <p style="color: #666666; font-size: 14px; margin: 0 0 4px 0;">Time</p>
+                                  <p style="color: #000000; font-size: 16px; margin: 0; font-weight: normal;">${timeDisplay}</p>
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                        </tr>
+                        ${locationAddress ? `
+                        <tr>
+                          <td width="50%" style="padding-right: 12px; padding-bottom: 16px;">
+                            <table cellpadding="0" cellspacing="0" style="border-left: 4px solid #1a4d2e; padding-left: 16px;">
+                              <tr>
+                                <td style="padding-top: 8px; padding-bottom: 8px;">
+                                  <p style="color: #666666; font-size: 14px; margin: 0 0 4px 0;">Location</p>
+                                  <p style="color: #000000; font-size: 16px; margin: 0; font-weight: normal;">${locationAddress}</p>
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                          <td width="50%" style="padding-left: 12px; padding-bottom: 16px;"></td>
+                        </tr>
+                        ` : ''}
+                        ${serviceType ? `
+                        <tr>
+                          <td width="50%" style="padding-right: 12px; padding-bottom: 16px;">
+                            <table cellpadding="0" cellspacing="0" style="border-left: 4px solid #1a4d2e; padding-left: 16px;">
+                              <tr>
+                                <td style="padding-top: 8px; padding-bottom: 8px;">
+                                  <p style="color: #666666; font-size: 14px; margin: 0 0 4px 0;">Service</p>
+                                  <p style="color: #000000; font-size: 16px; margin: 0; font-weight: normal;">${serviceType}</p>
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                          <td width="50%" style="padding-left: 12px; padding-bottom: 16px;"></td>
+                        </tr>
+                        ` : ''}
+                        <tr>
+                          <td width="50%" style="padding-right: 12px; padding-bottom: 16px;">
+                            <table cellpadding="0" cellspacing="0" style="border-left: 4px solid #1a4d2e; padding-left: 16px;">
+                              <tr>
+                                <td style="padding-top: 8px; padding-bottom: 8px;">
+                                  <p style="color: #666666; font-size: 14px; margin: 0 0 4px 0;">With</p>
+                                  <p style="color: #000000; font-size: 16px; margin: 0; font-weight: normal;">${consumerName || 'Client'}</p>
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                          ${clientEmail ? `
+                          <td width="50%" style="padding-left: 12px; padding-bottom: 16px;">
+                            <table cellpadding="0" cellspacing="0" style="border-left: 4px solid #1a4d2e; padding-left: 16px;">
+                              <tr>
+                                <td style="padding-top: 8px; padding-bottom: 8px;">
+                                  <p style="color: #666666; font-size: 14px; margin: 0 0 4px 0;">Contact</p>
+                                  <p style="color: #1a4d2e; font-size: 16px; margin: 0; font-weight: normal;">${clientEmail}</p>
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                          ` : '<td width="50%" style="padding-left: 12px; padding-bottom: 16px;"></td>'}
+                        </tr>
+                      </table>
                     </td>
                   </tr>
+                  
+                  <!-- Footer -->
                   <tr>
-                    <td style="background-color: #f9f9f9; padding: 20px 30px; text-align: center; border-top: 1px solid #e0e0e0;">
-                      <p style="color: #999999; font-size: 12px; margin: 0;">
-                        © ${new Date().getFullYear()} Soradin. All rights reserved.
-                      </p>
+                    <td style="background-color: #000000; padding: 16px;">
+                      <table width="100%" cellpadding="0" cellspacing="0">
+                        <tr>
+                          <td style="color: #ffffff; font-size: 12px;">
+                            © ${new Date().getFullYear()} Soradin. All rights reserved.
+                          </td>
+                          <td align="right" style="color: #9ca3af; font-size: 12px;">
+                            This is an automated message, please do not reply.
+                          </td>
+                        </tr>
+                      </table>
                     </td>
                   </tr>
                 </table>
@@ -485,37 +630,87 @@ export async function sendAgentCancellationEmail({
           <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 40px 20px;">
             <tr>
               <td align="center">
-                <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <table width="800" cellpadding="0" cellspacing="0" style="background-color: #ffffff; max-width: 800px;">
+                  <!-- Header -->
                   <tr>
-                    <td style="background-color: #0D5C3D; padding: 30px; text-align: center;">
-                      <img src="${cleanSiteUrl}/logo.png" alt="Soradin" style="max-width: 150px; height: auto;" />
+                    <td style="background-color: #1a4d2e; padding: 24px;">
+                      <table width="100%" cellpadding="0" cellspacing="0">
+                        <tr>
+                          <td width="80" style="vertical-align: middle;">
+                            <table cellpadding="0" cellspacing="0" style="width: 80px; height: 80px; background-color: #ffffff; border-radius: 50%;">
+                              <tr>
+                                <td align="center" style="vertical-align: middle;">
+                                  <img src="${cleanSiteUrl}/logo%20-%20white.png" alt="Soradin Logo" width="60" height="60" style="display: block; max-width: 60px; max-height: 60px;" />
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                          <td style="vertical-align: middle; padding-left: 24px;">
+                            <h1 style="color: #ffffff; font-size: 32px; font-weight: bold; margin: 0;">SORADIN</h1>
+                          </td>
+                        </tr>
+                      </table>
                     </td>
                   </tr>
+                  
+                  <!-- Content -->
                   <tr>
-                    <td style="padding: 40px 30px;">
-                      <h1 style="color: #2a2a2a; font-size: 24px; margin: 0 0 20px 0;">Appointment Cancelled</h1>
-                      <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-                        Hi ${agentName || 'there'},
-                      </p>
-                      <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 0 0 30px 0;">
-                        The following appointment has been cancelled:
-                      </p>
-                      <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                        <p style="color: #2a2a2a; font-size: 16px; margin: 8px 0;"><strong>Client:</strong> ${consumerName || 'Not specified'}</p>
-                        <p style="color: #2a2a2a; font-size: 16px; margin: 8px 0;"><strong>Date:</strong> ${prettyDate}</p>
-                        <p style="color: #2a2a2a; font-size: 16px; margin: 8px 0;"><strong>Time:</strong> ${timeWindowLabel}</p>
-                      </div>
-                      <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 30px 0 0 0;">
-                        Best regards,<br>
-                        The Soradin Team
-                      </p>
+                    <td style="padding: 32px;">
+                      <h2 style="color: #000000; font-size: 24px; margin: 0 0 24px 0; font-weight: normal;">Appointment Cancelled</h2>
+                      
+                      <!-- Two Column Layout for Details -->
+                      <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 32px;">
+                        <tr>
+                          <td width="50%" style="padding-right: 12px; padding-bottom: 16px;">
+                            <table cellpadding="0" cellspacing="0" style="border-left: 4px solid #1a4d2e; padding-left: 16px;">
+                              <tr>
+                                <td style="padding-top: 8px; padding-bottom: 8px;">
+                                  <p style="color: #666666; font-size: 14px; margin: 0 0 4px 0;">Date</p>
+                                  <p style="color: #000000; font-size: 16px; margin: 0; font-weight: normal;">${prettyDate}</p>
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                          <td width="50%" style="padding-left: 12px; padding-bottom: 16px;">
+                            <table cellpadding="0" cellspacing="0" style="border-left: 4px solid #1a4d2e; padding-left: 16px;">
+                              <tr>
+                                <td style="padding-top: 8px; padding-bottom: 8px;">
+                                  <p style="color: #666666; font-size: 14px; margin: 0 0 4px 0;">Time</p>
+                                  <p style="color: #000000; font-size: 16px; margin: 0; font-weight: normal;">${timeWindowLabel}</p>
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td width="50%" style="padding-right: 12px; padding-bottom: 16px;">
+                            <table cellpadding="0" cellspacing="0" style="border-left: 4px solid #1a4d2e; padding-left: 16px;">
+                              <tr>
+                                <td style="padding-top: 8px; padding-bottom: 8px;">
+                                  <p style="color: #666666; font-size: 14px; margin: 0 0 4px 0;">With</p>
+                                  <p style="color: #000000; font-size: 16px; margin: 0; font-weight: normal;">${consumerName || 'Client'}</p>
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                        </tr>
+                      </table>
                     </td>
                   </tr>
+                  
+                  <!-- Footer -->
                   <tr>
-                    <td style="background-color: #f9f9f9; padding: 20px 30px; text-align: center; border-top: 1px solid #e0e0e0;">
-                      <p style="color: #999999; font-size: 12px; margin: 0;">
-                        © ${new Date().getFullYear()} Soradin. All rights reserved.
-                      </p>
+                    <td style="background-color: #000000; padding: 16px;">
+                      <table width="100%" cellpadding="0" cellspacing="0">
+                        <tr>
+                          <td style="color: #ffffff; font-size: 12px;">
+                            © ${new Date().getFullYear()} Soradin. All rights reserved.
+                          </td>
+                          <td align="right" style="color: #9ca3af; font-size: 12px;">
+                            This is an automated message, please do not reply.
+                          </td>
+                        </tr>
+                      </table>
                     </td>
                   </tr>
                 </table>
@@ -633,40 +828,98 @@ export async function sendAgentRebookingEmail({
           <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 40px 20px;">
             <tr>
               <td align="center">
-                <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <table width="800" cellpadding="0" cellspacing="0" style="background-color: #ffffff; max-width: 800px;">
+                  <!-- Header -->
                   <tr>
-                    <td style="background-color: #0D5C3D; padding: 30px; text-align: center;">
-                      <img src="${cleanSiteUrl}/logo.png" alt="Soradin" style="max-width: 150px; height: auto;" />
+                    <td style="background-color: #1a4d2e; padding: 24px;">
+                      <table width="100%" cellpadding="0" cellspacing="0">
+                        <tr>
+                          <td width="80" style="vertical-align: middle;">
+                            <table cellpadding="0" cellspacing="0" style="width: 80px; height: 80px; background-color: #ffffff; border-radius: 50%;">
+                              <tr>
+                                <td align="center" style="vertical-align: middle;">
+                                  <img src="${cleanSiteUrl}/logo%20-%20white.png" alt="Soradin Logo" width="60" height="60" style="display: block; max-width: 60px; max-height: 60px;" />
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                          <td style="vertical-align: middle; padding-left: 24px;">
+                            <h1 style="color: #ffffff; font-size: 32px; font-weight: bold; margin: 0;">SORADIN</h1>
+                          </td>
+                        </tr>
+                      </table>
                     </td>
                   </tr>
+                  
+                  <!-- Content -->
                   <tr>
-                    <td style="padding: 40px 30px;">
-                      <h1 style="color: #2a2a2a; font-size: 24px; margin: 0 0 20px 0;">Appointment Reschedule Request</h1>
-                      <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-                        Hi ${agentName || 'there'},
-                      </p>
-                      <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 0 0 30px 0;">
-                        ${consumerName || 'A client'} has requested to reschedule their appointment:
-                      </p>
-                      <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                        <p style="color: #2a2a2a; font-size: 16px; margin: 8px 0;"><strong>Client:</strong> ${consumerName || 'Not specified'}</p>
-                        <p style="color: #2a2a2a; font-size: 16px; margin: 8px 0;"><strong>Original Date:</strong> ${prettyDate}</p>
-                        <p style="color: #2a2a2a; font-size: 16px; margin: 8px 0;"><strong>Original Time:</strong> ${timeWindowLabel}</p>
-                      </div>
-                      <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 30px 0 0 0;">
-                        They will be selecting a new time slot. Please check your calendar for the updated appointment.
-                      </p>
-                      <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 20px 0 0 0;">
-                        Best regards,<br>
-                        The Soradin Team
-                      </p>
+                    <td style="padding: 32px;">
+                      <h2 style="color: #000000; font-size: 24px; margin: 0 0 24px 0; font-weight: normal;">Appointment Reschedule Request</h2>
+                      
+                      <!-- Two Column Layout for Details -->
+                      <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 32px;">
+                        <tr>
+                          <td width="50%" style="padding-right: 12px; padding-bottom: 16px;">
+                            <table cellpadding="0" cellspacing="0" style="border-left: 4px solid #1a4d2e; padding-left: 16px;">
+                              <tr>
+                                <td style="padding-top: 8px; padding-bottom: 8px;">
+                                  <p style="color: #666666; font-size: 14px; margin: 0 0 4px 0;">Original Date</p>
+                                  <p style="color: #000000; font-size: 16px; margin: 0; font-weight: normal;">${prettyDate}</p>
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                          <td width="50%" style="padding-left: 12px; padding-bottom: 16px;">
+                            <table cellpadding="0" cellspacing="0" style="border-left: 4px solid #1a4d2e; padding-left: 16px;">
+                              <tr>
+                                <td style="padding-top: 8px; padding-bottom: 8px;">
+                                  <p style="color: #666666; font-size: 14px; margin: 0 0 4px 0;">Original Time</p>
+                                  <p style="color: #000000; font-size: 16px; margin: 0; font-weight: normal;">${timeWindowLabel}</p>
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td width="50%" style="padding-right: 12px; padding-bottom: 16px;">
+                            <table cellpadding="0" cellspacing="0" style="border-left: 4px solid #1a4d2e; padding-left: 16px;">
+                              <tr>
+                                <td style="padding-top: 8px; padding-bottom: 8px;">
+                                  <p style="color: #666666; font-size: 14px; margin: 0 0 4px 0;">With</p>
+                                  <p style="color: #000000; font-size: 16px; margin: 0; font-weight: normal;">${consumerName || 'Client'}</p>
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                        </tr>
+                      </table>
+                      
+                      <!-- Additional Message Box -->
+                      <table width="100%" cellpadding="0" cellspacing="0" style="margin-top: 24px;">
+                        <tr>
+                          <td style="padding: 16px; background-color: #f3f4f6; border: 1px solid #e5e7eb;">
+                            <p style="color: #374151; font-size: 16px; margin: 0; line-height: 1.5;">
+                              They will be selecting a new time slot. Please check your calendar for the updated appointment.
+                            </p>
+                          </td>
+                        </tr>
+                      </table>
                     </td>
                   </tr>
+                  
+                  <!-- Footer -->
                   <tr>
-                    <td style="background-color: #f9f9f9; padding: 20px 30px; text-align: center; border-top: 1px solid #e0e0e0;">
-                      <p style="color: #999999; font-size: 12px; margin: 0;">
-                        © ${new Date().getFullYear()} Soradin. All rights reserved.
-                      </p>
+                    <td style="background-color: #000000; padding: 16px;">
+                      <table width="100%" cellpadding="0" cellspacing="0">
+                        <tr>
+                          <td style="color: #ffffff; font-size: 12px;">
+                            © ${new Date().getFullYear()} Soradin. All rights reserved.
+                          </td>
+                          <td align="right" style="color: #9ca3af; font-size: 12px;">
+                            This is an automated message, please do not reply.
+                          </td>
+                        </tr>
+                      </table>
                     </td>
                   </tr>
                 </table>
@@ -775,43 +1028,82 @@ export async function sendReviewFollowUpEmail({
           <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 40px 20px;">
             <tr>
               <td align="center">
-                <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <table width="800" cellpadding="0" cellspacing="0" style="background-color: #ffffff; max-width: 800px;">
+                  <!-- Header -->
                   <tr>
-                    <td style="background-color: #0D5C3D; padding: 30px; text-align: center;">
-                      <img src="${cleanSiteUrl}/logo.png" alt="Soradin" style="max-width: 150px; height: auto;" />
+                    <td style="background-color: #1a4d2e; padding: 24px;">
+                      <table width="100%" cellpadding="0" cellspacing="0">
+                        <tr>
+                          <td width="80" style="vertical-align: middle;">
+                            <table cellpadding="0" cellspacing="0" style="width: 80px; height: 80px; background-color: #ffffff; border-radius: 50%;">
+                              <tr>
+                                <td align="center" style="vertical-align: middle;">
+                                  <img src="${cleanSiteUrl}/logo%20-%20white.png" alt="Soradin Logo" width="60" height="60" style="display: block; max-width: 60px; max-height: 60px;" />
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                          <td style="vertical-align: middle; padding-left: 24px;">
+                            <h1 style="color: #ffffff; font-size: 32px; font-weight: bold; margin: 0;">SORADIN</h1>
+                          </td>
+                        </tr>
+                      </table>
                     </td>
                   </tr>
+                  
+                  <!-- Content -->
                   <tr>
-                    <td style="padding: 40px 30px;">
-                      <h1 style="color: #2a2a2a; font-size: 24px; margin: 0 0 20px 0;">How was your appointment?</h1>
-                      <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-                        Hi ${familyName || 'there'},
-                      </p>
-                      <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 0 0 30px 0;">
-                        We hope your appointment with <strong>${agentName || 'your specialist'}</strong> went well. Your feedback helps us improve and helps other families find the right specialist.
-                      </p>
-                      <div style="text-align: center; margin: 30px 0;">
-                        <a href="${reviewUrl}" style="display: inline-block; background-color: #0D5C3D; color: #ffffff; padding: 15px 30px; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 600;">
-                          Share Your Experience
-                        </a>
-                      </div>
-                      <p style="color: #666666; font-size: 14px; line-height: 1.6; margin: 30px 0 0 0; text-align: center;">
-                        This link will expire in 30 days.
-                      </p>
-                      <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 30px 0 0 0;">
-                        Thank you for choosing Soradin.
-                      </p>
-                      <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 20px 0 0 0;">
-                        Best regards,<br>
-                        The Soradin Team
-                      </p>
+                    <td style="padding: 32px;">
+                      <h2 style="color: #000000; font-size: 24px; margin: 0 0 24px 0; font-weight: normal;">How was your appointment?</h2>
+                      
+                      <!-- Two Column Layout for Details -->
+                      <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 32px;">
+                        <tr>
+                          <td width="50%" style="padding-right: 12px; padding-bottom: 16px;">
+                            <table cellpadding="0" cellspacing="0" style="border-left: 4px solid #1a4d2e; padding-left: 16px;">
+                              <tr>
+                                <td style="padding-top: 8px; padding-bottom: 8px;">
+                                  <p style="color: #666666; font-size: 14px; margin: 0 0 4px 0;">With</p>
+                                  <p style="color: #000000; font-size: 16px; margin: 0; font-weight: normal;">${agentName || 'your specialist'}</p>
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                        </tr>
+                      </table>
+                      
+                      <!-- Additional Message Box -->
+                      <table width="100%" cellpadding="0" cellspacing="0" style="margin-top: 24px;">
+                        <tr>
+                          <td style="padding: 16px; background-color: #f3f4f6; border: 1px solid #e5e7eb;">
+                            <p style="color: #374151; font-size: 16px; margin: 0 0 16px 0; line-height: 1.5;">
+                              We hope your appointment went well. Your feedback helps us improve and helps other families find the right specialist.
+                            </p>
+                            <p style="color: #374151; font-size: 16px; margin: 0; line-height: 1.5;">
+                              <a href="${reviewUrl}" style="color: #1a4d2e; text-decoration: underline;">Share Your Experience</a>
+                            </p>
+                            <p style="color: #6b7280; font-size: 14px; margin: 16px 0 0 0; line-height: 1.5;">
+                              This link will expire in 30 days.
+                            </p>
+                          </td>
+                        </tr>
+                      </table>
                     </td>
                   </tr>
+                  
+                  <!-- Footer -->
                   <tr>
-                    <td style="background-color: #f9f9f9; padding: 20px 30px; text-align: center; border-top: 1px solid #e0e0e0;">
-                      <p style="color: #999999; font-size: 12px; margin: 0;">
-                        © ${new Date().getFullYear()} Soradin. All rights reserved.
-                      </p>
+                    <td style="background-color: #000000; padding: 16px;">
+                      <table width="100%" cellpadding="0" cellspacing="0">
+                        <tr>
+                          <td style="color: #ffffff; font-size: 12px;">
+                            © ${new Date().getFullYear()} Soradin. All rights reserved.
+                          </td>
+                          <td align="right" style="color: #9ca3af; font-size: 12px;">
+                            This is an automated message, please do not reply.
+                          </td>
+                        </tr>
+                      </table>
                     </td>
                   </tr>
                 </table>
@@ -921,60 +1213,103 @@ export async function sendPaymentDeclineEmail({
           <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 40px 20px;">
             <tr>
               <td align="center">
-                <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <table width="800" cellpadding="0" cellspacing="0" style="background-color: #ffffff; max-width: 800px;">
+                  <!-- Header -->
                   <tr>
-                    <td style="background-color: #dc2626; padding: 30px; text-align: center;">
-                      <img src="${cleanSiteUrl}/logo.png" alt="Soradin" style="max-width: 150px; height: auto;" />
+                    <td style="background-color: #1a4d2e; padding: 24px;">
+                      <table width="100%" cellpadding="0" cellspacing="0">
+                        <tr>
+                          <td width="80" style="vertical-align: middle;">
+                            <table cellpadding="0" cellspacing="0" style="width: 80px; height: 80px; background-color: #ffffff; border-radius: 50%;">
+                              <tr>
+                                <td align="center" style="vertical-align: middle;">
+                                  <img src="${cleanSiteUrl}/logo%20-%20white.png" alt="Soradin Logo" width="60" height="60" style="display: block; max-width: 60px; max-height: 60px;" />
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                          <td style="vertical-align: middle; padding-left: 24px;">
+                            <h1 style="color: #ffffff; font-size: 32px; font-weight: bold; margin: 0;">SORADIN</h1>
+                          </td>
+                        </tr>
+                      </table>
                     </td>
                   </tr>
+                  
+                  <!-- Content -->
                   <tr>
-                    <td style="padding: 40px 30px;">
-                      <h1 style="color: #2a2a2a; font-size: 24px; margin: 0 0 20px 0;">Payment Method Declined</h1>
-                      <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-                        Hi ${agentName || 'there'},
-                      </p>
-                      <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 0 0 30px 0;">
-                        We were unable to process the payment for an appointment booking. Your account has been temporarily paused, and you will not appear in search results until you update your payment method.
-                      </p>
+                    <td style="padding: 32px;">
+                      <h2 style="color: #000000; font-size: 24px; margin: 0 0 24px 0; font-weight: normal;">Payment Method Declined</h2>
                       
-                      <div style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 20px; border-radius: 4px; margin: 30px 0;">
-                        <p style="color: #856404; font-size: 16px; margin: 0 0 10px 0; font-weight: 600;">Appointment Details:</p>
-                        <p style="color: #856404; font-size: 14px; margin: 5px 0;"><strong>Amount:</strong> $${(amountCents / 100).toFixed(2)} CAD</p>
-                        <p style="color: #856404; font-size: 14px; margin: 5px 0;"><strong>Appointment ID:</strong> ${appointmentId}</p>
-                        ${declineReason ? `<p style="color: #856404; font-size: 14px; margin: 5px 0;"><strong>Reason:</strong> ${declineReason}</p>` : ''}
-                      </div>
+                      <!-- Two Column Layout for Details -->
+                      <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 32px;">
+                        <tr>
+                          <td width="50%" style="padding-right: 12px; padding-bottom: 16px;">
+                            <table cellpadding="0" cellspacing="0" style="border-left: 4px solid #1a4d2e; padding-left: 16px;">
+                              <tr>
+                                <td style="padding-top: 8px; padding-bottom: 8px;">
+                                  <p style="color: #666666; font-size: 14px; margin: 0 0 4px 0;">Amount</p>
+                                  <p style="color: #000000; font-size: 16px; margin: 0; font-weight: normal;">$${(amountCents / 100).toFixed(2)} CAD</p>
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                          <td width="50%" style="padding-left: 12px; padding-bottom: 16px;">
+                            <table cellpadding="0" cellspacing="0" style="border-left: 4px solid #1a4d2e; padding-left: 16px;">
+                              <tr>
+                                <td style="padding-top: 8px; padding-bottom: 8px;">
+                                  <p style="color: #666666; font-size: 14px; margin: 0 0 4px 0;">Appointment ID</p>
+                                  <p style="color: #000000; font-size: 16px; margin: 0; font-weight: normal;">${appointmentId}</p>
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                        </tr>
+                        ${declineReason ? `
+                        <tr>
+                          <td width="50%" style="padding-right: 12px; padding-bottom: 16px;">
+                            <table cellpadding="0" cellspacing="0" style="border-left: 4px solid #1a4d2e; padding-left: 16px;">
+                              <tr>
+                                <td style="padding-top: 8px; padding-bottom: 8px;">
+                                  <p style="color: #666666; font-size: 14px; margin: 0 0 4px 0;">Reason</p>
+                                  <p style="color: #000000; font-size: 16px; margin: 0; font-weight: normal;">${declineReason}</p>
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                        </tr>
+                        ` : ''}
+                      </table>
                       
-                      <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 30px 0 20px 0;">
-                        <strong>What you need to do:</strong>
-                      </p>
-                      <ol style="color: #666666; font-size: 16px; line-height: 1.8; margin: 0 0 30px 0; padding-left: 25px;">
-                        <li>Log in to your agent portal</li>
-                        <li>Go to the Billing section</li>
-                        <li>Update your payment method</li>
-                        <li>Once updated, we'll automatically charge the outstanding payment</li>
-                        <li>Your account will be reactivated and you'll appear in search results again</li>
-                      </ol>
-                      
-                      <div style="text-align: center; margin: 30px 0;">
-                        <a href="${billingUrl}" style="display: inline-block; background-color: #0D5C3D; color: #ffffff; padding: 15px 30px; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 600;">
-                          Update Payment Method
-                        </a>
-                      </div>
-                      
-                      <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 30px 0 0 0;">
-                        If you have any questions, please contact our support team.
-                      </p>
-                      <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 20px 0 0 0;">
-                        Best regards,<br>
-                        The Soradin Team
-                      </p>
+                      <!-- Additional Message Box -->
+                      <table width="100%" cellpadding="0" cellspacing="0" style="margin-top: 24px;">
+                        <tr>
+                          <td style="padding: 16px; background-color: #f3f4f6; border: 1px solid #e5e7eb;">
+                            <p style="color: #374151; font-size: 16px; margin: 0 0 16px 0; line-height: 1.5;">
+                              We were unable to process the payment for an appointment booking. Your account has been temporarily paused, and you will not appear in search results until you update your payment method.
+                            </p>
+                            <p style="color: #374151; font-size: 16px; margin: 0; line-height: 1.5;">
+                              Please <a href="${billingUrl}" style="color: #1a4d2e; text-decoration: underline;">update your payment method</a> to reactivate your account. Once updated, we'll automatically charge the outstanding payment and your account will be reactivated.
+                            </p>
+                          </td>
+                        </tr>
+                      </table>
                     </td>
                   </tr>
+                  
+                  <!-- Footer -->
                   <tr>
-                    <td style="background-color: #f9f9f9; padding: 20px 30px; text-align: center; border-top: 1px solid #e0e0e0;">
-                      <p style="color: #999999; font-size: 12px; margin: 0;">
-                        © ${new Date().getFullYear()} Soradin. All rights reserved.
-                      </p>
+                    <td style="background-color: #000000; padding: 16px;">
+                      <table width="100%" cellpadding="0" cellspacing="0">
+                        <tr>
+                          <td style="color: #ffffff; font-size: 12px;">
+                            © ${new Date().getFullYear()} Soradin. All rights reserved.
+                          </td>
+                          <td align="right" style="color: #9ca3af; font-size: 12px;">
+                            This is an automated message, please do not reply.
+                          </td>
+                        </tr>
+                      </table>
                     </td>
                   </tr>
                 </table>
