@@ -57,10 +57,20 @@ export async function GET(request: NextRequest) {
     const validLocations = Array.from(allLocationsSet);
 
     // Include availability data for all valid locations (both office locations and manually added)
+    // Also check case-insensitive matches to handle variations in city names
     const validAvailabilityByLocation: Record<string, any> = {};
     validLocations.forEach((city: string) => {
+      // Try exact match first
       if (existingAvailabilityByLocation[city]) {
         validAvailabilityByLocation[city] = existingAvailabilityByLocation[city];
+      } else {
+        // Try case-insensitive match
+        const matchingKey = Object.keys(existingAvailabilityByLocation).find(
+          key => key.toLowerCase() === city.toLowerCase()
+        );
+        if (matchingKey) {
+          validAvailabilityByLocation[city] = existingAvailabilityByLocation[matchingKey];
+        }
       }
     });
 
