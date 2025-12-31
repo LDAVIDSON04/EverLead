@@ -224,12 +224,12 @@ export default function HomePage() {
               <span className="text-sm md:text-2xl font-semibold text-[#1A1A1A] md:mt-0 -mt-1">Soradin</span>
             </Link>
 
-            {/* Navigation Links - Mobile: buttons, Desktop: hidden (shown in right side) */}
-            <div className="flex items-center gap-1.5 md:hidden">
-              <Link href="/what-is-pre-need-funeral-planning" className="px-2.5 py-1.5 bg-white border border-gray-300 rounded-lg text-xs text-[#1A1A1A] hover:bg-gray-50 hover:border-[#0C6F3C] transition-colors whitespace-nowrap">
+            {/* Navigation Links - Mobile only, next to logo */}
+            <div className="flex items-center gap-2 md:hidden">
+              <Link href="/what-is-pre-need-funeral-planning" className="text-xs text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors">
                 What is pre-need funeral planning?
               </Link>
-              <Link href="/learn-more-about-starting" className="px-2.5 py-1.5 bg-white border border-gray-300 rounded-lg text-xs text-[#1A1A1A] hover:bg-gray-50 hover:border-[#0C6F3C] transition-colors whitespace-nowrap">
+              <Link href="/learn-more-about-starting" className="text-xs text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors">
                 List your Specialty
               </Link>
             </div>
