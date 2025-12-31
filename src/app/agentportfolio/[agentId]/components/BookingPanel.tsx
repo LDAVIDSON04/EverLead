@@ -60,6 +60,52 @@ export function BookingPanel({ agentId }: BookingPanelProps) {
   const [loadingTimeSlots, setLoadingTimeSlots] = useState(false);
   const [agentInfo, setAgentInfo] = useState<any>(null);
 
+  // Helper function to fetch next available date for a location
+  const fetchNextAvailableDate = async (city: string): Promise<string> => {
+    try {
+      const today = new Date();
+      const startDate = today.toISOString().split("T")[0];
+      const endDate = new Date(today.getTime() + 60 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]; // 60 days ahead
+      
+      const res = await fetch(`/api/agents/availability?agentId=${agentId}&startDate=${startDate}&endDate=${endDate}&location=${encodeURIComponent(city)}`);
+      if (!res.ok) {
+        return 'Availability not set';
+      }
+      
+      const availabilityData: AvailabilityDay[] = await res.json();
+      const todayStr = startDate;
+      
+      // Find the first day with available slots
+      for (const day of availabilityData) {
+        if (day.slots && day.slots.length > 0) {
+          const dayDate = new Date(day.date + 'T00:00:00');
+          const todayDate = new Date(todayStr + 'T00:00:00');
+          const diffDays = Math.floor((dayDate.getTime() - todayDate.getTime()) / (1000 * 60 * 60 * 24));
+          
+          if (diffDays === 0) {
+            return 'Available today';
+          } else if (diffDays === 1) {
+            return 'Next available tomorrow';
+          } else if (diffDays === 2) {
+            return 'Next available in 2 days';
+          } else if (diffDays <= 7) {
+            const dayName = dayDate.toLocaleDateString('en-US', { weekday: 'long' });
+            return `Next available ${dayName}`;
+          } else {
+            const monthName = dayDate.toLocaleDateString('en-US', { month: 'short' });
+            const dayNum = dayDate.getDate();
+            return `Next available ${monthName} ${dayNum}`;
+          }
+        }
+      }
+      
+      return 'No availability';
+    } catch (err) {
+      console.error('Error fetching next available date:', err);
+      return 'Availability not set';
+    }
+  };
+
   // Fetch office locations from office_locations table
   useEffect(() => {
     const fetchOfficeLocations = async () => {
@@ -72,15 +118,21 @@ export function BookingPanel({ agentId }: BookingPanelProps) {
           .order('city', { ascending: true }); // Sort alphabetically by city
 
         if (!error && locations && locations.length > 0) {
-          const officeLocationsList: OfficeLocation[] = locations.map((loc: any) => ({
-            id: loc.id,
-            name: loc.name || `${loc.city}, ${loc.province}`,
-            address: loc.street_address 
-              ? `${loc.street_address}, ${loc.city}, ${loc.province}${loc.postal_code ? ` ${loc.postal_code}` : ''}`
-              : `${loc.city}, ${loc.province}`,
-            nextAvailable: 'Next available tomorrow',
-            city: loc.city, // Store city for matching with availability
-          }));
+          // Fetch next available date for each location
+          const officeLocationsList: OfficeLocation[] = await Promise.all(
+            locations.map(async (loc: any) => {
+              const nextAvailable = await fetchNextAvailableDate(loc.city);
+              return {
+                id: loc.id,
+                name: loc.name || `${loc.city}, ${loc.province}`,
+                address: loc.street_address 
+                  ? `${loc.street_address}, ${loc.city}, ${loc.province}${loc.postal_code ? ` ${loc.postal_code}` : ''}`
+                  : `${loc.city}, ${loc.province}`,
+                nextAvailable,
+                city: loc.city, // Store city for matching with availability
+              };
+            })
+          );
           
           setOfficeLocations(officeLocationsList);
           if (officeLocationsList.length > 0) {
@@ -114,41 +166,56 @@ export function BookingPanel({ agentId }: BookingPanelProps) {
         
         // Build locations from agent's availability settings
         if (availabilityLocations.length > 0) {
-          availabilityLocations.forEach((loc: string, index: number) => {
-            const address = business_street && business_city && business_province && business_zip
-              ? `${business_street}, ${business_city}, ${business_province} ${business_zip}`
-              : business_address || `${business_city || agent.agent_city || ''}, ${business_province || agent.agent_province || ''}`;
-            
-            locationsList.push({
-              id: String(index + 1),
-              name: `${agent.funeral_home || 'Office'} - ${loc}`,
-              address: address || `${loc}`,
-              nextAvailable: 'Next available tomorrow',
-              city: loc, // Store city for matching
-            });
-          });
+          const locationsWithAvailability = await Promise.all(
+            availabilityLocations.map(async (loc: string, index: number) => {
+              const address = business_street && business_city && business_province && business_zip
+                ? `${business_street}, ${business_city}, ${business_province} ${business_zip}`
+                : business_address || `${business_city || agent.agent_city || ''}, ${business_province || agent.agent_province || ''}`;
+              
+              const nextAvailable = await fetchNextAvailableDate(loc);
+              
+              return {
+                id: String(index + 1),
+                name: `${agent.funeral_home || 'Office'} - ${loc}`,
+                address: address || `${loc}`,
+                nextAvailable,
+                city: loc, // Store city for matching
+              };
+            })
+          );
+          
+          locationsList.push(...locationsWithAvailability);
         } else {
           // Default location
           const address = business_street && business_city && business_province && business_zip
             ? `${business_street}, ${business_city}, ${business_province} ${business_zip}`
             : business_address || `${agent.agent_city || ''}, ${agent.agent_province || ''}`;
           
+          const city = agent.agent_city || '';
+          const nextAvailable = city ? await fetchNextAvailableDate(city) : 'Availability not set';
+          
           locationsList.push({
             id: '1',
             name: agent.funeral_home || 'Main Office',
             address: address || 'Location not specified',
-            nextAvailable: 'Next available tomorrow',
-            city: agent.agent_city || '',
+            nextAvailable,
+            city,
           });
         }
         
-        setOfficeLocations(locationsList.length > 0 ? locationsList : [{
-          id: '1',
-          name: agent.funeral_home || 'Main Office',
-          address: `${agent.agent_city || ''}, ${agent.agent_province || ''}`,
-          nextAvailable: 'Next available tomorrow',
-          city: agent.agent_city || '',
-        }]);
+        if (locationsList.length === 0) {
+          const city = agent.agent_city || '';
+          const nextAvailable = city ? await fetchNextAvailableDate(city) : 'Availability not set';
+          locationsList.push({
+            id: '1',
+            name: agent.funeral_home || 'Main Office',
+            address: `${agent.agent_city || ''}, ${agent.agent_province || ''}`,
+            nextAvailable,
+            city,
+          });
+        }
+        
+        setOfficeLocations(locationsList);
       } catch (err) {
         console.error("Error fetching office locations:", err);
       }
