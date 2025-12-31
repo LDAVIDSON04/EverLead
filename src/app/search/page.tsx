@@ -6,7 +6,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Suspense, useState, useEffect } from "react";
-import { Search, Star, MapPin, Calendar, Clock, Stethoscope, Video, SlidersHorizontal, ChevronRight, X, ArrowLeft, Shield, ExternalLink } from "lucide-react";
+import { Search, Star, MapPin, Calendar, Clock, Stethoscope, Video, SlidersHorizontal, ChevronRight, X, ArrowLeft, Shield, ExternalLink, Menu } from "lucide-react";
 import { supabaseClient } from "@/lib/supabaseClient";
 import { BookingPanel } from "@/app/agentportfolio/[agentId]/components/BookingPanel";
 import { OfficeLocationMap } from "@/components/OfficeLocationMap";
@@ -136,6 +136,7 @@ function SearchResults() {
   const [portfolioLoading, setPortfolioLoading] = useState(false);
   const [portfolioReviews, setPortfolioReviews] = useState<any[]>([]);
   const [portfolioReviewsLoading, setPortfolioReviewsLoading] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
   
   // Debug: Log modal state changes
   useEffect(() => {
@@ -1213,9 +1214,91 @@ function SearchResults() {
         </div>
       )}
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
+      <header className="bg-white border-b-0 md:border-b border-gray-200 sticky top-0 z-50">
         <div className="max-w-[1200px] mx-auto px-4 py-4">
-          <div className="flex items-center gap-6">
+          {/* Mobile Header */}
+          <div className="flex md:hidden items-center gap-3">
+            {/* Logo and Soradin */}
+            <Link href="/" className="flex items-center gap-2 flex-shrink-0">
+              <Image
+                src="/Soradin.png"
+                alt="Soradin Logo"
+                width={40}
+                height={40}
+                className="h-10 w-10 object-contain"
+              />
+              <span className="text-xl font-semibold text-gray-900">Soradin</span>
+            </Link>
+
+            {/* City Search - Mobile only */}
+            <input
+              type="text"
+              placeholder="Location"
+              value={inputLocation}
+              onChange={(e) => setInputLocation(e.target.value)}
+              onBlur={(e) => {
+                setSearchLocation(inputLocation);
+                const params = new URLSearchParams();
+                if (inputQuery) params.set("q", inputQuery);
+                if (inputLocation) params.set("location", inputLocation);
+                if (inputService) params.set("service", inputService);
+                router.push(`/search?${params.toString()}`);
+              }}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  setSearchLocation(inputLocation);
+                  const params = new URLSearchParams();
+                  if (inputQuery) params.set("q", inputQuery);
+                  if (inputLocation) params.set("location", inputLocation);
+                  if (inputService) params.set("service", inputService);
+                  router.push(`/search?${params.toString()}`);
+                }
+              }}
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800 text-sm"
+            />
+
+            {/* Hamburger Menu Button */}
+            <button
+              onClick={() => setShowMobileMenu(!showMobileMenu)}
+              className="p-2 text-gray-700 hover:text-gray-900"
+            >
+              <Menu className="w-6 h-6" />
+            </button>
+          </div>
+
+          {/* Mobile Menu */}
+          {showMobileMenu && (
+            <div className="md:hidden border-t border-gray-200 mt-4 pt-4">
+              <form onSubmit={handleSearch} className="space-y-3">
+                <input
+                  type="text"
+                  placeholder="Service or specialist"
+                  value={inputQuery}
+                  onChange={(e) => setInputQuery(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800"
+                />
+                <input
+                  type="text"
+                  placeholder="Service type"
+                  value={inputService}
+                  onChange={(e) => setInputService(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800"
+                />
+                <button 
+                  type="submit"
+                  className="w-full bg-green-800 text-white px-6 py-2 rounded-lg hover:bg-green-900 transition-colors flex items-center justify-center gap-2"
+                  onClick={() => setShowMobileMenu(false)}
+                >
+                  <Search className="w-5 h-5" />
+                  Search
+                </button>
+              </form>
+            </div>
+          )}
+
+          {/* Desktop Header - Original Layout */}
+          <div className="hidden md:flex items-center gap-6">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2">
               <Image
@@ -1527,7 +1610,8 @@ function SearchResults() {
                             >
                               <div className="whitespace-pre-line leading-tight">{slot.date}</div>
                               <div className="text-xs mt-1 whitespace-pre-line">
-                                {hasSpots ? slot.spots + '\nappointments' : 'No\nappointments'}
+                                <span className="md:hidden">{hasSpots ? slot.spots + '\nappts' : 'No\nappts'}</span>
+                                <span className="hidden md:inline">{hasSpots ? slot.spots + '\nappointments' : 'No\nappointments'}</span>
                               </div>
                             </button>
                           );
