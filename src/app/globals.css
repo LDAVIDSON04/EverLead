@@ -47,7 +47,7 @@ a:hover {
 @media (min-width: 1520px) and (max-width: 1919px) {
   .arm-pointing-illustration {
     left: -170px !important;
-    bottom: -250px !important;
+    bottom: -225px !important;
     width: 1800px !important;
   }
 }
