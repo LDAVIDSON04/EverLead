@@ -52,6 +52,10 @@ export async function GET(request: NextRequest) {
     const locations = availabilityData.locations || [];
     const availabilityByLocation = availabilityData.availabilityByLocation || {};
     
+    console.log(`[ONBOARDING-STATUS] Agent ${agentId}: Checking availability. Locations: ${locations.length}, AvailabilityByLocation keys: ${Object.keys(availabilityByLocation).length}`);
+    console.log(`[ONBOARDING-STATUS] Agent ${agentId}: Locations: ${JSON.stringify(locations)}`);
+    console.log(`[ONBOARDING-STATUS] Agent ${agentId}: AvailabilityByLocation keys: ${JSON.stringify(Object.keys(availabilityByLocation))}`);
+    
     let hasAvailability = false;
     if (locations.length > 0 && Object.keys(availabilityByLocation).length > 0) {
       // Check if at least one location has at least one day enabled
@@ -63,12 +67,19 @@ export async function GET(request: NextRequest) {
           return dayData && dayData.enabled === true;
         });
       });
+      console.log(`[ONBOARDING-STATUS] Agent ${agentId}: Has availability with enabled days: ${hasAvailability}`);
+    } else {
+      console.log(`[ONBOARDING-STATUS] Agent ${agentId}: No availability data found (locations: ${locations.length}, availabilityByLocation: ${Object.keys(availabilityByLocation).length})`);
     }
+    
+    console.log(`[ONBOARDING-STATUS] Agent ${agentId}: Final hasAvailability: ${hasAvailability}`);
 
     // Check for payment method via Stripe
     // First, check if we have stripe_customer_id in metadata
     let hasPaymentMethod = false;
     let stripeCustomerId = (metadata as any)?.stripe_customer_id;
+    
+    console.log(`[ONBOARDING-STATUS] Agent ${agentId}: Checking payment method. Email: ${profile.email}, Stripe Customer ID in metadata: ${stripeCustomerId || 'NOT FOUND'}`);
     
     try {
       // Always try email lookup first to ensure we get the most up-to-date customer
@@ -82,6 +93,8 @@ export async function GET(request: NextRequest) {
           const customer = customers.data[0];
           stripeCustomerId = customer.id;
           
+          console.log(`[ONBOARDING-STATUS] Agent ${agentId}: Found Stripe customer by email: ${stripeCustomerId}`);
+          
           // Update metadata if we found a customer ID that wasn't stored
           if (!(metadata as any)?.stripe_customer_id && stripeCustomerId) {
             try {
@@ -94,6 +107,7 @@ export async function GET(request: NextRequest) {
                   },
                 })
                 .eq("id", agentId);
+              console.log(`[ONBOARDING-STATUS] Agent ${agentId}: Saved Stripe customer ID to metadata`);
             } catch (updateError) {
               console.error("Error updating stripe_customer_id in metadata:", updateError);
               // Non-fatal, continue
@@ -108,11 +122,15 @@ export async function GET(request: NextRequest) {
           });
 
           hasPaymentMethod = paymentMethods.data.length > 0;
+          console.log(`[ONBOARDING-STATUS] Agent ${agentId}: Payment methods found by email lookup: ${paymentMethods.data.length}, hasPaymentMethod: ${hasPaymentMethod}`);
+        } else {
+          console.log(`[ONBOARDING-STATUS] Agent ${agentId}: No Stripe customer found by email`);
         }
       }
       
       // If email lookup didn't find anything, try using stored stripe_customer_id
       if (!hasPaymentMethod && stripeCustomerId) {
+        console.log(`[ONBOARDING-STATUS] Agent ${agentId}: Trying stored Stripe customer ID: ${stripeCustomerId}`);
         const paymentMethods = await stripe.paymentMethods.list({
           customer: stripeCustomerId,
           type: 'card',
@@ -120,17 +138,24 @@ export async function GET(request: NextRequest) {
         });
 
         hasPaymentMethod = paymentMethods.data.length > 0;
+        console.log(`[ONBOARDING-STATUS] Agent ${agentId}: Payment methods found by stored ID: ${paymentMethods.data.length}, hasPaymentMethod: ${hasPaymentMethod}`);
       }
     } catch (stripeError: any) {
-      console.error("Error checking Stripe payment methods:", stripeError);
+      console.error(`[ONBOARDING-STATUS] Agent ${agentId}: Error checking Stripe payment methods:`, stripeError);
       // If Stripe check fails, assume no payment method (safer default)
       hasPaymentMethod = false;
     }
+    
+    console.log(`[ONBOARDING-STATUS] Agent ${agentId}: Final hasPaymentMethod: ${hasPaymentMethod}`);
 
     // CRITICAL FIX: If agent has both payment method AND availability, they are done with onboarding
     // Return needsOnboarding: false immediately - don't even check the flag
     // This ensures the modal NEVER shows once both requirements are met
+    console.log(`[ONBOARDING-STATUS] Agent ${agentId}: Evaluating onboarding status. hasPaymentMethod: ${hasPaymentMethod}, hasAvailability: ${hasAvailability}`);
+    
     if (hasPaymentMethod && hasAvailability) {
+      console.log(`[ONBOARDING-STATUS] Agent ${agentId}: BOTH CONDITIONS MET - marking as completed`);
+      
       // Auto-mark as completed in the database for future reference
       const onboardingCompleted = (metadata as any)?.onboarding_completed === true;
       if (!onboardingCompleted) {
@@ -144,15 +169,15 @@ export async function GET(request: NextRequest) {
               },
             })
             .eq("id", agentId);
-          console.log(`[ONBOARDING] Auto-marked onboarding as completed for agent ${agentId}`);
+          console.log(`[ONBOARDING-STATUS] Agent ${agentId}: Auto-marked onboarding as completed in database`);
         } catch (updateError) {
-          console.error("Error auto-marking onboarding as completed:", updateError);
+          console.error(`[ONBOARDING-STATUS] Agent ${agentId}: Error auto-marking onboarding as completed:`, updateError);
           // Non-fatal - we still return needsOnboarding: false below
         }
       }
       
       // CRITICAL: Return needsOnboarding: false immediately when both are present
-      console.log(`[ONBOARDING] Agent ${agentId} has both payment method and availability - returning needsOnboarding: false`);
+      console.log(`[ONBOARDING-STATUS] Agent ${agentId}: RETURNING needsOnboarding: false (has both payment and availability)`);
       return NextResponse.json({
         needsOnboarding: false,
         hasPaymentMethod: true,
@@ -160,6 +185,8 @@ export async function GET(request: NextRequest) {
         onboardingCompleted: true,
       });
     }
+    
+    console.log(`[ONBOARDING-STATUS] Agent ${agentId}: Conditions NOT met. hasPaymentMethod: ${hasPaymentMethod}, hasAvailability: ${hasAvailability}`);
 
     // If either is missing, needs onboarding
     const needsOnboarding = !hasPaymentMethod || !hasAvailability;
