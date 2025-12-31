@@ -1391,3 +1391,246 @@ export async function sendPaymentDeclineEmail({
     throw error;
   }
 }
+
+/**
+ * Send payment receipt email to agent when they are successfully charged
+ */
+export async function sendPaymentReceiptEmail({
+  to,
+  agentName,
+  appointmentId,
+  amountCents,
+  paymentIntentId,
+  consumerName,
+  appointmentDate,
+  appointmentTime,
+}: PaymentReceiptEmailArgs) {
+  if (!to) {
+    console.warn('sendPaymentReceiptEmail: No email address provided');
+    return;
+  }
+
+  const resendApiKey = process.env.RESEND_API_KEY;
+  const resendFromEmail = process.env.RESEND_FROM_EMAIL || 'Soradin <notifications@soradin.com>';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://soradin.com';
+
+  if (!resendApiKey) {
+    console.log('📧 sendPaymentReceiptEmail: RESEND_API_KEY not set, skipping email');
+    return;
+  }
+
+  let fromEmail = resendFromEmail;
+  if (fromEmail && !fromEmail.includes('<')) {
+    fromEmail = `Soradin <${fromEmail}>`;
+  } else if (fromEmail && fromEmail.includes('<')) {
+    const emailMatch = fromEmail.match(/<(.+@.+?)>/);
+    if (emailMatch) {
+      fromEmail = `Soradin <${emailMatch[1]}>`;
+    }
+  } else {
+    fromEmail = 'Soradin <notifications@soradin.com>';
+  }
+
+  try {
+    let cleanSiteUrl = (siteUrl || '').trim().replace(/\/+$/, '');
+    if (!cleanSiteUrl.startsWith('http')) {
+      cleanSiteUrl = `https://${cleanSiteUrl}`;
+    }
+
+    const emailBody = {
+      from: fromEmail,
+      to: [to],
+      subject: 'Payment Receipt - Appointment Booking',
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Payment Receipt</title>
+        </head>
+        <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f5f5f5;">
+          <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 40px 20px;">
+            <tr>
+              <td align="center">
+                <table width="800" cellpadding="0" cellspacing="0" style="background-color: #ffffff; max-width: 800px;">
+                  <!-- Header -->
+                  <tr>
+                    <td style="background-color: #1a4d2e; padding: 24px;">
+                      <table width="100%" cellpadding="0" cellspacing="0">
+                        <tr>
+                          <td width="80" style="vertical-align: middle;">
+                            <table cellpadding="0" cellspacing="0" style="width: 80px; height: 80px; background-color: #ffffff; border-radius: 50%;">
+                              <tr>
+                                <td align="center" style="vertical-align: middle;">
+                                  <img src="data:image/png;base64,${getLogoBase64()}" alt="Soradin Logo" width="60" height="60" style="display: block; max-width: 60px; max-height: 60px; border: 0; outline: none; text-decoration: none;" />
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                          <td style="vertical-align: middle; padding-left: 24px;">
+                            <h1 style="color: #ffffff; font-size: 32px; font-weight: bold; margin: 0;">SORADIN</h1>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                  
+                  <!-- Content -->
+                  <tr>
+                    <td style="padding: 32px;">
+                      <h2 style="color: #000000; font-size: 24px; margin: 0 0 24px 0; font-weight: normal;">Payment Receipt</h2>
+                      
+                      <!-- Two Column Layout for Details -->
+                      <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 32px;">
+                        <tr>
+                          <td width="50%" style="padding-right: 12px; padding-bottom: 16px;">
+                            <table cellpadding="0" cellspacing="0" style="border-left: 4px solid #1a4d2e; padding-left: 16px;">
+                              <tr>
+                                <td style="padding-top: 8px; padding-bottom: 8px;">
+                                  <p style="color: #666666; font-size: 14px; margin: 0 0 4px 0;">Amount Charged</p>
+                                  <p style="color: #000000; font-size: 16px; margin: 0; font-weight: normal;">$${(amountCents / 100).toFixed(2)} CAD</p>
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                          <td width="50%" style="padding-left: 12px; padding-bottom: 16px;">
+                            <table cellpadding="0" cellspacing="0" style="border-left: 4px solid #1a4d2e; padding-left: 16px;">
+                              <tr>
+                                <td style="padding-top: 8px; padding-bottom: 8px;">
+                                  <p style="color: #666666; font-size: 14px; margin: 0 0 4px 0;">Transaction ID</p>
+                                  <p style="color: #000000; font-size: 16px; margin: 0; font-weight: normal;">${paymentIntentId}</p>
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td width="50%" style="padding-right: 12px; padding-bottom: 16px;">
+                            <table cellpadding="0" cellspacing="0" style="border-left: 4px solid #1a4d2e; padding-left: 16px;">
+                              <tr>
+                                <td style="padding-top: 8px; padding-bottom: 8px;">
+                                  <p style="color: #666666; font-size: 14px; margin: 0 0 4px 0;">Appointment ID</p>
+                                  <p style="color: #000000; font-size: 16px; margin: 0; font-weight: normal;">${appointmentId}</p>
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                          ${consumerName ? `
+                          <td width="50%" style="padding-left: 12px; padding-bottom: 16px;">
+                            <table cellpadding="0" cellspacing="0" style="border-left: 4px solid #1a4d2e; padding-left: 16px;">
+                              <tr>
+                                <td style="padding-top: 8px; padding-bottom: 8px;">
+                                  <p style="color: #666666; font-size: 14px; margin: 0 0 4px 0;">Client</p>
+                                  <p style="color: #000000; font-size: 16px; margin: 0; font-weight: normal;">${consumerName}</p>
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                          ` : ''}
+                        </tr>
+                        ${appointmentDate || appointmentTime ? `
+                        <tr>
+                          ${appointmentDate ? `
+                          <td width="50%" style="padding-right: 12px; padding-bottom: 16px;">
+                            <table cellpadding="0" cellspacing="0" style="border-left: 4px solid #1a4d2e; padding-left: 16px;">
+                              <tr>
+                                <td style="padding-top: 8px; padding-bottom: 8px;">
+                                  <p style="color: #666666; font-size: 14px; margin: 0 0 4px 0;">Appointment Date</p>
+                                  <p style="color: #000000; font-size: 16px; margin: 0; font-weight: normal;">${appointmentDate}</p>
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                          ` : ''}
+                          ${appointmentTime ? `
+                          <td width="50%" style="padding-left: 12px; padding-bottom: 16px;">
+                            <table cellpadding="0" cellspacing="0" style="border-left: 4px solid #1a4d2e; padding-left: 16px;">
+                              <tr>
+                                <td style="padding-top: 8px; padding-bottom: 8px;">
+                                  <p style="color: #666666; font-size: 14px; margin: 0 0 4px 0;">Appointment Time</p>
+                                  <p style="color: #000000; font-size: 16px; margin: 0; font-weight: normal;">${appointmentTime}</p>
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                          ` : ''}
+                        </tr>
+                        ` : ''}
+                      </table>
+                      
+                      <!-- Info Box -->
+                      <table width="100%" cellpadding="0" cellspacing="0" style="margin-top: 24px;">
+                        <tr>
+                          <td style="padding: 16px; background-color: #f3f4f6; border: 1px solid #e5e7eb;">
+                            <p style="color: #374151; font-size: 16px; margin: 0; line-height: 1.5;">
+                              This is a receipt for the appointment booking fee that was charged to your payment method on file. This charge was processed immediately when the appointment was booked.
+                            </p>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                  
+                  <!-- Footer -->
+                  <tr>
+                    <td style="background-color: #000000; padding: 16px;">
+                      <table width="100%" cellpadding="0" cellspacing="0">
+                        <tr>
+                          <td style="color: #ffffff; font-size: 12px;">
+                            © ${new Date().getFullYear()} Soradin. All rights reserved.
+                          </td>
+                          <td align="right" style="color: #9ca3af; font-size: 12px;">
+                            This is an automated message, please do not reply.
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
+      `,
+    };
+
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${resendApiKey}`,
+      },
+      body: JSON.stringify(emailBody),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ Resend API error for payment receipt email:', {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorText,
+        to,
+      });
+      throw new Error(`Resend API error: ${response.status} ${response.statusText}`);
+    }
+
+    const result = await response.json();
+    console.log('✅ Payment receipt email sent successfully:', {
+      emailId: result.id,
+      to,
+      appointmentId,
+      paymentIntentId,
+    });
+    
+    return result;
+  } catch (error: any) {
+    console.error('❌ Error sending payment receipt email:', {
+      error: error.message,
+      stack: error.stack,
+      to,
+    });
+    throw error;
+  }
+}
