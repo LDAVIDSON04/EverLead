@@ -49,15 +49,9 @@ a:hover {
   height: auto;
 }
 
-/* Adjust arm positioning for larger screens (Windows laptops) - only affects screens 1280px and wider */
-@media (min-width: 1280px) and (min-height: 700px) {
-  .arm-pointing-illustration {
-    /* Check if screen is wider than typical Mac screens - adjust only for wider screens */
-  }
-}
-
-/* Windows laptops typically 1366px-1920px wide - adjust positioning */
-@media (min-width: 1366px) {
+/* Windows laptops - adjust positioning for screens wider than typical Mac screens */
+/* Using 1450px to avoid affecting most Mac screens (which are typically 1280-1440px) */
+@media (min-width: 1450px) {
   .arm-pointing-illustration {
     left: -80px;
     bottom: -60px;
