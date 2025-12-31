@@ -183,6 +183,34 @@ function BookingStep2Content() {
       value = formatted;
     }
     
+    // Auto-format phone number: (XXX) XXX-XXXX
+    if (field === "phone") {
+      // Remove all non-digit characters
+      const digitsOnly = value.replace(/\D/g, "");
+      
+      // Format with brackets and dash: (XXX) XXX-XXXX
+      let formatted = "";
+      if (digitsOnly.length > 0) {
+        formatted = "(" + digitsOnly.substring(0, 3);
+      }
+      if (digitsOnly.length >= 3) {
+        formatted += ")";
+      }
+      if (digitsOnly.length > 3) {
+        formatted += " " + digitsOnly.substring(3, 6);
+      }
+      if (digitsOnly.length > 6) {
+        formatted += "-" + digitsOnly.substring(6, 10);
+      }
+      
+      // Limit to 14 characters (XXX) XXX-XXXX
+      if (formatted.length > 14) {
+        formatted = formatted.substring(0, 14);
+      }
+      
+      value = formatted;
+    }
+    
     setFormData((prev) => ({ ...prev, [field]: value }));
     if (formErrors[field]) {
       setFormErrors((prev) => {
