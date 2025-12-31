@@ -18,6 +18,7 @@ function BookingStep2Content() {
   const endsAt = searchParams.get("endsAt") || "";
   const date = searchParams.get("date") || "";
   const searchedCity = searchParams.get("city") || ""; // City from search (e.g., Penticton)
+  const officeLocationName = searchParams.get("officeLocation") || ""; // Office location name
   const rescheduleAppointmentId = searchParams.get("rescheduleAppointmentId") || null; // ID of appointment being rescheduled
 
   const [agentInfo, setAgentInfo] = useState<{
@@ -37,8 +38,11 @@ function BookingStep2Content() {
     legalFirstName: "",
     legalLastName: "",
     dateOfBirth: "",
-    sex: "",
+    phone: "",
+    city: "",
   });
+
+  const [selectedOfficeLocation, setSelectedOfficeLocation] = useState<string>("");
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [selectedService, setSelectedService] = useState<string>("");
@@ -46,7 +50,7 @@ function BookingStep2Content() {
   const [isBooking, setIsBooking] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch agent info
+  // Fetch agent info and office locations
   useEffect(() => {
     async function loadAgent() {
       if (!agentId) return;
@@ -63,6 +67,38 @@ function BookingStep2Content() {
           console.error("Error loading agent:", error);
         } else if (data) {
           setAgentInfo(data);
+          
+          // Set default city from searched city or agent city
+          if (!formData.city) {
+            setFormData(prev => ({ ...prev, city: searchedCity || data.agent_city || "" }));
+          }
+        }
+
+        // Load office locations
+        if (officeLocationName) {
+          setSelectedOfficeLocation(officeLocationName);
+        } else {
+          // Try to fetch office locations to show the selected one
+          const { data: officeLocations } = await supabaseClient
+            .from("office_locations")
+            .select("name, city, street_address, province, postal_code")
+            .eq("agent_id", agentId)
+            .order("city", { ascending: true });
+
+          if (officeLocations && officeLocations.length > 0) {
+            // If we have a searched city, try to find matching office location
+            const matchingLocation = searchedCity 
+              ? officeLocations.find((loc: any) => loc.city?.toLowerCase() === searchedCity.toLowerCase())
+              : officeLocations[0];
+            
+            if (matchingLocation) {
+              const locationDisplay = matchingLocation.name || 
+                (matchingLocation.street_address 
+                  ? `${matchingLocation.street_address}, ${matchingLocation.city}, ${matchingLocation.province}${matchingLocation.postal_code ? ` ${matchingLocation.postal_code}` : ''}`
+                  : `${matchingLocation.city}, ${matchingLocation.province}`);
+              setSelectedOfficeLocation(locationDisplay);
+            }
+          }
         }
       } catch (err) {
         console.error("Error loading agent:", err);
@@ -71,7 +107,7 @@ function BookingStep2Content() {
       }
     }
     loadAgent();
-  }, [agentId]);
+  }, [agentId, searchedCity, officeLocationName]);
 
   const formatDate = (dateStr: string): string => {
     if (!dateStr) return "";
@@ -159,8 +195,12 @@ function BookingStep2Content() {
       }
     }
 
-    if (!formData.sex) {
-      errors.sex = "Please select your sex";
+    if (!formData.phone.trim()) {
+      errors.phone = "Telephone number is required";
+    }
+
+    if (!formData.city.trim()) {
+      errors.city = "City is required";
     }
 
     if (!selectedService) {
@@ -202,12 +242,11 @@ function BookingStep2Content() {
           firstName: formData.legalFirstName,
           lastName: formData.legalLastName,
           email: formData.email,
-          phone: null, // Optional for now
-          // Use searched city if available (from search), otherwise fall back to agent's city
-          city: searchedCity || agentInfo?.agent_city || null,
+          phone: formData.phone.trim(),
+          city: formData.city.trim() || searchedCity || agentInfo?.agent_city || null,
           province: agentInfo?.agent_province || null,
           serviceType: selectedService,
-          notes: `Date of Birth: ${formData.dateOfBirth}, Sex: ${formData.sex}`,
+          notes: `Date of Birth: ${formData.dateOfBirth}`,
           ...(rescheduleAppointmentId ? { rescheduleAppointmentId } : {}),
         }),
       });
@@ -444,49 +483,67 @@ function BookingStep2Content() {
               )}
             </div>
 
-            {/* Sex */}
+            {/* Telephone Number */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                <div className="flex items-center gap-1">
-                  Sex
-                  <Info className="w-4 h-4 text-gray-400" />
-                </div>
+              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+                Telephone number
               </label>
-              <div className="space-y-2">
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <input
-                    type="radio"
-                    id="sex-male"
-                    name="sex"
-                    value="male"
-                    checked={formData.sex === "male"}
-                    onChange={(e) => handleInputChange("sex", e.target.value)}
-                    className="w-4 h-4 text-green-800 focus:ring-green-800"
-                  />
-                  <span className="text-gray-700">Male</span>
-                </label>
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <input
-                    type="radio"
-                    id="sex-female"
-                    name="sex"
-                    value="female"
-                    checked={formData.sex === "female"}
-                    onChange={(e) => handleInputChange("sex", e.target.value)}
-                    className="w-4 h-4 text-green-800 focus:ring-green-800"
-                  />
-                  <span className="text-gray-700">Female</span>
-                </label>
-              </div>
-              {formErrors.sex && (
-                <p className="text-sm text-red-500 mt-1">{formErrors.sex}</p>
+              <input
+                type="tel"
+                id="phone"
+                name="phone"
+                value={formData.phone}
+                onChange={(e) => handleInputChange("phone", e.target.value)}
+                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800 ${
+                  formErrors.phone ? "border-red-500" : "border-gray-300"
+                }`}
+                placeholder="(555) 123-4567"
+              />
+              {formErrors.phone && (
+                <p className="text-sm text-red-500 mt-1">{formErrors.phone}</p>
               )}
             </div>
+
+            {/* City */}
+            <div>
+              <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-2">
+                City
+              </label>
+              <input
+                type="text"
+                id="city"
+                name="city"
+                value={formData.city}
+                onChange={(e) => handleInputChange("city", e.target.value)}
+                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800 ${
+                  formErrors.city ? "border-red-500" : "border-gray-300"
+                }`}
+                placeholder="City"
+              />
+              {formErrors.city && (
+                <p className="text-sm text-red-500 mt-1">{formErrors.city}</p>
+              )}
+            </div>
+
+            {/* Confirm Office Location */}
+            {selectedOfficeLocation && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Confirm office location
+                </label>
+                <div className="px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="w-5 h-5 text-green-800" />
+                    <span className="text-gray-900">{selectedOfficeLocation}</span>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="mb-8">
             <h2 className="text-2xl font-semibold text-gray-900 mb-2">
-              What service are you looking for?
+              What type of arrangement are you looking for?
             </h2>
             <p className="text-gray-600 mb-4">
               Help us understand your needs so we can better prepare for your appointment.

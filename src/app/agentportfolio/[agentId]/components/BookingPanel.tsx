@@ -736,6 +736,17 @@ export function BookingPanel({ agentId }: BookingPanelProps) {
                                 endsAt: timeSlot.endsAt,
                                 date: day.date,
                               });
+                              // Add office location to URL if available
+                              const selectedLocation = officeLocations.find(loc => loc.id === selectedLocationId) || officeLocations[0];
+                              if (selectedLocation) {
+                                const locationName = selectedLocation.name || selectedLocation.address || '';
+                                if (locationName) {
+                                  params.set('officeLocation', locationName);
+                                }
+                                if (selectedLocation.city) {
+                                  params.set('city', selectedLocation.city);
+                                }
+                              }
                               const bookingUrl = `${window.location.origin}/book/step2?agentId=${agentId}&${params.toString()}`;
                               
                               return (
