@@ -82,7 +82,7 @@ export function TrustHighlights({ agentId }: TrustHighlightsProps) {
       icon: 'star', 
       title: 'Highly recommended', 
       description: stats.totalReviews > 0 
-        ? `${stats.fiveStarPercentage}% of patients give this specialist 5 stars`
+        ? `${stats.fiveStarPercentage}% of users give this specialist 5 stars`
         : 'No reviews yet'
     },
     { 
