@@ -7,11 +7,12 @@ export const dynamic = "force-dynamic";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { year: string; month: string } }
+  { params }: { params: Promise<{ year: string; month: string }> }
 ) {
   try {
-    const year = parseInt(params.year);
-    const month = parseInt(params.month);
+    const { year: yearParam, month: monthParam } = await params;
+    const year = parseInt(yearParam);
+    const month = parseInt(monthParam);
 
     if (isNaN(year) || isNaN(month) || month < 1 || month > 12) {
       return NextResponse.json(
