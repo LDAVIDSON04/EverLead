@@ -335,7 +335,39 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    return NextResponse.json({ agents: filtered });
+    // Fetch review counts for all agents and sort by review count (highest first)
+    const agentIds = filtered.map(a => a.id);
+    let reviewCountsMap: Record<string, number> = {};
+    
+    if (agentIds.length > 0) {
+      const { data: reviews } = await supabaseAdmin
+        .from("reviews")
+        .select("agent_id")
+        .in("agent_id", agentIds);
+      
+      // Count reviews per agent
+      (reviews || []).forEach((review: any) => {
+        reviewCountsMap[review.agent_id] = (reviewCountsMap[review.agent_id] || 0) + 1;
+      });
+    }
+    
+    // Sort by review count (highest first), then by name
+    const sorted = filtered.sort((a, b) => {
+      const aReviews = reviewCountsMap[a.id] || 0;
+      const bReviews = reviewCountsMap[b.id] || 0;
+      
+      // First sort by review count (descending)
+      if (bReviews !== aReviews) {
+        return bReviews - aReviews;
+      }
+      
+      // If same review count, sort alphabetically by name
+      const aName = a.full_name || '';
+      const bName = b.full_name || '';
+      return aName.localeCompare(bName);
+    });
+
+    return NextResponse.json({ agents: sorted });
   } catch (error: any) {
     console.error("Error in /api/agents/search:", error);
     return NextResponse.json(

@@ -7,6 +7,10 @@
     {
       "path": "/api/integrations/sync",
       "schedule": "*/2 * * * *"
+    },
+    {
+      "path": "/api/cron/send-review-followups",
+      "schedule": "0 * * * *"
     }
   ]
 }
