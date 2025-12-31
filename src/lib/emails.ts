@@ -159,7 +159,7 @@ export async function sendConsumerBookingEmail({
                       <table width="100%" cellpadding="0" cellspacing="0">
                         <tr>
                           <td style="vertical-align: middle;" width="120">
-                            <img src="${cleanSiteUrl}/logo%20-%20white.png" alt="Soradin Logo" width="120" height="40" style="display: block; max-width: 120px; max-height: 40px; height: auto;" />
+                            <img src="${cleanSiteUrl}/logo%20-%20white.png" alt="Soradin Logo" style="display: block; max-width: 120px; height: auto;" />
                           </td>
                           <td style="vertical-align: middle; padding-left: 24px;">
                             <h1 style="color: #ffffff; font-size: 32px; font-weight: bold; margin: 0;">SORADIN</h1>
@@ -393,7 +393,7 @@ export async function sendAgentNewAppointmentEmail({
                       <table width="100%" cellpadding="0" cellspacing="0">
                         <tr>
                           <td style="vertical-align: middle;" width="120">
-                            <img src="${cleanSiteUrl}/logo%20-%20white.png" alt="Soradin Logo" width="120" height="40" style="display: block; max-width: 120px; max-height: 40px; height: auto;" />
+                            <img src="${cleanSiteUrl}/logo%20-%20white.png" alt="Soradin Logo" style="display: block; max-width: 120px; height: auto;" />
                           </td>
                           <td style="vertical-align: middle; padding-left: 24px;">
                             <h1 style="color: #ffffff; font-size: 32px; font-weight: bold; margin: 0;">SORADIN</h1>
@@ -627,7 +627,7 @@ export async function sendAgentCancellationEmail({
                       <table width="100%" cellpadding="0" cellspacing="0">
                         <tr>
                           <td style="vertical-align: middle;" width="120">
-                            <img src="${cleanSiteUrl}/logo%20-%20white.png" alt="Soradin Logo" width="120" height="40" style="display: block; max-width: 120px; max-height: 40px; height: auto;" />
+                            <img src="${cleanSiteUrl}/logo%20-%20white.png" alt="Soradin Logo" style="display: block; max-width: 120px; height: auto;" />
                           </td>
                           <td style="vertical-align: middle; padding-left: 24px;">
                             <h1 style="color: #ffffff; font-size: 32px; font-weight: bold; margin: 0;">SORADIN</h1>
@@ -819,7 +819,7 @@ export async function sendAgentRebookingEmail({
                       <table width="100%" cellpadding="0" cellspacing="0">
                         <tr>
                           <td style="vertical-align: middle;" width="120">
-                            <img src="${cleanSiteUrl}/logo%20-%20white.png" alt="Soradin Logo" width="120" height="40" style="display: block; max-width: 120px; max-height: 40px; height: auto;" />
+                            <img src="${cleanSiteUrl}/logo%20-%20white.png" alt="Soradin Logo" style="display: block; max-width: 120px; height: auto;" />
                           </td>
                           <td style="vertical-align: middle; padding-left: 24px;">
                             <h1 style="color: #ffffff; font-size: 32px; font-weight: bold; margin: 0;">SORADIN</h1>
@@ -1013,7 +1013,7 @@ export async function sendReviewFollowUpEmail({
                       <table width="100%" cellpadding="0" cellspacing="0">
                         <tr>
                           <td style="vertical-align: middle;" width="120">
-                            <img src="${cleanSiteUrl}/logo%20-%20white.png" alt="Soradin Logo" width="120" height="40" style="display: block; max-width: 120px; max-height: 40px; height: auto;" />
+                            <img src="${cleanSiteUrl}/logo%20-%20white.png" alt="Soradin Logo" style="display: block; max-width: 120px; height: auto;" />
                           </td>
                           <td style="vertical-align: middle; padding-left: 24px;">
                             <h1 style="color: #ffffff; font-size: 32px; font-weight: bold; margin: 0;">SORADIN</h1>
@@ -1192,7 +1192,7 @@ export async function sendPaymentDeclineEmail({
                       <table width="100%" cellpadding="0" cellspacing="0">
                         <tr>
                           <td style="vertical-align: middle;" width="120">
-                            <img src="${cleanSiteUrl}/logo%20-%20white.png" alt="Soradin Logo" width="120" height="40" style="display: block; max-width: 120px; max-height: 40px; height: auto;" />
+                            <img src="${cleanSiteUrl}/logo%20-%20white.png" alt="Soradin Logo" style="display: block; max-width: 120px; height: auto;" />
                           </td>
                           <td style="vertical-align: middle; padding-left: 24px;">
                             <h1 style="color: #ffffff; font-size: 32px; font-weight: bold; margin: 0;">SORADIN</h1>
