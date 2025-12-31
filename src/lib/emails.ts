@@ -5,13 +5,27 @@ import fs from 'fs';
 import path from 'path';
 
 // Read logo and convert to base64 for inline email images
+// Use smaller optimized logo for emails to avoid Gmail truncation
 let LOGO_BASE64: string | null = null;
 export function getLogoBase64(): string {
   if (!LOGO_BASE64) {
     try {
-      const logoPath = path.join(process.cwd(), 'public', 'logo.png');
+      // Try email-optimized logo first (60x60), fallback to regular logo
+      const emailLogoPath = path.join(process.cwd(), 'public', 'logo-email.png');
+      const regularLogoPath = path.join(process.cwd(), 'public', 'logo.png');
+      
+      let logoPath = emailLogoPath;
+      if (!fs.existsSync(logoPath)) {
+        logoPath = regularLogoPath;
+      }
+      
       const logoBuffer = fs.readFileSync(logoPath);
       LOGO_BASE64 = logoBuffer.toString('base64');
+      
+      // Log if using larger logo as warning
+      if (logoPath === regularLogoPath && logoBuffer.length > 50000) {
+        console.warn('⚠️ Using large logo for emails - may cause Gmail truncation. Consider creating logo-email.png');
+      }
     } catch (error) {
       console.error('Error reading logo file:', error);
       // Return empty string if logo can't be read
