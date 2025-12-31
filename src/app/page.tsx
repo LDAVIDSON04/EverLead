@@ -261,7 +261,7 @@ export default function HomePage() {
         </div>
 
         {/* Arm pointing illustration - positioned to point at Find care button */}
-        <div className="absolute hidden lg:block z-10 pointer-events-none lg:left-[-50px] lg:bottom-[-12px] lg:w-[1500px] xl:left-[-80px] xl:bottom-[-20px] xl:w-[1800px] 2xl:left-[-100px] 2xl:bottom-[-25px] 2xl:w-[2000px]">
+        <div className="absolute hidden lg:block z-10 pointer-events-none arm-pointing-illustration">
           <Image
             src="/arm-image.png"
             alt=""

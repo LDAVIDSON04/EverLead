@@ -40,3 +40,29 @@ a:hover {
   position: relative;
   z-index: 1;
 }
+
+/* Arm pointing illustration - base styles for Mac screens (lg breakpoint) */
+.arm-pointing-illustration {
+  left: -50px;
+  bottom: -12px;
+  width: 1500px;
+  height: auto;
+}
+
+/* Adjust arm positioning for larger screens (Windows laptops) - only affects screens larger than 1536px */
+@media (min-width: 1536px) {
+  .arm-pointing-illustration {
+    left: -80px;
+    bottom: -20px;
+    width: 1800px;
+  }
+}
+
+/* Further adjustment for extra-large screens */
+@media (min-width: 1920px) {
+  .arm-pointing-illustration {
+    left: -100px;
+    bottom: -25px;
+    width: 2000px;
+  }
+}
