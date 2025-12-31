@@ -207,15 +207,8 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
     };
   }, []); // Empty dependency array - only run once on mount
 
-  // Reload profile data when pathname changes (navigation)
-  useEffect(() => {
-    // Small delay to ensure auth is ready
-    const timer = setTimeout(() => {
-      window.dispatchEvent(new CustomEvent('profileUpdated'));
-    }, 100);
-
-    return () => clearTimeout(timer);
-  }, [pathname]); // Reload when navigating between pages
+  // Note: Removed profile reload on navigation to improve performance
+  // Profile data is loaded once on mount and updated via event listeners when needed
 
   const handleLogout = async () => {
     await supabaseClient.auth.signOut();
@@ -364,6 +357,7 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
                 <Link
                   key={item.href}
                   href={item.href}
+                  prefetch={true}
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-left ${
                     isActive 
                       ? 'bg-green-900/30 text-white' 
