@@ -126,8 +126,10 @@ export async function sendConsumerBookingEmail({
         const minutes = localDate.minute;
         const ampm = hours >= 12 ? 'PM' : 'AM';
         const displayHours = hours % 12 || 12;
-        const endHours = (hours + 1) % 12 || 12;
-        timeDisplay = `${displayHours}:${String(minutes).padStart(2, '0')} ${ampm} - ${endHours}:${String(minutes).padStart(2, '0')} ${ampm}`;
+        const endDate = localDate.plus({ hours: 1 });
+        const endHours = endDate.hour % 12 || 12;
+        const endAmpm = endDate.hour >= 12 ? 'PM' : 'AM';
+        timeDisplay = `${displayHours}:${String(minutes).padStart(2, '0')} ${ampm} - ${endHours}:${String(endDate.minute).padStart(2, '0')} ${endAmpm}`;
       } catch (error) {
         console.error('Error formatting time:', error);
       }
