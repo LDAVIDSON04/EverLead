@@ -378,8 +378,8 @@ export default function CreateAccountPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl mx-auto p-8 md:p-12">
-        {/* Logo and Home Link */}
-        <div className="flex items-center justify-between mb-8">
+        {/* Logo */}
+        <div className="flex justify-start mb-8">
           <Link href="/" className="flex items-center gap-3">
             <Image
               src="/Soradin.png"
@@ -388,9 +388,6 @@ export default function CreateAccountPage() {
               height={48}
               className="h-12 w-12 object-contain"
             />
-          </Link>
-          <Link href="/" className="text-gray-700 hover:text-gray-900 transition-colors underline">
-            Home
           </Link>
         </div>
 

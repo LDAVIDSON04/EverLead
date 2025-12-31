@@ -265,8 +265,8 @@ export default function AgentLandingPage() {
       <div className="w-full max-w-6xl">
         {/* Login Card */}
         <div className="bg-white rounded-3xl shadow-lg overflow-hidden relative">
-          {/* Logo and Home Link */}
-          <div className="absolute top-8 left-8 md:left-8 right-8 md:right-auto z-10 flex items-center gap-4">
+          {/* Logo at top left on desktop, top right on mobile */}
+          <div className="absolute top-8 left-8 md:left-8 right-8 md:right-auto z-10">
             <Link href="/">
               <Image
                 src="/Soradin.png"
@@ -275,9 +275,6 @@ export default function AgentLandingPage() {
                 height={96}
                 className="h-16 w-16 md:h-24 md:w-24 object-contain"
               />
-            </Link>
-            <Link href="/" className="text-gray-700 hover:text-gray-900 transition-colors underline">
-              Home
             </Link>
           </div>
           

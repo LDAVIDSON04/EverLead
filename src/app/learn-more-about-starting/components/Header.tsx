@@ -20,26 +20,18 @@ export function Header() {
           <span className="text-sm md:text-2xl font-semibold text-[#1A1A1A] md:mt-0 -mt-1">Soradin</span>
         </Link>
         
-        <div className="flex items-center gap-4">
-
-          {/* Home Link */}
-          <Link href="/" className="text-gray-700 hover:text-gray-900 transition-colors underline">
-            Home
+        {/* Auth buttons */}
+        <div className="flex items-center gap-3">
+          <Link href="/agent">
+            <Button variant="ghost" className="text-black hover:text-[#0D5C3D] hover:bg-transparent">
+              Log in
+            </Button>
           </Link>
-          
-          {/* Auth buttons */}
-          <div className="flex items-center gap-3">
-            <Link href="/agent">
-              <Button variant="ghost" className="text-black hover:text-[#0D5C3D] hover:bg-transparent">
-                Log in
-              </Button>
-            </Link>
-            <Link href="/create-account">
-              <Button className="bg-[#0D5C3D] hover:bg-[#0A4A30] text-white">
-                Create account
-              </Button>
-            </Link>
-          </div>
+          <Link href="/create-account">
+            <Button className="bg-[#0D5C3D] hover:bg-[#0A4A30] text-white">
+              Create account
+            </Button>
+          </Link>
         </div>
       </div>
     </header>
