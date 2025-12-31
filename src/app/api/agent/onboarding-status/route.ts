@@ -127,12 +127,12 @@ export async function GET(request: NextRequest) {
       hasPaymentMethod = false;
     }
 
-    // CRITICAL: If agent has both payment method and availability, automatically mark onboarding as completed
-    // This ensures the modal never shows again once both are set
-    let onboardingCompleted = (metadata as any)?.onboarding_completed === true;
-    
+    // CRITICAL FIX: If agent has both payment method AND availability, they are done with onboarding
+    // Return needsOnboarding: false immediately - don't even check the flag
+    // This ensures the modal NEVER shows once both requirements are met
     if (hasPaymentMethod && hasAvailability) {
-      // If both are present, ensure onboarding_completed is set to true
+      // Auto-mark as completed in the database for future reference
+      const onboardingCompleted = (metadata as any)?.onboarding_completed === true;
       if (!onboardingCompleted) {
         try {
           await supabaseAdmin
@@ -144,21 +144,20 @@ export async function GET(request: NextRequest) {
               },
             })
             .eq("id", agentId);
-          
-          onboardingCompleted = true;
-          console.log(`[ONBOARDING] Auto-marked onboarding as completed for agent ${agentId} (has payment method and availability)`);
+          console.log(`[ONBOARDING] Auto-marked onboarding as completed for agent ${agentId}`);
         } catch (updateError) {
           console.error("Error auto-marking onboarding as completed:", updateError);
-          // Non-fatal, continue with current status
+          // Non-fatal - we still return needsOnboarding: false below
         }
       }
       
-      // If onboarding is completed OR both requirements are met, don't show onboarding
+      // CRITICAL: Return needsOnboarding: false immediately when both are present
+      console.log(`[ONBOARDING] Agent ${agentId} has both payment method and availability - returning needsOnboarding: false`);
       return NextResponse.json({
         needsOnboarding: false,
-        hasPaymentMethod,
-        hasAvailability,
-        onboardingCompleted: true, // Always true if both are present
+        hasPaymentMethod: true,
+        hasAvailability: true,
+        onboardingCompleted: true,
       });
     }
 
