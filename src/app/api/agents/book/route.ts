@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getLeadPriceFromUrgency } from "@/lib/leads/pricing";
 import { chargeAgentForAppointment } from "@/lib/chargeAgentForAppointment";
-import { sendPaymentDeclineEmail, sendPaymentReceiptEmail, getLogoBase64 } from "@/lib/emails";
+import { sendPaymentDeclineEmail, getLogoBase64 } from "@/lib/emails";
 import { DateTime } from "luxon";
 
 export const dynamic = "force-dynamic";
@@ -447,49 +447,7 @@ export async function POST(req: NextRequest) {
         paymentIntentId: chargeResult.paymentIntentId,
       });
       
-      // Send payment receipt email to agent
-      try {
-        // Get agent email and name
-        let agentEmail: string | null = null;
-        let agentName: string | null = null;
-        try {
-          const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(agentId);
-          agentEmail = authUser?.user?.email || null;
-          
-          const { data: agentProfile } = await supabaseAdmin
-            .from("profiles")
-            .select("full_name")
-            .eq("id", agentId)
-            .single();
-          agentName = agentProfile?.full_name || null;
-        } catch (emailError) {
-          console.error("Error fetching agent email/name for receipt:", emailError);
-        }
-        
-        if (agentEmail) {
-          // Format appointment date and time for receipt
-          const appointmentDateTime = DateTime.fromISO(startsAt, { zone: 'utc' });
-          const appointmentDateStr = appointmentDateTime.toFormat('EEEE, MMMM d, yyyy');
-          const appointmentTimeStr = appointmentDateTime.toFormat('h:mm a');
-          
-          await sendPaymentReceiptEmail({
-            to: agentEmail,
-            agentName: agentName,
-            appointmentId: appointment.id,
-            amountCents: priceCents,
-            paymentIntentId: chargeResult.paymentIntentId,
-            consumerName: `${firstName} ${lastName}`.trim() || null,
-            appointmentDate: appointmentDateStr,
-            appointmentTime: appointmentTimeStr,
-          });
-          console.log("✅ Payment receipt email sent to agent");
-        } else {
-          console.warn("⚠️ Could not send receipt email - agent email not found");
-        }
-      } catch (receiptError: any) {
-        console.error("❌ Error sending payment receipt email (non-fatal):", receiptError);
-        // Don't fail the booking if receipt email fails
-      }
+      // Receipt emails are handled by Stripe, not Soradin
     } else {
       // Payment failed - mark appointment internally but don't fail the booking for the family
       console.error("❌ Failed to charge agent for appointment:", {
