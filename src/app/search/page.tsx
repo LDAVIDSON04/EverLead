@@ -2005,7 +2005,7 @@ function SearchResults() {
                             )}
                           </div>
                           <div className="flex-1">
-                            <h1 className="mb-1">{portfolioAgentData.full_name || "Agent"}, {portfolioAgentData.credentials}</h1>
+                            <h1 className="mb-1">{portfolioAgentData.full_name || "Agent"}</h1>
                             <p className="text-gray-600 mb-2">{portfolioAgentData.specialty || portfolioAgentData.job_title || "Pre-need Planning Specialist"}</p>
                           </div>
                         </div>
