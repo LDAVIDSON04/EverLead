@@ -671,17 +671,23 @@ export async function POST(req: NextRequest) {
                           <!-- Header -->
                           <tr>
                             <td style="background-color: #1a4d2e; padding: 24px;">
-                              <table width="100%" cellpadding="0" cellspacing="0">
-                                <tr>
-                                  <td style="vertical-align: middle;" width="120">
-                                    <img src="${cleanSiteUrl}/logo%20-%20white.png" alt="Soradin Logo" style="display: block; max-width: 120px; height: auto;" />
-                                  </td>
-                                  <td style="vertical-align: middle; padding-left: 24px;">
-                                    <h1 style="color: #ffffff; font-size: 32px; font-weight: bold; margin: 0;">SORADIN</h1>
-                                  </td>
-                                </tr>
-                              </table>
-                            </td>
+                            <table width="100%" cellpadding="0" cellspacing="0">
+                              <tr>
+                                <td width="80" style="vertical-align: middle;">
+                                  <table cellpadding="0" cellspacing="0" style="width: 80px; height: 80px; background-color: #ffffff; border-radius: 50%;">
+                                    <tr>
+                                      <td align="center" style="vertical-align: middle;">
+                                        <img src="${cleanSiteUrl}/logo.png" alt="Soradin Logo" width="60" height="60" style="display: block; max-width: 60px; max-height: 60px;" />
+                                      </td>
+                                    </tr>
+                                  </table>
+                                </td>
+                                <td style="vertical-align: middle; padding-left: 24px;">
+                                  <h1 style="color: #ffffff; font-size: 32px; font-weight: bold; margin: 0;">SORADIN</h1>
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
                           </tr>
                           
                           <!-- Content -->
@@ -815,8 +821,14 @@ export async function POST(req: NextRequest) {
                             <td style="background-color: #1a4d2e; padding: 24px;">
                               <table width="100%" cellpadding="0" cellspacing="0">
                                 <tr>
-                                  <td style="vertical-align: middle;" width="120">
-                                    <img src="${cleanSiteUrl}/logo%20-%20white.png" alt="Soradin Logo" style="display: block; max-width: 120px; height: auto;" />
+                                  <td width="80" style="vertical-align: middle;">
+                                    <table cellpadding="0" cellspacing="0" style="width: 80px; height: 80px; background-color: #ffffff; border-radius: 50%;">
+                                      <tr>
+                                        <td align="center" style="vertical-align: middle;">
+                                          <img src="${cleanSiteUrl}/logo.png" alt="Soradin Logo" width="60" height="60" style="display: block; max-width: 60px; max-height: 60px;" />
+                                        </td>
+                                      </tr>
+                                    </table>
                                   </td>
                                   <td style="vertical-align: middle; padding-left: 24px;">
                                     <h1 style="color: #ffffff; font-size: 32px; font-weight: bold; margin: 0;">SORADIN</h1>
