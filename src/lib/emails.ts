@@ -1494,28 +1494,6 @@ export async function sendPaymentReceiptEmail({
                               </tr>
                             </table>
                           </td>
-                          <td width="50%" style="padding-left: 12px; padding-bottom: 16px;">
-                            <table cellpadding="0" cellspacing="0" style="border-left: 4px solid #1a4d2e; padding-left: 16px;">
-                              <tr>
-                                <td style="padding-top: 8px; padding-bottom: 8px;">
-                                  <p style="color: #666666; font-size: 14px; margin: 0 0 4px 0;">Transaction ID</p>
-                                  <p style="color: #000000; font-size: 16px; margin: 0; font-weight: normal;">${paymentIntentId}</p>
-                                </td>
-                              </tr>
-                            </table>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td width="50%" style="padding-right: 12px; padding-bottom: 16px;">
-                            <table cellpadding="0" cellspacing="0" style="border-left: 4px solid #1a4d2e; padding-left: 16px;">
-                              <tr>
-                                <td style="padding-top: 8px; padding-bottom: 8px;">
-                                  <p style="color: #666666; font-size: 14px; margin: 0 0 4px 0;">Appointment ID</p>
-                                  <p style="color: #000000; font-size: 16px; margin: 0; font-weight: normal;">${appointmentId}</p>
-                                </td>
-                              </tr>
-                            </table>
-                          </td>
                           ${consumerName ? `
                           <td width="50%" style="padding-left: 12px; padding-bottom: 16px;">
                             <table cellpadding="0" cellspacing="0" style="border-left: 4px solid #1a4d2e; padding-left: 16px;">
