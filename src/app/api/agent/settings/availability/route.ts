@@ -107,28 +107,45 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { locations, availabilityByLocation, appointmentLength } = body;
 
-    // Get cities from office locations for reference
+    // Get cities from office locations
     const { data: officeLocations } = await supabaseAdmin
       .from("office_locations")
       .select("city")
       .eq("agent_id", user.id);
 
-    const officeLocationCities = Array.from(
+    const officeLocationCities: string[] = Array.from(
       new Set((officeLocations || []).map((loc: any) => loc.city).filter(Boolean))
     );
 
-    // Allow both office location cities and manually added cities
-    // Filter availabilityByLocation to only include cities in the locations array
+    // CRITICAL: Merge locations from the request with:
+    // 1. Office location cities (always include these)
+    // 2. Any cities that have availability data set (even if not in office locations)
+    // This ensures all cities with availability are saved
+    const allCitiesSet = new Set<string>();
+    
+    // Add office location cities
+    officeLocationCities.forEach(city => allCitiesSet.add(city));
+    
+    // Add locations from request
+    (locations || []).forEach((city: string) => allCitiesSet.add(city));
+    
+    // Add any cities that have availability data (even if not explicitly in locations array)
+    Object.keys(availabilityByLocation || {}).forEach((city: string) => {
+      if (city && city.trim()) {
+        allCitiesSet.add(city.trim());
+      }
+    });
+
+    const validLocations = Array.from(allCitiesSet);
+
+    // Include ALL availability data (filter by valid locations for safety)
     const filteredAvailabilityByLocation: Record<string, any> = {};
-    const validLocationsSet = new Set(locations || []);
+    const validLocationsSet = new Set(validLocations);
     Object.keys(availabilityByLocation || {}).forEach((city) => {
       if (validLocationsSet.has(city)) {
         filteredAvailabilityByLocation[city] = availabilityByLocation[city];
       }
     });
-
-    // Use the locations array provided (includes both office location cities and manually added ones)
-    const validLocations = locations || [];
 
     // Store availability in agent's profile metadata or a separate table
     // For now, we'll store it in a JSONB field
