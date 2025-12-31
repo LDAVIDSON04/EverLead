@@ -224,26 +224,33 @@ export default function HomePage() {
               <span className="text-sm md:text-2xl font-semibold text-[#1A1A1A] md:mt-0 -mt-1">Soradin</span>
             </Link>
 
-            {/* Navigation Links - Mobile only, next to logo */}
-            <div className="flex items-center gap-2 md:hidden">
-              <Link href="/what-is-pre-need-funeral-planning" className="text-xs text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors">
+            {/* Navigation Links - Mobile: buttons, Desktop: hidden (shown in right side) */}
+            <div className="flex items-center gap-1.5 md:hidden">
+              <Link href="/what-is-pre-need-funeral-planning" className="px-2.5 py-1.5 bg-white border border-gray-300 rounded-lg text-xs text-[#1A1A1A] hover:bg-gray-50 hover:border-[#0C6F3C] transition-colors whitespace-nowrap">
                 What is pre-need funeral planning?
               </Link>
-              <Link href="/learn-more-about-starting" className="text-xs text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors">
+              <Link href="/learn-more-about-starting" className="px-2.5 py-1.5 bg-white border border-gray-300 rounded-lg text-xs text-[#1A1A1A] hover:bg-gray-50 hover:border-[#0C6F3C] transition-colors whitespace-nowrap">
                 List your Specialty
               </Link>
             </div>
           </div>
 
-          {/* Right Side Navigation - Desktop: original layout, Mobile: hide all */}
-          <div className="hidden md:flex items-center gap-6">
-            <Link href="/what-is-pre-need-funeral-planning" className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors">
-              What is pre-need funeral planning?
-            </Link>
-            <Link href="/learn-more-about-starting" className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors">
-              List your Specialty
-            </Link>
-            <Link href="/agent" className="bg-[#0C6F3C] text-white px-6 py-2.5 rounded-xl hover:bg-[#0C6F3C]/90 transition-all shadow-sm">
+          {/* Right Side Navigation - Desktop: original layout, Mobile: Log in button */}
+          <div className="flex items-center gap-6">
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center gap-6">
+              <Link href="/what-is-pre-need-funeral-planning" className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors">
+                What is pre-need funeral planning?
+              </Link>
+              <Link href="/learn-more-about-starting" className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors">
+                List your Specialty
+              </Link>
+              <Link href="/agent" className="bg-[#0C6F3C] text-white px-6 py-2.5 rounded-xl hover:bg-[#0C6F3C]/90 transition-all shadow-sm">
+                Log in
+              </Link>
+            </div>
+            {/* Mobile: Log in button */}
+            <Link href="/agent" className="md:hidden bg-[#0C6F3C] text-white px-4 py-2 rounded-lg hover:bg-[#0C6F3C]/90 transition-all shadow-sm text-sm whitespace-nowrap">
               Log in
             </Link>
           </div>
