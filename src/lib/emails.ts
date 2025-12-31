@@ -158,8 +158,11 @@ export async function sendConsumerBookingEmail({
                     <td style="background-color: #1a4d2e; padding: 24px;">
                       <table width="100%" cellpadding="0" cellspacing="0">
                         <tr>
-                          <td style="vertical-align: middle;">
+                          <td style="vertical-align: middle;" width="120">
                             <img src="${cleanSiteUrl}/logo%20-%20white.png" alt="Soradin Logo" width="120" height="40" style="display: block; max-width: 120px; max-height: 40px; height: auto;" />
+                          </td>
+                          <td style="vertical-align: middle; padding-left: 24px;">
+                            <h1 style="color: #ffffff; font-size: 32px; font-weight: bold; margin: 0;">SORADIN</h1>
                           </td>
                         </tr>
                       </table>
@@ -389,8 +392,11 @@ export async function sendAgentNewAppointmentEmail({
                     <td style="background-color: #1a4d2e; padding: 24px;">
                       <table width="100%" cellpadding="0" cellspacing="0">
                         <tr>
-                          <td style="vertical-align: middle;">
+                          <td style="vertical-align: middle;" width="120">
                             <img src="${cleanSiteUrl}/logo%20-%20white.png" alt="Soradin Logo" width="120" height="40" style="display: block; max-width: 120px; max-height: 40px; height: auto;" />
+                          </td>
+                          <td style="vertical-align: middle; padding-left: 24px;">
+                            <h1 style="color: #ffffff; font-size: 32px; font-weight: bold; margin: 0;">SORADIN</h1>
                           </td>
                         </tr>
                       </table>
@@ -620,8 +626,11 @@ export async function sendAgentCancellationEmail({
                     <td style="background-color: #1a4d2e; padding: 24px;">
                       <table width="100%" cellpadding="0" cellspacing="0">
                         <tr>
-                          <td style="vertical-align: middle;">
+                          <td style="vertical-align: middle;" width="120">
                             <img src="${cleanSiteUrl}/logo%20-%20white.png" alt="Soradin Logo" width="120" height="40" style="display: block; max-width: 120px; max-height: 40px; height: auto;" />
+                          </td>
+                          <td style="vertical-align: middle; padding-left: 24px;">
+                            <h1 style="color: #ffffff; font-size: 32px; font-weight: bold; margin: 0;">SORADIN</h1>
                           </td>
                         </tr>
                       </table>
@@ -809,8 +818,11 @@ export async function sendAgentRebookingEmail({
                     <td style="background-color: #1a4d2e; padding: 24px;">
                       <table width="100%" cellpadding="0" cellspacing="0">
                         <tr>
-                          <td style="vertical-align: middle;">
+                          <td style="vertical-align: middle;" width="120">
                             <img src="${cleanSiteUrl}/logo%20-%20white.png" alt="Soradin Logo" width="120" height="40" style="display: block; max-width: 120px; max-height: 40px; height: auto;" />
+                          </td>
+                          <td style="vertical-align: middle; padding-left: 24px;">
+                            <h1 style="color: #ffffff; font-size: 32px; font-weight: bold; margin: 0;">SORADIN</h1>
                           </td>
                         </tr>
                       </table>
@@ -1000,8 +1012,11 @@ export async function sendReviewFollowUpEmail({
                     <td style="background-color: #1a4d2e; padding: 24px;">
                       <table width="100%" cellpadding="0" cellspacing="0">
                         <tr>
-                          <td style="vertical-align: middle;">
+                          <td style="vertical-align: middle;" width="120">
                             <img src="${cleanSiteUrl}/logo%20-%20white.png" alt="Soradin Logo" width="120" height="40" style="display: block; max-width: 120px; max-height: 40px; height: auto;" />
+                          </td>
+                          <td style="vertical-align: middle; padding-left: 24px;">
+                            <h1 style="color: #ffffff; font-size: 32px; font-weight: bold; margin: 0;">SORADIN</h1>
                           </td>
                         </tr>
                       </table>
@@ -1176,8 +1191,11 @@ export async function sendPaymentDeclineEmail({
                     <td style="background-color: #1a4d2e; padding: 24px;">
                       <table width="100%" cellpadding="0" cellspacing="0">
                         <tr>
-                          <td style="vertical-align: middle;">
+                          <td style="vertical-align: middle;" width="120">
                             <img src="${cleanSiteUrl}/logo%20-%20white.png" alt="Soradin Logo" width="120" height="40" style="display: block; max-width: 120px; max-height: 40px; height: auto;" />
+                          </td>
+                          <td style="vertical-align: middle; padding-left: 24px;">
+                            <h1 style="color: #ffffff; font-size: 32px; font-weight: bold; margin: 0;">SORADIN</h1>
                           </td>
                         </tr>
                       </table>
