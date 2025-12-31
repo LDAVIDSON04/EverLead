@@ -645,6 +645,7 @@ export async function POST(req: NextRequest) {
           if (!cleanSiteUrl.startsWith('http')) {
             cleanSiteUrl = `https://${cleanSiteUrl}`;
           }
+          console.log('📧 [EMAIL] Logo URL:', `${cleanSiteUrl}/logo.png`);
           await fetch('https://api.resend.com/emails', {
             method: 'POST',
             headers: {
@@ -677,7 +678,7 @@ export async function POST(req: NextRequest) {
                                   <table cellpadding="0" cellspacing="0" style="width: 80px; height: 80px; background-color: #ffffff; border-radius: 50%;">
                                     <tr>
                                       <td align="center" style="vertical-align: middle;">
-                                        <img src="${cleanSiteUrl}/logo.png" alt="Soradin Logo" width="60" height="60" style="display: block; max-width: 60px; max-height: 60px;" />
+                                        <img src="${cleanSiteUrl}/logo.png" alt="Soradin Logo" width="60" height="60" style="display: block; max-width: 60px; max-height: 60px; border: 0; outline: none; text-decoration: none;" />
                                       </td>
                                     </tr>
                                   </table>
@@ -793,6 +794,7 @@ export async function POST(req: NextRequest) {
           if (!cleanSiteUrl.startsWith('http')) {
             cleanSiteUrl = `https://${cleanSiteUrl}`;
           }
+          console.log('📧 [EMAIL] Logo URL:', `${cleanSiteUrl}/logo.png`);
           await fetch('https://api.resend.com/emails', {
             method: 'POST',
             headers: {
@@ -825,7 +827,7 @@ export async function POST(req: NextRequest) {
                                     <table cellpadding="0" cellspacing="0" style="width: 80px; height: 80px; background-color: #ffffff; border-radius: 50%;">
                                       <tr>
                                         <td align="center" style="vertical-align: middle;">
-                                          <img src="${cleanSiteUrl}/logo.png" alt="Soradin Logo" width="60" height="60" style="display: block; max-width: 60px; max-height: 60px;" />
+                                          <img src="${cleanSiteUrl}/logo.png" alt="Soradin Logo" width="60" height="60" style="display: block; max-width: 60px; max-height: 60px; border: 0; outline: none; text-decoration: none;" />
                                         </td>
                                       </tr>
                                     </table>
