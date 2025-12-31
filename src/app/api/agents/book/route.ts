@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getLeadPriceFromUrgency } from "@/lib/leads/pricing";
 import { chargeAgentForAppointment } from "@/lib/chargeAgentForAppointment";
+import { sendPaymentDeclineEmail } from "@/lib/emails";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -462,8 +463,80 @@ export async function POST(req: NextRequest) {
         })
         .eq("id", appointment.id);
       
-      // TODO: Send notification to agent about payment failure
-      // TODO: Queue payment retry or admin notification
+      // Record declined payment in declined_payments table
+      try {
+        await supabaseAdmin
+          .from("declined_payments")
+          .insert({
+            agent_id: agentId,
+            appointment_id: appointment.id,
+            amount_cents: priceCents,
+            decline_reason: chargeResult.error || "Unknown error",
+            stripe_error_code: chargeResult.stripeErrorCode || null,
+            stripe_error_message: chargeResult.stripeErrorMessage || chargeResult.error || null,
+            status: 'pending',
+          });
+        console.log("✅ Recorded declined payment for appointment:", appointment.id);
+      } catch (declinedPaymentError: any) {
+        console.error("❌ Error recording declined payment:", declinedPaymentError);
+        // Don't fail the booking if we can't record the declined payment
+      }
+      
+      // Pause agent's account by setting paused_account flag in metadata
+      try {
+        const { data: agentProfile } = await supabaseAdmin
+          .from("profiles")
+          .select("metadata")
+          .eq("id", agentId)
+          .single();
+        
+        const metadata = agentProfile?.metadata || {};
+        await supabaseAdmin
+          .from("profiles")
+          .update({
+            metadata: {
+              ...metadata,
+              paused_account: true,
+              paused_at: new Date().toISOString(),
+            },
+          })
+          .eq("id", agentId);
+        console.log("✅ Paused agent account:", agentId);
+      } catch (pauseError: any) {
+        console.error("❌ Error pausing agent account:", pauseError);
+        // Don't fail the booking if we can't pause the account
+      }
+      
+      // Send email notification to agent
+      try {
+        const { data: agentAuth } = await supabaseAdmin.auth.admin.getUserById(agentId);
+        const agentEmail = agentAuth?.user?.email;
+        
+        if (agentEmail) {
+          const { data: agentProfile } = await supabaseAdmin
+            .from("profiles")
+            .select("full_name, first_name, last_name")
+            .eq("id", agentId)
+            .single();
+          
+          const agentName = agentProfile?.full_name || 
+            (agentProfile?.first_name && agentProfile?.last_name 
+              ? `${agentProfile.first_name} ${agentProfile.last_name}` 
+              : null);
+          
+          await sendPaymentDeclineEmail({
+            to: agentEmail,
+            agentName: agentName || undefined,
+            appointmentId: appointment.id,
+            amountCents: priceCents,
+            declineReason: chargeResult.error || undefined,
+          });
+          console.log("✅ Sent payment decline email to agent:", agentEmail);
+        }
+      } catch (emailError: any) {
+        console.error("❌ Error sending payment decline email:", emailError);
+        // Don't fail the booking if email fails
+      }
     }
 
     // Send confirmation emails to both agent and family

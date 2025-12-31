@@ -94,6 +94,12 @@ export async function GET(req: NextRequest) {
             // Continue anyway - might still have availability
           }
 
+          // Filter out paused agents (agents with paused_account flag set to true)
+          if ((metadata as any)?.paused_account === true) {
+            console.log(`[AGENT SEARCH] Agent ${profile.id} is paused - excluding from results`);
+            return false;
+          }
+
           const availability = (metadata as any)?.availability || {};
           const locations = availability.locations || [];
           

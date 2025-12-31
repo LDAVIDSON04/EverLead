@@ -69,6 +69,36 @@ export default function BillingPage() {
       const paymentMethodStatus = params.get('payment_method');
       
       if (paymentMethodStatus === 'success') {
+        // Call the payment-method-updated API to charge outstanding payments and unpause account
+        const handlePaymentMethodUpdated = async () => {
+          try {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (!session?.access_token) return;
+
+            const res = await fetch("/api/agent/payment-method-updated", {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${session.access_token}`,
+              },
+            });
+
+            if (res.ok) {
+              const data = await res.json();
+              if (data.allCharged) {
+                console.log("✅ All outstanding payments charged. Account unpaused.");
+              } else if (data.chargedPayments && data.chargedPayments.length > 0) {
+                console.log(`⚠️ ${data.chargedPayments.length} payments charged, but some failed. Account remains paused.`);
+              }
+            }
+          } catch (err) {
+            console.error("Error processing payment method update:", err);
+            // Don't block the UI - just log the error
+          }
+        };
+
+        // Process outstanding payments and unpause account
+        handlePaymentMethodUpdated();
+        
         // Reload payment methods
         setTimeout(() => {
           loadBilling();

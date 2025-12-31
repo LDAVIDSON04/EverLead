@@ -4,7 +4,7 @@ import { ReactNode, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { supabaseClient } from '@/lib/supabaseClient';
-import { CheckCircle, Users, Calendar, DollarSign, User, XCircle, FileText } from 'lucide-react';
+import { CheckCircle, Users, Calendar, DollarSign, User, XCircle, FileText, AlertCircle } from 'lucide-react';
 
 type AdminLayoutProps = {
   children: ReactNode;
@@ -17,6 +17,7 @@ const menuItems = [
   { href: '/admin/specialists', label: 'Specialists', icon: Users },
   { href: '/admin/appointments', label: 'Appointments', icon: Calendar },
   { href: '/admin/payments', label: 'Payments', icon: DollarSign },
+  { href: '/admin/declined-payments', label: 'Declined Payments', icon: AlertCircle },
 ];
 
 export default function AdminLayout({ children }: AdminLayoutProps) {

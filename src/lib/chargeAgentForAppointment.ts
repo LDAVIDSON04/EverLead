@@ -6,7 +6,13 @@ export async function chargeAgentForAppointment(
   agentId: string,
   amountCents: number,
   appointmentId: string
-): Promise<{ success: boolean; paymentIntentId?: string; error?: string }> {
+): Promise<{ 
+  success: boolean; 
+  paymentIntentId?: string; 
+  error?: string;
+  stripeErrorCode?: string;
+  stripeErrorMessage?: string;
+}> {
   try {
     console.log("🔍 [chargeAgentForAppointment] Starting charge process:", {
       agentId,
@@ -133,8 +139,19 @@ export async function chargeAgentForAppointment(
       return { success: true, paymentIntentId: paymentIntent.id };
     } else if (paymentIntent.status === "requires_payment_method") {
       // Card was declined or requires authentication
-      console.error("❌ [chargeAgentForAppointment] Payment requires payment method - card likely declined");
-      return { success: false, error: "Payment method was declined. Please update your payment method." };
+      const lastPaymentError = paymentIntent.last_payment_error;
+      const errorCode = lastPaymentError?.code || 'card_declined';
+      const errorMessage = lastPaymentError?.message || "Payment method was declined. Please update your payment method.";
+      console.error("❌ [chargeAgentForAppointment] Payment requires payment method - card likely declined", {
+        errorCode,
+        errorMessage,
+      });
+      return { 
+        success: false, 
+        error: errorMessage,
+        stripeErrorCode: errorCode,
+        stripeErrorMessage: errorMessage,
+      };
     } else {
       console.error("❌ [chargeAgentForAppointment] Payment failed with status:", paymentIntent.status);
       return { success: false, error: `Payment failed with status: ${paymentIntent.status}` };
@@ -144,12 +161,19 @@ export async function chargeAgentForAppointment(
     
     // Handle Stripe card errors
     if (error.type === 'StripeCardError') {
-      return { success: false, error: `Card declined: ${error.message}` };
+      return { 
+        success: false, 
+        error: `Card declined: ${error.message}`,
+        stripeErrorCode: error.code || 'card_declined',
+        stripeErrorMessage: error.message,
+      };
     }
     
     return {
       success: false,
       error: error.message || "Failed to process payment",
+      stripeErrorCode: error.code,
+      stripeErrorMessage: error.message,
     };
   }
 }

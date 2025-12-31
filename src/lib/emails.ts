@@ -32,6 +32,14 @@ type ReviewFollowUpEmailArgs = {
   token: string; // Token for review submission
 };
 
+type PaymentDeclineEmailArgs = {
+  to: string;
+  agentName?: string | null;
+  appointmentId: string;
+  amountCents: number;
+  declineReason?: string | null;
+};
+
 /**
  * Send booking confirmation email to consumer/family
  */
@@ -845,6 +853,169 @@ export async function sendReviewFollowUpEmail({
     return result;
   } catch (error: any) {
     console.error('❌ Error sending review follow-up email:', {
+      error: error.message,
+      stack: error.stack,
+      to,
+    });
+    throw error;
+  }
+}
+
+/**
+ * Send payment decline notification email to agent
+ */
+export async function sendPaymentDeclineEmail({
+  to,
+  agentName,
+  appointmentId,
+  amountCents,
+  declineReason,
+}: PaymentDeclineEmailArgs) {
+  if (!to) {
+    console.warn('sendPaymentDeclineEmail: No email address provided');
+    return;
+  }
+
+  const resendApiKey = process.env.RESEND_API_KEY;
+  const resendFromEmail = process.env.RESEND_FROM_EMAIL || 'Soradin <notifications@soradin.com>';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://soradin.com';
+
+  if (!resendApiKey) {
+    console.log('📧 sendPaymentDeclineEmail: RESEND_API_KEY not set, skipping email');
+    return;
+  }
+
+  let fromEmail = resendFromEmail;
+  if (fromEmail && !fromEmail.includes('<')) {
+    fromEmail = `Soradin <${fromEmail}>`;
+  } else if (fromEmail && fromEmail.includes('<')) {
+    const emailMatch = fromEmail.match(/<(.+@.+?)>/);
+    if (emailMatch) {
+      fromEmail = `Soradin <${emailMatch[1]}>`;
+    }
+  } else {
+    fromEmail = 'Soradin <notifications@soradin.com>';
+  }
+
+  try {
+    let cleanSiteUrl = (siteUrl || '').trim().replace(/\/+$/, '');
+    if (!cleanSiteUrl.startsWith('http')) {
+      cleanSiteUrl = `https://${cleanSiteUrl}`;
+    }
+
+    const billingUrl = `${cleanSiteUrl}/agent/billing`;
+
+    const emailBody = {
+      from: fromEmail,
+      to: [to],
+      subject: 'Action Required: Update Your Payment Method',
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Payment Method Declined</title>
+        </head>
+        <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f5f5f5;">
+          <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 40px 20px;">
+            <tr>
+              <td align="center">
+                <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                  <tr>
+                    <td style="background-color: #dc2626; padding: 30px; text-align: center;">
+                      <img src="${cleanSiteUrl}/logo.png" alt="Soradin" style="max-width: 150px; height: auto;" />
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 40px 30px;">
+                      <h1 style="color: #2a2a2a; font-size: 24px; margin: 0 0 20px 0;">Payment Method Declined</h1>
+                      <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                        Hi ${agentName || 'there'},
+                      </p>
+                      <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 0 0 30px 0;">
+                        We were unable to process the payment for an appointment booking. Your account has been temporarily paused, and you will not appear in search results until you update your payment method.
+                      </p>
+                      
+                      <div style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 20px; border-radius: 4px; margin: 30px 0;">
+                        <p style="color: #856404; font-size: 16px; margin: 0 0 10px 0; font-weight: 600;">Appointment Details:</p>
+                        <p style="color: #856404; font-size: 14px; margin: 5px 0;"><strong>Amount:</strong> $${(amountCents / 100).toFixed(2)} CAD</p>
+                        <p style="color: #856404; font-size: 14px; margin: 5px 0;"><strong>Appointment ID:</strong> ${appointmentId}</p>
+                        ${declineReason ? `<p style="color: #856404; font-size: 14px; margin: 5px 0;"><strong>Reason:</strong> ${declineReason}</p>` : ''}
+                      </div>
+                      
+                      <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 30px 0 20px 0;">
+                        <strong>What you need to do:</strong>
+                      </p>
+                      <ol style="color: #666666; font-size: 16px; line-height: 1.8; margin: 0 0 30px 0; padding-left: 25px;">
+                        <li>Log in to your agent portal</li>
+                        <li>Go to the Billing section</li>
+                        <li>Update your payment method</li>
+                        <li>Once updated, we'll automatically charge the outstanding payment</li>
+                        <li>Your account will be reactivated and you'll appear in search results again</li>
+                      </ol>
+                      
+                      <div style="text-align: center; margin: 30px 0;">
+                        <a href="${billingUrl}" style="display: inline-block; background-color: #0D5C3D; color: #ffffff; padding: 15px 30px; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 600;">
+                          Update Payment Method
+                        </a>
+                      </div>
+                      
+                      <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 30px 0 0 0;">
+                        If you have any questions, please contact our support team.
+                      </p>
+                      <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 20px 0 0 0;">
+                        Best regards,<br>
+                        The Soradin Team
+                      </p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="background-color: #f9f9f9; padding: 20px 30px; text-align: center; border-top: 1px solid #e0e0e0;">
+                      <p style="color: #999999; font-size: 12px; margin: 0;">
+                        © ${new Date().getFullYear()} Soradin. All rights reserved.
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
+      `,
+    };
+
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${resendApiKey}`,
+      },
+      body: JSON.stringify(emailBody),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ Resend API error for payment decline email:', {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorText,
+        to,
+      });
+      throw new Error(`Resend API error: ${response.status} ${response.statusText}`);
+    }
+
+    const result = await response.json();
+    console.log('✅ Payment decline email sent successfully:', {
+      emailId: result.id,
+      to,
+      appointmentId,
+    });
+    
+    return result;
+  } catch (error: any) {
+    console.error('❌ Error sending payment decline email:', {
       error: error.message,
       stack: error.stack,
       to,

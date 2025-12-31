@@ -46,6 +46,8 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
     hasAvailability: boolean;
     onboardingCompleted?: boolean;
   } | null>(null);
+  const [isPaused, setIsPaused] = useState(false);
+  const [showPausedModal, setShowPausedModal] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -62,7 +64,7 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
 
         const { data: profile, error: profileError } = await supabaseClient
           .from('profiles')
-          .select('full_name, first_name, last_name, profile_picture_url, email, phone, funeral_home, job_title')
+          .select('full_name, first_name, last_name, profile_picture_url, email, phone, funeral_home, job_title, metadata')
           .eq('id', user.id)
           .maybeSingle();
 
@@ -76,6 +78,14 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
           setUserFirstName(profile.first_name || profile.full_name?.split(' ')[0] || 'Agent');
           setUserLastName(profile.last_name || profile.full_name?.split(' ').slice(1).join(' ') || '');
           setProfilePictureUrl(profile.profile_picture_url || null);
+          
+          // Check if account is paused
+          const metadata = profile.metadata || {};
+          const paused = (metadata as any)?.paused_account === true;
+          setIsPaused(paused);
+          if (paused && mounted) {
+            setShowPausedModal(true);
+          }
         }
       } catch (error) {
         console.error('Error loading profile:', error);
@@ -112,7 +122,7 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
         // Fetch profile with all necessary fields
         const { data: profile, error: profileError } = await supabaseClient
           .from('profiles')
-          .select('role, full_name, first_name, last_name, profile_picture_url, email, phone, funeral_home, job_title, approval_status')
+          .select('role, full_name, first_name, last_name, profile_picture_url, email, phone, funeral_home, job_title, approval_status, metadata')
           .eq('id', user.id)
           .maybeSingle();
 
@@ -138,6 +148,14 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
           setUserFirstName(profile.first_name || profile.full_name?.split(' ')[0] || 'Agent');
           setUserLastName(profile.last_name || profile.full_name?.split(' ').slice(1).join(' ') || '');
           setProfilePictureUrl(profile.profile_picture_url || null);
+          
+          // Check if account is paused
+          const metadata = profile.metadata || {};
+          const paused = (metadata as any)?.paused_account === true;
+          setIsPaused(paused);
+          if (paused && mounted) {
+            setShowPausedModal(true);
+          }
         }
         
         setCheckingAuth(false);
@@ -421,6 +439,55 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
       <div className="flex-1 overflow-auto">
         {children}
       </div>
+
+      {/* Paused Account Modal */}
+      {showPausedModal && isPaused && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl max-w-lg w-full p-6 shadow-xl">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-red-600">Account Paused</h2>
+              <button
+                onClick={() => setShowPausedModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="mb-6">
+              <p className="text-gray-600 text-sm mb-4">
+                Your account has been temporarily paused because a payment could not be processed. You will not appear in search results until you update your payment method.
+              </p>
+
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                <p className="text-red-800 text-sm font-medium mb-2">Action Required:</p>
+                <ol className="text-red-700 text-sm space-y-1 list-decimal list-inside">
+                  <li>Go to the Billing section</li>
+                  <li>Update your payment method</li>
+                  <li>Once updated, we'll automatically charge any outstanding payments</li>
+                  <li>Your account will be reactivated automatically</li>
+                </ol>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <Link
+                href="/agent/billing"
+                className="flex-1 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors text-center font-medium"
+                onClick={() => setShowPausedModal(false)}
+              >
+                Update Payment Method
+              </Link>
+              <button
+                onClick={() => setShowPausedModal(false)}
+                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-gray-700"
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Onboarding Modal */}
       {showOnboarding && onboardingStatus && (
