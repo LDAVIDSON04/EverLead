@@ -158,6 +158,31 @@ function BookingStep2Content() {
   };
 
   const handleInputChange = (field: string, value: string) => {
+    // Auto-format date of birth with slashes
+    if (field === "dateOfBirth") {
+      // Remove all non-digit characters
+      const digitsOnly = value.replace(/\D/g, "");
+      
+      // Format with slashes: mm/dd/yyyy
+      let formatted = "";
+      if (digitsOnly.length > 0) {
+        formatted = digitsOnly.substring(0, 2);
+      }
+      if (digitsOnly.length > 2) {
+        formatted += "/" + digitsOnly.substring(2, 4);
+      }
+      if (digitsOnly.length > 4) {
+        formatted += "/" + digitsOnly.substring(4, 8);
+      }
+      
+      // Limit to 10 characters (mm/dd/yyyy)
+      if (formatted.length > 10) {
+        formatted = formatted.substring(0, 10);
+      }
+      
+      value = formatted;
+    }
+    
     setFormData((prev) => ({ ...prev, [field]: value }));
     if (formErrors[field]) {
       setFormErrors((prev) => {
@@ -394,12 +419,13 @@ function BookingStep2Content() {
             {/* Email */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                Email
+                Email <span className="text-red-500">*</span>
               </label>
               <input
                 type="email"
                 id="email"
                 name="email"
+                required
                 value={formData.email}
                 onChange={(e) => handleInputChange("email", e.target.value)}
                 className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800 ${
@@ -417,7 +443,7 @@ function BookingStep2Content() {
               <div>
                 <label htmlFor="legalFirstName" className="block text-sm font-medium text-gray-700 mb-2">
                   <div className="flex items-center gap-1">
-                    Legal first name
+                    Legal first name <span className="text-red-500">*</span>
                     <Info className="w-4 h-4 text-gray-400" />
                   </div>
                 </label>
@@ -425,6 +451,7 @@ function BookingStep2Content() {
                   type="text"
                   id="legalFirstName"
                   name="legalFirstName"
+                  required
                   value={formData.legalFirstName}
                   onChange={(e) => handleInputChange("legalFirstName", e.target.value)}
                   className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800 ${
@@ -439,7 +466,7 @@ function BookingStep2Content() {
               <div>
                 <label htmlFor="legalLastName" className="block text-sm font-medium text-gray-700 mb-2">
                   <div className="flex items-center gap-1">
-                    Legal last name
+                    Legal last name <span className="text-red-500">*</span>
                     <Info className="w-4 h-4 text-gray-400" />
                   </div>
                 </label>
@@ -447,6 +474,7 @@ function BookingStep2Content() {
                   type="text"
                   id="legalLastName"
                   name="legalLastName"
+                  required
                   value={formData.legalLastName}
                   onChange={(e) => handleInputChange("legalLastName", e.target.value)}
                   className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800 ${
@@ -463,7 +491,7 @@ function BookingStep2Content() {
             {/* Date of Birth */}
             <div>
               <label htmlFor="dateOfBirth" className="block text-sm font-medium text-gray-700 mb-2">
-                Date of birth
+                Date of birth <span className="text-red-500">*</span>
               </label>
               <div className="relative">
                 <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -471,6 +499,7 @@ function BookingStep2Content() {
                   type="text"
                   id="dateOfBirth"
                   name="dateOfBirth"
+                  required
                   value={formData.dateOfBirth}
                   onChange={(e) => handleInputChange("dateOfBirth", e.target.value)}
                   className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800 ${
@@ -488,12 +517,13 @@ function BookingStep2Content() {
             {/* Telephone Number */}
             <div>
               <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
-                Telephone number
+                Telephone number <span className="text-red-500">*</span>
               </label>
               <input
                 type="tel"
                 id="phone"
                 name="phone"
+                required
                 value={formData.phone}
                 onChange={(e) => handleInputChange("phone", e.target.value)}
                 className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800 ${
@@ -509,12 +539,13 @@ function BookingStep2Content() {
             {/* City */}
             <div>
               <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-2">
-                City
+                City <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 id="city"
                 name="city"
+                required
                 value={formData.city}
                 onChange={(e) => handleInputChange("city", e.target.value)}
                 className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800 ${
@@ -545,7 +576,7 @@ function BookingStep2Content() {
 
           <div className="mb-8">
             <h2 className="text-2xl font-semibold text-gray-900 mb-2">
-              What type of arrangement are you looking for?
+              What type of arrangement are you looking for? <span className="text-red-500">*</span>
             </h2>
             <p className="text-gray-600 mb-4">
               Help us understand your needs so we can better prepare for your appointment.
