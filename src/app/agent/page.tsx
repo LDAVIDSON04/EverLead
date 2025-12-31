@@ -62,49 +62,9 @@ export default function AgentLandingPage() {
       }
     }
 
-    async function checkAuth() {
-      try {
-        const {
-          data: { user },
-        } = await supabaseClient.auth.getUser();
-
-        if (user) {
-          const { data: profile } = await supabaseClient
-            .from("profiles")
-            .select("role")
-            .eq("id", user.id)
-            .maybeSingle();
-
-          const role = profile?.role;
-
-          if (role === "agent") {
-            // Check if calendar was just connected
-            const calendarConnected = sessionStorage.getItem('calendarConnected');
-            const calendarMessage = sessionStorage.getItem('calendarMessage');
-            
-            if (calendarConnected && calendarMessage) {
-              sessionStorage.removeItem('calendarConnected');
-              sessionStorage.removeItem('calendarMessage');
-              // Redirect to settings with success message
-              router.replace(`/agent/settings?calendarConnected=${calendarConnected}&success=${encodeURIComponent(calendarMessage)}`);
-            } else {
-            router.replace("/agent/dashboard");
-            }
-            return;
-          } else if (role === "admin") {
-            router.replace("/admin/dashboard");
-            return;
-          }
-        }
-
-        setLoading(false);
-      } catch (error) {
-        console.error("Error checking auth:", error);
-        setLoading(false);
-      }
-    }
-
-    checkAuth();
+    // Always show login page - don't auto-redirect if already logged in
+    // Agents must manually enter their credentials
+    setLoading(false);
 
     // Check for calendar connection success message
     if (typeof window !== 'undefined') {
@@ -124,7 +84,7 @@ export default function AgentLandingPage() {
         window.history.replaceState({}, "", newUrl);
       }
     }
-  }, [router]);
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
