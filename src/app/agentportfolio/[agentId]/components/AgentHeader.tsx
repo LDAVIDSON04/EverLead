@@ -60,7 +60,7 @@ export function AgentHeader({
         </div>
         
         <div className="flex-1">
-          <h1 className="mb-1">{name}, {credentials}</h1>
+          <h1 className="mb-1">{name}</h1>
           <p className="text-gray-600 mb-2">{specialty}</p>
           <div className="flex items-center gap-1 text-gray-700">
             <MapPin className="w-4 h-4 text-gray-500" />
