@@ -11,7 +11,9 @@ if (!secretKey) {
 // Make sure STRIPE_SECRET_KEY is set to a test key (sk_test_...) for testing
 // Test keys won't charge real bank accounts - use live keys (sk_live_...) only in production
 const isTestMode = secretKey.startsWith('sk_test_');
-if (!isTestMode && process.env.NODE_ENV !== 'production') {
+if (isTestMode) {
+  console.log('✅ Stripe TEST MODE active - No real charges will be made');
+} else if (process.env.NODE_ENV !== 'production') {
   console.warn('⚠️ WARNING: Using a live Stripe key in non-production environment. For testing, use a test key (sk_test_...)');
 }
 
