@@ -127,10 +127,32 @@ export async function GET(request: NextRequest) {
       hasPaymentMethod = false;
     }
 
-    const needsOnboarding = !hasPaymentMethod || !hasAvailability;
-
     // Check if onboarding has been marked as completed
-    const onboardingCompleted = (metadata as any)?.onboarding_completed === true;
+    let onboardingCompleted = (metadata as any)?.onboarding_completed === true;
+    
+    // CRITICAL: If agent has both payment method and availability, automatically mark onboarding as completed
+    // This ensures the modal never shows again once both are set
+    if (hasPaymentMethod && hasAvailability && !onboardingCompleted) {
+      try {
+        await supabaseAdmin
+          .from("profiles")
+          .update({
+            metadata: {
+              ...metadata,
+              onboarding_completed: true,
+            },
+          })
+          .eq("id", agentId);
+        
+        onboardingCompleted = true;
+        console.log(`[ONBOARDING] Auto-marked onboarding as completed for agent ${agentId} (has payment method and availability)`);
+      } catch (updateError) {
+        console.error("Error auto-marking onboarding as completed:", updateError);
+        // Non-fatal, continue with current status
+      }
+    }
+
+    const needsOnboarding = !hasPaymentMethod || !hasAvailability;
 
     return NextResponse.json({
       needsOnboarding: needsOnboarding && !onboardingCompleted,
