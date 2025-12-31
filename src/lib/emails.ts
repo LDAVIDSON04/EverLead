@@ -60,6 +60,17 @@ type PaymentDeclineEmailArgs = {
   declineReason?: string | null;
 };
 
+type PaymentReceiptEmailArgs = {
+  to: string;
+  agentName?: string | null;
+  appointmentId: string;
+  amountCents: number;
+  paymentIntentId: string;
+  consumerName?: string | null;
+  appointmentDate?: string | null;
+  appointmentTime?: string | null;
+};
+
 /**
  * Send booking confirmation email to consumer/family
  */
@@ -154,7 +165,7 @@ export async function sendConsumerBookingEmail({
         console.error('Error formatting time:', error);
       }
     }
-
+    
     // Build email body
     const emailBody = {
       from: fromEmail,
@@ -246,7 +257,7 @@ export async function sendConsumerBookingEmail({
                       <table width="100%" cellpadding="0" cellspacing="0">
                         <tr>
                           <td style="color: #ffffff; font-size: 12px;">
-                            © ${new Date().getFullYear()} Soradin. All rights reserved.
+                        © ${new Date().getFullYear()} Soradin. All rights reserved.
                           </td>
                           <td align="right" style="color: #9ca3af; font-size: 12px;">
                             This is an automated message, please do not reply.
@@ -423,8 +434,8 @@ export async function sendAgentNewAppointmentEmail({
                               <tr>
                                 <td align="center" style="vertical-align: middle;">
                                   <img src="data:image/png;base64,${getLogoBase64()}" alt="Soradin Logo" width="60" height="60" style="display: block; max-width: 60px; max-height: 60px; border: 0; outline: none; text-decoration: none;" />
-                                </td>
-                              </tr>
+                    </td>
+                  </tr>
                             </table>
                           </td>
                           <td style="vertical-align: middle; padding-left: 24px;">
@@ -449,8 +460,8 @@ export async function sendAgentNewAppointmentEmail({
                                 <td style="padding-top: 8px; padding-bottom: 8px;">
                                   <p style="color: #666666; font-size: 14px; margin: 0 0 4px 0;">Date</p>
                                   <p style="color: #000000; font-size: 16px; margin: 0; font-weight: normal;">${prettyDate}</p>
-                                </td>
-                              </tr>
+                    </td>
+                  </tr>
                             </table>
                           </td>
                           <td width="50%" style="padding-left: 12px; padding-bottom: 16px;">
@@ -528,7 +539,7 @@ export async function sendAgentNewAppointmentEmail({
                       <table width="100%" cellpadding="0" cellspacing="0">
                         <tr>
                           <td style="color: #ffffff; font-size: 12px;">
-                            © ${new Date().getFullYear()} Soradin. All rights reserved.
+                        © ${new Date().getFullYear()} Soradin. All rights reserved.
                           </td>
                           <td align="right" style="color: #9ca3af; font-size: 12px;">
                             This is an automated message, please do not reply.
@@ -663,8 +674,8 @@ export async function sendAgentCancellationEmail({
                               <tr>
                                 <td align="center" style="vertical-align: middle;">
                                   <img src="data:image/png;base64,${getLogoBase64()}" alt="Soradin Logo" width="60" height="60" style="display: block; max-width: 60px; max-height: 60px; border: 0; outline: none; text-decoration: none;" />
-                                </td>
-                              </tr>
+                    </td>
+                  </tr>
                             </table>
                           </td>
                           <td style="vertical-align: middle; padding-left: 24px;">
@@ -689,8 +700,8 @@ export async function sendAgentCancellationEmail({
                                 <td style="padding-top: 8px; padding-bottom: 8px;">
                                   <p style="color: #666666; font-size: 14px; margin: 0 0 4px 0;">Date</p>
                                   <p style="color: #000000; font-size: 16px; margin: 0; font-weight: normal;">${prettyDate}</p>
-                                </td>
-                              </tr>
+                    </td>
+                  </tr>
                             </table>
                           </td>
                           <td width="50%" style="padding-left: 12px; padding-bottom: 16px;">
@@ -726,7 +737,7 @@ export async function sendAgentCancellationEmail({
                       <table width="100%" cellpadding="0" cellspacing="0">
                         <tr>
                           <td style="color: #ffffff; font-size: 12px;">
-                            © ${new Date().getFullYear()} Soradin. All rights reserved.
+                        © ${new Date().getFullYear()} Soradin. All rights reserved.
                           </td>
                           <td align="right" style="color: #9ca3af; font-size: 12px;">
                             This is an automated message, please do not reply.
@@ -861,8 +872,8 @@ export async function sendAgentRebookingEmail({
                               <tr>
                                 <td align="center" style="vertical-align: middle;">
                                   <img src="data:image/png;base64,${getLogoBase64()}" alt="Soradin Logo" width="60" height="60" style="display: block; max-width: 60px; max-height: 60px; border: 0; outline: none; text-decoration: none;" />
-                                </td>
-                              </tr>
+                    </td>
+                  </tr>
                             </table>
                           </td>
                           <td style="vertical-align: middle; padding-left: 24px;">
@@ -921,10 +932,10 @@ export async function sendAgentRebookingEmail({
                         <tr>
                           <td style="padding: 16px; background-color: #f3f4f6; border: 1px solid #e5e7eb;">
                             <p style="color: #374151; font-size: 16px; margin: 0; line-height: 1.5;">
-                              They will be selecting a new time slot. Please check your calendar for the updated appointment.
-                            </p>
-                          </td>
-                        </tr>
+                        They will be selecting a new time slot. Please check your calendar for the updated appointment.
+                      </p>
+                    </td>
+                  </tr>
                       </table>
                     </td>
                   </tr>
@@ -935,7 +946,7 @@ export async function sendAgentRebookingEmail({
                       <table width="100%" cellpadding="0" cellspacing="0">
                         <tr>
                           <td style="color: #ffffff; font-size: 12px;">
-                            © ${new Date().getFullYear()} Soradin. All rights reserved.
+                        © ${new Date().getFullYear()} Soradin. All rights reserved.
                           </td>
                           <td align="right" style="color: #9ca3af; font-size: 12px;">
                             This is an automated message, please do not reply.
@@ -1061,8 +1072,8 @@ export async function sendReviewFollowUpEmail({
                               <tr>
                                 <td align="center" style="vertical-align: middle;">
                                   <img src="data:image/png;base64,${getLogoBase64()}" alt="Soradin Logo" width="60" height="60" style="display: block; max-width: 60px; max-height: 60px; border: 0; outline: none; text-decoration: none;" />
-                                </td>
-                              </tr>
+                    </td>
+                  </tr>
                             </table>
                           </td>
                           <td style="vertical-align: middle; padding-left: 24px;">
@@ -1105,10 +1116,10 @@ export async function sendReviewFollowUpEmail({
                               <a href="${reviewUrl}" style="color: #1a4d2e; text-decoration: underline;">Share Your Experience</a>
                             </p>
                             <p style="color: #6b7280; font-size: 14px; margin: 16px 0 0 0; line-height: 1.5;">
-                              This link will expire in 30 days.
-                            </p>
-                          </td>
-                        </tr>
+                        This link will expire in 30 days.
+                      </p>
+                    </td>
+                  </tr>
                       </table>
                     </td>
                   </tr>
@@ -1119,7 +1130,7 @@ export async function sendReviewFollowUpEmail({
                       <table width="100%" cellpadding="0" cellspacing="0">
                         <tr>
                           <td style="color: #ffffff; font-size: 12px;">
-                            © ${new Date().getFullYear()} Soradin. All rights reserved.
+                        © ${new Date().getFullYear()} Soradin. All rights reserved.
                           </td>
                           <td align="right" style="color: #9ca3af; font-size: 12px;">
                             This is an automated message, please do not reply.

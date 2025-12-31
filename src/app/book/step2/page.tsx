@@ -375,12 +375,6 @@ function BookingStep2Content() {
                 </span>
                 <span>Secure</span>
               </div>
-              <Link
-                href="/search"
-                className="text-gray-600 hover:text-gray-900 transition-colors text-sm"
-              >
-                Log in
-              </Link>
             </div>
           </div>
         </div>
