@@ -558,6 +558,7 @@ function BookingStep2Content() {
                   formErrors.phone ? "border-red-500" : "border-gray-300"
                 }`}
                 placeholder="(555) 123-4567"
+                maxLength={14}
               />
               {formErrors.phone && (
                 <p className="text-sm text-red-500 mt-1">{formErrors.phone}</p>
