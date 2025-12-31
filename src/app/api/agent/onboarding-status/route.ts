@@ -127,31 +127,42 @@ export async function GET(request: NextRequest) {
       hasPaymentMethod = false;
     }
 
-    // Check if onboarding has been marked as completed
-    let onboardingCompleted = (metadata as any)?.onboarding_completed === true;
-    
     // CRITICAL: If agent has both payment method and availability, automatically mark onboarding as completed
     // This ensures the modal never shows again once both are set
-    if (hasPaymentMethod && hasAvailability && !onboardingCompleted) {
-      try {
-        await supabaseAdmin
-          .from("profiles")
-          .update({
-            metadata: {
-              ...metadata,
-              onboarding_completed: true,
-            },
-          })
-          .eq("id", agentId);
-        
-        onboardingCompleted = true;
-        console.log(`[ONBOARDING] Auto-marked onboarding as completed for agent ${agentId} (has payment method and availability)`);
-      } catch (updateError) {
-        console.error("Error auto-marking onboarding as completed:", updateError);
-        // Non-fatal, continue with current status
+    let onboardingCompleted = (metadata as any)?.onboarding_completed === true;
+    
+    if (hasPaymentMethod && hasAvailability) {
+      // If both are present, ensure onboarding_completed is set to true
+      if (!onboardingCompleted) {
+        try {
+          await supabaseAdmin
+            .from("profiles")
+            .update({
+              metadata: {
+                ...metadata,
+                onboarding_completed: true,
+              },
+            })
+            .eq("id", agentId);
+          
+          onboardingCompleted = true;
+          console.log(`[ONBOARDING] Auto-marked onboarding as completed for agent ${agentId} (has payment method and availability)`);
+        } catch (updateError) {
+          console.error("Error auto-marking onboarding as completed:", updateError);
+          // Non-fatal, continue with current status
+        }
       }
+      
+      // If onboarding is completed OR both requirements are met, don't show onboarding
+      return NextResponse.json({
+        needsOnboarding: false,
+        hasPaymentMethod,
+        hasAvailability,
+        onboardingCompleted: true, // Always true if both are present
+      });
     }
 
+    // If either is missing, needs onboarding
     const needsOnboarding = !hasPaymentMethod || !hasAvailability;
 
     return NextResponse.json({
