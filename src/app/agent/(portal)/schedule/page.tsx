@@ -38,7 +38,6 @@ export default function SchedulePage() {
 
   const [specialist, setSpecialist] = useState<Specialist | null>(null);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [loading, setLoading] = useState(true);
   const [loadingAppointments, setLoadingAppointments] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [icsUrl, setIcsUrl] = useState<string | null>(null);
@@ -66,7 +65,6 @@ export default function SchedulePage() {
   useEffect(() => {
     async function loadSpecialist() {
       try {
-        setLoading(true);
         setError(null);
 
         // Get access token
@@ -209,8 +207,6 @@ export default function SchedulePage() {
       } catch (err: any) {
         console.error("Error loading specialist:", err);
         setError(err.message || "Failed to load specialist information");
-      } finally {
-        setLoading(false);
       }
     }
 
@@ -436,16 +432,6 @@ export default function SchedulePage() {
       return null;
     }).filter(Boolean);
   };
-
-  if (loading) {
-    return (
-      <div className="flex-1 overflow-auto bg-gray-50">
-        <div className="flex items-center justify-center h-full">
-          <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
-        </div>
-      </div>
-    );
-  }
 
   const filteredAppointments = getFilteredAppointments();
   const weekAppointments = getAppointmentsForWeek();
