@@ -48,28 +48,43 @@ export async function GET(request: NextRequest) {
     const metadata = profile.metadata || {};
     const availabilityData = metadata.availability || {};
     
+    // Also get office locations to merge with availability
+    const { data: officeLocations } = await supabaseAdmin
+      .from("office_locations")
+      .select("city")
+      .eq("agent_id", agentId);
+    
+    const officeLocationCities: string[] = Array.from(
+      new Set((officeLocations || []).map((loc: any) => loc.city).filter(Boolean))
+    );
+    
     // Check that availability has locations AND at least one location has time slots enabled
     const locations = availabilityData.locations || [];
     const availabilityByLocation = availabilityData.availabilityByLocation || {};
     
-    console.log(`[ONBOARDING-STATUS] Agent ${agentId}: Checking availability. Locations: ${locations.length}, AvailabilityByLocation keys: ${Object.keys(availabilityByLocation).length}`);
-    console.log(`[ONBOARDING-STATUS] Agent ${agentId}: Locations: ${JSON.stringify(locations)}`);
+    // Merge office locations with availability locations
+    const allLocationCities = Array.from(new Set([...locations, ...officeLocationCities]));
+    
+    console.log(`[ONBOARDING-STATUS] Agent ${agentId}: Checking availability. Locations from metadata: ${locations.length}, Office locations: ${officeLocationCities.length}, AvailabilityByLocation keys: ${Object.keys(availabilityByLocation).length}`);
+    console.log(`[ONBOARDING-STATUS] Agent ${agentId}: Locations from metadata: ${JSON.stringify(locations)}`);
+    console.log(`[ONBOARDING-STATUS] Agent ${agentId}: Office location cities: ${JSON.stringify(officeLocationCities)}`);
     console.log(`[ONBOARDING-STATUS] Agent ${agentId}: AvailabilityByLocation keys: ${JSON.stringify(Object.keys(availabilityByLocation))}`);
     
     let hasAvailability = false;
-    if (locations.length > 0 && Object.keys(availabilityByLocation).length > 0) {
+    if (allLocationCities.length > 0 && Object.keys(availabilityByLocation).length > 0) {
       // Check if at least one location has at least one day enabled
       const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
       hasAvailability = Object.keys(availabilityByLocation).some((locationKey) => {
         const locationSchedule = availabilityByLocation[locationKey];
+        if (!locationSchedule || typeof locationSchedule !== 'object') return false;
         return days.some((day: string) => {
           const dayData = locationSchedule[day];
-          return dayData && dayData.enabled === true;
+          return dayData && typeof dayData === 'object' && dayData.enabled === true;
         });
       });
       console.log(`[ONBOARDING-STATUS] Agent ${agentId}: Has availability with enabled days: ${hasAvailability}`);
     } else {
-      console.log(`[ONBOARDING-STATUS] Agent ${agentId}: No availability data found (locations: ${locations.length}, availabilityByLocation: ${Object.keys(availabilityByLocation).length})`);
+      console.log(`[ONBOARDING-STATUS] Agent ${agentId}: No availability data found (all locations: ${allLocationCities.length}, availabilityByLocation: ${Object.keys(availabilityByLocation).length})`);
     }
     
     console.log(`[ONBOARDING-STATUS] Agent ${agentId}: Final hasAvailability: ${hasAvailability}`);

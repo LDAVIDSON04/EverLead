@@ -176,15 +176,21 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
         
         if (onboardingRes.ok) {
           const status = await onboardingRes.json();
+          console.log('[ONBOARDING-FRONTEND] Status received:', status);
           if (status && isMounted) {
             setOnboardingStatus(status);
-            // Only show onboarding if needsOnboarding is true AND not already completed
-            if (status.needsOnboarding && !status.onboardingCompleted) {
+            // CRITICAL: If needsOnboarding is false, never show the modal
+            // Also check if both payment method and availability are present
+            const shouldShow = status.needsOnboarding === true && !status.onboardingCompleted;
+            console.log('[ONBOARDING-FRONTEND] shouldShow:', shouldShow, 'needsOnboarding:', status.needsOnboarding, 'onboardingCompleted:', status.onboardingCompleted);
+            if (shouldShow) {
               setShowOnboarding(true);
             } else {
               setShowOnboarding(false);
             }
           }
+        } else {
+          console.error('[ONBOARDING-FRONTEND] Failed to fetch onboarding status:', onboardingRes.status);
         }
       } catch (fetchError) {
         // Silently fail - don't block access
