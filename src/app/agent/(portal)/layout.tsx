@@ -557,7 +557,7 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
                     });
                     const status = await res.json();
                     setOnboardingStatus(status);
-                    if (!status.needsOnboarding) {
+                    if (!status.needsOnboarding || status.onboardingCompleted) {
                       setShowOnboarding(false);
                     }
                   }

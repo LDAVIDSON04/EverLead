@@ -53,12 +53,6 @@ export async function GET(req: NextRequest) {
       .select("id, full_name, first_name, last_name, profile_picture_url, funeral_home, job_title, agent_city, agent_province, metadata, approval_status, ai_generated_bio, bio_approval_status")
       .eq("role", "agent");
 
-    // Also fetch office locations for all agents to merge with availability
-    const { data: allOfficeLocations } = await supabaseAdmin
-      .from("office_locations")
-      .select("agent_id, city")
-      .in("agent_id", (profiles || []).map((p: any) => p.id));
-
     if (error) {
       console.error("Error fetching agents:", error);
       return NextResponse.json(
