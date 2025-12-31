@@ -289,7 +289,7 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
             </div>
             <div className="rounded-xl overflow-hidden shadow-lg">
               <img 
-                src="/8ff8bf4b1af345419aad5cbee8652d7834e02dff.png" 
+                src="/consultation-image.jpg" 
                 alt="Professional consultation space"
                 className="w-full h-full object-contain md:object-cover min-h-[400px] md:min-h-[500px]"
                 onError={(e) => {
