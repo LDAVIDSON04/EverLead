@@ -226,8 +226,8 @@ export default function HomePage() {
 
             {/* Navigation Links - Mobile only, next to logo */}
             <div className="flex items-center gap-2 md:hidden">
-              <Link href="/what-is-pre-need-funeral-planning" className="text-xs text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors">
-                What is pre-need funeral planning?
+              <Link href="/what-is-pre-need-funeral-planning" className="text-xs text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors leading-tight">
+                What is pre-need<br />funeral planning?
               </Link>
               <Link href="/learn-more-about-starting" className="text-xs text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors">
                 List your Specialty
