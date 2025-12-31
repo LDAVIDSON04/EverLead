@@ -53,7 +53,7 @@ a:hover {
 @media (min-width: 1536px) {
   .arm-pointing-illustration {
     left: -80px;
-    bottom: -20px;
+    bottom: -60px;
     width: 1800px;
   }
 }
@@ -62,7 +62,7 @@ a:hover {
 @media (min-width: 1920px) {
   .arm-pointing-illustration {
     left: -100px;
-    bottom: -25px;
+    bottom: -80px;
     width: 2000px;
   }
 }
