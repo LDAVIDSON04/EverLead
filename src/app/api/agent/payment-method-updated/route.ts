@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
 
     // Attempt to charge for each outstanding payment
     const results = await Promise.allSettled(
-      declinedPayments.map(async (payment) => {
+      declinedPayments.map(async (payment: { id: string; appointment_id: string; amount_cents: number }) => {
         try {
           const chargeResult = await chargeAgentForAppointment(
             agentId,
