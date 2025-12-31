@@ -67,11 +67,6 @@ function BookingStep2Content() {
           console.error("Error loading agent:", error);
         } else if (data) {
           setAgentInfo(data);
-          
-          // Set default city from searched city or agent city
-          if (!formData.city) {
-            setFormData(prev => ({ ...prev, city: searchedCity || data.agent_city || "" }));
-          }
         }
 
         // Load office locations
@@ -108,6 +103,13 @@ function BookingStep2Content() {
     }
     loadAgent();
   }, [agentId, searchedCity, officeLocationName]);
+
+  // Set default city from searched city or agent city
+  useEffect(() => {
+    if (agentInfo && !formData.city) {
+      setFormData(prev => ({ ...prev, city: searchedCity || agentInfo.agent_city || "" }));
+    }
+  }, [agentInfo, searchedCity]);
 
   const formatDate = (dateStr: string): string => {
     if (!dateStr) return "";
