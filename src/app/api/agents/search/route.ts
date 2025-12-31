@@ -238,16 +238,22 @@ export async function GET(req: NextRequest) {
       
       filtered = filtered.filter((agent) => {
         // Normalize function to extract city name from "City, Province" format
+        // Handles case-insensitive matching and extra whitespace
         const normalizeCity = (cityStr: string): string => {
-          return cityStr.toLowerCase().trim().split(',')[0].trim();
+          if (!cityStr) return '';
+          return cityStr.toLowerCase().trim().split(',')[0].trim().replace(/\s+/g, ' ');
         };
         
         // Check if the search city matches any of the agent's locations (availability or office locations)
         const normalizedSearch = normalizeCity(searchCity);
         
+        if (!normalizedSearch) return false;
+        
         // First check if the city is in the agent's location list (availability or office locations)
         const hasLocationInList = agent.availabilityLocations.some((loc: string) => {
+          if (!loc) return false;
           const normalizedLoc = normalizeCity(loc);
+          // Exact match or one contains the other (for partial matches like "Salmon Arm" vs "Salmon")
           return normalizedLoc === normalizedSearch || 
                  normalizedLoc.includes(normalizedSearch) ||
                  normalizedSearch.includes(normalizedLoc);
@@ -259,8 +265,11 @@ export async function GET(req: NextRequest) {
         
         // If city is in the list, check if it has availability set with time slots
         // Try to find matching availability data (case-insensitive)
+        // Check both exact matches and keys that contain the search city
         const matchingLocationKey = Object.keys(agent.availabilityByLocation).find((loc: string) => {
+          if (!loc) return false;
           const normalizedLoc = normalizeCity(loc);
+          // Exact match or one contains the other
           return normalizedLoc === normalizedSearch || 
                  normalizedLoc.includes(normalizedSearch) ||
                  normalizedSearch.includes(normalizedLoc);
@@ -269,15 +278,18 @@ export async function GET(req: NextRequest) {
         if (matchingLocationKey) {
           // Check if this city has actual availability set (at least one day enabled)
           const cityAvailability = agent.availabilityByLocation[matchingLocationKey];
-          if (cityAvailability) {
+          if (cityAvailability && typeof cityAvailability === 'object') {
             // Check if at least one day has enabled: true
             const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
             const hasEnabledDay = days.some((day: string) => {
               const dayData = cityAvailability[day];
-              return dayData && dayData.enabled === true;
+              return dayData && typeof dayData === 'object' && dayData.enabled === true;
             });
             
-            return hasEnabledDay;
+            if (hasEnabledDay) {
+              console.log(`[AGENT SEARCH] Agent ${agent.id} matches location "${location}" (searchCity: "${searchCity}", matched key: "${matchingLocationKey}")`);
+              return true;
+            }
           }
         }
         
