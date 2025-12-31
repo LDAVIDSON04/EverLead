@@ -46,8 +46,8 @@ a:hover {
 /* Using 1520px breakpoint to target Windows laptop (1528px) without affecting Mac screens */
 @media (min-width: 1520px) and (max-width: 1919px) {
   .arm-pointing-illustration {
-    left: -150px !important;
-    bottom: -150px !important;
+    left: -170px !important;
+    bottom: -250px !important;
     width: 1800px !important;
   }
 }
