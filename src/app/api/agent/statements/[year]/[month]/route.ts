@@ -80,7 +80,7 @@ export async function GET(
     // Group appointments by date (day)
     const dailyCharges = new Map<string, { count: number; totalCents: number; dayNum: number }>();
 
-    appointments?.forEach((appt) => {
+    appointments?.forEach((appt: { id: string; created_at: string; price_cents: number | null; stripe_payment_intent_id: string | null }) => {
       const date = new Date(appt.created_at);
       const dayNum = date.getUTCDate();
       const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
