@@ -163,6 +163,7 @@ export async function GET(request: NextRequest) {
 
     // If either is missing, needs onboarding
     const needsOnboarding = !hasPaymentMethod || !hasAvailability;
+    const onboardingCompleted = (metadata as any)?.onboarding_completed === true;
 
     return NextResponse.json({
       needsOnboarding: needsOnboarding && !onboardingCompleted,
