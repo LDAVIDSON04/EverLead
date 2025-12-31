@@ -30,7 +30,7 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
               <img 
                 src="/f75c771a2df6874e6f701c79ddc5f202a2bcc4f5.png" 
                 alt="What is pre-need funeral planning illustration"
-                className="w-full h-full object-cover min-h-[500px]"
+                className="w-full h-full object-contain md:object-cover min-h-[400px] md:min-h-[500px]"
                 onError={(e) => {
                   e.currentTarget.style.display = 'none';
                 }}
@@ -95,7 +95,7 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
               <img 
                 src="/bf599b03f4b83eb7d458ba52eb11f1573e5ac36d.png" 
                 alt="Planning workspace"
-                className="w-full h-full object-cover min-h-[500px]"
+                className="w-full h-full object-contain md:object-cover min-h-[400px] md:min-h-[500px]"
                 onError={(e) => {
                   e.currentTarget.style.display = 'none';
                 }}
@@ -164,7 +164,7 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
               <img 
                 src="/a448f0358969818d57da3a45b0fef57728b21630.png" 
                 alt="Professional documentation"
-                className="w-full h-full object-cover min-h-[500px]"
+                className="w-full h-full object-contain md:object-cover min-h-[400px] md:min-h-[500px]"
                 onError={(e) => {
                   e.currentTarget.style.display = 'none';
                 }}
@@ -291,7 +291,7 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
               <img 
                 src="/8ff8bf4b1af345419aad5cbee8652d7834e02dff.png" 
                 alt="Professional consultation space"
-                className="w-full h-full object-cover min-h-[500px]"
+                className="w-full h-full object-contain md:object-cover min-h-[400px] md:min-h-[500px]"
                 onError={(e) => {
                   e.currentTarget.style.display = 'none';
                 }}
@@ -309,7 +309,7 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
               <img 
                 src="/3342a4b29bf643b580d630c78e1f13747daaed1c.png" 
                 alt="Calm interior setting"
-                className="w-full h-full object-cover min-h-[500px]"
+                className="w-full h-full object-contain md:object-cover min-h-[400px] md:min-h-[500px]"
                 onError={(e) => {
                   e.currentTarget.style.display = 'none';
                 }}
