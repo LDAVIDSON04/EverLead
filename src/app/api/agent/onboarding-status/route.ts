@@ -23,7 +23,10 @@ export async function GET(request: NextRequest) {
     }
 
     const agentId = user.id;
-    const agentEmail = user.email; // Get email from auth user, not profile (profile.email can be null)
+    // Get email from auth user - Supabase auth user always has email
+    const agentEmail = user.email || user.user_metadata?.email;
+
+    console.log(`[ONBOARDING-STATUS] Agent ${agentId}: Auth user email from user.email: ${user.email}, from user_metadata: ${user.user_metadata?.email}, final: ${agentEmail}`);
 
     // Get profile with approval status
     const { data: profile, error: profileError } = await supabaseAdmin
