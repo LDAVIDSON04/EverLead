@@ -360,7 +360,7 @@ export async function POST(req: NextRequest) {
     // Get price per appointment from billing settings (default to 50 cents for testing - Stripe minimum is $0.50)
     const pricePerAppointment = 0.50; // $0.50 - minimum Stripe allows, change to 29.0 for production
     const priceCents = Math.round(pricePerAppointment * 100);
-
+    
     const appointmentData: any = {
       lead_id: leadId,
       agent_id: agentId,
@@ -815,17 +815,8 @@ export async function POST(req: NextRequest) {
                             <td style="background-color: #1a4d2e; padding: 24px;">
                               <table width="100%" cellpadding="0" cellspacing="0">
                                 <tr>
-                                  <td width="80" style="vertical-align: middle;">
-                                    <table cellpadding="0" cellspacing="0" style="width: 80px; height: 80px; background-color: #ffffff; border-radius: 50%;">
-                                      <tr>
-                                        <td align="center" style="vertical-align: middle;">
-                                          <img src="${cleanSiteUrl}/logo%20-%20white.png" alt="Soradin Logo" width="60" height="60" style="display: block; max-width: 60px; max-height: 60px;" />
-                                        </td>
-                                      </tr>
-                                    </table>
-                                  </td>
-                                  <td style="vertical-align: middle; padding-left: 24px;">
-                                    <h1 style="color: #ffffff; font-size: 32px; font-weight: bold; margin: 0;">SORADIN</h1>
+                                  <td style="vertical-align: middle;">
+                                    <img src="${cleanSiteUrl}/logo%20-%20white.png" alt="Soradin Logo" width="120" height="40" style="display: block; max-width: 120px; max-height: 40px; height: auto;" />
                                   </td>
                                 </tr>
                               </table>
