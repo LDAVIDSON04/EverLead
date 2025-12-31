@@ -44,6 +44,7 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
     needsOnboarding: boolean;
     hasPaymentMethod: boolean;
     hasAvailability: boolean;
+    onboardingCompleted?: boolean;
   } | null>(null);
 
   useEffect(() => {

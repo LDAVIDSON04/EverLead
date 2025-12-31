@@ -28,6 +28,7 @@ type AgentSearchResult = {
   hasAvailability: boolean;
   availabilityLocations: string[];
   availabilityByLocation: Record<string, any>;
+  officeLocationCities?: string[];
 };
 
 export async function GET(req: NextRequest) {
@@ -52,6 +53,12 @@ export async function GET(req: NextRequest) {
       .select("id, full_name, first_name, last_name, profile_picture_url, funeral_home, job_title, agent_city, agent_province, metadata, approval_status, ai_generated_bio, bio_approval_status")
       .eq("role", "agent");
 
+    // Also fetch office locations for all agents to merge with availability
+    const { data: allOfficeLocations } = await supabaseAdmin
+      .from("office_locations")
+      .select("agent_id, city")
+      .in("agent_id", (profiles || []).map((p: any) => p.id));
+
     if (error) {
       console.error("Error fetching agents:", error);
       return NextResponse.json(
@@ -61,6 +68,13 @@ export async function GET(req: NextRequest) {
     }
 
     console.log(`[AGENT SEARCH] Found ${profiles?.length || 0} agents total`);
+
+    // Also fetch office locations for all agents to merge with availability
+    const agentIds = (profiles || []).map((p: any) => p.id);
+    const { data: allOfficeLocations } = await supabaseAdmin
+      .from("office_locations")
+      .select("agent_id, city")
+      .in("agent_id", agentIds.length > 0 ? agentIds : ['00000000-0000-0000-0000-000000000000']); // Dummy ID if no agents
 
     // Filter agents who are approved (both profile AND bio) and have availability configured
     const agentsWithAvailability: AgentSearchResult[] = (profiles || [])
@@ -115,6 +129,14 @@ export async function GET(req: NextRequest) {
           const availabilityLocations = availability.locations || [];
           const availabilityByLocation = availability.availabilityByLocation || {};
           
+          // Get office locations for this agent
+          const agentOfficeLocations = (allOfficeLocations || []).filter((loc: any) => loc.agent_id === profile.id);
+          const officeLocationCities = Array.from(new Set(agentOfficeLocations.map((loc: any) => loc.city).filter(Boolean)));
+          
+          // Merge availability locations with office location cities
+          // This ensures agents show up for all cities where they have offices OR have set availability
+          const allLocationCities = Array.from(new Set([...availabilityLocations, ...officeLocationCities]));
+          
           return {
             id: profile.id,
             full_name: profile.full_name,
@@ -134,8 +156,9 @@ export async function GET(req: NextRequest) {
             business_zip: (metadata as any)?.business_zip || null,
             hasAvailability: true,
             // Include availability data for location filtering
-            availabilityLocations: availabilityLocations,
+            availabilityLocations: allLocationCities, // Include office locations
             availabilityByLocation: availabilityByLocation,
+            officeLocationCities: officeLocationCities, // Store separately for reference
           };
         } catch (err) {
           console.error(`[AGENT SEARCH] Error mapping agent ${profile.id}:`, err);
@@ -225,38 +248,48 @@ export async function GET(req: NextRequest) {
           return cityStr.toLowerCase().trim().split(',')[0].trim();
         };
         
-        // Check availabilityByLocation keys (case-insensitive)
-        // Only match if the city has actual availability set with time slots (at least one day enabled)
+        // Check if the search city matches any of the agent's locations (availability or office locations)
         const normalizedSearch = normalizeCity(searchCity);
-        const hasLocationInByLocation = Object.keys(agent.availabilityByLocation).some((loc: string) => {
+        
+        // First check if the city is in the agent's location list (availability or office locations)
+        const hasLocationInList = agent.availabilityLocations.some((loc: string) => {
           const normalizedLoc = normalizeCity(loc);
-          const cityMatches = normalizedLoc === normalizedSearch || 
+          return normalizedLoc === normalizedSearch || 
                  normalizedLoc.includes(normalizedSearch) ||
                  normalizedSearch.includes(normalizedLoc);
-          
-          if (!cityMatches) return false;
-          
-          // Check if this city has actual availability set (at least one day enabled)
-          const cityAvailability = agent.availabilityByLocation[loc];
-          if (!cityAvailability) return false;
-          
-          // Check if at least one day has enabled: true
-          const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-          const hasEnabledDay = days.some((day: string) => {
-            const dayData = cityAvailability[day];
-            return dayData && dayData.enabled === true;
-          });
-          
-          return hasEnabledDay;
         });
         
-        const matches = hasLocationInByLocation;
-        
-        if (matches) {
-          console.log(`[AGENT SEARCH] Agent ${agent.id} matches location "${location}" (searchCity: "${searchCity}")`);
+        if (!hasLocationInList) {
+          return false; // City not in agent's locations at all
         }
         
-        return matches;
+        // If city is in the list, check if it has availability set with time slots
+        // Try to find matching availability data (case-insensitive)
+        const matchingLocationKey = Object.keys(agent.availabilityByLocation).find((loc: string) => {
+          const normalizedLoc = normalizeCity(loc);
+          return normalizedLoc === normalizedSearch || 
+                 normalizedLoc.includes(normalizedSearch) ||
+                 normalizedSearch.includes(normalizedLoc);
+        });
+        
+        if (matchingLocationKey) {
+          // Check if this city has actual availability set (at least one day enabled)
+          const cityAvailability = agent.availabilityByLocation[matchingLocationKey];
+          if (cityAvailability) {
+            // Check if at least one day has enabled: true
+            const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+            const hasEnabledDay = days.some((day: string) => {
+              const dayData = cityAvailability[day];
+              return dayData && dayData.enabled === true;
+            });
+            
+            return hasEnabledDay;
+          }
+        }
+        
+        // If city is in office locations but no availability data yet, don't show (agent needs to set availability)
+        // This ensures agents only show when they've actually configured availability
+        return false;
       });
       
       console.log(`✅ [AGENT SEARCH] After location filter "${location}" (searchCity: "${locationParts[0]}"): ${filtered.length} agents matched`);
