@@ -10,6 +10,7 @@ import { Search, Star, MapPin, Calendar, Clock, Stethoscope, Video, SlidersHoriz
 import { supabaseClient } from "@/lib/supabaseClient";
 import { BookingPanel } from "@/app/agentportfolio/[agentId]/components/BookingPanel";
 import { OfficeLocationMap } from "@/components/OfficeLocationMap";
+import { TrustHighlights } from "@/app/agentportfolio/[agentId]/components/TrustHighlights";
 
 type Appointment = {
   id: string;
@@ -2006,10 +2007,6 @@ function SearchResults() {
                           <div className="flex-1">
                             <h1 className="mb-1">{portfolioAgentData.full_name || "Agent"}, {portfolioAgentData.credentials}</h1>
                             <p className="text-gray-600 mb-2">{portfolioAgentData.specialty || portfolioAgentData.job_title || "Pre-need Planning Specialist"}</p>
-                            <div className="flex items-center gap-1 text-gray-700">
-                              <MapPin className="w-4 h-4 text-gray-500" />
-                              <span>{portfolioAgentData.location}</span>
-                            </div>
                           </div>
                         </div>
                       </div>
@@ -2037,31 +2034,9 @@ function SearchResults() {
                       </div>
 
                       {/* Trust Highlights */}
-                      <div id="highlights" className="py-8">
-                        <div className="space-y-6">
-                          <div className="flex items-start gap-4">
-                            <Star className="w-8 h-8" style={{ color: '#2d7a4a' }} fill="#2d7a4a" />
-                            <div>
-                              <h3 className="font-semibold text-gray-900 mb-1">Highly recommended</h3>
-                              <p className="text-gray-600 text-sm">100% of patients give this specialist 5 stars</p>
-                            </div>
-                          </div>
-                          <div className="flex items-start gap-4">
-                            <Clock className="w-8 h-8" style={{ color: '#2d7a4a' }} />
-                            <div>
-                              <h3 className="font-semibold text-gray-900 mb-1">Excellent response time</h3>
-                              <p className="text-gray-600 text-sm">100% of inquiries answered within 2 hours</p>
-                            </div>
-                          </div>
-                          <div className="flex items-start gap-4">
-                            <Shield className="w-8 h-8" style={{ color: '#2d7a4a' }} />
-                            <div>
-                              <h3 className="font-semibold text-gray-900 mb-1">Verified by Soradin</h3>
-                              <p className="text-gray-600 text-sm">All credentials and background checks verified</p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+                      {portfolioAgentData?.id && (
+                        <TrustHighlights agentId={portfolioAgentData.id} />
+                      )}
                     </div>
 
                     {/* Right Column - Sticky Booking Panel (5 columns) */}

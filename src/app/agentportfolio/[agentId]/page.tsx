@@ -184,7 +184,7 @@ function AgentProfileContent() {
               name={agentData.full_name || "Agent"}
               credentials={agentData.credentials}
               specialty={agentData.specialty || agentData.job_title || "Pre-need Planning Specialist"}
-              location={location}
+              location=""
               rating={agentData.rating}
               reviewCount={agentData.reviewCount}
               imageUrl={agentData.profile_picture_url || ""}
