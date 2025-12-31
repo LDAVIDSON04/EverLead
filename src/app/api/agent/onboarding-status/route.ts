@@ -66,10 +66,22 @@ export async function GET(request: NextRequest) {
     }
 
     // Check for payment method via Stripe
-    // First, try to find Stripe customer by email
+    // First, check if we have stripe_customer_id in metadata
     let hasPaymentMethod = false;
+    const stripeCustomerId = (metadata as any)?.stripe_customer_id;
+    
     try {
-      if (profile.email) {
+      if (stripeCustomerId) {
+        // Use the stored Stripe customer ID
+        const paymentMethods = await stripe.paymentMethods.list({
+          customer: stripeCustomerId,
+          type: 'card',
+          limit: 1,
+        });
+
+        hasPaymentMethod = paymentMethods.data.length > 0;
+      } else if (profile.email) {
+        // Fallback: try to find Stripe customer by email
         const customers = await stripe.customers.list({
           email: profile.email,
           limit: 1,
@@ -81,6 +93,7 @@ export async function GET(request: NextRequest) {
           const paymentMethods = await stripe.paymentMethods.list({
             customer: customer.id,
             type: 'card',
+            limit: 1,
           });
 
           hasPaymentMethod = paymentMethods.data.length > 0;
