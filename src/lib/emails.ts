@@ -1,6 +1,26 @@
 // src/lib/emails.ts
 // Email helper functions using Resend API
 
+import fs from 'fs';
+import path from 'path';
+
+// Read logo and convert to base64 for inline email images
+let LOGO_BASE64: string | null = null;
+export function getLogoBase64(): string {
+  if (!LOGO_BASE64) {
+    try {
+      const logoPath = path.join(process.cwd(), 'public', 'logo.png');
+      const logoBuffer = fs.readFileSync(logoPath);
+      LOGO_BASE64 = logoBuffer.toString('base64');
+    } catch (error) {
+      console.error('Error reading logo file:', error);
+      // Return empty string if logo can't be read
+      return '';
+    }
+  }
+  return LOGO_BASE64;
+}
+
 type ConsumerEmailArgs = {
   to: string;
   name?: string | null;
@@ -162,7 +182,7 @@ export async function sendConsumerBookingEmail({
                             <table cellpadding="0" cellspacing="0" style="width: 80px; height: 80px; background-color: #ffffff; border-radius: 50%;">
                               <tr>
                                 <td align="center" style="vertical-align: middle;">
-                                  <img src="${cleanSiteUrl}/logo.png" alt="Soradin Logo" width="60" height="60" style="display: block; max-width: 60px; max-height: 60px; border: 0; outline: none; text-decoration: none;" />
+                                  <img src="data:image/png;base64,${getLogoBase64()}" alt="Soradin Logo" width="60" height="60" style="display: block; max-width: 60px; max-height: 60px; border: 0; outline: none; text-decoration: none;" />
                                 </td>
                               </tr>
                             </table>
@@ -402,7 +422,7 @@ export async function sendAgentNewAppointmentEmail({
                             <table cellpadding="0" cellspacing="0" style="width: 80px; height: 80px; background-color: #ffffff; border-radius: 50%;">
                               <tr>
                                 <td align="center" style="vertical-align: middle;">
-                                  <img src="${cleanSiteUrl}/logo.png" alt="Soradin Logo" width="60" height="60" style="display: block; max-width: 60px; max-height: 60px; border: 0; outline: none; text-decoration: none;" />
+                                  <img src="data:image/png;base64,${getLogoBase64()}" alt="Soradin Logo" width="60" height="60" style="display: block; max-width: 60px; max-height: 60px; border: 0; outline: none; text-decoration: none;" />
                                 </td>
                               </tr>
                             </table>
@@ -642,7 +662,7 @@ export async function sendAgentCancellationEmail({
                             <table cellpadding="0" cellspacing="0" style="width: 80px; height: 80px; background-color: #ffffff; border-radius: 50%;">
                               <tr>
                                 <td align="center" style="vertical-align: middle;">
-                                  <img src="${cleanSiteUrl}/logo.png" alt="Soradin Logo" width="60" height="60" style="display: block; max-width: 60px; max-height: 60px; border: 0; outline: none; text-decoration: none;" />
+                                  <img src="data:image/png;base64,${getLogoBase64()}" alt="Soradin Logo" width="60" height="60" style="display: block; max-width: 60px; max-height: 60px; border: 0; outline: none; text-decoration: none;" />
                                 </td>
                               </tr>
                             </table>
@@ -840,7 +860,7 @@ export async function sendAgentRebookingEmail({
                             <table cellpadding="0" cellspacing="0" style="width: 80px; height: 80px; background-color: #ffffff; border-radius: 50%;">
                               <tr>
                                 <td align="center" style="vertical-align: middle;">
-                                  <img src="${cleanSiteUrl}/logo.png" alt="Soradin Logo" width="60" height="60" style="display: block; max-width: 60px; max-height: 60px; border: 0; outline: none; text-decoration: none;" />
+                                  <img src="data:image/png;base64,${getLogoBase64()}" alt="Soradin Logo" width="60" height="60" style="display: block; max-width: 60px; max-height: 60px; border: 0; outline: none; text-decoration: none;" />
                                 </td>
                               </tr>
                             </table>
@@ -1040,7 +1060,7 @@ export async function sendReviewFollowUpEmail({
                             <table cellpadding="0" cellspacing="0" style="width: 80px; height: 80px; background-color: #ffffff; border-radius: 50%;">
                               <tr>
                                 <td align="center" style="vertical-align: middle;">
-                                  <img src="${cleanSiteUrl}/logo.png" alt="Soradin Logo" width="60" height="60" style="display: block; max-width: 60px; max-height: 60px; border: 0; outline: none; text-decoration: none;" />
+                                  <img src="data:image/png;base64,${getLogoBase64()}" alt="Soradin Logo" width="60" height="60" style="display: block; max-width: 60px; max-height: 60px; border: 0; outline: none; text-decoration: none;" />
                                 </td>
                               </tr>
                             </table>
@@ -1225,7 +1245,7 @@ export async function sendPaymentDeclineEmail({
                             <table cellpadding="0" cellspacing="0" style="width: 80px; height: 80px; background-color: #ffffff; border-radius: 50%;">
                               <tr>
                                 <td align="center" style="vertical-align: middle;">
-                                  <img src="${cleanSiteUrl}/logo.png" alt="Soradin Logo" width="60" height="60" style="display: block; max-width: 60px; max-height: 60px; border: 0; outline: none; text-decoration: none;" />
+                                  <img src="data:image/png;base64,${getLogoBase64()}" alt="Soradin Logo" width="60" height="60" style="display: block; max-width: 60px; max-height: 60px; border: 0; outline: none; text-decoration: none;" />
                                 </td>
                               </tr>
                             </table>

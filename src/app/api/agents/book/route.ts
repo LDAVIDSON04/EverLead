@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getLeadPriceFromUrgency } from "@/lib/leads/pricing";
 import { chargeAgentForAppointment } from "@/lib/chargeAgentForAppointment";
-import { sendPaymentDeclineEmail } from "@/lib/emails";
+import { sendPaymentDeclineEmail, getLogoBase64 } from "@/lib/emails";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -678,7 +678,7 @@ export async function POST(req: NextRequest) {
                                   <table cellpadding="0" cellspacing="0" style="width: 80px; height: 80px; background-color: #ffffff; border-radius: 50%;">
                                     <tr>
                                       <td align="center" style="vertical-align: middle;">
-                                        <img src="${cleanSiteUrl}/logo.png" alt="Soradin Logo" width="60" height="60" style="display: block; max-width: 60px; max-height: 60px; border: 0; outline: none; text-decoration: none;" />
+                                        <img src="data:image/png;base64,${getLogoBase64()}" alt="Soradin Logo" width="60" height="60" style="display: block; max-width: 60px; max-height: 60px; border: 0; outline: none; text-decoration: none;" />
                                       </td>
                                     </tr>
                                   </table>
@@ -827,7 +827,7 @@ export async function POST(req: NextRequest) {
                                     <table cellpadding="0" cellspacing="0" style="width: 80px; height: 80px; background-color: #ffffff; border-radius: 50%;">
                                       <tr>
                                         <td align="center" style="vertical-align: middle;">
-                                          <img src="${cleanSiteUrl}/logo.png" alt="Soradin Logo" width="60" height="60" style="display: block; max-width: 60px; max-height: 60px; border: 0; outline: none; text-decoration: none;" />
+                                          <img src="data:image/png;base64,${getLogoBase64()}" alt="Soradin Logo" width="60" height="60" style="display: block; max-width: 60px; max-height: 60px; border: 0; outline: none; text-decoration: none;" />
                                         </td>
                                       </tr>
                                     </table>
