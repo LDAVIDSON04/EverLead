@@ -211,9 +211,8 @@ export default function HomePage() {
       {/* HEADER */}
       <header className="bg-[#FAF9F6] py-5 px-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          {/* Logo, Name, and Navigation Links */}
-          <div className="flex items-center gap-3 md:gap-6">
-            {/* Logo with Soradin text below on mobile, next to on desktop */}
+          {/* Logo and Name - Mobile: text below, Desktop: original layout (text next to) */}
+          <div className="flex items-center gap-3">
             <Link href="/" className="flex flex-col items-start md:flex-row md:items-center md:gap-3">
               <Image
                 src="/Soradin.png"
@@ -225,19 +224,25 @@ export default function HomePage() {
               <span className="text-sm md:text-2xl font-semibold text-[#1A1A1A] md:mt-0 -mt-1">Soradin</span>
             </Link>
 
-            {/* Navigation Links - Next to logo/nav area */}
-            <div className="flex items-center gap-2 md:gap-6">
-              <Link href="/what-is-pre-need-funeral-planning" className="text-xs md:text-base text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors">
+            {/* Navigation Links - Mobile only, next to logo */}
+            <div className="flex items-center gap-2 md:hidden">
+              <Link href="/what-is-pre-need-funeral-planning" className="text-xs text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors">
                 What is pre-need funeral planning?
               </Link>
-              <Link href="/learn-more-about-starting" className="text-xs md:text-base text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors">
+              <Link href="/learn-more-about-starting" className="text-xs text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors">
                 List your Specialty
               </Link>
             </div>
           </div>
 
-          {/* Right Side Navigation - Hide Log in on mobile */}
+          {/* Right Side Navigation - Desktop: original layout, Mobile: hide all */}
           <div className="hidden md:flex items-center gap-6">
+            <Link href="/what-is-pre-need-funeral-planning" className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors">
+              What is pre-need funeral planning?
+            </Link>
+            <Link href="/learn-more-about-starting" className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors">
+              List your Specialty
+            </Link>
             <Link href="/agent" className="bg-[#0C6F3C] text-white px-6 py-2.5 rounded-xl hover:bg-[#0C6F3C]/90 transition-all shadow-sm">
               Log in
             </Link>

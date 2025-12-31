@@ -8,7 +8,7 @@ export function Header() {
   return (
     <header className="w-full bg-[#FFF9F0]">
       <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-        {/* Logo - Mobile: text below, Desktop: text next to */}
+        {/* Logo - Mobile: text below, Desktop: text next to (original) */}
         <Link href="/" className="flex flex-col items-start md:flex-row md:items-center md:gap-3">
           <Image 
             src="/Soradin.png" 

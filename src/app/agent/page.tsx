@@ -265,8 +265,8 @@ export default function AgentLandingPage() {
       <div className="w-full max-w-6xl">
         {/* Login Card */}
         <div className="bg-white rounded-3xl shadow-lg overflow-hidden relative">
-          {/* Logo - top left on desktop, top right on mobile */}
-          <div className="absolute top-8 left-8 md:left-8 md:right-auto right-8 z-10">
+          {/* Logo at top left on desktop, top right on mobile */}
+          <div className="absolute top-8 left-8 md:left-8 right-8 md:right-auto z-10">
             <Link href="/">
               <Image
                 src="/Soradin.png"
