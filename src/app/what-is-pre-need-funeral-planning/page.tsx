@@ -2,23 +2,30 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { ArrowLeft } from "lucide-react";
 
 export default function WhatIsPreNeedFuneralPlanningPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
       <header className="bg-white py-5 px-4">
-        <div className="max-w-7xl mx-auto flex items-center">
-          <Link href="/" className="flex items-center gap-3">
-            <Image
-              src="/Soradin.png"
-              alt="Soradin Logo"
-              width={80}
-              height={80}
-              className="h-20 w-20 object-contain"
-            />
-            <span className="text-2xl font-semibold text-[#1A1A1A]">Soradin</span>
-          </Link>
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Link href="/" className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors">
+              <ArrowLeft className="w-5 h-5" />
+              <span className="text-sm font-medium">Back to Home</span>
+            </Link>
+            <Link href="/" className="flex items-center gap-3">
+              <Image
+                src="/Soradin.png"
+                alt="Soradin Logo"
+                width={80}
+                height={80}
+                className="h-20 w-20 object-contain"
+              />
+              <span className="text-2xl font-semibold text-[#1A1A1A]">Soradin</span>
+            </Link>
+          </div>
         </div>
       </header>
 

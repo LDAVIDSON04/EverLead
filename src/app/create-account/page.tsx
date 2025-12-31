@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Eye, EyeOff, User, Lock, Mail, Phone, MapPin, ChevronRight, ChevronLeft, Plus, X, Check } from 'lucide-react';
+import { Eye, EyeOff, User, Lock, Mail, Phone, MapPin, ChevronRight, ChevronLeft, Plus, X, Check, ArrowLeft } from 'lucide-react';
 
 type Step = 1 | 2 | 3;
 
@@ -378,8 +378,12 @@ export default function CreateAccountPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl mx-auto p-8 md:p-12">
-        {/* Logo */}
-        <div className="flex justify-start mb-8">
+        {/* Back Button and Logo */}
+        <div className="flex items-center justify-between mb-8">
+          <Link href="/" className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors">
+            <ArrowLeft className="w-5 h-5" />
+            <span className="text-sm font-medium">Back to Home</span>
+          </Link>
           <Link href="/" className="flex items-center gap-3">
             <Image
               src="/Soradin.png"

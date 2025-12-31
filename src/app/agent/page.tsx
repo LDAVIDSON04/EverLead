@@ -6,7 +6,7 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabaseClient } from "@/lib/supabaseClient";
-import { Lock, User, Eye, EyeOff, Check } from "lucide-react";
+import { Lock, User, Eye, EyeOff, Check, ArrowLeft } from "lucide-react";
 
 type Mode = "login" | "signup";
 
@@ -265,8 +265,12 @@ export default function AgentLandingPage() {
       <div className="w-full max-w-6xl">
         {/* Login Card */}
         <div className="bg-white rounded-3xl shadow-lg overflow-hidden relative">
-          {/* Logo at top left on desktop, top right on mobile */}
-          <div className="absolute top-8 left-8 md:left-8 right-8 md:right-auto z-10">
+          {/* Back Button and Logo */}
+          <div className="absolute top-8 left-8 md:left-8 right-8 md:right-auto z-10 flex items-center gap-4">
+            <Link href="/" className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors">
+              <ArrowLeft className="w-5 h-5" />
+              <span className="text-sm font-medium hidden sm:inline">Back to Home</span>
+            </Link>
             <Link href="/">
               <Image
                 src="/Soradin.png"
