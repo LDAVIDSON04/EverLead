@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { supabaseClient } from "@/lib/supabaseClient";
-import { CreditCard, Calendar, DollarSign, AlertCircle, FileText } from "lucide-react";
+import { CreditCard, AlertCircle, FileText } from "lucide-react";
 import { StatementModal } from "@/components/billing/StatementModal";
+import { MonthSelectorModal } from "@/components/billing/MonthSelectorModal";
 
 function Badge({ className = "", children, ...props }: React.HTMLAttributes<HTMLSpanElement>) {
   return (
@@ -21,12 +22,10 @@ export default function BillingPage() {
   const [addingPaymentMethod, setAddingPaymentMethod] = useState(false);
   const [paymentMethods, setPaymentMethods] = useState<any[]>([]);
   const [pricePerAppointment, setPricePerAppointment] = useState(0);
-  const [currentMonthAppointments, setCurrentMonthAppointments] = useState(0);
-  const [currentMonthTotal, setCurrentMonthTotal] = useState("0.00");
   const [pastPayments, setPastPayments] = useState<any[]>([]);
+  const [monthSelectorOpen, setMonthSelectorOpen] = useState(false);
   const [statementModalOpen, setStatementModalOpen] = useState(false);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
   const [statementData, setStatementData] = useState<any>(null);
   const [loadingStatement, setLoadingStatement] = useState(false);
 
@@ -45,8 +44,6 @@ export default function BillingPage() {
 
       const billingData = await billingRes.json();
       setPricePerAppointment(billingData.pricePerAppointment);
-      setCurrentMonthAppointments(billingData.currentMonthAppointments);
-      setCurrentMonthTotal(billingData.currentMonthTotal);
       setPastPayments(billingData.pastPayments || []);
 
       // Load payment methods
@@ -288,32 +285,16 @@ export default function BillingPage() {
           </div>
         </div>
 
+        {/* Monthly Statements Section */}
         <div className="mb-6">
-          <h3 className="font-semibold mb-4">Current Month</h3>
-
-          <div className="grid grid-cols-3 gap-4">
-            <div className="bg-gray-50 rounded-lg p-4">
-              <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
-                <Calendar size={16} />
-                Appointments Booked
-              </div>
-              <div className="text-2xl font-semibold">{currentMonthAppointments}</div>
-            </div>
-
-            <div className="bg-gray-50 rounded-lg p-4">
-              <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
-                <DollarSign size={16} />
-                Price Per Appointment
-              </div>
-              <div className="text-2xl font-semibold">${pricePerAppointment.toFixed(2)}</div>
-            </div>
-
-            <div className="bg-green-50 rounded-lg p-4 border border-green-200">
-              <div className="text-sm text-gray-600 mb-1">Estimated Charge</div>
-              <div className="text-2xl font-semibold text-green-800">${currentMonthTotal}</div>
-              <div className="text-xs text-gray-500 mt-1">Charged immediately when appointments are booked</div>
-            </div>
-          </div>
+          <h3 className="font-semibold mb-4">Monthly Statements</h3>
+          <button
+            onClick={() => setMonthSelectorOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-green-800 text-white rounded-lg hover:bg-green-900 transition-colors"
+          >
+            <FileText size={18} />
+            View your statements
+          </button>
         </div>
 
         {pastPayments.length > 0 && (
@@ -346,90 +327,51 @@ export default function BillingPage() {
           </div>
         )}
 
-        {/* Monthly Statements Section */}
-        <div className="mt-6">
-          <h3 className="font-semibold mb-4">Monthly Statements</h3>
-          
-          {/* Year Selector */}
-          <div className="mb-4">
-            <label className="block text-sm text-gray-600 mb-2">Year</label>
-            <select
-              value={selectedYear}
-              onChange={(e) => {
-                setSelectedYear(parseInt(e.target.value));
-                setSelectedMonth(null);
-                setStatementModalOpen(false);
-              }}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800"
-            >
-              {Array.from({ length: 5 }, (_, i) => {
-                const year = new Date().getFullYear() - i;
-                return (
-                  <option key={year} value={year}>
-                    {year}
-                  </option>
-                );
-              })}
-            </select>
-          </div>
-
-          {/* Month Grid */}
-          <div className="grid grid-cols-4 gap-3">
-            {Array.from({ length: 12 }, (_, i) => {
-              const month = i + 1;
-              const monthNames = [
-                "January", "February", "March", "April", "May", "June",
-                "July", "August", "September", "October", "November", "December"
-              ];
-              return (
-                <button
-                  key={month}
-                  onClick={async () => {
-                    setSelectedMonth(month);
-                    setStatementModalOpen(true);
-                    setLoadingStatement(true);
-                    
-                    try {
-                      const { data: { session } } = await supabaseClient.auth.getSession();
-                      if (!session?.access_token) return;
-
-                      const res = await fetch(`/api/agent/statements/${selectedYear}/${month}`, {
-                        headers: {
-                          Authorization: `Bearer ${session.access_token}`,
-                        },
-                      });
-
-                      if (res.ok) {
-                        const data = await res.json();
-                        setStatementData(data);
-                      } else {
-                        console.error("Failed to load statement");
-                        setStatementData(null);
-                      }
-                    } catch (err) {
-                      console.error("Error loading statement:", err);
-                      setStatementData(null);
-                    } finally {
-                      setLoadingStatement(false);
-                    }
-                  }}
-                  className="flex flex-col items-center justify-center p-4 border border-gray-200 rounded-lg hover:border-green-800 hover:bg-green-50 transition-colors"
-                >
-                  <FileText size={24} className="text-gray-600 mb-2" />
-                  <span className="text-sm font-medium text-gray-900">{monthNames[i].substring(0, 3)}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
       </div>
+
+      {/* Month Selector Modal */}
+      <MonthSelectorModal
+        open={monthSelectorOpen}
+        onClose={() => setMonthSelectorOpen(false)}
+        selectedYear={selectedYear}
+        onYearChange={(year) => setSelectedYear(year)}
+        onMonthSelect={async (year, month) => {
+          setMonthSelectorOpen(false);
+          setStatementModalOpen(true);
+          setLoadingStatement(true);
+
+          try {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (!session?.access_token) return;
+
+            const res = await fetch(`/api/agent/statements/${year}/${month}`, {
+              headers: {
+                Authorization: `Bearer ${session.access_token}`,
+              },
+            });
+
+            if (res.ok) {
+              const data = await res.json();
+              setStatementData(data);
+            } else {
+              console.error("Failed to load statement");
+              setStatementData(null);
+            }
+          } catch (err) {
+            console.error("Error loading statement:", err);
+            setStatementData(null);
+          } finally {
+            setLoadingStatement(false);
+          }
+        }}
+        loadingStatement={loadingStatement}
+      />
 
       {/* Statement Modal */}
       <StatementModal
         open={statementModalOpen}
         onClose={() => {
           setStatementModalOpen(false);
-          setSelectedMonth(null);
         }}
         data={statementData}
         loading={loadingStatement}
