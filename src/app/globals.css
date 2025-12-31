@@ -41,13 +41,13 @@ a:hover {
   z-index: 1;
 }
 
-/* Arm pointing illustration - Windows laptop adjustments only */
+/* Arm pointing illustration - Windows laptop adjustments ONLY */
 /* Base styles are inline in the component to preserve Mac view exactly */
-/* Only adjust for screens wider than typical Mac screens (1528px browser width = Windows laptop) */
-@media (min-width: 1450px) {
+/* Using 1520px breakpoint to target Windows laptop (1528px) without affecting Mac screens */
+@media (min-width: 1520px) and (max-width: 1919px) {
   .arm-pointing-illustration {
     left: -80px !important;
-    bottom: -80px !important;
+    bottom: -100px !important;
     width: 1800px !important;
   }
 }
@@ -56,7 +56,7 @@ a:hover {
 @media (min-width: 1920px) {
   .arm-pointing-illustration {
     left: -100px !important;
-    bottom: -100px !important;
+    bottom: -120px !important;
     width: 2000px !important;
   }
 }
