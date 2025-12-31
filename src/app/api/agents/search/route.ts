@@ -336,14 +336,14 @@ export async function GET(req: NextRequest) {
     }
 
     // Fetch review counts for all agents and sort by review count (highest first)
-    const agentIds = filtered.map(a => a.id);
+    const filteredAgentIds = filtered.map(a => a.id);
     let reviewCountsMap: Record<string, number> = {};
     
-    if (agentIds.length > 0) {
+    if (filteredAgentIds.length > 0) {
       const { data: reviews } = await supabaseAdmin
         .from("reviews")
         .select("agent_id")
-        .in("agent_id", agentIds);
+        .in("agent_id", filteredAgentIds);
       
       // Count reviews per agent
       (reviews || []).forEach((review: any) => {
