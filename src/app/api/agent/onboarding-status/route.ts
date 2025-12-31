@@ -23,6 +23,7 @@ export async function GET(request: NextRequest) {
     }
 
     const agentId = user.id;
+    const agentEmail = user.email; // Get email from auth user, not profile (profile.email can be null)
 
     // Get profile with approval status
     const { data: profile, error: profileError } = await supabaseAdmin
@@ -94,13 +95,16 @@ export async function GET(request: NextRequest) {
     let hasPaymentMethod = false;
     let stripeCustomerId = (metadata as any)?.stripe_customer_id;
     
-    console.log(`[ONBOARDING-STATUS] Agent ${agentId}: Checking payment method. Email: ${profile.email}, Stripe Customer ID in metadata: ${stripeCustomerId || 'NOT FOUND'}`);
+    // Use auth user email (which is always set) instead of profile.email (which can be null)
+    const emailToUse = agentEmail || profile.email;
+    
+    console.log(`[ONBOARDING-STATUS] Agent ${agentId}: Checking payment method. Auth user email: ${agentEmail}, Profile email: ${profile.email}, Email to use: ${emailToUse}, Stripe Customer ID in metadata: ${stripeCustomerId || 'NOT FOUND'}`);
     
     try {
       // Always try email lookup first to ensure we get the most up-to-date customer
-      if (profile.email) {
+      if (emailToUse) {
         const customers = await stripe.customers.list({
-          email: profile.email,
+          email: emailToUse,
           limit: 1,
         });
 
@@ -139,7 +143,7 @@ export async function GET(request: NextRequest) {
           hasPaymentMethod = paymentMethods.data.length > 0;
           console.log(`[ONBOARDING-STATUS] Agent ${agentId}: Payment methods found by email lookup: ${paymentMethods.data.length}, hasPaymentMethod: ${hasPaymentMethod}`);
         } else {
-          console.log(`[ONBOARDING-STATUS] Agent ${agentId}: No Stripe customer found by email`);
+          console.log(`[ONBOARDING-STATUS] Agent ${agentId}: No Stripe customer found by email: ${emailToUse}`);
         }
       }
       
