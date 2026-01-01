@@ -327,11 +327,6 @@ export default function SchedulePage() {
           >
             Add availability
           </button>
-          <div className="flex border border-gray-300 rounded-lg overflow-hidden">
-            <button className="px-6 py-2 bg-gray-100 text-gray-700">
-              Week
-            </button>
-          </div>
         </div>
       </div>
 
@@ -345,10 +340,10 @@ export default function SchedulePage() {
               const date = weekDates[index];
               const today = isToday(date);
               return (
-                <div key={day} className="flex-1 min-w-[140px] px-4 py-6 border-l border-gray-200">
+                <div key={day} className="flex-1 min-w-[140px] px-4 py-6">
                   <div className="flex items-center gap-3">
                     <div className={`w-12 h-12 rounded-full flex items-center justify-center text-gray-600 ${
-                      today ? 'bg-blue-500 text-white' : 'bg-gray-100'
+                      today ? 'bg-green-600 text-white' : 'bg-gray-100'
                     }`}>
                       {day.substring(0, 1)}
                     </div>
@@ -376,7 +371,7 @@ export default function SchedulePage() {
                     return (
                       <div
                         key={`${day}-${hour}`}
-                        className="flex-1 min-w-[140px] border-l border-gray-200 relative h-32 overflow-visible"
+                        className="flex-1 min-w-[140px] relative h-32 overflow-visible"
                       >
                         {cellAppointments.map((apt: any) => {
                           // Calculate top offset within this hour (based on minutes)
