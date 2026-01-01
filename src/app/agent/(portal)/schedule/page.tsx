@@ -388,6 +388,9 @@ export default function SchedulePage() {
                           // Calculate height based on duration
                           const height = (apt.durationMinutes / 60) * 120;
                           const color = getCityColor(apt.location, apt.is_external);
+                          
+                          // Debug: log to see what's happening with colors
+                          // console.log('Appointment:', { id: apt.id, location: apt.location, is_external: apt.is_external, color });
 
                           return (
                             <div
@@ -400,7 +403,7 @@ export default function SchedulePage() {
                                   setViewingExternalAppointment(apt);
                                 }
                               }}
-                              className={`absolute inset-x-1 ${color} rounded-lg p-2 shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-all`}
+                              className={`absolute inset-x-1 ${color} rounded-lg p-2 shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-all border border-gray-200`}
                               style={{
                                 top: `${topOffset}px`,
                                 height: `${Math.max(height, 60)}px`,
@@ -412,14 +415,28 @@ export default function SchedulePage() {
                                   <div className="flex items-center gap-1 mb-1">
                                     <span className="text-sm font-medium text-gray-700">{apt.family_name}</span>
                                   </div>
-                                  <div className="text-xs text-gray-600">
-                                    {apt.startTime} - {apt.endTime}
+                                  <div className="flex items-center gap-1 text-xs text-gray-600">
+                                    <span>{apt.startTime} - {apt.endTime}</span>
+                                    {apt.location && apt.location !== "N/A" && apt.location !== "External Calendar" && (
+                                      <>
+                                        <span>•</span>
+                                        <MapPin className="w-3 h-3" />
+                                        <span className="truncate">{apt.location}</span>
+                                      </>
+                                    )}
                                   </div>
                                 </>
                               )}
                               {!apt.family_name && (
                                 <div className="flex items-center gap-2 text-xs text-gray-600">
                                   <span>{apt.startTime} - {apt.endTime}</span>
+                                  {apt.location && apt.location !== "N/A" && apt.location !== "External Calendar" && (
+                                    <>
+                                      <span>•</span>
+                                      <MapPin className="w-3 h-3" />
+                                      <span className="truncate">{apt.location}</span>
+                                    </>
+                                  )}
                                 </div>
                               )}
                             </div>

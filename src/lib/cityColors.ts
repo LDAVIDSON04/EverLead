@@ -22,12 +22,18 @@ export function getCityColor(location: string | null | undefined, isExternal?: b
     return 'bg-gray-100';
   }
 
-  if (!location || location === 'N/A' || location === 'External Calendar') {
+  // If no location or N/A, use a light gray but still visible
+  if (!location || location === 'N/A' || location === 'External Calendar' || location.trim() === '') {
     return 'bg-gray-100';
   }
 
   // Extract city name (remove province if present, e.g., "Vancouver, BC" -> "Vancouver")
   const cityName = location.split(',')[0].trim().toLowerCase();
+  
+  // If city name is empty after extraction, return gray
+  if (!cityName || cityName === '') {
+    return 'bg-gray-100';
+  }
 
   // Simple hash function to get consistent color per city
   let hash = 0;
