@@ -260,7 +260,7 @@ export default function SchedulePage() {
         const localStart = startDate.setZone(agentTimezone);
         const aptDate = localStart.toJSDate();
         
-        // Check if appointment is in the current week (Monday-Sunday)
+        // Check if appointment is in the current week (Sunday-Saturday)
         // Include past appointments too - show all appointments in the week
         const weekStart = weekDates[0];
         const weekEnd = weekDates[6];
@@ -269,7 +269,7 @@ export default function SchedulePage() {
         
         // Include appointments from the week, including past days
         if (aptDate >= weekStart && aptDate <= weekEnd) {
-          // Find which day index this appointment belongs to (0-6 for Mon-Sun)
+          // Find which day index this appointment belongs to (0-6 for Sun-Sat)
           const dayIndex = weekDates.findIndex((date, idx) => {
             const dateStr = date.toDateString();
             const aptDateStr = aptDate.toDateString();
