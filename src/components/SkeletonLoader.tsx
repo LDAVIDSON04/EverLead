@@ -1,6 +1,6 @@
-export function SkeletonBox({ className = "" }: { className?: string }) {
+export function SkeletonBox({ className = "", style }: { className?: string; style?: React.CSSProperties }) {
   return (
-    <div className={`animate-pulse bg-gray-200 rounded ${className}`} />
+    <div className={`animate-pulse bg-gray-200 rounded ${className}`} style={style} />
   );
 }
 
