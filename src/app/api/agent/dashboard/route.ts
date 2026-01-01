@@ -101,111 +101,149 @@ export async function GET(request: NextRequest) {
     const thirtyDaysAgoISO = thirtyDaysAgo.toISOString();
     const nowISO = new Date().toISOString();
 
-    // 1. Stats: Total leads assigned to this agent
-    const { count: myLeadsCount } = await supabaseAdmin
-      .from("leads")
-      .select("id", { count: "exact", head: true })
-      .eq("assigned_agent_id", agentId);
-
-    // 2. Stats: My appointments (assigned to this agent)
-    const { count: myAppointmentsCount } = await supabaseAdmin
-      .from("appointments")
-      .select("id", { count: "exact", head: true })
-      .eq("agent_id", agentId);
-
-    // 3. Stats: Available appointments (pending, not hidden, not assigned)
-    const { count: availableAppointmentsCount } = await supabaseAdmin
-      .from("appointments")
-      .select("id", { count: "exact", head: true })
-      .eq("status", "pending")
-      .is("agent_id", null);
-
-    // 4. Stats: Purchased this month (appointments purchased in last 30 days)
-    const { count: purchasedThisMonthCount } = await supabaseAdmin
-      .from("appointments")
-      .select("id", { count: "exact", head: true })
-      .eq("agent_id", agentId)
-      .gte("created_at", thirtyDaysAgoISO);
-
-    // 5. Stats: Total spent on appointments
-    const { data: purchasedAppointments } = await supabaseAdmin
-      .from("appointments")
-      .select("price_cents")
-      .eq("agent_id", agentId)
-      .not("price_cents", "is", null);
-
-    const totalSpentCents =
-      purchasedAppointments?.reduce(
-        (sum: number, appt: any) => sum + (appt.price_cents || 0),
-        0
-      ) || 0;
-
-    // 6. Stats: New appointments needing attention (booked but not completed/no-show)
-    const { count: newAppointmentsCount } = await supabaseAdmin
-      .from("appointments")
-      .select("id", { count: "exact", head: true })
-      .eq("agent_id", agentId)
-      .eq("status", "booked");
-
-    // 7. Recent leads (last 5)
-    const { data: recentLeadsData } = await supabaseAdmin
-      .from("leads")
-      .select(
-        "id, created_at, city, province, urgency_level, service_type, status, agent_status"
-      )
-      .eq("assigned_agent_id", agentId)
-      .order("created_at", { ascending: false })
-      .limit(5);
-
-    // 8. Recent bids (last 5 bids, regardless of auction status)
-    const { data: recentBidsData } = await supabaseAdmin
-      .from("lead_bids")
-      .select("id, lead_id, amount, created_at")
-      .eq("agent_id", agentId)
-      .order("created_at", { ascending: false })
-      .limit(5);
-
-    const recentBidsLeadIds =
-      recentBidsData?.map((bid: any) => bid.lead_id as string) || [];
-
-    let recentBidsList: AgentDashboardData["recentBids"] = [];
-
-    if (recentBidsLeadIds.length > 0) {
-      // Fetch lead info for these bids
-      const { data: recentBidLeadsData } = await supabaseAdmin
+    // Fetch all stats and data in parallel for maximum speed
+    const [
+      myLeadsResult,
+      myAppointmentsResult,
+      availableAppointmentsResult,
+      purchasedThisMonthResult,
+      purchasedAppointmentsResult,
+      newAppointmentsResult,
+      recentLeadsResult,
+      recentBidsResult,
+      allAppointmentsResult, // For ROI stats and total spent
+    ] = await Promise.all([
+      // 1. Stats: Total leads assigned to this agent
+      supabaseAdmin
         .from("leads")
-        .select("id, city, urgency_level")
-        .in("id", recentBidsLeadIds);
+        .select("id", { count: "exact", head: true })
+        .eq("assigned_agent_id", agentId),
+      
+      // 2. Stats: My appointments (assigned to this agent)
+      supabaseAdmin
+        .from("appointments")
+        .select("id", { count: "exact", head: true })
+        .eq("agent_id", agentId),
+      
+      // 3. Stats: Available appointments (pending, not hidden, not assigned)
+      supabaseAdmin
+        .from("appointments")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "pending")
+        .is("agent_id", null),
+      
+      // 4. Stats: Purchased this month (appointments purchased in last 30 days)
+      supabaseAdmin
+        .from("appointments")
+        .select("id", { count: "exact", head: true })
+        .eq("agent_id", agentId)
+        .gte("created_at", thirtyDaysAgoISO),
+      
+      // 5. Stats: Total spent on appointments (only need price_cents)
+      supabaseAdmin
+        .from("appointments")
+        .select("price_cents")
+        .eq("agent_id", agentId)
+        .not("price_cents", "is", null),
+      
+      // 6. Stats: New appointments needing attention (booked but not completed/no-show)
+      supabaseAdmin
+        .from("appointments")
+        .select("id", { count: "exact", head: true })
+        .eq("agent_id", agentId)
+        .eq("status", "booked"),
+      
+      // 7. Recent leads (last 5)
+      supabaseAdmin
+        .from("leads")
+        .select("id, created_at, city, province, urgency_level, service_type, status, agent_status")
+        .eq("assigned_agent_id", agentId)
+        .order("created_at", { ascending: false })
+        .limit(5),
+      
+      // 8. Recent bids (last 5 bids, regardless of auction status)
+      supabaseAdmin
+        .from("lead_bids")
+        .select("id, lead_id, amount, created_at")
+        .eq("agent_id", agentId)
+        .order("created_at", { ascending: false })
+        .limit(5),
+      
+      // All appointments for ROI stats (can be optimized but needed for calculations)
+      supabaseAdmin
+        .from("appointments")
+        .select("id, status, price_cents")
+        .eq("agent_id", agentId),
+    ]);
 
-      const leadMap = new Map(
-        (recentBidLeadsData || []).map((lead: any) => [lead.id, lead])
-      );
+    const myLeadsCount = myLeadsResult.count ?? 0;
+    const myAppointmentsCount = myAppointmentsResult.count ?? 0;
+    const availableAppointmentsCount = availableAppointmentsResult.count ?? 0;
+    const purchasedThisMonthCount = purchasedThisMonthResult.count ?? 0;
+    const totalSpentCents = (purchasedAppointmentsResult.data || []).reduce(
+      (sum: number, appt: any) => sum + (appt.price_cents || 0),
+      0
+    );
+    const newAppointmentsCount = newAppointmentsResult.count ?? 0;
+    const recentLeadsData = recentLeadsResult.data || [];
+    const recentBidsData = recentBidsResult.data || [];
+    const appointments = allAppointmentsResult.data || [];
 
-      recentBidsList = (recentBidsData || []).map((bid: any) => {
-        const lead: any = leadMap.get(bid.lead_id as string);
-        return {
-          id: bid.id,
-          leadId: bid.lead_id as string,
-          amount: bid.amount as number,
-          createdAt: bid.created_at || "",
-          leadCity: lead?.city || null,
-          leadUrgency: lead?.urgency_level || null,
-        };
-      });
-    }
 
-    // 9. Your bids (active auction bids only - for the "Your bids" panel)
-    // Get all bids from this agent
-    const { data: bidsData } = await supabaseAdmin
-      .from("lead_bids")
-      .select("lead_id, amount, created_at")
-      .eq("agent_id", agentId)
-      .order("created_at", { ascending: false })
-      .limit(50); // Get more to find distinct leads
+    // 9. Process recent bids (fetch lead info if needed) and get your bids in parallel
+    const recentBidsLeadIds = recentBidsData.map((bid: any) => bid.lead_id as string);
 
-    // Group by lead_id to get highest bid per lead
+    // Fetch your bids and pending auctions in parallel (they're independent)
+    const [recentBidLeadsResult, yourBidsResult, pendingAuctionsResult] = await Promise.all([
+      // Lead info for recent bids (only if we have bids)
+      recentBidsLeadIds.length > 0
+        ? supabaseAdmin
+            .from("leads")
+            .select("id, city, urgency_level")
+            .in("id", recentBidsLeadIds)
+        : Promise.resolve({ data: [], error: null }),
+      
+      // 9. Your bids (active auction bids only)
+      supabaseAdmin
+        .from("lead_bids")
+        .select("lead_id, amount, created_at")
+        .eq("agent_id", agentId)
+        .order("created_at", { ascending: false })
+        .limit(50),
+      
+      // 10. Pending auctions
+      supabaseAdmin
+        .from("leads")
+        .select("id, city, urgency_level, current_bid_amount, buy_now_price, auction_end_time, auction_status, current_bid_agent_id")
+        .eq("auction_enabled", true)
+        .in("auction_status", ["pending", "open"])
+        .or("auction_end_time.gt." + nowISO + ",auction_end_time.is.null")
+        .neq("status", "purchased_by_agent")
+        .order("auction_end_time", { ascending: true })
+        .limit(20),
+    ]);
+
+    // Process recent bids
+    const leadMap = new Map(
+      ((recentBidLeadsResult.data as any) || []).map((lead: any) => [lead.id, lead])
+    );
+
+    const recentBidsList: AgentDashboardData["recentBids"] = recentBidsData.map((bid: any) => {
+      const lead: any = leadMap.get(bid.lead_id as string);
+      return {
+        id: bid.id,
+        leadId: bid.lead_id as string,
+        amount: bid.amount as number,
+        createdAt: bid.created_at || "",
+        leadCity: lead?.city || null,
+        leadUrgency: lead?.urgency_level || null,
+      };
+    });
+
+    // Process your bids
+    const bidsData = (yourBidsResult.data as any) || [];
     const leadBidMap: Record<string, number> = {};
-    bidsData?.forEach((bid: any) => {
+    bidsData.forEach((bid: any) => {
       const lid = bid.lead_id as string;
       const amount = bid.amount as number;
       if (!leadBidMap[lid] || amount > leadBidMap[lid]) {
@@ -214,16 +252,15 @@ export async function GET(request: NextRequest) {
     });
 
     const yourBidLeadIds = Object.keys(leadBidMap).slice(0, 10);
+    const allPendingAuctions = (pendingAuctionsResult.data as any) || [];
 
     let yourBidsList: AgentDashboardData["yourBids"] = [];
 
     if (yourBidLeadIds.length > 0) {
-      // Fetch lead info for these bids (only active auctions)
+      // Fetch lead info for your bids (only active auctions)
       const { data: bidLeadsData } = await supabaseAdmin
         .from("leads")
-        .select(
-          "id, city, urgency_level, current_bid_agent_id, auction_end_time, auction_enabled, status"
-        )
+        .select("id, city, urgency_level, current_bid_agent_id, auction_end_time, auction_enabled, status")
         .in("id", yourBidLeadIds)
         .eq("auction_enabled", true)
         .gt("auction_end_time", nowISO)
@@ -249,18 +286,6 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // 10. Pending auctions
-    // Get auctions where this agent is involved (either highest bidder or has placed a bid)
-    const { data: allPendingAuctions } = await supabaseAdmin
-      .from("leads")
-      .select("id, city, urgency_level, current_bid_amount, buy_now_price, auction_end_time, auction_status, current_bid_agent_id")
-      .eq("auction_enabled", true)
-      .in("auction_status", ["pending", "open"])
-      .or("auction_end_time.gt." + nowISO + ",auction_end_time.is.null")
-      .neq("status", "purchased_by_agent")
-      .order("auction_end_time", { ascending: true })
-      .limit(20);
-
     // Filter to only auctions where this agent is involved
     const agentBidLeadIds = new Set(yourBidLeadIds);
     const pendingAuctionsList: AgentDashboardData["pendingAuctions"] = (
@@ -282,13 +307,7 @@ export async function GET(request: NextRequest) {
         is_highest_bidder: auction.current_bid_agent_id === agentId,
       }));
 
-    // Calculate appointment ROI stats
-    const { data: appointmentsData } = await supabaseAdmin
-      .from("appointments")
-      .select("id, status, price_cents, agent_id")
-      .eq("agent_id", agentId);
-
-    const appointments = appointmentsData || [];
+    // Calculate appointment ROI stats (using appointments already fetched above)
     const totalAppointments = appointments.length;
     const bookedAppointments = appointments.filter((a: any) => a.status === "booked").length;
     const completedAppointments = appointments.filter((a: any) => a.status === "completed").length;
