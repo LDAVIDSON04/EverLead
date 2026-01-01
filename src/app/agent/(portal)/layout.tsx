@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import { supabaseClient } from '@/lib/supabaseClient';
-import { Home, Calendar, File, Mail, User, XCircle, Upload, X, Settings, Clock, CreditCard, CalendarCheck } from 'lucide-react';
+import { Home, Calendar, File, Mail, User, XCircle, Upload, X, Settings, CreditCard } from 'lucide-react';
 import { usePrefetchOnHover } from '@/lib/hooks/usePrefetch';
 
 type AgentLayoutProps = {
@@ -16,8 +16,6 @@ const menuItems = [
   { href: '/agent/dashboard', label: 'Home', icon: Home },
   { href: '/agent/schedule', label: 'Schedule', icon: Calendar },
   { href: '/agent/my-appointments', label: 'Files', icon: File },
-  { href: '/agent/availability', label: 'Availability', icon: Clock },
-  { href: '/agent/calendar-sync', label: 'Calendar sync', icon: CalendarCheck },
   { href: '/agent/billing', label: 'Billing', icon: CreditCard },
   { href: '/agent/settings', label: 'Settings', icon: Settings },
 ];

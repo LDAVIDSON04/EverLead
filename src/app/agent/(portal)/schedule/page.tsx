@@ -77,6 +77,20 @@ export default function SchedulePage() {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
+  // Get day-based color for appointments (0 = Monday, 1 = Tuesday, etc.)
+  const getDayColor = (dayIndex: number): string => {
+    const dayColors = [
+      'bg-cyan-200',      // Monday - cyan
+      'bg-orange-200',    // Tuesday - orange
+      'bg-amber-200',     // Wednesday - amber
+      'bg-emerald-200',   // Thursday - emerald/green
+      'bg-purple-200',    // Friday - purple
+      'bg-pink-200',      // Saturday - pink
+      'bg-blue-200',      // Sunday - blue
+    ];
+    return dayColors[dayIndex] || 'bg-gray-200';
+  };
+
   const formatWeekRange = () => {
     const start = weekDates[0];
     const end = weekDates[6];
@@ -409,7 +423,7 @@ export default function SchedulePage() {
                           const topOffset = (apt.minute / 60) * 120; // 120px per hour
                           // Calculate height based on duration
                           const height = (apt.durationMinutes / 60) * 120;
-                          const color = getCityColor(apt.location, apt.is_external);
+                          const color = getDayColor(dayIndex);
 
                           return (
                             <div
