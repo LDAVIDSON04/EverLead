@@ -110,12 +110,6 @@ export default function MyLeadsPage() {
     return option ? option.label : status;
   }
 
-  // Filter leads by status (client-side filtering)
-  const filteredLeads = leads.filter((lead) => {
-    if (statusFilter === "all") return true;
-    return lead.status === statusFilter;
-  });
-
   function getStatusColors(status: string | null): { bg: string; text: string } {
     const s = (status ?? "new").toLowerCase();
     if (s === "new") return { bg: "bg-blue-100", text: "text-blue-700" };
