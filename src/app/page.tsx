@@ -210,7 +210,7 @@ export default function HomePage() {
   return (
     <main className="min-h-screen bg-[#FAF9F6]">
       {/* HEADER */}
-      <header className="bg-[#FAF9F6] py-5 px-4 relative z-30">
+      <header className="bg-[#FAF9F6] py-5 px-4 relative z-30 overflow-visible">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           {/* Logo and Name - Mobile: text next to, Desktop: original layout (text next to) */}
           <div className="flex items-center gap-3">
@@ -259,9 +259,9 @@ export default function HomePage() {
               className="md:hidden fixed inset-0 bg-black/50 z-40"
               onClick={() => setMobileMenuOpen(false)}
             />
-            {/* Full Page Menu Sheet */}
-            <div className="md:hidden fixed inset-0 bg-[#FAF9F6] z-50 overflow-y-auto">
-              <div className="min-h-full flex flex-col">
+            {/* Menu Sheet - Cropped to content */}
+            <div className="md:hidden fixed top-0 left-0 right-0 bg-[#FAF9F6] z-50 rounded-b-3xl shadow-2xl">
+              <div className="flex flex-col">
                 {/* Header */}
                 <div className="px-4 py-5 bg-[#FAF9F6]">
                   <div className="flex items-center justify-between max-w-7xl mx-auto">
@@ -285,14 +285,11 @@ export default function HomePage() {
                   </div>
                 </div>
                 {/* Menu Content */}
-                <div className="flex-1 px-4 py-8">
+                <div className="px-4 pb-8">
                   <div className="max-w-7xl mx-auto flex flex-col items-center">
-                    <h2 className="text-3xl font-bold text-[#1A1A1A] mb-2 text-center">
+                    <h2 className="text-3xl font-bold text-[#1A1A1A] mb-8 text-center">
                       Welcome to Soradin
                     </h2>
-                    <p className="text-base text-[#1A1A1A]/70 mb-8 text-center">
-                      Book local funeral home professionals
-                    </p>
                     <div className="w-full max-w-sm flex flex-col gap-4">
                       <Link 
                         href="/learn-more-about-starting" 
@@ -356,7 +353,7 @@ export default function HomePage() {
           />
         </div>
 
-        <div className="max-w-7xl mx-auto relative z-20 w-full md:mt-0 -mt-4">
+        <div className="max-w-7xl mx-auto relative z-20 w-full md:mt-0 -mt-4 overflow-visible">
           {/* Headline and Search Bar - Full Width */}
           <div className="max-w-4xl">
             <h1 className="text-6xl md:text-6xl text-2xl md:mb-8 mb-3 text-[#1A1A1A] font-semibold tracking-tight leading-none text-left pt-1">
@@ -480,7 +477,7 @@ export default function HomePage() {
           <div className="md:hidden mt-4">
             <div className="bg-[#FAF9F6] rounded-3xl p-6 border border-[#1A1A1A]/5 relative overflow-hidden group hover:shadow-xl hover:shadow-black/5 transition-all flex flex-col">
               {/* Image inside the card, showing full torso */}
-              <div className="relative w-full flex items-center justify-center -mx-6 mb-2 overflow-hidden" style={{ height: '150px', minHeight: '150px', marginTop: '-54px', paddingTop: '0' }}>
+              <div className="relative w-full flex items-center justify-center -mx-6 mb-2 overflow-hidden" style={{ height: '150px', minHeight: '150px', marginTop: '-60px', paddingTop: '0' }}>
                 <Image
                   src="/What is Pre need planning image.png"
                   alt="Person asking about pre-need planning"
@@ -656,8 +653,18 @@ export default function HomePage() {
       <section className="py-24 px-4 bg-[#FAF9F6]">
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
-            {/* Left side - Content */}
-            <div>
+            {/* Left side - Image (moved before content) */}
+            <div className="relative w-full order-2 lg:order-1">
+              <Image
+                src="/trusted-partners-image.png"
+                alt="Professional standards"
+                width={800}
+                height={600}
+                className="w-full h-auto object-cover rounded-lg"
+              />
+            </div>
+            {/* Right side - Content (moved after image) */}
+            <div className="order-1 lg:order-2">
               <h2 className="text-5xl mb-6 text-[#1A1A1A] font-semibold tracking-tight leading-tight">
                 Built with professional standards in mind
               </h2>
@@ -670,22 +677,6 @@ export default function HomePage() {
               >
                 Find care
               </button>
-            </div>
-
-            {/* Right side - Estate Planning Image */}
-            <div className="relative w-full flex items-center justify-center">
-              <Image
-                src="/estate-planning-image.webp"
-                alt="Estate planning professionals"
-                width={800}
-                height={600}
-                className="w-full h-auto object-contain rounded-xl"
-                style={{
-                  filter: "brightness(1.05) contrast(1.05)",
-                  mixBlendMode: "multiply",
-                }}
-                unoptimized
-              />
             </div>
           </div>
         </div>
