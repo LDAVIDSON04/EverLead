@@ -415,11 +415,13 @@ export default function SchedulePage() {
                         className="flex-1 min-w-[50px] md:min-w-[100px] border-l border-gray-200 relative h-12 md:h-20 overflow-visible"
                       >
                         {cellAppointments.map((apt: any) => {
-                          // Calculate top offset within this hour (based on minutes) - 48px per hour on mobile, 80px on desktop
-                          const pxPerHour = 48; // Mobile: h-12 = 48px
-                          const topOffset = (apt.minute / 60) * pxPerHour;
+                          // Calculate top offset within this hour (based on minutes)
+                          // Mobile: h-12 = 48px per hour, Desktop: h-20 = 80px per hour
+                          const topOffsetMobile = (apt.minute / 60) * 48;
+                          const topOffsetDesktop = (apt.minute / 60) * 80;
                           // Calculate height based on duration
-                          const height = (apt.durationMinutes / 60) * pxPerHour;
+                          const heightMobile = (apt.durationMinutes / 60) * 48;
+                          const heightDesktop = (apt.durationMinutes / 60) * 80;
                           const color = getDayColor(dayIndex);
 
                           return (
