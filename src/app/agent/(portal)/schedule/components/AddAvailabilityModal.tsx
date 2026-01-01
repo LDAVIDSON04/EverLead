@@ -237,11 +237,21 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
         });
       }
 
+      // Show success message
+      setSaveMessage({ type: "success", text: "Availability saved successfully!" });
+      
+      // Call onSave callback
       onSave?.();
-      onClose();
+      
+      // Close modal after a short delay to show the message
+      setTimeout(() => {
+        setSaveMessage(null);
+        onClose();
+      }, 1500);
     } catch (err: any) {
       console.error("Error saving:", err);
-      alert(err.message || "Failed to save availability. Please try again.");
+      setSaveMessage({ type: "error", text: err.message || "Failed to save availability. Please try again." });
+      setTimeout(() => setSaveMessage(null), 3000);
     } finally {
       setSaving(false);
     }
@@ -295,6 +305,17 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
 
         {/* Content - Scrollable */}
         <div className="p-6 overflow-y-auto flex-1">
+          {/* Save Message */}
+          {saveMessage && (
+            <div className={`mb-4 p-3 rounded-lg ${
+              saveMessage.type === "success" 
+                ? "bg-green-50 border border-green-200 text-green-800" 
+                : "bg-red-50 border border-red-200 text-red-800"
+            }`}>
+              <p className="text-sm font-medium">{saveMessage.text}</p>
+            </div>
+          )}
+          
           {loading ? (
             <div className="text-center py-8">
               <p className="text-gray-600">Loading...</p>
