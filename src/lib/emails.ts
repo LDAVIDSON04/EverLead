@@ -200,7 +200,7 @@ export async function sendConsumerBookingEmail({
                 <table width="800" cellpadding="0" cellspacing="0" style="background-color: #ffffff; max-width: 800px;">
                   <!-- Header -->
                   <tr>
-                    <td style="background-color: #1a4d2e; padding: 24px;">
+                    <td style="background-color: #0D5C3D; padding: 24px;">
                       <table width="100%" cellpadding="0" cellspacing="0">
                         <tr>
                           <td width="80" style="vertical-align: middle;">
@@ -222,28 +222,28 @@ export async function sendConsumerBookingEmail({
                   
                   <!-- Content -->
                   <tr>
-                    <td style="padding: 32px;">
-                      <h2 style="color: #000000; font-size: 24px; margin: 0 0 24px 0; font-weight: normal;">Appointment Confirmation</h2>
+                    <td style="padding: 40px 32px;">
+                      <h2 style="color: #111827; font-size: 28px; margin: 0 0 32px 0; font-weight: 600; line-height: 1.3;">Appointment Confirmation</h2>
                       
                       <!-- Two Column Layout for Details -->
                       <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 32px;">
                         <tr>
-                          <td width="50%" style="padding-right: 12px; padding-bottom: 16px;">
-                            <table cellpadding="0" cellspacing="0" style="border-left: 4px solid #1a4d2e; padding-left: 16px;">
+                          <td width="50%" style="padding-right: 16px; padding-bottom: 20px;">
+                            <table cellpadding="0" cellspacing="0" style="border-left: 3px solid #0D5C3D; padding-left: 20px;">
                               <tr>
-                                <td style="padding-top: 8px; padding-bottom: 8px;">
-                                  <p style="color: #666666; font-size: 14px; margin: 0 0 4px 0;">Date</p>
-                                  <p style="color: #000000; font-size: 16px; margin: 0; font-weight: normal;">${prettyDate}</p>
+                                <td style="padding-top: 4px; padding-bottom: 4px;">
+                                  <p style="color: #6b7280; font-size: 13px; margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500;">Date</p>
+                                  <p style="color: #111827; font-size: 18px; margin: 0; font-weight: 500; line-height: 1.4;">${prettyDate}</p>
                                 </td>
                               </tr>
                             </table>
                           </td>
-                          <td width="50%" style="padding-left: 12px; padding-bottom: 16px;">
-                            <table cellpadding="0" cellspacing="0" style="border-left: 4px solid #1a4d2e; padding-left: 16px;">
+                          <td width="50%" style="padding-left: 20px; padding-bottom: 20px;">
+                            <table cellpadding="0" cellspacing="0" style="border-left: 3px solid #0D5C3D; padding-left: 20px;">
                               <tr>
-                                <td style="padding-top: 8px; padding-bottom: 8px;">
-                                  <p style="color: #666666; font-size: 14px; margin: 0 0 4px 0;">Time</p>
-                                  <p style="color: #000000; font-size: 16px; margin: 0; font-weight: normal;">${timeDisplay}</p>
+                                <td style="padding-top: 4px; padding-bottom: 4px;">
+                                  <p style="color: #6b7280; font-size: 13px; margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500;">Time</p>
+                                  <p style="color: #111827; font-size: 18px; margin: 0; font-weight: 500; line-height: 1.4;">${timeDisplay}</p>
                                 </td>
                               </tr>
                             </table>
@@ -254,11 +254,13 @@ export async function sendConsumerBookingEmail({
                       <!-- Additional Message Box -->
                       <table width="100%" cellpadding="0" cellspacing="0" style="margin-top: 24px;">
                         <tr>
-                          <td style="padding: 16px; background-color: #f3f4f6; border: 1px solid #e5e7eb;">
-                            <p style="color: #374151; font-size: 16px; margin: 0; line-height: 1.5;">
-                              Please arrive 10 minutes before your scheduled appointment time. 
-                              ${appointmentId ? `If you need to reschedule or cancel, please click this link: <a href="${cleanSiteUrl}/book/cancel?appointmentId=${appointmentId}" style="color: #1a4d2e; text-decoration: underline;">Cancel Or Reschedule Appointment</a>` : ''}
+                          <td style="padding: 20px; background-color: #f9fafb; border-radius: 8px;">
+                            <p style="color: #374151; font-size: 16px; margin: 0 0 ${appointmentId ? '12px' : '0'}; line-height: 1.6;">
+                              Please arrive 10 minutes before your scheduled appointment time.
                             </p>
+                            ${appointmentId ? `<p style="color: #374151; font-size: 16px; margin: 0; line-height: 1.6;">
+                              <a href="${cleanSiteUrl}/book/cancel?appointmentId=${appointmentId}" style="color: #0D5C3D; text-decoration: underline; font-weight: 500;">Cancel Or Reschedule Appointment</a>
+                            </p>` : ''}
                           </td>
                         </tr>
                       </table>
@@ -440,20 +442,11 @@ export async function sendAgentNewAppointmentEmail({
                 <table width="800" cellpadding="0" cellspacing="0" style="background-color: #ffffff; max-width: 800px;">
                   <!-- Header -->
                   <tr>
-                    <td style="background-color: #1a4d2e; padding: 24px;">
+                    <td style="background-color: #0D5C3D; padding: 32px 24px;">
                       <table width="100%" cellpadding="0" cellspacing="0">
                         <tr>
-                          <td width="80" style="vertical-align: middle;">
-                            <table cellpadding="0" cellspacing="0" style="width: 80px; height: 80px; background-color: #ffffff; border-radius: 50%;">
-                              <tr>
-                                <td align="center" style="vertical-align: middle;">
-                                  <img src="data:image/png;base64,${getLogoBase64()}" alt="Soradin Logo" width="60" height="60" style="display: block; max-width: 60px; max-height: 60px; border: 0; outline: none; text-decoration: none;" />
-                    </td>
-                  </tr>
-                            </table>
-                          </td>
-                          <td style="vertical-align: middle; padding-left: 24px;">
-                            <h1 style="color: #ffffff; font-size: 32px; font-weight: bold; margin: 0;">SORADIN</h1>
+                          <td style="vertical-align: middle;">
+                            <img src="data:image/png;base64,${getLogoBase64()}" alt="Soradin Logo" width="120" height="40" style="display: block; max-width: 120px; max-height: 40px; border: 0; outline: none; text-decoration: none; margin-bottom: 16px;" />
                           </td>
                         </tr>
                       </table>
@@ -462,28 +455,28 @@ export async function sendAgentNewAppointmentEmail({
                   
                   <!-- Content -->
                   <tr>
-                    <td style="padding: 32px;">
-                      <h2 style="color: #000000; font-size: 24px; margin: 0 0 24px 0; font-weight: normal;">New Appointment Scheduled</h2>
+                    <td style="padding: 40px 32px;">
+                      <h2 style="color: #111827; font-size: 28px; margin: 0 0 32px 0; font-weight: 600; line-height: 1.3;">New Appointment Scheduled</h2>
                       
                       <!-- Two Column Layout for Details -->
                       <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 32px;">
                         <tr>
-                          <td width="50%" style="padding-right: 12px; padding-bottom: 16px;">
-                            <table cellpadding="0" cellspacing="0" style="border-left: 4px solid #1a4d2e; padding-left: 16px;">
+                          <td width="50%" style="padding-right: 16px; padding-bottom: 20px;">
+                            <table cellpadding="0" cellspacing="0" style="border-left: 3px solid #0D5C3D; padding-left: 20px;">
                               <tr>
-                                <td style="padding-top: 8px; padding-bottom: 8px;">
-                                  <p style="color: #666666; font-size: 14px; margin: 0 0 4px 0;">Date</p>
-                                  <p style="color: #000000; font-size: 16px; margin: 0; font-weight: normal;">${prettyDate}</p>
+                                <td style="padding-top: 4px; padding-bottom: 4px;">
+                                  <p style="color: #6b7280; font-size: 13px; margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500;">Date</p>
+                                  <p style="color: #111827; font-size: 18px; margin: 0; font-weight: 500; line-height: 1.4;">${prettyDate}</p>
                     </td>
                   </tr>
                             </table>
                           </td>
-                          <td width="50%" style="padding-left: 12px; padding-bottom: 16px;">
-                            <table cellpadding="0" cellspacing="0" style="border-left: 4px solid #1a4d2e; padding-left: 16px;">
+                          <td width="50%" style="padding-left: 20px; padding-bottom: 20px;">
+                            <table cellpadding="0" cellspacing="0" style="border-left: 3px solid #0D5C3D; padding-left: 20px;">
                               <tr>
-                                <td style="padding-top: 8px; padding-bottom: 8px;">
-                                  <p style="color: #666666; font-size: 14px; margin: 0 0 4px 0;">Time</p>
-                                  <p style="color: #000000; font-size: 16px; margin: 0; font-weight: normal;">${timeDisplay}</p>
+                                <td style="padding-top: 4px; padding-bottom: 4px;">
+                                  <p style="color: #6b7280; font-size: 13px; margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500;">Time</p>
+                                  <p style="color: #111827; font-size: 18px; margin: 0; font-weight: 500; line-height: 1.4;">${timeDisplay}</p>
                                 </td>
                               </tr>
                             </table>
@@ -491,57 +484,57 @@ export async function sendAgentNewAppointmentEmail({
                         </tr>
                         ${locationAddress ? `
                         <tr>
-                          <td width="50%" style="padding-right: 12px; padding-bottom: 16px;">
-                            <table cellpadding="0" cellspacing="0" style="border-left: 4px solid #1a4d2e; padding-left: 16px;">
+                          <td width="50%" style="padding-right: 16px; padding-bottom: 20px;">
+                            <table cellpadding="0" cellspacing="0" style="border-left: 3px solid #0D5C3D; padding-left: 20px;">
                               <tr>
-                                <td style="padding-top: 8px; padding-bottom: 8px;">
-                                  <p style="color: #666666; font-size: 14px; margin: 0 0 4px 0;">Location</p>
-                                  <p style="color: #000000; font-size: 16px; margin: 0; font-weight: normal;">${locationAddress}</p>
+                                <td style="padding-top: 4px; padding-bottom: 4px;">
+                                  <p style="color: #6b7280; font-size: 13px; margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500;">Location</p>
+                                  <p style="color: #111827; font-size: 18px; margin: 0; font-weight: 500; line-height: 1.4;">${locationAddress}</p>
                                 </td>
                               </tr>
                             </table>
                           </td>
-                          <td width="50%" style="padding-left: 12px; padding-bottom: 16px;"></td>
+                          <td width="50%" style="padding-left: 20px; padding-bottom: 20px;"></td>
                         </tr>
                         ` : ''}
                         ${serviceType ? `
                         <tr>
-                          <td width="50%" style="padding-right: 12px; padding-bottom: 16px;">
-                            <table cellpadding="0" cellspacing="0" style="border-left: 4px solid #1a4d2e; padding-left: 16px;">
+                          <td width="50%" style="padding-right: 16px; padding-bottom: 20px;">
+                            <table cellpadding="0" cellspacing="0" style="border-left: 3px solid #0D5C3D; padding-left: 20px;">
                               <tr>
-                                <td style="padding-top: 8px; padding-bottom: 8px;">
-                                  <p style="color: #666666; font-size: 14px; margin: 0 0 4px 0;">Service</p>
-                                  <p style="color: #000000; font-size: 16px; margin: 0; font-weight: normal;">${serviceType}</p>
+                                <td style="padding-top: 4px; padding-bottom: 4px;">
+                                  <p style="color: #6b7280; font-size: 13px; margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500;">Service</p>
+                                  <p style="color: #111827; font-size: 18px; margin: 0; font-weight: 500; line-height: 1.4;">${serviceType}</p>
                                 </td>
                               </tr>
                             </table>
                           </td>
-                          <td width="50%" style="padding-left: 12px; padding-bottom: 16px;"></td>
+                          <td width="50%" style="padding-left: 20px; padding-bottom: 20px;"></td>
                         </tr>
                         ` : ''}
                         <tr>
-                          <td width="50%" style="padding-right: 12px; padding-bottom: 16px;">
-                            <table cellpadding="0" cellspacing="0" style="border-left: 4px solid #1a4d2e; padding-left: 16px;">
+                          <td width="50%" style="padding-right: 16px; padding-bottom: 20px;">
+                            <table cellpadding="0" cellspacing="0" style="border-left: 3px solid #0D5C3D; padding-left: 20px;">
                               <tr>
-                                <td style="padding-top: 8px; padding-bottom: 8px;">
-                                  <p style="color: #666666; font-size: 14px; margin: 0 0 4px 0;">With</p>
-                                  <p style="color: #000000; font-size: 16px; margin: 0; font-weight: normal;">${consumerName || 'Client'}</p>
+                                <td style="padding-top: 4px; padding-bottom: 4px;">
+                                  <p style="color: #6b7280; font-size: 13px; margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500;">With</p>
+                                  <p style="color: #111827; font-size: 18px; margin: 0; font-weight: 500; line-height: 1.4;">${consumerName || 'Client'}</p>
                                 </td>
                               </tr>
                             </table>
                           </td>
                           ${clientEmail ? `
-                          <td width="50%" style="padding-left: 12px; padding-bottom: 16px;">
-                            <table cellpadding="0" cellspacing="0" style="border-left: 4px solid #1a4d2e; padding-left: 16px;">
+                          <td width="50%" style="padding-left: 20px; padding-bottom: 20px;">
+                            <table cellpadding="0" cellspacing="0" style="border-left: 3px solid #0D5C3D; padding-left: 20px;">
                               <tr>
-                                <td style="padding-top: 8px; padding-bottom: 8px;">
-                                  <p style="color: #666666; font-size: 14px; margin: 0 0 4px 0;">Contact</p>
-                                  <p style="color: #1a4d2e; font-size: 16px; margin: 0; font-weight: normal;">${clientEmail}</p>
+                                <td style="padding-top: 4px; padding-bottom: 4px;">
+                                  <p style="color: #6b7280; font-size: 13px; margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500;">Contact</p>
+                                  <p style="color: #0D5C3D; font-size: 16px; margin: 0; font-weight: normal;">${clientEmail}</p>
                                 </td>
                               </tr>
                             </table>
                           </td>
-                          ` : '<td width="50%" style="padding-left: 12px; padding-bottom: 16px;"></td>'}
+                          ` : '<td width="50%" style="padding-left: 20px; padding-bottom: 20px;"></td>'}
                         </tr>
                       </table>
                     </td>
@@ -680,20 +673,11 @@ export async function sendAgentCancellationEmail({
                 <table width="800" cellpadding="0" cellspacing="0" style="background-color: #ffffff; max-width: 800px;">
                   <!-- Header -->
                   <tr>
-                    <td style="background-color: #1a4d2e; padding: 24px;">
+                    <td style="background-color: #0D5C3D; padding: 32px 24px;">
                       <table width="100%" cellpadding="0" cellspacing="0">
                         <tr>
-                          <td width="80" style="vertical-align: middle;">
-                            <table cellpadding="0" cellspacing="0" style="width: 80px; height: 80px; background-color: #ffffff; border-radius: 50%;">
-                              <tr>
-                                <td align="center" style="vertical-align: middle;">
-                                  <img src="data:image/png;base64,${getLogoBase64()}" alt="Soradin Logo" width="60" height="60" style="display: block; max-width: 60px; max-height: 60px; border: 0; outline: none; text-decoration: none;" />
-                    </td>
-                  </tr>
-                            </table>
-                          </td>
-                          <td style="vertical-align: middle; padding-left: 24px;">
-                            <h1 style="color: #ffffff; font-size: 32px; font-weight: bold; margin: 0;">SORADIN</h1>
+                          <td style="vertical-align: middle;">
+                            <img src="data:image/png;base64,${getLogoBase64()}" alt="Soradin Logo" width="120" height="40" style="display: block; max-width: 120px; max-height: 40px; border: 0; outline: none; text-decoration: none; margin-bottom: 16px;" />
                           </td>
                         </tr>
                       </table>
@@ -702,40 +686,40 @@ export async function sendAgentCancellationEmail({
                   
                   <!-- Content -->
                   <tr>
-                    <td style="padding: 32px;">
-                      <h2 style="color: #000000; font-size: 24px; margin: 0 0 24px 0; font-weight: normal;">Appointment Cancelled</h2>
+                    <td style="padding: 40px 32px;">
+                      <h2 style="color: #111827; font-size: 28px; margin: 0 0 32px 0; font-weight: 600; line-height: 1.3;">Appointment Cancelled</h2>
                       
                       <!-- Two Column Layout for Details -->
                       <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 32px;">
                         <tr>
-                          <td width="50%" style="padding-right: 12px; padding-bottom: 16px;">
-                            <table cellpadding="0" cellspacing="0" style="border-left: 4px solid #1a4d2e; padding-left: 16px;">
+                          <td width="50%" style="padding-right: 16px; padding-bottom: 20px;">
+                            <table cellpadding="0" cellspacing="0" style="border-left: 3px solid #0D5C3D; padding-left: 20px;">
                               <tr>
-                                <td style="padding-top: 8px; padding-bottom: 8px;">
-                                  <p style="color: #666666; font-size: 14px; margin: 0 0 4px 0;">Date</p>
-                                  <p style="color: #000000; font-size: 16px; margin: 0; font-weight: normal;">${prettyDate}</p>
+                                <td style="padding-top: 4px; padding-bottom: 4px;">
+                                  <p style="color: #6b7280; font-size: 13px; margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500;">Date</p>
+                                  <p style="color: #111827; font-size: 18px; margin: 0; font-weight: 500; line-height: 1.4;">${prettyDate}</p>
                     </td>
                   </tr>
                             </table>
                           </td>
-                          <td width="50%" style="padding-left: 12px; padding-bottom: 16px;">
-                            <table cellpadding="0" cellspacing="0" style="border-left: 4px solid #1a4d2e; padding-left: 16px;">
+                          <td width="50%" style="padding-left: 20px; padding-bottom: 20px;">
+                            <table cellpadding="0" cellspacing="0" style="border-left: 3px solid #0D5C3D; padding-left: 20px;">
                               <tr>
-                                <td style="padding-top: 8px; padding-bottom: 8px;">
-                                  <p style="color: #666666; font-size: 14px; margin: 0 0 4px 0;">Time</p>
-                                  <p style="color: #000000; font-size: 16px; margin: 0; font-weight: normal;">${timeWindowLabel}</p>
+                                <td style="padding-top: 4px; padding-bottom: 4px;">
+                                  <p style="color: #6b7280; font-size: 13px; margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500;">Time</p>
+                                  <p style="color: #111827; font-size: 18px; margin: 0; font-weight: 500; line-height: 1.4;">${timeWindowLabel}</p>
                                 </td>
                               </tr>
                             </table>
                           </td>
                         </tr>
                         <tr>
-                          <td width="50%" style="padding-right: 12px; padding-bottom: 16px;">
-                            <table cellpadding="0" cellspacing="0" style="border-left: 4px solid #1a4d2e; padding-left: 16px;">
+                          <td width="50%" style="padding-right: 16px; padding-bottom: 20px;">
+                            <table cellpadding="0" cellspacing="0" style="border-left: 3px solid #0D5C3D; padding-left: 20px;">
                               <tr>
-                                <td style="padding-top: 8px; padding-bottom: 8px;">
-                                  <p style="color: #666666; font-size: 14px; margin: 0 0 4px 0;">With</p>
-                                  <p style="color: #000000; font-size: 16px; margin: 0; font-weight: normal;">${consumerName || 'Client'}</p>
+                                <td style="padding-top: 4px; padding-bottom: 4px;">
+                                  <p style="color: #6b7280; font-size: 13px; margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500;">With</p>
+                                  <p style="color: #111827; font-size: 18px; margin: 0; font-weight: 500; line-height: 1.4;">${consumerName || 'Client'}</p>
                                 </td>
                               </tr>
                             </table>
@@ -878,20 +862,11 @@ export async function sendAgentRebookingEmail({
                 <table width="800" cellpadding="0" cellspacing="0" style="background-color: #ffffff; max-width: 800px;">
                   <!-- Header -->
                   <tr>
-                    <td style="background-color: #1a4d2e; padding: 24px;">
+                    <td style="background-color: #0D5C3D; padding: 32px 24px;">
                       <table width="100%" cellpadding="0" cellspacing="0">
                         <tr>
-                          <td width="80" style="vertical-align: middle;">
-                            <table cellpadding="0" cellspacing="0" style="width: 80px; height: 80px; background-color: #ffffff; border-radius: 50%;">
-                              <tr>
-                                <td align="center" style="vertical-align: middle;">
-                                  <img src="data:image/png;base64,${getLogoBase64()}" alt="Soradin Logo" width="60" height="60" style="display: block; max-width: 60px; max-height: 60px; border: 0; outline: none; text-decoration: none;" />
-                    </td>
-                  </tr>
-                            </table>
-                          </td>
-                          <td style="vertical-align: middle; padding-left: 24px;">
-                            <h1 style="color: #ffffff; font-size: 32px; font-weight: bold; margin: 0;">SORADIN</h1>
+                          <td style="vertical-align: middle;">
+                            <img src="data:image/png;base64,${getLogoBase64()}" alt="Soradin Logo" width="120" height="40" style="display: block; max-width: 120px; max-height: 40px; border: 0; outline: none; text-decoration: none; margin-bottom: 16px;" />
                           </td>
                         </tr>
                       </table>
@@ -900,40 +875,40 @@ export async function sendAgentRebookingEmail({
                   
                   <!-- Content -->
                   <tr>
-                    <td style="padding: 32px;">
-                      <h2 style="color: #000000; font-size: 24px; margin: 0 0 24px 0; font-weight: normal;">Appointment Reschedule Request</h2>
+                    <td style="padding: 40px 32px;">
+                      <h2 style="color: #111827; font-size: 28px; margin: 0 0 32px 0; font-weight: 600; line-height: 1.3;">Appointment Reschedule Request</h2>
                       
                       <!-- Two Column Layout for Details -->
                       <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 32px;">
                         <tr>
-                          <td width="50%" style="padding-right: 12px; padding-bottom: 16px;">
-                            <table cellpadding="0" cellspacing="0" style="border-left: 4px solid #1a4d2e; padding-left: 16px;">
+                          <td width="50%" style="padding-right: 16px; padding-bottom: 20px;">
+                            <table cellpadding="0" cellspacing="0" style="border-left: 3px solid #0D5C3D; padding-left: 20px;">
                               <tr>
-                                <td style="padding-top: 8px; padding-bottom: 8px;">
-                                  <p style="color: #666666; font-size: 14px; margin: 0 0 4px 0;">Original Date</p>
-                                  <p style="color: #000000; font-size: 16px; margin: 0; font-weight: normal;">${prettyDate}</p>
+                                <td style="padding-top: 4px; padding-bottom: 4px;">
+                                  <p style="color: #6b7280; font-size: 13px; margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500;">Original Date</p>
+                                  <p style="color: #111827; font-size: 18px; margin: 0; font-weight: 500; line-height: 1.4;">${prettyDate}</p>
                                 </td>
                               </tr>
                             </table>
                           </td>
-                          <td width="50%" style="padding-left: 12px; padding-bottom: 16px;">
-                            <table cellpadding="0" cellspacing="0" style="border-left: 4px solid #1a4d2e; padding-left: 16px;">
+                          <td width="50%" style="padding-left: 20px; padding-bottom: 20px;">
+                            <table cellpadding="0" cellspacing="0" style="border-left: 3px solid #0D5C3D; padding-left: 20px;">
                               <tr>
-                                <td style="padding-top: 8px; padding-bottom: 8px;">
-                                  <p style="color: #666666; font-size: 14px; margin: 0 0 4px 0;">Original Time</p>
-                                  <p style="color: #000000; font-size: 16px; margin: 0; font-weight: normal;">${timeWindowLabel}</p>
+                                <td style="padding-top: 4px; padding-bottom: 4px;">
+                                  <p style="color: #6b7280; font-size: 13px; margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500;">Original Time</p>
+                                  <p style="color: #111827; font-size: 18px; margin: 0; font-weight: 500; line-height: 1.4;">${timeWindowLabel}</p>
                                 </td>
                               </tr>
                             </table>
                           </td>
                         </tr>
                         <tr>
-                          <td width="50%" style="padding-right: 12px; padding-bottom: 16px;">
-                            <table cellpadding="0" cellspacing="0" style="border-left: 4px solid #1a4d2e; padding-left: 16px;">
+                          <td width="50%" style="padding-right: 16px; padding-bottom: 20px;">
+                            <table cellpadding="0" cellspacing="0" style="border-left: 3px solid #0D5C3D; padding-left: 20px;">
                               <tr>
-                                <td style="padding-top: 8px; padding-bottom: 8px;">
-                                  <p style="color: #666666; font-size: 14px; margin: 0 0 4px 0;">With</p>
-                                  <p style="color: #000000; font-size: 16px; margin: 0; font-weight: normal;">${consumerName || 'Client'}</p>
+                                <td style="padding-top: 4px; padding-bottom: 4px;">
+                                  <p style="color: #6b7280; font-size: 13px; margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500;">With</p>
+                                  <p style="color: #111827; font-size: 18px; margin: 0; font-weight: 500; line-height: 1.4;">${consumerName || 'Client'}</p>
                                 </td>
                               </tr>
                             </table>
@@ -944,7 +919,7 @@ export async function sendAgentRebookingEmail({
                       <!-- Additional Message Box -->
                       <table width="100%" cellpadding="0" cellspacing="0" style="margin-top: 24px;">
                         <tr>
-                          <td style="padding: 16px; background-color: #f3f4f6; border: 1px solid #e5e7eb;">
+                          <td style="padding: 24px; background-color: #f9fafb; border-radius: 8px;">
                             <p style="color: #374151; font-size: 16px; margin: 0; line-height: 1.5;">
                         They will be selecting a new time slot. Please check your calendar for the updated appointment.
                       </p>
@@ -1078,20 +1053,11 @@ export async function sendReviewFollowUpEmail({
                 <table width="800" cellpadding="0" cellspacing="0" style="background-color: #ffffff; max-width: 800px;">
                   <!-- Header -->
                   <tr>
-                    <td style="background-color: #1a4d2e; padding: 24px;">
+                    <td style="background-color: #0D5C3D; padding: 32px 24px;">
                       <table width="100%" cellpadding="0" cellspacing="0">
                         <tr>
-                          <td width="80" style="vertical-align: middle;">
-                            <table cellpadding="0" cellspacing="0" style="width: 80px; height: 80px; background-color: #ffffff; border-radius: 50%;">
-                              <tr>
-                                <td align="center" style="vertical-align: middle;">
-                                  <img src="data:image/png;base64,${getLogoBase64()}" alt="Soradin Logo" width="60" height="60" style="display: block; max-width: 60px; max-height: 60px; border: 0; outline: none; text-decoration: none;" />
-                    </td>
-                  </tr>
-                            </table>
-                          </td>
-                          <td style="vertical-align: middle; padding-left: 24px;">
-                            <h1 style="color: #ffffff; font-size: 32px; font-weight: bold; margin: 0;">SORADIN</h1>
+                          <td style="vertical-align: middle;">
+                            <img src="data:image/png;base64,${getLogoBase64()}" alt="Soradin Logo" width="120" height="40" style="display: block; max-width: 120px; max-height: 40px; border: 0; outline: none; text-decoration: none; margin-bottom: 16px;" />
                           </td>
                         </tr>
                       </table>
@@ -1100,18 +1066,18 @@ export async function sendReviewFollowUpEmail({
                   
                   <!-- Content -->
                   <tr>
-                    <td style="padding: 32px;">
-                      <h2 style="color: #000000; font-size: 24px; margin: 0 0 24px 0; font-weight: normal;">How was your appointment?</h2>
+                    <td style="padding: 40px 32px;">
+                      <h2 style="color: #111827; font-size: 28px; margin: 0 0 32px 0; font-weight: 600; line-height: 1.3;">How was your appointment?</h2>
                       
                       <!-- Two Column Layout for Details -->
                       <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 32px;">
                         <tr>
-                          <td width="50%" style="padding-right: 12px; padding-bottom: 16px;">
-                            <table cellpadding="0" cellspacing="0" style="border-left: 4px solid #1a4d2e; padding-left: 16px;">
+                          <td width="50%" style="padding-right: 16px; padding-bottom: 20px;">
+                            <table cellpadding="0" cellspacing="0" style="border-left: 3px solid #0D5C3D; padding-left: 20px;">
                               <tr>
-                                <td style="padding-top: 8px; padding-bottom: 8px;">
-                                  <p style="color: #666666; font-size: 14px; margin: 0 0 4px 0;">With</p>
-                                  <p style="color: #000000; font-size: 16px; margin: 0; font-weight: normal;">${agentName || 'your specialist'}</p>
+                                <td style="padding-top: 4px; padding-bottom: 4px;">
+                                  <p style="color: #6b7280; font-size: 13px; margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500;">With</p>
+                                  <p style="color: #111827; font-size: 18px; margin: 0; font-weight: 500; line-height: 1.4;">${agentName || 'your specialist'}</p>
                                 </td>
                               </tr>
                             </table>
@@ -1122,16 +1088,20 @@ export async function sendReviewFollowUpEmail({
                       <!-- Additional Message Box -->
                       <table width="100%" cellpadding="0" cellspacing="0" style="margin-top: 24px;">
                         <tr>
-                          <td style="padding: 16px; background-color: #f3f4f6; border: 1px solid #e5e7eb;">
-                            <p style="color: #374151; font-size: 16px; margin: 0 0 16px 0; line-height: 1.5;">
+                          <td style="padding: 24px; background-color: #f9fafb; border-radius: 8px;">
+                            <p style="color: #374151; font-size: 16px; margin: 0 0 20px 0; line-height: 1.6;">
                               We hope your appointment went well. Your feedback helps us improve and helps other families find the right specialist.
                             </p>
-                            <p style="color: #374151; font-size: 16px; margin: 0; line-height: 1.5;">
-                              <a href="${reviewUrl}" style="color: #1a4d2e; text-decoration: underline;">Share Your Experience</a>
+                            <table cellpadding="0" cellspacing="0" style="margin-bottom: 12px;">
+                              <tr>
+                                <td>
+                                  <a href="${reviewUrl}" style="display: inline-block; background-color: #0D5C3D; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-size: 16px; font-weight: 500;">Share Your Experience</a>
+                                </td>
+                              </tr>
+                            </table>
+                            <p style="color: #9ca3af; font-size: 13px; margin: 0; line-height: 1.5;">
+                              This link will expire in 30 days.
                             </p>
-                            <p style="color: #6b7280; font-size: 14px; margin: 16px 0 0 0; line-height: 1.5;">
-                        This link will expire in 30 days.
-                      </p>
                     </td>
                   </tr>
                       </table>
@@ -1263,7 +1233,7 @@ export async function sendPaymentDeclineEmail({
                 <table width="800" cellpadding="0" cellspacing="0" style="background-color: #ffffff; max-width: 800px;">
                   <!-- Header -->
                   <tr>
-                    <td style="background-color: #1a4d2e; padding: 24px;">
+                    <td style="background-color: #0D5C3D; padding: 24px;">
                       <table width="100%" cellpadding="0" cellspacing="0">
                         <tr>
                           <td width="80" style="vertical-align: middle;">
@@ -1285,28 +1255,28 @@ export async function sendPaymentDeclineEmail({
                   
                   <!-- Content -->
                   <tr>
-                    <td style="padding: 32px;">
-                      <h2 style="color: #000000; font-size: 24px; margin: 0 0 24px 0; font-weight: normal;">Payment Method Declined</h2>
+                    <td style="padding: 40px 32px;">
+                      <h2 style="color: #111827; font-size: 28px; margin: 0 0 32px 0; font-weight: 600; line-height: 1.3;">Payment Method Declined</h2>
                       
                       <!-- Two Column Layout for Details -->
                       <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 32px;">
                         <tr>
-                          <td width="50%" style="padding-right: 12px; padding-bottom: 16px;">
-                            <table cellpadding="0" cellspacing="0" style="border-left: 4px solid #1a4d2e; padding-left: 16px;">
+                          <td width="50%" style="padding-right: 16px; padding-bottom: 20px;">
+                            <table cellpadding="0" cellspacing="0" style="border-left: 3px solid #0D5C3D; padding-left: 20px;">
                               <tr>
-                                <td style="padding-top: 8px; padding-bottom: 8px;">
-                                  <p style="color: #666666; font-size: 14px; margin: 0 0 4px 0;">Amount</p>
-                                  <p style="color: #000000; font-size: 16px; margin: 0; font-weight: normal;">$${(amountCents / 100).toFixed(2)} CAD</p>
+                                <td style="padding-top: 4px; padding-bottom: 4px;">
+                                  <p style="color: #6b7280; font-size: 13px; margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500;">Amount</p>
+                                  <p style="color: #111827; font-size: 18px; margin: 0; font-weight: 500; line-height: 1.4;">$${(amountCents / 100).toFixed(2)} CAD</p>
                                 </td>
                               </tr>
                             </table>
                           </td>
-                          <td width="50%" style="padding-left: 12px; padding-bottom: 16px;">
-                            <table cellpadding="0" cellspacing="0" style="border-left: 4px solid #1a4d2e; padding-left: 16px;">
+                          <td width="50%" style="padding-left: 20px; padding-bottom: 20px;">
+                            <table cellpadding="0" cellspacing="0" style="border-left: 3px solid #0D5C3D; padding-left: 20px;">
                               <tr>
-                                <td style="padding-top: 8px; padding-bottom: 8px;">
-                                  <p style="color: #666666; font-size: 14px; margin: 0 0 4px 0;">Appointment ID</p>
-                                  <p style="color: #000000; font-size: 16px; margin: 0; font-weight: normal;">${appointmentId}</p>
+                                <td style="padding-top: 4px; padding-bottom: 4px;">
+                                  <p style="color: #6b7280; font-size: 13px; margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500;">Appointment ID</p>
+                                  <p style="color: #111827; font-size: 18px; margin: 0; font-weight: 500; line-height: 1.4;">${appointmentId}</p>
                                 </td>
                               </tr>
                             </table>
@@ -1314,12 +1284,12 @@ export async function sendPaymentDeclineEmail({
                         </tr>
                         ${declineReason ? `
                         <tr>
-                          <td width="50%" style="padding-right: 12px; padding-bottom: 16px;">
-                            <table cellpadding="0" cellspacing="0" style="border-left: 4px solid #1a4d2e; padding-left: 16px;">
+                          <td width="50%" style="padding-right: 16px; padding-bottom: 20px;">
+                            <table cellpadding="0" cellspacing="0" style="border-left: 3px solid #0D5C3D; padding-left: 20px;">
                               <tr>
-                                <td style="padding-top: 8px; padding-bottom: 8px;">
-                                  <p style="color: #666666; font-size: 14px; margin: 0 0 4px 0;">Reason</p>
-                                  <p style="color: #000000; font-size: 16px; margin: 0; font-weight: normal;">${declineReason}</p>
+                                <td style="padding-top: 4px; padding-bottom: 4px;">
+                                  <p style="color: #6b7280; font-size: 13px; margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500;">Reason</p>
+                                  <p style="color: #111827; font-size: 18px; margin: 0; font-weight: 500; line-height: 1.4;">${declineReason}</p>
                                 </td>
                               </tr>
                             </table>
@@ -1331,12 +1301,12 @@ export async function sendPaymentDeclineEmail({
                       <!-- Additional Message Box -->
                       <table width="100%" cellpadding="0" cellspacing="0" style="margin-top: 24px;">
                         <tr>
-                          <td style="padding: 16px; background-color: #f3f4f6; border: 1px solid #e5e7eb;">
+                          <td style="padding: 24px; background-color: #f9fafb; border-radius: 8px;">
                             <p style="color: #374151; font-size: 16px; margin: 0 0 16px 0; line-height: 1.5;">
                               We were unable to process the payment for an appointment booking. Your account has been temporarily paused, and you will not appear in search results until you update your payment method.
                             </p>
                             <p style="color: #374151; font-size: 16px; margin: 0; line-height: 1.5;">
-                              Please <a href="${billingUrl}" style="color: #1a4d2e; text-decoration: underline;">update your payment method</a> to reactivate your account. Once updated, we'll automatically charge the outstanding payment and your account will be reactivated.
+                              Please <a href="${billingUrl}" style="color: #0D5C3D; text-decoration: underline;">update your payment method</a> to reactivate your account. Once updated, we'll automatically charge the outstanding payment and your account will be reactivated.
                             </p>
                           </td>
                         </tr>
@@ -1470,7 +1440,7 @@ export async function sendPaymentReceiptEmail({
                 <table width="800" cellpadding="0" cellspacing="0" style="background-color: #ffffff; max-width: 800px;">
                   <!-- Header -->
                   <tr>
-                    <td style="background-color: #1a4d2e; padding: 24px;">
+                    <td style="background-color: #0D5C3D; padding: 24px;">
                       <table width="100%" cellpadding="0" cellspacing="0">
                         <tr>
                           <td width="80" style="vertical-align: middle;">
@@ -1492,29 +1462,29 @@ export async function sendPaymentReceiptEmail({
                   
                   <!-- Content -->
                   <tr>
-                    <td style="padding: 32px;">
-                      <h2 style="color: #000000; font-size: 24px; margin: 0 0 24px 0; font-weight: normal;">Payment Receipt</h2>
+                    <td style="padding: 40px 32px;">
+                      <h2 style="color: #111827; font-size: 28px; margin: 0 0 32px 0; font-weight: 600; line-height: 1.3;">Payment Receipt</h2>
                       
                       <!-- Two Column Layout for Details -->
                       <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 32px;">
                         <tr>
-                          <td width="50%" style="padding-right: 12px; padding-bottom: 16px;">
-                            <table cellpadding="0" cellspacing="0" style="border-left: 4px solid #1a4d2e; padding-left: 16px;">
+                          <td width="50%" style="padding-right: 16px; padding-bottom: 20px;">
+                            <table cellpadding="0" cellspacing="0" style="border-left: 3px solid #0D5C3D; padding-left: 20px;">
                               <tr>
-                                <td style="padding-top: 8px; padding-bottom: 8px;">
-                                  <p style="color: #666666; font-size: 14px; margin: 0 0 4px 0;">Amount Charged</p>
-                                  <p style="color: #000000; font-size: 16px; margin: 0; font-weight: normal;">$${(amountCents / 100).toFixed(2)} CAD</p>
+                                <td style="padding-top: 4px; padding-bottom: 4px;">
+                                  <p style="color: #6b7280; font-size: 13px; margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500;">Amount Charged</p>
+                                  <p style="color: #111827; font-size: 18px; margin: 0; font-weight: 500; line-height: 1.4;">$${(amountCents / 100).toFixed(2)} CAD</p>
                                 </td>
                               </tr>
                             </table>
                           </td>
                           ${consumerName ? `
-                          <td width="50%" style="padding-left: 12px; padding-bottom: 16px;">
-                            <table cellpadding="0" cellspacing="0" style="border-left: 4px solid #1a4d2e; padding-left: 16px;">
+                          <td width="50%" style="padding-left: 20px; padding-bottom: 20px;">
+                            <table cellpadding="0" cellspacing="0" style="border-left: 3px solid #0D5C3D; padding-left: 20px;">
                               <tr>
-                                <td style="padding-top: 8px; padding-bottom: 8px;">
-                                  <p style="color: #666666; font-size: 14px; margin: 0 0 4px 0;">Client</p>
-                                  <p style="color: #000000; font-size: 16px; margin: 0; font-weight: normal;">${consumerName}</p>
+                                <td style="padding-top: 4px; padding-bottom: 4px;">
+                                  <p style="color: #6b7280; font-size: 13px; margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500;">Client</p>
+                                  <p style="color: #111827; font-size: 18px; margin: 0; font-weight: 500; line-height: 1.4;">${consumerName}</p>
                                 </td>
                               </tr>
                             </table>
@@ -1524,24 +1494,24 @@ export async function sendPaymentReceiptEmail({
                         ${appointmentDate || appointmentTime ? `
                         <tr>
                           ${appointmentDate ? `
-                          <td width="50%" style="padding-right: 12px; padding-bottom: 16px;">
-                            <table cellpadding="0" cellspacing="0" style="border-left: 4px solid #1a4d2e; padding-left: 16px;">
+                          <td width="50%" style="padding-right: 16px; padding-bottom: 20px;">
+                            <table cellpadding="0" cellspacing="0" style="border-left: 3px solid #0D5C3D; padding-left: 20px;">
                               <tr>
-                                <td style="padding-top: 8px; padding-bottom: 8px;">
-                                  <p style="color: #666666; font-size: 14px; margin: 0 0 4px 0;">Appointment Date</p>
-                                  <p style="color: #000000; font-size: 16px; margin: 0; font-weight: normal;">${appointmentDate}</p>
+                                <td style="padding-top: 4px; padding-bottom: 4px;">
+                                  <p style="color: #6b7280; font-size: 13px; margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500;">Appointment Date</p>
+                                  <p style="color: #111827; font-size: 18px; margin: 0; font-weight: 500; line-height: 1.4;">${appointmentDate}</p>
                                 </td>
                               </tr>
                             </table>
                           </td>
                           ` : ''}
                           ${appointmentTime ? `
-                          <td width="50%" style="padding-left: 12px; padding-bottom: 16px;">
-                            <table cellpadding="0" cellspacing="0" style="border-left: 4px solid #1a4d2e; padding-left: 16px;">
+                          <td width="50%" style="padding-left: 20px; padding-bottom: 20px;">
+                            <table cellpadding="0" cellspacing="0" style="border-left: 3px solid #0D5C3D; padding-left: 20px;">
                               <tr>
-                                <td style="padding-top: 8px; padding-bottom: 8px;">
-                                  <p style="color: #666666; font-size: 14px; margin: 0 0 4px 0;">Appointment Time</p>
-                                  <p style="color: #000000; font-size: 16px; margin: 0; font-weight: normal;">${appointmentTime}</p>
+                                <td style="padding-top: 4px; padding-bottom: 4px;">
+                                  <p style="color: #6b7280; font-size: 13px; margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500;">Appointment Time</p>
+                                  <p style="color: #111827; font-size: 18px; margin: 0; font-weight: 500; line-height: 1.4;">${appointmentTime}</p>
                                 </td>
                               </tr>
                             </table>
@@ -1554,7 +1524,7 @@ export async function sendPaymentReceiptEmail({
                       <!-- Info Box -->
                       <table width="100%" cellpadding="0" cellspacing="0" style="margin-top: 24px;">
                         <tr>
-                          <td style="padding: 16px; background-color: #f3f4f6; border: 1px solid #e5e7eb;">
+                          <td style="padding: 24px; background-color: #f9fafb; border-radius: 8px;">
                             <p style="color: #374151; font-size: 16px; margin: 0; line-height: 1.5;">
                               This is a receipt for the appointment booking fee that was charged to your payment method on file. This charge was processed immediately when the appointment was booked.
                             </p>
