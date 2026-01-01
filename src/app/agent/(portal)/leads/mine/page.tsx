@@ -198,10 +198,10 @@ export default function MyLeadsPage() {
                 const { bg, text } = getStatusColors(status);
                 
                 return (
-              <div
-                key={lead.id}
-                className="rounded-lg border border-[#ded3c2] bg-white p-4 shadow-sm"
-              >
+                  <div
+                    key={lead.id}
+                    className="rounded-lg border border-[#ded3c2] bg-white p-4 shadow-sm"
+                  >
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
                     <div className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
