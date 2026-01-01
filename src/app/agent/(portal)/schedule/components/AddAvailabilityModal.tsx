@@ -149,6 +149,9 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
           "Sa": "saturday",
         };
 
+        // Note: "Every other week" frequency would need additional logic to handle
+        // For now, we save it as weekly - this can be enhanced later if needed
+
         const fullDayNames = recurDays.map(d => dayMap[d]).filter(Boolean);
 
         // Get current availability for this location
