@@ -300,7 +300,7 @@ export default function SchedulePage() {
   }
 
   return (
-    <div className="w-full h-screen flex flex-col bg-white relative" style={{ padding: '32px', paddingTop: '56px', overflow: 'hidden' }}>
+    <div className="w-full h-screen flex flex-col bg-white relative overflow-hidden p-8 pt-[56px] md:pt-8">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
