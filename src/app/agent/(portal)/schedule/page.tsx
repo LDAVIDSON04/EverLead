@@ -8,7 +8,6 @@ import { Calendar, Clock, User, X, ChevronLeft, ChevronRight, MapPin } from "luc
 import { DateTime } from "luxon";
 import { ClientInfoModal } from "../my-appointments/components/ClientInfoModal";
 import { downloadClientInfo } from "@/lib/downloadClientInfo";
-import { getCityColor } from "@/lib/cityColors";
 import { AddAvailabilityModal } from "./components/AddAvailabilityModal";
 import { CalendarSyncModal } from "./components/CalendarSyncModal";
 
