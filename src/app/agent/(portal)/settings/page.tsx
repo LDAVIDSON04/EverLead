@@ -2208,25 +2208,6 @@ function SecuritySection() {
         </div>
       </div>
 
-      <div className="mb-8">
-        <h3 className="font-semibold mb-4 flex items-center gap-2">
-          <Monitor size={18} />
-          Connected Devices
-        </h3>
-
-        <div className="bg-gray-50 rounded-lg p-4 mb-4">
-          <p className="text-sm text-gray-600">No other devices currently connected.</p>
-        </div>
-
-        <button
-          onClick={handleLogout}
-          className="px-4 py-2 border border-red-600 text-red-600 rounded-lg hover:bg-red-50 flex items-center gap-2"
-        >
-          <LogOut size={16} />
-          Logout of All Sessions
-        </button>
-      </div>
-
       <div className="border-t border-gray-200 pt-8">
         <h3 className="font-semibold mb-4 text-red-600 flex items-center gap-2">
           <AlertTriangle size={18} />
