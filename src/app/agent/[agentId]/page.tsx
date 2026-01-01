@@ -60,6 +60,20 @@ export default function AgentProfilePage() {
         const specialty = (metadata as any)?.specialty || null;
         const licenseNumber = (metadata as any)?.license_number || null;
         
+        // Fetch review stats
+        let reviewCount = 0;
+        let averageRating = 0;
+        try {
+          const reviewsResponse = await fetch(`/api/reviews/agent/${agentId}`);
+          if (reviewsResponse.ok) {
+            const reviewsData = await reviewsResponse.json();
+            reviewCount = reviewsData.totalReviews || 0;
+            averageRating = reviewsData.averageRating || 0;
+          }
+        } catch (reviewError) {
+          console.error('Error fetching reviews:', reviewError);
+        }
+
         setAgentData({
           ...data,
           business_address: (metadata as any)?.business_address || null,
@@ -70,8 +84,8 @@ export default function AgentProfilePage() {
           specialty: specialty,
           license_number: licenseNumber,
           credentials: licenseNumber ? `LFD, ${licenseNumber}` : 'LFD',
-          rating: 4.9,
-          reviewCount: Math.floor(Math.random() * 200 + 50),
+          rating: averageRating || 0,
+          reviewCount: reviewCount,
           verified: true,
           summary: `${data.full_name || 'This agent'} brings years of compassionate expertise in end-of-life planning and grief support. ${specialty || 'They help'} families navigate difficult decisions with dignity and care.`,
           fullBio: `${data.full_name || 'This agent'}'s journey into end-of-life care is driven by a commitment to helping families during life's most challenging moments.\n\n${specialty || 'Their expertise'} allows them to address both the emotional and practical aspects of end-of-life planning.\n\nThey are known for their patient, non-judgmental approach and their ability to facilitate difficult family conversations.`,
@@ -171,7 +185,7 @@ export default function AgentProfilePage() {
         <div className="mt-8">
           <Credentials agentData={agentData} />
           <OfficeLocations agentData={agentData} />
-          <Reviews reviewCount={agentData.reviewCount} />
+          <Reviews agentId={agentId} reviewCount={agentData.reviewCount} />
           <FAQs />
         </div>
       </div>

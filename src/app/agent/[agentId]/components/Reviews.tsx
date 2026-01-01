@@ -1,8 +1,10 @@
 "use client";
 
 import { Star } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 interface ReviewsProps {
+  agentId: string;
   reviewCount: number;
 }
 
@@ -11,39 +13,56 @@ interface Review {
   author: string;
   rating: number;
   date: string;
-  comment: string;
+  comment: string | null;
   verified: boolean;
 }
 
-// Mock reviews - can be replaced with real data later
-const mockReviews: Review[] = [
-  {
-    id: '1',
-    author: 'Jennifer M.',
-    rating: 5,
-    date: 'November 2024',
-    comment: 'Incredibly compassionate during one of the most difficult times of our lives. Helped us plan everything with care and respect.',
-    verified: true
-  },
-  {
-    id: '2',
-    author: 'Robert T.',
-    rating: 5,
-    date: 'October 2024',
-    comment: 'Professional, knowledgeable, and truly caring. Made the entire process much easier for our family.',
-    verified: true
-  },
-  {
-    id: '3',
-    author: 'Maria L.',
-    rating: 5,
-    date: 'September 2024',
-    comment: 'Expertise in estate planning was invaluable. I now have peace of mind knowing everything is in order.',
-    verified: true
-  }
-];
+export function Reviews({ agentId, reviewCount }: ReviewsProps) {
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [loading, setLoading] = useState(true);
 
-export function Reviews({ reviewCount }: ReviewsProps) {
+  useEffect(() => {
+    async function fetchReviews() {
+      try {
+        const response = await fetch(`/api/reviews/agent/${agentId}`);
+        if (response.ok) {
+          const data = await response.json();
+          setReviews(data.reviews || []);
+        }
+      } catch (error) {
+        console.error('Error fetching reviews:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    if (agentId) {
+      fetchReviews();
+    }
+  }, [agentId]);
+
+  if (loading) {
+    return (
+      <div className="mb-12">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-xl font-medium text-gray-900">Reviews & Testimonials</h3>
+          <div className="text-sm text-gray-500">Loading reviews...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (reviews.length === 0) {
+    return (
+      <div className="mb-12">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-xl font-medium text-gray-900">Reviews & Testimonials</h3>
+          <div className="text-sm text-gray-500">No reviews yet</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="mb-12">
       <div className="flex items-center justify-between mb-4">
@@ -52,7 +71,7 @@ export function Reviews({ reviewCount }: ReviewsProps) {
       </div>
       
       <div className="space-y-4">
-        {mockReviews.map((review) => (
+        {reviews.map((review) => (
           <div key={review.id} className="p-4 bg-gray-50 rounded-lg">
             <div className="flex items-start justify-between mb-3">
               <div>
@@ -84,7 +103,9 @@ export function Reviews({ reviewCount }: ReviewsProps) {
                 </div>
               </div>
             </div>
-            <p className="text-gray-700">{review.comment}</p>
+            {review.comment && (
+              <p className="text-gray-700">{review.comment}</p>
+            )}
           </div>
         ))}
       </div>

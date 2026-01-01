@@ -28,6 +28,7 @@ export async function GET(req: NextRequest) {
     // 1. Have confirmed_at between 24-25 hours ago (1 hour window)
     // 2. Are confirmed or booked (not cancelled)
     // 3. Don't already have a review
+    // Note: confirmed_at is set when appointment is booked and represents the appointment start time
     const { data: appointments, error: appointmentsError } = await supabaseAdmin
       .from("appointments")
       .select(`
@@ -46,7 +47,7 @@ export async function GET(req: NextRequest) {
           full_name
         )
       `)
-      .eq("status", "confirmed")
+      .in("status", ["confirmed", "booked"])
       .gte("confirmed_at", twentyFiveHoursAgo.toISOString())
       .lte("confirmed_at", twentyFourHoursAgo.toISOString())
       .not("confirmed_at", "is", null);
