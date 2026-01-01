@@ -4,7 +4,7 @@ import Link from "next/link";
 
 export function CTASection() {
   return (
-    <section className="bg-[#FFF9F0] py-20 relative overflow-hidden">
+    <section className="bg-[#FFF9F0] py-4 md:py-8 relative overflow-hidden">
       <div className="max-w-7xl mx-auto px-6">
         <div className="grid md:grid-cols-2 gap-12 items-center">
           {/* Left content */}
