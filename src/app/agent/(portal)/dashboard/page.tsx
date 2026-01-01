@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabaseClient } from "@/lib/supabaseClient";
 import { Calendar, ChevronLeft, ChevronRight, Phone, Mail as MailIcon, Users, Plus, MoreHorizontal, ArrowUpDown, AlertCircle, Check, User, Clock } from "lucide-react";
-import { SkeletonBox } from "@/components/SkeletonLoader";
 
 type Stats = {
   available: number;
@@ -384,23 +383,8 @@ export default function AgentDashboardPage() {
 
   if (loading) {
     return (
-      <div className="flex-1 overflow-auto bg-gray-50">
-        <div className="max-w-7xl mx-auto px-6 py-6 space-y-6">
-          {/* Stats skeleton */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {[1, 2, 3, 4].map((i) => (
-              <SkeletonBox key={i} className="h-24" />
-            ))}
-          </div>
-          {/* Calendar skeleton */}
-          <SkeletonBox className="h-64" />
-          {/* Appointments skeleton */}
-          <div className="space-y-4">
-            {[1, 2, 3].map((i) => (
-              <SkeletonBox key={i} className="h-20" />
-            ))}
-          </div>
-        </div>
+      <div className="flex items-center justify-center h-full">
+        <p className="text-sm text-gray-600">Loading...</p>
       </div>
     );
   }

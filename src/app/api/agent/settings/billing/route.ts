@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { supabaseServer } from "@/lib/supabaseServer";
+import { DateTime } from "luxon";
 
 export async function GET(request: NextRequest) {
   try {
@@ -24,6 +25,35 @@ export async function GET(request: NextRequest) {
     const agentId = user.id;
     const pricePerAppointment = 0.50; // Testing price - Stripe minimum is $0.50, change to 29.0 for production
 
+    // Get agent's timezone from profile
+    let agentTimezone = "America/Vancouver"; // Default
+    const { data: profileData } = await supabaseAdmin
+      .from("profiles")
+      .select("metadata, agent_province")
+      .eq("id", agentId)
+      .maybeSingle();
+    
+    if (profileData?.metadata?.timezone) {
+      agentTimezone = profileData.metadata.timezone;
+    } else if (profileData?.metadata?.availability?.timezone) {
+      agentTimezone = profileData.metadata.availability.timezone;
+    } else if (profileData?.agent_province) {
+      const province = profileData.agent_province.toUpperCase();
+      if (province === "BC" || province === "BRITISH COLUMBIA") {
+        agentTimezone = "America/Vancouver";
+      } else if (province === "AB" || province === "ALBERTA") {
+        agentTimezone = "America/Edmonton";
+      } else if (province === "SK" || province === "SASKATCHEWAN") {
+        agentTimezone = "America/Regina";
+      } else if (province === "MB" || province === "MANITOBA") {
+        agentTimezone = "America/Winnipeg";
+      } else if (province === "ON" || province === "ONTARIO") {
+        agentTimezone = "America/Toronto";
+      } else if (province === "QC" || province === "QUEBEC") {
+        agentTimezone = "America/Montreal";
+      }
+    }
+
     // Get current month appointments (booked/confirmed appointments)
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -46,12 +76,16 @@ export async function GET(request: NextRequest) {
       .order("created_at", { ascending: false })
       .limit(50);
 
-    // Group by day
+    // Group by day (using agent's timezone)
     const paymentsByDay: Record<string, { appointments: number; amount: number; ids: string[] }> = {};
     (pastAppointments || []).forEach((apt: any) => {
-      const date = new Date(apt.created_at);
-      // Create a day key in format "YYYY-MM-DD" for grouping
-      const dayKey = date.toISOString().split('T')[0];
+      // Parse UTC timestamp and convert to agent's timezone
+      const utcDate = DateTime.fromISO(apt.created_at, { zone: "utc" });
+      const localDate = utcDate.setZone(agentTimezone);
+      // Create a day key in format "YYYY-MM-DD" for grouping (in agent's timezone)
+      const dayKey = localDate.toISODate() || localDate.toFormat('yyyy-MM-dd');
+      
+      if (!dayKey) return; // Skip if date parsing failed
       
       if (!paymentsByDay[dayKey]) {
         paymentsByDay[dayKey] = { appointments: 0, amount: 0, ids: [] };
@@ -65,8 +99,10 @@ export async function GET(request: NextRequest) {
     const pastPayments = Object.entries(paymentsByDay)
       .sort(([dateA], [dateB]) => dateB.localeCompare(dateA)) // Sort descending (newest first)
       .map(([dayKey, data]) => {
-        const date = new Date(dayKey);
-        const formattedDate = date.toLocaleDateString("en-US", {
+        // Parse UTC date string and convert to agent's timezone
+        const utcDate = DateTime.fromISO(`${dayKey}T00:00:00.000Z`, { zone: "utc" });
+        const localDate = utcDate.setZone(agentTimezone);
+        const formattedDate = localDate.toLocaleString({
           year: "numeric",
           month: "long",
           day: "numeric",
