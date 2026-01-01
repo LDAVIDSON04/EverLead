@@ -17,22 +17,22 @@ const cityColors = [
  * External events always return gray
  */
 export function getCityColor(location: string | null | undefined, isExternal?: boolean): string {
-  // External events are always gray
+  // External events are always gray (more visible)
   if (isExternal) {
-    return 'bg-gray-100';
+    return 'bg-slate-200';
   }
 
-  // If no location or N/A, use a light gray but still visible
+  // If no location or N/A, use a more visible light blue-gray
   if (!location || location === 'N/A' || location === 'External Calendar' || location.trim() === '') {
-    return 'bg-gray-100';
+    return 'bg-slate-200'; // More visible than gray-100
   }
 
   // Extract city name (remove province if present, e.g., "Vancouver, BC" -> "Vancouver")
   const cityName = location.split(',')[0].trim().toLowerCase();
   
-  // If city name is empty after extraction, return gray
+  // If city name is empty after extraction, return a visible color
   if (!cityName || cityName === '') {
-    return 'bg-gray-100';
+    return 'bg-slate-200';
   }
 
   // Simple hash function to get consistent color per city

@@ -388,9 +388,6 @@ export default function SchedulePage() {
                           // Calculate height based on duration
                           const height = (apt.durationMinutes / 60) * 120;
                           const color = getCityColor(apt.location, apt.is_external);
-                          
-                          // Debug: log to see what's happening with colors
-                          // console.log('Appointment:', { id: apt.id, location: apt.location, is_external: apt.is_external, color });
 
                           return (
                             <div
