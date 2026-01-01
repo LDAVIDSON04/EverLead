@@ -356,7 +356,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto relative z-20 w-full md:mt-0 -mt-4 overflow-visible">
           {/* Headline and Search Bar - Full Width */}
           <div className="max-w-4xl">
-            <h1 className="text-6xl md:text-6xl text-2xl md:mb-8 mb-3 text-[#1A1A1A] font-semibold tracking-tight leading-none text-left pt-1">
+            <h1 className="text-6xl md:text-6xl text-2xl md:mb-8 mb-3 text-[#1A1A1A] font-semibold tracking-tight leading-none text-left" style={{ paddingTop: '4px' }}>
               Book local funeral professionals
             </h1>
 
@@ -654,7 +654,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             {/* Left side - Image (moved before content) */}
-            <div className="relative w-full order-2 lg:order-1">
+            <div className="relative w-full order-1 lg:order-1">
               <Image
                 src="/estate-planning-image.webp"
                 alt="Estate planning professionals"
@@ -669,7 +669,7 @@ export default function HomePage() {
               />
             </div>
             {/* Right side - Content (moved after image) */}
-            <div className="order-1 lg:order-2">
+            <div className="order-2 lg:order-2">
               <h2 className="text-5xl mb-6 text-[#1A1A1A] font-semibold tracking-tight leading-tight">
                 Built with professional standards in mind
               </h2>
