@@ -653,8 +653,8 @@ export default function HomePage() {
       <section className="py-24 px-4 bg-[#FAF9F6]">
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
-            {/* Left side - Image (moved before content) */}
-            <div className="relative w-full order-1 lg:order-1">
+            {/* Left side - Image (mobile first, desktop right) */}
+            <div className="relative w-full order-1 lg:order-2">
               <Image
                 src="/estate-planning-image.webp"
                 alt="Estate planning professionals"
@@ -668,8 +668,8 @@ export default function HomePage() {
                 unoptimized
               />
             </div>
-            {/* Right side - Content (moved after image) */}
-            <div className="order-2 lg:order-2">
+            {/* Right side - Content (mobile second, desktop left) */}
+            <div className="order-2 lg:order-1">
               <h2 className="text-5xl mb-6 text-[#1A1A1A] font-semibold tracking-tight leading-tight">
                 Built with professional standards in mind
               </h2>
