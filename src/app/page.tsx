@@ -257,10 +257,10 @@ export default function HomePage() {
             <div className="flex flex-col gap-3">
               <Link 
                 href="/learn-more-about-starting" 
-                className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors py-2"
+                className="bg-[#0C6F3C] text-white px-4 py-2 rounded-lg hover:bg-[#0C6F3C]/90 transition-all shadow-sm text-sm text-center"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                List your Specialty
+                Create account
               </Link>
               <Link 
                 href="/agent" 
@@ -316,7 +316,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto relative z-20 w-full md:mt-0 -mt-8">
           {/* Headline and Search Bar - Full Width */}
           <div className="max-w-4xl">
-            <h1 className="text-6xl md:text-6xl text-2xl md:mb-8 mb-3 text-[#1A1A1A] font-semibold tracking-tight leading-tight text-left">
+            <h1 className="text-6xl md:text-6xl text-2xl md:mb-8 mb-3 text-[#1A1A1A] font-semibold tracking-tight leading-none text-left">
               Book local funeral professionals
             </h1>
 
@@ -453,11 +453,11 @@ export default function HomePage() {
                 />
               </div>
 
-              <div className="relative z-10 flex flex-col">
-                <h3 className="text-xl font-semibold text-[#1A1A1A] mb-2 text-left">
+              <div className="relative z-10 flex flex-col items-center text-center">
+                <h3 className="text-xl font-semibold text-[#1A1A1A] mb-2">
                   What are pre needs
                 </h3>
-                <p className="text-sm text-[#1A1A1A]/70 mb-4 text-left">
+                <p className="text-sm text-[#1A1A1A]/70 mb-4">
                   Learn more about pre needs and how they help you plan ahead
                 </p>
                 <Link 
