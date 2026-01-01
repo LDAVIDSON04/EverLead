@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search, MapPin, Star, Calendar, Check, ChevronDown, Heart, Facebook, Instagram, Menu, X } from "lucide-react";
+import { Search, MapPin, Star, Calendar, Check, ChevronDown, Heart, Facebook, Instagram, Menu, X, ChevronRight } from "lucide-react";
 import { useState } from "react";
 
 export default function HomePage() {
@@ -453,12 +453,19 @@ export default function HomePage() {
                 />
               </div>
 
-              <div className="relative z-10 flex flex-col items-center text-center">
+              <div className="relative z-10 flex flex-col">
+                <h3 className="text-xl font-semibold text-[#1A1A1A] mb-2 text-left">
+                  What are pre needs
+                </h3>
+                <p className="text-sm text-[#1A1A1A]/70 mb-4 text-left">
+                  Learn more about pre needs and how they help you plan ahead
+                </p>
                 <Link 
                   href="/what-is-pre-need-funeral-planning"
-                  className="bg-[#0C6F3C] text-white px-5 py-2.5 rounded-xl hover:bg-[#0C6F3C]/90 transition-all shadow-sm text-sm font-medium w-full"
+                  className="bg-[#0C6F3C] text-white px-5 py-2.5 rounded-xl hover:bg-[#0C6F3C]/90 transition-all shadow-sm text-sm font-medium w-full flex items-center justify-center gap-2"
                 >
-                  What Is Pre Need Planning?
+                  Learn more
+                  <ChevronRight className="w-4 h-4" />
                 </Link>
               </div>
             </div>
