@@ -74,10 +74,14 @@ export async function GET(request: NextRequest) {
       }
     });
 
+    // Get availability type per location (which type is active: "recurring" or "daily")
+    const availabilityTypeByLocation = availabilityData.availabilityTypeByLocation || {};
+
     return NextResponse.json({
       locations: validLocations,
       availabilityByLocation: validAvailabilityByLocation,
       appointmentLength: availabilityData.appointmentLength || "30",
+      availabilityTypeByLocation, // e.g., { "Kelowna": "recurring", "Penticton": "daily" }
     });
   } catch (err: any) {
     console.error("Error in GET /api/agent/settings/availability:", err);
@@ -105,7 +109,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { locations, availabilityByLocation, appointmentLength } = body;
+    const { locations, availabilityByLocation, appointmentLength, availabilityTypeByLocation } = body;
 
     // Get cities from office locations
     const { data: officeLocations } = await supabaseAdmin
@@ -158,6 +162,9 @@ export async function POST(request: NextRequest) {
 
     const existingMetadata = existingProfile?.metadata || {};
 
+    // Store availability type per location (which type is active)
+    const availabilityTypeToStore = availabilityTypeByLocation || {};
+
     const { error } = await supabaseAdmin
       .from("profiles")
       .update({
@@ -167,6 +174,7 @@ export async function POST(request: NextRequest) {
             locations: validLocations,
             availabilityByLocation: filteredAvailabilityByLocation,
             appointmentLength,
+            availabilityTypeByLocation: availabilityTypeToStore, // Store which type is active per location
           },
         },
       })

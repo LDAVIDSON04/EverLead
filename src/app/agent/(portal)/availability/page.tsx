@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabaseClient } from "@/lib/supabaseClient";
-import { MapPin, Plus } from "lucide-react";
-import Link from "next/link";
+import { MapPin, Plus, ChevronLeft, ChevronRight } from "lucide-react";
 
 function Input({ className = "", ...props }: React.InputHTMLAttributes<HTMLInputElement>) {
   return (
@@ -35,6 +34,130 @@ function Select({ value, onValueChange, children, ...props }: { value: string; o
   );
 }
 
+// Modal component for adding/editing daily availability
+function DailyAvailabilityModal({
+  isOpen,
+  onClose,
+  selectedDate,
+  location,
+  existingAvailability,
+  onSave,
+  onDelete,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  selectedDate: Date;
+  location: string;
+  existingAvailability?: { start_time: string; end_time: string };
+  onSave: (date: string, startTime: string, endTime: string) => Promise<void>;
+  onDelete?: () => Promise<void>;
+}) {
+  const [startTime, setStartTime] = useState(existingAvailability?.start_time || "09:00");
+  const [endTime, setEndTime] = useState(existingAvailability?.end_time || "17:00");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (existingAvailability) {
+      setStartTime(existingAvailability.start_time);
+      setEndTime(existingAvailability.end_time);
+    } else {
+      setStartTime("09:00");
+      setEndTime("17:00");
+    }
+  }, [existingAvailability, isOpen]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const dateStr = selectedDate.toISOString().split("T")[0];
+      await onSave(dateStr, startTime, endTime);
+      onClose();
+    } catch (err) {
+      console.error("Error saving:", err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!onDelete) return;
+    setSaving(true);
+    try {
+      await onDelete();
+      onClose();
+    } catch (err) {
+      console.error("Error deleting:", err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  const dateStr = selectedDate.toLocaleDateString("en-US", {
+    month: "2-digit",
+    day: "2-digit",
+    year: "numeric",
+  });
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 w-full max-w-md">
+        <h2 className="text-xl font-semibold mb-4">Add availability</h2>
+
+        <div className="mb-4">
+          <Label>Date</Label>
+          <Input type="text" value={dateStr} disabled />
+        </div>
+
+        <div className="mb-4">
+          <Label>From</Label>
+          <Input
+            type="time"
+            value={startTime}
+            onChange={(e) => setStartTime(e.target.value)}
+          />
+        </div>
+
+        <div className="mb-6">
+          <Label>To</Label>
+          <Input
+            type="time"
+            value={endTime}
+            onChange={(e) => setEndTime(e.target.value)}
+          />
+        </div>
+
+        <div className="flex gap-3 justify-end">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+            disabled={saving}
+          >
+            Cancel
+          </button>
+          {onDelete && existingAvailability && (
+            <button
+              onClick={handleDelete}
+              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+              disabled={saving}
+            >
+              Delete
+            </button>
+          )}
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="px-4 py-2 bg-green-800 text-white rounded-lg hover:bg-green-900 disabled:opacity-50"
+          >
+            {saving ? "Saving..." : existingAvailability ? "Save" : "Add"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function AvailabilityPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -44,6 +167,22 @@ export default function AvailabilityPage() {
   const [newLocationName, setNewLocationName] = useState("");
   const [showAddLocation, setShowAddLocation] = useState(false);
   const [appointmentLength, setAppointmentLength] = useState("30");
+
+  // Toggle between "Day only" and "Recurring"
+  const [availabilityType, setAvailabilityType] = useState<"daily" | "recurring">("recurring");
+  const [availabilityTypeByLocation, setAvailabilityTypeByLocation] = useState<Record<string, "daily" | "recurring">>({});
+
+  // Daily availability state
+  const [currentWeekStart, setCurrentWeekStart] = useState<Date>(() => {
+    const today = new Date();
+    const day = today.getDay();
+    const diff = today.getDate() - day + (day === 0 ? -6 : 1); // Get Monday of current week
+    return new Date(today.setDate(diff));
+  });
+  const [dailyAvailability, setDailyAvailability] = useState<Record<string, { start_time: string; end_time: string }>>({});
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [modalExistingAvailability, setModalExistingAvailability] = useState<{ start_time: string; end_time: string } | undefined>();
 
   const defaultSchedule = {
     monday: { enabled: true, start: "09:00", end: "17:00" },
@@ -59,6 +198,7 @@ export default function AvailabilityPage() {
 
   const days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
 
+  // Load availability data
   useEffect(() => {
     async function loadAvailability() {
       try {
@@ -78,8 +218,12 @@ export default function AvailabilityPage() {
           setSelectedLocation(data.locations[0]);
           setAvailabilityByLocation(data.availabilityByLocation || {});
           setAppointmentLength(data.appointmentLength || "30");
+          setAvailabilityTypeByLocation(data.availabilityTypeByLocation || {});
+
+          // Set initial type for selected location
+          const locationType = data.availabilityTypeByLocation?.[data.locations[0]] || "recurring";
+          setAvailabilityType(locationType);
         } else {
-          // No office locations yet - show empty state
           setLocations([]);
           setAvailabilityByLocation({});
         }
@@ -94,6 +238,52 @@ export default function AvailabilityPage() {
 
     loadAvailability();
   }, []);
+
+  // Load daily availability when location or week changes (for daily mode)
+  useEffect(() => {
+    if (availabilityType === "daily" && selectedLocation) {
+      loadDailyAvailability();
+    }
+  }, [availabilityType, selectedLocation, currentWeekStart]);
+
+  async function loadDailyAvailability() {
+    if (!selectedLocation) return;
+
+    try {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session?.access_token) return;
+
+      // Calculate week start and end dates
+      const weekEnd = new Date(currentWeekStart);
+      weekEnd.setDate(weekEnd.getDate() + 6);
+
+      const startDateStr = currentWeekStart.toISOString().split("T")[0];
+      const endDateStr = weekEnd.toISOString().split("T")[0];
+
+      const res = await fetch(
+        `/api/agent/settings/daily-availability?location=${encodeURIComponent(selectedLocation)}&startDate=${startDateStr}&endDate=${endDateStr}`,
+        {
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        }
+      );
+
+      if (!res.ok) throw new Error("Failed to load daily availability");
+
+      const data = await res.json();
+      const availabilityMap: Record<string, { start_time: string; end_time: string }> = {};
+      (data || []).forEach((item: any) => {
+        availabilityMap[item.date] = {
+          start_time: item.start_time,
+          end_time: item.end_time,
+        };
+      });
+      setDailyAvailability(availabilityMap);
+    } catch (err) {
+      console.error("Error loading daily availability:", err);
+    }
+  }
 
   const addLocation = () => {
     if (newLocationName.trim() && !locations.includes(newLocationName.trim())) {
@@ -119,6 +309,12 @@ export default function AvailabilityPage() {
         throw new Error("Not authenticated");
       }
 
+      // Update availability type for current location
+      const updatedTypeByLocation = {
+        ...availabilityTypeByLocation,
+        [selectedLocation]: availabilityType,
+      };
+
       // Ensure all locations have availability data (initialize with default if missing)
       const completeAvailabilityByLocation: Record<string, any> = {};
       locations.forEach((loc: string) => {
@@ -135,6 +331,7 @@ export default function AvailabilityPage() {
           locations,
           availabilityByLocation: completeAvailabilityByLocation,
           appointmentLength,
+          availabilityTypeByLocation: updatedTypeByLocation,
         }),
       });
 
@@ -143,6 +340,7 @@ export default function AvailabilityPage() {
         throw new Error(data.error || "Failed to save availability");
       }
 
+      setAvailabilityTypeByLocation(updatedTypeByLocation);
       setSaveMessage({ type: "success", text: "Availability saved successfully!" });
       setTimeout(() => setSaveMessage(null), 3000);
     } catch (err: any) {
@@ -151,6 +349,123 @@ export default function AvailabilityPage() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleLocationChange = (location: string) => {
+    setSelectedLocation(location);
+    // Update type based on saved preference for this location
+    const locationType = availabilityTypeByLocation[location] || "recurring";
+    setAvailabilityType(locationType);
+  };
+
+  const handleTypeToggle = async (type: "daily" | "recurring") => {
+    setAvailabilityType(type);
+    // Auto-save type change
+    const updatedTypeByLocation = {
+      ...availabilityTypeByLocation,
+      [selectedLocation]: type,
+    };
+    setAvailabilityTypeByLocation(updatedTypeByLocation);
+
+    // Save immediately
+    try {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (session?.access_token) {
+        fetch("/api/agent/settings/availability", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({
+            locations,
+            availabilityByLocation,
+            appointmentLength,
+            availabilityTypeByLocation: updatedTypeByLocation,
+          }),
+        }).catch((err) => console.error("Error saving type change:", err));
+      }
+    } catch (err) {
+      console.error("Error in handleTypeToggle:", err);
+    }
+  };
+
+  const handleDateClick = (date: Date) => {
+    const dateStr = date.toISOString().split("T")[0];
+    const existing = dailyAvailability[dateStr];
+    setSelectedDate(date);
+    setModalExistingAvailability(existing);
+    setModalOpen(true);
+  };
+
+  const handleSaveDailyAvailability = async (date: string, startTime: string, endTime: string) => {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session?.access_token) throw new Error("Not authenticated");
+
+    const res = await fetch("/api/agent/settings/daily-availability", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({
+        location: selectedLocation,
+        date,
+        startTime,
+        endTime,
+      }),
+    });
+
+    if (!res.ok) {
+      const data = await res.json();
+      throw new Error(data.error || "Failed to save daily availability");
+    }
+
+    // Reload daily availability
+    await loadDailyAvailability();
+  };
+
+  const handleDeleteDailyAvailability = async () => {
+    if (!selectedDate) return;
+
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session?.access_token) throw new Error("Not authenticated");
+
+    const dateStr = selectedDate.toISOString().split("T")[0];
+
+    const res = await fetch(
+      `/api/agent/settings/daily-availability?location=${encodeURIComponent(selectedLocation)}&date=${dateStr}`,
+      {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      }
+    );
+
+    if (!res.ok) {
+      const data = await res.json();
+      throw new Error(data.error || "Failed to delete daily availability");
+    }
+
+    // Reload daily availability
+    await loadDailyAvailability();
+  };
+
+  const getWeekDates = () => {
+    const dates: Date[] = [];
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(currentWeekStart);
+      date.setDate(date.getDate() + i);
+      dates.push(date);
+    }
+    return dates;
+  };
+
+  const navigateWeek = (direction: "prev" | "next") => {
+    const newStart = new Date(currentWeekStart);
+    newStart.setDate(newStart.getDate() + (direction === "next" ? 7 : -7));
+    setCurrentWeekStart(newStart);
   };
 
   if (loading) {
@@ -171,8 +486,8 @@ export default function AvailabilityPage() {
       </div>
 
       <div className="bg-white rounded-lg border border-gray-200 p-6">
-        {/* Availability Rules */}
-        <div className="mb-8">
+        {/* Location Selector */}
+        <div className="mb-6">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="font-semibold flex items-center gap-2">
@@ -195,7 +510,7 @@ export default function AvailabilityPage() {
               {locations.map((location) => (
                 <button
                   key={location}
-                  onClick={() => setSelectedLocation(location)}
+                  onClick={() => handleLocationChange(location)}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                     selectedLocation === location
                       ? "bg-green-800 text-white"
@@ -244,7 +559,40 @@ export default function AvailabilityPage() {
                 </div>
               )}
             </div>
+          </div>
+        </div>
 
+        {/* Type Toggle */}
+        {selectedLocation && (
+          <div className="mb-6">
+            <div className="flex gap-2 border border-gray-300 rounded-lg p-1 w-fit">
+              <button
+                onClick={() => handleTypeToggle("daily")}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  availabilityType === "daily"
+                    ? "bg-green-800 text-white"
+                    : "text-gray-700 hover:bg-gray-100"
+                }`}
+              >
+                {availabilityType === "daily" ? "✓ " : ""}Day only
+              </button>
+              <button
+                onClick={() => handleTypeToggle("recurring")}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  availabilityType === "recurring"
+                    ? "bg-green-800 text-white"
+                    : "text-gray-700 hover:bg-gray-100"
+                }`}
+              >
+                {availabilityType === "recurring" ? "✓ " : ""}Recurring
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Recurring Availability View */}
+        {availabilityType === "recurring" && (
+          <>
             <div className="bg-gray-50 rounded-lg p-4 mb-4">
               <p className="text-sm text-gray-700">
                 <strong>Showing availability for {selectedLocation}.</strong> Set the days and hours when you're
@@ -256,7 +604,6 @@ export default function AvailabilityPage() {
               <Label className="mb-3 block">Weekly Availability</Label>
               <div className="space-y-2">
                 {days.map((day) => {
-                  // Initialize with default schedule if no data exists for this location
                   const locationAvailability = availabilityByLocation[selectedLocation] || defaultSchedule;
                   const dayData = locationAvailability[day as keyof typeof defaultSchedule] || defaultSchedule[day as keyof typeof defaultSchedule];
                   return (
@@ -281,30 +628,30 @@ export default function AvailabilityPage() {
                           <Input
                             type="time"
                             value={dayData.start}
-                              onChange={(e) => {
-                                setAvailabilityByLocation({
-                                  ...availabilityByLocation,
-                                  [selectedLocation]: {
-                                    ...(availabilityByLocation[selectedLocation] || defaultSchedule),
-                                    [day]: { ...dayData, start: e.target.value },
-                                  },
-                                });
-                              }}
+                            onChange={(e) => {
+                              setAvailabilityByLocation({
+                                ...availabilityByLocation,
+                                [selectedLocation]: {
+                                  ...(availabilityByLocation[selectedLocation] || defaultSchedule),
+                                  [day]: { ...dayData, start: e.target.value },
+                                },
+                              });
+                            }}
                             className="w-32"
                           />
                           <span className="text-gray-500">to</span>
                           <Input
                             type="time"
                             value={dayData.end}
-                              onChange={(e) => {
-                                setAvailabilityByLocation({
-                                  ...availabilityByLocation,
-                                  [selectedLocation]: {
-                                    ...(availabilityByLocation[selectedLocation] || defaultSchedule),
-                                    [day]: { ...dayData, end: e.target.value },
-                                  },
-                                });
-                              }}
+                            onChange={(e) => {
+                              setAvailabilityByLocation({
+                                ...availabilityByLocation,
+                                [selectedLocation]: {
+                                  ...(availabilityByLocation[selectedLocation] || defaultSchedule),
+                                  [day]: { ...dayData, end: e.target.value },
+                                },
+                              });
+                            }}
                             className="w-32"
                           />
                         </div>
@@ -316,18 +663,86 @@ export default function AvailabilityPage() {
                 })}
               </div>
             </div>
-          </div>
+          </>
+        )}
 
-          <div className="max-w-md mt-6">
-            <Label htmlFor="appointmentLength">Default Appointment Length</Label>
-            <Select value={appointmentLength} onValueChange={setAppointmentLength} id="appointmentLength">
-              <option value="15">15 minutes</option>
-              <option value="30">30 minutes</option>
-              <option value="45">45 minutes</option>
-              <option value="60">60 minutes</option>
-              <option value="90">90 minutes</option>
-            </Select>
+        {/* Daily Availability View */}
+        {availabilityType === "daily" && (
+          <div className="mb-6">
+            <div className="bg-gray-50 rounded-lg p-4 mb-4">
+              <p className="text-sm text-gray-700">
+                <strong>Showing daily availability for {selectedLocation}.</strong> Click on a date to add or edit availability.
+              </p>
+            </div>
+
+            {/* Week Navigation */}
+            <div className="flex items-center justify-between mb-4">
+              <button
+                onClick={() => navigateWeek("prev")}
+                className="p-2 hover:bg-gray-100 rounded-lg"
+              >
+                <ChevronLeft size={20} />
+              </button>
+              <div className="text-lg font-semibold">
+                {currentWeekStart.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+                {" - "}
+                {new Date(currentWeekStart.getTime() + 6 * 24 * 60 * 60 * 1000).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+              </div>
+              <button
+                onClick={() => navigateWeek("next")}
+                className="p-2 hover:bg-gray-100 rounded-lg"
+              >
+                <ChevronRight size={20} />
+              </button>
+            </div>
+
+            {/* 7-Day Calendar Grid */}
+            <div className="grid grid-cols-7 gap-2">
+              {getWeekDates().map((date, index) => {
+                const dateStr = date.toISOString().split("T")[0];
+                const existing = dailyAvailability[dateStr];
+                const isToday = dateStr === new Date().toISOString().split("T")[0];
+                const dayName = date.toLocaleDateString("en-US", { weekday: "short" });
+                const dayNum = date.getDate();
+
+                return (
+                  <div
+                    key={dateStr}
+                    onClick={() => handleDateClick(date)}
+                    className={`p-4 border-2 rounded-lg cursor-pointer transition-colors ${
+                      existing
+                        ? "border-green-600 bg-green-50"
+                        : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                    } ${isToday ? "ring-2 ring-blue-500" : ""}`}
+                  >
+                    <div className="text-xs text-gray-500 mb-1">{dayName}</div>
+                    <div className={`text-lg font-semibold mb-2 ${isToday ? "text-blue-600" : "text-gray-900"}`}>
+                      {dayNum}
+                    </div>
+                    {existing ? (
+                      <div className="text-xs text-gray-600">
+                        {existing.start_time} - {existing.end_time}
+                      </div>
+                    ) : (
+                      <div className="text-xs text-gray-400">Click to add</div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
+        )}
+
+        {/* Appointment Length (shown for both types) */}
+        <div className="max-w-md mt-6">
+          <Label htmlFor="appointmentLength">Default Appointment Length</Label>
+          <Select value={appointmentLength} onValueChange={setAppointmentLength} id="appointmentLength">
+            <option value="15">15 minutes</option>
+            <option value="30">30 minutes</option>
+            <option value="45">45 minutes</option>
+            <option value="60">60 minutes</option>
+            <option value="90">90 minutes</option>
+          </Select>
         </div>
 
         {saveMessage && (
@@ -338,7 +753,7 @@ export default function AvailabilityPage() {
           </div>
         )}
 
-        <div className="flex justify-end">
+        <div className="flex justify-end mt-6">
           <button
             onClick={handleSaveAvailability}
             disabled={saving}
@@ -348,6 +763,23 @@ export default function AvailabilityPage() {
           </button>
         </div>
       </div>
+
+      {/* Daily Availability Modal */}
+      {selectedDate && (
+        <DailyAvailabilityModal
+          isOpen={modalOpen}
+          onClose={() => {
+            setModalOpen(false);
+            setSelectedDate(null);
+            setModalExistingAvailability(undefined);
+          }}
+          selectedDate={selectedDate}
+          location={selectedLocation}
+          existingAvailability={modalExistingAvailability}
+          onSave={handleSaveDailyAvailability}
+          onDelete={modalExistingAvailability ? handleDeleteDailyAvailability : undefined}
+        />
+      )}
     </div>
   );
 }

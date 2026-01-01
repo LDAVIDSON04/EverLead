@@ -72,6 +72,7 @@ export async function GET(req: NextRequest) {
     const availabilityData = metadata.availability || {};
     const locations = availabilityData.locations || [];
     const availabilityByLocation = availabilityData.availabilityByLocation || {};
+    const availabilityTypeByLocation = availabilityData.availabilityTypeByLocation || {}; // "recurring" or "daily"
     const appointmentLength = parseInt(availabilityData.appointmentLength || "30", 10);
     
     // Log the raw metadata to see what's actually stored
@@ -101,10 +102,24 @@ export async function GET(req: NextRequest) {
       selectedLocation = locations[0];
     }
     
-    // Get the schedule for the selected location
+    // Determine which type is active for this location
+    let locationType: "recurring" | "daily" = "recurring"; // Default to recurring
+    if (selectedLocation && availabilityTypeByLocation[selectedLocation]) {
+      locationType = availabilityTypeByLocation[selectedLocation] as "recurring" | "daily";
+    } else if (selectedLocation) {
+      // Try case-insensitive match for type
+      const matchingLocationKey = Object.keys(availabilityTypeByLocation).find(
+        loc => loc.toLowerCase() === selectedLocation!.toLowerCase()
+      );
+      if (matchingLocationKey) {
+        locationType = availabilityTypeByLocation[matchingLocationKey] as "recurring" | "daily";
+      }
+    }
+
+    // Get the schedule for the selected location (for recurring mode)
     let locationSchedule: Record<string, any> = {};
     
-    if (selectedLocation) {
+    if (selectedLocation && locationType === "recurring") {
       // Try exact match first
       if (availabilityByLocation[selectedLocation]) {
         locationSchedule = availabilityByLocation[selectedLocation];
@@ -119,8 +134,8 @@ export async function GET(req: NextRequest) {
       }
     }
     
-    // Final fallback: use first available location's schedule
-    if (Object.keys(locationSchedule).length === 0 && locations.length > 0) {
+    // Final fallback: use first available location's schedule (for recurring mode)
+    if (locationType === "recurring" && Object.keys(locationSchedule).length === 0 && locations.length > 0) {
       locationSchedule = availabilityByLocation[locations[0]] || {};
     }
     
@@ -445,6 +460,111 @@ export async function GET(req: NextRequest) {
 
     // Generate availability days
     const days: AvailabilityDay[] = [];
+    
+    // If daily mode, fetch daily availability from database
+    if (locationType === "daily" && selectedLocation) {
+      const { data: dailyAvailabilityData, error: dailyAvailabilityError } = await supabaseAdmin
+        .from("daily_availability")
+        .select("date, start_time, end_time")
+        .eq("specialist_id", agentId)
+        .eq("location", selectedLocation)
+        .gte("date", startDate)
+        .lte("date", endDate)
+        .order("date", { ascending: true });
+
+      if (dailyAvailabilityError) {
+        console.error("Error loading daily availability:", dailyAvailabilityError);
+        return NextResponse.json(
+          { error: "Failed to load daily availability" },
+          { status: 500 }
+        );
+      }
+
+      // Create a map of date -> daily availability entry
+      const dailyAvailabilityMap = new Map<string, { start_time: string; end_time: string }>();
+      (dailyAvailabilityData || []).forEach((entry: any) => {
+        dailyAvailabilityMap.set(entry.date, {
+          start_time: entry.start_time,
+          end_time: entry.end_time,
+        });
+      });
+
+      // Parse start and end dates
+      const startParts = startDate.split("-").map(Number);
+      const endParts = endDate.split("-").map(Number);
+      const startDateObj = new Date(Date.UTC(startParts[0], startParts[1] - 1, startParts[2]));
+      const endDateObj = new Date(Date.UTC(endParts[0], endParts[1] - 1, endParts[2]));
+
+      // Generate days from daily availability
+      for (
+        let date = new Date(startDateObj);
+        date <= endDateObj;
+        date.setUTCDate(date.getUTCDate() + 1)
+      ) {
+        const dateStr = date.toISOString().split("T")[0];
+        const dailyEntry = dailyAvailabilityMap.get(dateStr);
+
+        if (!dailyEntry) {
+          days.push({ date: dateStr, slots: [] });
+          continue;
+        }
+
+        // Generate slots for this day
+        const slots: { startsAt: string; endsAt: string }[] = [];
+        const [startHour, startMin] = dailyEntry.start_time.split(":").map(Number);
+        const [endHour, endMin] = dailyEntry.end_time.split(":").map(Number);
+
+        if (isNaN(startHour) || isNaN(startMin) || isNaN(endHour) || isNaN(endMin)) {
+          days.push({ date: dateStr, slots: [] });
+          continue;
+        }
+
+        const endTimeMinutes = endHour * 60 + endMin;
+        let currentTimeMinutes = startHour * 60 + startMin;
+
+        while (currentTimeMinutes < endTimeMinutes) {
+          const slotEndMinutes = currentTimeMinutes + appointmentLength;
+          
+          if (slotEndMinutes > endTimeMinutes) {
+            break;
+          }
+
+          const currentHour = Math.floor(currentTimeMinutes / 60);
+          const currentMin = currentTimeMinutes % 60;
+          const timeStr = `${String(currentHour).padStart(2, "0")}:${String(currentMin).padStart(2, "0")}`;
+          
+          const localDateTimeStr = `${dateStr}T${timeStr}:00`;
+          const localStart = DateTime.fromISO(localDateTimeStr, { zone: agentTimezone });
+          const localEnd = localStart.plus({ minutes: appointmentLength });
+          
+          if (!localStart.isValid || !localEnd.isValid) {
+            currentTimeMinutes += appointmentLength;
+            continue;
+          }
+          
+          const slotStart = new Date(localStart.toUTC().toISO());
+          const slotEnd = new Date(localEnd.toUTC().toISO());
+          const slotHour = localStart.hour;
+
+          const hasConflictResult = hasConflict(slotStart, slotEnd, dateStr, slotHour);
+          
+          if (!hasConflictResult) {
+            slots.push({
+              startsAt: slotStart.toISOString(),
+              endsAt: slotEnd.toISOString(),
+            });
+          }
+
+          currentTimeMinutes += appointmentLength;
+        }
+
+        days.push({ date: dateStr, slots });
+      }
+
+      return NextResponse.json(days);
+    }
+
+    // Recurring mode: Use existing logic
     const dayNames = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
 
     // Parse start and end dates properly to avoid timezone issues
