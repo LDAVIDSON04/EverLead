@@ -300,11 +300,11 @@ export default function SchedulePage() {
   }
 
   return (
-    <div className="w-full h-screen flex flex-col bg-white relative" style={{ padding: '32px', paddingTop: '32px', overflow: 'hidden' }}>
+    <div className="w-full h-screen flex flex-col bg-white relative" style={{ padding: '32px', paddingTop: '56px', overflow: 'hidden' }}>
       {/* Header */}
-      <div className="flex items-center justify-between mb-8 md:mb-8" style={{ marginTop: '0' }}>
+      <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
-          <h1 className="text-3xl font-semibold md:relative" style={{ '@media (max-width: 768px)': { position: 'absolute', top: '0', left: '32px', zIndex: 100 } }}>{formatDate(weekDates[0])}</h1>
+          <h1 className="text-3xl font-semibold">{formatDate(weekDates[0])}</h1>
           <button 
             onClick={goToToday}
             className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
