@@ -367,13 +367,18 @@ export default function SchedulePage() {
               const today = isToday(date);
               return (
                 <div key={`${day}-${index}`} className="flex-1 min-w-[120px] px-3 py-5">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center text-gray-600 ${
-                      today ? 'bg-green-600 text-white' : 'bg-gray-100'
-                    }`}>
-                      {day.substring(0, 1)}
+                  <div className="flex flex-col items-center gap-1">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center text-gray-600 ${
+                        today ? 'bg-green-600 text-white' : 'bg-gray-100'
+                      }`}>
+                        {day.substring(0, 1)}
+                      </div>
+                      <span className={`text-gray-700 ${today ? 'font-semibold' : ''}`}>{day}</span>
                     </div>
-                    <span className={`text-gray-700 ${today ? 'font-semibold' : ''}`}>{day}</span>
+                    <span className={`text-sm text-gray-500 ${today ? 'font-medium' : ''}`}>
+                      {date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    </span>
                   </div>
                 </div>
               );
