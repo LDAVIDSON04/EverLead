@@ -236,7 +236,7 @@ export default function MyLeadsPage() {
                     </div>
                   </div>
                 );
-              ))}
+              })}
               
               {/* Load More Button */}
               {hasMoreLeads && !loading && (
