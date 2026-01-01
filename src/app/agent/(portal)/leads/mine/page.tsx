@@ -32,6 +32,12 @@ export default function MyLeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<"all" | "new" | "contacted" | "in_followup" | "closed_won" | "closed_lost">("all");
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(0);
+  const [pageSize] = useState(100); // Load 100 leads at a time (agents may have many)
+  const [totalLeads, setTotalLeads] = useState(0);
+  const [hasMoreLeads, setHasMoreLeads] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -46,25 +52,48 @@ export default function MyLeadsPage() {
           return;
         }
 
-        // Fetch all leads for this agent (filtering done client-side)
-        const { data, error } = await supabaseClient
+        // Fetch leads for this agent with pagination
+        const from = currentPage * pageSize;
+        const to = from + pageSize - 1;
+        
+        const { data, error, count } = await supabaseClient
           .from("leads")
-          .select("*")
+          .select("*", { count: 'exact' })
           .eq("assigned_agent_id", user.id)
-          .order("created_at", { ascending: false });
+          .order("created_at", { ascending: false })
+          .range(from, to);
 
         if (error) {
           console.error(error);
         }
 
-        setLeads(data || []);
+        // Set pagination state
+        const totalCount = count || 0;
+        setTotalLeads(totalCount);
+        setHasMoreLeads((from + (data?.length || 0)) < totalCount);
+
+        // Append or replace leads based on page
+        if (currentPage === 0) {
+          setLeads(data || []);
+        } else {
+          setLeads(prev => {
+            const existingIds = new Set(prev.map(l => l.id));
+            const uniqueNewLeads = (data || []).filter((l: Lead) => !existingIds.has(l.id));
+            return [...prev, ...uniqueNewLeads];
+          });
+        }
       } finally {
         setLoading(false);
       }
     }
 
     load();
-  }, [router]); // Filters applied client-side, no need to reload
+  }, [router, currentPage, pageSize]); // Reload when page changes
+
+  // Function to load more leads
+  const loadMoreLeads = () => {
+    setCurrentPage(prev => prev + 1);
+  };
 
   function formatUrgency(u: string | null) {
     if (!u) return "Unknown";
@@ -80,6 +109,12 @@ export default function MyLeadsPage() {
     const option = STATUS_OPTIONS.find((opt) => opt.value === status);
     return option ? option.label : status;
   }
+
+  // Filter leads by status (client-side filtering)
+  const filteredLeads = leads.filter((lead) => {
+    if (statusFilter === "all") return true;
+    return lead.status === statusFilter;
+  });
 
   function getStatusColors(status: string | null): { bg: string; text: string } {
     const s = (status ?? "new").toLowerCase();
