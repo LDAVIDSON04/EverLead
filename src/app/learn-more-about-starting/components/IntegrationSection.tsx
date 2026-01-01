@@ -4,7 +4,7 @@ import Link from "next/link";
 
 export function IntegrationSection() {
   return (
-    <section className="bg-[#FFF9F0] py-4 md:py-20">
+    <section className="bg-[#FFF9F0] py-4 md:py-8">
       <div className="max-w-7xl mx-auto px-6">
         <div className="grid md:grid-cols-2 gap-4 md:gap-16 items-center">
           {/* Left - Diagram */}
