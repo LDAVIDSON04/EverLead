@@ -347,9 +347,9 @@ export default function AgentDashboardPage() {
     <div className="flex-1 overflow-auto bg-gray-50">
       {/* Main Content */}
       <div className="p-8">
-        <div className="grid grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Left 2 Columns */}
-          <div className="col-span-2 space-y-6">
+          <div className="col-span-1 md:col-span-2 space-y-6">
             {/* Welcome Section */}
             <div className="bg-gradient-to-r from-green-900 to-green-800 rounded-2xl p-6">
               <div>
@@ -448,8 +448,8 @@ export default function AgentDashboardPage() {
             </div>
           </div>
           
-          {/* Right Column */}
-          <div className="space-y-6">
+          {/* Right Column - Hidden on mobile */}
+          <div className="hidden md:block space-y-6">
             {/* Schedule Calendar */}
             <div className="bg-white rounded-xl border border-gray-200 p-5">
               <div className="flex items-center justify-between mb-4">

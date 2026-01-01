@@ -49,41 +49,41 @@ export function FileTable({ files }: FileTableProps) {
         <table className="w-full">
           <thead>
             <tr className="border-b border-gray-200">
-              <th className="text-left py-4 px-6 text-gray-600 font-medium">File name</th>
-              <th className="text-left py-4 px-6 text-gray-600 font-medium">Appointment</th>
-              <th className="text-left py-4 px-6 text-gray-600 font-medium">Client</th>
-              <th className="text-left py-4 px-6 text-gray-600 font-medium">Uploaded by</th>
-              <th className="text-left py-4 px-6 text-gray-600 font-medium">Date</th>
-              <th className="text-left py-4 px-6 text-gray-600 font-medium">Actions</th>
+              <th className="text-left py-2 md:py-4 px-2 md:px-6 text-[10px] md:text-sm text-gray-600 font-medium">File name</th>
+              <th className="text-left py-2 md:py-4 px-2 md:px-6 text-[10px] md:text-sm text-gray-600 font-medium">Appointment</th>
+              <th className="text-left py-2 md:py-4 px-2 md:px-6 text-[10px] md:text-sm text-gray-600 font-medium">Client</th>
+              <th className="text-left py-2 md:py-4 px-2 md:px-6 text-[10px] md:text-sm text-gray-600 font-medium">Uploaded by</th>
+              <th className="text-left py-2 md:py-4 px-2 md:px-6 text-[10px] md:text-sm text-gray-600 font-medium">Date</th>
+              <th className="text-left py-2 md:py-4 px-2 md:px-6 text-[10px] md:text-sm text-gray-600 font-medium">Actions</th>
             </tr>
           </thead>
           <tbody>
             {files.map((file) => (
               <tr key={file.id} className="border-b border-gray-200 hover:bg-gray-50 transition-colors">
-                <td className="py-4 px-6 text-gray-900">{file.fileName}</td>
-                <td className="py-4 px-6 text-gray-700">{file.appointment}</td>
-                <td className="py-4 px-6 text-gray-700">{file.client}</td>
-                <td className="py-4 px-6 text-gray-700">{file.uploadedBy}</td>
-                <td className="py-4 px-6 text-gray-700">{file.date}</td>
-                <td className="py-4 px-6">
-                  <div className="flex items-center gap-2">
+                <td className="py-2 md:py-4 px-2 md:px-6 text-[10px] md:text-sm text-gray-900">{file.fileName}</td>
+                <td className="py-2 md:py-4 px-2 md:px-6 text-[10px] md:text-sm text-gray-700">{file.appointment}</td>
+                <td className="py-2 md:py-4 px-2 md:px-6 text-[10px] md:text-sm text-gray-700">{file.client}</td>
+                <td className="py-2 md:py-4 px-2 md:px-6 text-[10px] md:text-sm text-gray-700">{file.uploadedBy}</td>
+                <td className="py-2 md:py-4 px-2 md:px-6 text-[10px] md:text-sm text-gray-700">{file.date}</td>
+                <td className="py-2 md:py-4 px-2 md:px-6">
+                  <div className="flex items-center gap-1 md:gap-2">
                     <button 
-                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors" 
+                      className="p-1 md:p-2 hover:bg-gray-100 rounded-lg transition-colors" 
                       aria-label="View client information"
                       onClick={() => handleView(file)}
                       disabled={!file.leadId}
                       title={file.leadId ? 'View client information' : 'No client information available'}
                     >
-                      <Eye className={`w-4 h-4 ${file.leadId ? 'text-gray-600' : 'text-gray-300'}`} />
+                      <Eye className={`w-3 h-3 md:w-4 md:h-4 ${file.leadId ? 'text-gray-600' : 'text-gray-300'}`} />
                     </button>
                     <button 
-                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors" 
+                      className="p-1 md:p-2 hover:bg-gray-100 rounded-lg transition-colors" 
                       aria-label="Download client information"
                       onClick={() => handleDownload(file)}
                       disabled={!file.leadId}
                       title={file.leadId ? 'Download client information' : 'No client information available'}
                     >
-                      <Download className={`w-4 h-4 ${file.leadId ? 'text-gray-600' : 'text-gray-300'}`} />
+                      <Download className={`w-3 h-3 md:w-4 md:h-4 ${file.leadId ? 'text-gray-600' : 'text-gray-300'}`} />
                     </button>
                   </div>
                 </td>

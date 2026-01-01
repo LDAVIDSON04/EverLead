@@ -328,41 +328,45 @@ export default function SchedulePage() {
   return (
     <div className="w-full h-screen flex flex-col bg-white relative overflow-hidden p-8 pt-[56px] md:pt-8">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-4">
-          <h1 className="text-3xl font-semibold">{formatWeekRange()}</h1>
+      <div className="mb-4 md:mb-8">
+        {/* Date range - horizontal on mobile */}
+        <div className="mb-3 md:mb-0">
+          <h1 className="text-lg md:text-3xl font-semibold">{formatWeekRange()}</h1>
+        </div>
+        
+        {/* Navigation row on mobile */}
+        <div className="flex items-center gap-2 md:gap-4 mb-3 md:mb-0 md:inline-flex">
           <button 
             onClick={goToToday}
-            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            className="px-3 py-1.5 md:px-4 md:py-2 text-xs md:text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
           >
             Today
           </button>
-          <div className="flex gap-2">
-            <button 
-              onClick={goToPreviousWeek}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-            <button 
-              onClick={goToNextWeek}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <ChevronRight className="w-5 h-5" />
-            </button>
-          </div>
+          <button 
+            onClick={goToPreviousWeek}
+            className="p-1.5 md:p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <ChevronLeft className="w-4 h-4 md:w-5 md:h-5" />
+          </button>
+          <button 
+            onClick={goToNextWeek}
+            className="p-1.5 md:p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <ChevronRight className="w-4 h-4 md:w-5 md:h-5" />
+          </button>
         </div>
 
-        <div className="flex items-center gap-4">
+        {/* Action buttons */}
+        <div className="flex items-center gap-2 md:gap-4 md:justify-end">
           <button 
             onClick={() => setShowCalendarSyncModal(true)}
-            className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-gray-700"
+            className="px-3 py-1.5 md:px-6 md:py-2 text-xs md:text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-gray-700"
           >
             Calendar sync
           </button>
           <button 
             onClick={() => setShowAddAvailabilityModal(true)}
-            className="px-6 py-2 bg-green-700 text-white rounded-lg hover:bg-green-800 transition-colors"
+            className="px-3 py-1.5 md:px-6 md:py-2 text-xs md:text-sm bg-green-700 text-white rounded-lg hover:bg-green-800 transition-colors"
           >
             Add availability
           </button>
@@ -396,7 +400,7 @@ export default function SchedulePage() {
             {hours.map((hour) => {
               return (
                 <div key={hour} className="flex border-t border-gray-200">
-                  <div className="w-20 flex-shrink-0 pr-3 pt-1.5 text-xs text-gray-500 text-right">
+                  <div className="w-12 md:w-20 flex-shrink-0 pr-1 md:pr-3 pt-1 md:pt-1.5 text-[10px] md:text-xs text-gray-500 text-right">
                     {hour === 12 ? '12 PM' : hour > 12 ? `${hour - 12} PM` : `${hour} AM`}
                   </div>
                   {weekDays.map((day, dayIndex) => {
@@ -408,13 +412,14 @@ export default function SchedulePage() {
                     return (
                       <div
                         key={`${day}-${hour}`}
-                        className="flex-1 min-w-[100px] border-l border-gray-200 relative h-20 overflow-visible"
+                        className="flex-1 min-w-[50px] md:min-w-[100px] border-l border-gray-200 relative h-12 md:h-20 overflow-visible"
                       >
                         {cellAppointments.map((apt: any) => {
-                          // Calculate top offset within this hour (based on minutes)
-                          const topOffset = (apt.minute / 60) * 80; // 80px per hour
+                          // Calculate top offset within this hour (based on minutes) - 48px per hour on mobile, 80px on desktop
+                          const pxPerHour = 48; // Mobile: h-12 = 48px
+                          const topOffset = (apt.minute / 60) * pxPerHour;
                           // Calculate height based on duration
-                          const height = (apt.durationMinutes / 60) * 80;
+                          const height = (apt.durationMinutes / 60) * pxPerHour;
                           const color = getDayColor(dayIndex);
 
                           return (
