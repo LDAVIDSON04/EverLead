@@ -435,9 +435,9 @@ export default function HomePage() {
           
           {/* Mobile Only: Pre-Need Planning Box */}
           <div className="md:hidden mt-4">
-            <div className="bg-[#FAF9F6] rounded-3xl p-6 border border-[#1A1A1A]/5 relative overflow-visible group hover:shadow-xl hover:shadow-black/5 transition-all flex flex-col min-h-[200px]">
-              {/* Image overlapping the top */}
-              <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-64 h-64 flex items-center justify-center z-0">
+            <div className="bg-[#FAF9F6] rounded-3xl p-6 border border-[#1A1A1A]/5 relative overflow-hidden group hover:shadow-xl hover:shadow-black/5 transition-all flex flex-col">
+              {/* Image inside the card, positioned at top */}
+              <div className="relative w-full flex items-center justify-center -mt-6 -mx-6 mb-4" style={{ height: '180px' }}>
                 <Image
                   src="/Liam_Davidson_can_you_make_her_just_look_confused_not_sad_in_her_face_3a82045d-4dd2-42ee-b830-5cc27e82c2b1.png"
                   alt="Person asking about pre-need planning"
@@ -448,10 +448,11 @@ export default function HomePage() {
                     filter: "brightness(1.1) contrast(1.05)",
                     mixBlendMode: "multiply",
                   }}
+                  priority
                 />
               </div>
 
-              <div className="relative z-10 flex flex-col items-center text-center mt-32">
+              <div className="relative z-10 flex flex-col items-center text-center">
                 <Link 
                   href="/what-is-pre-need-funeral-planning"
                   className="bg-[#0C6F3C] text-white px-5 py-2.5 rounded-xl hover:bg-[#0C6F3C]/90 transition-all shadow-sm text-sm font-medium w-full"
