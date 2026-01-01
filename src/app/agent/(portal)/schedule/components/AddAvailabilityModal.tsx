@@ -58,6 +58,7 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
   const [selectedLocation, setSelectedLocation] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [availabilityByLocation, setAvailabilityByLocation] = useState<Record<string, typeof defaultSchedule>>({});
   const [availabilityTypeByLocation, setAvailabilityTypeByLocation] = useState<Record<string, "daily" | "recurring">>({});
 
@@ -471,7 +472,7 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
               className="px-4 py-2 bg-green-800 text-white rounded-lg hover:bg-green-900 transition-colors text-sm font-medium"
               disabled={saving}
             >
-              {saving ? "Saving..." : "Add"}
+              {saving ? "Saving..." : "Save"}
             </button>
           </div>
         )}
