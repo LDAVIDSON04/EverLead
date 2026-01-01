@@ -316,7 +316,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto relative z-20 w-full">
           {/* Headline and Search Bar - Full Width */}
           <div className="max-w-4xl">
-            <h1 className="text-6xl md:text-6xl text-2xl md:mb-8 mb-3 text-[#1A1A1A] font-semibold tracking-tight leading-tight text-left">
+            <h1 className="text-6xl md:text-6xl text-base md:mb-8 mb-3 text-[#1A1A1A] font-semibold tracking-tight leading-tight text-left">
               Book local funeral professionals
             </h1>
 
@@ -436,14 +436,14 @@ export default function HomePage() {
           {/* Mobile Only: Pre-Need Planning Box */}
           <div className="md:hidden mt-4">
             <div className="bg-[#FAF9F6] rounded-3xl p-6 border border-[#1A1A1A]/5 relative overflow-hidden group hover:shadow-xl hover:shadow-black/5 transition-all flex flex-col">
-              {/* Image inside the card, positioned at top */}
-              <div className="relative w-full flex items-center justify-center -mt-6 -mx-6 mb-4" style={{ height: '180px' }}>
+              {/* Image inside the card, filling the box */}
+              <div className="relative w-full flex items-center justify-center -mt-6 -mx-6 mb-4" style={{ height: '220px', minHeight: '220px' }}>
                 <Image
-                  src="/Liam_Davidson_can_you_make_her_just_look_confused_not_sad_in_her_face_3a82045d-4dd2-42ee-b830-5cc27e82c2b1.png"
+                  src="/What is Pre need planning image.png"
                   alt="Person asking about pre-need planning"
-                  width={256}
-                  height={256}
-                  className="w-full h-full object-contain"
+                  width={400}
+                  height={400}
+                  className="w-full h-full object-cover"
                   style={{
                     filter: "brightness(1.1) contrast(1.05)",
                     mixBlendMode: "multiply",
