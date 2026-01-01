@@ -313,7 +313,7 @@ export default function HomePage() {
           />
         </div>
 
-        <div className="max-w-7xl mx-auto relative z-20 w-full md:mt-0 -mt-8">
+        <div className="max-w-7xl mx-auto relative z-20 w-full md:mt-0 -mt-4">
           {/* Headline and Search Bar - Full Width */}
           <div className="max-w-4xl">
             <h1 className="text-6xl md:text-6xl text-2xl md:mb-8 mb-3 text-[#1A1A1A] font-semibold tracking-tight leading-none text-left">
@@ -437,7 +437,7 @@ export default function HomePage() {
           <div className="md:hidden mt-4">
             <div className="bg-[#FAF9F6] rounded-3xl p-6 border border-[#1A1A1A]/5 relative overflow-hidden group hover:shadow-xl hover:shadow-black/5 transition-all flex flex-col">
               {/* Image inside the card, showing full torso */}
-              <div className="relative w-full flex items-center justify-center -mt-6 -mx-6 mb-4 overflow-hidden" style={{ height: '150px', minHeight: '150px' }}>
+              <div className="relative w-full flex items-center justify-center -mx-6 mb-4 overflow-hidden" style={{ height: '150px', minHeight: '150px', marginTop: '-24px' }}>
                 <Image
                   src="/What is Pre need planning image.png"
                   alt="Person asking about pre-need planning"
