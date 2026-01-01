@@ -93,6 +93,7 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
       const data = await res.json();
 
       setLocations(data.locations || []);
+      setAppointmentLength(data.appointmentLength || "30");
       if (data.locations && data.locations.length > 0) {
         setSelectedLocation(data.locations[0]);
       }
@@ -131,6 +132,7 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
             date: dayDate,
             start_time: dayFromTime,
             end_time: dayToTime,
+            appointment_length: appointmentLength,
           }),
         });
 
@@ -210,7 +212,7 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
           body: JSON.stringify({
             locations: currentData.locations || locations,
             availabilityByLocation: newAvailability,
-            appointmentLength: currentData.appointmentLength || "30",
+            appointmentLength: appointmentLength || currentData.appointmentLength || "30",
             availabilityTypeByLocation: updatedTypeByLocation,
           }),
         });
