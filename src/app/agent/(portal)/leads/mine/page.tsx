@@ -236,7 +236,25 @@ export default function MyLeadsPage() {
                 </div>
               </div>
                 );
-              })}
+              ))}
+              
+              {/* Load More Button */}
+              {hasMoreLeads && !loading && (
+                <div className="mt-6 flex justify-center">
+                  <button
+                    onClick={loadMoreLeads}
+                    className="px-6 py-2 bg-[#0C6F3C] text-white rounded-lg hover:bg-[#0C6F3C]/90 transition-colors"
+                  >
+                    Load More ({totalLeads - filteredMyLeads.length} remaining)
+                  </button>
+                </div>
+              )}
+              
+              {loading && currentPage > 0 && (
+                <div className="mt-6 text-center text-sm text-gray-500">
+                  Loading more leads...
+                </div>
+              )}
             </div>
           );
         })()}
