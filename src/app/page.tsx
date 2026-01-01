@@ -439,7 +439,7 @@ export default function HomePage() {
               {/* Image overlapping the top */}
               <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-64 h-64 flex items-center justify-center z-0">
                 <Image
-                  src="/pre-need-character.png"
+                  src="/Liam_Davidson_can_you_make_her_just_look_confused_not_sad_in_her_face_3a82045d-4dd2-42ee-b830-5cc27e82c2b1.png"
                   alt="Person asking about pre-need planning"
                   width={256}
                   height={256}
