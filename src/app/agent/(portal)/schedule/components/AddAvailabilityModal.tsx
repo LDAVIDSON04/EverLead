@@ -63,7 +63,7 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
   const [dayDate, setDayDate] = useState("");
   const [dayFromTime, setDayFromTime] = useState("09:00");
   const [dayToTime, setDayToTime] = useState("09:30");
-  const [dayType, setDayType] = useState<"in-person" | "virtual">("in-person");
+  const [appointmentLength, setAppointmentLength] = useState("30");
 
   // Recurring state - use same structure as availability page
   const [recurringSchedule, setRecurringSchedule] = useState<typeof defaultSchedule>(getDefaultScheduleCopy);
@@ -230,7 +230,7 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg w-full max-w-6xl max-h-[85vh] shadow-xl flex flex-col">
+      <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] shadow-xl flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200 flex-shrink-0">
           <h2 className="text-lg font-semibold text-gray-900">Add availability</h2>
@@ -344,31 +344,18 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
                   </div>
 
                   <div className="mb-6">
-                    <Label>Type</Label>
-                    <div className="flex gap-4 mt-2">
-                      <label className="flex items-center cursor-pointer">
-                        <input
-                          type="radio"
-                          name="dayType"
-                          value="in-person"
-                          checked={dayType === "in-person"}
-                          onChange={(e) => setDayType(e.target.value as "in-person" | "virtual")}
-                          className="w-4 h-4 text-green-800 focus:ring-green-800"
-                        />
-                        <span className="ml-2 text-sm text-gray-700">In person</span>
-                      </label>
-                      <label className="flex items-center cursor-pointer">
-                        <input
-                          type="radio"
-                          name="dayType"
-                          value="virtual"
-                          checked={dayType === "virtual"}
-                          onChange={(e) => setDayType(e.target.value as "in-person" | "virtual")}
-                          className="w-4 h-4 text-green-800 focus:ring-green-800"
-                        />
-                        <span className="ml-2 text-sm text-gray-700">Virtual</span>
-                      </label>
-                    </div>
+                    <Label>Appointment Length</Label>
+                    <select
+                      value={appointmentLength}
+                      onChange={(e) => setAppointmentLength(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800 focus:border-transparent"
+                    >
+                      <option value="15">15 minutes</option>
+                      <option value="30">30 minutes</option>
+                      <option value="45">45 minutes</option>
+                      <option value="60">60 minutes</option>
+                      <option value="90">90 minutes</option>
+                    </select>
                   </div>
                 </>
               )}
@@ -377,7 +364,7 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
               {activeTab === "recurring" && (
                 <div>
                   <Label className="mb-3 block">Weekly Availability</Label>
-                  <div className="space-y-2 max-h-[350px] overflow-y-auto pr-2">
+                  <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2">
                     {days.map((day) => {
                       const dayData = recurringSchedule[day as keyof typeof recurringSchedule];
                       return (
