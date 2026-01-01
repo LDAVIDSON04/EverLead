@@ -669,7 +669,7 @@ export default function HomePage() {
               />
             </div>
             {/* Right side - Content (mobile second, desktop left) */}
-            <div className="order-2 lg:order-1">
+            <div className="order-2 lg:order-1 text-center">
               <h2 className="text-5xl mb-6 text-[#1A1A1A] font-semibold tracking-tight leading-tight">
                 Built with professional standards in mind
               </h2>
