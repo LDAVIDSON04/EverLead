@@ -40,6 +40,12 @@ export default function AvailableLeadsPage() {
   const [maxPrice, setMaxPrice] = useState<string>("");
   const [availableLocations, setAvailableLocations] = useState<string[]>([]);
   
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(0);
+  const [pageSize] = useState(50); // Load 50 leads at a time
+  const [totalLeads, setTotalLeads] = useState(0);
+  const [hasMoreLeads, setHasMoreLeads] = useState(false);
+  
   // Geographic search state
   const [locationQuery, setLocationQuery] = useState<string>("");
   const [provinceFilter, setProvinceFilter] = useState<string>("");
@@ -58,14 +64,26 @@ export default function AvailableLeadsPage() {
   const shouldRequestGeo = !agentCity || !agentProvince || !agentLat || !agentLng;
   const { result: geoResult, loading: geoLoading } = useBrowserGeolocation(shouldRequestGeo);
 
+  // Function to load more leads (pagination)
+  const loadMoreLeads = useCallback(async () => {
+    setCurrentPage(prev => prev + 1);
+  }, []);
+
   // Function to refresh leads (reusable for initial load, polling, and after actions)
   // Memoized with useCallback to prevent recreation on every render
-  const refreshLeads = useCallback(async (isPolling = false) => {
+  const refreshLeads = useCallback(async (isPolling = false, resetPage = false) => {
+    if (resetPage) {
+      setCurrentPage(0);
+    }
     if (!isPolling) {
       setLoading(true);
       setError(null);
     }
     // IMPORTANT: Do NOT clear leads here - we want to keep existing leads visible during polling
+    // But reset leads if resetting page
+    if (resetPage) {
+      setLeads([]);
+    }
 
     try {
       const {
@@ -126,12 +144,25 @@ export default function AvailableLeadsPage() {
       // so non-owning agents never receive full PII (name, email, phone).
       // For now, we mask these fields in the UI.
       
-      // Fetch all available leads (unsold leads only - filters applied client-side)
-      const { data: leadsData, error: leadsError } = await supabaseClient
+      // Build query with database-side filtering for scalability
+      let query = supabaseClient
         .from("leads")
-        .select("id, city, province, urgency_level, service_type, lead_price, additional_notes, assigned_agent_id, planning_for, latitude, longitude")
-        .is("assigned_agent_id", null) // Only unsold leads
-        .order("created_at", { ascending: false });
+        .select("id, city, province, urgency_level, service_type, lead_price, additional_notes, assigned_agent_id, planning_for, latitude, longitude", { count: 'exact' })
+        .is("assigned_agent_id", null); // Only unsold leads
+      
+      // Filter by province in database (CRITICAL for scalability)
+      if (agentProvince) {
+        query = query.eq("province", agentProvince);
+      }
+      
+      // Apply pagination
+      const from = pageToUse * pageSize;
+      const to = from + pageSize - 1;
+      query = query
+        .order("created_at", { ascending: false })
+        .range(from, to);
+
+      const { data: leadsData, error: leadsError, count } = await query;
 
       if (leadsError) {
         console.error(leadsError);
@@ -142,8 +173,13 @@ export default function AvailableLeadsPage() {
         return;
       }
 
+      // Set pagination state
+      const totalCount = count || 0;
+      setTotalLeads(totalCount);
+      setHasMoreLeads((from + (leadsData?.length || 0)) < totalCount);
+
       // Map to AgentLead format
-      let newLeads: AgentLead[] = (leadsData || []).map((lead: any) => {
+      const newLeads: AgentLead[] = (leadsData || []).map((lead: any) => {
         const urgency = (lead.urgency_level || "cold").toLowerCase() as 'hot' | 'warm' | 'cold';
         // Use lead_price from database (in dollars), or calculate from urgency if not set
         const leadPrice = lead.lead_price ?? getLeadPriceFromUrgency(lead.urgency_level);
@@ -161,15 +197,6 @@ export default function AvailableLeadsPage() {
           longitude: lead.longitude,
         };
       });
-
-      // Filter by agent's province (strict restriction - agents can only see leads from their province)
-      if (agentProvince) {
-        const agentProvinceUpper = agentProvince.toUpperCase().trim();
-        newLeads = newLeads.filter((lead) => {
-          const leadProvinceUpper = (lead.province || '').toUpperCase().trim();
-          return leadProvinceUpper === agentProvinceUpper;
-        });
-      }
 
       // No auction filtering needed - all unsold leads are available
 
@@ -200,7 +227,18 @@ export default function AvailableLeadsPage() {
 
       // No outbid detection needed - buy-now-only
 
-      setLeads(newLeads);
+      // For pagination: append new leads if loading more pages, replace if resetting
+      if (resetPage || pageToUse === 0) {
+        setLeads(newLeads);
+      } else {
+        // Append to existing leads when loading more pages
+        setLeads(prev => {
+          // Avoid duplicates by checking if lead ID already exists
+          const existingIds = new Set(prev.map(l => l.id));
+          const uniqueNewLeads = newLeads.filter(l => !existingIds.has(l.id));
+          return [...prev, ...uniqueNewLeads];
+        });
+      }
     } catch (err) {
       console.error(err);
       if (!isPolling) {
@@ -212,7 +250,7 @@ export default function AvailableLeadsPage() {
         setLoading(false);
       }
     }
-  }, [router]);
+  }, [router, currentPage, pageSize, agentProvince]);
 
   // Track if initial load has completed
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
@@ -264,12 +302,12 @@ export default function AvailableLeadsPage() {
     updateLocation();
   }, [geoResult, locationInitialized, userId]);
 
-  // Initial load
+  // Initial load - reset pagination
   useEffect(() => {
-    refreshLeads(false).then(() => {
+    refreshLeads(false, true).then(() => {
       setInitialLoadComplete(true);
     });
-  }, [router, refreshLeads]);
+  }, [router, agentProvince]); // Reset when province changes
 
   // Filters are applied client-side, so no need to reload when filters change
 
