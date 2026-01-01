@@ -50,30 +50,26 @@ export default function SchedulePage() {
   const [viewingExternalAppointment, setViewingExternalAppointment] = useState<any | null>(null);
   const [showAddAvailabilityModal, setShowAddAvailabilityModal] = useState(false);
 
-  // Calculate 5 consecutive days starting from today (or current day when offset is applied)
+  // Calculate Monday-Sunday week starting from Monday of the current week
   const getWeekDates = (offset: number) => {
     const today = new Date();
-    const startDate = new Date(today);
-    startDate.setDate(today.getDate() + (offset * 7));
-    startDate.setHours(0, 0, 0, 0);
+    const currentDay = today.getDay();
+    // Calculate Monday of current week (Monday = 1, so if today is Sunday (0), go back 6 days)
+    const mondayOffset = currentDay === 0 ? -6 : 1 - currentDay;
+    const monday = new Date(today);
+    monday.setDate(today.getDate() + mondayOffset + (offset * 7));
+    monday.setHours(0, 0, 0, 0);
 
-    // Return 5 consecutive days starting from the start date
-    return Array.from({ length: 5 }, (_, i) => {
-      const date = new Date(startDate);
-      date.setDate(startDate.getDate() + i);
+    // Return Monday through Sunday (7 days)
+    return Array.from({ length: 7 }, (_, i) => {
+      const date = new Date(monday);
+      date.setDate(monday.getDate() + i);
       return date;
     });
   };
 
   const weekDates = getWeekDates(currentWeekOffset);
-  
-  // Get day names for the current week dates
-  const getDayName = (date: Date) => {
-    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    return days[date.getDay()];
-  };
-  
-  const weekDays = weekDates.map(date => getDayName(date));
+  const weekDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -238,21 +234,21 @@ export default function SchedulePage() {
         const localStart = startDate.setZone(agentTimezone);
         const aptDate = localStart.toJSDate();
         
-        // Check if appointment is in the current week (Monday-Friday)
+        // Check if appointment is in the current week (Monday-Sunday)
         const weekStart = weekDates[0];
-        const weekEnd = weekDates[4];
+        const weekEnd = weekDates[6];
         weekStart.setHours(0, 0, 0, 0);
         weekEnd.setHours(23, 59, 59, 999);
         
         if (aptDate >= weekStart && aptDate <= weekEnd) {
-          // Find which day index this appointment belongs to (0-4)
+          // Find which day index this appointment belongs to (0-6 for Mon-Sun)
           const dayIndex = weekDates.findIndex((date, idx) => {
             const dateStr = date.toDateString();
             const aptDateStr = aptDate.toDateString();
             return dateStr === aptDateStr;
           });
           
-          if (dayIndex >= 0 && dayIndex < 5) {
+          if (dayIndex >= 0 && dayIndex < 7) {
             const endDate = DateTime.fromISO(apt.ends_at, { zone: "utc" });
             const localEnd = endDate.setZone(agentTimezone);
             const durationMinutes = localEnd.diff(localStart, 'minutes').minutes;
@@ -349,7 +345,7 @@ export default function SchedulePage() {
               const date = weekDates[index];
               const today = isToday(date);
               return (
-                <div key={`${day}-${index}`} className="flex-1 min-w-[140px] px-4 py-6">
+                <div key={`${day}-${index}`} className="flex-1 min-w-[120px] px-3 py-5">
                   <div className="flex items-center gap-3">
                     <div className={`w-12 h-12 rounded-full flex items-center justify-center text-gray-600 ${
                       today ? 'bg-green-600 text-white' : 'bg-gray-100'
@@ -380,7 +376,7 @@ export default function SchedulePage() {
                     return (
                       <div
                         key={`${day}-${hour}`}
-                        className="flex-1 min-w-[140px] border-l border-gray-200 relative h-32 overflow-visible first:border-l-0"
+                        className="flex-1 min-w-[120px] border-l border-gray-200 relative h-32 overflow-visible"
                       >
                         {cellAppointments.map((apt: any) => {
                           // Calculate top offset within this hour (based on minutes)
@@ -400,42 +396,34 @@ export default function SchedulePage() {
                                   setViewingExternalAppointment(apt);
                                 }
                               }}
-                              className={`absolute inset-x-1 ${color} rounded-lg p-2 shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-all border border-gray-200`}
+                              className={`absolute inset-x-1 ${color} rounded-lg p-2.5 shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-all border border-gray-200`}
                               style={{
                                 top: `${topOffset}px`,
                                 height: `${Math.max(height, 60)}px`,
                                 zIndex: 5,
                               }}
                             >
-                              {apt.family_name && (
-                                <>
-                                  <div className="flex items-center gap-1 mb-1">
-                                    <span className="text-sm font-medium text-gray-700">{apt.family_name}</span>
+                              <div className="h-full flex flex-col justify-between">
+                                {apt.family_name ? (
+                                  <div className="text-sm font-medium text-gray-700 truncate">
+                                    {apt.family_name}
                                   </div>
-                                  <div className="flex items-center gap-1 text-xs text-gray-600">
-                                    <span>{apt.startTime} - {apt.endTime}</span>
-                                    {apt.location && apt.location !== "N/A" && apt.location !== "External Calendar" && (
-                                      <>
-                                        <span>•</span>
-                                        <MapPin className="w-3 h-3" />
-                                        <span className="truncate">{apt.location}</span>
-                                      </>
-                                    )}
+                                ) : apt.is_external ? (
+                                  <div className="text-sm font-medium text-gray-700 truncate">
+                                    {apt.family_name || 'External Meeting'}
                                   </div>
-                                </>
-                              )}
-                              {!apt.family_name && (
-                                <div className="flex items-center gap-2 text-xs text-gray-600">
-                                  <span>{apt.startTime} - {apt.endTime}</span>
-                                  {apt.location && apt.location !== "N/A" && apt.location !== "External Calendar" && (
-                                    <>
-                                      <span>•</span>
-                                      <MapPin className="w-3 h-3" />
-                                      <span className="truncate">{apt.location}</span>
-                                    </>
-                                  )}
-                                </div>
-                              )}
+                                ) : (
+                                  <div className="text-sm font-medium text-gray-700 truncate">
+                                    Appointment
+                                  </div>
+                                )}
+                                {apt.location && apt.location !== "N/A" && apt.location !== "External Calendar" && (
+                                  <div className="flex items-center gap-1 mt-auto pt-1">
+                                    <MapPin className="w-3 h-3 text-gray-600 flex-shrink-0" />
+                                    <span className="text-xs text-gray-600 truncate">{apt.location}</span>
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           );
                         })}
