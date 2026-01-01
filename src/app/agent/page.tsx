@@ -300,7 +300,7 @@ export default function AgentLandingPage() {
 
             {/* Right Side - Form */}
             <div className="flex flex-col p-8 lg:p-16 relative z-20">
-              <h1 className="text-black mb-8 lg:mb-12 text-4xl lg:text-5xl font-bold text-left md:text-left text-right">
+              <h1 className="text-black mb-8 lg:mb-12 text-4xl lg:text-5xl font-bold text-right md:text-left">
                 {mode === "login" ? "Log In" : "Create Account"}
               </h1>
 
