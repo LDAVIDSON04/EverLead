@@ -316,7 +316,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto relative z-20 w-full">
           {/* Headline and Search Bar - Full Width */}
           <div className="max-w-4xl">
-            <h1 className="text-6xl md:text-6xl text-xl md:mb-8 mb-3 text-[#1A1A1A] font-semibold tracking-tight leading-tight text-left">
+            <h1 className="text-6xl md:text-6xl text-2xl md:mb-8 mb-3 text-[#1A1A1A] font-semibold tracking-tight leading-tight text-left">
               Book local funeral professionals
             </h1>
 
@@ -437,7 +437,7 @@ export default function HomePage() {
           <div className="md:hidden mt-4">
             <div className="bg-[#FAF9F6] rounded-3xl p-6 border border-[#1A1A1A]/5 relative overflow-hidden group hover:shadow-xl hover:shadow-black/5 transition-all flex flex-col">
               {/* Image inside the card, filling the box */}
-              <div className="relative w-full flex items-center justify-center -mt-6 -mx-6 mb-4" style={{ height: '220px', minHeight: '220px' }}>
+              <div className="relative w-full flex items-center justify-center -mt-6 -mx-6 mb-4" style={{ height: '180px', minHeight: '180px' }}>
                 <Image
                   src="/What is Pre need planning image.png"
                   alt="Person asking about pre-need planning"
