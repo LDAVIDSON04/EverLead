@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabaseClient } from "@/lib/supabaseClient";
-import { MapPin, Plus, ChevronLeft, ChevronRight } from "lucide-react";
+import { MapPin, Plus, ChevronLeft, ChevronRight, Calendar, Clock } from "lucide-react";
 
 function Input({ className = "", ...props }: React.InputHTMLAttributes<HTMLInputElement>) {
   return (
@@ -669,64 +669,130 @@ export default function AvailabilityPage() {
         {/* Daily Availability View */}
         {availabilityType === "daily" && (
           <div className="mb-6">
-            <div className="bg-gray-50 rounded-lg p-4 mb-4">
-              <p className="text-sm text-gray-700">
-                <strong>Showing daily availability for {selectedLocation}.</strong> Click on a date to add or edit availability.
-              </p>
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-5 mb-6 shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-green-100 rounded-lg">
+                  <Calendar className="w-5 h-5 text-green-700" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">
+                    Daily availability for {selectedLocation}
+                  </p>
+                  <p className="text-xs text-gray-600 mt-0.5">
+                    Click on a date to set your availability time slots
+                  </p>
+                </div>
+              </div>
             </div>
 
             {/* Week Navigation */}
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-6">
               <button
                 onClick={() => navigateWeek("prev")}
-                className="p-2 hover:bg-gray-100 rounded-lg"
+                className="group flex items-center justify-center w-10 h-10 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 shadow-sm hover:shadow-md"
               >
-                <ChevronLeft size={20} />
+                <ChevronLeft size={20} className="text-gray-600 group-hover:text-gray-900" />
               </button>
-              <div className="text-lg font-semibold">
-                {currentWeekStart.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
-                {" - "}
-                {new Date(currentWeekStart.getTime() + 6 * 24 * 60 * 60 * 1000).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+              <div className="flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-gray-600" />
+                <div className="text-lg font-semibold text-gray-900 tracking-tight">
+                  {currentWeekStart.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+                  {" - "}
+                  {new Date(currentWeekStart.getTime() + 6 * 24 * 60 * 60 * 1000).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+                </div>
               </div>
               <button
                 onClick={() => navigateWeek("next")}
-                className="p-2 hover:bg-gray-100 rounded-lg"
+                className="group flex items-center justify-center w-10 h-10 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 shadow-sm hover:shadow-md"
               >
-                <ChevronRight size={20} />
+                <ChevronRight size={20} className="text-gray-600 group-hover:text-gray-900" />
               </button>
             </div>
 
             {/* 7-Day Calendar Grid */}
-            <div className="grid grid-cols-7 gap-2">
+            <div className="grid grid-cols-7 gap-3">
               {getWeekDates().map((date, index) => {
                 const dateStr = date.toISOString().split("T")[0];
                 const existing = dailyAvailability[dateStr];
                 const isToday = dateStr === new Date().toISOString().split("T")[0];
                 const dayName = date.toLocaleDateString("en-US", { weekday: "short" });
                 const dayNum = date.getDate();
+                const monthName = date.toLocaleDateString("en-US", { month: "short" });
+
+                // Format time for display (convert 24h to 12h)
+                const formatTime = (time: string) => {
+                  const [hours, minutes] = time.split(":").map(Number);
+                  const period = hours >= 12 ? "PM" : "AM";
+                  const displayHours = hours % 12 || 12;
+                  return `${displayHours}:${String(minutes).padStart(2, "0")} ${period}`;
+                };
 
                 return (
-                  <div
+                  <button
                     key={dateStr}
                     onClick={() => handleDateClick(date)}
-                    className={`p-4 border-2 rounded-lg cursor-pointer transition-colors ${
-                      existing
-                        ? "border-green-600 bg-green-50"
-                        : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-                    } ${isToday ? "ring-2 ring-blue-500" : ""}`}
+                    className={`
+                      group relative
+                      p-5 rounded-xl
+                      border-2 transition-all duration-200
+                      cursor-pointer
+                      hover:scale-[1.02] hover:shadow-lg
+                      ${existing
+                        ? "border-green-500 bg-gradient-to-br from-green-50 to-emerald-50 shadow-md"
+                        : "border-gray-200 bg-white hover:border-green-300 hover:bg-green-50/30 shadow-sm"
+                      }
+                      ${isToday 
+                        ? "ring-2 ring-blue-500 ring-offset-2 border-blue-400" 
+                        : ""
+                      }
+                    `}
                   >
-                    <div className="text-xs text-gray-500 mb-1">{dayName}</div>
-                    <div className={`text-lg font-semibold mb-2 ${isToday ? "text-blue-600" : "text-gray-900"}`}>
-                      {dayNum}
-                    </div>
-                    {existing ? (
-                      <div className="text-xs text-gray-600">
-                        {existing.start_time} - {existing.end_time}
+                    {/* Day Header */}
+                    <div className="flex flex-col items-start mb-3">
+                      <div className={`
+                        text-xs font-semibold uppercase tracking-wider mb-1
+                        ${existing ? "text-green-700" : "text-gray-500"}
+                        ${isToday ? "text-blue-600" : ""}
+                      `}>
+                        {dayName}
                       </div>
-                    ) : (
-                      <div className="text-xs text-gray-400">Click to add</div>
+                      <div className={`
+                        text-2xl font-bold
+                        ${isToday ? "text-blue-600" : existing ? "text-green-900" : "text-gray-900"}
+                      `}>
+                        {dayNum}
+                      </div>
+                      <div className="text-xs text-gray-400 mt-0.5">{monthName}</div>
+                    </div>
+
+                    {/* Availability Status */}
+                    <div className="mt-4 pt-4 border-t border-gray-200">
+                      {existing ? (
+                        <div className="space-y-1.5">
+                          <div className="flex items-center gap-1.5">
+                            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                            <span className="text-xs font-semibold text-green-700">Available</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-xs text-gray-700">
+                            <Clock className="w-3 h-3 text-gray-500" />
+                            <span className="font-mono">
+                              {formatTime(existing.start_time)} - {formatTime(existing.end_time)}
+                            </span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1.5 text-xs text-gray-400 group-hover:text-gray-600 transition-colors">
+                          <div className="w-2 h-2 rounded-full border border-gray-300"></div>
+                          <span>Click to add</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Hover overlay effect */}
+                    {!existing && (
+                      <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-green-500/0 to-green-500/0 group-hover:from-green-500/5 group-hover:to-emerald-500/5 transition-all duration-200 pointer-events-none"></div>
                     )}
-                  </div>
+                  </button>
                 );
               })}
             </div>
