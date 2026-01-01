@@ -144,6 +144,25 @@ CREATE POLICY "Admins can delete profiles"
     )
   );
 
+-- Note: Service role policy bypasses RLS automatically, but we ensure it exists for completeness
+-- Service role queries should use supabaseAdmin client which bypasses RLS
+-- This policy is typically not needed but included for safety
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies 
+    WHERE schemaname = 'public' 
+    AND tablename = 'profiles' 
+    AND policyname = 'Service role can manage profiles'
+  ) THEN
+    CREATE POLICY "Service role can manage profiles"
+      ON public.profiles
+      FOR ALL
+      USING (true)
+      WITH CHECK (true);
+  END IF;
+END $$;
+
 -- ============================================
 -- CALENDAR_CONNECTIONS TABLE
 -- ============================================

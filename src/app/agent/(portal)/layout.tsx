@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import { supabaseClient } from '@/lib/supabaseClient';
 import { Home, Calendar, File, Mail, User, XCircle, Upload, X, Settings, Clock, CreditCard, CalendarCheck } from 'lucide-react';
+import { usePrefetchOnHover } from '@/lib/hooks/usePrefetch';
 
 type AgentLayoutProps = {
   children: ReactNode;
@@ -20,6 +21,37 @@ const menuItems = [
   { href: '/agent/billing', label: 'Billing', icon: CreditCard },
   { href: '/agent/settings', label: 'Settings', icon: Settings },
 ];
+
+// Component for nav links with prefetch on hover
+function NavLinkWithPrefetch({ 
+  href, 
+  isActive, 
+  icon: Icon, 
+  label 
+}: { 
+  href: string; 
+  isActive: boolean; 
+  icon: any; 
+  label: string;
+}) {
+  const prefetchHandler = usePrefetchOnHover(href);
+  
+  return (
+    <Link
+      href={href}
+      prefetch={true}
+      onMouseEnter={prefetchHandler}
+      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-left ${
+        isActive 
+          ? 'bg-green-900/30 text-white' 
+          : 'text-white/60 hover:bg-white/5 hover:text-white'
+      }`}
+    >
+      <Icon size={18} />
+      <span className="text-sm">{label}</span>
+    </Link>
+  );
+}
 
 export default function AgentLayout({ children }: AgentLayoutProps) {
   const router = useRouter();
@@ -372,19 +404,13 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
               const isActive = pathname === item.href || 
                 (item.href === '/agent/dashboard#roi' && pathname === '/agent/dashboard');
               return (
-                <Link
+                <NavLinkWithPrefetch
                   key={item.href}
                   href={item.href}
-                  prefetch={true}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-left ${
-                    isActive 
-                      ? 'bg-green-900/30 text-white' 
-                      : 'text-white/60 hover:bg-white/5 hover:text-white'
-                  }`}
-                >
-                  <Icon size={18} />
-                  <span className="text-sm">{item.label}</span>
-                </Link>
+                  isActive={isActive}
+                  icon={Icon}
+                  label={item.label}
+                />
               );
             })}
           </div>

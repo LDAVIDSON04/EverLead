@@ -9,6 +9,7 @@ import { DateTime } from "luxon";
 import Link from "next/link";
 import { ClientInfoModal } from "../my-appointments/components/ClientInfoModal";
 import { downloadClientInfo } from "@/lib/downloadClientInfo";
+import { SkeletonBox } from "@/components/SkeletonLoader";
 
 type Specialist = {
   id: string;
@@ -440,8 +441,21 @@ export default function SchedulePage() {
   if (loading) {
     return (
       <div className="flex-1 overflow-auto bg-gray-50">
-        <div className="flex items-center justify-center h-full">
-          <p className="text-gray-500">Loading...</p>
+        <div className="max-w-7xl mx-auto px-6 py-6 space-y-6">
+          {/* Header skeleton */}
+          <div className="space-y-4">
+            <SkeletonBox className="h-8 w-48" />
+            <div className="flex gap-4">
+              <SkeletonBox className="h-10 w-32" />
+              <SkeletonBox className="h-10 w-32" />
+            </div>
+          </div>
+          {/* Content skeleton */}
+          <div className="space-y-4">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <SkeletonBox key={i} className="h-24 w-full" />
+            ))}
+          </div>
         </div>
       </div>
     );
