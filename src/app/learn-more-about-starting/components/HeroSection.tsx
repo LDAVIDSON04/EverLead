@@ -18,13 +18,13 @@ export function HeroSection() {
             <p className="text-lg text-gray-700 mb-6 md:mb-8 max-w-md">
               Reach more patients, simplify scheduling, and get a clear view into your performance data—all with one platform.
             </p>
-            <Link href="/create-account" className="mb-2 md:mb-0">
+            <Link href="/create-account" className="mb-0 md:mb-6">
               <Button className="bg-[#0D5C3D] hover:bg-[#0A4A30] text-white px-8 py-6">
                 Get started
               </Button>
             </Link>
             {/* Mobile Appointment Cards - shows only on mobile */}
-            <div className="relative h-[400px] w-full md:hidden mt-2 flex items-center justify-center">
+            <div className="relative h-[400px] w-full md:hidden mt-1 flex items-center justify-center">
               {/* FEATURED: Funeral Director - center */}
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10" style={{ transform: 'translate(-50%, -50%) scale(0.7)' }}>
                 <AppointmentCard
