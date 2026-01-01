@@ -24,7 +24,7 @@ export function HeroSection() {
               </Button>
             </Link>
             {/* Mobile Appointment Cards - shows only on mobile */}
-            <div className="relative h-[400px] w-full md:hidden mt-8 flex items-center justify-center">
+            <div className="relative h-[400px] w-full md:hidden mt-4 flex items-center justify-center">
               {/* FEATURED: Funeral Director - center */}
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10" style={{ transform: 'translate(-50%, -50%) scale(0.7)' }}>
                 <AppointmentCard
