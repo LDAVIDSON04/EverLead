@@ -51,41 +51,41 @@ export default function SchedulePage() {
   const [showAddAvailabilityModal, setShowAddAvailabilityModal] = useState(false);
   const [showCalendarSyncModal, setShowCalendarSyncModal] = useState(false);
 
-  // Calculate Monday-Sunday week starting from Monday of the current week
+  // Calculate Sunday-Saturday week starting from Sunday of the current week
   const getWeekDates = (offset: number) => {
     const today = new Date();
-    const currentDay = today.getDay();
-    // Calculate Monday of current week (Monday = 1, so if today is Sunday (0), go back 6 days)
-    const mondayOffset = currentDay === 0 ? -6 : 1 - currentDay;
-    const monday = new Date(today);
-    monday.setDate(today.getDate() + mondayOffset + (offset * 7));
-    monday.setHours(0, 0, 0, 0);
+    const currentDay = today.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+    // Calculate Sunday of current week (go back currentDay days)
+    const sundayOffset = -currentDay;
+    const sunday = new Date(today);
+    sunday.setDate(today.getDate() + sundayOffset + (offset * 7));
+    sunday.setHours(0, 0, 0, 0);
 
-    // Return Monday through Sunday (7 days)
+    // Return Sunday through Saturday (7 days)
     return Array.from({ length: 7 }, (_, i) => {
-      const date = new Date(monday);
-      date.setDate(monday.getDate() + i);
+      const date = new Date(sunday);
+      date.setDate(sunday.getDate() + i);
       return date;
     });
   };
 
   const weekDates = getWeekDates(currentWeekOffset);
-  const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
-  // Get day-based color for appointments (0 = Monday, 1 = Tuesday, etc.)
+  // Get day-based color for appointments (0 = Sunday, 1 = Monday, etc.)
   const getDayColor = (dayIndex: number): string => {
     const dayColors = [
+      'bg-blue-200',      // Sunday - blue
       'bg-cyan-200',      // Monday - cyan
       'bg-orange-200',    // Tuesday - orange
       'bg-amber-200',     // Wednesday - amber
       'bg-emerald-200',   // Thursday - emerald/green
       'bg-purple-200',    // Friday - purple
       'bg-pink-200',      // Saturday - pink
-      'bg-blue-200',      // Sunday - blue
     ];
     return dayColors[dayIndex] || 'bg-gray-200';
   };
