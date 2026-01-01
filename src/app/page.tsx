@@ -210,7 +210,7 @@ export default function HomePage() {
   return (
     <main className="min-h-screen bg-[#FAF9F6]">
       {/* HEADER */}
-      <header className="bg-[#FAF9F6] py-5 px-4">
+      <header className="bg-[#FAF9F6] py-5 px-4 relative z-30">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           {/* Logo and Name - Mobile: text next to, Desktop: original layout (text next to) */}
           <div className="flex items-center gap-3">
