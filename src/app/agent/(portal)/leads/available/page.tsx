@@ -71,19 +71,20 @@ export default function AvailableLeadsPage() {
 
   // Function to refresh leads (reusable for initial load, polling, and after actions)
   // Memoized with useCallback to prevent recreation on every render
-  const refreshLeads = useCallback(async (isPolling = false, resetPage = false) => {
+  const refreshLeads = useCallback(async (isPolling = false, resetPage = false, targetPage?: number) => {
+    // Determine which page to use
+    const pageToUse = targetPage !== undefined ? targetPage : (resetPage ? 0 : currentPage);
+    
     if (resetPage) {
       setCurrentPage(0);
+      setLeads([]);
     }
+    
     if (!isPolling) {
       setLoading(true);
       setError(null);
     }
     // IMPORTANT: Do NOT clear leads here - we want to keep existing leads visible during polling
-    // But reset leads if resetting page
-    if (resetPage) {
-      setLeads([]);
-    }
 
     try {
       const {
