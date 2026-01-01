@@ -202,39 +202,39 @@ export default function MyLeadsPage() {
                     key={lead.id}
                     className="rounded-lg border border-[#ded3c2] bg-white p-4 shadow-sm"
                   >
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div>
-                    <div className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
-                      {formatUrgency(lead.urgency_level)} lead
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div>
+                        <div className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                          {formatUrgency(lead.urgency_level)} lead
+                        </div>
+                        <div className="mt-1 text-sm font-semibold text-[#2a2a2a]">
+                          {lead.city || "Unknown location"}
+                        </div>
+                        <div className="text-xs text-[#6b6b6b]">
+                          {lead.service_type || "Pre-need planning"}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span
+                          className={clsx(
+                            "inline-flex rounded-full px-2 py-0.5 text-xs font-medium",
+                            bg,
+                            text
+                          )}
+                        >
+                          {formatStatus(lead.agent_status)}
+                        </span>
+                      </div>
                     </div>
-                    <div className="mt-1 text-sm font-semibold text-[#2a2a2a]">
-                      {lead.city || "Unknown location"}
-                    </div>
-                    <div className="text-xs text-[#6b6b6b]">
-                      {lead.service_type || "Pre-need planning"}
+                    <div className="mt-3">
+                      <Link
+                        href={`/agent/leads/${lead.id}`}
+                        className="text-xs font-medium text-[#6b6b6b] hover:text-[#2a2a2a] transition-colors"
+                      >
+                        View details →
+                      </Link>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span
-                      className={clsx(
-                        "inline-flex rounded-full px-2 py-0.5 text-xs font-medium",
-                        bg,
-                        text
-                      )}
-                    >
-                      {formatStatus(lead.agent_status)}
-                    </span>
-                  </div>
-                </div>
-                <div className="mt-3">
-                  <Link
-                    href={`/agent/leads/${lead.id}`}
-                    className="text-xs font-medium text-[#6b6b6b] hover:text-[#2a2a2a] transition-colors"
-                  >
-                    View details →
-                  </Link>
-                </div>
-              </div>
                 );
               ))}
               
