@@ -59,11 +59,22 @@ export async function notifyAgentsForLead(lead: any, supabaseAdminClient: any = 
     
     try {
       console.log(`🔍 [NOTIFY] Executing Supabase query...`);
-      const queryResult = await supabaseAdminClient
+      
+      // OPTIMIZATION: Filter by province in database FIRST (critical for scalability)
+      // This reduces the number of agents we need to process in JavaScript
+      let query = supabaseAdminClient
         .from('profiles')
         .select('id, full_name, agent_latitude, agent_longitude, search_radius_km, notification_cities, agent_province')
         .eq('role', 'agent')
         .eq('approval_status', 'approved');
+      
+      // Filter by province in database (CRITICAL for scalability with thousands of agents)
+      if (lead.province) {
+        const leadProvinceUpper = (lead.province || '').toUpperCase().trim();
+        query = query.eq('agent_province', leadProvinceUpper);
+      }
+      
+      const queryResult = await query;
       
       agents = queryResult.data;
       agentsError = queryResult.error;
