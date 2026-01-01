@@ -304,7 +304,7 @@ export default function SchedulePage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
-          <h1 className="text-3xl font-semibold">{formatDate(weekDates[0])}</h1>
+          <h1 className="text-3xl font-semibold" style={{ paddingTop: '4px' }}>{formatDate(weekDates[0])}</h1>
           <button 
             onClick={goToToday}
             className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
