@@ -374,22 +374,15 @@ export default function SchedulePage() {
         <div className="inline-block min-w-full">
           {/* Day Headers */}
           <div className="flex sticky top-0 bg-white z-20 border-b border-gray-200 shadow-sm">
-            <div className="w-24 flex-shrink-0"></div>
+            <div className="w-20 flex-shrink-0"></div>
             {weekDays.map((day, index) => {
               const date = weekDates[index];
               const today = isToday(date);
               return (
-                <div key={`${day}-${index}`} className="flex-1 min-w-[120px] px-3 py-5">
-                  <div className="flex flex-col items-center gap-1">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-12 h-12 rounded-full flex items-center justify-center text-gray-600 ${
-                        today ? 'bg-green-600 text-white' : 'bg-gray-100'
-                      }`}>
-                        {day.substring(0, 1)}
-                      </div>
-                      <span className={`text-gray-700 ${today ? 'font-semibold' : ''}`}>{day}</span>
-                    </div>
-                    <span className={`text-sm text-gray-500 ${today ? 'font-medium' : ''}`}>
+                <div key={`${day}-${index}`} className="flex-1 min-w-[100px] px-2 py-3">
+                  <div className="flex flex-col items-center gap-0.5">
+                    <span className={`text-xs text-gray-700 ${today ? 'font-semibold' : ''}`}>{day}</span>
+                    <span className={`text-xs text-gray-500 ${today ? 'font-medium' : ''}`}>
                       {date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                     </span>
                   </div>
@@ -435,16 +428,16 @@ export default function SchedulePage() {
                                   setViewingExternalAppointment(apt);
                                 }
                               }}
-                              className={`absolute inset-x-1 ${color} rounded-lg p-2.5 shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-all border border-gray-200`}
+                              className={`absolute inset-x-0.5 ${color} rounded p-1 shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-all border border-gray-200`}
                               style={{
                                 top: `${topOffset}px`,
-                                height: `${Math.max(height, 60)}px`,
+                                height: `${Math.max(height, 40)}px`,
                                 zIndex: 5,
                               }}
                             >
-                              <div className="h-full flex flex-col gap-1.5 p-2">
+                              <div className="h-full flex flex-col gap-0.5 px-1 py-0.5">
                                 {/* Customer Name */}
-                                <div className="text-sm font-medium text-gray-700 leading-tight line-clamp-2 break-words min-h-[2.5rem]">
+                                <div className="text-xs font-medium text-gray-700 leading-tight line-clamp-1 break-words">
                                   {apt.family_name || 'Appointment'}
                                 </div>
                                 
@@ -462,9 +455,9 @@ export default function SchedulePage() {
                                     : null;
                                   
                                   return cleanLocation && cleanLocation.length > 0 ? (
-                                    <div className="flex items-center gap-1 mt-auto">
-                                      <MapPin className="w-3 h-3 text-gray-600 flex-shrink-0" />
-                                      <span className="text-xs text-gray-600 truncate leading-tight">{cleanLocation}</span>
+                                    <div className="flex items-center gap-0.5 mt-auto">
+                                      <MapPin className="w-2.5 h-2.5 text-gray-600 flex-shrink-0" />
+                                      <span className="text-[10px] text-gray-600 truncate leading-tight">{cleanLocation}</span>
                                     </div>
                                   ) : null;
                                 })()}
