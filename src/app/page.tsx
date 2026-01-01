@@ -495,7 +495,7 @@ export default function HomePage() {
 
               <div className="relative z-10 flex flex-col items-center text-center -mt-1">
                 <h3 className="text-xl font-semibold text-[#1A1A1A] mb-1">
-                  What are pre needs
+                  What are pre arrangements?
                 </h3>
                 <p className="text-sm text-[#1A1A1A]/70 mb-3">
                   Learn more about pre needs and how they help you plan ahead
