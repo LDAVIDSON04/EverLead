@@ -10,6 +10,7 @@ import { ClientInfoModal } from "../my-appointments/components/ClientInfoModal";
 import { downloadClientInfo } from "@/lib/downloadClientInfo";
 import { getCityColor } from "@/lib/cityColors";
 import { AddAvailabilityModal } from "./components/AddAvailabilityModal";
+import { CalendarSyncModal } from "./components/CalendarSyncModal";
 
 type Specialist = {
   id: string;
@@ -49,6 +50,7 @@ export default function SchedulePage() {
   const [viewingAppointmentId, setViewingAppointmentId] = useState<string | null>(null);
   const [viewingExternalAppointment, setViewingExternalAppointment] = useState<any | null>(null);
   const [showAddAvailabilityModal, setShowAddAvailabilityModal] = useState(false);
+  const [showCalendarSyncModal, setShowCalendarSyncModal] = useState(false);
 
   // Calculate Monday-Sunday week starting from Monday of the current week
   const getWeekDates = (offset: number) => {
@@ -73,6 +75,17 @@ export default function SchedulePage() {
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
+  const formatWeekRange = () => {
+    const start = weekDates[0];
+    const end = weekDates[6];
+    // If same month, show: "Dec 29 - Jan 4, 2025"
+    // If different months/years, show full dates
+    if (start.getMonth() === end.getMonth() && start.getFullYear() === end.getFullYear()) {
+      return `${formatDate(start)} - ${end.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}, ${end.getFullYear()}`;
+    }
+    return `${formatDate(start)} - ${formatDate(end)}`;
   };
 
   const goToPreviousWeek = () => setCurrentWeekOffset(currentWeekOffset - 1);
@@ -304,7 +317,7 @@ export default function SchedulePage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
-          <h1 className="text-3xl font-semibold">{formatDate(weekDates[0])}</h1>
+          <h1 className="text-3xl font-semibold">{formatWeekRange()}</h1>
           <button 
             onClick={goToToday}
             className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
@@ -328,6 +341,12 @@ export default function SchedulePage() {
         </div>
 
         <div className="flex items-center gap-4">
+          <button 
+            onClick={() => setShowCalendarSyncModal(true)}
+            className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-gray-700"
+          >
+            Calendar sync
+          </button>
           <button 
             onClick={() => setShowAddAvailabilityModal(true)}
             className="px-6 py-2 bg-green-700 text-white rounded-lg hover:bg-green-800 transition-colors"
@@ -496,6 +515,12 @@ export default function SchedulePage() {
           </div>
         </div>
       )}
+
+      {/* Calendar Sync Modal */}
+      <CalendarSyncModal
+        isOpen={showCalendarSyncModal}
+        onClose={() => setShowCalendarSyncModal(false)}
+      />
 
       {/* Add Availability Modal */}
       <AddAvailabilityModal

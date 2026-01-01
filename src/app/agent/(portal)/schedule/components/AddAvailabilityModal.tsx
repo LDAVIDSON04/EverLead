@@ -230,9 +230,9 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg w-full max-w-md shadow-xl">
+      <div className="bg-white rounded-lg w-full max-w-6xl max-h-[85vh] shadow-xl flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 flex-shrink-0">
           <h2 className="text-lg font-semibold text-gray-900">Add availability</h2>
           <button
             onClick={onClose}
@@ -243,7 +243,7 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-gray-200">
+        <div className="flex border-b border-gray-200 flex-shrink-0">
           <button
             onClick={() => setActiveTab("daily")}
             className={`flex-1 px-4 py-3 text-sm font-medium transition-colors relative ${
@@ -272,8 +272,8 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
           </button>
         </div>
 
-        {/* Content */}
-        <div className="p-6">
+        {/* Content - Scrollable */}
+        <div className="p-6 overflow-y-auto flex-1">
           {loading ? (
             <div className="text-center py-8">
               <p className="text-gray-600">Loading...</p>
@@ -375,9 +375,9 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
 
               {/* Recurring tab content */}
               {activeTab === "recurring" && (
-                <div className="mb-6">
+                <div>
                   <Label className="mb-3 block">Weekly Availability</Label>
-                  <div className="space-y-2">
+                  <div className="space-y-2 max-h-[350px] overflow-y-auto pr-2">
                     {days.map((day) => {
                       const dayData = recurringSchedule[day as keyof typeof recurringSchedule];
                       return (
@@ -429,27 +429,29 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
                   </div>
                 </div>
               )}
-
-              {/* Actions */}
-              <div className="flex gap-3 justify-end pt-4 border-t border-gray-200">
-                <button
-                  onClick={onClose}
-                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium"
-                  disabled={saving}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSave}
-                  className="px-4 py-2 bg-green-800 text-white rounded-lg hover:bg-green-900 transition-colors text-sm font-medium"
-                  disabled={saving}
-                >
-                  {saving ? "Saving..." : "Add"}
-                </button>
-              </div>
             </>
           )}
         </div>
+
+        {/* Actions - Fixed at bottom */}
+        {!loading && locations.length > 0 && (
+          <div className="flex gap-3 justify-end p-6 border-t border-gray-200 bg-white flex-shrink-0">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium"
+              disabled={saving}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSave}
+              className="px-4 py-2 bg-green-800 text-white rounded-lg hover:bg-green-900 transition-colors text-sm font-medium"
+              disabled={saving}
+            >
+              {saving ? "Saving..." : "Add"}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
