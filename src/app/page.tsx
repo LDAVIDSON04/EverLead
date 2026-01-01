@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search, MapPin, Star, Calendar, Check, ChevronDown, Heart, Facebook, Instagram } from "lucide-react";
+import { Search, MapPin, Star, Calendar, Check, ChevronDown, Heart, Facebook, Instagram, Menu, X } from "lucide-react";
 import { useState } from "react";
 
 export default function HomePage() {
@@ -13,6 +13,7 @@ export default function HomePage() {
   const [showSpecialtyDropdown, setShowSpecialtyDropdown] = useState(false);
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
   const [locationSuggestions, setLocationSuggestions] = useState<string[]>([]);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Function to navigate to search page with detected location from IP
   const navigateToSearchWithLocation = async (e: React.MouseEvent) => {
@@ -211,9 +212,9 @@ export default function HomePage() {
       {/* HEADER */}
       <header className="bg-[#FAF9F6] py-5 px-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          {/* Logo and Name - Mobile: text below, Desktop: original layout (text next to) */}
+          {/* Logo and Name - Mobile: text next to, Desktop: original layout (text next to) */}
           <div className="flex items-center gap-3">
-            <Link href="/" className="flex flex-col items-start md:flex-row md:items-center md:gap-3">
+            <Link href="/" className="flex items-center gap-3">
               <Image
                 src="/Soradin.png"
                 alt="Soradin Logo"
@@ -221,21 +222,11 @@ export default function HomePage() {
                 height={80}
                 className="h-16 w-16 md:h-20 md:w-20 object-contain"
               />
-              <span className="text-sm md:text-2xl font-semibold text-[#1A1A1A] md:mt-0 -mt-1">Soradin</span>
+              <span className="text-sm md:text-2xl font-semibold text-[#1A1A1A]">Soradin</span>
             </Link>
-
-            {/* Navigation Links - Mobile only, next to logo */}
-            <div className="flex items-center gap-2 md:hidden">
-              <Link href="/what-is-pre-need-funeral-planning" className="text-xs text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors leading-tight">
-                What is pre-need<br />funeral planning?
-              </Link>
-              <Link href="/learn-more-about-starting" className="text-xs text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors">
-                List your Specialty
-              </Link>
-            </div>
           </div>
 
-          {/* Right Side Navigation - Desktop: original layout, Mobile: Log in button */}
+          {/* Right Side Navigation - Desktop: original layout, Mobile: Hamburger menu */}
           <div className="flex items-center gap-6">
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center gap-6">
@@ -249,16 +240,42 @@ export default function HomePage() {
                 Log in
               </Link>
             </div>
-            {/* Mobile: Log in button */}
-            <Link href="/agent" className="md:hidden bg-[#0C6F3C] text-white px-4 py-2 rounded-lg hover:bg-[#0C6F3C]/90 transition-all shadow-sm text-sm whitespace-nowrap">
-              Log in
-            </Link>
+            {/* Mobile: Hamburger menu */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2 text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors"
+              aria-label="Toggle menu"
+            >
+              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
           </div>
         </div>
+        
+        {/* Mobile Menu Dropdown */}
+        {mobileMenuOpen && (
+          <div className="md:hidden mt-4 pb-4 border-t border-[#1A1A1A]/10 pt-4">
+            <div className="flex flex-col gap-3">
+              <Link 
+                href="/learn-more-about-starting" 
+                className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors py-2"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                List your Specialty
+              </Link>
+              <Link 
+                href="/agent" 
+                className="bg-[#0C6F3C] text-white px-4 py-2 rounded-lg hover:bg-[#0C6F3C]/90 transition-all shadow-sm text-sm text-center"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Log in
+              </Link>
+            </div>
+          </div>
+        )}
       </header>
 
       {/* HERO */}
-      <div className="relative bg-[#FAF9F6] py-12 px-4 min-h-[calc(100vh-80px)] flex items-start pt-32" style={{ overflow: 'visible' }}>
+      <div className="relative bg-[#FAF9F6] py-12 px-4 min-h-[calc(100vh-80px)] flex items-start md:pt-32 pt-6" style={{ overflow: 'visible' }}>
         {/* Abstract background shapes */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-20 right-10 w-96 h-96 bg-[#0C6F3C]/10 rounded-full blur-3xl" />
@@ -299,7 +316,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto relative z-20 w-full">
           {/* Headline and Search Bar - Full Width */}
           <div className="max-w-4xl">
-            <h1 className="text-6xl mb-8 text-[#1A1A1A] font-semibold tracking-tight leading-tight text-left">
+            <h1 className="text-6xl md:text-6xl text-2xl md:mb-8 mb-4 text-[#1A1A1A] font-semibold tracking-tight leading-tight text-left">
               Book local funeral professionals
             </h1>
 
@@ -414,6 +431,35 @@ export default function HomePage() {
                 </div>
               </div>
             </form>
+          </div>
+          
+          {/* Mobile Only: Pre-Need Planning Box */}
+          <div className="md:hidden mt-6">
+            <div className="bg-[#FAF9F6] rounded-3xl p-6 border border-[#1A1A1A]/5 relative overflow-visible group hover:shadow-xl hover:shadow-black/5 transition-all flex flex-col">
+              {/* Image overlapping the top */}
+              <div className="absolute -top-48 left-1/2 -translate-x-1/2 w-96 h-96 flex items-center justify-center">
+                <Image
+                  src="/pre-need-character.png"
+                  alt="Person asking about pre-need planning"
+                  width={384}
+                  height={384}
+                  className="w-full h-full object-contain"
+                  style={{
+                    filter: "brightness(1.1) contrast(1.05)",
+                    mixBlendMode: "multiply",
+                  }}
+                />
+              </div>
+
+              <div className="relative z-10 flex flex-col items-center text-center mt-20">
+                <Link 
+                  href="/what-is-pre-need-funeral-planning"
+                  className="bg-[#0C6F3C] text-white px-5 py-2.5 rounded-xl hover:bg-[#0C6F3C]/90 transition-all shadow-sm text-sm font-medium w-full"
+                >
+                  What Is Pre Need Planning?
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </div>
