@@ -251,26 +251,34 @@ export default function HomePage() {
           </div>
         </div>
         
-        {/* Mobile Menu Dropdown */}
+        {/* Mobile Menu Dropdown - Overlay Card */}
         {mobileMenuOpen && (
-          <div className="md:hidden mt-4 pb-4 border-t border-[#1A1A1A]/10 pt-4">
-            <div className="flex flex-col gap-3">
-              <Link 
-                href="/learn-more-about-starting" 
-                className="bg-[#0C6F3C] text-white px-4 py-2 rounded-lg hover:bg-[#0C6F3C]/90 transition-all shadow-sm text-sm text-center"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Create account
-              </Link>
-              <Link 
-                href="/agent" 
-                className="bg-[#0C6F3C] text-white px-4 py-2 rounded-lg hover:bg-[#0C6F3C]/90 transition-all shadow-sm text-sm text-center"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Log in
-              </Link>
+          <>
+            {/* Backdrop */}
+            <div 
+              className="md:hidden fixed inset-0 bg-black/50 z-40"
+              onClick={() => setMobileMenuOpen(false)}
+            />
+            {/* Menu Card */}
+            <div className="md:hidden fixed top-20 right-4 left-4 bg-white rounded-2xl shadow-2xl border border-[#1A1A1A]/10 z-50 overflow-hidden">
+              <div className="flex flex-col">
+                <Link 
+                  href="/learn-more-about-starting" 
+                  className="px-6 py-4 text-[#1A1A1A] hover:bg-[#FAF9F6] transition-colors border-b border-[#1A1A1A]/10 text-base font-medium"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Create account
+                </Link>
+                <Link 
+                  href="/agent" 
+                  className="px-6 py-4 text-[#1A1A1A] hover:bg-[#FAF9F6] transition-colors text-base font-medium"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Log in
+                </Link>
+              </div>
             </div>
-          </div>
+          </>
         )}
       </header>
 
@@ -437,7 +445,7 @@ export default function HomePage() {
           <div className="md:hidden mt-4">
             <div className="bg-[#FAF9F6] rounded-3xl p-6 border border-[#1A1A1A]/5 relative overflow-hidden group hover:shadow-xl hover:shadow-black/5 transition-all flex flex-col">
               {/* Image inside the card, showing full torso */}
-              <div className="relative w-full flex items-center justify-center -mx-6 mb-4 overflow-hidden" style={{ height: '150px', minHeight: '150px', marginTop: '-24px' }}>
+              <div className="relative w-full flex items-center justify-center -mx-6 mb-2 overflow-hidden" style={{ height: '150px', minHeight: '150px', marginTop: '-24px', paddingTop: '0' }}>
                 <Image
                   src="/What is Pre need planning image.png"
                   alt="Person asking about pre-need planning"
@@ -454,15 +462,15 @@ export default function HomePage() {
               </div>
 
               <div className="relative z-10 flex flex-col items-center text-center">
-                <h3 className="text-xl font-semibold text-[#1A1A1A] mb-2">
+                <h3 className="text-xl font-semibold text-[#1A1A1A] mb-1">
                   What are pre needs
                 </h3>
-                <p className="text-sm text-[#1A1A1A]/70 mb-4">
+                <p className="text-sm text-[#1A1A1A]/70 mb-3">
                   Learn more about pre needs and how they help you plan ahead
                 </p>
                 <Link 
                   href="/what-is-pre-need-funeral-planning"
-                  className="bg-[#0C6F3C] text-white px-5 py-2.5 rounded-xl hover:bg-[#0C6F3C]/90 transition-all shadow-sm text-sm font-medium w-full flex items-center justify-center gap-2"
+                  className="text-[#0C6F3C] hover:text-[#0C6F3C]/80 transition-colors text-sm font-medium flex items-center justify-center gap-1"
                 >
                   Learn more
                   <ChevronRight className="w-4 h-4" />
