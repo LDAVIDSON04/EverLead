@@ -23,15 +23,98 @@ export function HeroSection() {
                 Get started
               </Button>
             </Link>
-            {/* Mobile Image - shows only on mobile */}
-            <div className="w-full max-w-md md:hidden mt-4">
-              <Image
-                src="/hero-image.png"
-                alt="Patient growth"
-                width={600}
-                height={400}
-                className="w-full h-auto object-contain rounded-lg"
-              />
+            {/* Mobile Appointment Cards - shows only on mobile */}
+            <div className="relative h-[500px] w-full md:hidden mt-8 flex items-center justify-center">
+              {/* FEATURED: Funeral Director - center */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
+                <AppointmentCard
+                  name="Michael Davis"
+                  date="Pre-Need Sales Consultant"
+                  status="Funeral Director"
+                  imageUrl="/6cf5ec63f87cc57ba7775f9fb59e1fd68aa5998b.png"
+                  featured
+                />
+              </div>
+
+              {/* Client Card 1 - top */}
+              <div className="absolute top-4 left-1/2 -translate-x-1/2" style={{ transform: 'translateX(-50%) rotate(-1deg) scale(0.8)' }}>
+                <AppointmentCard
+                  name="James Miller"
+                  date="Mon, April 14 at 3:00 PM EST"
+                  status="Booked"
+                  imageUrl="/ca3d03ea2df40f93620bf476ca4d13a99c120a0d.png"
+                />
+              </div>
+
+              {/* Client Card 2 - top right */}
+              <div className="absolute top-16 right-4" style={{ transform: 'rotate(2deg) scale(0.8)' }}>
+                <AppointmentCard
+                  name="Sarah Johnson"
+                  date="Fri, April 18 at 2:00 PM EST"
+                  status="Booked"
+                  imageUrl="https://images.unsplash.com/photo-1747302653727-275b259eef46?w=150&h=150&fit=crop&crop=faces"
+                />
+              </div>
+
+              {/* Client Card 3 - right */}
+              <div className="absolute top-1/2 right-0 -translate-y-1/2" style={{ transform: 'translateY(-50%) rotate(1deg) scale(0.8)' }}>
+                <AppointmentCard
+                  name="Jessica Brown"
+                  date="Sat, April 19 at 1:00 PM EST"
+                  status="Booked"
+                  imageUrl="https://images.unsplash.com/photo-1763259405593-d30c6b820a3d?w=150&h=150&fit=crop&crop=faces"
+                />
+              </div>
+
+              {/* Client Card 4 - bottom right */}
+              <div className="absolute bottom-16 right-8" style={{ transform: 'rotate(-2deg) scale(0.8)' }}>
+                <AppointmentCard
+                  name="Lisa Anderson"
+                  date="Mon, April 21 at 10:30 AM EST"
+                  status="Booked"
+                  imageUrl="https://images.unsplash.com/photo-1643717347866-f213892b736b?w=150&h=150&fit=crop&crop=faces"
+                />
+              </div>
+
+              {/* Client Card 5 - bottom */}
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2" style={{ transform: 'translateX(-50%) rotate(2deg) scale(0.8)' }}>
+                <AppointmentCard
+                  name="Robert Taylor"
+                  date="Sun, April 20 at 10:00 AM EST"
+                  status="Booked"
+                  imageUrl="https://images.unsplash.com/photo-1758600432307-2f5ea934be75?w=150&h=150&fit=crop&crop=faces"
+                />
+              </div>
+
+              {/* Client Card 6 - bottom left */}
+              <div className="absolute bottom-16 left-8" style={{ transform: 'rotate(-1deg) scale(0.8)' }}>
+                <AppointmentCard
+                  name="Amy Chen"
+                  date="Thu, April 17 at 4:00 PM EST"
+                  status="Booked"
+                  imageUrl="https://images.unsplash.com/photo-1658767119017-3a2a362e65c0?w=150&h=150&fit=crop&crop=faces"
+                />
+              </div>
+
+              {/* Client Card 7 - left */}
+              <div className="absolute top-1/2 left-0 -translate-y-1/2" style={{ transform: 'translateY(-50%) rotate(1deg) scale(0.8)' }}>
+                <AppointmentCard
+                  name="David Chen"
+                  date="Tue, April 15 at 11:00 AM EST"
+                  status="Booked"
+                  imageUrl="/a16d084325d7eb62b3170f963475f05b750a383d.png"
+                />
+              </div>
+
+              {/* Client Card 8 - top left */}
+              <div className="absolute top-16 left-4" style={{ transform: 'rotate(-2deg) scale(0.8)' }}>
+                <AppointmentCard
+                  name="William White"
+                  date="Wed, April 16 at 9:00 AM EST"
+                  status="Booked"
+                  imageUrl="/56636ec270d99f4a4d6ae68e014f42a3fc84e7c3.png"
+                />
+              </div>
             </div>
           </div>
 
