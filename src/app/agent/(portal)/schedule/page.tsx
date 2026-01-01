@@ -302,9 +302,9 @@ export default function SchedulePage() {
   return (
     <div className="w-full h-screen overflow-hidden flex flex-col bg-white" style={{ padding: '32px', paddingTop: '48px' }}>
       {/* Header */}
-      <div className="flex items-center justify-between mb-8" style={{ marginTop: '0', paddingTop: '0' }}>
+      <div className="flex items-center justify-between mb-8" style={{ marginTop: '-16px', paddingTop: '0' }}>
         <div className="flex items-center gap-4">
-          <h1 className="text-3xl font-semibold" style={{ lineHeight: '1.2', marginTop: '0', paddingTop: '0' }}>{formatDate(weekDates[0])}</h1>
+          <h1 className="text-3xl font-semibold" style={{ lineHeight: '1.2', marginTop: '0', paddingTop: '0', position: 'relative', zIndex: 10 }}>{formatDate(weekDates[0])}</h1>
           <button 
             onClick={goToToday}
             className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
