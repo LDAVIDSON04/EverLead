@@ -208,7 +208,7 @@ export default function HomePage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#FAF9F6] md:bg-[#FAF9F6] bg-[#FFF8E7]">
+    <main className="min-h-screen bg-[#FAF9F6]">
       {/* HEADER */}
       <header className="bg-[#FAF9F6] py-5 px-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -275,7 +275,7 @@ export default function HomePage() {
       </header>
 
       {/* HERO */}
-      <div className="relative bg-[#FAF9F6] md:bg-[#FAF9F6] bg-[#FFF8E7] py-12 px-4 min-h-[calc(100vh-80px)] flex items-start md:pt-32 pt-2" style={{ overflow: 'visible' }}>
+      <div className="relative bg-[#FAF9F6] py-12 px-4 min-h-[calc(100vh-80px)] flex items-start md:pt-32 pt-2" style={{ overflow: 'visible' }}>
         {/* Abstract background shapes */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-20 right-10 w-96 h-96 bg-[#0C6F3C]/10 rounded-full blur-3xl" />
@@ -316,7 +316,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto relative z-20 w-full">
           {/* Headline and Search Bar - Full Width */}
           <div className="max-w-4xl">
-            <h1 className="text-6xl md:text-6xl text-lg md:mb-8 mb-3 text-[#1A1A1A] font-semibold tracking-tight leading-tight text-left">
+            <h1 className="text-6xl md:text-6xl text-2xl md:mb-8 mb-3 text-[#1A1A1A] font-semibold tracking-tight leading-tight text-left">
               Book local funeral professionals
             </h1>
 
@@ -436,10 +436,10 @@ export default function HomePage() {
           {/* Mobile Only: Pre-Need Planning Box */}
           <div className="md:hidden mt-4">
             <div className="bg-[#FAF9F6] rounded-3xl p-6 border border-[#1A1A1A]/5 relative overflow-visible group hover:shadow-xl hover:shadow-black/5 transition-all flex flex-col min-h-[200px]">
-              {/* Image overlapping the top - using booking-image.png as placeholder until pre-need-character.png is added */}
+              {/* Image overlapping the top */}
               <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-64 h-64 flex items-center justify-center z-0">
                 <Image
-                  src="/booking-image.png"
+                  src="/pre-need-character.png"
                   alt="Person asking about pre-need planning"
                   width={256}
                   height={256}
