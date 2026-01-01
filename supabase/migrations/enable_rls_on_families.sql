@@ -34,6 +34,7 @@ CREATE POLICY "Families can view their own record"
 
 -- Policy: Agents can view family records (for appointments they have with families)
 -- This allows agents to see family info for appointments they're managing
+-- Note: appointments uses specialist_id which maps to agent_id (auth.uid())
 CREATE POLICY "Agents can view families they have appointments with"
   ON public.families
   FOR SELECT
@@ -42,7 +43,7 @@ CREATE POLICY "Agents can view families they have appointments with"
     EXISTS (
       SELECT 1 FROM public.appointments
       WHERE appointments.family_id = families.id
-      AND appointments.agent_id = auth.uid()
+      AND appointments.specialist_id = auth.uid()
     )
     OR EXISTS (
       SELECT 1 FROM public.profiles
