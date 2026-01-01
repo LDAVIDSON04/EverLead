@@ -24,9 +24,9 @@ export function HeroSection() {
               </Button>
             </Link>
             {/* Mobile Appointment Cards - shows only on mobile */}
-            <div className="relative h-[500px] w-full md:hidden mt-8 flex items-center justify-center">
+            <div className="relative h-[400px] w-full md:hidden mt-8 flex items-center justify-center">
               {/* FEATURED: Funeral Director - center */}
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10" style={{ transform: 'translate(-50%, -50%) scale(0.7)' }}>
                 <AppointmentCard
                   name="Michael Davis"
                   date="Pre-Need Sales Consultant"
@@ -37,7 +37,7 @@ export function HeroSection() {
               </div>
 
               {/* Client Card 1 - top */}
-              <div className="absolute top-4 left-1/2 -translate-x-1/2" style={{ transform: 'translateX(-50%) rotate(-1deg) scale(0.8)' }}>
+              <div className="absolute top-2 left-1/2 -translate-x-1/2" style={{ transform: 'translateX(-50%) rotate(-1deg) scale(0.55)' }}>
                 <AppointmentCard
                   name="James Miller"
                   date="Mon, April 14 at 3:00 PM EST"
@@ -47,7 +47,7 @@ export function HeroSection() {
               </div>
 
               {/* Client Card 2 - top right */}
-              <div className="absolute top-16 right-4" style={{ transform: 'rotate(2deg) scale(0.8)' }}>
+              <div className="absolute top-8 right-2" style={{ transform: 'rotate(2deg) scale(0.55)' }}>
                 <AppointmentCard
                   name="Sarah Johnson"
                   date="Fri, April 18 at 2:00 PM EST"
@@ -57,7 +57,7 @@ export function HeroSection() {
               </div>
 
               {/* Client Card 3 - right */}
-              <div className="absolute top-1/2 right-0 -translate-y-1/2" style={{ transform: 'translateY(-50%) rotate(1deg) scale(0.8)' }}>
+              <div className="absolute top-1/2 right-0 -translate-y-1/2" style={{ transform: 'translateY(-50%) rotate(1deg) scale(0.55)' }}>
                 <AppointmentCard
                   name="Jessica Brown"
                   date="Sat, April 19 at 1:00 PM EST"
@@ -67,7 +67,7 @@ export function HeroSection() {
               </div>
 
               {/* Client Card 4 - bottom right */}
-              <div className="absolute bottom-16 right-8" style={{ transform: 'rotate(-2deg) scale(0.8)' }}>
+              <div className="absolute bottom-8 right-2" style={{ transform: 'rotate(-2deg) scale(0.55)' }}>
                 <AppointmentCard
                   name="Lisa Anderson"
                   date="Mon, April 21 at 10:30 AM EST"
@@ -77,7 +77,7 @@ export function HeroSection() {
               </div>
 
               {/* Client Card 5 - bottom */}
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2" style={{ transform: 'translateX(-50%) rotate(2deg) scale(0.8)' }}>
+              <div className="absolute bottom-2 left-1/2 -translate-x-1/2" style={{ transform: 'translateX(-50%) rotate(2deg) scale(0.55)' }}>
                 <AppointmentCard
                   name="Robert Taylor"
                   date="Sun, April 20 at 10:00 AM EST"
@@ -87,7 +87,7 @@ export function HeroSection() {
               </div>
 
               {/* Client Card 6 - bottom left */}
-              <div className="absolute bottom-16 left-8" style={{ transform: 'rotate(-1deg) scale(0.8)' }}>
+              <div className="absolute bottom-8 left-2" style={{ transform: 'rotate(-1deg) scale(0.55)' }}>
                 <AppointmentCard
                   name="Amy Chen"
                   date="Thu, April 17 at 4:00 PM EST"
@@ -97,7 +97,7 @@ export function HeroSection() {
               </div>
 
               {/* Client Card 7 - left */}
-              <div className="absolute top-1/2 left-0 -translate-y-1/2" style={{ transform: 'translateY(-50%) rotate(1deg) scale(0.8)' }}>
+              <div className="absolute top-1/2 left-0 -translate-y-1/2" style={{ transform: 'translateY(-50%) rotate(1deg) scale(0.55)' }}>
                 <AppointmentCard
                   name="David Chen"
                   date="Tue, April 15 at 11:00 AM EST"
@@ -107,7 +107,7 @@ export function HeroSection() {
               </div>
 
               {/* Client Card 8 - top left */}
-              <div className="absolute top-16 left-4" style={{ transform: 'rotate(-2deg) scale(0.8)' }}>
+              <div className="absolute top-8 left-2" style={{ transform: 'rotate(-2deg) scale(0.55)' }}>
                 <AppointmentCard
                   name="William White"
                   date="Wed, April 16 at 9:00 AM EST"
