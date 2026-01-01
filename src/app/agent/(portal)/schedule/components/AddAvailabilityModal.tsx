@@ -27,6 +27,31 @@ function Label({ className = "", children, ...props }: React.LabelHTMLAttributes
   );
 }
 
+const defaultSchedule = {
+  monday: { enabled: true, start: "09:00", end: "17:00" },
+  tuesday: { enabled: true, start: "09:00", end: "17:00" },
+  wednesday: { enabled: true, start: "09:00", end: "17:00" },
+  thursday: { enabled: true, start: "09:00", end: "17:00" },
+  friday: { enabled: true, start: "09:00", end: "17:00" },
+  saturday: { enabled: false, start: "10:00", end: "14:00" },
+  sunday: { enabled: false, start: "10:00", end: "14:00" },
+};
+
+const days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+
+// Helper to create a deep copy of the default schedule
+function getDefaultScheduleCopy() {
+  return {
+    monday: { ...defaultSchedule.monday },
+    tuesday: { ...defaultSchedule.tuesday },
+    wednesday: { ...defaultSchedule.wednesday },
+    thursday: { ...defaultSchedule.thursday },
+    friday: { ...defaultSchedule.friday },
+    saturday: { ...defaultSchedule.saturday },
+    sunday: { ...defaultSchedule.sunday },
+  };
+}
+
 export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilityModalProps) {
   const [activeTab, setActiveTab] = useState<"daily" | "recurring">("daily");
   const [locations, setLocations] = useState<string[]>([]);
@@ -40,13 +65,8 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
   const [dayToTime, setDayToTime] = useState("09:30");
   const [dayType, setDayType] = useState<"in-person" | "virtual">("in-person");
 
-  // Recurring state
-  const [recurStartDate, setRecurStartDate] = useState("");
-  const [recurEndDate, setRecurEndDate] = useState("");
-  const [recurFromTime, setRecurFromTime] = useState("09:00");
-  const [recurToTime, setRecurToTime] = useState("09:30");
-  const [recurDays, setRecurDays] = useState<string[]>([]);
-  const [recurFrequency, setRecurFrequency] = useState<"every-week" | "every-other-week">("every-week");
+  // Recurring state - use same structure as availability page
+  const [recurringSchedule, setRecurringSchedule] = useState<typeof defaultSchedule>(getDefaultScheduleCopy);
 
   useEffect(() => {
     if (isOpen) {
@@ -54,7 +74,8 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
       // Set default dates
       const today = new Date().toISOString().split('T')[0];
       setDayDate(today);
-      setRecurStartDate(today);
+      // Reset recurring schedule to defaults when modal opens (create a copy)
+      setRecurringSchedule(getDefaultScheduleCopy());
     }
   }, [isOpen]);
 
@@ -82,13 +103,6 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
     }
   }
 
-  const toggleDay = (day: string) => {
-    setRecurDays(prev => 
-      prev.includes(day) 
-        ? prev.filter(d => d !== day)
-        : [...prev, day]
-    );
-  };
 
   const handleSave = async () => {
     if (!selectedLocation) return;
@@ -126,8 +140,10 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
         }
       } else {
         // Save recurring availability
-        if (!recurStartDate || !recurFromTime || !recurToTime || recurDays.length === 0) {
-          alert("Please fill in all required fields and select at least one day.");
+        // Check if at least one day is enabled
+        const hasEnabledDay = days.some(day => recurringSchedule[day as keyof typeof recurringSchedule].enabled);
+        if (!hasEnabledDay) {
+          alert("Please enable at least one day for recurring availability.");
           setSaving(false);
           return;
         }
@@ -138,53 +154,43 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
         });
         const currentData = await res.ok ? await res.json() : {};
 
-        // Convert day abbreviations to full day names for the API
-        const dayMap: Record<string, string> = {
-          "S": "sunday",
-          "M": "monday",
-          "T": "tuesday",
-          "W": "wednesday",
-          "Th": "thursday",
-          "F": "friday",
-          "Sa": "saturday",
-        };
-
-        // Note: "Every other week" frequency would need additional logic to handle
-        // For now, we save it as weekly - this can be enhanced later if needed
-
-        const fullDayNames = recurDays.map(d => dayMap[d]).filter(Boolean);
-
         // Get current availability for this location
         const currentAvailability = currentData.availabilityByLocation?.[selectedLocation] || {};
         
-        // Build new availability object
+        // Build new availability object - convert from checkbox schedule format to API format
         const newAvailability: Record<string, { start_time: string; end_time: string }[]> = {};
         
-        // Copy existing schedule
+        // Copy existing schedule for other days
         Object.keys(currentAvailability).forEach(day => {
           newAvailability[day] = currentAvailability[day] || [];
         });
 
-        // Add or update the recurring slots
-        fullDayNames.forEach(day => {
-          const timeSlot = {
-            start_time: recurFromTime,
-            end_time: recurToTime,
-          };
+        // Convert recurringSchedule to API format
+        days.forEach(day => {
+          const dayData = recurringSchedule[day as keyof typeof recurringSchedule];
+          if (dayData.enabled) {
+            const timeSlot = {
+              start_time: dayData.start,
+              end_time: dayData.end,
+            };
 
-          // For "every other week", we might need to handle this differently
-          // For now, we'll save it as weekly and handle the logic elsewhere if needed
-          if (!newAvailability[day]) {
-            newAvailability[day] = [];
-          }
+            if (!newAvailability[day]) {
+              newAvailability[day] = [];
+            }
 
-          // Check if this exact slot already exists
-          const exists = newAvailability[day].some(
-            (slot: any) => slot.start_time === recurFromTime && slot.end_time === recurToTime
-          );
+            // Check if this exact slot already exists
+            const exists = newAvailability[day].some(
+              (slot: any) => slot.start_time === dayData.start && slot.end_time === dayData.end
+            );
 
-          if (!exists) {
-            newAvailability[day].push(timeSlot);
+            if (!exists) {
+              newAvailability[day].push(timeSlot);
+            }
+          } else {
+            // If disabled, keep existing slots (don't clear them, just don't add new ones)
+            if (!newAvailability[day]) {
+              newAvailability[day] = [];
+            }
           }
         });
 
@@ -221,16 +227,6 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
   };
 
   if (!isOpen) return null;
-
-  const weekDays = [
-    { label: "S", value: "S", full: "Sunday" },
-    { label: "M", value: "M", full: "Monday" },
-    { label: "T", value: "T", full: "Tuesday" },
-    { label: "W", value: "W", full: "Wednesday" },
-    { label: "Th", value: "Th", full: "Thursday" },
-    { label: "F", value: "F", full: "Friday" },
-    { label: "Sa", value: "Sa", full: "Saturday" },
-  ];
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -379,97 +375,59 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
 
               {/* Recurring tab content */}
               {activeTab === "recurring" && (
-                <>
-                  <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div>
-                      <Label>Start Date</Label>
-                      <Input
-                        type="date"
-                        value={recurStartDate}
-                        onChange={(e) => setRecurStartDate(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label>End Date (optional)</Label>
-                      <Input
-                        type="date"
-                        value={recurEndDate}
-                        onChange={(e) => setRecurEndDate(e.target.value)}
-                      />
-                    </div>
+                <div className="mb-6">
+                  <Label className="mb-3 block">Weekly Availability</Label>
+                  <div className="space-y-2">
+                    {days.map((day) => {
+                      const dayData = recurringSchedule[day as keyof typeof recurringSchedule];
+                      return (
+                        <div key={day} className="flex items-center gap-4 p-3 border border-gray-200 rounded-lg bg-white">
+                          <input
+                            type="checkbox"
+                            checked={dayData.enabled}
+                            onChange={(e) => {
+                              setRecurringSchedule({
+                                ...recurringSchedule,
+                                [day]: { ...dayData, enabled: e.target.checked },
+                              });
+                            }}
+                            className="w-4 h-4 accent-green-800"
+                          />
+                          <div className="w-24 capitalize">{day}</div>
+                          {dayData.enabled ? (
+                            <div className="flex items-center gap-2 flex-1">
+                              <Input
+                                type="time"
+                                value={dayData.start}
+                                onChange={(e) => {
+                                  setRecurringSchedule({
+                                    ...recurringSchedule,
+                                    [day]: { ...dayData, start: e.target.value },
+                                  });
+                                }}
+                                className="w-32"
+                              />
+                              <span className="text-gray-500">to</span>
+                              <Input
+                                type="time"
+                                value={dayData.end}
+                                onChange={(e) => {
+                                  setRecurringSchedule({
+                                    ...recurringSchedule,
+                                    [day]: { ...dayData, end: e.target.value },
+                                  });
+                                }}
+                                className="w-32"
+                              />
+                            </div>
+                          ) : (
+                            <span className="text-gray-400 text-sm">Unavailable</span>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
-
-                  <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div>
-                      <Label>From</Label>
-                      <Input
-                        type="time"
-                        value={recurFromTime}
-                        onChange={(e) => setRecurFromTime(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label>To</Label>
-                      <Input
-                        type="time"
-                        value={recurToTime}
-                        onChange={(e) => setRecurToTime(e.target.value)}
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="mb-4">
-                    <Label>Repeats on</Label>
-                    <div className="flex gap-2 mt-2">
-                      {weekDays.map((day) => (
-                        <button
-                          key={day.value}
-                          type="button"
-                          onClick={() => toggleDay(day.value)}
-                          className={`w-10 h-10 rounded-full text-sm font-medium transition-colors ${
-                            recurDays.includes(day.value)
-                              ? "bg-gray-900 text-white"
-                              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                          }`}
-                          title={day.full}
-                        >
-                          {day.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="mb-6">
-                    <Label>Frequency</Label>
-                    <div className="flex gap-4 mt-2">
-                      <label className="flex items-center cursor-pointer">
-                        <input
-                          type="radio"
-                          name="frequency"
-                          value="every-week"
-                          checked={recurFrequency === "every-week"}
-                          onChange={(e) => setRecurFrequency(e.target.value as "every-week" | "every-other-week")}
-                          className="w-4 h-4 text-green-800 focus:ring-green-800"
-                        />
-                        <span className="ml-2 text-sm text-gray-700">Every week</span>
-                      </label>
-                      <label className="flex items-center cursor-pointer">
-                        <input
-                          type="radio"
-                          name="frequency"
-                          value="every-other-week"
-                          checked={recurFrequency === "every-other-week"}
-                          onChange={(e) => setRecurFrequency(e.target.value as "every-week" | "every-other-week")}
-                          className="w-4 h-4 text-green-800 focus:ring-green-800"
-                        />
-                        <span className="ml-2 text-sm text-gray-700">Every other week</span>
-                      </label>
-                    </div>
-                  </div>
-                </>
+                </div>
               )}
 
               {/* Actions */}

@@ -405,9 +405,9 @@ export default function SchedulePage() {
                                 zIndex: 5,
                               }}
                             >
-                              <div className="h-full flex flex-col justify-between p-1.5">
+                              <div className="h-full flex flex-col gap-1.5 p-2">
                                 {/* Customer Name */}
-                                <div className="text-sm font-medium text-gray-700 leading-tight line-clamp-2 break-words">
+                                <div className="text-sm font-medium text-gray-700 leading-tight line-clamp-2 break-words min-h-[2.5rem]">
                                   {apt.family_name || 'Appointment'}
                                 </div>
                                 
@@ -425,7 +425,7 @@ export default function SchedulePage() {
                                     : null;
                                   
                                   return cleanLocation && cleanLocation.length > 0 ? (
-                                    <div className="flex items-center gap-1 mt-1">
+                                    <div className="flex items-center gap-1 mt-auto">
                                       <MapPin className="w-3 h-3 text-gray-600 flex-shrink-0" />
                                       <span className="text-xs text-gray-600 truncate leading-tight">{cleanLocation}</span>
                                     </div>
