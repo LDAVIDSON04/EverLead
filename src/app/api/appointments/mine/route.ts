@@ -59,10 +59,13 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Fetch upcoming appointments for this agent (using old schema: agent_id, lead_id)
-    // Use confirmed_at (exact booking time) if available, otherwise infer from requested_window
+    // Fetch appointments for this agent (using old schema: agent_id, lead_id)
+    // Fetch appointments from the past 7 days to ensure we get appointments from the current week
+    // This allows the schedule view to show all appointments in the week, including past days
     const now = new Date();
-    const today = now.toISOString().split('T')[0]; // YYYY-MM-DD
+    const sevenDaysAgo = new Date(now);
+    sevenDaysAgo.setDate(now.getDate() - 7);
+    const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0]; // YYYY-MM-DD
     
     const { data: appointments, error: appointmentsError } = await supabaseServer
       .from("appointments")
@@ -87,7 +90,7 @@ export async function GET(req: NextRequest) {
       `
       )
       .eq("agent_id", userId)
-      .gte("requested_date", today)
+      .gte("requested_date", sevenDaysAgoStr)
       .in("status", ["pending", "confirmed", "booked"])
       .order("requested_date", { ascending: true })
       .order("created_at", { ascending: true });
