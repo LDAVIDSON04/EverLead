@@ -417,11 +417,11 @@ export default function SchedulePage() {
                         {cellAppointments.map((apt: any) => {
                           // Calculate top offset within this hour (based on minutes)
                           // Mobile: h-12 = 48px per hour, Desktop: h-20 = 80px per hour
-                          const topOffsetMobile = (apt.minute / 60) * 48;
-                          const topOffsetDesktop = (apt.minute / 60) * 80;
+                          // Use mobile size (48px) - appointments scale proportionally with cell height
+                          const pxPerHour = 48;
+                          const topOffset = (apt.minute / 60) * pxPerHour;
                           // Calculate height based on duration
-                          const heightMobile = (apt.durationMinutes / 60) * 48;
-                          const heightDesktop = (apt.durationMinutes / 60) * 80;
+                          const height = (apt.durationMinutes / 60) * pxPerHour;
                           const color = getDayColor(dayIndex);
 
                           return (
@@ -435,16 +435,16 @@ export default function SchedulePage() {
                                   setViewingExternalAppointment(apt);
                                 }
                               }}
-                              className={`absolute inset-x-0.5 ${color} rounded p-1 shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-all border border-gray-200`}
+                              className={`absolute inset-x-0.5 ${color} rounded p-0.5 md:p-1 shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-all border border-gray-200`}
                               style={{
                                 top: `${topOffset}px`,
-                                height: `${Math.max(height, 40)}px`,
+                                height: `${Math.max(height, 24)}px`,
                                 zIndex: 5,
                               }}
                             >
-                              <div className="h-full flex flex-col gap-0.5 px-1 py-0.5">
+                              <div className="h-full flex flex-col gap-0.5 px-0.5 md:px-1 py-0.5">
                                 {/* Customer Name */}
-                                <div className="text-xs font-medium text-gray-700 leading-tight line-clamp-1 break-words">
+                                <div className="text-[9px] md:text-xs font-medium text-gray-700 leading-tight line-clamp-1 break-words">
                                   {apt.family_name || 'Appointment'}
                                 </div>
                                 
@@ -463,8 +463,8 @@ export default function SchedulePage() {
                                   
                                   return cleanLocation && cleanLocation.length > 0 ? (
                                     <div className="flex items-center gap-0.5 mt-auto">
-                                      <MapPin className="w-2.5 h-2.5 text-gray-600 flex-shrink-0" />
-                                      <span className="text-[10px] text-gray-600 truncate leading-tight">{cleanLocation}</span>
+                                      <MapPin className="w-2 h-2 md:w-2.5 md:h-2.5 text-gray-600 flex-shrink-0" />
+                                      <span className="text-[8px] md:text-[10px] text-gray-600 truncate leading-tight">{cleanLocation}</span>
                                     </div>
                                   ) : null;
                                 })()}
