@@ -477,7 +477,7 @@ export default function HomePage() {
           <div className="md:hidden mt-4">
             <div className="bg-[#FAF9F6] rounded-3xl p-6 border border-[#1A1A1A]/5 relative overflow-hidden group hover:shadow-xl hover:shadow-black/5 transition-all flex flex-col">
               {/* Image inside the card, showing full torso */}
-              <div className="relative w-full flex items-center justify-center -mx-6 mb-2 overflow-hidden" style={{ height: '150px', minHeight: '150px', marginTop: '-66px', paddingTop: '0' }}>
+              <div className="relative w-full flex items-center justify-center -mx-6 mb-2 overflow-hidden" style={{ height: '150px', minHeight: '150px', marginTop: '-72px', paddingTop: '0' }}>
                 <Image
                   src="/What is Pre need planning image.png"
                   alt="Person asking about pre-need planning"
