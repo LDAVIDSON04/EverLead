@@ -275,7 +275,7 @@ export default function HomePage() {
       </header>
 
       {/* HERO */}
-      <div className="relative bg-[#FAF9F6] py-12 px-4 min-h-[calc(100vh-80px)] flex items-start md:pt-32 pt-2" style={{ overflow: 'visible' }}>
+      <div className="relative bg-[#FAF9F6] py-12 px-4 min-h-[calc(100vh-80px)] flex items-start md:pt-32 pt-4" style={{ overflow: 'visible' }}>
         {/* Abstract background shapes */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-20 right-10 w-96 h-96 bg-[#0C6F3C]/10 rounded-full blur-3xl" />
@@ -316,12 +316,12 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto relative z-20 w-full">
           {/* Headline and Search Bar - Full Width */}
           <div className="max-w-4xl">
-            <h1 className="text-6xl md:text-6xl text-xl md:mb-8 mb-3 text-[#1A1A1A] font-semibold tracking-tight leading-tight text-left">
+            <h1 className="text-6xl md:text-6xl text-2xl md:mb-8 mb-3 text-[#1A1A1A] font-semibold tracking-tight leading-tight text-left">
               Book local funeral professionals
             </h1>
 
             {/* Horizontal search bar */}
-            <form onSubmit={handleSearch} className="bg-white rounded-2xl p-3 shadow-lg border border-[#1A1A1A]/5 relative z-30 md:mb-8 mb-3">
+            <form onSubmit={handleSearch} className="bg-white rounded-2xl p-3 shadow-lg border border-[#1A1A1A]/5 relative z-30 md:mb-8 mb-4">
               <div className="flex flex-col lg:flex-row items-stretch gap-0">
                 {/* Search field */}
                 <div className="flex-1 relative border-b border-[#1A1A1A]/10 lg:border-b-0 lg:border-r lg:border-[#1A1A1A]/10">
