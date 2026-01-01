@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import { supabaseClient } from '@/lib/supabaseClient';
-import { Home, Calendar, File, Mail, User, XCircle, Upload, X, Settings, CreditCard } from 'lucide-react';
+import { Home, Calendar, File, Mail, User, XCircle, Upload, X, Settings, CreditCard, Menu } from 'lucide-react';
 import { usePrefetchOnHover } from '@/lib/hooks/usePrefetch';
 
 type AgentLayoutProps = {
@@ -379,8 +379,8 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
 
   return (
     <div className="flex h-screen bg-gray-50">
-      {/* Sidebar */}
-      <div className="w-64 bg-black flex flex-col">
+      {/* Sidebar - Hidden on mobile */}
+      <div className="hidden md:flex w-64 bg-black flex-col">
         {/* Logo - Top Left */}
         <div className="px-4 py-6">
           <Link href="/agent/dashboard" className="flex items-center gap-2">
@@ -459,8 +459,110 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
         </div>
       </div>
 
+      {/* Mobile Header - Shows only on mobile */}
+      <div className="md:hidden fixed top-0 left-0 right-0 bg-black z-50 flex items-center justify-between px-4 py-3">
+        <div className="flex items-center gap-3">
+          <Link href="/agent/dashboard" className="flex items-center gap-2">
+            <Image
+              src="/logo - white.png"
+              alt="Soradin Logo"
+              width={40}
+              height={40}
+              className="h-10 w-10 object-contain"
+            />
+          </Link>
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="text-white p-2 hover:bg-white/10 rounded-lg transition-colors"
+          >
+            <Menu size={24} />
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile Menu Overlay - Shows only on mobile */}
+      {mobileMenuOpen && (
+        <div className="md:hidden fixed inset-0 bg-black/50 z-50" onClick={() => setMobileMenuOpen(false)}>
+          <div className="bg-black w-64 h-full shadow-xl" onClick={(e) => e.stopPropagation()}>
+            {/* Logo */}
+            <div className="px-4 py-4 border-b border-white/10">
+              <Link href="/agent/dashboard" className="flex items-center gap-2" onClick={() => setMobileMenuOpen(false)}>
+                <Image
+                  src="/logo - white.png"
+                  alt="Soradin Logo"
+                  width={60}
+                  height={60}
+                  className="h-16 w-16 object-contain"
+                />
+              </Link>
+            </div>
+            
+            {/* Menu Items */}
+            <nav className="px-4 py-4">
+              <div className="flex flex-col gap-1">
+                {menuItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = pathname === item.href || 
+                    (item.href === '/agent/dashboard#roi' && pathname === '/agent/dashboard');
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-left ${
+                        isActive 
+                          ? 'bg-green-900/30 text-white' 
+                          : 'text-white/60 hover:bg-white/5 hover:text-white'
+                      }`}
+                    >
+                      <Icon size={18} />
+                      <span className="text-sm">{item.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            </nav>
+            
+            {/* User Profile */}
+            <div className="absolute bottom-0 left-0 right-0 px-4 pb-4 border-t border-white/10 pt-4">
+              <div className="flex items-center gap-3 px-3 py-3 mb-2">
+                {profilePictureUrl ? (
+                  <img
+                    src={profilePictureUrl}
+                    alt={`${userFirstName} ${userLastName}`}
+                    className="w-10 h-10 rounded-full object-cover border-2 border-white/20"
+                  />
+                ) : (
+                  <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-400 rounded-full flex items-center justify-center border-2 border-white/20">
+                    <span className="text-white text-xs font-semibold">
+                      {userFirstName?.[0]?.toUpperCase() || 'A'}{userLastName?.[0]?.toUpperCase() || ''}
+                    </span>
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <div className="text-white text-sm font-medium truncate">
+                    {userFirstName} {userLastName}
+                  </div>
+                  <div className="text-white/60 text-xs">Agent</div>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  handleLogout();
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+              >
+                <XCircle size={16} />
+                <span>Log out</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Main Content */}
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 overflow-auto md:ml-0 pt-16 md:pt-0">
         {children}
       </div>
 

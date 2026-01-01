@@ -1,27 +1,38 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { AppointmentCard } from "./AppointmentCard";
 import { Button } from "@/components/ui/button";
 
 export function HeroSection() {
   return (
-    <section className="bg-[#FFF9F0] py-16 md:py-20 relative overflow-hidden min-h-[700px]">
+    <section className="bg-[#FFF9F0] py-8 md:py-20 relative overflow-hidden min-h-[700px]">
       <div className="max-w-7xl mx-auto px-6">
         <div className="grid md:grid-cols-5 gap-12 items-center">
           {/* Left content */}
           <div className="z-10 md:col-span-2 flex flex-col items-center text-center">
-            <h1 className="text-5xl md:text-6xl text-black mb-6 max-w-lg">
+            <h1 className="text-4xl md:text-6xl text-black mb-4 md:mb-6 max-w-lg">
               Patient growth you can count on
             </h1>
-            <p className="text-lg text-gray-700 mb-8 max-w-md">
+            <p className="text-lg text-gray-700 mb-6 md:mb-8 max-w-md">
               Reach more patients, simplify scheduling, and get a clear view into your performance data—all with one platform.
             </p>
-            <Link href="/create-account">
+            <Link href="/create-account" className="mb-6 md:mb-0">
               <Button className="bg-[#0D5C3D] hover:bg-[#0A4A30] text-white px-8 py-6">
                 Get started
               </Button>
             </Link>
+            {/* Mobile Image - shows only on mobile */}
+            <div className="w-full max-w-md md:hidden mt-4">
+              <Image
+                src="/hero-image.png"
+                alt="Patient growth"
+                width={600}
+                height={400}
+                className="w-full h-auto object-contain rounded-lg"
+              />
+            </div>
           </div>
 
           {/* Right content - floating appointment cards */}
