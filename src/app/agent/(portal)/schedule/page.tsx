@@ -182,19 +182,18 @@ export default function SchedulePage() {
                 });
               }
             }
-          }
-          
-          // Fallback to defaults if no availability set
-          if (!availabilityOverview || !profileData?.metadata?.availability) {
-            const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "America/Vancouver";
-            setAgentTimezone(detectedTimezone);
-            setAvailabilityOverview({
-              workingHours: "9 AM - 5 PM",
-              slotLength: "30 minutes",
-              bufferTime: "10 minutes",
-              timeZone: detectedTimezone,
-            });
-          }
+        }
+        
+        // Fallback to defaults if no availability set
+        if (!availabilityOverview) {
+          const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "America/Vancouver";
+          setAgentTimezone(detectedTimezone);
+          setAvailabilityOverview({
+            workingHours: "9 AM - 5 PM",
+            slotLength: "30 minutes",
+            bufferTime: "10 minutes",
+            timeZone: detectedTimezone,
+          });
         }
 
         // Check calendar connections and ICS URL in parallel (only if specialist exists)
