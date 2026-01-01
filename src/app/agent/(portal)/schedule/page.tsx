@@ -69,57 +69,62 @@ export default function SchedulePage() {
         setLoading(true);
         setError(null);
 
-        // Get access token
-        const { data: { session } } = await supabaseClient.auth.getSession();
-        if (!session?.access_token) {
+        // Get session and user in parallel
+        const [sessionResult, userResult] = await Promise.all([
+          supabaseClient.auth.getSession(),
+          supabaseClient.auth.getUser(),
+        ]);
+
+        const { data: { session } } = sessionResult;
+        const { data: { user } } = userResult;
+
+        if (!session?.access_token || !user) {
           router.push("/agent");
           return;
         }
 
-        // Get user name
-        const { data: { user } } = await supabaseClient.auth.getUser();
-        if (user) {
-          const { data: profile } = await supabaseClient
+        // Fetch all data in parallel: profile (with metadata), specialist, and appointments
+        const [profileResult, specialistRes, appointmentsData] = await Promise.all([
+          supabaseClient
             .from("profiles")
-            .select("full_name")
+            .select("full_name, metadata")
             .eq("id", user.id)
-            .maybeSingle();
-          if (profile?.full_name) {
-            setUserName(profile.full_name);
-          }
+            .maybeSingle(),
+          fetch("/api/specialists/me", {
+            headers: { Authorization: `Bearer ${session.access_token}` },
+          }),
+          fetch("/api/appointments/mine", {
+            headers: { Authorization: `Bearer ${session.access_token}` },
+          }).then(res => res.ok ? res.json() : []).catch(() => []),
+        ]);
+
+        // Handle profile
+        const { data: profileData } = profileResult;
+        if (profileData?.full_name) {
+          setUserName(profileData.full_name);
         }
 
-        // Fetch specialist record
-        const res = await fetch("/api/specialists/me", {
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-          },
-        });
-
-        if (!res.ok) {
-          if (res.status === 401) {
+        // Handle specialist
+        if (!specialistRes.ok) {
+          if (specialistRes.status === 401) {
             router.push("/agent");
             return;
           }
           throw new Error("Failed to fetch specialist record");
         }
 
-        const data = await res.json();
-        setSpecialist(data);
+        const specialistData = await specialistRes.json();
+        setSpecialist(specialistData);
 
-        // Load appointments regardless of specialist record
-        await loadAppointments(session.access_token);
+        // Handle appointments
+        if (appointmentsData && Array.isArray(appointmentsData)) {
+          setAppointments(appointmentsData);
+          setLoadingAppointments(false);
+        }
 
         // Load availability settings
-        if (user) {
-          const { data: profileData } = await supabaseClient
-            .from("profiles")
-            .select("metadata")
-            .eq("id", user.id)
-            .maybeSingle();
-
-          if (profileData?.metadata?.availability) {
-            const availability = profileData.metadata.availability;
+        if (profileData?.metadata?.availability) {
+          const availability = profileData.metadata.availability;
             const locations = availability.locations || [];
             const availabilityByLocation = availability.availabilityByLocation || {};
             const appointmentLength = availability.appointmentLength || "30";
@@ -192,16 +197,18 @@ export default function SchedulePage() {
           }
         }
 
-        // Check if specialist has any calendar connections (only if specialist exists)
-        if (data && data.id) {
-          await checkCalendarConnections(data.id, session.access_token);
-          await loadIcsUrl(data.id);
+        // Check calendar connections and ICS URL in parallel (only if specialist exists)
+        if (specialistData && specialistData.id) {
+          Promise.all([
+            checkCalendarConnections(specialistData.id, session.access_token),
+            loadIcsUrl(specialistData.id),
+          ]).catch(err => console.error("Error loading calendar data:", err));
         } else {
           // No specialist record yet - show modal to encourage setup
           setHasCalendarConnection(false);
           setCheckingConnection(false);
           // Check localStorage to see if user dismissed it before
-          const dismissed = localStorage.getItem(`calendar_modal_dismissed_${data?.id || 'new'}`);
+          const dismissed = localStorage.getItem(`calendar_modal_dismissed_${specialistData?.id || 'new'}`);
           if (dismissed !== "true") {
             setShowCalendarModal(true);
           }

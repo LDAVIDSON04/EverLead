@@ -75,11 +75,16 @@ export default function AgentDashboardPage() {
     async function loadDashboard() {
       setLoading(true);
       try {
-        const {
-          data: { user },
-        } = await supabaseClient.auth.getUser();
+        // Get user and session in parallel
+        const [userResult, sessionResult] = await Promise.all([
+          supabaseClient.auth.getUser(),
+          supabaseClient.auth.getSession(),
+        ]);
 
-        if (!user) {
+        const { data: { user } } = userResult;
+        const { data: { session } } = sessionResult;
+
+        if (!user || !session?.access_token) {
           router.push("/agent");
           return;
         }
@@ -87,29 +92,32 @@ export default function AgentDashboardPage() {
         const agentId = user.id;
         setUserId(agentId);
 
-        // Get user name
-        const { data: profile } = await supabaseClient
-          .from("profiles")
-          .select("full_name, first_name, last_name")
-          .eq("id", agentId)
-          .maybeSingle();
+        // Fetch dashboard API and profile (with metadata) in parallel
+        const [dashboardRes, profileResult] = await Promise.all([
+          fetch(`/api/agent/dashboard?agentId=${agentId}`),
+          supabaseClient
+            .from("profiles")
+            .select("full_name, first_name, last_name, metadata, agent_province")
+            .eq("id", agentId)
+            .maybeSingle(),
+        ]);
         
-        if (profile) {
-          setUserName(profile.full_name || 'Agent');
-          const firstName = profile.first_name || profile.full_name?.split(' ')[0] || 'Agent';
+        // Handle profile
+        const { data: profileData } = profileResult;
+        if (profileData) {
+          setUserName(profileData.full_name || 'Agent');
+          const firstName = profileData.first_name || profileData.full_name?.split(' ')[0] || 'Agent';
           setUserFirstName(firstName);
         }
 
-        // Fetch dashboard data from API
-        const res = await fetch(`/api/agent/dashboard?agentId=${agentId}`);
-        
-        if (!res.ok) {
-          const errorData = await res.json().catch(() => ({}));
+        // Handle dashboard API
+        if (!dashboardRes.ok) {
+          const errorData = await dashboardRes.json().catch(() => ({}));
           console.error("Dashboard API error:", errorData);
           throw new Error(errorData.error || "Failed to load dashboard");
         }
 
-        const data = await res.json();
+        const data = await dashboardRes.json();
 
         if (!data || data.error) {
           throw new Error(data.error || "Failed to load dashboard data");
@@ -126,13 +134,8 @@ export default function AgentDashboardPage() {
           myAppointments: data.stats.myAppointments ?? 0,
         });
 
-        // Get agent's timezone and profile data (shared for both appointments list, calendar widget, and availability settings)
+        // Get agent's timezone from profile data we already fetched
         let agentTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "America/Vancouver";
-        const { data: profileData } = await supabaseClient
-          .from("profiles")
-          .select("metadata, agent_province")
-          .eq("id", agentId)
-          .maybeSingle();
         
         if (profileData?.metadata?.timezone) {
           agentTimezone = profileData.metadata.timezone;
@@ -155,17 +158,17 @@ export default function AgentDashboardPage() {
           }
         }
 
-        // Fetch recent appointments - use the same API endpoint as schedule page for consistency
-        const { data: { session } } = await supabaseClient.auth.getSession();
-        if (!session?.access_token) {
-          throw new Error("Not authenticated");
-        }
-        
-        const appointmentsRes = await fetch("/api/appointments/mine", {
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-          },
-        });
+        // Fetch recent appointments and weekly appointments in parallel
+        const [appointmentsRes, weeklyAppointmentsResult] = await Promise.all([
+          fetch("/api/appointments/mine", {
+            headers: { Authorization: `Bearer ${session.access_token}` },
+          }),
+          supabaseClient
+            .from("appointments")
+            .select("requested_date, created_at")
+            .eq("agent_id", agentId)
+            .gte("created_at", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
+        ]);
         
         if (!appointmentsRes.ok) {
           throw new Error("Failed to fetch appointments");
@@ -173,7 +176,7 @@ export default function AgentDashboardPage() {
         
         const appointmentsFromAPI = await appointmentsRes.json();
         
-        // Format appointments for dashboard display
+        // Format appointments for dashboard display and calendar widget (reuse same data)
         if (appointmentsFromAPI && Array.isArray(appointmentsFromAPI)) {
           const { DateTime } = await import('luxon');
           
@@ -208,17 +211,20 @@ export default function AgentDashboardPage() {
           });
           
           setAppointments(formattedAppointments);
+
+          // Also process calendar appointments from the same data (reuse instead of fetching again)
+          const appointmentsByDay: Record<number, number> = {};
+          appointmentsFromAPI.forEach((apt: any) => {
+            const startDate = DateTime.fromISO(apt.starts_at, { zone: "utc" });
+            const localStart = startDate.setZone(agentTimezone);
+            const dayOfMonth = localStart.day;
+            appointmentsByDay[dayOfMonth] = (appointmentsByDay[dayOfMonth] || 0) + 1;
+          });
+          setCalendarAppointments(appointmentsByDay);
         }
 
-        // Generate meetings chart data from last week's appointments
-        const oneWeekAgo = new Date();
-        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-        
-        const { data: weeklyAppointments } = await supabaseClient
-          .from("appointments")
-          .select("requested_date, created_at")
-          .eq("agent_id", agentId)
-          .gte("created_at", oneWeekAgo.toISOString());
+        // Use weekly appointments we already fetched
+        const { data: weeklyAppointments } = weeklyAppointmentsResult;
 
         // Group appointments by day of week (Mon-Fri)
         const dayCounts: Record<string, number> = {
@@ -251,59 +257,7 @@ export default function AgentDashboardPage() {
         ]);
 
         // Load appointments for calendar display - use the same API as schedule page
-        const { data: { session: calendarSession } } = await supabaseClient.auth.getSession();
-        if (calendarSession?.access_token) {
-          try {
-            const calendarRes = await fetch("/api/appointments/mine", {
-              headers: {
-                Authorization: `Bearer ${calendarSession.access_token}`,
-              },
-            });
-            
-            if (calendarRes.ok) {
-              const calendarAppointmentsData = await calendarRes.json();
-              
-              // Import DateTime for timezone conversion
-              const { DateTime } = await import('luxon');
-              
-              // Count appointments per day of the month
-              const appointmentsByDay: Record<number, number> = {};
-              (calendarAppointmentsData || []).forEach((apt: any) => {
-                // Parse the starts_at timestamp and convert to agent's timezone
-                const startDate = DateTime.fromISO(apt.starts_at, { zone: "utc" });
-                const localStart = startDate.setZone(agentTimezone);
-                const dayOfMonth = localStart.day; // Day of month (1-31)
-                appointmentsByDay[dayOfMonth] = (appointmentsByDay[dayOfMonth] || 0) + 1;
-              });
-              setCalendarAppointments(appointmentsByDay);
-            }
-          } catch (err) {
-            console.error("Error loading calendar appointments:", err);
-            // Fallback to direct database query
-            const weekStart = new Date(today);
-            weekStart.setDate(today.getDate() - currentDay + 1);
-            weekStart.setHours(0, 0, 0, 0);
-            const weekEnd = new Date(weekStart);
-            weekEnd.setDate(weekStart.getDate() + 6);
-            weekEnd.setHours(23, 59, 59, 999);
-
-            const { data: weekAppointments } = await supabaseClient
-              .from("appointments")
-              .select("requested_date, created_at")
-              .eq("agent_id", agentId)
-              .gte("requested_date", weekStart.toISOString().split("T")[0])
-              .lte("requested_date", weekEnd.toISOString().split("T")[0])
-              .in("status", ["pending", "confirmed", "booked"]);
-
-            const appointmentsByDay: Record<number, number> = {};
-            (weekAppointments || []).forEach((apt: any) => {
-              const date = apt.requested_date ? new Date(apt.requested_date) : new Date(apt.created_at);
-              const dayOfMonth = date.getDate();
-              appointmentsByDay[dayOfMonth] = (appointmentsByDay[dayOfMonth] || 0) + 1;
-            });
-            setCalendarAppointments(appointmentsByDay);
-          }
-        }
+        // Calendar appointments already processed above from appointmentsFromAPI (no duplicate fetch needed)
 
         // Load availability settings (reuse profileData from above)
         if (profileData?.metadata?.availability) {
