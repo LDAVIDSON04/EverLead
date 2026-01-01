@@ -50,26 +50,30 @@ export default function SchedulePage() {
   const [viewingExternalAppointment, setViewingExternalAppointment] = useState<any | null>(null);
   const [showAddAvailabilityModal, setShowAddAvailabilityModal] = useState(false);
 
-  // Calculate Monday-Friday dates for the current week
+  // Calculate 5 consecutive days starting from today (or current day when offset is applied)
   const getWeekDates = (offset: number) => {
     const today = new Date();
-    const currentDay = today.getDay();
-    // Calculate Monday of current week (Monday = 1, so if today is Sunday (0), go back 6 days)
-    const mondayOffset = currentDay === 0 ? -6 : 1 - currentDay;
-    const monday = new Date(today);
-    monday.setDate(today.getDate() + mondayOffset + (offset * 7));
-    monday.setHours(0, 0, 0, 0);
+    const startDate = new Date(today);
+    startDate.setDate(today.getDate() + (offset * 7));
+    startDate.setHours(0, 0, 0, 0);
 
-    // Return Monday through Friday (5 days)
+    // Return 5 consecutive days starting from the start date
     return Array.from({ length: 5 }, (_, i) => {
-      const date = new Date(monday);
-      date.setDate(monday.getDate() + i);
+      const date = new Date(startDate);
+      date.setDate(startDate.getDate() + i);
       return date;
     });
   };
 
   const weekDates = getWeekDates(currentWeekOffset);
-  const weekDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+  
+  // Get day names for the current week dates
+  const getDayName = (date: Date) => {
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    return days[date.getDay()];
+  };
+  
+  const weekDays = weekDates.map(date => getDayName(date));
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -241,8 +245,13 @@ export default function SchedulePage() {
         weekEnd.setHours(23, 59, 59, 999);
         
         if (aptDate >= weekStart && aptDate <= weekEnd) {
-          // Get day index (0-4 for Mon-Fri)
-          const dayIndex = aptDate.getDay() - 1; // Monday = 0
+          // Find which day index this appointment belongs to (0-4)
+          const dayIndex = weekDates.findIndex((date, idx) => {
+            const dateStr = date.toDateString();
+            const aptDateStr = aptDate.toDateString();
+            return dateStr === aptDateStr;
+          });
+          
           if (dayIndex >= 0 && dayIndex < 5) {
             const endDate = DateTime.fromISO(apt.ends_at, { zone: "utc" });
             const localEnd = endDate.setZone(agentTimezone);
@@ -334,13 +343,13 @@ export default function SchedulePage() {
       <div className="flex-1 overflow-auto">
         <div className="inline-block min-w-full">
           {/* Day Headers */}
-          <div className="flex sticky top-0 bg-white z-10 border-b border-gray-200">
+          <div className="flex sticky top-0 bg-white z-20 border-b border-gray-200 shadow-sm">
             <div className="w-24 flex-shrink-0"></div>
             {weekDays.map((day, index) => {
               const date = weekDates[index];
               const today = isToday(date);
               return (
-                <div key={day} className="flex-1 min-w-[140px] px-4 py-6">
+                <div key={`${day}-${index}`} className="flex-1 min-w-[140px] px-4 py-6">
                   <div className="flex items-center gap-3">
                     <div className={`w-12 h-12 rounded-full flex items-center justify-center text-gray-600 ${
                       today ? 'bg-green-600 text-white' : 'bg-gray-100'
@@ -371,7 +380,7 @@ export default function SchedulePage() {
                     return (
                       <div
                         key={`${day}-${hour}`}
-                        className="flex-1 min-w-[140px] relative h-32 overflow-visible"
+                        className="flex-1 min-w-[140px] border-l border-gray-200 relative h-32 overflow-visible first:border-l-0"
                       >
                         {cellAppointments.map((apt: any) => {
                           // Calculate top offset within this hour (based on minutes)
@@ -391,10 +400,11 @@ export default function SchedulePage() {
                                   setViewingExternalAppointment(apt);
                                 }
                               }}
-                              className={`absolute inset-x-1 ${color} rounded-lg p-2 shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-all z-10`}
+                              className={`absolute inset-x-1 ${color} rounded-lg p-2 shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-all`}
                               style={{
                                 top: `${topOffset}px`,
                                 height: `${Math.max(height, 60)}px`,
+                                zIndex: 5,
                               }}
                             >
                               {apt.family_name && (
