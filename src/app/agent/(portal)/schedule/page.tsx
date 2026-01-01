@@ -70,7 +70,7 @@ export default function SchedulePage() {
   };
 
   const weekDates = getWeekDates(currentWeekOffset);
-  const weekDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -403,7 +403,7 @@ export default function SchedulePage() {
             {hours.map((hour) => {
               return (
                 <div key={hour} className="flex border-t border-gray-200">
-                  <div className="w-24 flex-shrink-0 pr-4 pt-2 text-sm text-gray-500 text-right">
+                  <div className="w-20 flex-shrink-0 pr-3 pt-1.5 text-xs text-gray-500 text-right">
                     {hour === 12 ? '12 PM' : hour > 12 ? `${hour - 12} PM` : `${hour} AM`}
                   </div>
                   {weekDays.map((day, dayIndex) => {
@@ -415,13 +415,13 @@ export default function SchedulePage() {
                     return (
                       <div
                         key={`${day}-${hour}`}
-                        className="flex-1 min-w-[120px] border-l border-gray-200 relative h-32 overflow-visible"
+                        className="flex-1 min-w-[100px] border-l border-gray-200 relative h-20 overflow-visible"
                       >
                         {cellAppointments.map((apt: any) => {
                           // Calculate top offset within this hour (based on minutes)
-                          const topOffset = (apt.minute / 60) * 120; // 120px per hour
+                          const topOffset = (apt.minute / 60) * 80; // 80px per hour
                           // Calculate height based on duration
-                          const height = (apt.durationMinutes / 60) * 120;
+                          const height = (apt.durationMinutes / 60) * 80;
                           const color = getDayColor(dayIndex);
 
                           return (
