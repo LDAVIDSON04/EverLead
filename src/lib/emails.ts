@@ -200,20 +200,11 @@ export async function sendConsumerBookingEmail({
                 <table width="800" cellpadding="0" cellspacing="0" style="background-color: #ffffff; max-width: 800px;">
                   <!-- Header -->
                   <tr>
-                    <td style="background-color: #0D5C3D; padding: 24px;">
+                    <td style="background-color: #0D5C3D; padding: 32px 24px;">
                       <table width="100%" cellpadding="0" cellspacing="0">
                         <tr>
-                          <td width="80" style="vertical-align: middle;">
-                            <table cellpadding="0" cellspacing="0" style="width: 80px; height: 80px; background-color: #ffffff; border-radius: 50%;">
-                              <tr>
-                                <td align="center" style="vertical-align: middle;">
-                                  <img src="data:image/png;base64,${getLogoBase64()}" alt="Soradin Logo" width="60" height="60" style="display: block; max-width: 60px; max-height: 60px; border: 0; outline: none; text-decoration: none;" />
-                                </td>
-                              </tr>
-                            </table>
-                          </td>
-                          <td style="vertical-align: middle; padding-left: 24px;">
-                            <h1 style="color: #ffffff; font-size: 32px; font-weight: bold; margin: 0;">SORADIN</h1>
+                          <td style="vertical-align: middle;">
+                            <img src="data:image/png;base64,${getLogoBase64()}" alt="Soradin Logo" width="120" height="40" style="display: block; max-width: 120px; max-height: 40px; border: 0; outline: none; text-decoration: none; margin-bottom: 16px;" />
                           </td>
                         </tr>
                       </table>
@@ -1233,20 +1224,11 @@ export async function sendPaymentDeclineEmail({
                 <table width="800" cellpadding="0" cellspacing="0" style="background-color: #ffffff; max-width: 800px;">
                   <!-- Header -->
                   <tr>
-                    <td style="background-color: #0D5C3D; padding: 24px;">
+                    <td style="background-color: #0D5C3D; padding: 32px 24px;">
                       <table width="100%" cellpadding="0" cellspacing="0">
                         <tr>
-                          <td width="80" style="vertical-align: middle;">
-                            <table cellpadding="0" cellspacing="0" style="width: 80px; height: 80px; background-color: #ffffff; border-radius: 50%;">
-                              <tr>
-                                <td align="center" style="vertical-align: middle;">
-                                  <img src="data:image/png;base64,${getLogoBase64()}" alt="Soradin Logo" width="60" height="60" style="display: block; max-width: 60px; max-height: 60px; border: 0; outline: none; text-decoration: none;" />
-                                </td>
-                              </tr>
-                            </table>
-                          </td>
-                          <td style="vertical-align: middle; padding-left: 24px;">
-                            <h1 style="color: #ffffff; font-size: 32px; font-weight: bold; margin: 0;">SORADIN</h1>
+                          <td style="vertical-align: middle;">
+                            <img src="data:image/png;base64,${getLogoBase64()}" alt="Soradin Logo" width="120" height="40" style="display: block; max-width: 120px; max-height: 40px; border: 0; outline: none; text-decoration: none; margin-bottom: 16px;" />
                           </td>
                         </tr>
                       </table>
@@ -1440,20 +1422,11 @@ export async function sendPaymentReceiptEmail({
                 <table width="800" cellpadding="0" cellspacing="0" style="background-color: #ffffff; max-width: 800px;">
                   <!-- Header -->
                   <tr>
-                    <td style="background-color: #0D5C3D; padding: 24px;">
+                    <td style="background-color: #0D5C3D; padding: 32px 24px;">
                       <table width="100%" cellpadding="0" cellspacing="0">
                         <tr>
-                          <td width="80" style="vertical-align: middle;">
-                            <table cellpadding="0" cellspacing="0" style="width: 80px; height: 80px; background-color: #ffffff; border-radius: 50%;">
-                              <tr>
-                                <td align="center" style="vertical-align: middle;">
-                                  <img src="data:image/png;base64,${getLogoBase64()}" alt="Soradin Logo" width="60" height="60" style="display: block; max-width: 60px; max-height: 60px; border: 0; outline: none; text-decoration: none;" />
-                                </td>
-                              </tr>
-                            </table>
-                          </td>
-                          <td style="vertical-align: middle; padding-left: 24px;">
-                            <h1 style="color: #ffffff; font-size: 32px; font-weight: bold; margin: 0;">SORADIN</h1>
+                          <td style="vertical-align: middle;">
+                            <img src="data:image/png;base64,${getLogoBase64()}" alt="Soradin Logo" width="120" height="40" style="display: block; max-width: 120px; max-height: 40px; border: 0; outline: none; text-decoration: none; margin-bottom: 16px;" />
                           </td>
                         </tr>
                       </table>
