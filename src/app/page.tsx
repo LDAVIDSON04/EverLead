@@ -231,7 +231,7 @@ export default function HomePage() {
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center gap-6">
               <Link href="/what-is-pre-need-funeral-planning" className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors">
-                What is pre-need funeral planning?
+                What are pre arrangements?
               </Link>
               <Link href="/learn-more-about-starting" className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors">
                 List your Specialty
