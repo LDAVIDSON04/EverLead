@@ -383,67 +383,70 @@ export default function AgentDashboardPage() {
             <div className="bg-white rounded-xl border border-gray-200 p-6">
               <h3 className="text-lg text-gray-900 mb-4">My appointments</h3>
               
-              <div className="space-y-2">
-                {/* Table Header */}
-                <div className="grid grid-cols-12 gap-4 text-xs text-gray-500 pb-2 border-b border-gray-100">
-                  <div className="col-span-3 flex items-center gap-2">
-                    Name
-                    <ArrowUpDown size={14} className="text-green-800" />
+              {/* Scrollable container for mobile */}
+              <div className="overflow-x-auto md:overflow-visible">
+                <div className="min-w-[600px] md:min-w-0 space-y-2">
+                  {/* Table Header */}
+                  <div className="grid grid-cols-12 gap-4 text-xs text-gray-500 pb-2 border-b border-gray-100">
+                    <div className="col-span-3 flex items-center gap-2">
+                      Name
+                      <ArrowUpDown size={14} className="text-green-800" />
+                    </div>
+                    <div className="col-span-2">Location</div>
+                    <div className="col-span-3 flex items-center gap-2">
+                      Date
+                      <ArrowUpDown size={14} className="text-gray-400" />
+                    </div>
+                    <div className="col-span-2 flex items-center gap-2">
+                      Time
+                      <ArrowUpDown size={14} className="text-gray-400" />
+                    </div>
+                    <div className="col-span-1">Status</div>
+                    <div className="col-span-1"></div>
                   </div>
-                  <div className="col-span-2">Location</div>
-                  <div className="col-span-3 flex items-center gap-2">
-                    Date
-                    <ArrowUpDown size={14} className="text-gray-400" />
-                  </div>
-                  <div className="col-span-2 flex items-center gap-2">
-                    Time
-                    <ArrowUpDown size={14} className="text-gray-400" />
-                  </div>
-                  <div className="col-span-1">Status</div>
-                  <div className="col-span-1"></div>
+                  
+                  {/* Table Rows */}
+                  {appointments.length === 0 ? (
+                    <div className="py-8 text-center text-sm text-gray-500">
+                      No appointments yet. <Link href="/agent/appointments" className="text-green-800 hover:underline">Browse available appointments</Link>
+                    </div>
+                  ) : (
+                    appointments.map((apt, idx) => (
+                      <Link
+                        key={apt.id}
+                        href={`/agent/my-appointments`}
+                        className={`grid grid-cols-12 gap-4 items-center py-3 rounded-lg transition-colors ${
+                          apt.status === 'confirmed' ? 'bg-green-50 hover:bg-green-100' : 'bg-white hover:bg-gray-50'
+                        }`}
+                      >
+                        <div className="col-span-3">
+                          <span className="text-sm text-gray-900">{apt.name || 'Unknown'}</span>
+                        </div>
+                        <div className="col-span-2 text-sm text-gray-600">{apt.location}</div>
+                        <div className="col-span-3 text-sm text-gray-600">{apt.date}</div>
+                        <div className="col-span-2 text-sm text-gray-600">{apt.time}</div>
+                        <div className="col-span-1">
+                          {apt.status === 'confirmed' ? (
+                            <Check size={18} className="text-green-600" />
+                          ) : (
+                            <AlertCircle size={18} className="text-red-500" />
+                          )}
+                        </div>
+                        <div className="col-span-1">
+                          <button 
+                            onClick={(e) => {
+                              e.preventDefault();
+                              router.push(`/agent/my-appointments`);
+                            }}
+                            className="p-1 hover:bg-gray-100 rounded"
+                          >
+                            <MoreHorizontal size={16} className="text-gray-400" />
+                          </button>
+                        </div>
+                      </Link>
+                    ))
+                  )}
                 </div>
-                
-                {/* Table Rows */}
-                {appointments.length === 0 ? (
-                  <div className="py-8 text-center text-sm text-gray-500">
-                    No appointments yet. <Link href="/agent/appointments" className="text-green-800 hover:underline">Browse available appointments</Link>
-                  </div>
-                ) : (
-                  appointments.map((apt, idx) => (
-                    <Link
-                      key={apt.id}
-                      href={`/agent/my-appointments`}
-                      className={`grid grid-cols-12 gap-4 items-center py-3 rounded-lg transition-colors ${
-                        apt.status === 'confirmed' ? 'bg-green-50 hover:bg-green-100' : 'bg-white hover:bg-gray-50'
-                      }`}
-                    >
-                      <div className="col-span-3">
-                        <span className="text-sm text-gray-900">{apt.name || 'Unknown'}</span>
-                      </div>
-                      <div className="col-span-2 text-sm text-gray-600">{apt.location}</div>
-                      <div className="col-span-3 text-sm text-gray-600">{apt.date}</div>
-                      <div className="col-span-2 text-sm text-gray-600">{apt.time}</div>
-                      <div className="col-span-1">
-                        {apt.status === 'confirmed' ? (
-                          <Check size={18} className="text-green-600" />
-                        ) : (
-                          <AlertCircle size={18} className="text-red-500" />
-                        )}
-                      </div>
-                      <div className="col-span-1">
-                        <button 
-                          onClick={(e) => {
-                            e.preventDefault();
-                            router.push(`/agent/my-appointments`);
-                          }}
-                          className="p-1 hover:bg-gray-100 rounded"
-                        >
-                          <MoreHorizontal size={16} className="text-gray-400" />
-                        </button>
-                      </div>
-                    </Link>
-                  ))
-                )}
               </div>
             </div>
           </div>
