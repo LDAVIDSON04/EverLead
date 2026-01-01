@@ -656,11 +656,16 @@ export default function HomePage() {
             {/* Left side - Image (moved before content) */}
             <div className="relative w-full order-2 lg:order-1">
               <Image
-                src="/trusted-partners-image.png"
-                alt="Professional standards"
+                src="/estate-planning-image.webp"
+                alt="Estate planning professionals"
                 width={800}
                 height={600}
-                className="w-full h-auto object-cover rounded-lg"
+                className="w-full h-auto object-contain rounded-xl"
+                style={{
+                  filter: "brightness(1.05) contrast(1.05)",
+                  mixBlendMode: "multiply",
+                }}
+                unoptimized
               />
             </div>
             {/* Right side - Content (moved after image) */}
