@@ -436,8 +436,8 @@ export default function HomePage() {
           {/* Mobile Only: Pre-Need Planning Box */}
           <div className="md:hidden mt-4">
             <div className="bg-[#FAF9F6] rounded-3xl p-6 border border-[#1A1A1A]/5 relative overflow-hidden group hover:shadow-xl hover:shadow-black/5 transition-all flex flex-col">
-              {/* Image inside the card, showing only from belt line up */}
-              <div className="relative w-full flex items-center justify-center -mt-6 -mx-6 mb-4 overflow-hidden" style={{ height: '120px', minHeight: '120px' }}>
+              {/* Image inside the card, showing full torso */}
+              <div className="relative w-full flex items-center justify-center -mt-6 -mx-6 mb-4 overflow-hidden" style={{ height: '150px', minHeight: '150px' }}>
                 <Image
                   src="/What is Pre need planning image.png"
                   alt="Person asking about pre-need planning"
@@ -447,7 +447,7 @@ export default function HomePage() {
                   style={{
                     filter: "brightness(1.1) contrast(1.05)",
                     mixBlendMode: "multiply",
-                    objectPosition: 'top',
+                    objectPosition: 'top center',
                   }}
                   priority
                 />
