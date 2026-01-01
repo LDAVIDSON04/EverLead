@@ -75,7 +75,8 @@ export function CalendarSyncModal({ isOpen, onClose }: CalendarSyncModalProps) {
 
   async function handleConnect(provider: "google" | "microsoft") {
     try {
-      const { data: { session, user } } = await supabaseClient.auth.getSession();
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      const { data: { user } } = await supabaseClient.auth.getUser();
       if (!session?.access_token || !user) {
         alert("Please log in to connect your calendar");
         return;
