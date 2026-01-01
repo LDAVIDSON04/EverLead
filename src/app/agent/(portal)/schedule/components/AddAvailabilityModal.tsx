@@ -58,11 +58,13 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
   const [selectedLocation, setSelectedLocation] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [availabilityByLocation, setAvailabilityByLocation] = useState<Record<string, typeof defaultSchedule>>({});
+  const [availabilityTypeByLocation, setAvailabilityTypeByLocation] = useState<Record<string, "daily" | "recurring">>({});
 
   // Day only state
   const [dayDate, setDayDate] = useState("");
   const [dayFromTime, setDayFromTime] = useState("09:00");
-  const [dayToTime, setDayToTime] = useState("09:30");
+  const [dayToTime, setDayToTime] = useState("17:00");
   const [appointmentLength, setAppointmentLength] = useState("30");
 
   // Recurring state - use same structure as availability page
@@ -93,9 +95,19 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
       const data = await res.json();
 
       setLocations(data.locations || []);
+      setAvailabilityByLocation(data.availabilityByLocation || {});
+      setAvailabilityTypeByLocation(data.availabilityTypeByLocation || {});
       setAppointmentLength(data.appointmentLength || "30");
+      
       if (data.locations && data.locations.length > 0) {
         setSelectedLocation(data.locations[0]);
+        // Load existing schedule for selected location if it exists
+        const existingSchedule = data.availabilityByLocation?.[data.locations[0]];
+        if (existingSchedule) {
+          setRecurringSchedule(existingSchedule);
+        } else {
+          setRecurringSchedule(getDefaultScheduleCopy());
+        }
       }
     } catch (err) {
       console.error("Error loading locations:", err);
@@ -104,6 +116,14 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
     }
   }
 
+  // Update recurring schedule when location changes
+  useEffect(() => {
+    if (selectedLocation && availabilityByLocation[selectedLocation]) {
+      setRecurringSchedule(availabilityByLocation[selectedLocation]);
+    } else if (selectedLocation) {
+      setRecurringSchedule(getDefaultScheduleCopy());
+    }
+  }, [selectedLocation, availabilityByLocation]);
 
   const handleSave = async () => {
     if (!selectedLocation) return;
@@ -114,7 +134,7 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
       if (!session?.access_token) throw new Error("Not authenticated");
 
       if (activeTab === "daily") {
-        // Save daily availability
+        // Save daily availability - use camelCase as API expects
         if (!dayDate || !dayFromTime || !dayToTime) {
           alert("Please fill in all required fields.");
           setSaving(false);
@@ -130,9 +150,8 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
           body: JSON.stringify({
             location: selectedLocation,
             date: dayDate,
-            start_time: dayFromTime,
-            end_time: dayToTime,
-            appointment_length: appointmentLength,
+            startTime: dayFromTime, // camelCase
+            endTime: dayToTime, // camelCase
           }),
         });
 
@@ -140,8 +159,34 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
           const data = await res.json();
           throw new Error(data.error || "Failed to save daily availability");
         }
+
+        // Update availability type for this location to "daily"
+        const updatedTypeByLocation = {
+          ...availabilityTypeByLocation,
+          [selectedLocation]: "daily" as const,
+        };
+
+        // Get current availability data to save type
+        const currentRes = await fetch("/api/agent/settings/availability", {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        });
+        const currentData = await currentRes.ok ? await currentRes.json() : {};
+
+        await fetch("/api/agent/settings/availability", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({
+            locations: currentData.locations || locations,
+            availabilityByLocation: currentData.availabilityByLocation || availabilityByLocation,
+            appointmentLength: appointmentLength || currentData.appointmentLength || "30",
+            availabilityTypeByLocation: updatedTypeByLocation,
+          }),
+        });
       } else {
-        // Save recurring availability
+        // Save recurring availability - use checkbox format directly like availability page
         // Check if at least one day is enabled
         const hasEnabledDay = days.some(day => recurringSchedule[day as keyof typeof recurringSchedule].enabled);
         if (!hasEnabledDay) {
@@ -156,53 +201,26 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
         });
         const currentData = await res.ok ? await res.json() : {};
 
-        // Get current availability for this location
-        const currentAvailability = currentData.availabilityByLocation?.[selectedLocation] || {};
-        
-        // Build new availability object - convert from checkbox schedule format to API format
-        const newAvailability: Record<string, { start_time: string; end_time: string }[]> = {};
-        
-        // Copy existing schedule for other days
-        Object.keys(currentAvailability).forEach(day => {
-          newAvailability[day] = currentAvailability[day] || [];
-        });
+        // Update availability for selected location with checkbox format (same as availability page)
+        const updatedAvailabilityByLocation = {
+          ...(currentData.availabilityByLocation || availabilityByLocation),
+          [selectedLocation]: recurringSchedule, // Store checkbox format directly
+        };
 
-        // Convert recurringSchedule to API format
-        days.forEach(day => {
-          const dayData = recurringSchedule[day as keyof typeof recurringSchedule];
-          if (dayData.enabled) {
-            const timeSlot = {
-              start_time: dayData.start,
-              end_time: dayData.end,
-            };
-
-            if (!newAvailability[day]) {
-              newAvailability[day] = [];
-            }
-
-            // Check if this exact slot already exists
-            const exists = newAvailability[day].some(
-              (slot: any) => slot.start_time === dayData.start && slot.end_time === dayData.end
-            );
-
-            if (!exists) {
-              newAvailability[day].push(timeSlot);
-            }
-          } else {
-            // If disabled, keep existing slots (don't clear them, just don't add new ones)
-            if (!newAvailability[day]) {
-              newAvailability[day] = [];
-            }
-          }
+        // Ensure all locations have availability data (same as availability page)
+        const completeAvailabilityByLocation: Record<string, any> = {};
+        const allLocations = currentData.locations || locations;
+        allLocations.forEach((loc: string) => {
+          completeAvailabilityByLocation[loc] = updatedAvailabilityByLocation[loc] || defaultSchedule;
         });
 
         // Update availabilityTypeByLocation
         const updatedTypeByLocation = {
-          ...(currentData.availabilityTypeByLocation || {}),
-          [selectedLocation]: "recurring",
+          ...(currentData.availabilityTypeByLocation || availabilityTypeByLocation),
+          [selectedLocation]: "recurring" as const,
         };
 
-        // Save the recurring availability
+        // Save the recurring availability (same format as availability page)
         await fetch("/api/agent/settings/availability", {
           method: "POST",
           headers: {
@@ -210,8 +228,8 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
             Authorization: `Bearer ${session.access_token}`,
           },
           body: JSON.stringify({
-            locations: currentData.locations || locations,
-            availabilityByLocation: newAvailability,
+            locations: allLocations,
+            availabilityByLocation: completeAvailabilityByLocation,
             appointmentLength: appointmentLength || currentData.appointmentLength || "30",
             availabilityTypeByLocation: updatedTypeByLocation,
           }),
