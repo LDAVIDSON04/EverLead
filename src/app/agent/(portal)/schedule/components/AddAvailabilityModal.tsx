@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { supabaseClient } from "@/lib/supabaseClient";
-import { X, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
+import { X, ChevronDown } from "lucide-react";
 
 interface AddAvailabilityModalProps {
   isOpen: boolean;
@@ -21,270 +21,40 @@ function Input({ className = "", ...props }: React.InputHTMLAttributes<HTMLInput
 
 function Label({ className = "", children, ...props }: React.LabelHTMLAttributes<HTMLLabelElement>) {
   return (
-    <label className={`block text-sm font-medium text-gray-700 mb-1 ${className}`} {...props}>
+    <label className={`block text-sm font-medium text-gray-700 mb-1.5 ${className}`} {...props}>
       {children}
     </label>
   );
 }
 
-// Daily availability modal (embedded in the main modal)
-function DailyAvailabilitySubModal({
-  location,
-  onClose: onSubClose,
-}: {
-  location: string;
-  onClose: () => void;
-}) {
-  const [currentWeekStart, setCurrentWeekStart] = useState<Date>(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return today;
-  });
-  const [dailyAvailability, setDailyAvailability] = useState<Record<string, { start_time: string; end_time: string; id?: string }>>({});
-  const [modalOpen, setModalOpen] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [modalExistingAvailability, setModalExistingAvailability] = useState<{ start_time: string; end_time: string; id?: string } | undefined>();
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    loadDailyAvailability();
-  }, [location, currentWeekStart]);
-
-  async function loadDailyAvailability() {
-    try {
-      const { data: { session } } = await supabaseClient.auth.getSession();
-      if (!session?.access_token) return;
-
-      const weekEnd = new Date(currentWeekStart);
-      weekEnd.setDate(weekEnd.getDate() + 6);
-      const startDateStr = currentWeekStart.toISOString().split("T")[0];
-      const endDateStr = weekEnd.toISOString().split("T")[0];
-
-      const res = await fetch(
-        `/api/agent/settings/daily-availability?location=${encodeURIComponent(location)}&startDate=${startDateStr}&endDate=${endDateStr}`,
-        {
-          headers: { Authorization: `Bearer ${session.access_token}` },
-        }
-      );
-
-      if (!res.ok) throw new Error("Failed to load daily availability");
-      const data = await res.json();
-
-      const availabilityMap: Record<string, { start_time: string; end_time: string; id?: string }> = {};
-      Object.keys(data).forEach((date) => {
-        availabilityMap[date] = { ...data[date] };
-      });
-      setDailyAvailability(availabilityMap);
-    } catch (err) {
-      console.error("Error loading daily availability:", err);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  const handleDateClick = (date: Date) => {
-    const dateStr = date.toISOString().split("T")[0];
-    const existing = dailyAvailability[dateStr];
-    setSelectedDate(date);
-    setModalExistingAvailability(existing);
-    setModalOpen(true);
-  };
-
-  const handleSaveDailyAvailability = async (date: string, startTime: string, endTime: string) => {
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    if (!session?.access_token) throw new Error("Not authenticated");
-
-    const res = await fetch("/api/agent/settings/daily-availability", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${session.access_token}`,
-      },
-      body: JSON.stringify({ location, date, start_time: startTime, end_time: endTime }),
-    });
-
-    if (!res.ok) {
-      const data = await res.json();
-      throw new Error(data.error || "Failed to save daily availability");
-    }
-
-    await loadDailyAvailability();
-    setModalOpen(false);
-  };
-
-  const handleDeleteDailyAvailability = async () => {
-    if (!selectedDate || !modalExistingAvailability?.id) return;
-
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    if (!session?.access_token) throw new Error("Not authenticated");
-
-    const res = await fetch("/api/agent/settings/daily-availability", {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${session.access_token}`,
-      },
-      body: JSON.stringify({ id: modalExistingAvailability.id }),
-    });
-
-    if (!res.ok) {
-      const data = await res.json();
-      throw new Error(data.error || "Failed to delete daily availability");
-    }
-
-    await loadDailyAvailability();
-    setModalOpen(false);
-  };
-
-  const getWeekDates = () => {
-    const dates: Date[] = [];
-    for (let i = 0; i < 7; i++) {
-      const date = new Date(currentWeekStart);
-      date.setDate(date.getDate() + i);
-      dates.push(date);
-    }
-    return dates;
-  };
-
-  const navigateWeek = (direction: "prev" | "next") => {
-    const newStart = new Date(currentWeekStart);
-    newStart.setDate(newStart.getDate() + (direction === "next" ? 7 : -7));
-    setCurrentWeekStart(newStart);
-  };
-
-  return (
-    <>
-      <div className="mb-4">
-        <div className="flex items-center justify-between mb-4">
-          <button
-            onClick={() => navigateWeek("prev")}
-            className="p-2 hover:bg-gray-100 rounded-lg"
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-          <div className="text-sm font-medium text-gray-700">
-            {currentWeekStart.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-            {" - "}
-            {new Date(currentWeekStart.getTime() + 6 * 24 * 60 * 60 * 1000).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-          </div>
-          <button
-            onClick={() => navigateWeek("next")}
-            className="p-2 hover:bg-gray-100 rounded-lg"
-          >
-            <ChevronRight className="w-5 h-5" />
-          </button>
-        </div>
-
-        <div className="grid grid-cols-7 gap-2">
-          {getWeekDates().map((date) => {
-            const dateStr = date.toISOString().split("T")[0];
-            const existing = dailyAvailability[dateStr];
-            const isToday = dateStr === new Date().toISOString().split("T")[0];
-            const dayName = date.toLocaleDateString("en-US", { weekday: "short" });
-            const dayNum = date.getDate();
-
-            const formatTime = (time: string) => {
-              const [hours, minutes] = time.split(":").map(Number);
-              const period = hours >= 12 ? "PM" : "AM";
-              const displayHours = hours % 12 || 12;
-              return `${displayHours}:${String(minutes).padStart(2, "0")} ${period}`;
-            };
-
-            return (
-              <button
-                key={dateStr}
-                onClick={() => handleDateClick(date)}
-                className={`p-3 rounded-lg border-2 text-left transition-all ${
-                  existing
-                    ? "border-green-500 bg-green-50"
-                    : "border-gray-200 bg-white hover:border-green-300"
-                } ${isToday ? "ring-2 ring-blue-500" : ""}`}
-              >
-                <div className="text-xs font-semibold text-gray-600 mb-1">{dayName}</div>
-                <div className={`text-lg font-bold ${existing ? "text-green-700" : "text-gray-900"}`}>
-                  {dayNum}
-                </div>
-                {existing && (
-                  <div className="text-xs text-green-700 mt-1">
-                    {formatTime(existing.start_time)} - {formatTime(existing.end_time)}
-                  </div>
-                )}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Time slot modal */}
-      {modalOpen && selectedDate && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold mb-4">
-              {selectedDate.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
-            </h3>
-            <div className="mb-4">
-              <Label>From</Label>
-              <Input
-                type="time"
-                defaultValue={modalExistingAvailability?.start_time || "09:00"}
-                id="start-time"
-              />
-            </div>
-            <div className="mb-6">
-              <Label>To</Label>
-              <Input
-                type="time"
-                defaultValue={modalExistingAvailability?.end_time || "17:00"}
-                id="end-time"
-              />
-            </div>
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={() => setModalOpen(false)}
-                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              {modalExistingAvailability?.id && (
-                <button
-                  onClick={handleDeleteDailyAvailability}
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-                >
-                  Delete
-                </button>
-              )}
-              <button
-                onClick={async () => {
-                  const startInput = document.getElementById("start-time") as HTMLInputElement;
-                  const endInput = document.getElementById("end-time") as HTMLInputElement;
-                  await handleSaveDailyAvailability(
-                    selectedDate.toISOString().split("T")[0],
-                    startInput.value,
-                    endInput.value
-                  );
-                }}
-                className="px-4 py-2 bg-green-800 text-white rounded-lg hover:bg-green-900"
-              >
-                Save
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </>
-  );
-}
-
 export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilityModalProps) {
-  const [availabilityType, setAvailabilityType] = useState<"daily" | "recurring">("recurring");
+  const [activeTab, setActiveTab] = useState<"daily" | "recurring">("daily");
   const [locations, setLocations] = useState<string[]>([]);
   const [selectedLocation, setSelectedLocation] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
+  // Day only state
+  const [dayDate, setDayDate] = useState("");
+  const [dayFromTime, setDayFromTime] = useState("09:00");
+  const [dayToTime, setDayToTime] = useState("09:30");
+  const [dayType, setDayType] = useState<"in-person" | "virtual">("in-person");
+
+  // Recurring state
+  const [recurStartDate, setRecurStartDate] = useState("");
+  const [recurEndDate, setRecurEndDate] = useState("");
+  const [recurFromTime, setRecurFromTime] = useState("09:00");
+  const [recurToTime, setRecurToTime] = useState("09:30");
+  const [recurDays, setRecurDays] = useState<string[]>([]);
+  const [recurFrequency, setRecurFrequency] = useState<"every-week" | "every-other-week">("every-week");
+
   useEffect(() => {
     if (isOpen) {
       loadLocations();
+      // Set default dates
+      const today = new Date().toISOString().split('T')[0];
+      setDayDate(today);
+      setRecurStartDate(today);
     }
   }, [isOpen]);
 
@@ -304,9 +74,6 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
       setLocations(data.locations || []);
       if (data.locations && data.locations.length > 0) {
         setSelectedLocation(data.locations[0]);
-        // Set initial type for selected location
-        const locationType = data.availabilityTypeByLocation?.[data.locations[0]] || "recurring";
-        setAvailabilityType(locationType);
       }
     } catch (err) {
       console.error("Error loading locations:", err);
@@ -314,6 +81,14 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
       setLoading(false);
     }
   }
+
+  const toggleDay = (day: string) => {
+    setRecurDays(prev => 
+      prev.includes(day) 
+        ? prev.filter(d => d !== day)
+        : [...prev, day]
+    );
+  };
 
   const handleSave = async () => {
     if (!selectedLocation) return;
@@ -323,22 +98,100 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (!session?.access_token) throw new Error("Not authenticated");
 
-      // Get current availability data
-      const res = await fetch("/api/agent/settings/availability", {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
-      const currentData = await res.ok ? await res.json() : {};
+      if (activeTab === "daily") {
+        // Save daily availability
+        if (!dayDate || !dayFromTime || !dayToTime) {
+          alert("Please fill in all required fields.");
+          setSaving(false);
+          return;
+        }
 
-      // Update availability type for selected location
-      const updatedTypeByLocation = {
-        ...(currentData.availabilityTypeByLocation || {}),
-        [selectedLocation]: availabilityType,
-      };
+        const res = await fetch("/api/agent/settings/daily-availability", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({
+            location: selectedLocation,
+            date: dayDate,
+            start_time: dayFromTime,
+            end_time: dayToTime,
+          }),
+        });
 
-      // Save the type (this is mainly for recurring, daily is saved via the sub-modal)
-      if (availabilityType === "recurring") {
-        // For recurring, we need to redirect to the availability page or show the recurring UI
-        // For now, just save the type change
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.error || "Failed to save daily availability");
+        }
+      } else {
+        // Save recurring availability
+        if (!recurStartDate || !recurFromTime || !recurToTime || recurDays.length === 0) {
+          alert("Please fill in all required fields and select at least one day.");
+          setSaving(false);
+          return;
+        }
+
+        // Get current availability data
+        const res = await fetch("/api/agent/settings/availability", {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        });
+        const currentData = await res.ok ? await res.json() : {};
+
+        // Convert day abbreviations to full day names for the API
+        const dayMap: Record<string, string> = {
+          "S": "sunday",
+          "M": "monday",
+          "T": "tuesday",
+          "W": "wednesday",
+          "Th": "thursday",
+          "F": "friday",
+          "Sa": "saturday",
+        };
+
+        const fullDayNames = recurDays.map(d => dayMap[d]).filter(Boolean);
+
+        // Get current availability for this location
+        const currentAvailability = currentData.availabilityByLocation?.[selectedLocation] || {};
+        
+        // Build new availability object
+        const newAvailability: Record<string, { start_time: string; end_time: string }[]> = {};
+        
+        // Copy existing schedule
+        Object.keys(currentAvailability).forEach(day => {
+          newAvailability[day] = currentAvailability[day] || [];
+        });
+
+        // Add or update the recurring slots
+        fullDayNames.forEach(day => {
+          const timeSlot = {
+            start_time: recurFromTime,
+            end_time: recurToTime,
+          };
+
+          // For "every other week", we might need to handle this differently
+          // For now, we'll save it as weekly and handle the logic elsewhere if needed
+          if (!newAvailability[day]) {
+            newAvailability[day] = [];
+          }
+
+          // Check if this exact slot already exists
+          const exists = newAvailability[day].some(
+            (slot: any) => slot.start_time === recurFromTime && slot.end_time === recurToTime
+          );
+
+          if (!exists) {
+            newAvailability[day].push(timeSlot);
+          }
+        });
+
+        // Update availabilityTypeByLocation
+        const updatedTypeByLocation = {
+          ...(currentData.availabilityTypeByLocation || {}),
+          [selectedLocation]: "recurring",
+        };
+
+        // Save the recurring availability
         await fetch("/api/agent/settings/availability", {
           method: "POST",
           headers: {
@@ -347,7 +200,7 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
           },
           body: JSON.stringify({
             locations: currentData.locations || locations,
-            availabilityByLocation: currentData.availabilityByLocation || {},
+            availabilityByLocation: newAvailability,
             appointmentLength: currentData.appointmentLength || "30",
             availabilityTypeByLocation: updatedTypeByLocation,
           }),
@@ -356,9 +209,9 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
 
       onSave?.();
       onClose();
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error saving:", err);
-      alert("Failed to save availability. Please try again.");
+      alert(err.message || "Failed to save availability. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -366,17 +219,57 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
 
   if (!isOpen) return null;
 
+  const weekDays = [
+    { label: "S", value: "S", full: "Sunday" },
+    { label: "M", value: "M", full: "Monday" },
+    { label: "T", value: "T", full: "Tuesday" },
+    { label: "W", value: "W", full: "Wednesday" },
+    { label: "Th", value: "Th", full: "Thursday" },
+    { label: "F", value: "F", full: "Friday" },
+    { label: "Sa", value: "Sa", full: "Saturday" },
+  ];
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-lg w-full max-w-md shadow-xl">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold">Add availability</h2>
+        <div className="flex items-center justify-between p-4 border-b border-gray-200">
+          <h2 className="text-lg font-semibold text-gray-900">Add availability</h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-1 hover:bg-gray-100 rounded transition-colors"
           >
-            <X className="w-5 h-5" />
+            <X className="w-5 h-5 text-gray-500" />
+          </button>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex border-b border-gray-200">
+          <button
+            onClick={() => setActiveTab("daily")}
+            className={`flex-1 px-4 py-3 text-sm font-medium transition-colors relative ${
+              activeTab === "daily"
+                ? "text-gray-900"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            Day only
+            {activeTab === "daily" && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-green-800" />
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab("recurring")}
+            className={`flex-1 px-4 py-3 text-sm font-medium transition-colors relative ${
+              activeTab === "recurring"
+                ? "text-gray-900"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            Recurring
+            {activeTab === "recurring" && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-green-800" />
+            )}
           </button>
         </div>
 
@@ -384,7 +277,7 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
         <div className="p-6">
           {loading ? (
             <div className="text-center py-8">
-              <p className="text-gray-600">Loading locations...</p>
+              <p className="text-gray-600">Loading...</p>
             </div>
           ) : locations.length === 0 ? (
             <div className="text-center py-8">
@@ -398,93 +291,200 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
             </div>
           ) : (
             <>
-              {/* Type Toggle */}
+              {/* Office Location */}
               <div className="mb-6">
-                <Label className="mb-2">Availability Type</Label>
-                <div className="flex gap-2 border border-gray-300 rounded-lg p-1 w-fit">
-                  <button
-                    onClick={() => setAvailabilityType("daily")}
-                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                      availabilityType === "daily"
-                        ? "bg-green-800 text-white"
-                        : "text-gray-700 hover:bg-gray-100"
-                    }`}
+                <Label>Office Location</Label>
+                <div className="relative">
+                  <select
+                    value={selectedLocation}
+                    onChange={(e) => setSelectedLocation(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800 focus:border-transparent appearance-none bg-white"
                   >
-                    Day only
-                  </button>
-                  <button
-                    onClick={() => setAvailabilityType("recurring")}
-                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                      availabilityType === "recurring"
-                        ? "bg-green-800 text-white"
-                        : "text-gray-700 hover:bg-gray-100"
-                    }`}
-                  >
-                    Recurring
-                  </button>
+                    {locations.map((loc) => (
+                      <option key={loc} value={loc}>
+                        {loc}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                 </div>
               </div>
 
-              {/* Location Selector */}
-              <div className="mb-6">
-                <Label className="mb-2">Office Location</Label>
-                <select
-                  value={selectedLocation}
-                  onChange={(e) => setSelectedLocation(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800 focus:border-transparent"
-                >
-                  {locations.map((loc) => (
-                    <option key={loc} value={loc}>
-                      {loc}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {/* Day only tab content */}
+              {activeTab === "daily" && (
+                <>
+                  <div className="mb-4">
+                    <Label>Date</Label>
+                    <Input
+                      type="date"
+                      value={dayDate}
+                      onChange={(e) => setDayDate(e.target.value)}
+                      required
+                    />
+                  </div>
 
-              {/* Availability UI */}
-              {availabilityType === "daily" && selectedLocation && (
-                <DailyAvailabilitySubModal
-                  location={selectedLocation}
-                  onClose={onClose}
-                />
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <Label>From</Label>
+                      <Input
+                        type="time"
+                        value={dayFromTime}
+                        onChange={(e) => setDayFromTime(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label>To</Label>
+                      <Input
+                        type="time"
+                        value={dayToTime}
+                        onChange={(e) => setDayToTime(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mb-6">
+                    <Label>Type</Label>
+                    <div className="flex gap-4 mt-2">
+                      <label className="flex items-center cursor-pointer">
+                        <input
+                          type="radio"
+                          name="dayType"
+                          value="in-person"
+                          checked={dayType === "in-person"}
+                          onChange={(e) => setDayType(e.target.value as "in-person" | "virtual")}
+                          className="w-4 h-4 text-green-800 focus:ring-green-800"
+                        />
+                        <span className="ml-2 text-sm text-gray-700">In person</span>
+                      </label>
+                      <label className="flex items-center cursor-pointer">
+                        <input
+                          type="radio"
+                          name="dayType"
+                          value="virtual"
+                          checked={dayType === "virtual"}
+                          onChange={(e) => setDayType(e.target.value as "in-person" | "virtual")}
+                          className="w-4 h-4 text-green-800 focus:ring-green-800"
+                        />
+                        <span className="ml-2 text-sm text-gray-700">Virtual</span>
+                      </label>
+                    </div>
+                  </div>
+                </>
               )}
 
-              {availabilityType === "recurring" && (
-                <div className="mb-6">
-                  <p className="text-sm text-gray-600 mb-4">
-                    For recurring availability, please use the{" "}
-                    <a href="/agent/availability" className="text-green-800 underline" target="_blank">
-                      Availability page
-                    </a>{" "}
-                    to set your weekly schedule.
-                  </p>
-                </div>
+              {/* Recurring tab content */}
+              {activeTab === "recurring" && (
+                <>
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <Label>Start Date</Label>
+                      <Input
+                        type="date"
+                        value={recurStartDate}
+                        onChange={(e) => setRecurStartDate(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label>End Date (optional)</Label>
+                      <Input
+                        type="date"
+                        value={recurEndDate}
+                        onChange={(e) => setRecurEndDate(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <Label>From</Label>
+                      <Input
+                        type="time"
+                        value={recurFromTime}
+                        onChange={(e) => setRecurFromTime(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label>To</Label>
+                      <Input
+                        type="time"
+                        value={recurToTime}
+                        onChange={(e) => setRecurToTime(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mb-4">
+                    <Label>Repeats on</Label>
+                    <div className="flex gap-2 mt-2">
+                      {weekDays.map((day) => (
+                        <button
+                          key={day.value}
+                          type="button"
+                          onClick={() => toggleDay(day.value)}
+                          className={`w-10 h-10 rounded-full text-sm font-medium transition-colors ${
+                            recurDays.includes(day.value)
+                              ? "bg-gray-900 text-white"
+                              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                          }`}
+                          title={day.full}
+                        >
+                          {day.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="mb-6">
+                    <Label>Frequency</Label>
+                    <div className="flex gap-4 mt-2">
+                      <label className="flex items-center cursor-pointer">
+                        <input
+                          type="radio"
+                          name="frequency"
+                          value="every-week"
+                          checked={recurFrequency === "every-week"}
+                          onChange={(e) => setRecurFrequency(e.target.value as "every-week" | "every-other-week")}
+                          className="w-4 h-4 text-green-800 focus:ring-green-800"
+                        />
+                        <span className="ml-2 text-sm text-gray-700">Every week</span>
+                      </label>
+                      <label className="flex items-center cursor-pointer">
+                        <input
+                          type="radio"
+                          name="frequency"
+                          value="every-other-week"
+                          checked={recurFrequency === "every-other-week"}
+                          onChange={(e) => setRecurFrequency(e.target.value as "every-week" | "every-other-week")}
+                          className="w-4 h-4 text-green-800 focus:ring-green-800"
+                        />
+                        <span className="ml-2 text-sm text-gray-700">Every other week</span>
+                      </label>
+                    </div>
+                  </div>
+                </>
               )}
 
               {/* Actions */}
               <div className="flex gap-3 justify-end pt-4 border-t border-gray-200">
                 <button
                   onClick={onClose}
-                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium"
                   disabled={saving}
                 >
                   Cancel
                 </button>
-                {availabilityType === "daily" ? (
-                  <button
-                    onClick={onClose}
-                    className="px-4 py-2 bg-green-800 text-white rounded-lg hover:bg-green-900"
-                  >
-                    Done
-                  </button>
-                ) : (
-                  <a
-                    href="/agent/availability"
-                    className="px-4 py-2 bg-green-800 text-white rounded-lg hover:bg-green-900 text-center"
-                  >
-                    Go to Availability
-                  </a>
-                )}
+                <button
+                  onClick={handleSave}
+                  className="px-4 py-2 bg-green-800 text-white rounded-lg hover:bg-green-900 transition-colors text-sm font-medium"
+                  disabled={saving}
+                >
+                  {saving ? "Saving..." : "Add"}
+                </button>
               </div>
             </>
           )}
@@ -493,4 +493,3 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
     </div>
   );
 }
-
