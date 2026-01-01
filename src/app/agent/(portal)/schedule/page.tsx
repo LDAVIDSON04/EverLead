@@ -235,11 +235,13 @@ export default function SchedulePage() {
         const aptDate = localStart.toJSDate();
         
         // Check if appointment is in the current week (Monday-Sunday)
+        // Include past appointments too - show all appointments in the week
         const weekStart = weekDates[0];
         const weekEnd = weekDates[6];
         weekStart.setHours(0, 0, 0, 0);
         weekEnd.setHours(23, 59, 59, 999);
         
+        // Include appointments from the week, including past days
         if (aptDate >= weekStart && aptDate <= weekEnd) {
           // Find which day index this appointment belongs to (0-6 for Mon-Sun)
           const dayIndex = weekDates.findIndex((date, idx) => {
@@ -403,26 +405,37 @@ export default function SchedulePage() {
                                 zIndex: 5,
                               }}
                             >
-                              <div className="h-full flex flex-col justify-between">
-                                {apt.family_name ? (
-                                  <div className="text-sm font-medium text-gray-700 truncate">
-                                    {apt.family_name}
-                                  </div>
-                                ) : apt.is_external ? (
-                                  <div className="text-sm font-medium text-gray-700 truncate">
-                                    {apt.family_name || 'External Meeting'}
-                                  </div>
-                                ) : (
-                                  <div className="text-sm font-medium text-gray-700 truncate">
-                                    Appointment
-                                  </div>
-                                )}
-                                {apt.location && apt.location !== "N/A" && apt.location !== "External Calendar" && (
-                                  <div className="flex items-center gap-1 mt-auto pt-1">
-                                    <MapPin className="w-3 h-3 text-gray-600 flex-shrink-0" />
-                                    <span className="text-xs text-gray-600 truncate">{apt.location}</span>
-                                  </div>
-                                )}
+                              <div className="h-full flex flex-col gap-1.5">
+                                {/* Customer Name */}
+                                <div className="text-sm font-medium text-gray-700 truncate">
+                                  {apt.family_name || 'Appointment'}
+                                </div>
+                                
+                                {/* Time */}
+                                <div className="text-xs text-gray-600">
+                                  {apt.startTime} - {apt.endTime}
+                                </div>
+                                
+                                {/* Location with pin - filter out provider names */}
+                                {(() => {
+                                  // Filter out provider names and invalid locations
+                                  const validLocation = apt.location && 
+                                    apt.location !== "N/A" && 
+                                    apt.location !== "External Calendar" &&
+                                    !apt.location.match(/^(Google Calendar|Microsoft Calendar|ICS Calendar)$/i);
+                                  
+                                  // Clean the location string (remove provider names if they're part of the string)
+                                  const cleanLocation = validLocation 
+                                    ? apt.location.replace(/Google Calendar|Microsoft Calendar|ICS Calendar/gi, '').trim()
+                                    : null;
+                                  
+                                  return cleanLocation && cleanLocation.length > 0 ? (
+                                    <div className="flex items-center gap-1 mt-auto">
+                                      <MapPin className="w-3 h-3 text-gray-600 flex-shrink-0" />
+                                      <span className="text-xs text-gray-600 truncate">{cleanLocation}</span>
+                                    </div>
+                                  ) : null;
+                                })()}
                               </div>
                             </div>
                           );
