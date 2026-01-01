@@ -78,6 +78,7 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
   } | null>(null);
   const [isPaused, setIsPaused] = useState(false);
   const [showPausedModal, setShowPausedModal] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     let mounted = true;
