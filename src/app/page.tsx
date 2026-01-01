@@ -263,7 +263,7 @@ export default function HomePage() {
             <div className="md:hidden fixed inset-0 bg-[#FAF9F6] z-50 overflow-y-auto">
               <div className="min-h-full flex flex-col">
                 {/* Header */}
-                <div className="px-4 py-5 border-b border-[#1A1A1A]/10 bg-[#FAF9F6]">
+                <div className="px-4 py-5 bg-[#FAF9F6]">
                   <div className="flex items-center justify-between max-w-7xl mx-auto">
                     <div className="flex items-center gap-3">
                       <Image
@@ -286,21 +286,29 @@ export default function HomePage() {
                 </div>
                 {/* Menu Content */}
                 <div className="flex-1 px-4 py-8">
-                  <div className="max-w-7xl mx-auto flex flex-col gap-6">
-                    <Link 
-                      href="/learn-more-about-starting" 
-                      className="px-6 py-4 bg-[#0C6F3C] text-white rounded-xl hover:bg-[#0C6F3C]/90 transition-all shadow-sm text-center text-base font-medium"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      Create account
-                    </Link>
-                    <Link 
-                      href="/agent" 
-                      className="px-6 py-4 bg-white border-2 border-[#0C6F3C] text-[#0C6F3C] rounded-xl hover:bg-[#FAF9F6] transition-all text-center text-base font-medium"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      Log in
-                    </Link>
+                  <div className="max-w-7xl mx-auto flex flex-col items-center">
+                    <h2 className="text-3xl font-bold text-[#1A1A1A] mb-2 text-center">
+                      Welcome to Soradin
+                    </h2>
+                    <p className="text-base text-[#1A1A1A]/70 mb-8 text-center">
+                      Book local funeral home professionals
+                    </p>
+                    <div className="w-full max-w-sm flex flex-col gap-4">
+                      <Link 
+                        href="/learn-more-about-starting" 
+                        className="px-6 py-4 bg-[#0C6F3C] text-white rounded-xl hover:bg-[#0C6F3C]/90 transition-all shadow-sm text-center text-base font-medium"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Create account
+                      </Link>
+                      <Link 
+                        href="/agent" 
+                        className="px-6 py-4 bg-white border-2 border-[#1A1A1A] text-[#1A1A1A] rounded-xl hover:bg-[#FAF9F6] transition-all text-center text-base font-medium"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Log in
+                      </Link>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -351,7 +359,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto relative z-20 w-full md:mt-0 -mt-4">
           {/* Headline and Search Bar - Full Width */}
           <div className="max-w-4xl">
-            <h1 className="text-6xl md:text-6xl text-2xl md:mb-8 mb-3 text-[#1A1A1A] font-semibold tracking-tight leading-none text-left">
+            <h1 className="text-6xl md:text-6xl text-2xl md:mb-8 mb-3 text-[#1A1A1A] font-semibold tracking-tight leading-none text-left pt-1">
               Book local funeral professionals
             </h1>
 
@@ -472,7 +480,7 @@ export default function HomePage() {
           <div className="md:hidden mt-4">
             <div className="bg-[#FAF9F6] rounded-3xl p-6 border border-[#1A1A1A]/5 relative overflow-hidden group hover:shadow-xl hover:shadow-black/5 transition-all flex flex-col">
               {/* Image inside the card, showing full torso */}
-              <div className="relative w-full flex items-center justify-center -mx-6 mb-2 overflow-hidden" style={{ height: '150px', minHeight: '150px', marginTop: '-48px', paddingTop: '0' }}>
+              <div className="relative w-full flex items-center justify-center -mx-6 mb-2 overflow-hidden" style={{ height: '150px', minHeight: '150px', marginTop: '-54px', paddingTop: '0' }}>
                 <Image
                   src="/What is Pre need planning image.png"
                   alt="Person asking about pre-need planning"
