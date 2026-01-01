@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabaseClient } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
-import { Settings, Camera, Check, AlertCircle, Lock, Monitor, LogOut, Trash2, AlertTriangle, Bell, Mail, Smartphone, CreditCard, ExternalLink, DollarSign, Calendar, RefreshCw, MapPin, Plus, X, FileText, Clock, Edit2 } from "lucide-react";
+import { Settings, Camera, Check, AlertCircle, Lock, Trash2, AlertTriangle, Bell, Mail, Smartphone, CreditCard, ExternalLink, DollarSign, Calendar, RefreshCw, MapPin, Plus, X, FileText, Clock, Edit2 } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -2084,10 +2084,6 @@ function SecuritySection() {
   const [saving, setSaving] = useState(false);
   const [passwordMessage, setPasswordMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
-  const handleLogout = async () => {
-    await supabaseClient.auth.signOut();
-    router.push("/agent");
-  };
 
   const handleUpdatePassword = async () => {
     setSaving(true);
