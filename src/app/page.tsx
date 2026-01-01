@@ -275,7 +275,7 @@ export default function HomePage() {
       </header>
 
       {/* HERO */}
-      <div className="relative bg-[#FAF9F6] py-12 px-4 min-h-[calc(100vh-80px)] flex items-start md:pt-32 pt-4" style={{ overflow: 'visible' }}>
+      <div className="relative bg-[#FAF9F6] py-12 px-4 min-h-[calc(100vh-80px)] flex items-start md:pt-32 pt-2" style={{ overflow: 'visible' }}>
         {/* Abstract background shapes */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-20 right-10 w-96 h-96 bg-[#0C6F3C]/10 rounded-full blur-3xl" />
