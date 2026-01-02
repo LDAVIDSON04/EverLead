@@ -51,7 +51,8 @@ a:hover {
 /* Adjust arm position for large monitors (1920px and wider) */
 @media (min-width: 1920px) {
   .arm-pointing-illustration {
-    left: -100px;
+    left: 380px;
+    bottom: 276px;
   }
 }
 
