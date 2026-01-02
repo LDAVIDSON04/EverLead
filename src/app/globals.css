@@ -41,7 +41,8 @@ a:hover {
   z-index: 1;
 }
 
-/* Arm pointing illustration - responsive positioning for large monitors */
+/* Arm pointing illustration - responsive positioning */
+/* Base positioning for laptops (preserved from original) */
 .arm-pointing-illustration {
   left: -50px;
   bottom: -12px;
@@ -58,25 +59,5 @@ a:hover {
 @media (min-width: 2560px) {
   .arm-pointing-illustration {
     left: -450px;
-  }
-}
-
-/* Arm pointing illustration - Windows laptop adjustments ONLY */
-/* Base styles are inline in the component to preserve Mac view exactly */
-/* Using 1520px breakpoint to target Windows laptop (1528px) without affecting Mac screens */
-@media (min-width: 1520px) and (max-width: 1919px) {
-  .arm-pointing-illustration {
-    left: -170px !important;
-    bottom: -180px !important;
-    width: 1800px !important;
-  }
-}
-
-/* Extra-large screens */
-@media (min-width: 1920px) {
-  .arm-pointing-illustration {
-    left: -180px !important;
-    bottom: -180px !important;
-    width: 2000px !important;
   }
 }
