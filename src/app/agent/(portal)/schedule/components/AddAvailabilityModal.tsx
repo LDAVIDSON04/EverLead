@@ -205,6 +205,15 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
           return;
         }
 
+        // Normalize location to match availability API (remove "Office" suffix and province)
+        const normalizeLocation = (loc: string): string => {
+          let normalized = loc.split(',').map(s => s.trim())[0];
+          normalized = normalized.replace(/\s+office$/i, '').trim();
+          return normalized;
+        };
+
+        const normalizedLocation = normalizeLocation(selectedLocation);
+
         // Get current availability data
         const res = await fetch("/api/agent/settings/availability", {
           headers: { Authorization: `Bearer ${session.access_token}` },
@@ -214,7 +223,7 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
         // Update availability for selected location with checkbox format (same as availability page)
         const updatedAvailabilityByLocation = {
           ...(currentData.availabilityByLocation || availabilityByLocation),
-          [selectedLocation]: recurringSchedule, // Store checkbox format directly
+          [normalizedLocation]: recurringSchedule, // Store checkbox format directly
         };
 
         // Ensure all locations have availability data (same as availability page)
@@ -224,10 +233,10 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
           completeAvailabilityByLocation[loc] = updatedAvailabilityByLocation[loc] || defaultSchedule;
         });
 
-        // Update availabilityTypeByLocation
+        // Update availabilityTypeByLocation (use normalized location)
         const updatedTypeByLocation = {
           ...(currentData.availabilityTypeByLocation || availabilityTypeByLocation),
-          [selectedLocation]: "recurring" as const,
+          [normalizedLocation]: "recurring" as const,
         };
 
         // Save the recurring availability (same format as availability page)
