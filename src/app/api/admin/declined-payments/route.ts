@@ -27,6 +27,11 @@ export async function GET(req: NextRequest) {
 
     if (error) {
       console.error("Error fetching declined payments:", error);
+      // If table doesn't exist (PGRST205), return empty array instead of error
+      if (error.code === 'PGRST205' || error.message?.includes('Could not find the table')) {
+        console.warn("declined_payments table does not exist - returning empty array");
+        return NextResponse.json({ declinedPayments: [] });
+      }
       return NextResponse.json(
         { error: "Failed to fetch declined payments", details: error.message },
         { status: 500 }
