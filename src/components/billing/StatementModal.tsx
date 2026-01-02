@@ -179,7 +179,7 @@ export function StatementModal({ open, onClose, data, loading }: StatementModalP
       filename: `Soradin_Statement_${data.monthName}_${data.year}.pdf`,
       image: { type: 'jpeg' as const, quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true },
-      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' as const }
     };
 
     // Generate and download PDF
