@@ -244,20 +244,28 @@ export async function POST(req: NextRequest) {
 
     if (existingLead) {
       leadId = existingLead.id;
-      // Update the lead's city if the booking is for a different location
-      // This ensures the location shown matches where the appointment was booked
+      // Update the lead's information (city, province, phone) if provided
+      // This ensures the location and contact info shown matches the booking
+      const updateData: any = {};
       if (city && city.trim()) {
+        updateData.city = city.trim();
+      }
+      if (province && province.trim()) {
+        updateData.province = province.trim();
+      }
+      if (phone && phone.trim()) {
+        updateData.phone = phone.trim();
+      }
+      
+      if (Object.keys(updateData).length > 0) {
         const { error: updateError } = await supabaseAdmin
           .from("leads")
-          .update({ 
-            city: city.trim(),
-            province: province?.trim() || existingLead.province || null
-          })
+          .update(updateData)
           .eq("id", leadId);
         
         if (updateError) {
-          console.warn("Failed to update lead city for booking:", updateError);
-          // Don't fail the booking if city update fails
+          console.warn("Failed to update lead information for booking:", updateError);
+          // Don't fail the booking if update fails
         }
       }
     } else {
@@ -271,9 +279,9 @@ export async function POST(req: NextRequest) {
         last_name: lastName.trim(),
         full_name: `${firstName} ${lastName}`.trim(),
         email: email.trim(),
-        phone: phone?.trim() || "",
-        city: city?.trim() || "",
-        province: province?.trim() || "",
+        phone: phone?.trim() || null,
+        city: city?.trim() || null,
+        province: province?.trim() || null,
         service_type: serviceType?.trim() || "Pre-need Planning",
         status: "new",
         urgency_level: urgencyLevel,
