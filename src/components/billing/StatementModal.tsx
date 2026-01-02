@@ -48,12 +48,11 @@ export function StatementModal({ open, onClose, data, loading }: StatementModalP
 
   if (!open) return null;
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!data) return;
     
-    // Create a new window for printing/downloading
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
+    // Dynamically import html2pdf.js
+    const html2pdf = (await import('html2pdf.js')).default;
 
     // Generate HTML for PDF
     const htmlContent = `
@@ -96,10 +95,6 @@ export function StatementModal({ open, onClose, data, loading }: StatementModalP
             .summary-row span:last-child { font-weight: 600; }
             .footer { padding-top: 24px; border-top: 2px solid black; text-align: center; }
             .footer p { font-size: 12px; color: #666; margin: 0; }
-            @media print {
-              body { padding: 0; }
-              .no-print { display: none; }
-            }
           </style>
         </head>
         <body>
@@ -173,13 +168,35 @@ export function StatementModal({ open, onClose, data, loading }: StatementModalP
       </html>
     `;
 
-    printWindow.document.write(htmlContent);
-    printWindow.document.close();
+    // Create a temporary container element
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = htmlContent;
+    const contentElement = tempDiv.querySelector('.statement-container') || tempDiv;
     
-    // Wait for content to load, then print
-    setTimeout(() => {
-      printWindow.print();
-    }, 250);
+    // Configure PDF options
+    const opt = {
+      margin: 0.5,
+      filename: `Soradin_Statement_${data.monthName}_${data.year}.pdf`,
+      image: { type: 'jpeg' as const, quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+    };
+
+    // Generate and download PDF
+    try {
+      await html2pdf().set(opt).from(contentElement).save();
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      // Fallback to print dialog
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        printWindow.document.write(htmlContent);
+        printWindow.document.close();
+        setTimeout(() => {
+          printWindow.print();
+        }, 250);
+      }
+    }
   };
 
   return (
