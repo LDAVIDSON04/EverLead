@@ -42,6 +42,40 @@ export default function AdminPaymentsPage() {
 
         if (paymentsError) throw paymentsError;
 
+        // Also fetch appointments with price_cents > 0 that don't have a payment record
+        const { data: appointmentsWithPrice, error: appointmentsError } = await supabaseClient
+          .from("appointments")
+          .select("id, created_at, price_cents, agent_id, lead_id, status")
+          .not("price_cents", "is", null)
+          .gt("price_cents", 0)
+          .order("created_at", { ascending: false });
+
+        if (appointmentsError) {
+          console.error("Error fetching appointments with price:", appointmentsError);
+          // Don't throw - continue with payments table data only
+        }
+
+        // Get appointment IDs that already have payments
+        const appointmentIdsWithPayments = new Set((paymentsData || []).map((p: any) => p.appointment_id).filter(Boolean));
+
+        // Create payment records from appointments that don't have payments
+        const appointmentPayments = (appointmentsWithPrice || [])
+          .filter((apt: any) => !appointmentIdsWithPayments.has(apt.id))
+          .map((apt: any) => ({
+            id: apt.id, // Use appointment ID as payment ID for these
+            created_at: apt.created_at,
+            appointment_id: apt.id,
+            amount_cents: apt.price_cents,
+            fee_cents: null, // Calculate fee if needed
+            status: apt.status === "completed" || apt.status === "confirmed" ? "completed" : "pending",
+          }));
+
+        // Combine both sources
+        const allPayments = [
+          ...(paymentsData || []),
+          ...appointmentPayments,
+        ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
         // Fetch appointment data if we have appointment_ids
         const appointmentIds = allPayments.map((p: any) => p.appointment_id).filter(Boolean);
         let appointmentsMap: Record<string, any> = {};
