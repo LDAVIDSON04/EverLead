@@ -336,13 +336,6 @@ export default function HomePage() {
           />
         </div>
 
-        <div className="max-w-7xl mx-auto relative z-20 w-full md:mt-0 mt-2 overflow-visible">
-          {/* Headline and Search Bar - Full Width */}
-          <div className="max-w-4xl">
-            <h1 className="text-6xl md:text-6xl text-2xl md:mb-8 mb-3 text-[#1A1A1A] font-semibold tracking-tight leading-none text-left" style={{ paddingTop: '4px' }}>
-              Book local funeral professionals
-            </h1>
-
         {/* Arm pointing illustration - positioned to point at Find care button */}
         <div className="absolute hidden lg:block z-10 pointer-events-none arm-pointing-illustration" style={{ left: "-50px", bottom: "-12px", width: "1500px", height: "auto" }}>
           <Image
