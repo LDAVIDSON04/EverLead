@@ -168,9 +168,14 @@ export function StatementModal({ open, onClose, data, loading }: StatementModalP
       </html>
     `;
 
-    // Create a temporary container element
+    // Create a temporary container element and append to DOM (required for html2pdf)
     const tempDiv = document.createElement('div');
+    tempDiv.style.position = 'absolute';
+    tempDiv.style.left = '-9999px';
+    tempDiv.style.top = '-9999px';
     tempDiv.innerHTML = htmlContent;
+    document.body.appendChild(tempDiv);
+    
     const contentElement = (tempDiv.querySelector('.statement-container') || tempDiv) as HTMLElement;
     
     // Configure PDF options
@@ -185,8 +190,14 @@ export function StatementModal({ open, onClose, data, loading }: StatementModalP
     // Generate and download PDF
     try {
       await html2pdf().set(opt).from(contentElement).save();
+      // Clean up
+      document.body.removeChild(tempDiv);
     } catch (error) {
       console.error('Error generating PDF:', error);
+      // Clean up
+      if (document.body.contains(tempDiv)) {
+        document.body.removeChild(tempDiv);
+      }
       // Fallback to print dialog
       const printWindow = window.open('', '_blank');
       if (printWindow) {
