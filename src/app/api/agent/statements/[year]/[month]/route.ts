@@ -89,15 +89,19 @@ export async function GET(
         .eq("agent_id", userId)
         .not("price_cents", "is", null)
         .order("created_at", { ascending: false })
-        .limit(10);
+        .limit(20);
       
       console.log(`[STATEMENTS] Debug: Found ${allAppointments?.length || 0} total appointments with price_cents for this agent`);
       if (allAppointments && allAppointments.length > 0) {
-        console.log(`[STATEMENTS] Debug: Sample appointments:`, allAppointments.map(a => ({
-          id: a.id.substring(0, 8),
-          created_at: a.created_at,
-          price_cents: a.price_cents
-        })));
+        // Check which months these appointments are in
+        const appointmentsByMonth: Record<string, number> = {};
+        allAppointments.forEach((a: any) => {
+          const date = new Date(a.created_at);
+          const monthKey = `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}`;
+          appointmentsByMonth[monthKey] = (appointmentsByMonth[monthKey] || 0) + 1;
+        });
+        console.log(`[STATEMENTS] Debug: Appointments by month:`, appointmentsByMonth);
+        console.log(`[STATEMENTS] Debug: Looking for ${year}-${String(month).padStart(2, '0')}`);
       }
     }
 
