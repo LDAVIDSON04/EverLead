@@ -504,14 +504,31 @@ export async function GET(req: NextRequest) {
         endDate,
       });
 
-      const { data: dailyAvailabilityData, error: dailyAvailabilityError } = await supabaseAdmin
+      // Fetch all daily availability entries for this agent in the date range
+      // We'll filter by location in code to handle normalization properly
+      const { data: allDailyAvailability, error: dailyAvailabilityError } = await supabaseAdmin
         .from("daily_availability")
-        .select("date, start_time, end_time")
+        .select("date, start_time, end_time, location")
         .eq("specialist_id", agentId)
-        .eq("location", selectedLocation)
         .gte("date", startDate)
         .lte("date", endDate)
         .order("date", { ascending: true });
+
+      if (dailyAvailabilityError) {
+        console.error("Error loading daily availability:", dailyAvailabilityError);
+        return NextResponse.json(
+          { error: "Failed to load daily availability" },
+          { status: 500 }
+        );
+      }
+
+      // Filter by normalized location (case-insensitive, handle "Office" suffix)
+      const normalizedSelectedLocation = selectedLocation.toLowerCase().trim();
+      const dailyAvailabilityData = (allDailyAvailability || []).filter((entry: any) => {
+        if (!entry.location) return false;
+        const normalizedEntryLocation = normalizeLocation(entry.location)?.toLowerCase().trim();
+        return normalizedEntryLocation === normalizedSelectedLocation;
+      });
 
       if (dailyAvailabilityError) {
         console.error("Error loading daily availability:", dailyAvailabilityError);
