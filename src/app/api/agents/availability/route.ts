@@ -497,6 +497,13 @@ export async function GET(req: NextRequest) {
     
     // If daily mode, fetch daily availability from database
     if (locationType === "daily" && selectedLocation) {
+      console.log("📅 [DAILY AVAILABILITY] Fetching daily availability:", {
+        agentId,
+        selectedLocation,
+        startDate,
+        endDate,
+      });
+
       const { data: dailyAvailabilityData, error: dailyAvailabilityError } = await supabaseAdmin
         .from("daily_availability")
         .select("date, start_time, end_time")
@@ -514,6 +521,11 @@ export async function GET(req: NextRequest) {
         );
       }
 
+      console.log("📅 [DAILY AVAILABILITY] Found entries:", {
+        count: dailyAvailabilityData?.length || 0,
+        entries: dailyAvailabilityData || [],
+      });
+
       // Create a map of date -> daily availability entry
       const dailyAvailabilityMap = new Map<string, { start_time: string; end_time: string }>();
       (dailyAvailabilityData || []).forEach((entry: any) => {
@@ -529,7 +541,8 @@ export async function GET(req: NextRequest) {
       const startDateObj = new Date(Date.UTC(startParts[0], startParts[1] - 1, startParts[2]));
       const endDateObj = new Date(Date.UTC(endParts[0], endParts[1] - 1, endParts[2]));
 
-      // Generate days from daily availability
+      // Generate days ONLY for dates that have daily availability entries
+      // Do NOT generate empty days - only return days with actual availability
       for (
         let date = new Date(startDateObj);
         date <= endDateObj;
@@ -538,8 +551,9 @@ export async function GET(req: NextRequest) {
         const dateStr = date.toISOString().split("T")[0];
         const dailyEntry = dailyAvailabilityMap.get(dateStr);
 
+        // Only process days that have daily availability entries
         if (!dailyEntry) {
-          days.push({ date: dateStr, slots: [] });
+          // Skip days without daily availability - do NOT add empty days
           continue;
         }
 
