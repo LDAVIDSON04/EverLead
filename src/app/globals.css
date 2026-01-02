@@ -41,6 +41,26 @@ a:hover {
   z-index: 1;
 }
 
+/* Arm pointing illustration - responsive positioning for large monitors */
+.arm-pointing-illustration {
+  left: -50px;
+  bottom: -12px;
+}
+
+/* Adjust arm position for large monitors (1920px and wider) */
+@media (min-width: 1920px) {
+  .arm-pointing-illustration {
+    left: -150px;
+  }
+}
+
+/* Further adjustment for very large monitors (2560px and wider) */
+@media (min-width: 2560px) {
+  .arm-pointing-illustration {
+    left: -250px;
+  }
+}
+
 /* Arm pointing illustration - Windows laptop adjustments ONLY */
 /* Base styles are inline in the component to preserve Mac view exactly */
 /* Using 1520px breakpoint to target Windows laptop (1528px) without affecting Mac screens */
