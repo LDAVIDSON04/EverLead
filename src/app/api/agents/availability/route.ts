@@ -91,7 +91,7 @@ export async function GET(req: NextRequest) {
     };
     
     // Use the specified location, or fall back to first location, or agent's default city
-    let selectedLocation = normalizeLocation(location);
+    let selectedLocation = location ? normalizeLocation(location) : undefined;
     if (!selectedLocation && locations.length > 0) {
       selectedLocation = locations[0];
     }
@@ -100,6 +100,11 @@ export async function GET(req: NextRequest) {
     }
     if (!selectedLocation && locations.length > 0) {
       selectedLocation = locations[0];
+    }
+    
+    // Trim the selected location to remove any whitespace
+    if (selectedLocation) {
+      selectedLocation = selectedLocation.trim();
     }
     
     // Determine which type is active for this location
@@ -120,23 +125,41 @@ export async function GET(req: NextRequest) {
     let locationSchedule: Record<string, any> = {};
     
     if (selectedLocation && locationType === "recurring") {
-      // Try exact match first
+      // Try exact match first (case-sensitive)
       if (availabilityByLocation[selectedLocation]) {
         locationSchedule = availabilityByLocation[selectedLocation];
       } else {
         // Try case-insensitive match
         const matchingLocation = Object.keys(availabilityByLocation).find(
-          loc => loc.toLowerCase() === selectedLocation!.toLowerCase()
+          loc => loc.toLowerCase().trim() === selectedLocation!.toLowerCase().trim()
         );
         if (matchingLocation) {
           locationSchedule = availabilityByLocation[matchingLocation];
+          // Update selectedLocation to the matched key for consistency
+          selectedLocation = matchingLocation;
         }
       }
     }
     
-    // Final fallback: use first available location's schedule (for recurring mode)
-    if (locationType === "recurring" && Object.keys(locationSchedule).length === 0 && locations.length > 0) {
-      locationSchedule = availabilityByLocation[locations[0]] || {};
+    // Only use fallback if no location was specified in the request
+    // If a location was specified but doesn't match, return empty schedule
+    if (locationType === "recurring" && Object.keys(locationSchedule).length === 0) {
+      if (!location) {
+        // No location specified - use first available location as fallback
+        if (locations.length > 0) {
+          locationSchedule = availabilityByLocation[locations[0]] || {};
+          selectedLocation = locations[0];
+        }
+      } else {
+        // Location was specified but didn't match - log warning but don't use fallback
+        console.warn("⚠️ Specified location not found in availability:", {
+          requestedLocation: location,
+          normalizedLocation: normalizeLocation(location),
+          selectedLocation,
+          availableLocations: locations,
+          availabilityByLocationKeys: Object.keys(availabilityByLocation),
+        });
+      }
     }
     
     // Debug logging - comprehensive
