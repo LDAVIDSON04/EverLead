@@ -269,39 +269,10 @@ export async function GET(req: NextRequest) {
           return false; // City not in agent's locations at all
         }
         
-        // If city is in the list, check if it has availability set with time slots
-        // Try to find matching availability data (case-insensitive)
-        // Check both exact matches and keys that contain the search city
-        const matchingLocationKey = Object.keys(agent.availabilityByLocation).find((loc: string) => {
-          if (!loc) return false;
-          const normalizedLoc = normalizeCity(loc);
-          // Exact match or one contains the other
-          return normalizedLoc === normalizedSearch || 
-                 normalizedLoc.includes(normalizedSearch) ||
-                 normalizedSearch.includes(normalizedLoc);
-        });
-        
-        if (matchingLocationKey) {
-          // Check if this city has actual availability set (at least one day enabled)
-          const cityAvailability = agent.availabilityByLocation[matchingLocationKey];
-          if (cityAvailability && typeof cityAvailability === 'object') {
-            // Check if at least one day has enabled: true
-            const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-            const hasEnabledDay = days.some((day: string) => {
-              const dayData = cityAvailability[day];
-              return dayData && typeof dayData === 'object' && dayData.enabled === true;
-            });
-            
-            if (hasEnabledDay) {
-              console.log(`[AGENT SEARCH] Agent ${agent.id} matches location "${location}" (searchCity: "${searchCity}", matched key: "${matchingLocationKey}")`);
-              return true;
-            }
-          }
-        }
-        
-        // If city is in office locations but no availability data yet, don't show (agent needs to set availability)
-        // This ensures agents only show when they've actually configured availability
-        return false;
+        // If city is in the list, include the agent (even if they have no availability set)
+        // Agents will show with "No appointments" for all blocks if they have no availability
+        console.log(`[AGENT SEARCH] Agent ${agent.id} matches location "${location}" (searchCity: "${searchCity}") - including agent even if no availability set`);
+        return true;
       });
       
       console.log(`✅ [AGENT SEARCH] After location filter "${location}" (searchCity: "${locationParts[0]}"): ${filtered.length} agents matched`);
