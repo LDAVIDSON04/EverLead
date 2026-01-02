@@ -1754,15 +1754,11 @@ function SearchResults() {
                 <div className="text-center py-12">
                   <Clock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-gray-600">No time slots available.</p>
-                  <p className="text-xs text-gray-400 mt-2">Debug: allAvailabilityDays is empty</p>
                 </div>
               ) : allAvailabilityDays.filter(day => day.slots.length > 0).length === 0 ? (
                 <div className="text-center py-12">
                   <Clock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-gray-600">No time slots available.</p>
-                  <p className="text-xs text-gray-400 mt-2">
-                    Debug: {allAvailabilityDays.length} days loaded, but none have slots
-                  </p>
                 </div>
               ) : (
                 <div className="space-y-6">
