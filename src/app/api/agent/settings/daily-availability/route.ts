@@ -34,12 +34,21 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Normalize location to match availability API (remove "Office" suffix and province)
+    const normalizeLocation = (loc: string): string => {
+      let normalized = loc.split(',').map(s => s.trim())[0];
+      normalized = normalized.replace(/\s+office$/i, '').trim();
+      return normalized;
+    };
+
+    const normalizedLocation = normalizeLocation(location);
+
     // Fetch daily availability from database
     const { data: dailyAvailability, error } = await supabaseAdmin
       .from("daily_availability")
       .select("*")
       .eq("specialist_id", user.id)
-      .eq("location", location)
+      .eq("location", normalizedLocation)
       .gte("date", startDate)
       .lte("date", endDate)
       .order("date", { ascending: true });
@@ -88,13 +97,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Normalize location to match availability API (remove "Office" suffix and province)
+    const normalizeLocation = (loc: string): string => {
+      let normalized = loc.split(',').map(s => s.trim())[0];
+      normalized = normalized.replace(/\s+office$/i, '').trim();
+      return normalized;
+    };
+
+    const normalizedLocation = normalizeLocation(location);
+
     // Upsert daily availability (using unique constraint on specialist_id, location, date)
     const { data, error } = await supabaseAdmin
       .from("daily_availability")
       .upsert(
         {
           specialist_id: user.id,
-          location,
+          location: normalizedLocation,
           date,
           start_time: startTime,
           end_time: endTime,
@@ -152,11 +170,20 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
+    // Normalize location to match availability API (remove "Office" suffix and province)
+    const normalizeLocation = (loc: string): string => {
+      let normalized = loc.split(',').map(s => s.trim())[0];
+      normalized = normalized.replace(/\s+office$/i, '').trim();
+      return normalized;
+    };
+
+    const normalizedLocation = normalizeLocation(location);
+
     const { error } = await supabaseAdmin
       .from("daily_availability")
       .delete()
       .eq("specialist_id", user.id)
-      .eq("location", location)
+      .eq("location", normalizedLocation)
       .eq("date", date);
 
     if (error) {
