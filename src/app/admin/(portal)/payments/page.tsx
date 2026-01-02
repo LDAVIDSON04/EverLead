@@ -38,8 +38,7 @@ export default function AdminPaymentsPage() {
             fee_cents,
             status
           `)
-          .order("created_at", { ascending: false })
-          .limit(100);
+          .order("created_at", { ascending: false });
 
         if (paymentsError) throw paymentsError;
 
