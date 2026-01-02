@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { supabaseClient } from "@/lib/supabaseClient";
 import { useRequireRole } from "@/lib/hooks/useRequireRole";
 import { Calendar, Clock, User, X, ChevronLeft, ChevronRight, MapPin } from "lucide-react";
@@ -33,6 +33,7 @@ type Appointment = {
 export default function SchedulePage() {
   useRequireRole("agent");
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [specialist, setSpecialist] = useState<Specialist | null>(null);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -50,6 +51,16 @@ export default function SchedulePage() {
   const [viewingExternalAppointment, setViewingExternalAppointment] = useState<any | null>(null);
   const [showAddAvailabilityModal, setShowAddAvailabilityModal] = useState(false);
   const [showCalendarSyncModal, setShowCalendarSyncModal] = useState(false);
+
+  // Check for query parameter to open availability modal
+  useEffect(() => {
+    const openAvailability = searchParams.get('openAvailability');
+    if (openAvailability === 'true') {
+      setShowAddAvailabilityModal(true);
+      // Clean up URL by removing the query parameter
+      router.replace('/agent/schedule', { scroll: false });
+    }
+  }, [searchParams, router]);
 
   // Calculate Sunday-Saturday week starting from Sunday of the current week
   const getWeekDates = (offset: number) => {

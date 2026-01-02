@@ -584,7 +584,7 @@ export default function AgentDashboardPage() {
                   </div>
 
                   <Link
-                    href="/agent/settings"
+                    href="/agent/schedule?openAvailability=true"
                     className="w-full mt-4 px-4 py-2 bg-white text-gray-700 rounded-lg border border-gray-200 hover:bg-gray-50 transition-all text-sm flex items-center justify-center"
                   >
                     Edit Availability
