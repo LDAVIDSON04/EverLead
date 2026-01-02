@@ -171,7 +171,7 @@ export function StatementModal({ open, onClose, data, loading }: StatementModalP
     // Create a temporary container element
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = htmlContent;
-    const contentElement = tempDiv.querySelector('.statement-container') || tempDiv;
+    const contentElement = (tempDiv.querySelector('.statement-container') || tempDiv) as HTMLElement;
     
     // Configure PDF options
     const opt = {
