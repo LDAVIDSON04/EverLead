@@ -20,6 +20,7 @@ interface OfficeLocation {
   name: string;
   address: string;
   nextAvailable: string;
+  locationName: string; // The actual location name used in the API (e.g., "Kelowna", "Penticton")
 }
 
 interface BookingPanelProps {
@@ -74,20 +75,23 @@ export function BookingPanel({ agentId }: BookingPanelProps) {
               id: String(index + 1),
               name: `${agent.funeral_home || 'Office'} - ${loc}`,
               address: address || `${loc}`,
-              nextAvailable: 'Next available tomorrow'
+              nextAvailable: 'Next available tomorrow',
+              locationName: loc // Store the raw location name for API calls
             });
           });
         } else {
-          // Default location
+          // Default location - use agent's city as location name
           const address = business_street && business_city && business_province && business_zip
             ? `${business_street}, ${business_city}, ${business_province} ${business_zip}`
             : business_address || `${agent.agent_city || ''}, ${agent.agent_province || ''}`;
+          const defaultLocationName = agent.agent_city || '';
           
           locations.push({
             id: '1',
             name: agent.funeral_home || 'Main Office',
             address: address || 'Location not specified',
-            nextAvailable: 'Next available tomorrow'
+            nextAvailable: 'Next available tomorrow',
+            locationName: defaultLocationName
           });
         }
         
@@ -95,7 +99,8 @@ export function BookingPanel({ agentId }: BookingPanelProps) {
           id: '1',
           name: agent.funeral_home || 'Main Office',
           address: `${agent.agent_city || ''}, ${agent.agent_province || ''}`,
-          nextAvailable: 'Next available tomorrow'
+          nextAvailable: 'Next available tomorrow',
+          locationName: agent.agent_city || ''
         }]);
       } catch (err) {
         console.error("Error fetching agent data:", err);
@@ -107,13 +112,22 @@ export function BookingPanel({ agentId }: BookingPanelProps) {
 
   // Fetch availability
   useEffect(() => {
+    if (officeLocations.length === 0) return; // Wait for locations to load
+    
     const fetchAvailability = async () => {
       setLoading(true);
       try {
         const startDate = weekStartDate.toISOString().split("T")[0];
         const endDate = new Date(weekStartDate.getTime() + 13 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
         
-        const res = await fetch(`/api/agents/availability?agentId=${agentId}&startDate=${startDate}&endDate=${endDate}`);
+        // Get the selected location name
+        const selectedLocation = officeLocations.find(loc => loc.id === selectedLocationId) || officeLocations[0];
+        const locationName = selectedLocation?.locationName || '';
+        
+        // Build API URL with location parameter
+        const url = `/api/agents/availability?agentId=${agentId}&startDate=${startDate}&endDate=${endDate}${locationName ? `&location=${encodeURIComponent(locationName)}` : ''}`;
+        
+        const res = await fetch(url);
         if (res.ok) {
           const availabilityData: any[] = await res.json();
           
@@ -158,7 +172,7 @@ export function BookingPanel({ agentId }: BookingPanelProps) {
     };
     
     fetchAvailability();
-  }, [agentId, weekStartDate]);
+  }, [agentId, weekStartDate, selectedLocationId, officeLocations]);
 
   const selectedLocation = officeLocations.find(loc => loc.id === selectedLocationId) || officeLocations[0];
   
