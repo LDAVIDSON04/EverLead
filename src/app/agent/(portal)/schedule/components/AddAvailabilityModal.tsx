@@ -142,6 +142,15 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
           return;
         }
 
+        // Normalize location to match availability API (remove "Office" suffix and province)
+        const normalizeLocation = (loc: string): string => {
+          let normalized = loc.split(',').map(s => s.trim())[0];
+          normalized = normalized.replace(/\s+office$/i, '').trim();
+          return normalized;
+        };
+
+        const normalizedLocation = normalizeLocation(selectedLocation);
+
         const res = await fetch("/api/agent/settings/daily-availability", {
           method: "POST",
           headers: {
@@ -149,7 +158,7 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
             Authorization: `Bearer ${session.access_token}`,
           },
           body: JSON.stringify({
-            location: selectedLocation,
+            location: normalizedLocation,
             date: dayDate,
             startTime: dayFromTime, // camelCase
             endTime: dayToTime, // camelCase
@@ -161,10 +170,10 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
           throw new Error(data.error || "Failed to save daily availability");
         }
 
-        // Update availability type for this location to "daily"
+        // Update availability type for this location to "daily" (use normalized location)
         const updatedTypeByLocation = {
           ...availabilityTypeByLocation,
-          [selectedLocation]: "daily" as const,
+          [normalizedLocation]: "daily" as const,
         };
 
         // Get current availability data to save type
