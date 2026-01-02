@@ -97,19 +97,26 @@ export async function GET(req: NextRequest) {
     // Use the specified location, or fall back to first location, or agent's default city
     let selectedLocation = location ? normalizeLocation(location) : undefined;
     if (!selectedLocation && locations.length > 0) {
-      selectedLocation = locations[0];
+      selectedLocation = locations[0].trim();
     }
     if (!selectedLocation && profile.agent_city) {
       selectedLocation = normalizeLocation(profile.agent_city);
     }
     if (!selectedLocation && locations.length > 0) {
-      selectedLocation = locations[0];
+      selectedLocation = locations[0].trim();
     }
     
-    // Trim the selected location to remove any whitespace
+    // Ensure selectedLocation is trimmed (normalizeLocation already trims, but be safe)
     if (selectedLocation) {
       selectedLocation = selectedLocation.trim();
     }
+    
+    console.log("🔍 Location normalization:", {
+      originalLocation: location,
+      normalizedLocation: location ? normalizeLocation(location) : undefined,
+      selectedLocation,
+      availableLocations: locations,
+    });
     
     // Determine which type is active for this location
     let locationType: "recurring" | "daily" = "recurring"; // Default to recurring
