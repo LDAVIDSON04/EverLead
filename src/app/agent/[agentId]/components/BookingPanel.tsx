@@ -71,12 +71,15 @@ export function BookingPanel({ agentId }: BookingPanelProps) {
               ? `${business_street}, ${business_city}, ${business_province} ${business_zip}`
               : business_address || `${business_city || agent.agent_city || ''}, ${business_province || agent.agent_province || ''}`;
             
+            // Store the location name exactly as it appears in metadata (trimmed)
+            const locationName = loc.trim();
+            
             locations.push({
               id: String(index + 1),
-              name: `${agent.funeral_home || 'Office'} - ${loc}`,
-              address: address || `${loc}`,
+              name: `${agent.funeral_home || 'Office'} - ${locationName}`,
+              address: address || `${locationName}`,
               nextAvailable: 'Next available tomorrow',
-              locationName: loc // Store the raw location name for API calls
+              locationName: locationName // Store the exact location name from metadata for API calls
             });
           });
         } else {
@@ -84,7 +87,7 @@ export function BookingPanel({ agentId }: BookingPanelProps) {
           const address = business_street && business_city && business_province && business_zip
             ? `${business_street}, ${business_city}, ${business_province} ${business_zip}`
             : business_address || `${agent.agent_city || ''}, ${agent.agent_province || ''}`;
-          const defaultLocationName = agent.agent_city || '';
+          const defaultLocationName = (agent.agent_city || '').trim();
           
           locations.push({
             id: '1',
@@ -100,7 +103,7 @@ export function BookingPanel({ agentId }: BookingPanelProps) {
           name: agent.funeral_home || 'Main Office',
           address: `${agent.agent_city || ''}, ${agent.agent_province || ''}`,
           nextAvailable: 'Next available tomorrow',
-          locationName: agent.agent_city || ''
+          locationName: (agent.agent_city || '').trim()
         }]);
       } catch (err) {
         console.error("Error fetching agent data:", err);
@@ -122,10 +125,18 @@ export function BookingPanel({ agentId }: BookingPanelProps) {
         
         // Get the selected location name
         const selectedLocation = officeLocations.find(loc => loc.id === selectedLocationId) || officeLocations[0];
-        const locationName = selectedLocation?.locationName || '';
+        const locationName = selectedLocation?.locationName?.trim() || '';
         
         // Build API URL with location parameter
         const url = `/api/agents/availability?agentId=${agentId}&startDate=${startDate}&endDate=${endDate}${locationName ? `&location=${encodeURIComponent(locationName)}` : ''}`;
+        
+        console.log('📅 BookingPanel fetching availability:', {
+          agentId,
+          selectedLocationId,
+          locationName,
+          url,
+          officeLocations: officeLocations.map(loc => ({ id: loc.id, name: loc.name, locationName: loc.locationName }))
+        });
         
         const res = await fetch(url);
         if (res.ok) {
