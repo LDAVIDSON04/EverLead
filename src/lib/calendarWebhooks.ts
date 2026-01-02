@@ -102,42 +102,37 @@ export async function setupGoogleWebhook(connection: CalendarConnection): Promis
     const webhookUrl = `${BASE_URL}/api/integrations/google/webhook`;
     const webhookSecret = process.env.GOOGLE_WEBHOOK_SECRET || "soradin-webhook-secret";
 
-    // Calculate expiration (must be between now and 7 days from now, in seconds since epoch)
+    // Calculate expiration (must be between now and 7 days from now, in MILLISECONDS since epoch)
+    // Google Calendar API expects expiration in milliseconds, not seconds
     // Google allows max 7 days, but let's use 6 days to be safe
-    const nowSeconds = Math.floor(Date.now() / 1000);
-    const expirationSeconds = nowSeconds + (6 * 24 * 60 * 60); // 6 days from now
+    const now = Date.now();
+    const expirationMs = now + (6 * 24 * 60 * 60 * 1000); // 6 days from now in milliseconds
 
-    // Ensure expiration is a valid positive integer and within Google's allowed range
-    if (!Number.isInteger(expirationSeconds) || expirationSeconds <= nowSeconds) {
-      throw new Error(`Invalid expiration calculation: ${expirationSeconds} (now: ${nowSeconds})`);
+    // Ensure expiration is a valid positive number and within Google's allowed range
+    if (expirationMs <= now) {
+      throw new Error(`Invalid expiration calculation: ${expirationMs} (now: ${now})`);
     }
     
-    // Google requires expiration to be at most 7 days (604800 seconds) from now
-    const maxExpiration = nowSeconds + (7 * 24 * 60 * 60);
-    if (expirationSeconds > maxExpiration) {
-      throw new Error(`Expiration ${expirationSeconds} exceeds Google's maximum of ${maxExpiration}`);
+    // Google requires expiration to be at most 7 days from now
+    const maxExpirationMs = now + (7 * 24 * 60 * 60 * 1000);
+    if (expirationMs > maxExpirationMs) {
+      throw new Error(`Expiration ${expirationMs} exceeds Google's maximum of ${maxExpirationMs}`);
     }
 
     // Subscribe to calendar push notifications
-    // Note: Google's API sometimes has issues with expiration parameter
-    // We'll include it but if it fails, we'll retry without it
+    // Note: Google's API expects expiration in milliseconds since epoch
     const watchPayload: any = {
       id: channelId,
       type: "web_hook",
       address: webhookUrl,
       token: webhookSecret,
+      expiration: expirationMs.toString(), // Google expects this as a string in milliseconds
     };
-    
-    // Only add expiration if it's a valid positive number
-    // Some Google API versions have issues with this parameter
-    if (expirationSeconds > 0 && expirationSeconds < maxExpiration) {
-      watchPayload.expiration = expirationSeconds.toString(); // Try as string to avoid parsing issues
-    }
 
     console.log(`Setting up Google webhook with payload:`, {
       channelId,
-      expiration: expirationSeconds,
-      expirationDate: new Date(expirationSeconds * 1000).toISOString(),
+      expiration: expirationMs,
+      expirationDate: new Date(expirationMs).toISOString(),
     });
 
     const watchResponse = await fetch(
