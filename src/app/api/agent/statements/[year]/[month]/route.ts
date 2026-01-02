@@ -56,18 +56,50 @@ export async function GET(
     }
 
     // Calculate start and end dates for the month (UTC)
+    // Note: month is 1-indexed (1=January, 12=December)
     const startDate = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0, 0));
+    // Get last day of month: month, 0 means last day of previous month
     const endDate = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999));
+    
+    console.log(`[STATEMENTS] Fetching appointments for ${year}-${month}`, {
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString(),
+      userId
+    });
 
     // Fetch all appointments with charges for this month
+    // Match the logic from /api/agent/settings/billing - get all appointments with price_cents set
+    // Use created_at to determine when the charge occurred (when appointment was created/confirmed)
     const { data: appointments, error: appointmentsError } = await supabaseAdmin
       .from("appointments")
-      .select("id, created_at, price_cents, stripe_payment_intent_id")
+      .select("id, created_at, price_cents, stripe_payment_intent_id, status")
       .eq("agent_id", userId)
       .not("price_cents", "is", null)
       .gte("created_at", startDate.toISOString())
       .lte("created_at", endDate.toISOString())
       .order("created_at", { ascending: true });
+    
+    console.log(`[STATEMENTS] Found ${appointments?.length || 0} appointments for ${year}-${month}`);
+    
+    // If no appointments found, try a broader query to debug
+    if (!appointments || appointments.length === 0) {
+      const { data: allAppointments } = await supabaseAdmin
+        .from("appointments")
+        .select("id, created_at, price_cents, status")
+        .eq("agent_id", userId)
+        .not("price_cents", "is", null)
+        .order("created_at", { ascending: false })
+        .limit(10);
+      
+      console.log(`[STATEMENTS] Debug: Found ${allAppointments?.length || 0} total appointments with price_cents for this agent`);
+      if (allAppointments && allAppointments.length > 0) {
+        console.log(`[STATEMENTS] Debug: Sample appointments:`, allAppointments.map(a => ({
+          id: a.id.substring(0, 8),
+          created_at: a.created_at,
+          price_cents: a.price_cents
+        })));
+      }
+    }
 
     if (appointmentsError) {
       console.error("Error fetching appointments:", appointmentsError);
