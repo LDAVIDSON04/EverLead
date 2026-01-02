@@ -7,7 +7,7 @@ export const runtime = "nodejs";
 
 export async function GET(req: NextRequest) {
   try {
-    // Fetch all pending declined payments with agent and appointment info
+    // Fetch all pending declined payments
     const { data: declinedPayments, error } = await supabaseAdmin
       .from("declined_payments")
       .select(`
@@ -20,31 +20,7 @@ export async function GET(req: NextRequest) {
         stripe_error_message,
         created_at,
         resolved_at,
-        status,
-        profiles:agent_id (
-          id,
-          full_name,
-          first_name,
-          last_name,
-          email,
-          funeral_home,
-          agent_city,
-          agent_province
-        ),
-        appointments:appointment_id (
-          id,
-          starts_at,
-          ends_at,
-          status,
-          leads (
-            id,
-            full_name,
-            email,
-            phone,
-            city,
-            province
-          )
-        )
+        status
       `)
       .eq("status", "pending")
       .order("created_at", { ascending: false });
@@ -52,16 +28,64 @@ export async function GET(req: NextRequest) {
     if (error) {
       console.error("Error fetching declined payments:", error);
       return NextResponse.json(
-        { error: "Failed to fetch declined payments" },
+        { error: "Failed to fetch declined payments", details: error.message },
         { status: 500 }
       );
     }
 
+    // Fetch related data separately
+    const agentIds = [...new Set((declinedPayments || []).map((p: any) => p.agent_id).filter(Boolean))];
+    const appointmentIds = [...new Set((declinedPayments || []).map((p: any) => p.appointment_id).filter(Boolean))];
+    
+    let agentsMap: Record<string, any> = {};
+    let appointmentsMap: Record<string, any> = {};
+    let leadsMap: Record<string, any> = {};
+
+    // Fetch agents
+    if (agentIds.length > 0) {
+      const { data: agentsData } = await supabaseAdmin
+        .from("profiles")
+        .select("id, full_name, first_name, last_name, email, funeral_home, agent_city, agent_province")
+        .in("id", agentIds);
+      
+      (agentsData || []).forEach((agent: any) => {
+        agentsMap[agent.id] = agent;
+      });
+    }
+
+    // Fetch appointments
+    if (appointmentIds.length > 0) {
+      const { data: appointmentsData } = await supabaseAdmin
+        .from("appointments")
+        .select("id, starts_at, ends_at, status, lead_id")
+        .in("id", appointmentIds);
+      
+      (appointmentsData || []).forEach((apt: any) => {
+        appointmentsMap[apt.id] = apt;
+        if (apt.lead_id) {
+          // We'll fetch leads separately
+        }
+      });
+
+      // Fetch leads
+      const leadIds = [...new Set((appointmentsData || []).map((apt: any) => apt.lead_id).filter(Boolean))];
+      if (leadIds.length > 0) {
+        const { data: leadsData } = await supabaseAdmin
+          .from("leads")
+          .select("id, full_name, email, phone, city, province")
+          .in("id", leadIds);
+        
+        (leadsData || []).forEach((lead: any) => {
+          leadsMap[lead.id] = lead;
+        });
+      }
+    }
+
     // Transform the data to flatten nested relationships
     const formattedPayments = (declinedPayments || []).map((payment: any) => {
-      const agent = Array.isArray(payment.profiles) ? payment.profiles[0] : payment.profiles;
-      const appointment = Array.isArray(payment.appointments) ? payment.appointments[0] : payment.appointments;
-      const lead = appointment?.leads ? (Array.isArray(appointment.leads) ? appointment.leads[0] : appointment.leads) : null;
+      const agent = agentsMap[payment.agent_id] || null;
+      const appointment = appointmentsMap[payment.appointment_id] || null;
+      const lead = appointment?.lead_id ? (leadsMap[appointment.lead_id] || null) : null;
 
       // Get agent email from auth.users
       let agentEmail: string | null = null;

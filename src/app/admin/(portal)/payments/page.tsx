@@ -43,7 +43,7 @@ export default function AdminPaymentsPage() {
         if (paymentsError) throw paymentsError;
 
         // Fetch appointment data if we have appointment_ids
-        const appointmentIds = (paymentsData || []).map((p: any) => p.appointment_id).filter(Boolean);
+        const appointmentIds = allPayments.map((p: any) => p.appointment_id).filter(Boolean);
         let appointmentsMap: Record<string, any> = {};
         let leadIds: string[] = [];
         let agentIds: string[] = [];
@@ -87,7 +87,7 @@ export default function AdminPaymentsPage() {
           });
         }
 
-        const rows: AdminPayment[] = (paymentsData || []).map((p: any) => {
+        const rows: AdminPayment[] = allPayments.map((p: any) => {
           const appointment = appointmentsMap[p.appointment_id];
           const lead = appointment?.lead_id ? leadsMap[appointment.lead_id] : null;
           const agent = appointment?.agent_id ? agentsMap[appointment.agent_id] : null;
