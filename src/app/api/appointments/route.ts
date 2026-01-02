@@ -164,7 +164,7 @@ export async function POST(req: NextRequest) {
           appointment_id: appointment.id,
           amount_cents: price_cents,
           currency: "CAD",
-          status: "requires_payment",
+          status: "pending",
         });
 
       if (paymentError) {
