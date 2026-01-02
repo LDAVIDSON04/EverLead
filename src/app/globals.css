@@ -53,6 +53,7 @@ a:hover {
   .arm-pointing-illustration {
     left: -200px;
     bottom: 20px;
+    width: 2200px !important;
   }
 }
 
