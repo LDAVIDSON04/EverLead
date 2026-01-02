@@ -621,6 +621,13 @@ export async function GET(req: NextRequest) {
         days.push({ date: dateStr, slots });
       }
 
+      console.log("📅 [DAILY AVAILABILITY] Returning days:", {
+        selectedLocation,
+        totalDays: days.length,
+        dates: days.map(d => d.date),
+        daysWithSlots: days.filter(d => d.slots.length > 0).length,
+      });
+
       return NextResponse.json(days);
     }
 
