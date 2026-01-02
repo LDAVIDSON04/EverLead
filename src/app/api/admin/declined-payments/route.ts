@@ -43,41 +43,53 @@ export async function GET(req: NextRequest) {
 
     // Fetch agents
     if (agentIds.length > 0) {
-      const { data: agentsData } = await supabaseAdmin
+      const { data: agentsData, error: agentsError } = await supabaseAdmin
         .from("profiles")
         .select("id, full_name, first_name, last_name, email, funeral_home, agent_city, agent_province")
         .in("id", agentIds);
       
-      (agentsData || []).forEach((agent: any) => {
-        agentsMap[agent.id] = agent;
-      });
+      if (agentsError) {
+        console.error("Error fetching agents for declined payments:", agentsError);
+        // Continue without agent data
+      } else {
+        (agentsData || []).forEach((agent: any) => {
+          agentsMap[agent.id] = agent;
+        });
+      }
     }
 
     // Fetch appointments
     if (appointmentIds.length > 0) {
-      const { data: appointmentsData } = await supabaseAdmin
+      const { data: appointmentsData, error: appointmentsError } = await supabaseAdmin
         .from("appointments")
         .select("id, starts_at, ends_at, status, lead_id")
         .in("id", appointmentIds);
       
-      (appointmentsData || []).forEach((apt: any) => {
-        appointmentsMap[apt.id] = apt;
-        if (apt.lead_id) {
-          // We'll fetch leads separately
-        }
-      });
-
-      // Fetch leads
-      const leadIds = [...new Set((appointmentsData || []).map((apt: any) => apt.lead_id).filter(Boolean))];
-      if (leadIds.length > 0) {
-        const { data: leadsData } = await supabaseAdmin
-          .from("leads")
-          .select("id, full_name, email, phone, city, province")
-          .in("id", leadIds);
-        
-        (leadsData || []).forEach((lead: any) => {
-          leadsMap[lead.id] = lead;
+      if (appointmentsError) {
+        console.error("Error fetching appointments for declined payments:", appointmentsError);
+        // Continue without appointment data
+      } else {
+        (appointmentsData || []).forEach((apt: any) => {
+          appointmentsMap[apt.id] = apt;
         });
+
+        // Fetch leads
+        const leadIds = [...new Set((appointmentsData || []).map((apt: any) => apt.lead_id).filter(Boolean))];
+        if (leadIds.length > 0) {
+          const { data: leadsData, error: leadsError } = await supabaseAdmin
+            .from("leads")
+            .select("id, full_name, email, phone, city, province")
+            .in("id", leadIds);
+          
+          if (leadsError) {
+            console.error("Error fetching leads for declined payments:", leadsError);
+            // Continue without lead data
+          } else {
+            (leadsData || []).forEach((lead: any) => {
+              leadsMap[lead.id] = lead;
+            });
+          }
+        }
       }
     }
 
