@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Star, MapPin, X } from "lucide-react";
@@ -21,6 +21,7 @@ type AvailabilityDay = {
 export default function BookAgentPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const agentId = (params?.agentId as string) || "";
 
   // State
@@ -90,11 +91,31 @@ export default function BookAgentPage() {
       setError(null);
 
       try {
-        // Calculate date range (today to 7 days from now)
-        const today = new Date();
-        const startDate = today.toISOString().split("T")[0];
+        // Get date from URL query params, or use today as default
+        const dateParam = searchParams.get("date");
+        
+        let startDate: string;
+        if (dateParam) {
+          // Use the selected date as start date (ensure it's not in the past)
+          const selectedDateObj = new Date(dateParam + "T00:00:00");
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          
+          // If selected date is in the past, use today instead
+          if (selectedDateObj < today) {
+            startDate = today.toISOString().split("T")[0];
+          } else {
+            startDate = dateParam;
+          }
+        } else {
+          // Default to today
+          startDate = new Date().toISOString().split("T")[0];
+        }
+        
+        // Calculate end date (7 days from start date)
+        const startDateObj = new Date(startDate + "T00:00:00");
         const endDate = new Date(
-          today.getTime() + 7 * 24 * 60 * 60 * 1000
+          startDateObj.getTime() + 7 * 24 * 60 * 60 * 1000
         )
           .toISOString()
           .split("T")[0];
@@ -111,10 +132,25 @@ export default function BookAgentPage() {
         const data: AvailabilityDay[] = await res.json();
         setAvailability(data);
 
-        // Default selectedDate to first day with slots
-        const firstDayWithSlots = data.find((day) => day.slots.length > 0);
-        if (firstDayWithSlots) {
-          setSelectedDate(firstDayWithSlots.date);
+        // Set selectedDate to the date from URL params, or first day with slots
+        if (dateParam) {
+          // Check if the date from URL has slots available
+          const dayFromUrl = data.find((day) => day.date === dateParam);
+          if (dayFromUrl && dayFromUrl.slots.length > 0) {
+            setSelectedDate(dateParam);
+          } else {
+            // If the selected date has no slots, use first day with slots
+            const firstDayWithSlots = data.find((day) => day.slots.length > 0);
+            if (firstDayWithSlots) {
+              setSelectedDate(firstDayWithSlots.date);
+            }
+          }
+        } else {
+          // Default selectedDate to first day with slots
+          const firstDayWithSlots = data.find((day) => day.slots.length > 0);
+          if (firstDayWithSlots) {
+            setSelectedDate(firstDayWithSlots.date);
+          }
         }
       } catch (err: any) {
         console.error("Error loading availability:", err);
@@ -125,7 +161,7 @@ export default function BookAgentPage() {
     }
 
     loadAvailability();
-  }, [agentId]);
+  }, [agentId, searchParams]);
 
   // Reload availability when date range changes
   const handleDateRangeChange = (days: number) => {

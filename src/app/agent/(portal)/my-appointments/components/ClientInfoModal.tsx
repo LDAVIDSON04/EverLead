@@ -142,14 +142,6 @@ export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId }: Clie
                     <label className="text-sm font-medium text-gray-500">Phone</label>
                     <p className="text-gray-900">{formatField('', leadData.phone)}</p>
                   </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">Age</label>
-                    <p className="text-gray-900">{formatField('', leadData.age)}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">Sex</label>
-                    <p className="text-gray-900">{formatField('', leadData.sex)}</p>
-                  </div>
                 </div>
               </div>
 
@@ -157,10 +149,6 @@ export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId }: Clie
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Address</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="md:col-span-2">
-                    <label className="text-sm font-medium text-gray-500">Street Address</label>
-                    <p className="text-gray-900">{formatField('', leadData.address_line1)}</p>
-                  </div>
                   <div>
                     <label className="text-sm font-medium text-gray-500">City</label>
                     <p className="text-gray-900">{formatField('', leadData.city)}</p>
@@ -181,67 +169,10 @@ export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId }: Clie
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Planning Details</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-sm font-medium text-gray-500">Planning For</label>
-                    <p className="text-gray-900">{formatField('', leadData.planning_for)}</p>
-                  </div>
-                  {leadData.planning_for_name && (
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Planning For Name</label>
-                      <p className="text-gray-900">{formatField('', leadData.planning_for_name)}</p>
-                    </div>
-                  )}
-                  {leadData.planning_for_age && (
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Planning For Age</label>
-                      <p className="text-gray-900">{formatField('', leadData.planning_for_age)}</p>
-                    </div>
-                  )}
-                  <div>
                     <label className="text-sm font-medium text-gray-500">Service Type</label>
                     <p className="text-gray-900">{formatField('', leadData.service_type)}</p>
                   </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">Timeline Intent</label>
-                    <p className="text-gray-900">{formatField('', leadData.timeline_intent)}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">Remains Disposition</label>
-                    <p className="text-gray-900">{formatField('', leadData.remains_disposition)}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">Service Celebration</label>
-                    <p className="text-gray-900">{formatField('', leadData.service_celebration)}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">Family Pre-arranged</label>
-                    <p className="text-gray-900">{formatField('', leadData.family_pre_arranged)}</p>
-                  </div>
                 </div>
-              </div>
-
-              {/* Additional Notes */}
-              {(leadData.additional_notes || leadData.notes_from_family) && (
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Notes</h3>
-                  {leadData.additional_notes && (
-                    <div className="mb-4">
-                      <label className="text-sm font-medium text-gray-500">Additional Notes</label>
-                      <p className="text-gray-900 whitespace-pre-wrap">{leadData.additional_notes}</p>
-                    </div>
-                  )}
-                  {leadData.notes_from_family && (
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Notes from Family</label>
-                      <p className="text-gray-900 whitespace-pre-wrap">{leadData.notes_from_family}</p>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Submission Date */}
-              <div>
-                <label className="text-sm font-medium text-gray-500">Submitted</label>
-                <p className="text-gray-900">{formatDate(leadData.created_at)}</p>
               </div>
             </div>
           ) : (

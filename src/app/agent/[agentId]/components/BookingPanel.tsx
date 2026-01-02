@@ -187,8 +187,8 @@ export function BookingPanel({ agentId }: BookingPanelProps) {
     if (weekAvailability[index]?.appointmentCount > 0) {
       setSelectedDayIndex(index);
       const selectedDay = weekAvailability[index];
-      // Navigate to booking page
-      router.push(`/book/step2?agentId=${agentId}&date=${selectedDay.dateStr}`);
+      // Navigate to booking page with time slot selection
+      router.push(`/book/agent/${agentId}?date=${selectedDay.dateStr}`);
     }
   };
 
