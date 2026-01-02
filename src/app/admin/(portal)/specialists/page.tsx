@@ -30,6 +30,7 @@ type SpecialistRow = {
   agent_province: string | null;
   metadata: any;
   office_locations: OfficeLocation[];
+  profile_picture_url: string | null;
 };
 
 export default function AdminSpecialistsPage() {
@@ -50,7 +51,7 @@ export default function AdminSpecialistsPage() {
         // Get only approved agents from profiles table (only agents visible to families)
         const { data: profilesData, error: profilesError } = await supabaseClient
           .from("profiles")
-          .select("id, full_name, email, phone, funeral_home, agent_city, agent_province, approval_status, created_at, metadata")
+          .select("id, full_name, email, phone, funeral_home, agent_city, agent_province, approval_status, created_at, metadata, profile_picture_url")
           .eq("role", "agent")
           .eq("approval_status", "approved")
           .order("created_at", { ascending: false });
@@ -59,6 +60,25 @@ export default function AdminSpecialistsPage() {
 
         // Get emails from auth.users for agents that don't have email in profiles
         const agentIds = (profilesData || []).map((p: any) => p.id);
+        
+        // Fetch emails from auth.users for agents without email in profiles
+        let emailsFromAuth: Record<string, string | null> = {};
+        if (agentIds.length > 0) {
+          try {
+            const emailResponse = await fetch("/api/admin/agents/emails", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ agentIds }),
+            });
+            if (emailResponse.ok) {
+              const emailData = await emailResponse.json();
+              emailsFromAuth = emailData.emails || {};
+            }
+          } catch (emailErr) {
+            console.error("Error fetching emails from auth.users:", emailErr);
+            // Continue without emails - not critical
+          }
+        }
         let calendarByAgent: Record<string, { google: boolean; microsoft: boolean }> = {};
         let appointmentsByAgent: Record<string, number> = {};
         let officeLocationsByAgent: Record<string, OfficeLocation[]> = {};
@@ -143,10 +163,13 @@ export default function AdminSpecialistsPage() {
             ? `${profile.agent_city}, ${profile.agent_province}`
             : profile.agent_province || profile.agent_city || null);
 
+          // Get email from profile first, fallback to auth.users
+          const email = profile.email || emailsFromAuth[profile.id] || null;
+
           return {
             id: profile.id,
             display_name: profile.full_name || null,
-            email: profile.email || null,
+            email: email,
             phone: profile.phone || null,
             funeral_home: profile.funeral_home || null,
             region: region,
@@ -161,6 +184,7 @@ export default function AdminSpecialistsPage() {
             agent_province: profile.agent_province,
             metadata: metadata,
             office_locations: officeLocations,
+            profile_picture_url: profile.profile_picture_url || null,
           };
         });
 
@@ -357,6 +381,20 @@ export default function AdminSpecialistsPage() {
                   <User className="w-5 h-5" />
                   Agent Information
                 </h3>
+                {/* Profile Picture */}
+                {selectedSpecialist.profile_picture_url && (
+                  <div className="mb-4">
+                    <p className="text-xs text-neutral-500 mb-2">Profile Picture</p>
+                    <div className="relative w-24 h-24 rounded-full overflow-hidden border-2 border-neutral-200">
+                      <Image
+                        src={selectedSpecialist.profile_picture_url}
+                        alt={selectedSpecialist.display_name || 'Agent'}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  </div>
+                )}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-xs text-neutral-500 mb-1">Full Name</p>
