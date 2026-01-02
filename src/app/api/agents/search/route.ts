@@ -330,15 +330,31 @@ export async function GET(req: NextRequest) {
     }
 
     if (query) {
-      const queryLower = query.toLowerCase();
-      filtered = filtered.filter((agent) => {
-        return (
-          agent.full_name?.toLowerCase().includes(queryLower) ||
-          agent.funeral_home?.toLowerCase().includes(queryLower) ||
-          agent.job_title?.toLowerCase().includes(queryLower) ||
-          agent.specialty?.toLowerCase().includes(queryLower)
-        );
-      });
+      const queryLower = query.toLowerCase().trim();
+      
+      // List of funeral-related keywords that should show all funeral agents
+      const funeralKeywords = ['funeral', 'funeral director', 'funeral planning', 'funeral services', 'advanced planning director'];
+      
+      // Check if query contains any funeral-related keywords (case-insensitive)
+      const isFuneralRelatedSearch = funeralKeywords.some(keyword => 
+        queryLower.includes(keyword.toLowerCase())
+      );
+      
+      if (isFuneralRelatedSearch) {
+        // If funeral-related search, don't filter by query - show all agents
+        // (location and other filters still apply)
+        console.log(`[AGENT SEARCH] Funeral-related search detected: "${query}" - showing all agents`);
+      } else {
+        // For non-funeral searches, filter agents by matching query in their fields
+        filtered = filtered.filter((agent) => {
+          return (
+            agent.full_name?.toLowerCase().includes(queryLower) ||
+            agent.funeral_home?.toLowerCase().includes(queryLower) ||
+            agent.job_title?.toLowerCase().includes(queryLower) ||
+            agent.specialty?.toLowerCase().includes(queryLower)
+          );
+        });
+      }
     }
 
     // Fetch review counts for all agents and sort by review count (highest first)

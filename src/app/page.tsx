@@ -169,7 +169,7 @@ export default function HomePage() {
   ];
 
   const specialtySuggestions = [
-    "Funeral Pre need Specialist",
+    "Advanced Planning Director",
   ];
 
   const handleSearch = (e?: React.FormEvent) => {
