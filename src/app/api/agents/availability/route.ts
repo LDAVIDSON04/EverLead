@@ -83,11 +83,15 @@ export async function GET(req: NextRequest) {
       return NextResponse.json([]);
     }
 
-    // Normalize location by removing province suffix (e.g., "Kelowna, BC" -> "Kelowna")
+    // Normalize location by removing province suffix and "Office" suffix
+    // e.g., "Kelowna, BC" -> "Kelowna", "Kelowna Office" -> "Kelowna"
     const normalizeLocation = (loc: string | undefined): string | undefined => {
       if (!loc) return undefined;
       // Remove common province suffixes like ", BC", ", AB", etc.
-      return loc.split(',').map(s => s.trim())[0];
+      let normalized = loc.split(',').map(s => s.trim())[0];
+      // Remove " Office" suffix if present (case-insensitive)
+      normalized = normalized.replace(/\s+office$/i, '').trim();
+      return normalized;
     };
     
     // Use the specified location, or fall back to first location, or agent's default city
