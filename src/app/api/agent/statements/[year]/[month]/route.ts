@@ -72,7 +72,7 @@ export async function GET(
     // Use created_at to determine when the charge occurred (when appointment was created/confirmed)
     const { data: appointments, error: appointmentsError } = await supabaseAdmin
       .from("appointments")
-      .select("id, created_at, price_cents, stripe_payment_intent_id, status")
+      .select("id, created_at, price_cents, status")
       .eq("agent_id", userId)
       .not("price_cents", "is", null)
       .gte("created_at", startDate.toISOString())
@@ -116,7 +116,7 @@ export async function GET(
     // Group appointments by date (day)
     const dailyCharges = new Map<string, { count: number; totalCents: number; dayNum: number }>();
 
-    appointments?.forEach((appt: { id: string; created_at: string; price_cents: number | null; stripe_payment_intent_id: string | null }) => {
+    appointments?.forEach((appt: { id: string; created_at: string; price_cents: number | null }) => {
       const date = new Date(appt.created_at);
       const dayNum = date.getUTCDate();
       const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
