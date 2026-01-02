@@ -343,24 +343,32 @@ export default function HomePage() {
               Book local funeral professionals
             </h1>
 
+        {/* Arm pointing illustration - positioned to point at Find care button */}
+        <div className="absolute hidden lg:block z-10 pointer-events-none arm-pointing-illustration" style={{ left: "-50px", bottom: "-12px", width: "1500px", height: "auto" }}>
+          <Image
+            src="/arm-image.png"
+            alt=""
+            width={1500}
+            height={800}
+            className="w-full h-auto object-contain"
+            style={{
+              mixBlendMode: "multiply",
+              imageRendering: "-webkit-optimize-contrast",
+              transform: "translateZ(0)",
+              backfaceVisibility: "hidden",
+            }}
+          />
+        </div>
+
+        <div className="max-w-7xl mx-auto relative z-20 w-full md:mt-0 mt-2 overflow-visible">
+          {/* Headline and Search Bar - Full Width */}
+          <div className="max-w-4xl">
+            <h1 className="text-6xl md:text-6xl text-2xl md:mb-8 mb-3 text-[#1A1A1A] font-semibold tracking-tight leading-none text-left" style={{ paddingTop: '4px' }}>
+              Book local funeral professionals
+            </h1>
+
             {/* Horizontal search bar */}
             <form onSubmit={handleSearch} className="bg-white rounded-2xl p-3 shadow-lg border border-[#1A1A1A]/5 relative z-30 md:mb-8 mb-4">
-              {/* Arm pointing illustration - positioned to point at Find care button (desktop only) */}
-              <div className="absolute hidden lg:block z-10 pointer-events-none" style={{ right: "0px", bottom: "-20px", width: "800px", height: "auto", transform: "translateX(calc(-100% - 80px))" }}>
-                <Image
-                  src="/arm-image.png"
-                  alt=""
-                  width={1500}
-                  height={800}
-                  className="w-full h-auto object-contain"
-                  style={{
-                    mixBlendMode: "multiply",
-                    imageRendering: "-webkit-optimize-contrast",
-                    transform: "translateZ(0)",
-                    backfaceVisibility: "hidden",
-                  }}
-                />
-              </div>
               <div className="flex flex-col lg:flex-row items-stretch gap-0">
                 {/* Search field */}
                 <div className="flex-1 relative border-b border-[#1A1A1A]/10 lg:border-b-0 lg:border-r lg:border-[#1A1A1A]/10">
