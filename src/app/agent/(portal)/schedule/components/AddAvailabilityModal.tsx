@@ -197,14 +197,9 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
         });
       } else {
         // Save recurring availability - use checkbox format directly like availability page
-        // Check if at least one day is enabled
-        const hasEnabledDay = days.some(day => recurringSchedule[day as keyof typeof recurringSchedule].enabled);
-        if (!hasEnabledDay) {
-          alert("Please enable at least one day for recurring availability.");
-          setSaving(false);
-          return;
-        }
-
+        // Note: No validation required - agents can save recurring schedule even if all days are disabled
+        // This allows agents to use daily-only availability if they prefer
+        
         // Normalize location to match availability API (remove "Office" suffix and province)
         const normalizeLocation = (loc: string): string => {
           let normalized = loc.split(',').map(s => s.trim())[0];
