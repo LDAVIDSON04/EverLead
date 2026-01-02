@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getLeadPriceFromUrgency } from "@/lib/leads/pricing";
 import { chargeAgentForAppointment } from "@/lib/chargeAgentForAppointment";
-import { sendPaymentDeclineEmail, getLogoBase64 } from "@/lib/emails";
+import { sendPaymentDeclineEmail } from "@/lib/emails";
 import { DateTime } from "luxon";
 
 export const dynamic = "force-dynamic";
@@ -683,24 +683,15 @@ export async function POST(req: NextRequest) {
                         <table width="800" cellpadding="0" cellspacing="0" style="background-color: #ffffff; max-width: 800px;">
                           <!-- Header -->
                           <tr>
-                            <td style="background-color: #1a4d2e; padding: 24px;">
-                            <table width="100%" cellpadding="0" cellspacing="0">
-                              <tr>
-                                <td width="80" style="vertical-align: middle;">
-                                  <table cellpadding="0" cellspacing="0" style="width: 80px; height: 80px; background-color: #ffffff; border-radius: 50%;">
-                                    <tr>
-                                      <td align="center" style="vertical-align: middle;">
-                                        <img src="data:image/png;base64,${getLogoBase64()}" alt="Soradin Logo" width="60" height="60" style="display: block; max-width: 60px; max-height: 60px; border: 0; outline: none; text-decoration: none;" />
-                                      </td>
-                                    </tr>
-                                  </table>
-                                </td>
-                                <td style="vertical-align: middle; padding-left: 24px;">
-                                  <h1 style="color: #ffffff; font-size: 32px; font-weight: bold; margin: 0;">SORADIN</h1>
-                                </td>
-                              </tr>
-                            </table>
-                          </td>
+                            <td style="background-color: #1a4d2e; padding: 32px 24px;">
+                              <table width="100%" cellpadding="0" cellspacing="0">
+                                <tr>
+                                  <td style="vertical-align: middle;">
+                                    <h1 style="color: #ffffff; font-size: 32px; font-weight: bold; margin: 0;">SORADIN</h1>
+                                  </td>
+                                </tr>
+                              </table>
+                            </td>
                           </tr>
                           
                           <!-- Content -->
@@ -832,19 +823,10 @@ export async function POST(req: NextRequest) {
                         <table width="800" cellpadding="0" cellspacing="0" style="background-color: #ffffff; max-width: 800px;">
                           <!-- Header -->
                           <tr>
-                            <td style="background-color: #1a4d2e; padding: 24px;">
+                            <td style="background-color: #1a4d2e; padding: 32px 24px;">
                               <table width="100%" cellpadding="0" cellspacing="0">
                                 <tr>
-                                  <td width="80" style="vertical-align: middle;">
-                                    <table cellpadding="0" cellspacing="0" style="width: 80px; height: 80px; background-color: #ffffff; border-radius: 50%;">
-                                      <tr>
-                                        <td align="center" style="vertical-align: middle;">
-                                          <img src="data:image/png;base64,${getLogoBase64()}" alt="Soradin Logo" width="60" height="60" style="display: block; max-width: 60px; max-height: 60px; border: 0; outline: none; text-decoration: none;" />
-                                        </td>
-                                      </tr>
-                                    </table>
-                                  </td>
-                                  <td style="vertical-align: middle; padding-left: 24px;">
+                                  <td style="vertical-align: middle;">
                                     <h1 style="color: #ffffff; font-size: 32px; font-weight: bold; margin: 0;">SORADIN</h1>
                                   </td>
                                 </tr>

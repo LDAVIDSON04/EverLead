@@ -200,11 +200,11 @@ export async function sendConsumerBookingEmail({
                 <table width="800" cellpadding="0" cellspacing="0" style="background-color: #ffffff; max-width: 800px;">
                   <!-- Header -->
                   <tr>
-                    <td style="background-color: #0D5C3D; padding: 32px 24px;">
+                    <td style="background-color: #1a4d2e; padding: 32px 24px;">
                       <table width="100%" cellpadding="0" cellspacing="0">
                         <tr>
                           <td style="vertical-align: middle;">
-                            <img src="data:image/png;base64,${getLogoBase64()}" alt="Soradin Logo" width="120" height="40" style="display: block; max-width: 120px; max-height: 40px; border: 0; outline: none; text-decoration: none; margin-bottom: 16px;" />
+                            <h1 style="color: #ffffff; font-size: 32px; font-weight: bold; margin: 0;">SORADIN</h1>
                           </td>
                         </tr>
                       </table>
@@ -250,7 +250,7 @@ export async function sendConsumerBookingEmail({
                               Please arrive 10 minutes before your scheduled appointment time.
                             </p>
                             ${appointmentId ? `<p style="color: #374151; font-size: 16px; margin: 0; line-height: 1.6;">
-                              <a href="${cleanSiteUrl}/book/cancel?appointmentId=${appointmentId}" style="color: #0D5C3D; text-decoration: underline; font-weight: 500;">Cancel Or Reschedule Appointment</a>
+                              <a href="${cleanSiteUrl}/book/cancel?appointmentId=${appointmentId}" style="color: #1a4d2e; text-decoration: underline; font-weight: 500;">Cancel Or Reschedule Appointment</a>
                             </p>` : ''}
                           </td>
                         </tr>
@@ -433,11 +433,11 @@ export async function sendAgentNewAppointmentEmail({
                 <table width="800" cellpadding="0" cellspacing="0" style="background-color: #ffffff; max-width: 800px;">
                   <!-- Header -->
                   <tr>
-                    <td style="background-color: #0D5C3D; padding: 32px 24px;">
+                    <td style="background-color: #1a4d2e; padding: 32px 24px;">
                       <table width="100%" cellpadding="0" cellspacing="0">
                         <tr>
                           <td style="vertical-align: middle;">
-                            <img src="data:image/png;base64,${getLogoBase64()}" alt="Soradin Logo" width="120" height="40" style="display: block; max-width: 120px; max-height: 40px; border: 0; outline: none; text-decoration: none; margin-bottom: 16px;" />
+                            <h1 style="color: #ffffff; font-size: 32px; font-weight: bold; margin: 0;">SORADIN</h1>
                           </td>
                         </tr>
                       </table>
@@ -520,7 +520,7 @@ export async function sendAgentNewAppointmentEmail({
                               <tr>
                                 <td style="padding-top: 4px; padding-bottom: 4px;">
                                   <p style="color: #6b7280; font-size: 13px; margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500;">Contact</p>
-                                  <p style="color: #0D5C3D; font-size: 16px; margin: 0; font-weight: normal;">${clientEmail}</p>
+                                  <p style="color: #1a4d2e; font-size: 16px; margin: 0; font-weight: normal;">${clientEmail}</p>
                                 </td>
                               </tr>
                             </table>
@@ -664,11 +664,11 @@ export async function sendAgentCancellationEmail({
                 <table width="800" cellpadding="0" cellspacing="0" style="background-color: #ffffff; max-width: 800px;">
                   <!-- Header -->
                   <tr>
-                    <td style="background-color: #0D5C3D; padding: 32px 24px;">
+                    <td style="background-color: #1a4d2e; padding: 32px 24px;">
                       <table width="100%" cellpadding="0" cellspacing="0">
                         <tr>
                           <td style="vertical-align: middle;">
-                            <img src="data:image/png;base64,${getLogoBase64()}" alt="Soradin Logo" width="120" height="40" style="display: block; max-width: 120px; max-height: 40px; border: 0; outline: none; text-decoration: none; margin-bottom: 16px;" />
+                            <h1 style="color: #ffffff; font-size: 32px; font-weight: bold; margin: 0;">SORADIN</h1>
                           </td>
                         </tr>
                       </table>
@@ -853,11 +853,11 @@ export async function sendAgentRebookingEmail({
                 <table width="800" cellpadding="0" cellspacing="0" style="background-color: #ffffff; max-width: 800px;">
                   <!-- Header -->
                   <tr>
-                    <td style="background-color: #0D5C3D; padding: 32px 24px;">
+                    <td style="background-color: #1a4d2e; padding: 32px 24px;">
                       <table width="100%" cellpadding="0" cellspacing="0">
                         <tr>
                           <td style="vertical-align: middle;">
-                            <img src="data:image/png;base64,${getLogoBase64()}" alt="Soradin Logo" width="120" height="40" style="display: block; max-width: 120px; max-height: 40px; border: 0; outline: none; text-decoration: none; margin-bottom: 16px;" />
+                            <h1 style="color: #ffffff; font-size: 32px; font-weight: bold; margin: 0;">SORADIN</h1>
                           </td>
                         </tr>
                       </table>
@@ -1044,11 +1044,11 @@ export async function sendReviewFollowUpEmail({
                 <table width="800" cellpadding="0" cellspacing="0" style="background-color: #ffffff; max-width: 800px;">
                   <!-- Header -->
                   <tr>
-                    <td style="background-color: #0D5C3D; padding: 32px 24px;">
+                    <td style="background-color: #1a4d2e; padding: 32px 24px;">
                       <table width="100%" cellpadding="0" cellspacing="0">
                         <tr>
                           <td style="vertical-align: middle;">
-                            <img src="data:image/png;base64,${getLogoBase64()}" alt="Soradin Logo" width="120" height="40" style="display: block; max-width: 120px; max-height: 40px; border: 0; outline: none; text-decoration: none; margin-bottom: 16px;" />
+                            <h1 style="color: #ffffff; font-size: 32px; font-weight: bold; margin: 0;">SORADIN</h1>
                           </td>
                         </tr>
                       </table>
@@ -1086,7 +1086,7 @@ export async function sendReviewFollowUpEmail({
                             <table cellpadding="0" cellspacing="0" style="margin-bottom: 12px;">
                               <tr>
                                 <td>
-                                  <a href="${reviewUrl}" style="display: inline-block; background-color: #0D5C3D; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-size: 16px; font-weight: 500;">Share Your Experience</a>
+                                  <a href="${reviewUrl}" style="display: inline-block; background-color: #1a4d2e; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-size: 16px; font-weight: 500;">Share Your Experience</a>
                                 </td>
                               </tr>
                             </table>
@@ -1224,11 +1224,11 @@ export async function sendPaymentDeclineEmail({
                 <table width="800" cellpadding="0" cellspacing="0" style="background-color: #ffffff; max-width: 800px;">
                   <!-- Header -->
                   <tr>
-                    <td style="background-color: #0D5C3D; padding: 32px 24px;">
+                    <td style="background-color: #1a4d2e; padding: 32px 24px;">
                       <table width="100%" cellpadding="0" cellspacing="0">
                         <tr>
                           <td style="vertical-align: middle;">
-                            <img src="data:image/png;base64,${getLogoBase64()}" alt="Soradin Logo" width="120" height="40" style="display: block; max-width: 120px; max-height: 40px; border: 0; outline: none; text-decoration: none; margin-bottom: 16px;" />
+                            <h1 style="color: #ffffff; font-size: 32px; font-weight: bold; margin: 0;">SORADIN</h1>
                           </td>
                         </tr>
                       </table>
@@ -1288,7 +1288,7 @@ export async function sendPaymentDeclineEmail({
                               We were unable to process the payment for an appointment booking. Your account has been temporarily paused, and you will not appear in search results until you update your payment method.
                             </p>
                             <p style="color: #374151; font-size: 16px; margin: 0; line-height: 1.5;">
-                              Please <a href="${billingUrl}" style="color: #0D5C3D; text-decoration: underline;">update your payment method</a> to reactivate your account. Once updated, we'll automatically charge the outstanding payment and your account will be reactivated.
+                              Please <a href="${billingUrl}" style="color: #1a4d2e; text-decoration: underline;">update your payment method</a> to reactivate your account. Once updated, we'll automatically charge the outstanding payment and your account will be reactivated.
                             </p>
                           </td>
                         </tr>
@@ -1422,11 +1422,11 @@ export async function sendPaymentReceiptEmail({
                 <table width="800" cellpadding="0" cellspacing="0" style="background-color: #ffffff; max-width: 800px;">
                   <!-- Header -->
                   <tr>
-                    <td style="background-color: #0D5C3D; padding: 32px 24px;">
+                    <td style="background-color: #1a4d2e; padding: 32px 24px;">
                       <table width="100%" cellpadding="0" cellspacing="0">
                         <tr>
                           <td style="vertical-align: middle;">
-                            <img src="data:image/png;base64,${getLogoBase64()}" alt="Soradin Logo" width="120" height="40" style="display: block; max-width: 120px; max-height: 40px; border: 0; outline: none; text-decoration: none; margin-bottom: 16px;" />
+                            <h1 style="color: #ffffff; font-size: 32px; font-weight: bold; margin: 0;">SORADIN</h1>
                           </td>
                         </tr>
                       </table>
