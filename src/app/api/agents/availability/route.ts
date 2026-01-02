@@ -530,16 +530,11 @@ export async function GET(req: NextRequest) {
         return normalizedEntryLocation === normalizedSelectedLocation;
       });
 
-      if (dailyAvailabilityError) {
-        console.error("Error loading daily availability:", dailyAvailabilityError);
-        return NextResponse.json(
-          { error: "Failed to load daily availability" },
-          { status: 500 }
-        );
-      }
-
-      console.log("📅 [DAILY AVAILABILITY] Found entries:", {
-        count: dailyAvailabilityData?.length || 0,
+      console.log("📅 [DAILY AVAILABILITY] Filtered entries for location:", {
+        selectedLocation,
+        normalizedSelectedLocation,
+        allEntriesCount: allDailyAvailability?.length || 0,
+        filteredCount: dailyAvailabilityData?.length || 0,
         entries: dailyAvailabilityData || [],
       });
 
