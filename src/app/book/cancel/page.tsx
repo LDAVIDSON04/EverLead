@@ -130,14 +130,23 @@ function CancelAppointmentContent() {
         const endDate = new Date(today.getTime() + 14 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
         
         // Determine which office location this appointment was booked for
-        // Since appointments don't store the office location, we need to check which location
-        // has availability for the appointment's confirmed_at time
+        // Use the lead's city (where they booked from) to match the office location
+        // This matches how the email determines the location
         let locationToUse = '';
         
-        if (appointmentData.exact_time) {
-          // We have the exact booking time - check which location has this slot available
+        // Normalize location name (remove "Office" suffix, province, etc.)
+        const normalizeLocation = (loc: string | undefined | null): string => {
+          if (!loc) return '';
+          let normalized = loc.split(',').map(s => s.trim())[0];
+          normalized = normalized.replace(/\s+office$/i, '').trim();
+          return normalized.toLowerCase();
+        };
+        
+        const leadCity = appointmentData.lead?.city;
+        
+        if (leadCity) {
+          // Try to match lead's city to office locations
           try {
-            // Fetch all office locations
             const { data: officeLocations } = await supabaseClient
               .from('office_locations')
               .select('city')
@@ -145,30 +154,18 @@ function CancelAppointmentContent() {
               .order('city', { ascending: true });
             
             if (officeLocations && officeLocations.length > 0) {
-              // For each location, check if it has the confirmed_at time available
-              // We'll fetch availability for the appointment date and check which location has this slot
-              const appointmentDate = appointmentData.exact_time.split('T')[0];
+              const normalizedLeadCity = normalizeLocation(leadCity);
               
-              for (const officeLoc of officeLocations) {
-                try {
-                  const testRes = await fetch(
-                    `/api/agents/availability?agentId=${appointmentData.agent_id}&startDate=${appointmentDate}&endDate=${appointmentDate}&location=${encodeURIComponent(officeLoc.city)}`
-                  );
-                  
-                  if (testRes.ok) {
-                    const testData: AvailabilityDay[] = await testRes.json();
-                    const dayData = testData.find(d => d.date === appointmentDate);
-                    
-                    // Check if this location has the exact time slot
-                    if (dayData?.slots?.some(slot => slot.startsAt === appointmentData.exact_time)) {
-                      locationToUse = officeLoc.city;
-                      break; // Found the location - use it
-                    }
-                  }
-                } catch (err) {
-                  // Continue to next location
-                  console.error(`Error checking location ${officeLoc.city}:`, err);
-                }
+              // Find matching office location (case-insensitive)
+              const matchingLocation = officeLocations.find((loc: any) => 
+                normalizeLocation(loc.city) === normalizedLeadCity
+              );
+              
+              if (matchingLocation) {
+                locationToUse = matchingLocation.city;
+              } else if (officeLocations.length > 0) {
+                // If no exact match, use first location (fallback)
+                locationToUse = officeLocations[0].city;
               }
             }
           } catch (err) {
@@ -176,40 +173,14 @@ function CancelAppointmentContent() {
           }
         }
         
-        // If we couldn't determine from the time slot, try matching by address
-        // The appointment email shows "Penticton, BC" so check if we can match by that
-        if (!locationToUse) {
-          try {
-            const { data: officeLocations } = await supabaseClient
-              .from('office_locations')
-              .select('city, street_address')
-              .eq('agent_id', appointmentData.agent_id)
-              .order('city', { ascending: true });
-            
-            if (officeLocations && officeLocations.length > 0) {
-              // Check agent's business address - if it mentions Penticton, use that
-              const businessAddress = appointmentData.agent?.business_address || '';
-              if (businessAddress.toLowerCase().includes('penticton')) {
-                const pentictonLoc = officeLocations.find((loc: any) => 
-                  loc.city?.toLowerCase().includes('penticton')
-                );
-                if (pentictonLoc) {
-                  locationToUse = pentictonLoc.city;
-                }
-              }
-              
-              // If still no match and we have multiple locations, default to first one
-              // (This is a fallback - ideally we'd know which location was used)
-              if (!locationToUse && officeLocations.length > 0) {
-                locationToUse = officeLocations[0].city;
-              }
-            }
-          } catch (err) {
-            console.error("Error in location fallback:", err);
-          }
+        // Final fallback: use lead's city directly (normalized)
+        if (!locationToUse && leadCity) {
+          locationToUse = normalizeLocation(leadCity);
+          // Capitalize first letter
+          locationToUse = locationToUse.charAt(0).toUpperCase() + locationToUse.slice(1);
         }
         
-        // Final fallback: use agent_city
+        // Last resort: use agent_city
         if (!locationToUse) {
           locationToUse = appointmentData.agent?.agent_city || '';
         }
