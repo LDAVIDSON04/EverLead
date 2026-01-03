@@ -177,30 +177,9 @@ function CancelAppointmentContent() {
           console.error("Error fetching office locations:", err);
         }
         
-        // Fallback: use agent metadata locations or agent_city
+        // Fallback: use agent_city if no office location match found
         if (!locationToUse) {
-          const metadata = appointmentData.agent?.metadata || {};
-          const availabilityLocations = (metadata as any)?.availability?.locations || [];
-          if (availabilityLocations.length > 0) {
-            // Try to match lead city with availability locations
-            const leadCity = appointmentData.lead?.city?.toLowerCase().trim();
-            if (leadCity) {
-              const matchingLocation = availabilityLocations.find((loc: string) => 
-                loc.toLowerCase().trim() === leadCity
-              );
-              if (matchingLocation) {
-                locationToUse = matchingLocation;
-              }
-            }
-            
-            // If no match, use first location from metadata
-            if (!locationToUse) {
-              locationToUse = availabilityLocations[0];
-            }
-          } else {
-            // Last resort: use agent_city
-            locationToUse = appointmentData.agent?.agent_city || '';
-          }
+          locationToUse = appointmentData.agent?.agent_city || '';
         }
         
         const locationParam = locationToUse ? `&location=${encodeURIComponent(locationToUse)}` : '';
