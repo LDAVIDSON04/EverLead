@@ -250,17 +250,43 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
         });
       }
 
+      // Generate success message with date/location info
+      let successMessage = "Availability saved successfully!";
+      if (activeTab === "daily") {
+        // Format date nicely (e.g., "January 3, 2026")
+        const dateObj = new Date(dayDate + "T00:00:00");
+        const formattedDate = dateObj.toLocaleDateString('en-US', { 
+          weekday: 'long', 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric' 
+        });
+        successMessage = `You have set availability for ${selectedLocation} on ${formattedDate} and it is now visible for families to book.`;
+      } else {
+        // For recurring, show location and enabled days
+        const enabledDays = days.filter(day => recurringSchedule[day as keyof typeof recurringSchedule].enabled);
+        if (enabledDays.length > 0) {
+          const daysList = enabledDays.map(day => {
+            const dayName = day.charAt(0).toUpperCase() + day.slice(1);
+            return dayName;
+          }).join(", ");
+          successMessage = `You have set recurring availability for ${selectedLocation} on ${daysList} and it is now visible for families to book.`;
+        } else {
+          successMessage = `Availability settings for ${selectedLocation} have been saved.`;
+        }
+      }
+      
       // Show success message
-      setSaveMessage({ type: "success", text: "Availability saved successfully!" });
+      setSaveMessage({ type: "success", text: successMessage });
       
       // Call onSave callback
       onSave?.();
       
-      // Close modal after a short delay to show the message
+      // Close modal after a delay to show the message
       setTimeout(() => {
         setSaveMessage(null);
         onClose();
-      }, 1500);
+      }, 3000);
     } catch (err: any) {
       console.error("Error saving:", err);
       setSaveMessage({ type: "error", text: err.message || "Failed to save availability. Please try again." });
