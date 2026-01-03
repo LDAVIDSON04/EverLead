@@ -287,40 +287,24 @@ export function BookingPanel({ agentId, initialLocation }: BookingPanelProps) {
             daysWithSlots: availabilityData.filter(d => d.slots?.length > 0).length
           });
           
-          // Create a map of date -> availability data for quick lookup
-          const availabilityMap = new Map<string, any>();
-          availabilityData.forEach(day => {
-            availabilityMap.set(day.date, day);
-          });
-          
-          const days: DayAvailability[] = [];
-          // Show 7 days starting from today (same as search page)
-          const today = new Date();
-          for (let i = 0; i < 7; i++) {
-            // Create date in UTC to avoid timezone issues
-            const date = new Date(today);
-            date.setUTCDate(today.getUTCDate() + i);
-            date.setUTCHours(0, 0, 0, 0);
-            const dateStr = date.toISOString().split("T")[0];
+          // Use the availability data directly from API (same as search page)
+          // The API returns days with slots, we just map them to our format
+          const days: DayAvailability[] = availabilityData.map((day) => {
+            // Parse date string (YYYY-MM-DD) in UTC to avoid timezone shifts
+            const [year, month, dayOfMonth] = day.date.split("-").map(Number);
+            const date = new Date(Date.UTC(year, month - 1, dayOfMonth));
             
-            const dayData = availabilityMap.get(dateStr);
+            const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' });
+            const dateNum = date.getUTCDate();
+            const monthName = date.toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' });
             
-            // Only add day if it exists in availabilityData (for daily-only) OR if it's in our range (for recurring)
-            // Since the API returns all days with availability (daily or recurring), we should include all returned days
-            // For days not in the response, they have no availability (either not set for daily, or disabled for recurring)
-            const appointmentCount = dayData?.slots?.length || 0;
-            
-            const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'short' });
-            const dateNum = date.getDate();
-            const month = date.toLocaleDateString('en-US', { month: 'short' });
-            
-            days.push({
+            return {
               dayOfWeek,
               date: dateNum,
-              month,
+              month: monthName,
               fullDate: date,
-              appointmentCount,
-              timeSlots: dayData?.slots?.map((s: any) => {
+              appointmentCount: day.slots?.length || 0,
+              timeSlots: day.slots?.map((s: any) => {
                 const d = new Date(s.startsAt);
                 const hours = d.getHours();
                 const minutes = d.getMinutes();
@@ -328,9 +312,9 @@ export function BookingPanel({ agentId, initialLocation }: BookingPanelProps) {
                 const displayHours = hours % 12 || 12;
                 return `${displayHours}:${String(minutes).padStart(2, '0')} ${ampm}`;
               }) || [],
-              dateStr
-            });
-          }
+              dateStr: day.date
+            };
+          });
           
           setWeekAvailability(days);
         } else {
