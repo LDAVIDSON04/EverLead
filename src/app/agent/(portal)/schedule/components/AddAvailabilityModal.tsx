@@ -340,6 +340,7 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
                   </select>
                 </div>
               </div>
+            </>
           )}
         </div>
 
