@@ -192,14 +192,10 @@ export function BookingPanel({ agentId, initialLocation }: BookingPanelProps) {
     const fetchAvailability = async () => {
       setLoading(true);
       try {
-        // Use UTC dates to ensure consistent date strings matching API format
-        const startDateUtc = new Date(weekStartDate);
-        startDateUtc.setUTCHours(0, 0, 0, 0);
-        const startDate = startDateUtc.toISOString().split("T")[0];
-        
-        const endDateUtc = new Date(startDateUtc);
-        endDateUtc.setUTCDate(startDateUtc.getUTCDate() + 13);
-        const endDate = endDateUtc.toISOString().split("T")[0];
+        // Use today to today + 7 days (same as search page)
+        const today = new Date();
+        const startDate = today.toISOString().split("T")[0];
+        const endDate = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
         
         // Get the selected location name
         const selectedLocation = officeLocations.find(loc => loc.id === selectedLocationId) || officeLocations[0];
@@ -286,38 +282,78 @@ export function BookingPanel({ agentId, initialLocation }: BookingPanelProps) {
     };
     
     fetchAvailability();
-  }, [agentId, weekStartDate, selectedLocationId, officeLocations]);
+  }, [agentId, selectedLocationId, officeLocations]);
 
   const selectedLocation = officeLocations.find(loc => loc.id === selectedLocationId) || officeLocations[0];
   
-  const getDateRangeText = () => {
-    if (weekAvailability.length === 0) return '';
-    const firstDay = weekAvailability[0];
-    const lastDay = weekAvailability[13];
-    return `${firstDay.dayOfWeek}, ${firstDay.month} ${firstDay.date} - ${lastDay.dayOfWeek}, ${lastDay.month} ${lastDay.date}`;
-  };
-  
-  const goToPreviousWeek = () => {
-    const newDate = new Date(weekStartDate);
-    newDate.setDate(weekStartDate.getDate() - 14);
-    setWeekStartDate(newDate);
-    setSelectedDayIndex(null);
-  };
-  
-  const goToNextWeek = () => {
-    const newDate = new Date(weekStartDate);
-    newDate.setDate(weekStartDate.getDate() + 14);
-    setWeekStartDate(newDate);
-    setSelectedDayIndex(null);
-  };
-  
-  const handleDayClick = (index: number) => {
+  const handleDayClick = async (index: number) => {
     if (weekAvailability[index]?.appointmentCount > 0) {
       setSelectedDayIndex(index);
       const selectedDay = weekAvailability[index];
-      // Navigate to booking page with time slot selection
-      router.push(`/book/agent/${agentId}?date=${selectedDay.dateStr}`);
+      
+      // Open time slot modal instead of navigating
+      setSelectedDayForModal(selectedDay.dateStr);
+      setLoadingTimeSlots(true);
+      setShowTimeSlotModal(true);
+      
+      // Fetch agent info
+      try {
+        const { data, error } = await supabaseClient
+          .from("profiles")
+          .select("full_name, profile_picture_url, job_title, funeral_home, agent_city, agent_province, metadata")
+          .eq("id", agentId)
+          .eq("role", "agent")
+          .single();
+        
+        if (!error && data) {
+          const metadata = data.metadata || {};
+          setAgentInfo({
+            ...data,
+            business_address: (metadata as any)?.business_address || null,
+            business_street: (metadata as any)?.business_street || null,
+            business_city: (metadata as any)?.business_city || null,
+            business_province: (metadata as any)?.business_province || null,
+            business_zip: (metadata as any)?.business_zip || null,
+          });
+        }
+      } catch (err) {
+        console.error("Error loading agent info:", err);
+      }
+      
+      // Fetch availability for 14 days starting from selected day
+      try {
+        const startDate = selectedDay.dateStr;
+        const endDate = new Date(new Date(startDate).getTime() + 14 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+        
+        // Get the selected location name
+        const selectedLocation = officeLocations.find(loc => loc.id === selectedLocationId) || officeLocations[0];
+        const locationName = selectedLocation?.locationName?.trim() || '';
+        const locationParam = locationName ? `&location=${encodeURIComponent(locationName)}` : '';
+        
+        const res = await fetch(
+          `/api/agents/availability?agentId=${agentId}&startDate=${startDate}&endDate=${endDate}${locationParam}`
+        );
+        
+        if (res.ok) {
+          const availabilityData: AvailabilityDay[] = await res.json();
+          setAllAvailabilityDays(availabilityData);
+        } else {
+          setAllAvailabilityDays([]);
+        }
+      } catch (err) {
+        console.error("Error loading time slots:", err);
+        setAllAvailabilityDays([]);
+      } finally {
+        setLoadingTimeSlots(false);
+      }
     }
+  };
+  
+  const closeTimeSlotModal = () => {
+    setShowTimeSlotModal(false);
+    setSelectedDayForModal(null);
+    setAllAvailabilityDays([]);
+    setAgentInfo(null);
   };
 
   if (officeLocations.length === 0) {
@@ -492,18 +528,157 @@ export function BookingPanel({ agentId, initialLocation }: BookingPanelProps) {
               })}
             </div>
             
-            {/* View More Availability Link */}
-            <div>
-              <button 
-                onClick={goToNextWeek}
-                className="text-sm text-gray-700 hover:text-gray-900 hover:underline font-medium"
-              >
-                View more availability
-              </button>
-            </div>
           </>
         )}
       </div>
+      
+      {/* Time Slot Selection Modal */}
+      {showTimeSlotModal && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-[10000] flex items-center justify-center p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              closeTimeSlotModal();
+            }
+          }}
+        >
+          <div 
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto relative z-[10001]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header with Agent Info */}
+            <div className="bg-gradient-to-r from-green-50 to-white p-6 border-b border-gray-200 sticky top-0 z-10">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-bold text-black">Book an appointment</h2>
+                <button
+                  onClick={closeTimeSlotModal}
+                  className="text-gray-500 hover:text-black transition-colors p-2 rounded-full hover:bg-gray-100"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+              
+              {/* Agent Profile Card */}
+              {agentInfo && (
+                <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
+                  <div className="flex items-center gap-4">
+                    {agentInfo.profile_picture_url ? (
+                      <Image
+                        src={agentInfo.profile_picture_url}
+                        alt={agentInfo.full_name || "Agent"}
+                        width={80}
+                        height={80}
+                        className="rounded-full object-cover border-2 border-green-600"
+                        unoptimized
+                      />
+                    ) : (
+                      <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center border-2 border-green-600">
+                        <span className="text-green-700 text-2xl font-semibold">
+                          {(agentInfo.full_name || "A")[0].toUpperCase()}
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      <h3 className="text-xl font-bold text-black mb-1">
+                        {agentInfo.full_name || "Agent"}
+                      </h3>
+                      {agentInfo.job_title && (
+                        <p className="text-gray-700 font-medium text-sm mb-1">{agentInfo.job_title}</p>
+                      )}
+                      {agentInfo.funeral_home && (
+                        <p className="text-gray-600 text-sm mb-2">{agentInfo.funeral_home}</p>
+                      )}
+                      {(agentInfo.business_street || agentInfo.business_address) && (
+                        <div className="flex items-start gap-2 mb-3">
+                          <MapPin className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                          <span className="text-gray-500 text-xs">
+                            {agentInfo.business_street && agentInfo.business_city && agentInfo.business_province && agentInfo.business_zip
+                              ? `${agentInfo.business_street}, ${agentInfo.business_city}, ${agentInfo.business_province} ${agentInfo.business_zip}`
+                              : agentInfo.business_address || `${agentInfo.business_street || ''}${agentInfo.business_city ? `, ${agentInfo.business_city}` : ''}${agentInfo.business_province ? `, ${agentInfo.business_province}` : ''}${agentInfo.business_zip ? ` ${agentInfo.business_zip}` : ''}`.trim()}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Content */}
+            <div className="p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <Calendar className="w-5 h-5 text-green-600" />
+                <h3 className="text-lg font-semibold text-black">Select a date and time</h3>
+              </div>
+
+              {loadingTimeSlots ? (
+                <div className="text-center py-12">
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mb-4"></div>
+                  <p className="text-gray-600">Loading available times...</p>
+                </div>
+              ) : allAvailabilityDays.length === 0 ? (
+                <div className="text-center py-12">
+                  <Clock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-600">No time slots available.</p>
+                </div>
+              ) : allAvailabilityDays.filter(day => day.slots.length > 0).length === 0 ? (
+                <div className="text-center py-12">
+                  <Clock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-600">No time slots available.</p>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {allAvailabilityDays
+                    .filter(day => day.slots.length > 0)
+                    .map((day) => {
+                      const [year, month, dayOfMonth] = day.date.split("-").map(Number);
+                      const date = new Date(Date.UTC(year, month - 1, dayOfMonth));
+                      const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
+                      const formattedDate = date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+
+                      return (
+                        <div key={day.date} className="">
+                          <div className="mb-3">
+                            <h4 className="text-lg font-semibold text-gray-900">{dayName}, {formattedDate}</h4>
+                          </div>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                            {day.slots.map((slot, idx) => {
+                              const slotDate = new Date(slot.startsAt);
+                              const hours = slotDate.getHours();
+                              const minutes = slotDate.getMinutes();
+                              const ampm = hours >= 12 ? 'PM' : 'AM';
+                              const displayHours = hours % 12 || 12;
+                              const timeStr = `${displayHours}:${String(minutes).padStart(2, '0')} ${ampm}`;
+
+                              return (
+                                <button
+                                  key={idx}
+                                  type="button"
+                                  onClick={() => {
+                                    // Navigate to booking page
+                                    const params = new URLSearchParams();
+                                    params.set('agentId', agentId);
+                                    params.set('date', day.date);
+                                    params.set('time', slot.startsAt);
+                                    const bookingUrl = `/book/step2?${params.toString()}`;
+                                    window.location.href = bookingUrl;
+                                  }}
+                                  className="w-full px-4 py-3 rounded-lg text-sm font-medium transition-all bg-green-100 text-black hover:bg-green-600 hover:text-white border-2 border-green-300 hover:border-green-600 shadow-sm hover:shadow-md"
+                                >
+                                  {timeStr}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
