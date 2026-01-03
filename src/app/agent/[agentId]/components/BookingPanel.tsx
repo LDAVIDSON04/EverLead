@@ -368,12 +368,12 @@ export function BookingPanel({ agentId, initialLocation }: BookingPanelProps) {
       }
       
       // Fetch availability starting from today (same as the calendar view)
-      // Use the same date range as the main calendar: today to today + 14 days
+      // Use the EXACT same date range as the main calendar: today to today + 7 days
       // CRITICAL: Use the same location that was used for the calendar view
       try {
         const today = new Date();
         const startDate = today.toISOString().split("T")[0];
-        const endDate = new Date(today.getTime() + 14 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+        const endDate = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
         
         // Get the selected location name (same as calendar view)
         // Use the same logic as the main calendar fetch
