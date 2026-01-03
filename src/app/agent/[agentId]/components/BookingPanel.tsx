@@ -107,10 +107,7 @@ export function BookingPanel({ agentId, initialLocation }: BookingPanelProps) {
               finalLocations = [...finalLocations];
               finalLocations.splice(matchingIndex, 1);
               finalLocations.unshift(matchingLocation);
-              // Update IDs to maintain sequential order
-              finalLocations.forEach((loc, idx) => {
-                loc.id = String(idx + 1);
-              });
+              // Keep original IDs from database (don't change them)
             }
           }
           
