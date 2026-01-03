@@ -369,12 +369,14 @@ export function BookingPanel({ agentId, initialLocation }: BookingPanelProps) {
       
       // Fetch availability starting from today (same as the calendar view)
       // Use the same date range as the main calendar: today to today + 14 days
+      // CRITICAL: Use the same location that was used for the calendar view
       try {
         const today = new Date();
         const startDate = today.toISOString().split("T")[0];
         const endDate = new Date(today.getTime() + 14 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
         
         // Get the selected location name (same as calendar view)
+        // Use the same logic as the main calendar fetch
         const selectedLocation = officeLocations.find(loc => loc.id === selectedLocationId) || officeLocations[0];
         const locationName = selectedLocation?.locationName?.trim() || '';
         const locationParam = locationName ? `&location=${encodeURIComponent(locationName)}` : '';
@@ -383,7 +385,10 @@ export function BookingPanel({ agentId, initialLocation }: BookingPanelProps) {
           agentId,
           startDate,
           endDate,
+          selectedLocationId,
+          selectedLocation: selectedLocation ? { id: selectedLocation.id, name: selectedLocation.name, locationName: selectedLocation.locationName } : null,
           locationName,
+          allOfficeLocations: officeLocations.map(loc => ({ id: loc.id, name: loc.name, locationName: loc.locationName })),
           selectedDayDateStr: selectedDay.dateStr,
           url: `/api/agents/availability?agentId=${agentId}&startDate=${startDate}&endDate=${endDate}${locationParam}`
         });
@@ -397,7 +402,9 @@ export function BookingPanel({ agentId, initialLocation }: BookingPanelProps) {
           console.log('📅 BookingPanel time slot modal received availability:', {
             totalDays: availabilityData.length,
             dates: availabilityData.map(d => d.date),
-            selectedDayDateStr: selectedDay.dateStr
+            daysWithSlots: availabilityData.filter(d => d.slots?.length > 0).map(d => d.date),
+            selectedDayDateStr: selectedDay.dateStr,
+            locationName
           });
           setAllAvailabilityDays(availabilityData);
         } else {
