@@ -120,8 +120,14 @@ export function BookingPanel({ agentId }: BookingPanelProps) {
     const fetchAvailability = async () => {
       setLoading(true);
       try {
-        const startDate = weekStartDate.toISOString().split("T")[0];
-        const endDate = new Date(weekStartDate.getTime() + 13 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+        // Use UTC dates to ensure consistent date strings matching API format
+        const startDateUtc = new Date(weekStartDate);
+        startDateUtc.setUTCHours(0, 0, 0, 0);
+        const startDate = startDateUtc.toISOString().split("T")[0];
+        
+        const endDateUtc = new Date(startDateUtc);
+        endDateUtc.setUTCDate(startDateUtc.getUTCDate() + 13);
+        const endDate = endDateUtc.toISOString().split("T")[0];
         
         // Get the selected location name
         const selectedLocation = officeLocations.find(loc => loc.id === selectedLocationId) || officeLocations[0];
