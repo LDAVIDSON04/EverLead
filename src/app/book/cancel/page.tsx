@@ -284,6 +284,30 @@ function CancelAppointmentContent() {
             setSelectedDayForModal(firstDayWithSlots.date);
           }
         }
+        
+        // Update agent info to show the selected location's address
+        if (officeLocations.length > 0 && selectedAgentInfo) {
+          const normalizeLocation = (loc: string | undefined | null): string => {
+            if (!loc) return '';
+            let normalized = loc.split(',').map(s => s.trim())[0];
+            normalized = normalized.replace(/\s+office$/i, '').trim();
+            return normalized.toLowerCase();
+          };
+          
+          const matchingOfficeLoc = officeLocations.find((loc: any) => 
+            normalizeLocation(loc.city) === normalizeLocation(selectedRescheduleLocation)
+          );
+          
+          if (matchingOfficeLoc) {
+            setSelectedAgentInfo({
+              ...selectedAgentInfo,
+              displayCity: matchingOfficeLoc.city,
+              displayAddress: matchingOfficeLoc.street_address 
+                ? `${matchingOfficeLoc.street_address}, ${matchingOfficeLoc.city}, ${matchingOfficeLoc.province}${matchingOfficeLoc.postal_code ? ` ${matchingOfficeLoc.postal_code}` : ''}`
+                : `${matchingOfficeLoc.city}, ${matchingOfficeLoc.province}`,
+            });
+          }
+        }
       } catch (error) {
         console.error("Error fetching availability:", error);
       } finally {
@@ -292,7 +316,7 @@ function CancelAppointmentContent() {
     };
 
     fetchAvailability();
-  }, [showRescheduleModal, selectedRescheduleLocation, appointmentData]);
+  }, [showRescheduleModal, selectedRescheduleLocation, appointmentData, officeLocations, selectedAgentInfo]);
 
   const handleCancel = async () => {
     if (!appointmentId) {
@@ -620,11 +644,11 @@ function CancelAppointmentContent() {
                       {selectedAgentInfo.funeral_home && (
                         <p className="text-gray-600 text-sm mb-2">{selectedAgentInfo.funeral_home}</p>
                       )}
-                      {appointmentData.agent?.agent_city && (
+                      {(selectedAgentInfo?.displayCity || appointmentData.agent?.agent_city) && (
                         <div className="flex items-center gap-1 mb-2">
                           <MapPin className="w-4 h-4 text-gray-500" />
                           <span className="text-gray-600 text-sm">
-                            {appointmentData.agent.agent_city}
+                            {selectedAgentInfo?.displayCity || appointmentData.agent.agent_city}
                             {appointmentData.agent.agent_province && `, ${appointmentData.agent.agent_province}`}
                           </span>
                         </div>
