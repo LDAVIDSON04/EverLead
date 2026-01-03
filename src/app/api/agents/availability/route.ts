@@ -116,7 +116,7 @@ export async function GET(req: NextRequest) {
       normalizedLocation: location ? normalizeLocation(location) : undefined,
       selectedLocation,
       availableLocations: locations,
-      normalizedAvailableLocations: locations.map(loc => normalizeLocation(loc)),
+      normalizedAvailableLocations: locations.map((loc: string) => normalizeLocation(loc)),
     });
     
     // Determine which type is active for this location
