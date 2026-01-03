@@ -70,6 +70,70 @@ export function BookingPanel({ agentId, initialLocation }: BookingPanelProps) {
   useEffect(() => {
     const fetchAgentData = async () => {
       try {
+        // First try to load from office_locations table (has addresses per location)
+        const { data: officeLocationsData, error: officeError } = await supabaseClient
+          .from('office_locations')
+          .select('*')
+          .eq('agent_id', agentId)
+          .order('city', { ascending: true });
+
+        if (!officeError && officeLocationsData && officeLocationsData.length > 0) {
+          // Use office_locations table data - each location has its own address
+          const locationsList: OfficeLocation[] = officeLocationsData.map((loc: any) => {
+            const locationName = loc.city?.trim() || '';
+            const address = loc.street_address 
+              ? `${loc.street_address}, ${loc.city}, ${loc.province}${loc.postal_code ? ` ${loc.postal_code}` : ''}`
+              : `${loc.city || ''}, ${loc.province || ''}`;
+            
+            return {
+              id: loc.id,
+              name: loc.name || `${loc.city}, ${loc.province}`,
+              address: address,
+              nextAvailable: 'Next available tomorrow',
+              locationName: locationName
+            };
+          });
+          
+          // Reorder locations: if searchLocation matches a location, put it first
+          let finalLocations = locationsList;
+          if (normalizedSearchLocation && finalLocations.length > 1) {
+            const matchingIndex = finalLocations.findIndex(loc => {
+              const normalizedLocName = normalizeLocation(loc.locationName);
+              return normalizedLocName?.toLowerCase() === normalizedSearchLocation.toLowerCase();
+            });
+            
+            if (matchingIndex > 0) {
+              const matchingLocation = finalLocations[matchingIndex];
+              finalLocations = [...finalLocations];
+              finalLocations.splice(matchingIndex, 1);
+              finalLocations.unshift(matchingLocation);
+              // Update IDs to maintain sequential order
+              finalLocations.forEach((loc, idx) => {
+                loc.id = String(idx + 1);
+              });
+            }
+          }
+          
+          setOfficeLocations(finalLocations);
+          
+          // Set selected location
+          if (normalizedSearchLocation && finalLocations.length > 0) {
+            const matchingLocation = finalLocations.find(loc => {
+              const normalizedLocName = normalizeLocation(loc.locationName);
+              return normalizedLocName?.toLowerCase() === normalizedSearchLocation.toLowerCase();
+            });
+            if (matchingLocation) {
+              setSelectedLocationId(matchingLocation.id);
+            } else {
+              setSelectedLocationId(finalLocations[0].id);
+            }
+          } else {
+            setSelectedLocationId(finalLocations[0]?.id || '1');
+          }
+          return;
+        }
+
+        // Fallback: Use agent profile metadata (single address for all locations)
         const { data: agent, error } = await supabaseClient
           .from("profiles")
           .select("id, funeral_home, agent_city, agent_province, metadata")
@@ -83,7 +147,6 @@ export function BookingPanel({ agentId, initialLocation }: BookingPanelProps) {
         }
         
         const metadata = agent.metadata || {};
-        // Don't log empty availability - it's expected if not set
         const availabilityLocations = (metadata as any)?.availability?.locations || [];
         const business_street = (metadata as any)?.business_street;
         const business_city = (metadata as any)?.business_city;
@@ -108,7 +171,7 @@ export function BookingPanel({ agentId, initialLocation }: BookingPanelProps) {
               name: `${agent.funeral_home || 'Office'} - ${locationName}`,
               address: address || `${locationName}`,
               nextAvailable: 'Next available tomorrow',
-              locationName: locationName // Store the exact location name from metadata for API calls
+              locationName: locationName
             });
           });
         } else {
