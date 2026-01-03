@@ -65,6 +65,8 @@ function CancelAppointmentContent() {
   const [loadingAvailability, setLoadingAvailability] = useState(false);
   const [selectedDayForModal, setSelectedDayForModal] = useState<string | null>(null);
   const [selectedAgentInfo, setSelectedAgentInfo] = useState<any>(null);
+  const [officeLocations, setOfficeLocations] = useState<any[]>([]);
+  const [selectedRescheduleLocation, setSelectedRescheduleLocation] = useState<string>("");
 
   // Fetch appointment details on mount
   useEffect(() => {
