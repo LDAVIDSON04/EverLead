@@ -2038,7 +2038,7 @@ function SearchResults() {
                     {/* Right Column - Sticky Booking Panel (5 columns) */}
                     <div className="lg:col-span-5">
                       {portfolioAgentData?.id && (
-                        <BookingPanel agentId={portfolioAgentData.id} />
+                        <BookingPanel agentId={portfolioAgentData.id} initialLocation={searchLocation} />
                       )}
                     </div>
                   </div>

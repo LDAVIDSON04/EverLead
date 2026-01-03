@@ -25,6 +25,7 @@ interface OfficeLocation {
 
 interface BookingPanelProps {
   agentId: string;
+  initialLocation?: string; // Optional: location from search (for modal usage)
 }
 
 // Normalize location name (remove "Office" suffix, province, etc.)
@@ -35,8 +36,9 @@ const normalizeLocation = (loc: string | undefined): string | undefined => {
   return normalized;
 };
 
-export function BookingPanel({ agentId }: BookingPanelProps) {
+export function BookingPanel({ agentId, initialLocation }: BookingPanelProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [weekStartDate, setWeekStartDate] = useState(new Date());
   const [selectedDayIndex, setSelectedDayIndex] = useState<number | null>(null);
   const [selectedLocationId, setSelectedLocationId] = useState<string>('1');
@@ -44,6 +46,10 @@ export function BookingPanel({ agentId }: BookingPanelProps) {
   const [weekAvailability, setWeekAvailability] = useState<DayAvailability[]>([]);
   const [loading, setLoading] = useState(true);
   const [officeLocations, setOfficeLocations] = useState<OfficeLocation[]>([]);
+
+  // Get search location from URL parameters or prop (prop takes precedence for modal usage)
+  const searchLocationParam = initialLocation || searchParams?.get('location') || null;
+  const normalizedSearchLocation = searchLocationParam ? normalizeLocation(searchLocationParam) : null;
 
   // Fetch agent data to build office locations
   useEffect(() => {
