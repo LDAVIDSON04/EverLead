@@ -254,10 +254,10 @@ export function BookingPanel({ agentId, initialLocation }: BookingPanelProps) {
     const fetchAvailability = async () => {
       setLoading(true);
       try {
-        // Use today to today + 7 days (same as search page)
+        // Use today to today + 8 days (same as search page - it uses 8 days for the calendar view)
         const today = new Date();
         const startDate = today.toISOString().split("T")[0];
-        const endDate = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+        const endDate = new Date(today.getTime() + 8 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
         
         // Get the selected location name
         const selectedLocation = officeLocations.find(loc => loc.id === selectedLocationId) || officeLocations[0];
@@ -368,12 +368,12 @@ export function BookingPanel({ agentId, initialLocation }: BookingPanelProps) {
       }
       
       // Fetch availability starting from today (same as the calendar view)
-      // Use the EXACT same date range as the main calendar: today to today + 7 days
+      // Use the EXACT same date range as the main calendar: today to today + 8 days (matching search page)
       // CRITICAL: Use the same location that was used for the calendar view
       try {
         const today = new Date();
         const startDate = today.toISOString().split("T")[0];
-        const endDate = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+        const endDate = new Date(today.getTime() + 8 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
         
         // Get the selected location name (same as calendar view)
         // Use the same logic as the main calendar fetch
