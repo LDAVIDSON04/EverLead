@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, ChevronDown, Check, MapPin } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { supabaseClient } from '@/lib/supabaseClient';
 
 interface DayAvailability {
@@ -26,6 +26,14 @@ interface OfficeLocation {
 interface BookingPanelProps {
   agentId: string;
 }
+
+// Normalize location name (remove "Office" suffix, province, etc.)
+const normalizeLocation = (loc: string | undefined): string | undefined => {
+  if (!loc) return undefined;
+  let normalized = loc.split(',').map(s => s.trim())[0];
+  normalized = normalized.replace(/\s+office$/i, '').trim();
+  return normalized;
+};
 
 export function BookingPanel({ agentId }: BookingPanelProps) {
   const router = useRouter();
