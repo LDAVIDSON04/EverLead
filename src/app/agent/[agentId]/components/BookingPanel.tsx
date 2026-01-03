@@ -367,15 +367,26 @@ export function BookingPanel({ agentId, initialLocation }: BookingPanelProps) {
         console.error("Error loading agent info:", err);
       }
       
-      // Fetch availability for 14 days starting from selected day
+      // Fetch availability starting from today (same as the calendar view)
+      // Use the same date range as the main calendar: today to today + 14 days
       try {
-        const startDate = selectedDay.dateStr;
-        const endDate = new Date(new Date(startDate).getTime() + 14 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+        const today = new Date();
+        const startDate = today.toISOString().split("T")[0];
+        const endDate = new Date(today.getTime() + 14 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
         
-        // Get the selected location name
+        // Get the selected location name (same as calendar view)
         const selectedLocation = officeLocations.find(loc => loc.id === selectedLocationId) || officeLocations[0];
         const locationName = selectedLocation?.locationName?.trim() || '';
         const locationParam = locationName ? `&location=${encodeURIComponent(locationName)}` : '';
+        
+        console.log('📅 BookingPanel time slot modal fetching availability:', {
+          agentId,
+          startDate,
+          endDate,
+          locationName,
+          selectedDayDateStr: selectedDay.dateStr,
+          url: `/api/agents/availability?agentId=${agentId}&startDate=${startDate}&endDate=${endDate}${locationParam}`
+        });
         
         const res = await fetch(
           `/api/agents/availability?agentId=${agentId}&startDate=${startDate}&endDate=${endDate}${locationParam}`
@@ -383,8 +394,14 @@ export function BookingPanel({ agentId, initialLocation }: BookingPanelProps) {
         
         if (res.ok) {
           const availabilityData: AvailabilityDay[] = await res.json();
+          console.log('📅 BookingPanel time slot modal received availability:', {
+            totalDays: availabilityData.length,
+            dates: availabilityData.map(d => d.date),
+            selectedDayDateStr: selectedDay.dateStr
+          });
           setAllAvailabilityDays(availabilityData);
         } else {
+          console.error('📅 BookingPanel time slot modal fetch failed:', res.status, res.statusText);
           setAllAvailabilityDays([]);
         }
       } catch (err) {
