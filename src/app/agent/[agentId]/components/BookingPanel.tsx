@@ -702,12 +702,20 @@ export function BookingPanel({ agentId, initialLocation }: BookingPanelProps) {
                                   key={idx}
                                   type="button"
                                   onClick={() => {
-                                    // Navigate to booking page
-                                    const params = new URLSearchParams();
-                                    params.set('agentId', agentId);
-                                    params.set('date', day.date);
-                                    params.set('time', slot.startsAt);
-                                    const bookingUrl = `/book/step2?${params.toString()}`;
+                                    // Navigate to booking page (same format as search page)
+                                    const params = new URLSearchParams({
+                                      startsAt: slot.startsAt,
+                                      endsAt: slot.endsAt,
+                                      date: day.date,
+                                    });
+                                    
+                                    // Include location if available
+                                    const selectedLocation = officeLocations.find(loc => loc.id === selectedLocationId) || officeLocations[0];
+                                    if (selectedLocation?.locationName) {
+                                      params.set('city', selectedLocation.locationName);
+                                    }
+                                    
+                                    const bookingUrl = `/book/step2?agentId=${agentId}&${params.toString()}`;
                                     window.location.href = bookingUrl;
                                   }}
                                   className="w-full px-4 py-3 rounded-lg text-sm font-medium transition-all bg-green-100 text-black hover:bg-green-600 hover:text-white border-2 border-green-300 hover:border-green-600 shadow-sm hover:shadow-md"
