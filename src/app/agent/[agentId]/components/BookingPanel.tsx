@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, ChevronDown, Check, MapPin } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronDown, Check, MapPin, X, Calendar, Clock } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabaseClient } from '@/lib/supabaseClient';
+import Image from 'next/image';
 
 interface DayAvailability {
   dayOfWeek: string;
@@ -23,6 +24,14 @@ interface OfficeLocation {
   locationName: string; // The actual location name used in the API (e.g., "Kelowna", "Penticton")
 }
 
+interface AvailabilityDay {
+  date: string;
+  slots: Array<{
+    startsAt: string;
+    endsAt: string;
+  }>;
+}
+
 interface BookingPanelProps {
   agentId: string;
   initialLocation?: string; // Optional: location from search (for modal usage)
@@ -39,13 +48,19 @@ const normalizeLocation = (loc: string | undefined): string | undefined => {
 export function BookingPanel({ agentId, initialLocation }: BookingPanelProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [weekStartDate, setWeekStartDate] = useState(new Date());
   const [selectedDayIndex, setSelectedDayIndex] = useState<number | null>(null);
   const [selectedLocationId, setSelectedLocationId] = useState<string>('1');
   const [isLocationDropdownOpen, setIsLocationDropdownOpen] = useState(false);
   const [weekAvailability, setWeekAvailability] = useState<DayAvailability[]>([]);
   const [loading, setLoading] = useState(true);
   const [officeLocations, setOfficeLocations] = useState<OfficeLocation[]>([]);
+
+  // Time slot modal state
+  const [showTimeSlotModal, setShowTimeSlotModal] = useState(false);
+  const [selectedDayForModal, setSelectedDayForModal] = useState<string | null>(null);
+  const [allAvailabilityDays, setAllAvailabilityDays] = useState<AvailabilityDay[]>([]);
+  const [loadingTimeSlots, setLoadingTimeSlots] = useState(false);
+  const [agentInfo, setAgentInfo] = useState<any>(null);
 
   // Get search location from URL parameters or prop (prop takes precedence for modal usage)
   const searchLocationParam = initialLocation || searchParams?.get('location') || null;
@@ -220,12 +235,12 @@ export function BookingPanel({ agentId, initialLocation }: BookingPanelProps) {
           });
           
           const days: DayAvailability[] = [];
-          // Only show up to 14 days starting from weekStartDate
-          // Use UTC dates to match API response format (YYYY-MM-DD)
-          for (let i = 0; i < 14; i++) {
+          // Show 7 days starting from today (same as search page)
+          const today = new Date();
+          for (let i = 0; i < 7; i++) {
             // Create date in UTC to avoid timezone issues
-            const date = new Date(weekStartDate);
-            date.setUTCDate(weekStartDate.getUTCDate() + i);
+            const date = new Date(today);
+            date.setUTCDate(today.getUTCDate() + i);
             date.setUTCHours(0, 0, 0, 0);
             const dateStr = date.toISOString().split("T")[0];
             
@@ -385,27 +400,6 @@ export function BookingPanel({ agentId, initialLocation }: BookingPanelProps) {
               </>
             )}
           </div>
-        </div>
-        
-        {/* Date Range Display */}
-        <div className="flex items-center justify-between mb-8">
-          <button
-            onClick={goToPreviousWeek}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            aria-label="Previous week"
-          >
-            <ChevronLeft className="w-7 h-7 text-gray-600" />
-          </button>
-          <span className="font-medium text-gray-900 text-lg">
-            {getDateRangeText()}
-          </span>
-          <button
-            onClick={goToNextWeek}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            aria-label="Next week"
-          >
-            <ChevronRight className="w-7 h-7 text-gray-600" />
-          </button>
         </div>
         
         {loading ? (
