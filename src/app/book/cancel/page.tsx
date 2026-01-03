@@ -412,12 +412,20 @@ function CancelAppointmentContent() {
                 {appointmentData.agent.funeral_home && (
                   <p className="text-gray-600">{appointmentData.agent.funeral_home}</p>
                 )}
-                {(appointmentData.agent.agent_city || appointmentData.agent.agent_province) && (
-                  <p className="text-sm text-gray-500 flex items-center gap-1 mt-1">
-                    <MapPin className="w-4 h-4" />
-                    {[appointmentData.agent.agent_city, appointmentData.agent.agent_province].filter(Boolean).join(", ")}
-                  </p>
-                )}
+                {(() => {
+                  // Show office location city if available, otherwise fall back to agent city
+                  const displayCity = appointmentData.office_location?.city || appointmentData.agent.agent_city;
+                  const displayProvince = appointmentData.office_location?.province || appointmentData.agent.agent_province;
+                  if (displayCity || displayProvince) {
+                    return (
+                      <p className="text-sm text-gray-500 flex items-center gap-1 mt-1">
+                        <MapPin className="w-4 h-4" />
+                        {[displayCity, displayProvince].filter(Boolean).join(", ")}
+                      </p>
+                    );
+                  }
+                  return null;
+                })()}
               </div>
             </div>
           </div>
