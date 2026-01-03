@@ -76,6 +76,7 @@ function CancelAppointmentContent() {
   const [officeLocations, setOfficeLocations] = useState<any[]>([]);
   const [selectedRescheduleLocation, setSelectedRescheduleLocation] = useState<string>("");
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<{ startsAt: string; endsAt: string; date: string; time: string } | null>(null);
+  const [pendingTimeSlot, setPendingTimeSlot] = useState<{ startsAt: string; endsAt: string; date: string; time: string; displayDate: string } | null>(null);
   const [rescheduling, setRescheduling] = useState(false);
 
   // Fetch appointment details on mount
@@ -298,13 +299,40 @@ function CancelAppointmentContent() {
   };
 
   const handleTimeSlotClick = (timeSlot: { startsAt: string; endsAt: string; time: string }, date: string) => {
-    // Store the selected time slot instead of navigating
-    setSelectedTimeSlot({
+    // Format the date for display
+    const [year, month, dayOfMonth] = date.split("-").map(Number);
+    const dateObj = new Date(Date.UTC(year, month - 1, dayOfMonth));
+    const displayDate = dateObj.toLocaleDateString('en-US', { 
+      weekday: 'long', 
+      month: 'long', 
+      day: 'numeric', 
+      year: 'numeric' 
+    });
+    
+    // Show confirmation popup
+    setPendingTimeSlot({
       startsAt: timeSlot.startsAt,
       endsAt: timeSlot.endsAt,
       date: date,
       time: timeSlot.time,
+      displayDate: displayDate,
     });
+  };
+
+  const handleConfirmTimeSelection = () => {
+    if (pendingTimeSlot) {
+      setSelectedTimeSlot({
+        startsAt: pendingTimeSlot.startsAt,
+        endsAt: pendingTimeSlot.endsAt,
+        date: pendingTimeSlot.date,
+        time: pendingTimeSlot.time,
+      });
+      setPendingTimeSlot(null);
+    }
+  };
+
+  const handleCancelTimeSelection = () => {
+    setPendingTimeSlot(null);
   };
 
   const handleConfirmReschedule = async () => {
@@ -876,6 +904,46 @@ function CancelAppointmentContent() {
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Time Selection Confirmation Popup */}
+      {pendingTimeSlot && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-[60] flex items-center justify-center p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              handleCancelTimeSelection();
+            }
+          }}
+        >
+          <div 
+            className="bg-white rounded-lg shadow-xl w-full max-w-md p-6 relative z-[61]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-xl font-semibold text-gray-900 mb-4">Confirm Time Selection</h3>
+            <div className="mb-6">
+              <p className="text-gray-600 mb-2">You have selected:</p>
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <p className="text-lg font-semibold text-gray-900 mb-1">{pendingTimeSlot.time}</p>
+                <p className="text-sm text-gray-600">{pendingTimeSlot.displayDate}</p>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={handleCancelTimeSelection}
+                className="flex-1 px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmTimeSelection}
+                className="flex-1 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+              >
+                Confirm
+              </button>
             </div>
           </div>
         </div>
