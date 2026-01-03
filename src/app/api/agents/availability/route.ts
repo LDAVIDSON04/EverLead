@@ -44,6 +44,16 @@ export async function GET(req: NextRequest) {
 
     const { agentId, startDate, endDate, location } = validation.data;
 
+    // Log the incoming request immediately
+    console.log("🚀 [AVAILABILITY API] Incoming request:", {
+      agentId,
+      startDate,
+      endDate,
+      location,
+      locationParam: locationParam,
+      url: req.url,
+    });
+
     // Load agent profile with availability settings
     // Check approval_status (bios are auto-approved on creation)
     const { data: profile, error: profileError } = await supabaseAdmin
@@ -191,21 +201,34 @@ export async function GET(req: NextRequest) {
     }
     
     // Debug logging - comprehensive
-    console.log("Availability API Debug:", {
+    console.log("🔍 [AVAILABILITY API] Location matching result:", {
       agentId,
       requestedLocation: location,
       selectedLocation,
+      locationType,
       allLocations: locations,
       availabilityByLocationKeys: Object.keys(availabilityByLocation),
+      normalizedAvailabilityKeys: Object.keys(availabilityByLocation).map(loc => normalizeLocation(loc)),
       locationScheduleKeys: Object.keys(locationSchedule),
-      fullLocationSchedule: locationSchedule,
+      hasSchedule: Object.keys(locationSchedule).length > 0,
       appointmentLength,
-      metadataAvailability: availabilityData,
+      availabilityTypeByLocation: availabilityTypeByLocation,
       scheduleDayNames: locationSchedule ? Object.keys(locationSchedule) : [],
-      scheduleDetails: locationSchedule,
-      locationType: locationType, // CRITICAL: Log the determined location type
-      availabilityTypeByLocation: availabilityTypeByLocation, // Log the type mapping
     });
+    
+    // CRITICAL: If location was specified but we didn't find a match, log and return empty
+    if (location && locationType === "recurring" && Object.keys(locationSchedule).length === 0) {
+      console.error("❌ [AVAILABILITY API] Location specified but no schedule found:", {
+        requestedLocation: location,
+        normalizedRequested: normalizeLocation(location),
+        selectedLocation,
+        normalizedSelected: normalizeLocation(selectedLocation),
+        allLocations: locations,
+        availabilityByLocationKeys: Object.keys(availabilityByLocation),
+        normalizedKeys: Object.keys(availabilityByLocation).map(loc => normalizeLocation(loc)),
+      });
+      return NextResponse.json([]);
+    }
     
     // Validate that we have a valid schedule
     if (Object.keys(locationSchedule).length === 0) {
