@@ -319,15 +319,52 @@ function CancelAppointmentContent() {
     });
   };
 
-  const handleConfirmTimeSelection = () => {
-    if (pendingTimeSlot) {
-      setSelectedTimeSlot({
-        startsAt: pendingTimeSlot.startsAt,
-        endsAt: pendingTimeSlot.endsAt,
-        date: pendingTimeSlot.date,
-        time: pendingTimeSlot.time,
+  const handleConfirmTimeSelection = async () => {
+    if (!pendingTimeSlot || !appointmentId) return;
+
+    setRescheduling(true);
+    setPendingTimeSlot(null); // Close popup immediately
+    try {
+      const response = await fetch(`/api/appointments/${appointmentId}/reschedule`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          startsAt: pendingTimeSlot.startsAt,
+          endsAt: pendingTimeSlot.endsAt,
+        }),
       });
-      setPendingTimeSlot(null);
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setStatus("error");
+        setMessage(data.error || "Failed to reschedule appointment. Please try again.");
+        setShowRescheduleModal(false);
+        return;
+      }
+
+      setStatus("success");
+      setMessage("Your appointment has been rescheduled successfully.");
+      setShowRescheduleModal(false);
+      setSelectedTimeSlot(null);
+      
+      // Refresh appointment data
+      if (appointmentId) {
+        const refreshResponse = await fetch(`/api/appointments/${appointmentId}`);
+        if (refreshResponse.ok) {
+          const refreshedData = await refreshResponse.json();
+          setAppointmentData(refreshedData);
+        }
+      }
+    } catch (error: any) {
+      console.error("Error rescheduling appointment:", error);
+      setStatus("error");
+      setMessage("An error occurred while rescheduling. Please try again.");
+      setShowRescheduleModal(false);
+    } finally {
+      setRescheduling(false);
     }
   };
 
@@ -940,9 +977,10 @@ function CancelAppointmentContent() {
               </button>
               <button
                 onClick={handleConfirmTimeSelection}
-                className="flex-1 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+                disabled={rescheduling}
+                className="flex-1 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Confirm
+                {rescheduling ? "Rescheduling..." : "Confirm"}
               </button>
             </div>
           </div>
