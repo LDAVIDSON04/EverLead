@@ -142,13 +142,34 @@ export function BookingPanel({ agentId }: BookingPanelProps) {
         if (res.ok) {
           const availabilityData: any[] = await res.json();
           
+          console.log('📅 BookingPanel received availability data:', {
+            agentId,
+            locationName,
+            totalDaysReturned: availabilityData.length,
+            dates: availabilityData.map(d => d.date),
+            daysWithSlots: availabilityData.filter(d => d.slots?.length > 0).length
+          });
+          
+          // Create a map of date -> availability data for quick lookup
+          const availabilityMap = new Map<string, any>();
+          availabilityData.forEach(day => {
+            availabilityMap.set(day.date, day);
+          });
+          
           const days: DayAvailability[] = [];
+          // Only show up to 14 days starting from weekStartDate
+          // For daily-only: only show days that are in the API response
+          // For recurring: show all days in range, but appointmentCount will be 0 for days without slots
           for (let i = 0; i < 14; i++) {
             const date = new Date(weekStartDate);
             date.setDate(weekStartDate.getDate() + i);
             const dateStr = date.toISOString().split("T")[0];
             
-            const dayData = availabilityData.find(d => d.date === dateStr);
+            const dayData = availabilityMap.get(dateStr);
+            
+            // Only add day if it exists in availabilityData (for daily-only) OR if it's in our range (for recurring)
+            // Since the API returns all days with availability (daily or recurring), we should include all returned days
+            // For days not in the response, they have no availability (either not set for daily, or disabled for recurring)
             const appointmentCount = dayData?.slots?.length || 0;
             
             const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'short' });
@@ -174,6 +195,9 @@ export function BookingPanel({ agentId }: BookingPanelProps) {
           }
           
           setWeekAvailability(days);
+        } else {
+          console.error('📅 BookingPanel availability fetch failed:', res.status, res.statusText);
+          setWeekAvailability([]);
         }
       } catch (err) {
         console.error("Error fetching availability:", err);
