@@ -53,19 +53,12 @@ function getDefaultScheduleCopy() {
 }
 
 export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilityModalProps) {
-  const [activeTab, setActiveTab] = useState<"daily" | "recurring">("daily");
   const [locations, setLocations] = useState<string[]>([]);
   const [selectedLocation, setSelectedLocation] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [availabilityByLocation, setAvailabilityByLocation] = useState<Record<string, typeof defaultSchedule>>({});
-  const [availabilityTypeByLocation, setAvailabilityTypeByLocation] = useState<Record<string, "daily" | "recurring">>({});
-
-  // Day only state
-  const [dayDate, setDayDate] = useState("");
-  const [dayFromTime, setDayFromTime] = useState("09:00");
-  const [dayToTime, setDayToTime] = useState("17:00");
   const [appointmentLength, setAppointmentLength] = useState("30");
 
   // Recurring state - use same structure as availability page
@@ -74,9 +67,6 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
   useEffect(() => {
     if (isOpen) {
       loadLocations();
-      // Set default dates
-      const today = new Date().toISOString().split('T')[0];
-      setDayDate(today);
       // Reset recurring schedule to defaults when modal opens (create a copy)
       setRecurringSchedule(getDefaultScheduleCopy());
     }
@@ -97,7 +87,6 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
 
       setLocations(data.locations || []);
       setAvailabilityByLocation(data.availabilityByLocation || {});
-      setAvailabilityTypeByLocation(data.availabilityTypeByLocation || {});
       setAppointmentLength(data.appointmentLength || "30");
       
       if (data.locations && data.locations.length > 0) {
@@ -134,146 +123,67 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (!session?.access_token) throw new Error("Not authenticated");
 
-      if (activeTab === "daily") {
-        // Save daily availability - use camelCase as API expects
-        if (!dayDate || !dayFromTime || !dayToTime) {
-          alert("Please fill in all required fields.");
-          setSaving(false);
-          return;
-        }
+      // Save recurring availability - use checkbox format directly like availability page
+      // Normalize location to match availability API (remove "Office" suffix and province)
+      const normalizeLocation = (loc: string): string => {
+        let normalized = loc.split(',').map(s => s.trim())[0];
+        normalized = normalized.replace(/\s+office$/i, '').trim();
+        return normalized;
+      };
 
-        // Normalize location to match availability API (remove "Office" suffix and province)
-        const normalizeLocation = (loc: string): string => {
-          let normalized = loc.split(',').map(s => s.trim())[0];
-          normalized = normalized.replace(/\s+office$/i, '').trim();
-          return normalized;
-        };
+      const normalizedLocation = normalizeLocation(selectedLocation);
 
-        const normalizedLocation = normalizeLocation(selectedLocation);
+      // Get current availability data
+      const res = await fetch("/api/agent/settings/availability", {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      const currentData = await res.ok ? await res.json() : {};
 
-        const res = await fetch("/api/agent/settings/daily-availability", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify({
-            location: normalizedLocation,
-            date: dayDate,
-            startTime: dayFromTime, // camelCase
-            endTime: dayToTime, // camelCase
-          }),
-        });
+      // Update availability for selected location with checkbox format (same as availability page)
+      const updatedAvailabilityByLocation = {
+        ...(currentData.availabilityByLocation || availabilityByLocation),
+        [normalizedLocation]: recurringSchedule, // Store checkbox format directly
+      };
 
-        if (!res.ok) {
-          const data = await res.json();
-          throw new Error(data.error || "Failed to save daily availability");
-        }
+      // Ensure all locations have availability data (same as availability page)
+      const completeAvailabilityByLocation: Record<string, any> = {};
+      const allLocations = currentData.locations || locations;
+      allLocations.forEach((loc: string) => {
+        completeAvailabilityByLocation[loc] = updatedAvailabilityByLocation[loc] || defaultSchedule;
+      });
 
-        // Update availability type for this location to "daily" (use normalized location)
-        const updatedTypeByLocation = {
-          ...availabilityTypeByLocation,
-          [normalizedLocation]: "daily" as const,
-        };
+      // Update availabilityTypeByLocation - always set to "recurring"
+      const updatedTypeByLocation = {
+        ...(currentData.availabilityTypeByLocation || {}),
+        [normalizedLocation]: "recurring" as const,
+      };
 
-        // Get current availability data to save type
-        const currentRes = await fetch("/api/agent/settings/availability", {
-          headers: { Authorization: `Bearer ${session.access_token}` },
-        });
-        const currentData = await currentRes.ok ? await currentRes.json() : {};
+      // Save the recurring availability (same format as availability page)
+      await fetch("/api/agent/settings/availability", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          locations: allLocations,
+          availabilityByLocation: completeAvailabilityByLocation,
+          appointmentLength: appointmentLength || currentData.appointmentLength || "30",
+          availabilityTypeByLocation: updatedTypeByLocation,
+        }),
+      });
 
-        await fetch("/api/agent/settings/availability", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify({
-            locations: currentData.locations || locations,
-            availabilityByLocation: currentData.availabilityByLocation || availabilityByLocation,
-            appointmentLength: appointmentLength || currentData.appointmentLength || "30",
-            availabilityTypeByLocation: updatedTypeByLocation,
-          }),
-        });
-      } else {
-        // Save recurring availability - use checkbox format directly like availability page
-        // Note: No validation required - agents can save recurring schedule even if all days are disabled
-        // This allows agents to use daily-only availability if they prefer
-        
-        // Normalize location to match availability API (remove "Office" suffix and province)
-        const normalizeLocation = (loc: string): string => {
-          let normalized = loc.split(',').map(s => s.trim())[0];
-          normalized = normalized.replace(/\s+office$/i, '').trim();
-          return normalized;
-        };
-
-        const normalizedLocation = normalizeLocation(selectedLocation);
-
-        // Get current availability data
-        const res = await fetch("/api/agent/settings/availability", {
-          headers: { Authorization: `Bearer ${session.access_token}` },
-        });
-        const currentData = await res.ok ? await res.json() : {};
-
-        // Update availability for selected location with checkbox format (same as availability page)
-        const updatedAvailabilityByLocation = {
-          ...(currentData.availabilityByLocation || availabilityByLocation),
-          [normalizedLocation]: recurringSchedule, // Store checkbox format directly
-        };
-
-        // Ensure all locations have availability data (same as availability page)
-        const completeAvailabilityByLocation: Record<string, any> = {};
-        const allLocations = currentData.locations || locations;
-        allLocations.forEach((loc: string) => {
-          completeAvailabilityByLocation[loc] = updatedAvailabilityByLocation[loc] || defaultSchedule;
-        });
-
-        // Update availabilityTypeByLocation (use normalized location)
-        const updatedTypeByLocation = {
-          ...(currentData.availabilityTypeByLocation || availabilityTypeByLocation),
-          [normalizedLocation]: "recurring" as const,
-        };
-
-        // Save the recurring availability (same format as availability page)
-        await fetch("/api/agent/settings/availability", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify({
-            locations: allLocations,
-            availabilityByLocation: completeAvailabilityByLocation,
-            appointmentLength: appointmentLength || currentData.appointmentLength || "30",
-            availabilityTypeByLocation: updatedTypeByLocation,
-          }),
-        });
-      }
-
-      // Generate success message with date/location info
+      // Generate success message with location and enabled days
+      const enabledDays = days.filter(day => recurringSchedule[day as keyof typeof recurringSchedule].enabled);
       let successMessage = "Availability saved successfully!";
-      if (activeTab === "daily") {
-        // Format date nicely (e.g., "January 3, 2026")
-        const dateObj = new Date(dayDate + "T00:00:00");
-        const formattedDate = dateObj.toLocaleDateString('en-US', { 
-          weekday: 'long', 
-          year: 'numeric', 
-          month: 'long', 
-          day: 'numeric' 
-        });
-        successMessage = `You have set availability for ${selectedLocation} on ${formattedDate} and it is now visible for families to book.`;
+      if (enabledDays.length > 0) {
+        const daysList = enabledDays.map(day => {
+          const dayName = day.charAt(0).toUpperCase() + day.slice(1);
+          return dayName;
+        }).join(", ");
+        successMessage = `You have set recurring availability for ${selectedLocation} on ${daysList} and it is now visible for families to book.`;
       } else {
-        // For recurring, show location and enabled days
-        const enabledDays = days.filter(day => recurringSchedule[day as keyof typeof recurringSchedule].enabled);
-        if (enabledDays.length > 0) {
-          const daysList = enabledDays.map(day => {
-            const dayName = day.charAt(0).toUpperCase() + day.slice(1);
-            return dayName;
-          }).join(", ");
-          successMessage = `You have set recurring availability for ${selectedLocation} on ${daysList} and it is now visible for families to book.`;
-        } else {
-          successMessage = `Availability settings for ${selectedLocation} have been saved.`;
-        }
+        successMessage = `Availability settings for ${selectedLocation} have been saved.`;
       }
       
       // Show success message in modal briefly
@@ -309,36 +219,6 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
             className="p-1 hover:bg-gray-100 rounded transition-colors"
           >
             <X className="w-5 h-5 text-gray-500" />
-          </button>
-        </div>
-
-        {/* Tabs */}
-        <div className="flex border-b border-gray-200 flex-shrink-0">
-          <button
-            onClick={() => setActiveTab("daily")}
-            className={`flex-1 px-4 py-3 text-sm font-medium transition-colors relative ${
-              activeTab === "daily"
-                ? "text-gray-900"
-                : "text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            Day only
-            {activeTab === "daily" && (
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-green-800" />
-            )}
-          </button>
-          <button
-            onClick={() => setActiveTab("recurring")}
-            className={`flex-1 px-4 py-3 text-sm font-medium transition-colors relative ${
-              activeTab === "recurring"
-                ? "text-gray-900"
-                : "text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            Recurring
-            {activeTab === "recurring" && (
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-green-800" />
-            )}
           </button>
         </div>
 
@@ -390,59 +270,8 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
                 </div>
               </div>
 
-              {/* Day only tab content */}
-              {activeTab === "daily" && (
-                <>
-                  <div className="mb-4">
-                    <Label>Date</Label>
-                    <Input
-                      type="date"
-                      value={dayDate}
-                      onChange={(e) => setDayDate(e.target.value)}
-                      required
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div>
-                      <Label>From</Label>
-                      <Input
-                        type="time"
-                        value={dayFromTime}
-                        onChange={(e) => setDayFromTime(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label>To</Label>
-                      <Input
-                        type="time"
-                        value={dayToTime}
-                        onChange={(e) => setDayToTime(e.target.value)}
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="mb-6">
-                    <Label>Appointment Length</Label>
-                    <select
-                      value={appointmentLength}
-                      onChange={(e) => setAppointmentLength(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800 focus:border-transparent"
-                    >
-                      <option value="15">15 minutes</option>
-                      <option value="30">30 minutes</option>
-                      <option value="45">45 minutes</option>
-                      <option value="60">60 minutes</option>
-                      <option value="90">90 minutes</option>
-                    </select>
-                  </div>
-                </>
-              )}
-
-              {/* Recurring tab content */}
-              {activeTab === "recurring" && (
+              {/* Recurring availability content */}
+              <div>
                 <>
                   <div>
                     <Label className="mb-3 block">Weekly Availability</Label>
@@ -511,8 +340,7 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
                       <option value="90">90 minutes</option>
                     </select>
                   </div>
-                </>
-              )}
+              </div>
             </>
           )}
         </div>
