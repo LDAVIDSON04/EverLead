@@ -129,10 +129,81 @@ function CancelAppointmentContent() {
         const startDate = today.toISOString().split("T")[0];
         const endDate = new Date(today.getTime() + 14 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
         
-        // Try to determine location: use lead's city (where they searched from) as proxy for appointment location
-        // If no lead city, don't filter by location (shows all locations)
-        const location = appointmentData.lead?.city || appointmentData.agent?.agent_city || '';
-        const locationParam = location ? `&location=${encodeURIComponent(location)}` : '';
+        // Determine location for reschedule:
+        // 1. Check if agent has office_locations, try to match lead city or agent city
+        // 2. If no office_locations table or no match, use agent's first location from metadata
+        // 3. Fall back to agent_city if nothing else works
+        let locationToUse = '';
+        
+        try {
+          // Fetch agent's office locations to find matching one
+          const { data: officeLocations } = await supabaseClient
+            .from('office_locations')
+            .select('city')
+            .eq('agent_id', appointmentData.agent_id)
+            .order('city', { ascending: true });
+          
+          if (officeLocations && officeLocations.length > 0) {
+            // Try to match lead's city first (where they booked from)
+            const leadCity = appointmentData.lead?.city?.toLowerCase().trim();
+            if (leadCity) {
+              const matchingLocation = officeLocations.find((loc: any) => 
+                loc.city?.toLowerCase().trim() === leadCity
+              );
+              if (matchingLocation) {
+                locationToUse = matchingLocation.city;
+              }
+            }
+            
+            // If no match with lead city, try agent city
+            if (!locationToUse) {
+              const agentCity = appointmentData.agent?.agent_city?.toLowerCase().trim();
+              if (agentCity) {
+                const matchingLocation = officeLocations.find((loc: any) => 
+                  loc.city?.toLowerCase().trim() === agentCity
+                );
+                if (matchingLocation) {
+                  locationToUse = matchingLocation.city;
+                }
+              }
+            }
+            
+            // If still no match, use first office location
+            if (!locationToUse && officeLocations.length > 0) {
+              locationToUse = officeLocations[0].city;
+            }
+          }
+        } catch (err) {
+          console.error("Error fetching office locations:", err);
+        }
+        
+        // Fallback: use agent metadata locations or agent_city
+        if (!locationToUse) {
+          const metadata = appointmentData.agent?.metadata || {};
+          const availabilityLocations = (metadata as any)?.availability?.locations || [];
+          if (availabilityLocations.length > 0) {
+            // Try to match lead city with availability locations
+            const leadCity = appointmentData.lead?.city?.toLowerCase().trim();
+            if (leadCity) {
+              const matchingLocation = availabilityLocations.find((loc: string) => 
+                loc.toLowerCase().trim() === leadCity
+              );
+              if (matchingLocation) {
+                locationToUse = matchingLocation;
+              }
+            }
+            
+            // If no match, use first location from metadata
+            if (!locationToUse) {
+              locationToUse = availabilityLocations[0];
+            }
+          } else {
+            // Last resort: use agent_city
+            locationToUse = appointmentData.agent?.agent_city || '';
+          }
+        }
+        
+        const locationParam = locationToUse ? `&location=${encodeURIComponent(locationToUse)}` : '';
         
         const res = await fetch(
           `/api/agents/availability?agentId=${appointmentData.agent_id}&startDate=${startDate}&endDate=${endDate}${locationParam}`
@@ -205,8 +276,15 @@ function CancelAppointmentContent() {
       rescheduleAppointmentId: appointmentId,
     });
     
-    // Use lead's city (where they searched from) as location
-    const locationCity = appointmentData.lead?.city || appointmentData.agent?.agent_city || '';
+    // Determine location city for booking (same logic as availability fetch)
+    // This should match the location used to fetch availability above
+    let locationCity = '';
+    if (appointmentData.lead?.city) {
+      locationCity = appointmentData.lead.city;
+    } else if (appointmentData.agent?.agent_city) {
+      locationCity = appointmentData.agent.agent_city;
+    }
+    
     if (locationCity) {
       params.set("city", locationCity);
     }
