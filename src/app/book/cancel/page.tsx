@@ -608,6 +608,47 @@ function CancelAppointmentContent() {
 
             {/* Content */}
             <div className="p-6">
+              {/* Office Location Selector */}
+              {officeLocations.length > 1 && (
+                <div className="mb-6">
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">
+                    Select office location
+                  </label>
+                  <select
+                    value={selectedRescheduleLocation}
+                    onChange={(e) => {
+                      setSelectedRescheduleLocation(e.target.value);
+                      // Update agent info to show the selected location's address
+                      const normalizeLocation = (loc: string | undefined | null): string => {
+                        if (!loc) return '';
+                        let normalized = loc.split(',').map(s => s.trim())[0];
+                        normalized = normalized.replace(/\s+office$/i, '').trim();
+                        return normalized.toLowerCase();
+                      };
+                      const matchingOfficeLoc = officeLocations.find((loc: any) => 
+                        normalizeLocation(loc.city) === normalizeLocation(e.target.value)
+                      );
+                      if (matchingOfficeLoc) {
+                        setSelectedAgentInfo((prev: any) => ({
+                          ...prev,
+                          displayCity: matchingOfficeLoc.city,
+                          displayAddress: matchingOfficeLoc.street_address 
+                            ? `${matchingOfficeLoc.street_address}, ${matchingOfficeLoc.city}, ${matchingOfficeLoc.province}${matchingOfficeLoc.postal_code ? ` ${matchingOfficeLoc.postal_code}` : ''}`
+                            : `${matchingOfficeLoc.city}, ${matchingOfficeLoc.province}`,
+                        }));
+                      }
+                    }}
+                    className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-lg hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-green-600 transition-all text-base"
+                  >
+                    {officeLocations.map((loc: any) => (
+                      <option key={loc.id} value={loc.city}>
+                        {loc.name || loc.city} - {loc.city}, {loc.province}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              
               <div className="flex items-center gap-2 mb-4">
                 <Calendar className="w-5 h-5 text-green-600" />
                 <h3 className="text-lg font-semibold text-black">Select a date and time</h3>
