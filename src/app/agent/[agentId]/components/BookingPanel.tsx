@@ -112,20 +112,63 @@ export function BookingPanel({ agentId, initialLocation }: BookingPanelProps) {
           });
         }
         
-        setOfficeLocations(locations.length > 0 ? locations : [{
+        const finalLocations = locations.length > 0 ? locations : [{
           id: '1',
           name: agent.funeral_home || 'Main Office',
           address: `${agent.agent_city || ''}, ${agent.agent_province || ''}`,
           nextAvailable: 'Next available tomorrow',
           locationName: (agent.agent_city || '').trim()
-        }]);
+        }];
+        
+        // Reorder locations: if searchLocation matches a location, put it first
+        if (normalizedSearchLocation && finalLocations.length > 1) {
+          const matchingIndex = finalLocations.findIndex(loc => {
+            const normalizedLocName = normalizeLocation(loc.locationName);
+            return normalizedLocName?.toLowerCase() === normalizedSearchLocation.toLowerCase();
+          });
+          
+          if (matchingIndex > 0) {
+            // Move matching location to the beginning
+            const matchingLocation = finalLocations[matchingIndex];
+            finalLocations.splice(matchingIndex, 1);
+            finalLocations.unshift(matchingLocation);
+            // Update IDs to maintain sequential order
+            finalLocations.forEach((loc, idx) => {
+              loc.id = String(idx + 1);
+            });
+          }
+        }
+        
+        setOfficeLocations(finalLocations);
+        
+        // Set selected location: if searchLocation matches, select it; otherwise default to first
+        if (normalizedSearchLocation && finalLocations.length > 0) {
+          const matchingLocation = finalLocations.find(loc => {
+            const normalizedLocName = normalizeLocation(loc.locationName);
+            return normalizedLocName?.toLowerCase() === normalizedSearchLocation.toLowerCase();
+          });
+          
+          if (matchingLocation) {
+            setSelectedLocationId(matchingLocation.id);
+            console.log('🎯 BookingPanel: Selected location from search:', {
+              searchLocation: searchLocationParam,
+              normalizedSearchLocation,
+              selectedLocationId: matchingLocation.id,
+              locationName: matchingLocation.locationName
+            });
+          } else {
+            setSelectedLocationId(finalLocations[0].id);
+          }
+        } else {
+          setSelectedLocationId(finalLocations[0]?.id || '1');
+        }
       } catch (err) {
         console.error("Error fetching agent data:", err);
       }
     };
     
     fetchAgentData();
-  }, [agentId]);
+  }, [agentId, normalizedSearchLocation, searchLocationParam]);
 
   // Fetch availability
   useEffect(() => {
