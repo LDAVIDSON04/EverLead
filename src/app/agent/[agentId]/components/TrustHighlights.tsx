@@ -2,35 +2,56 @@
 
 import { Check, Shield, Award, FileCheck, Star, Clock } from 'lucide-react';
 
-interface Highlight {
-  icon: 'check' | 'shield' | 'award' | 'file' | 'star' | 'clock';
-  title: string;
-  description: string;
+interface TrustHighlightsProps {
+  rating?: number;
+  reviewCount?: number;
 }
 
-const highlights: Highlight[] = [
-  { 
-    icon: 'star', 
-    title: 'Highly recommended', 
-    description: '100% of patients give this specialist 5 stars' 
-  },
-  { 
-    icon: 'clock', 
-    title: 'Excellent response time', 
-    description: '100% of inquiries answered within 2 hours' 
-  },
-  { 
-    icon: 'shield', 
-    title: 'Verified by Soradin', 
-    description: 'All credentials and background checks verified' 
-  },
-];
+export function TrustHighlights({ rating = 0, reviewCount = 0 }: TrustHighlightsProps) {
+  // Calculate real stats for "Highly recommended"
+  const getRecommendedDescription = () => {
+    if (reviewCount === 0) {
+      return 'No reviews yet';
+    }
+    if (rating >= 4.5) {
+      const percentage = Math.round((rating / 5) * 100);
+      return `${percentage}% of patients give this specialist ${rating >= 4.8 ? '5' : '4-5'} stars`;
+    }
+    return `${rating.toFixed(1)} average rating from ${reviewCount} ${reviewCount === 1 ? 'review' : 'reviews'}`;
+  };
 
-export function TrustHighlights() {
+  const highlights = [
+    { 
+      icon: 'star', 
+      title: 'Highly recommended', 
+      description: getRecommendedDescription()
+    },
+    { 
+      icon: 'clock', 
+      title: 'Excellent response time', 
+      description: '100% of inquiries answered within 2 hours' 
+    },
+    { 
+      icon: 'shield', 
+      title: 'Verified by Soradin', 
+      description: 'All credentials and background checks verified' 
+    },
+  ];
+
   const getIcon = (icon: string) => {
     const iconProps = { className: "w-8 h-8", style: { color: '#2d7a4a' } };
     switch (icon) {
-      case 'shield': return <Shield {...iconProps} />;
+      case 'shield': 
+        return (
+          <div className="relative">
+            <Shield {...iconProps} />
+            <Check 
+              className="w-4 h-4 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" 
+              style={{ color: '#ffffff' }}
+              strokeWidth={3}
+            />
+          </div>
+        );
       case 'award': return <Award {...iconProps} />;
       case 'file': return <FileCheck {...iconProps} />;
       case 'star': return <Star {...iconProps} fill="#2d7a4a" />;

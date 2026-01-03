@@ -172,7 +172,7 @@ export default function AgentProfilePage() {
               summary={agentData.summary} 
               fullBio={agentData.fullBio} 
             />
-            <TrustHighlights />
+            <TrustHighlights rating={agentData.rating} reviewCount={agentData.reviewCount} />
           </div>
 
           {/* Right Column - Sticky Booking Panel (5 columns) */}
