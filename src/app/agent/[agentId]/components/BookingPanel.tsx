@@ -158,11 +158,12 @@ export function BookingPanel({ agentId }: BookingPanelProps) {
           
           const days: DayAvailability[] = [];
           // Only show up to 14 days starting from weekStartDate
-          // For daily-only: only show days that are in the API response
-          // For recurring: show all days in range, but appointmentCount will be 0 for days without slots
+          // Use UTC dates to match API response format (YYYY-MM-DD)
           for (let i = 0; i < 14; i++) {
+            // Create date in UTC to avoid timezone issues
             const date = new Date(weekStartDate);
-            date.setDate(weekStartDate.getDate() + i);
+            date.setUTCDate(weekStartDate.getUTCDate() + i);
+            date.setUTCHours(0, 0, 0, 0);
             const dateStr = date.toISOString().split("T")[0];
             
             const dayData = availabilityMap.get(dateStr);
