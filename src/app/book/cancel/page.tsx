@@ -901,41 +901,6 @@ function CancelAppointmentContent() {
                     })}
                 </div>
               )}
-              
-              {/* Confirm Reschedule Button */}
-              {selectedTimeSlot && (
-                <div className="mt-6 pt-6 border-t border-gray-200">
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-                    <p className="text-sm text-gray-700 mb-2">
-                      <span className="font-semibold">Selected time:</span> {selectedTimeSlot.time}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {new Date(selectedTimeSlot.date).toLocaleDateString('en-US', { 
-                        weekday: 'long', 
-                        month: 'long', 
-                        day: 'numeric', 
-                        year: 'numeric' 
-                      })}
-                    </p>
-                  </div>
-                  <div className="flex gap-3">
-                    <button
-                      onClick={() => setSelectedTimeSlot(null)}
-                      className="flex-1 px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium"
-                      disabled={rescheduling}
-                    >
-                      Change Time
-                    </button>
-                    <button
-                      onClick={handleConfirmReschedule}
-                      disabled={rescheduling}
-                      className="flex-1 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {rescheduling ? "Rescheduling..." : "Confirm Reschedule"}
-                    </button>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </div>
