@@ -449,6 +449,19 @@ function CancelAppointmentContent() {
                 <p className="text-gray-900 font-medium">{appointmentData.time_display}</p>
               </div>
             </div>
+            {appointmentData.office_location && (
+              <div className="flex items-start gap-3">
+                <MapPin className="w-5 h-5 text-gray-400 mt-0.5" />
+                <div>
+                  <p className="text-sm text-gray-500">Location</p>
+                  <p className="text-gray-900 font-medium">
+                    {appointmentData.office_location.street_address 
+                      ? `${appointmentData.office_location.street_address}, ${appointmentData.office_location.city}, ${appointmentData.office_location.province}${appointmentData.office_location.postal_code ? ` ${appointmentData.office_location.postal_code}` : ''}`
+                      : `${appointmentData.office_location.city}, ${appointmentData.office_location.province}`}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
         
