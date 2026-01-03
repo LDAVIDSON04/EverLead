@@ -97,18 +97,18 @@ export async function GET(req: NextRequest) {
     // Use the specified location, or fall back to first location, or agent's default city
     let selectedLocation = location ? normalizeLocation(location) : undefined;
     if (!selectedLocation && locations.length > 0) {
-      selectedLocation = locations[0].trim();
+      selectedLocation = normalizeLocation(locations[0]) || locations[0].trim();
     }
     if (!selectedLocation && profile.agent_city) {
       selectedLocation = normalizeLocation(profile.agent_city);
     }
     if (!selectedLocation && locations.length > 0) {
-      selectedLocation = locations[0].trim();
+      selectedLocation = normalizeLocation(locations[0]) || locations[0].trim();
     }
     
-    // Ensure selectedLocation is trimmed (normalizeLocation already trims, but be safe)
+    // Ensure selectedLocation is trimmed and normalized (normalizeLocation already trims, but be safe)
     if (selectedLocation) {
-      selectedLocation = selectedLocation.trim();
+      selectedLocation = normalizeLocation(selectedLocation) || selectedLocation.trim();
     }
     
     console.log("🔍 Location normalization:", {
@@ -116,16 +116,23 @@ export async function GET(req: NextRequest) {
       normalizedLocation: location ? normalizeLocation(location) : undefined,
       selectedLocation,
       availableLocations: locations,
+      normalizedAvailableLocations: locations.map(loc => normalizeLocation(loc)),
     });
     
     // Determine which type is active for this location
+    // CRITICAL: availabilityTypeByLocation keys are normalized (no "Office" suffix, no province)
+    // So we must use normalized location name for lookup
     let locationType: "recurring" | "daily" = "recurring"; // Default to recurring
     if (selectedLocation && availabilityTypeByLocation[selectedLocation]) {
       locationType = availabilityTypeByLocation[selectedLocation] as "recurring" | "daily";
     } else if (selectedLocation) {
-      // Try case-insensitive match for type
+      // Try case-insensitive match for type (also normalize keys for comparison)
+      const normalizedSelected = selectedLocation.toLowerCase().trim();
       const matchingLocationKey = Object.keys(availabilityTypeByLocation).find(
-        loc => loc.toLowerCase() === selectedLocation!.toLowerCase()
+        loc => {
+          const normalizedKey = normalizeLocation(loc)?.toLowerCase().trim() || loc.toLowerCase().trim();
+          return normalizedKey === normalizedSelected;
+        }
       );
       if (matchingLocationKey) {
         locationType = availabilityTypeByLocation[matchingLocationKey] as "recurring" | "daily";
