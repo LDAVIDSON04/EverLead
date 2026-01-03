@@ -555,8 +555,10 @@ export default function SchedulePage() {
       <AddAvailabilityModal
         isOpen={showAddAvailabilityModal}
         onClose={() => setShowAddAvailabilityModal(false)}
-        onSave={() => {
-          // Optionally refresh data here
+        onSave={(message) => {
+          if (message) {
+            alert(message);
+          }
           setShowAddAvailabilityModal(false);
         }}
       />

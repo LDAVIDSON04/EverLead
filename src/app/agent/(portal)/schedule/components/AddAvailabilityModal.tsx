@@ -7,7 +7,7 @@ import { X, ChevronDown } from "lucide-react";
 interface AddAvailabilityModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave?: () => void;
+  onSave?: (message?: string) => void;
 }
 
 function Input({ className = "", ...props }: React.InputHTMLAttributes<HTMLInputElement>) {
@@ -276,17 +276,17 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
         }
       }
       
-      // Show success message
+      // Show success message in modal briefly
       setSaveMessage({ type: "success", text: successMessage });
       
-      // Call onSave callback
-      onSave?.();
+      // Call onSave callback with message
+      onSave?.(successMessage);
       
-      // Close modal after a delay to show the message
+      // Close modal after a short delay
       setTimeout(() => {
         setSaveMessage(null);
         onClose();
-      }, 3000);
+      }, 500);
     } catch (err: any) {
       console.error("Error saving:", err);
       setSaveMessage({ type: "error", text: err.message || "Failed to save availability. Please try again." });
