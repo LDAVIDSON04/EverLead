@@ -41,6 +41,14 @@ type AppointmentData = {
     province: string | null;
   } | null;
   lead_id: string | null;
+  office_location: {
+    id: string;
+    name: string | null;
+    city: string | null;
+    street_address: string | null;
+    province: string | null;
+    postal_code: string | null;
+  } | null;
 };
 
 type AvailabilityDay = {

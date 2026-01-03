@@ -135,6 +135,36 @@ export async function GET(
 
     const lead = Array.isArray(appointment.leads) ? appointment.leads[0] : appointment.leads;
 
+    // Fetch office location based on lead's city
+    let officeLocation = null;
+    if (lead?.city && appointment.agent_id) {
+      const normalizeLocation = (loc: string | null | undefined): string => {
+        if (!loc) return '';
+        let normalized = loc.split(',').map(s => s.trim())[0];
+        normalized = normalized.replace(/\s+office$/i, '').trim();
+        return normalized.toLowerCase();
+      };
+
+      const { data: officeLocations } = await supabaseAdmin
+        .from('office_locations')
+        .select('id, name, city, street_address, province, postal_code')
+        .eq('agent_id', appointment.agent_id)
+        .order('city', { ascending: true });
+
+      if (officeLocations && officeLocations.length > 0) {
+        const normalizedLeadCity = normalizeLocation(lead.city);
+        const matchingLocation = officeLocations.find((loc: any) => 
+          normalizeLocation(loc.city) === normalizedLeadCity
+        );
+        if (matchingLocation) {
+          officeLocation = matchingLocation;
+        } else {
+          // Fallback to first location if no match
+          officeLocation = officeLocations[0];
+        }
+      }
+    }
+
     return NextResponse.json({
       id: appointment.id,
       agent_id: appointment.agent_id,
@@ -148,6 +178,7 @@ export async function GET(
       agent: agentInfo,
       lead: lead,
       lead_id: appointment.lead_id,
+      office_location: officeLocation,
     });
   } catch (error: any) {
     console.error("Error fetching appointment:", error);
