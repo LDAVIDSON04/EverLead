@@ -129,7 +129,9 @@ function CancelAppointmentContent() {
         const startDate = today.toISOString().split("T")[0];
         const endDate = new Date(today.getTime() + 14 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
         
-        const location = appointmentData.agent?.agent_city || '';
+        // Try to determine location: use lead's city (where they searched from) as proxy for appointment location
+        // If no lead city, don't filter by location (shows all locations)
+        const location = appointmentData.lead?.city || appointmentData.agent?.agent_city || '';
         const locationParam = location ? `&location=${encodeURIComponent(location)}` : '';
         
         const res = await fetch(
@@ -203,8 +205,10 @@ function CancelAppointmentContent() {
       rescheduleAppointmentId: appointmentId,
     });
     
-    if (appointmentData.agent?.agent_city) {
-      params.set("city", appointmentData.agent.agent_city);
+    // Use lead's city (where they searched from) as location
+    const locationCity = appointmentData.lead?.city || appointmentData.agent?.agent_city || '';
+    if (locationCity) {
+      params.set("city", locationCity);
     }
     
     const bookingUrl = `/book/step2?agentId=${appointmentData.agent_id}&${params.toString()}`;
