@@ -883,17 +883,12 @@ function CancelAppointmentContent() {
                           ) : (
                             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                               {formattedSlots.map((timeSlot, idx) => {
-                                const isSelected = selectedTimeSlot?.startsAt === timeSlot.startsAt && selectedTimeSlot?.date === day.date;
                                 return (
                                   <button
                                     key={idx}
                                     type="button"
                                     onClick={() => handleTimeSlotClick(timeSlot, day.date)}
-                                    className={`w-full px-4 py-3 rounded-lg text-sm font-medium transition-all border-2 shadow-sm hover:shadow-md ${
-                                      isSelected
-                                        ? "bg-green-600 text-white border-green-600"
-                                        : "bg-green-100 text-black hover:bg-green-600 hover:text-white border-green-300 hover:border-green-600"
-                                    }`}
+                                    className="w-full px-4 py-3 rounded-lg text-sm font-medium transition-all bg-green-100 text-black hover:bg-green-600 hover:text-white border-2 border-green-300 hover:border-green-600 shadow-sm hover:shadow-md"
                                   >
                                     {timeSlot.time}
                                   </button>
