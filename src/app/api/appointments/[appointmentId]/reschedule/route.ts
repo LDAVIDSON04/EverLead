@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { DateTime } from "luxon";
+import { deleteExternalEventsForAgentAppointment, syncAgentAppointmentToGoogleCalendar, syncAgentAppointmentToMicrosoftCalendar } from "@/lib/calendarSyncAgent";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -124,6 +125,31 @@ export async function POST(
         { error: "Failed to reschedule appointment" },
         { status: 500 }
       );
+    }
+
+    // Sync to external calendars (non-blocking)
+    // Delete old events and create new ones with updated time
+    try {
+      // First, delete the old calendar events
+      await deleteExternalEventsForAgentAppointment(appointmentId);
+      
+      // Then, create new events with the updated time
+      // Sync to Google Calendar
+      try {
+        await syncAgentAppointmentToGoogleCalendar(appointmentId);
+      } catch (googleError: any) {
+        console.error("Error syncing to Google Calendar (non-fatal):", googleError);
+      }
+      
+      // Sync to Microsoft Calendar
+      try {
+        await syncAgentAppointmentToMicrosoftCalendar(appointmentId);
+      } catch (microsoftError: any) {
+        console.error("Error syncing to Microsoft Calendar (non-fatal):", microsoftError);
+      }
+    } catch (syncError: any) {
+      console.error("Error syncing appointment to calendars (non-fatal):", syncError);
+      // Don't fail the reschedule if calendar sync fails
     }
 
     return NextResponse.json({
