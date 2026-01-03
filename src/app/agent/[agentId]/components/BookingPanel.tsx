@@ -699,56 +699,116 @@ export function BookingPanel({ agentId, initialLocation }: BookingPanelProps) {
                 </div>
               ) : (
                 <div className="space-y-6">
-                  {allAvailabilityDays
-                    .filter(day => day.slots.length > 0)
-                    .map((day) => {
+                  {/* Show days - prioritize showing the selected day even if it has no slots (EXACT same logic as search page) */}
+                  {(() => {
+                    const normalizedSelectedDate = selectedDayForModal?.trim() || "";
+                    
+                    // Always include the selected day, even if it has no slots
+                    const selectedDay = allAvailabilityDays.find(d => d.date.trim() === normalizedSelectedDate);
+                    const daysWithSlots = allAvailabilityDays.filter(day => day.slots.length > 0);
+                    
+                    // If selected day has no slots, show it first, then show days with slots
+                    // If selected day has slots, it will already be in daysWithSlots
+                    let daysToShow = [...daysWithSlots];
+                    if (selectedDay && selectedDay.slots.length === 0) {
+                      // Insert selected day at the beginning
+                      daysToShow.unshift(selectedDay);
+                    }
+                    
+                    // Remove duplicates (in case selected day is already in daysWithSlots)
+                    const uniqueDays = daysToShow.filter((day, index, self) => 
+                      index === self.findIndex(d => d.date.trim() === day.date.trim())
+                    );
+                    
+                    return uniqueDays;
+                  })()
+                    .map((day, dayIdx) => {
+                      // Parse date string (YYYY-MM-DD) in UTC to avoid timezone shifts (EXACT same as search page)
                       const [year, month, dayOfMonth] = day.date.split("-").map(Number);
+                      
+                      // Validate parsed date components
+                      if (isNaN(year) || isNaN(month) || isNaN(dayOfMonth)) {
+                        console.error("Invalid date format:", day.date);
+                        return null;
+                      }
+                      
+                      // Create date in UTC to get correct day of week
                       const date = new Date(Date.UTC(year, month - 1, dayOfMonth));
-                      const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
-                      const formattedDate = date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+                      
+                      // Use UTC methods to get day of week and date components (EXACT same as search page)
+                      const dayName = date.toLocaleDateString("en-US", { weekday: "long", timeZone: "UTC" });
+                      const monthName = date.toLocaleDateString("en-US", { month: "long", timeZone: "UTC" });
+                      const dayNum = date.getUTCDate();
+                      const displayDate = `${dayName}, ${monthName} ${dayNum}`;
+                      
+                      // Format time slots for this day
+                      const formattedSlots = day.slots.map(slot => {
+                        const startDate = new Date(slot.startsAt);
+                        const hours = startDate.getHours();
+                        const minutes = startDate.getMinutes();
+                        const ampm = hours >= 12 ? 'PM' : 'AM';
+                        const displayHours = hours % 12 || 12;
+                        const timeStr = `${displayHours}:${String(minutes).padStart(2, '0')} ${ampm}`;
+                        
+                        return {
+                          time: timeStr,
+                          startsAt: slot.startsAt,
+                          endsAt: slot.endsAt,
+                          available: true
+                        };
+                      });
+                      
+                      // Skip if date parsing failed
+                      if (!date || !dayName || !monthName) {
+                        return null;
+                      }
+                      
+                      // Show this day even if it has no slots (so user sees the day they clicked)
+                      const hasSlots = formattedSlots.length > 0;
 
                       return (
-                        <div key={day.date} className="">
-                          <div className="mb-3">
-                            <h4 className="text-lg font-semibold text-gray-900">{dayName}, {formattedDate}</h4>
-                          </div>
-                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                            {day.slots.map((slot, idx) => {
-                              const slotDate = new Date(slot.startsAt);
-                              const hours = slotDate.getHours();
-                              const minutes = slotDate.getMinutes();
-                              const ampm = hours >= 12 ? 'PM' : 'AM';
-                              const displayHours = hours % 12 || 12;
-                              const timeStr = `${displayHours}:${String(minutes).padStart(2, '0')} ${ampm}`;
+                        <div key={dayIdx} className="border-b border-gray-200 pb-6 last:border-b-0">
+                          <h4 className="text-base font-semibold text-black mb-3">{displayDate}</h4>
+                          {!hasSlots ? (
+                            <div className="text-center py-8 text-gray-500">
+                              <p className="text-sm">No available time slots for this date.</p>
+                              <p className="text-xs mt-2 text-gray-400">Please select another date.</p>
+                            </div>
+                          ) : (
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                              {formattedSlots.map((timeSlot, idx) => {
+                                const params = new URLSearchParams({
+                                  startsAt: timeSlot.startsAt,
+                                  endsAt: timeSlot.endsAt,
+                                  date: day.date,
+                                });
+                                
+                                // Get location from selected location
+                                const selectedLocation = officeLocations.find(loc => loc.id === selectedLocationId) || officeLocations[0];
+                                const locationName = selectedLocation?.locationName?.trim() || '';
+                                if (locationName) {
+                                  params.set("city", locationName);
+                                }
+                                
+                                const bookingUrl = `${window.location.origin}/book/step2?agentId=${agentId}&${params.toString()}`;
 
-                              return (
-                                <button
-                                  key={idx}
-                                  type="button"
-                                  onClick={() => {
-                                    // Navigate to booking page (same format as search page)
-                                    const params = new URLSearchParams({
-                                      startsAt: slot.startsAt,
-                                      endsAt: slot.endsAt,
-                                      date: day.date,
-                                    });
-                                    
-                                    // Include location if available
-                                    const selectedLocation = officeLocations.find(loc => loc.id === selectedLocationId) || officeLocations[0];
-                                    if (selectedLocation?.locationName) {
-                                      params.set('city', selectedLocation.locationName);
-                                    }
-                                    
-                                    const bookingUrl = `/book/step2?agentId=${agentId}&${params.toString()}`;
-                                    window.location.href = bookingUrl;
-                                  }}
-                                  className="w-full px-4 py-3 rounded-lg text-sm font-medium transition-all bg-green-100 text-black hover:bg-green-600 hover:text-white border-2 border-green-300 hover:border-green-600 shadow-sm hover:shadow-md"
-                                >
-                                  {timeStr}
-                                </button>
-                              );
-                            })}
-                          </div>
+                                return (
+                                  <button
+                                    key={idx}
+                                    type="button"
+                                    onMouseDown={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      window.location.href = bookingUrl;
+                                    }}
+                                    className="w-full px-4 py-3 rounded-lg text-sm font-medium transition-all bg-green-100 text-black hover:bg-green-600 hover:text-white border-2 border-green-300 hover:border-green-600 shadow-sm hover:shadow-md"
+                                  >
+                                    {timeSlot.time}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
                         </div>
                       );
                     })}
