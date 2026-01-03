@@ -269,7 +269,8 @@ export function BookingPanel({ agentId, initialLocation }: BookingPanelProps) {
           selectedLocationId,
           locationName,
           url,
-          officeLocations: officeLocations.map(loc => ({ id: loc.id, name: loc.name, locationName: loc.locationName }))
+          officeLocations: officeLocations.map(loc => ({ id: loc.id, name: loc.name, locationName: loc.locationName })),
+          selectedLocation: selectedLocation
         });
         
         const res = await fetch(url);
