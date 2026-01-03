@@ -2030,9 +2030,7 @@ function SearchResults() {
                       </div>
 
                       {/* Trust Highlights */}
-                      {portfolioAgentData?.id && (
-                        <TrustHighlights agentId={portfolioAgentData.id} />
-                      )}
+                      <TrustHighlights />
                     </div>
 
                     {/* Right Column - Sticky Booking Panel (5 columns) */}
