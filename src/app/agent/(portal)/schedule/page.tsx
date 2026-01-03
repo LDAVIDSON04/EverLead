@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabaseClient } from "@/lib/supabaseClient";
 import { useRequireRole } from "@/lib/hooks/useRequireRole";
-import { Calendar, Clock, User, X, ChevronLeft, ChevronRight, MapPin, ChevronDown } from "lucide-react";
+import { Calendar, Clock, User, X, ChevronLeft, ChevronRight, MapPin } from "lucide-react";
 import { DateTime } from "luxon";
 import { ClientInfoModal } from "../my-appointments/components/ClientInfoModal";
 import { downloadClientInfo } from "@/lib/downloadClientInfo";
@@ -50,7 +50,6 @@ export default function SchedulePage() {
   const [currentDayOffset, setCurrentDayOffset] = useState(0);
   const [currentMonthOffset, setCurrentMonthOffset] = useState(0);
   const [view, setView] = useState<ViewType>('week');
-  const [viewDropdownOpen, setViewDropdownOpen] = useState(false);
   const [agentTimezone, setAgentTimezone] = useState<string>("America/Vancouver");
   const [viewingLeadId, setViewingLeadId] = useState<string | null>(null);
   const [viewingAppointmentId, setViewingAppointmentId] = useState<string | null>(null);
@@ -566,62 +565,41 @@ export default function SchedulePage() {
       {/* Header */}
       <div className="mb-4 md:mb-8">
         {/* Date range and View Selector */}
-        <div className="mb-3 md:mb-0 flex items-center justify-between gap-4">
+        <div className="mb-3 md:mb-0 flex items-center justify-between gap-4 flex-wrap">
           <h1 className="text-lg md:text-3xl font-semibold">{formatDateRange()}</h1>
           
-          {/* View Selector Dropdown */}
-          <div className="relative">
+          {/* View Selector - Modern Button Group */}
+          <div className="inline-flex items-center bg-gray-100 rounded-lg p-1 shadow-sm border border-gray-200">
             <button
-              onClick={() => setViewDropdownOpen(!viewDropdownOpen)}
-              className="flex items-center gap-2 px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              onClick={() => setView('day')}
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+                view === 'day'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              }`}
             >
-              <span className="capitalize">{view} view</span>
-              <ChevronDown className={`w-4 h-4 transition-transform ${viewDropdownOpen ? 'rotate-180' : ''}`} />
+              Day
             </button>
-            
-            {viewDropdownOpen && (
-              <>
-                <div 
-                  className="fixed inset-0 z-10" 
-                  onClick={() => setViewDropdownOpen(false)}
-                />
-                <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-20">
-                  <button
-                    onClick={() => {
-                      setView('day');
-                      setViewDropdownOpen(false);
-                    }}
-                    className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors ${
-                      view === 'day' ? 'bg-gray-100 font-medium' : ''
-                    } ${view === 'day' ? 'rounded-t-lg' : ''}`}
-                  >
-                    Day view
-                  </button>
-                  <button
-                    onClick={() => {
-                      setView('week');
-                      setViewDropdownOpen(false);
-                    }}
-                    className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors ${
-                      view === 'week' ? 'bg-gray-100 font-medium' : ''
-                    }`}
-                  >
-                    Week view
-                  </button>
-                  <button
-                    onClick={() => {
-                      setView('month');
-                      setViewDropdownOpen(false);
-                    }}
-                    className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors ${
-                      view === 'month' ? 'bg-gray-100 font-medium' : ''
-                    } ${view === 'month' ? 'rounded-b-lg' : ''}`}
-                  >
-                    Month view
-                  </button>
-                </div>
-              </>
-            )}
+            <button
+              onClick={() => setView('week')}
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+                view === 'week'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              }`}
+            >
+              Week
+            </button>
+            <button
+              onClick={() => setView('month')}
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+                view === 'month'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              }`}
+            >
+              Month
+            </button>
           </div>
         </div>
         
