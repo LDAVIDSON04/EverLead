@@ -80,7 +80,9 @@ export function BookingPanel({ agentId, initialLocation }: BookingPanelProps) {
         if (!officeError && officeLocationsData && officeLocationsData.length > 0) {
           // Use office_locations table data - each location has its own address
           const locationsList: OfficeLocation[] = officeLocationsData.map((loc: any) => {
-            const locationName = loc.city?.trim() || '';
+            // Normalize city name to match metadata format (remove province, commas, etc.)
+            const rawCity = loc.city?.trim() || '';
+            const locationName = normalizeLocation(rawCity) || rawCity;
             const address = loc.street_address 
               ? `${loc.street_address}, ${loc.city}, ${loc.province}${loc.postal_code ? ` ${loc.postal_code}` : ''}`
               : `${loc.city || ''}, ${loc.province || ''}`;
