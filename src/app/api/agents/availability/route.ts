@@ -186,6 +186,8 @@ export async function GET(req: NextRequest) {
       metadataAvailability: availabilityData,
       scheduleDayNames: locationSchedule ? Object.keys(locationSchedule) : [],
       scheduleDetails: locationSchedule,
+      locationType: locationType, // CRITICAL: Log the determined location type
+      availabilityTypeByLocation: availabilityTypeByLocation, // Log the type mapping
     });
     
     // Validate that we have a valid schedule
