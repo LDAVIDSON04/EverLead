@@ -255,6 +255,43 @@ function CancelAppointmentContent() {
     fetchData();
   }, [showRescheduleModal, appointmentData]);
 
+  // Fetch availability when selected location changes
+  useEffect(() => {
+    if (!showRescheduleModal || !selectedRescheduleLocation || !appointmentData?.agent_id) return;
+
+    const fetchAvailability = async () => {
+      setLoadingAvailability(true);
+      try {
+        const today = new Date();
+        const startDate = today.toISOString().split("T")[0];
+        const endDate = new Date(today.getTime() + 14 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+        
+        const locationParam = selectedRescheduleLocation ? `&location=${encodeURIComponent(selectedRescheduleLocation)}` : '';
+        
+        const res = await fetch(
+          `/api/agents/availability?agentId=${appointmentData.agent_id}&startDate=${startDate}&endDate=${endDate}${locationParam}`
+        );
+        
+        if (res.ok) {
+          const availabilityData: AvailabilityDay[] = await res.json();
+          setAvailabilityDays(availabilityData);
+          
+          // Set first day with slots as selected
+          if (availabilityData.length > 0) {
+            const firstDayWithSlots = availabilityData.find(day => day.slots.length > 0) || availabilityData[0];
+            setSelectedDayForModal(firstDayWithSlots.date);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching availability:", error);
+      } finally {
+        setLoadingAvailability(false);
+      }
+    };
+
+    fetchAvailability();
+  }, [showRescheduleModal, selectedRescheduleLocation, appointmentData]);
+
   const handleCancel = async () => {
     if (!appointmentId) {
       setStatus("error");
@@ -302,17 +339,19 @@ function CancelAppointmentContent() {
       rescheduleAppointmentId: appointmentId,
     });
     
-    // Determine location city for booking (same logic as availability fetch)
-    // This should match the location used to fetch availability above
-    let locationCity = '';
-    if (appointmentData.lead?.city) {
-      locationCity = appointmentData.lead.city;
-    } else if (appointmentData.agent?.agent_city) {
-      locationCity = appointmentData.agent.agent_city;
-    }
+    // Use the selected reschedule location (or fallback to lead city)
+    const locationCity = selectedRescheduleLocation || appointmentData.lead?.city || appointmentData.agent?.agent_city || '';
     
     if (locationCity) {
       params.set("city", locationCity);
+    }
+    
+    // Also include office location name if available
+    if (officeLocations.length > 0 && selectedRescheduleLocation) {
+      const selectedLoc = officeLocations.find((loc: any) => loc.city === selectedRescheduleLocation);
+      if (selectedLoc?.name) {
+        params.set("officeLocation", selectedLoc.name);
+      }
     }
     
     const bookingUrl = `/book/step2?agentId=${appointmentData.agent_id}&${params.toString()}`;
