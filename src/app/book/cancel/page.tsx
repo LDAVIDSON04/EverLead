@@ -75,6 +75,8 @@ function CancelAppointmentContent() {
   const [selectedAgentInfo, setSelectedAgentInfo] = useState<any>(null);
   const [officeLocations, setOfficeLocations] = useState<any[]>([]);
   const [selectedRescheduleLocation, setSelectedRescheduleLocation] = useState<string>("");
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState<{ startsAt: string; endsAt: string; date: string; time: string } | null>(null);
+  const [rescheduling, setRescheduling] = useState(false);
 
   // Fetch appointment details on mount
   useEffect(() => {
@@ -295,34 +297,60 @@ function CancelAppointmentContent() {
     }
   };
 
-  const handleTimeSlotClick = (timeSlot: { startsAt: string; endsAt: string }, date: string) => {
-    if (!appointmentData || !appointmentId) return;
-
-    // Navigate to booking page with the selected time slot
-    const params = new URLSearchParams({
+  const handleTimeSlotClick = (timeSlot: { startsAt: string; endsAt: string; time: string }, date: string) => {
+    // Store the selected time slot instead of navigating
+    setSelectedTimeSlot({
       startsAt: timeSlot.startsAt,
       endsAt: timeSlot.endsAt,
       date: date,
-      rescheduleAppointmentId: appointmentId,
+      time: timeSlot.time,
     });
-    
-    // Use the selected reschedule location (or fallback to lead city)
-    const locationCity = selectedRescheduleLocation || appointmentData.lead?.city || appointmentData.agent?.agent_city || '';
-    
-    if (locationCity) {
-      params.set("city", locationCity);
-    }
-    
-    // Also include office location name if available
-    if (officeLocations.length > 0 && selectedRescheduleLocation) {
-      const selectedLoc = officeLocations.find((loc: any) => loc.city === selectedRescheduleLocation);
-      if (selectedLoc?.name) {
-        params.set("officeLocation", selectedLoc.name);
+  };
+
+  const handleConfirmReschedule = async () => {
+    if (!selectedTimeSlot || !appointmentId) return;
+
+    setRescheduling(true);
+    try {
+      const response = await fetch(`/api/appointments/${appointmentId}/reschedule`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          startsAt: selectedTimeSlot.startsAt,
+          endsAt: selectedTimeSlot.endsAt,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setStatus("error");
+        setMessage(data.error || "Failed to reschedule appointment. Please try again.");
+        return;
       }
+
+      setStatus("success");
+      setMessage("Your appointment has been rescheduled successfully.");
+      setShowRescheduleModal(false);
+      setSelectedTimeSlot(null);
+      
+      // Refresh appointment data
+      if (appointmentId) {
+        const refreshResponse = await fetch(`/api/appointments/${appointmentId}`);
+        if (refreshResponse.ok) {
+          const refreshedData = await refreshResponse.json();
+          setAppointmentData(refreshedData);
+        }
+      }
+    } catch (error: any) {
+      console.error("Error rescheduling appointment:", error);
+      setStatus("error");
+      setMessage("An error occurred while rescheduling. Please try again.");
+    } finally {
+      setRescheduling(false);
     }
-    
-    const bookingUrl = `/book/step2?agentId=${appointmentData.agent_id}&${params.toString()}`;
-    window.location.href = bookingUrl;
   };
 
   const closeRescheduleModal = () => {
@@ -806,6 +834,41 @@ function CancelAppointmentContent() {
                         </div>
                       );
                     })}
+                </div>
+              )}
+              
+              {/* Confirm Reschedule Button */}
+              {selectedTimeSlot && (
+                <div className="mt-6 pt-6 border-t border-gray-200">
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                    <p className="text-sm text-gray-700 mb-2">
+                      <span className="font-semibold">Selected time:</span> {selectedTimeSlot.time}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {new Date(selectedTimeSlot.date).toLocaleDateString('en-US', { 
+                        weekday: 'long', 
+                        month: 'long', 
+                        day: 'numeric', 
+                        year: 'numeric' 
+                      })}
+                    </p>
+                  </div>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => setSelectedTimeSlot(null)}
+                      className="flex-1 px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium"
+                      disabled={rescheduling}
+                    >
+                      Change Time
+                    </button>
+                    <button
+                      onClick={handleConfirmReschedule}
+                      disabled={rescheduling}
+                      className="flex-1 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {rescheduling ? "Rescheduling..." : "Confirm Reschedule"}
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
