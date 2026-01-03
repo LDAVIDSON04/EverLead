@@ -143,13 +143,19 @@ export async function GET(req: NextRequest) {
     let locationSchedule: Record<string, any> = {};
     
     if (selectedLocation && locationType === "recurring") {
+      // Normalize selectedLocation for comparison
+      const normalizedSelected = normalizeLocation(selectedLocation)?.toLowerCase().trim() || selectedLocation.toLowerCase().trim();
+      
       // Try exact match first (case-sensitive)
       if (availabilityByLocation[selectedLocation]) {
         locationSchedule = availabilityByLocation[selectedLocation];
       } else {
-        // Try case-insensitive match
+        // Try normalized match - normalize both the key and selectedLocation for comparison
         const matchingLocation = Object.keys(availabilityByLocation).find(
-          loc => loc.toLowerCase().trim() === selectedLocation!.toLowerCase().trim()
+          loc => {
+            const normalizedKey = normalizeLocation(loc)?.toLowerCase().trim() || loc.toLowerCase().trim();
+            return normalizedKey === normalizedSelected;
+          }
         );
         if (matchingLocation) {
           locationSchedule = availabilityByLocation[matchingLocation];
@@ -174,9 +180,13 @@ export async function GET(req: NextRequest) {
           requestedLocation: location,
           normalizedLocation: normalizeLocation(location),
           selectedLocation,
+          normalizedSelected: normalizeLocation(selectedLocation),
           availableLocations: locations,
           availabilityByLocationKeys: Object.keys(availabilityByLocation),
+          normalizedKeys: Object.keys(availabilityByLocation).map(loc => normalizeLocation(loc)),
         });
+        // Return empty schedule instead of falling back
+        return NextResponse.json([]);
       }
     }
     
