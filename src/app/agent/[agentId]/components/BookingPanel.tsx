@@ -415,32 +415,33 @@ export function BookingPanel({ agentId, initialLocation }: BookingPanelProps) {
           </div>
         ) : (
           <>
-            {/* First Week - 7 days */}
-            <div className="grid grid-cols-7 gap-8 mb-6 -ml-8">
-              {weekAvailability.slice(0, 7).map((day, index) => (
+            {/* Top Row - 3 days */}
+            <div className="grid grid-cols-3 gap-3 mb-3">
+              {weekAvailability.slice(0, 3).map((day, index) => (
                 <button
                   key={index}
                   onClick={() => handleDayClick(index)}
                   disabled={day.appointmentCount === 0}
-                  className={`rounded-lg text-left pl-3 pr-13 py-1 transition-all border-2 ${
+                  className={`rounded-lg text-center px-4 py-2 transition-all border-2 flex flex-col justify-center items-center w-full ${
                     day.appointmentCount === 0
                       ? 'bg-gray-50 border-gray-200 cursor-not-allowed'
                       : selectedDayIndex === index
                       ? 'bg-[#2d7a4a] border-[#2d7a4a] shadow-md'
                       : 'bg-[#2d7a4a] border-gray-200 hover:border-gray-300 hover:shadow-sm'
                   }`}
+                  style={{ aspectRatio: '3 / 1' }}
                 >
-                  <div className={`text-xs font-medium mb-0.5 ${
+                  <div className={`text-sm font-medium ${
                     day.appointmentCount === 0 ? 'text-gray-400' : 'text-white'
                   }`}>
                     {day.dayOfWeek}
                   </div>
-                  <div className={`text-xs mb-1 ${
+                  <div className={`text-xs ${
                     day.appointmentCount === 0 ? 'text-gray-400' : 'text-white'
                   }`}>
                     {day.month} {day.date}
                   </div>
-                  <div className={`text-xl font-medium mb-0.5 ${
+                  <div className={`text-2xl font-medium ${
                     day.appointmentCount === 0 ? 'text-gray-400' : 'text-white'
                   }`}>
                     {day.appointmentCount === 0 ? 'No' : day.appointmentCount}
@@ -454,34 +455,35 @@ export function BookingPanel({ agentId, initialLocation }: BookingPanelProps) {
               ))}
             </div>
             
-            {/* Second Week - 7 days */}
-            <div className="grid grid-cols-7 gap-8 mb-6 -ml-8">
-              {weekAvailability.slice(7, 14).map((day, index) => {
-                const actualIndex = index + 7;
+            {/* Bottom Row - 4 days */}
+            <div className="grid grid-cols-4 gap-3 mb-4">
+              {weekAvailability.slice(3, 7).map((day, index) => {
+                const actualIndex = index + 3;
                 return (
                   <button
                     key={actualIndex}
                     onClick={() => handleDayClick(actualIndex)}
                     disabled={day.appointmentCount === 0}
-                    className={`rounded-lg text-left pl-3 pr-13 py-1 transition-all border-2 ${
+                    className={`rounded-lg text-center px-4 py-2 transition-all border-2 flex flex-col justify-center items-center w-full ${
                       day.appointmentCount === 0
                         ? 'bg-gray-50 border-gray-200 cursor-not-allowed'
                         : selectedDayIndex === actualIndex
                         ? 'bg-[#2d7a4a] border-[#2d7a4a] shadow-md'
                         : 'bg-[#2d7a4a] border-gray-200 hover:border-gray-300 hover:shadow-sm'
                     }`}
+                    style={{ aspectRatio: '3 / 1' }}
                   >
-                    <div className={`text-xs font-medium mb-0.5 ${
+                    <div className={`text-sm font-medium ${
                       day.appointmentCount === 0 ? 'text-gray-400' : 'text-white'
                     }`}>
                       {day.dayOfWeek}
                     </div>
-                    <div className={`text-xs mb-1 ${
+                    <div className={`text-xs ${
                       day.appointmentCount === 0 ? 'text-gray-400' : 'text-white'
                     }`}>
                       {day.month} {day.date}
                     </div>
-                    <div className={`text-xl font-medium mb-0.5 ${
+                    <div className={`text-2xl font-medium ${
                       day.appointmentCount === 0 ? 'text-gray-400' : 'text-white'
                     }`}>
                       {day.appointmentCount === 0 ? 'No' : day.appointmentCount}
