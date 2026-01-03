@@ -8,9 +8,9 @@ import Image from "next/image";
 import { Suspense, useState, useEffect } from "react";
 import { Search, Star, MapPin, Calendar, Clock, Stethoscope, Video, SlidersHorizontal, ChevronRight, X, ArrowLeft, Shield, ExternalLink, Menu } from "lucide-react";
 import { supabaseClient } from "@/lib/supabaseClient";
-import { BookingPanel } from "@/app/agentportfolio/[agentId]/components/BookingPanel";
+import { BookingPanel } from "@/app/agent/[agentId]/components/BookingPanel";
 import { OfficeLocationMap } from "@/components/OfficeLocationMap";
-import { TrustHighlights } from "@/app/agentportfolio/[agentId]/components/TrustHighlights";
+import { TrustHighlights } from "@/app/agent/[agentId]/components/TrustHighlights";
 
 type Appointment = {
   id: string;
