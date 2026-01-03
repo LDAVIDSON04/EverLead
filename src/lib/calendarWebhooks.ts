@@ -243,9 +243,8 @@ export async function setupMicrosoftWebhook(connection: CalendarConnection): Pro
     const webhookUrl = `${BASE_URL}/api/integrations/microsoft/webhook`;
     const subscriptionId = `soradin-${connection.specialist_id}-${Date.now()}`;
 
-  // Add a longer delay to avoid rate limiting if multiple webhooks are being set up
-  // Microsoft has strict rate limits for webhook subscriptions
-  await new Promise(resolve => setTimeout(resolve, 3000)); // 3 second delay
+  // Note: Delay between Microsoft webhook setups is now handled in renewExpiredWebhooks()
+  // to space out multiple webhook setups properly
 
     // Subscribe to calendar change notifications
     const subscriptionResponse = await fetch(
@@ -268,7 +267,24 @@ export async function setupMicrosoftWebhook(connection: CalendarConnection): Pro
 
     if (!subscriptionResponse.ok) {
       const error = await subscriptionResponse.json().catch(() => ({ error: "Unknown error" }));
-      throw new Error(`Failed to set up Microsoft webhook: ${JSON.stringify(error)}`);
+      const errorStr = JSON.stringify(error);
+      
+      // Handle rate limiting (429) gracefully - log warning and return
+      if (subscriptionResponse.status === 429 || errorStr.includes('429') || errorStr.includes('rate limit') || errorStr.includes('Rate limit')) {
+        console.warn(`⚠️ Microsoft webhook rate limited for specialist ${connection.specialist_id} - will retry in 1 hour`);
+        // Store a future expiration time to prevent immediate retries (wait 1 hour before retry)
+        const retryAfter = new Date(Date.now() + 60 * 60 * 1000).toISOString(); // 1 hour from now
+        await supabaseAdmin
+          .from("calendar_connections")
+          .update({
+            webhook_expires_at: retryAfter, // Use expires_at to track when we can retry
+          })
+          .eq("id", connection.id);
+        return; // Don't throw - return gracefully
+      }
+      
+      // For other errors, throw to be caught and logged
+      throw new Error(`Failed to set up Microsoft webhook: ${errorStr}`);
     }
 
     const subscriptionData = await subscriptionResponse.json();
@@ -358,23 +374,47 @@ export async function renewExpiredWebhooks(): Promise<{
       new Map(connections.map((conn: any) => [conn.id, conn])).values()
     );
 
+    // Track last Microsoft webhook setup time to add delays between Microsoft setups
+    let lastMicrosoftSetup = 0;
+    
     for (const connection of uniqueConnections as CalendarConnection[]) {
       if (isWebhookExpiredOrExpiring(connection)) {
         try {
           if (connection.provider === "google") {
             await setupGoogleWebhook(connection);
+            results.renewed++;
+            console.log(
+              `✅ Renewed ${connection.provider} webhook for specialist ${connection.specialist_id}`
+            );
           } else if (connection.provider === "microsoft") {
+            // Add delay between Microsoft webhook setups to avoid rate limiting
+            // Microsoft has strict rate limits - wait at least 15 seconds between setups
+            const timeSinceLastMicrosoft = Date.now() - lastMicrosoftSetup;
+            const minDelayMs = 15 * 1000; // 15 seconds minimum
+            
+            if (lastMicrosoftSetup > 0 && timeSinceLastMicrosoft < minDelayMs) {
+              const waitTime = minDelayMs - timeSinceLastMicrosoft;
+              console.log(`⏳ Waiting ${Math.ceil(waitTime / 1000)} seconds before next Microsoft webhook setup (rate limit protection)`);
+              await new Promise(resolve => setTimeout(resolve, waitTime));
+            }
+            
             await setupMicrosoftWebhook(connection);
+            lastMicrosoftSetup = Date.now();
+            results.renewed++;
+            console.log(
+              `✅ Renewed ${connection.provider} webhook for specialist ${connection.specialist_id}`
+            );
           }
-          results.renewed++;
-          console.log(
-            `✅ Renewed ${connection.provider} webhook for specialist ${connection.specialist_id}`
-          );
         } catch (error: any) {
           results.failed++;
           const errorMsg = `Failed to renew ${connection.provider} webhook for specialist ${connection.specialist_id}: ${error.message}`;
           results.errors.push(errorMsg);
           console.error(errorMsg, error);
+          
+          // Update lastMicrosoftSetup even on error to maintain delay spacing
+          if (connection.provider === "microsoft") {
+            lastMicrosoftSetup = Date.now();
+          }
         }
       }
     }
