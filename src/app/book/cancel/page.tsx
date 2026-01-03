@@ -215,29 +215,6 @@ function CancelAppointmentContent() {
           }
         }
         
-        // Update agent info to show the selected location's address
-        if (officeLocations.length > 0 && selectedAgentInfo) {
-          const normalizeLocation = (loc: string | undefined | null): string => {
-            if (!loc) return '';
-            let normalized = loc.split(',').map(s => s.trim())[0];
-            normalized = normalized.replace(/\s+office$/i, '').trim();
-            return normalized.toLowerCase();
-          };
-          
-          const matchingOfficeLoc = officeLocations.find((loc: any) => 
-            normalizeLocation(loc.city) === normalizeLocation(selectedRescheduleLocation)
-          );
-          
-          if (matchingOfficeLoc) {
-            setSelectedAgentInfo({
-              ...selectedAgentInfo,
-              displayCity: matchingOfficeLoc.city,
-              displayAddress: matchingOfficeLoc.street_address 
-                ? `${matchingOfficeLoc.street_address}, ${matchingOfficeLoc.city}, ${matchingOfficeLoc.province}${matchingOfficeLoc.postal_code ? ` ${matchingOfficeLoc.postal_code}` : ''}`
-                : `${matchingOfficeLoc.city}, ${matchingOfficeLoc.province}`,
-            });
-          }
-        }
       } catch (error) {
         console.error("Error fetching availability:", error);
       } finally {
@@ -246,7 +223,33 @@ function CancelAppointmentContent() {
     };
 
     fetchAvailability();
-  }, [showRescheduleModal, selectedRescheduleLocation, appointmentData, officeLocations, selectedAgentInfo]);
+  }, [showRescheduleModal, selectedRescheduleLocation, appointmentData?.agent_id]);
+
+  // Update agent info display when location changes (separate effect to avoid infinite loop)
+  useEffect(() => {
+    if (!showRescheduleModal || !selectedRescheduleLocation || officeLocations.length === 0 || !selectedAgentInfo) return;
+
+    const normalizeLocation = (loc: string | undefined | null): string => {
+      if (!loc) return '';
+      let normalized = loc.split(',').map(s => s.trim())[0];
+      normalized = normalized.replace(/\s+office$/i, '').trim();
+      return normalized.toLowerCase();
+    };
+    
+    const matchingOfficeLoc = officeLocations.find((loc: any) => 
+      normalizeLocation(loc.city) === normalizeLocation(selectedRescheduleLocation)
+    );
+    
+    if (matchingOfficeLoc) {
+      setSelectedAgentInfo((prev: any) => ({
+        ...prev,
+        displayCity: matchingOfficeLoc.city,
+        displayAddress: matchingOfficeLoc.street_address 
+          ? `${matchingOfficeLoc.street_address}, ${matchingOfficeLoc.city}, ${matchingOfficeLoc.province}${matchingOfficeLoc.postal_code ? ` ${matchingOfficeLoc.postal_code}` : ''}`
+          : `${matchingOfficeLoc.city}, ${matchingOfficeLoc.province}`,
+      }));
+    }
+  }, [selectedRescheduleLocation, officeLocations, showRescheduleModal]);
 
   const handleCancel = async () => {
     if (!appointmentId) {

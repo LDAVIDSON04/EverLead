@@ -104,12 +104,7 @@ function BookingStep2Content() {
     loadAgent();
   }, [agentId, searchedCity, officeLocationName]);
 
-  // Set default city from searched city or agent city
-  useEffect(() => {
-    if (agentInfo && !formData.city) {
-      setFormData(prev => ({ ...prev, city: searchedCity || agentInfo.agent_city || "" }));
-    }
-  }, [agentInfo, searchedCity]);
+  // City field should be empty - let family fill it in
 
   const formatDate = (dateStr: string): string => {
     if (!dateStr) return "";
