@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabaseClient } from "@/lib/supabaseClient";
 import { useRequireRole } from "@/lib/hooks/useRequireRole";
-import { Calendar, Clock, User, X, ChevronLeft, ChevronRight, MapPin } from "lucide-react";
+import { Calendar, Clock, User, X, ChevronLeft, ChevronRight, MapPin, ChevronDown } from "lucide-react";
 import { DateTime } from "luxon";
 import { ClientInfoModal } from "../my-appointments/components/ClientInfoModal";
 import { downloadClientInfo } from "@/lib/downloadClientInfo";
@@ -30,6 +30,8 @@ type Appointment = {
   provider?: string;
 };
 
+type ViewType = 'day' | 'week' | 'month';
+
 export default function SchedulePage() {
   useRequireRole("agent");
   const router = useRouter();
@@ -45,6 +47,10 @@ export default function SchedulePage() {
   const [checkingConnection, setCheckingConnection] = useState(true);
   const [userName, setUserName] = useState<string>("");
   const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
+  const [currentDayOffset, setCurrentDayOffset] = useState(0);
+  const [currentMonthOffset, setCurrentMonthOffset] = useState(0);
+  const [view, setView] = useState<ViewType>('week');
+  const [viewDropdownOpen, setViewDropdownOpen] = useState(false);
   const [agentTimezone, setAgentTimezone] = useState<string>("America/Vancouver");
   const [viewingLeadId, setViewingLeadId] = useState<string | null>(null);
   const [viewingAppointmentId, setViewingAppointmentId] = useState<string | null>(null);
@@ -80,7 +86,48 @@ export default function SchedulePage() {
     });
   };
 
+  // Calculate single day date
+  const getDayDate = (offset: number) => {
+    const today = new Date();
+    const day = new Date(today);
+    day.setDate(today.getDate() + offset);
+    day.setHours(0, 0, 0, 0);
+    return day;
+  };
+
+  // Calculate month dates (first day of month and all days in month grid)
+  const getMonthDates = (offset: number) => {
+    const today = new Date();
+    const month = new Date(today.getFullYear(), today.getMonth() + offset, 1);
+    month.setHours(0, 0, 0, 0);
+    
+    // Get first day of month and what day of week it falls on
+    const firstDay = new Date(month);
+    const firstDayOfWeek = firstDay.getDay(); // 0 = Sunday
+    
+    // Start from the Sunday before the first day (or the first day if it's Sunday)
+    const startDate = new Date(firstDay);
+    startDate.setDate(firstDay.getDate() - firstDayOfWeek);
+    
+    // Generate 42 days (6 weeks) to fill the grid
+    const dates: Date[] = [];
+    for (let i = 0; i < 42; i++) {
+      const date = new Date(startDate);
+      date.setDate(startDate.getDate() + i);
+      dates.push(date);
+    }
+    
+    return {
+      monthStart: month,
+      gridDates: dates,
+      currentMonth: month.getMonth(),
+      currentYear: month.getFullYear(),
+    };
+  };
+
   const weekDates = getWeekDates(currentWeekOffset);
+  const dayDate = getDayDate(currentDayOffset);
+  const monthData = getMonthDates(currentMonthOffset);
   const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   const formatDate = (date: Date) => {
@@ -112,13 +159,51 @@ export default function SchedulePage() {
     return `${formatDate(start)} - ${formatDate(end)}`;
   };
 
-  const goToPreviousWeek = () => setCurrentWeekOffset(currentWeekOffset - 1);
-  const goToNextWeek = () => setCurrentWeekOffset(currentWeekOffset + 1);
-  const goToToday = () => setCurrentWeekOffset(0);
+  const formatDayDate = () => {
+    return dayDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+  };
+
+  const formatMonthDate = () => {
+    return monthData.monthStart.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  };
+
+  const formatDateRange = () => {
+    if (view === 'day') return formatDayDate();
+    if (view === 'week') return formatWeekRange();
+    if (view === 'month') return formatMonthDate();
+    return formatWeekRange();
+  };
+
+  // Navigation functions
+  const goToPrevious = () => {
+    if (view === 'day') setCurrentDayOffset(currentDayOffset - 1);
+    else if (view === 'week') setCurrentWeekOffset(currentWeekOffset - 1);
+    else if (view === 'month') setCurrentMonthOffset(currentMonthOffset - 1);
+  };
+
+  const goToNext = () => {
+    if (view === 'day') setCurrentDayOffset(currentDayOffset + 1);
+    else if (view === 'week') setCurrentWeekOffset(currentWeekOffset + 1);
+    else if (view === 'month') setCurrentMonthOffset(currentMonthOffset + 1);
+  };
+
+  const goToToday = () => {
+    setCurrentDayOffset(0);
+    setCurrentWeekOffset(0);
+    setCurrentMonthOffset(0);
+  };
+
+  // Legacy functions for backward compatibility
+  const goToPreviousWeek = () => goToPrevious();
+  const goToNextWeek = () => goToNext();
 
   const isToday = (date: Date) => {
     const today = new Date();
     return date.toDateString() === today.toDateString();
+  };
+
+  const isCurrentMonth = (date: Date) => {
+    return date.getMonth() === monthData.currentMonth && date.getFullYear() === monthData.currentYear;
   };
 
   useEffect(() => {
@@ -263,24 +348,45 @@ export default function SchedulePage() {
     setShowCalendarModal(false);
   }
 
-  // Get appointments for the week (Monday-Friday only)
+  // Helper function to process appointments
+  const processAppointment = (apt: Appointment, dateRange: { start: Date; end: Date }, dayIndex?: number) => {
+    const startDate = DateTime.fromISO(apt.starts_at, { zone: "utc" });
+    const localStart = startDate.setZone(agentTimezone);
+    const aptDate = localStart.toJSDate();
+    
+    if (aptDate >= dateRange.start && aptDate <= dateRange.end) {
+      const endDate = DateTime.fromISO(apt.ends_at, { zone: "utc" });
+      const localEnd = endDate.setZone(agentTimezone);
+      const durationMinutes = localEnd.diff(localStart, 'minutes').minutes;
+      
+      return {
+        ...apt,
+        day: dayIndex !== undefined ? dayIndex : 0,
+        hour: localStart.hour,
+        minute: localStart.minute,
+        durationMinutes,
+        startTime: `${String(localStart.hour).padStart(2, '0')}:${String(localStart.minute).padStart(2, '0')}`,
+        endTime: `${String(localEnd.hour).padStart(2, '0')}:${String(localEnd.minute).padStart(2, '0')}`,
+        date: aptDate,
+      };
+    }
+    return null;
+  };
+
+  // Get appointments for the week (Sunday-Saturday)
   const getWeekAppointments = () => {
+    const weekStart = new Date(weekDates[0]);
+    const weekEnd = new Date(weekDates[6]);
+    weekStart.setHours(0, 0, 0, 0);
+    weekEnd.setHours(23, 59, 59, 999);
+
     return appointments
       .map(apt => {
         const startDate = DateTime.fromISO(apt.starts_at, { zone: "utc" });
         const localStart = startDate.setZone(agentTimezone);
         const aptDate = localStart.toJSDate();
         
-        // Check if appointment is in the current week (Sunday-Saturday)
-        // Include past appointments too - show all appointments in the week
-        const weekStart = weekDates[0];
-        const weekEnd = weekDates[6];
-        weekStart.setHours(0, 0, 0, 0);
-        weekEnd.setHours(23, 59, 59, 999);
-        
-        // Include appointments from the week, including past days
         if (aptDate >= weekStart && aptDate <= weekEnd) {
-          // Find which day index this appointment belongs to (0-6 for Sun-Sat)
           const dayIndex = weekDates.findIndex((date, idx) => {
             const dateStr = date.toDateString();
             const aptDateStr = aptDate.toDateString();
@@ -308,15 +414,96 @@ export default function SchedulePage() {
       .filter(Boolean);
   };
 
+  // Get appointments for a single day
+  const getDayAppointments = () => {
+    const dayStart = new Date(dayDate);
+    dayStart.setHours(0, 0, 0, 0);
+    const dayEnd = new Date(dayDate);
+    dayEnd.setHours(23, 59, 59, 999);
+
+    return appointments
+      .map(apt => {
+        const startDate = DateTime.fromISO(apt.starts_at, { zone: "utc" });
+        const localStart = startDate.setZone(agentTimezone);
+        const aptDate = localStart.toJSDate();
+        
+        if (aptDate >= dayStart && aptDate <= dayEnd) {
+          const endDate = DateTime.fromISO(apt.ends_at, { zone: "utc" });
+          const localEnd = endDate.setZone(agentTimezone);
+          const durationMinutes = localEnd.diff(localStart, 'minutes').minutes;
+          
+          return {
+            ...apt,
+            day: 0,
+            hour: localStart.hour,
+            minute: localStart.minute,
+            durationMinutes,
+            startTime: `${String(localStart.hour).padStart(2, '0')}:${String(localStart.minute).padStart(2, '0')}`,
+            endTime: `${String(localEnd.hour).padStart(2, '0')}:${String(localEnd.minute).padStart(2, '0')}`,
+          };
+        }
+        return null;
+      })
+      .filter(Boolean);
+  };
+
+  // Get appointments for the month
+  const getMonthAppointments = () => {
+    const monthStart = new Date(monthData.monthStart);
+    monthStart.setDate(1);
+    monthStart.setHours(0, 0, 0, 0);
+    
+    const monthEnd = new Date(monthData.monthStart.getFullYear(), monthData.monthStart.getMonth() + 1, 0);
+    monthEnd.setHours(23, 59, 59, 999);
+
+    const appointmentsByDate: { [key: string]: any[] } = {};
+
+    appointments.forEach(apt => {
+      const startDate = DateTime.fromISO(apt.starts_at, { zone: "utc" });
+      const localStart = startDate.setZone(agentTimezone);
+      const aptDate = localStart.toJSDate();
+      const dateKey = aptDate.toDateString();
+      
+      if (aptDate >= monthStart && aptDate <= monthEnd) {
+        const endDate = DateTime.fromISO(apt.ends_at, { zone: "utc" });
+        const localEnd = endDate.setZone(agentTimezone);
+        
+        if (!appointmentsByDate[dateKey]) {
+          appointmentsByDate[dateKey] = [];
+        }
+        
+        appointmentsByDate[dateKey].push({
+          ...apt,
+          hour: localStart.hour,
+          minute: localStart.minute,
+          startTime: `${String(localStart.hour).padStart(2, '0')}:${String(localStart.minute).padStart(2, '0')}`,
+          endTime: `${String(localEnd.hour).padStart(2, '0')}:${String(localEnd.minute).padStart(2, '0')}`,
+        });
+      }
+    });
+
+    // Sort appointments within each day by start time
+    Object.keys(appointmentsByDate).forEach(dateKey => {
+      appointmentsByDate[dateKey].sort((a, b) => {
+        if (a.hour !== b.hour) return a.hour - b.hour;
+        return a.minute - b.minute;
+      });
+    });
+
+    return appointmentsByDate;
+  };
+
   const weekAppointments = getWeekAppointments();
+  const dayAppointments = getDayAppointments();
+  const monthAppointments = getMonthAppointments();
 
   // Calculate hours for display (8 AM to 8 PM, or based on appointments)
-  const calculateHours = () => {
-    if (weekAppointments.length === 0) {
+  const calculateHours = (appts: any[]) => {
+    if (appts.length === 0) {
       return Array.from({ length: 13 }, (_, i) => i + 8); // 8 AM to 8 PM
     }
     
-    const appointmentHours = weekAppointments.map((apt: any) => apt.hour);
+    const appointmentHours = appts.map((apt: any) => apt.hour);
     const earliestHour = Math.min(...appointmentHours);
     const latestHour = Math.max(...appointmentHours);
     
@@ -326,7 +513,45 @@ export default function SchedulePage() {
     return Array.from({ length: endHour - startHour + 1 }, (_, i) => i + startHour);
   };
 
-  const hours = calculateHours();
+  const weekHours = calculateHours(weekAppointments);
+  const dayHours = calculateHours(dayAppointments);
+
+  // Render appointment box (shared across views)
+  const renderAppointmentBox = (apt: any, color: string, showLocation: boolean = true) => {
+    const cleanLocation = apt.location && 
+      apt.location !== "N/A" && 
+      apt.location !== "External Calendar" &&
+      !apt.location.match(/^(Google Calendar|Microsoft Calendar|ICS Calendar)$/i)
+      ? apt.location.replace(/Google Calendar|Microsoft Calendar|ICS Calendar/gi, '').trim()
+      : null;
+
+    return (
+      <div
+        key={apt.id}
+        onClick={() => {
+          if (apt.lead_id && !apt.is_external) {
+            setViewingLeadId(apt.lead_id);
+            setViewingAppointmentId(apt.id);
+          } else if (apt.is_external) {
+            setViewingExternalAppointment(apt);
+          }
+        }}
+        className={`${color} rounded p-0.5 md:p-1 shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-all border border-gray-200`}
+      >
+        <div className="h-full flex flex-col gap-0.5 px-0.5 md:px-1 py-0.5">
+          <div className="text-[9px] md:text-xs font-medium text-gray-700 leading-tight line-clamp-1 break-words">
+            {apt.family_name || 'Appointment'}
+          </div>
+          {showLocation && cleanLocation && cleanLocation.length > 0 && (
+            <div className="flex items-center gap-0.5 mt-auto">
+              <MapPin className="w-2 h-2 md:w-2.5 md:h-2.5 text-gray-600 flex-shrink-0" />
+              <span className="text-[8px] md:text-[10px] text-gray-600 truncate leading-tight">{cleanLocation}</span>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   if (loading) {
     return (
@@ -340,12 +565,67 @@ export default function SchedulePage() {
     <div className="w-full h-screen flex flex-col bg-white relative overflow-hidden p-8 pt-[56px] md:pt-8">
       {/* Header */}
       <div className="mb-4 md:mb-8">
-        {/* Date range - horizontal on mobile */}
-        <div className="mb-3 md:mb-0">
-          <h1 className="text-lg md:text-3xl font-semibold">{formatWeekRange()}</h1>
+        {/* Date range and View Selector */}
+        <div className="mb-3 md:mb-0 flex items-center justify-between gap-4">
+          <h1 className="text-lg md:text-3xl font-semibold">{formatDateRange()}</h1>
+          
+          {/* View Selector Dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => setViewDropdownOpen(!viewDropdownOpen)}
+              className="flex items-center gap-2 px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              <span className="capitalize">{view} view</span>
+              <ChevronDown className={`w-4 h-4 transition-transform ${viewDropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
+            
+            {viewDropdownOpen && (
+              <>
+                <div 
+                  className="fixed inset-0 z-10" 
+                  onClick={() => setViewDropdownOpen(false)}
+                />
+                <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-20">
+                  <button
+                    onClick={() => {
+                      setView('day');
+                      setViewDropdownOpen(false);
+                    }}
+                    className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors ${
+                      view === 'day' ? 'bg-gray-100 font-medium' : ''
+                    } ${view === 'day' ? 'rounded-t-lg' : ''}`}
+                  >
+                    Day view
+                  </button>
+                  <button
+                    onClick={() => {
+                      setView('week');
+                      setViewDropdownOpen(false);
+                    }}
+                    className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors ${
+                      view === 'week' ? 'bg-gray-100 font-medium' : ''
+                    }`}
+                  >
+                    Week view
+                  </button>
+                  <button
+                    onClick={() => {
+                      setView('month');
+                      setViewDropdownOpen(false);
+                    }}
+                    className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors ${
+                      view === 'month' ? 'bg-gray-100 font-medium' : ''
+                    } ${view === 'month' ? 'rounded-b-lg' : ''}`}
+                  >
+                    Month view
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
         </div>
         
-        {/* Navigation row on mobile */}
+        {/* Navigation row */}
         <div className="flex items-center gap-2 md:gap-4 mb-3 md:mb-0 md:inline-flex">
           <button 
             onClick={goToToday}
@@ -354,13 +634,13 @@ export default function SchedulePage() {
             Today
           </button>
           <button 
-            onClick={goToPreviousWeek}
+            onClick={goToPrevious}
             className="p-1.5 md:p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
             <ChevronLeft className="w-4 h-4 md:w-5 md:h-5" />
           </button>
           <button 
-            onClick={goToNextWeek}
+            onClick={goToNext}
             className="p-1.5 md:p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
             <ChevronRight className="w-4 h-4 md:w-5 md:h-5" />
@@ -384,113 +664,274 @@ export default function SchedulePage() {
         </div>
       </div>
 
-      {/* Calendar Grid */}
+      {/* Calendar Views */}
       <div className="flex-1 overflow-auto">
-        <div className="inline-block min-w-full">
-          {/* Day Headers */}
-          <div className="flex sticky top-0 bg-white z-20 border-b border-gray-200 shadow-sm">
-            <div className="w-20 flex-shrink-0"></div>
-            {weekDays.map((day, index) => {
-              const date = weekDates[index];
-              const today = isToday(date);
-              return (
-                <div key={`${day}-${index}`} className="flex-1 min-w-[100px] px-2 py-3">
-                  <div className="flex flex-col items-center gap-0.5">
-                    <span className={`text-xs text-gray-700 ${today ? 'font-semibold' : ''}`}>{day}</span>
-                    <span className={`text-xs text-gray-500 ${today ? 'font-medium' : ''}`}>
-                      {date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                    </span>
+        {/* Week View - EXACTLY AS BEFORE */}
+        {view === 'week' && (
+          <div className="inline-block min-w-full">
+            {/* Day Headers */}
+            <div className="flex sticky top-0 bg-white z-20 border-b border-gray-200 shadow-sm">
+              <div className="w-20 flex-shrink-0"></div>
+              {weekDays.map((day, index) => {
+                const date = weekDates[index];
+                const today = isToday(date);
+                return (
+                  <div key={`${day}-${index}`} className="flex-1 min-w-[100px] px-2 py-3">
+                    <div className="flex flex-col items-center gap-0.5">
+                      <span className={`text-xs text-gray-700 ${today ? 'font-semibold' : ''}`}>{day}</span>
+                      <span className={`text-xs text-gray-500 ${today ? 'font-medium' : ''}`}>
+                        {date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
 
-          {/* Time Grid */}
-          <div className="relative">
-            {hours.map((hour) => {
-              return (
-                <div key={hour} className="flex border-t border-gray-200">
-                  <div className="w-12 md:w-20 flex-shrink-0 pr-1 md:pr-3 pt-1 md:pt-1.5 text-[10px] md:text-xs text-gray-500 text-right">
-                    {hour === 12 ? '12 PM' : hour > 12 ? `${hour - 12} PM` : `${hour} AM`}
-                  </div>
-                  {weekDays.map((day, dayIndex) => {
-                    // Find appointments that start in this hour for this day
-                    const cellAppointments = weekAppointments.filter((apt: any) => {
-                      return apt.day === dayIndex && apt.hour === hour;
-                    });
+            {/* Time Grid */}
+            <div className="relative">
+              {weekHours.map((hour) => {
+                return (
+                  <div key={hour} className="flex border-t border-gray-200">
+                    <div className="w-12 md:w-20 flex-shrink-0 pr-1 md:pr-3 pt-1 md:pt-1.5 text-[10px] md:text-xs text-gray-500 text-right">
+                      {hour === 12 ? '12 PM' : hour > 12 ? `${hour - 12} PM` : `${hour} AM`}
+                    </div>
+                    {weekDays.map((day, dayIndex) => {
+                      // Find appointments that start in this hour for this day
+                      const cellAppointments = weekAppointments.filter((apt: any) => {
+                        return apt.day === dayIndex && apt.hour === hour;
+                      });
 
-                    return (
-                      <div
-                        key={`${day}-${hour}`}
-                        className="flex-1 min-w-[50px] md:min-w-[100px] border-l border-gray-200 relative h-12 md:h-20 overflow-visible"
-                      >
-                        {cellAppointments.map((apt: any) => {
-                          // Calculate top offset within this hour (based on minutes)
-                          // Mobile: h-12 = 48px per hour, Desktop: h-20 = 80px per hour
-                          // Use mobile size (48px) - appointments scale proportionally with cell height
-                          const pxPerHour = 48;
-                          const topOffset = (apt.minute / 60) * pxPerHour;
-                          // Calculate height based on duration
-                          const height = (apt.durationMinutes / 60) * pxPerHour;
-                          const color = getDayColor(dayIndex);
+                      return (
+                        <div
+                          key={`${day}-${hour}`}
+                          className="flex-1 min-w-[50px] md:min-w-[100px] border-l border-gray-200 relative h-12 md:h-20 overflow-visible"
+                        >
+                          {cellAppointments.map((apt: any) => {
+                            // Calculate top offset within this hour (based on minutes)
+                            const pxPerHour = 48;
+                            const topOffset = (apt.minute / 60) * pxPerHour;
+                            // Calculate height based on duration
+                            const height = (apt.durationMinutes / 60) * pxPerHour;
+                            const color = getDayColor(dayIndex);
 
-                          return (
-                            <div
-                              key={apt.id}
-                              onClick={() => {
-                                if (apt.lead_id && !apt.is_external) {
-                                  setViewingLeadId(apt.lead_id);
-                                  setViewingAppointmentId(apt.id);
-                                } else if (apt.is_external) {
-                                  setViewingExternalAppointment(apt);
-                                }
-                              }}
-                              className={`absolute inset-x-0.5 ${color} rounded p-0.5 md:p-1 shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-all border border-gray-200`}
-                              style={{
-                                top: `${topOffset}px`,
-                                height: `${Math.max(height, 24)}px`,
-                                zIndex: 5,
-                              }}
-                            >
-                              <div className="h-full flex flex-col gap-0.5 px-0.5 md:px-1 py-0.5">
-                                {/* Customer Name */}
-                                <div className="text-[9px] md:text-xs font-medium text-gray-700 leading-tight line-clamp-1 break-words">
-                                  {apt.family_name || 'Appointment'}
+                            return (
+                              <div
+                                key={apt.id}
+                                onClick={() => {
+                                  if (apt.lead_id && !apt.is_external) {
+                                    setViewingLeadId(apt.lead_id);
+                                    setViewingAppointmentId(apt.id);
+                                  } else if (apt.is_external) {
+                                    setViewingExternalAppointment(apt);
+                                  }
+                                }}
+                                className={`absolute inset-x-0.5 ${color} rounded p-0.5 md:p-1 shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-all border border-gray-200`}
+                                style={{
+                                  top: `${topOffset}px`,
+                                  height: `${Math.max(height, 24)}px`,
+                                  zIndex: 5,
+                                }}
+                              >
+                                <div className="h-full flex flex-col gap-0.5 px-0.5 md:px-1 py-0.5">
+                                  {/* Customer Name */}
+                                  <div className="text-[9px] md:text-xs font-medium text-gray-700 leading-tight line-clamp-1 break-words">
+                                    {apt.family_name || 'Appointment'}
+                                  </div>
+                                  
+                                  {/* Location with pin - filter out provider names */}
+                                  {(() => {
+                                    // Filter out provider names and invalid locations
+                                    const validLocation = apt.location && 
+                                      apt.location !== "N/A" && 
+                                      apt.location !== "External Calendar" &&
+                                      !apt.location.match(/^(Google Calendar|Microsoft Calendar|ICS Calendar)$/i);
+                                    
+                                    // Clean the location string (remove provider names if they're part of the string)
+                                    const cleanLocation = validLocation 
+                                      ? apt.location.replace(/Google Calendar|Microsoft Calendar|ICS Calendar/gi, '').trim()
+                                      : null;
+                                    
+                                    return cleanLocation && cleanLocation.length > 0 ? (
+                                      <div className="flex items-center gap-0.5 mt-auto">
+                                        <MapPin className="w-2 h-2 md:w-2.5 md:h-2.5 text-gray-600 flex-shrink-0" />
+                                        <span className="text-[8px] md:text-[10px] text-gray-600 truncate leading-tight">{cleanLocation}</span>
+                                      </div>
+                                    ) : null;
+                                  })()}
                                 </div>
-                                
-                                {/* Location with pin - filter out provider names */}
-                                {(() => {
-                                  // Filter out provider names and invalid locations
-                                  const validLocation = apt.location && 
-                                    apt.location !== "N/A" && 
-                                    apt.location !== "External Calendar" &&
-                                    !apt.location.match(/^(Google Calendar|Microsoft Calendar|ICS Calendar)$/i);
-                                  
-                                  // Clean the location string (remove provider names if they're part of the string)
-                                  const cleanLocation = validLocation 
-                                    ? apt.location.replace(/Google Calendar|Microsoft Calendar|ICS Calendar/gi, '').trim()
-                                    : null;
-                                  
-                                  return cleanLocation && cleanLocation.length > 0 ? (
-                                    <div className="flex items-center gap-0.5 mt-auto">
-                                      <MapPin className="w-2 h-2 md:w-2.5 md:h-2.5 text-gray-600 flex-shrink-0" />
-                                      <span className="text-[8px] md:text-[10px] text-gray-600 truncate leading-tight">{cleanLocation}</span>
-                                    </div>
-                                  ) : null;
-                                })()}
                               </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    );
-                  })}
-                </div>
-              );
-            })}
+                            );
+                          })}
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* Day View */}
+        {view === 'day' && (
+          <div className="inline-block min-w-full">
+            {/* Day Header */}
+            <div className="flex sticky top-0 bg-white z-20 border-b border-gray-200 shadow-sm">
+              <div className="w-20 flex-shrink-0"></div>
+              <div className="flex-1 px-2 py-3">
+                <div className="flex flex-col items-center gap-0.5">
+                  <span className={`text-xs text-gray-700 ${isToday(dayDate) ? 'font-semibold' : ''}`}>
+                    {dayDate.toLocaleDateString('en-US', { weekday: 'long' })}
+                  </span>
+                  <span className={`text-xs text-gray-500 ${isToday(dayDate) ? 'font-medium' : ''}`}>
+                    {dayDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Time Grid */}
+            <div className="relative">
+              {dayHours.map((hour) => {
+                const cellAppointments = dayAppointments.filter((apt: any) => apt.hour === hour);
+                const dayIndex = dayDate.getDay();
+
+                return (
+                  <div key={hour} className="flex border-t border-gray-200">
+                    <div className="w-12 md:w-20 flex-shrink-0 pr-1 md:pr-3 pt-1 md:pt-1.5 text-[10px] md:text-xs text-gray-500 text-right">
+                      {hour === 12 ? '12 PM' : hour > 12 ? `${hour - 12} PM` : `${hour} AM`}
+                    </div>
+                    <div className="flex-1 min-w-[50px] md:min-w-[100px] border-l border-gray-200 relative h-12 md:h-20 overflow-visible">
+                      {cellAppointments.map((apt: any) => {
+                        const pxPerHour = 48;
+                        const topOffset = (apt.minute / 60) * pxPerHour;
+                        const height = (apt.durationMinutes / 60) * pxPerHour;
+                        const color = getDayColor(dayIndex);
+
+                        return (
+                          <div
+                            key={apt.id}
+                            onClick={() => {
+                              if (apt.lead_id && !apt.is_external) {
+                                setViewingLeadId(apt.lead_id);
+                                setViewingAppointmentId(apt.id);
+                              } else if (apt.is_external) {
+                                setViewingExternalAppointment(apt);
+                              }
+                            }}
+                            className={`absolute inset-x-0.5 ${color} rounded p-0.5 md:p-1 shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-all border border-gray-200`}
+                            style={{
+                              top: `${topOffset}px`,
+                              height: `${Math.max(height, 24)}px`,
+                              zIndex: 5,
+                            }}
+                          >
+                            <div className="h-full flex flex-col gap-0.5 px-0.5 md:px-1 py-0.5">
+                              <div className="text-[9px] md:text-xs font-medium text-gray-700 leading-tight line-clamp-1 break-words">
+                                {apt.family_name || 'Appointment'}
+                              </div>
+                              {(() => {
+                                const validLocation = apt.location && 
+                                  apt.location !== "N/A" && 
+                                  apt.location !== "External Calendar" &&
+                                  !apt.location.match(/^(Google Calendar|Microsoft Calendar|ICS Calendar)$/i);
+                                const cleanLocation = validLocation 
+                                  ? apt.location.replace(/Google Calendar|Microsoft Calendar|ICS Calendar/gi, '').trim()
+                                  : null;
+                                return cleanLocation && cleanLocation.length > 0 ? (
+                                  <div className="flex items-center gap-0.5 mt-auto">
+                                    <MapPin className="w-2 h-2 md:w-2.5 md:h-2.5 text-gray-600 flex-shrink-0" />
+                                    <span className="text-[8px] md:text-[10px] text-gray-600 truncate leading-tight">{cleanLocation}</span>
+                                  </div>
+                                ) : null;
+                              })()}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Month View */}
+        {view === 'month' && (
+          <div className="inline-block min-w-full">
+            {/* Day Headers */}
+            <div className="grid grid-cols-7 border-b border-gray-200 bg-white sticky top-0 z-20 shadow-sm">
+              {weekDays.map((day) => (
+                <div key={day} className="p-2 text-center">
+                  <span className="text-xs font-medium text-gray-700">{day}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Month Grid */}
+            <div className="grid grid-cols-7">
+              {monthData.gridDates.map((date, index) => {
+                const dateKey = date.toDateString();
+                const dayAppts = monthAppointments[dateKey] || [];
+                const today = isToday(date);
+                const isCurrentMonthDay = isCurrentMonth(date);
+                const maxVisible = 3;
+                const visibleAppts = dayAppts.slice(0, maxVisible);
+                const remainingCount = Math.max(0, dayAppts.length - maxVisible);
+
+                return (
+                  <div
+                    key={index}
+                    className={`min-h-[100px] border-r border-b border-gray-200 p-1 ${
+                      !isCurrentMonthDay ? 'bg-gray-50' : 'bg-white'
+                    } ${today ? 'bg-blue-50' : ''}`}
+                  >
+                    <div className={`text-xs mb-1 ${today ? 'font-bold text-blue-600' : isCurrentMonthDay ? 'text-gray-900' : 'text-gray-400'}`}>
+                      {date.getDate()}
+                    </div>
+                    <div className="space-y-0.5">
+                      {visibleAppts.map((apt: any) => {
+                        const dayIndex = date.getDay();
+                        const color = getDayColor(dayIndex);
+                        const hour = apt.hour;
+                        const ampm = hour >= 12 ? 'PM' : 'AM';
+                        const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+                        const timeStr = `${displayHour}${apt.minute > 0 ? `:${String(apt.minute).padStart(2, '0')}` : ''} ${ampm}`;
+
+                        return (
+                          <div
+                            key={apt.id}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (apt.lead_id && !apt.is_external) {
+                                setViewingLeadId(apt.lead_id);
+                                setViewingAppointmentId(apt.id);
+                              } else if (apt.is_external) {
+                                setViewingExternalAppointment(apt);
+                              }
+                            }}
+                            className={`${color} rounded px-1.5 py-0.5 text-[10px] cursor-pointer hover:opacity-80 transition-opacity border border-gray-300 truncate`}
+                            title={`${timeStr} - ${apt.family_name || 'Appointment'}`}
+                          >
+                            <span className="font-medium">{timeStr}</span>
+                            <span className="ml-1">{apt.family_name || 'Appointment'}</span>
+                          </div>
+                        );
+                      })}
+                      {remainingCount > 0 && (
+                        <div className="text-[10px] text-gray-600 px-1.5 py-0.5 cursor-pointer hover:text-gray-900">
+                          +{remainingCount} more
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Calendar Connection Modal */}
@@ -650,4 +1091,3 @@ export default function SchedulePage() {
     </div>
   );
 }
-
