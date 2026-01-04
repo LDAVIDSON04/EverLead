@@ -123,85 +123,14 @@ async function handleMicrosoftNotification(notification: any) {
       timeMax
     );
 
-    const fetchedEventIds = new Set<string>();
     // Process each event
     for (const event of events) {
       await processExternalEvent(connection as CalendarConnection, event);
-      fetchedEventIds.add(event.providerEventId);
     }
-
-    // Delete events from database that no longer exist in Microsoft Calendar
-    await deleteMissingEvents(connection as CalendarConnection, fetchedEventIds, timeMin, timeMax);
 
     console.log(`Updated events for Microsoft Calendar ${subscriptionId} after ${changeType} notification`);
   } catch (error: any) {
     console.error("Error updating Microsoft Calendar events:", error);
-  }
-}
-
-/**
- * Deletes events from database that no longer exist in Microsoft Calendar
- */
-async function deleteMissingEvents(
-  connection: CalendarConnection,
-  fetchedEventIds: Set<string>,
-  timeMin: string,
-  timeMax: string
-): Promise<void> {
-  try {
-    const { data: dbEvents, error: fetchError } = await supabaseAdmin
-      .from("external_events")
-      .select("id, provider_event_id, appointment_id, is_soradin_created")
-      .eq("specialist_id", connection.specialist_id)
-      .eq("provider", connection.provider)
-      .gte("starts_at", timeMin)
-      .lte("starts_at", timeMax);
-
-    if (fetchError || !dbEvents) {
-      console.error("Error fetching events for deletion check:", fetchError);
-      return;
-    }
-
-    const eventsToDelete = dbEvents.filter(
-      (dbEvent) => !fetchedEventIds.has(dbEvent.provider_event_id)
-    );
-
-    if (eventsToDelete.length === 0) {
-      return;
-    }
-
-    console.log(`🗑️ Webhook: Found ${eventsToDelete.length} events to delete (no longer in Microsoft Calendar)`);
-
-    const allowExternalEdits = process.env.ALLOW_EXTERNAL_EDITS === "true" || false;
-
-    for (const eventToDelete of eventsToDelete) {
-      if (eventToDelete.is_soradin_created && eventToDelete.appointment_id && allowExternalEdits) {
-        console.log(`⚠️ Webhook: Soradin appointment ${eventToDelete.appointment_id} was deleted in Microsoft Calendar - cancelling`);
-        
-        const { error: cancelError } = await supabaseAdmin
-          .from("appointments")
-          .update({
-            status: "cancelled",
-            notes: `Cancelled externally via Microsoft Calendar on ${new Date().toISOString()}`,
-          })
-          .eq("id", eventToDelete.appointment_id);
-
-        if (cancelError) {
-          console.error(`Failed to cancel appointment ${eventToDelete.appointment_id}:`, cancelError);
-        }
-      }
-
-      const { error: deleteError } = await supabaseAdmin
-        .from("external_events")
-        .delete()
-        .eq("id", eventToDelete.id);
-
-      if (deleteError) {
-        console.error(`Error deleting external event ${eventToDelete.id}:`, deleteError);
-      }
-    }
-  } catch (error: any) {
-    console.error("Error in deleteMissingEvents:", error);
   }
 }
 
