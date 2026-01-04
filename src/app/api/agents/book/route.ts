@@ -33,6 +33,7 @@ export async function POST(req: NextRequest) {
       province,
       serviceType,
       notes,
+      officeLocationId, // ID of the office location where appointment is booked
       rescheduleAppointmentId, // ID of appointment being rescheduled
     } = body;
 
@@ -378,6 +379,7 @@ export async function POST(req: NextRequest) {
       status: "confirmed", // Mark as confirmed immediately after booking
       price_cents: priceCents, // Set price when booking
       confirmed_at: confirmedAtISO, // Store exact booking time - MUST match slot startsAt for conflict detection
+      office_location_id: officeLocationId || null, // Store the office location where appointment was booked
     };
     
     const { data: appointment, error: appointmentError } = await supabaseAdmin

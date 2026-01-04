@@ -135,9 +135,23 @@ export async function GET(
 
     const lead = Array.isArray(appointment.leads) ? appointment.leads[0] : appointment.leads;
 
-    // Fetch office location based on lead's city
+    // Fetch office location directly using office_location_id if available
     let officeLocation = null;
-    if (lead?.city && appointment.agent_id) {
+    if (appointment.office_location_id) {
+      // Use the stored office_location_id for direct lookup
+      const { data: location } = await supabaseAdmin
+        .from('office_locations')
+        .select('id, name, city, street_address, province, postal_code')
+        .eq('id', appointment.office_location_id)
+        .maybeSingle();
+      
+      if (location) {
+        officeLocation = location;
+      }
+    }
+    
+    // Fallback: if no office_location_id, try to match by lead's city (for backwards compatibility with old appointments)
+    if (!officeLocation && lead?.city && appointment.agent_id) {
       const normalizeLocation = (loc: string | null | undefined): string => {
         if (!loc) return '';
         let normalized = loc.split(',').map(s => s.trim())[0];

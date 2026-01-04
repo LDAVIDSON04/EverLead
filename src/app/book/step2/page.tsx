@@ -43,6 +43,7 @@ function BookingStep2Content() {
   });
 
   const [selectedOfficeLocation, setSelectedOfficeLocation] = useState<string>("");
+  const [officeLocationId, setOfficeLocationId] = useState<string | null>(null);
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [selectedService, setSelectedService] = useState<string>("");
@@ -69,30 +70,57 @@ function BookingStep2Content() {
           setAgentInfo(data);
         }
 
-        // Load office locations
-        if (officeLocationName) {
-          setSelectedOfficeLocation(officeLocationName);
-        } else {
-          // Try to fetch office locations to show the selected one
-          const { data: officeLocations } = await supabaseClient
-            .from("office_locations")
-            .select("name, city, street_address, province, postal_code")
-            .eq("agent_id", agentId)
-            .order("city", { ascending: true });
+        // Load office locations and find the matching one
+        const { data: officeLocations } = await supabaseClient
+          .from("office_locations")
+          .select("id, name, city, street_address, province, postal_code")
+          .eq("agent_id", agentId)
+          .order("city", { ascending: true });
 
-          if (officeLocations && officeLocations.length > 0) {
-            // If we have a searched city, try to find matching office location
-            const matchingLocation = searchedCity 
-              ? officeLocations.find((loc: any) => loc.city?.toLowerCase() === searchedCity.toLowerCase())
-              : officeLocations[0];
+        if (officeLocations && officeLocations.length > 0) {
+          // Normalize location names for matching
+          const normalizeLocation = (loc: string | null | undefined): string => {
+            if (!loc) return '';
+            let normalized = loc.split(',').map(s => s.trim())[0];
+            normalized = normalized.replace(/\s+office$/i, '').trim();
+            return normalized.toLowerCase();
+          };
+
+          let matchingLocation: any = null;
+          
+          // If we have officeLocationName, try to match by name or city
+          if (officeLocationName) {
+            const normalizedOfficeName = normalizeLocation(officeLocationName);
+            matchingLocation = officeLocations.find((loc: any) => {
+              const normalizedName = normalizeLocation(loc.name);
+              const normalizedCity = normalizeLocation(loc.city);
+              return normalizedName === normalizedOfficeName || normalizedCity === normalizedOfficeName;
+            });
+          }
+          
+          // If no match yet and we have searchedCity, try to match by city
+          if (!matchingLocation && searchedCity) {
+            const normalizedSearchedCity = normalizeLocation(searchedCity);
+            matchingLocation = officeLocations.find((loc: any) => 
+              normalizeLocation(loc.city) === normalizedSearchedCity
+            );
+          }
+          
+          // Fallback to first location if no match
+          if (!matchingLocation) {
+            matchingLocation = officeLocations[0];
+          }
+          
+          if (matchingLocation) {
+            // Store the office_location_id
+            setOfficeLocationId(matchingLocation.id);
             
-            if (matchingLocation) {
-              const locationDisplay = matchingLocation.name || 
-                (matchingLocation.street_address 
-                  ? `${matchingLocation.street_address}, ${matchingLocation.city}, ${matchingLocation.province}${matchingLocation.postal_code ? ` ${matchingLocation.postal_code}` : ''}`
-                  : `${matchingLocation.city}, ${matchingLocation.province}`);
-              setSelectedOfficeLocation(locationDisplay);
-            }
+            // Set display name
+            const locationDisplay = matchingLocation.name || 
+              (matchingLocation.street_address 
+                ? `${matchingLocation.street_address}, ${matchingLocation.city}, ${matchingLocation.province}${matchingLocation.postal_code ? ` ${matchingLocation.postal_code}` : ''}`
+                : `${matchingLocation.city}, ${matchingLocation.province}`);
+            setSelectedOfficeLocation(locationDisplay);
           }
         }
       } catch (err) {
@@ -297,6 +325,7 @@ function BookingStep2Content() {
           province: agentInfo?.agent_province || null,
           serviceType: selectedService,
           notes: `Date of Birth: ${formData.dateOfBirth}`,
+          officeLocationId: officeLocationId || null,
           ...(rescheduleAppointmentId ? { rescheduleAppointmentId } : {}),
         }),
       });
