@@ -67,7 +67,7 @@ export async function GET(req: NextRequest) {
     const agentIds = (profiles || []).map((p: any) => p.id);
     const { data: allOfficeLocations } = await supabaseAdmin
       .from("office_locations")
-      .select("agent_id, city")
+      .select("id, agent_id, name, city, street_address, province, postal_code")
       .in("agent_id", agentIds.length > 0 ? agentIds : ['00000000-0000-0000-0000-000000000000']); // Dummy ID if no agents
 
     // Filter agents who are approved (both profile AND bio) and have availability configured
@@ -159,6 +159,7 @@ export async function GET(req: NextRequest) {
             availabilityLocations: allLocationCities, // Include office locations
             availabilityByLocation: availabilityByLocation,
             officeLocationCities: officeLocationCities, // Store separately for reference
+            officeLocations: agentOfficeLocations, // Store full office location data
           };
         } catch (err) {
           console.error(`[AGENT SEARCH] Error mapping agent ${profile.id}:`, err);

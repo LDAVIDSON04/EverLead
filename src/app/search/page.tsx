@@ -42,6 +42,14 @@ type Appointment = {
     business_zip?: string | null;
     rating?: number;
     reviewCount?: number;
+    officeLocations?: Array<{
+      id: string;
+      name: string | null;
+      city: string | null;
+      street_address: string | null;
+      province: string | null;
+      postal_code: string | null;
+    }>;
   } | null;
 };
 
@@ -251,6 +259,7 @@ function SearchResults() {
             business_city: agent.business_city,
             business_province: agent.business_province,
             business_zip: agent.business_zip,
+            officeLocations: agent.officeLocations || [], // Include office locations
           }, // Store full agent data
         }));
 

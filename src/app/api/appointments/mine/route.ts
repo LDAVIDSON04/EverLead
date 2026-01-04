@@ -78,6 +78,7 @@ export async function GET(req: NextRequest) {
         status,
         created_at,
         confirmed_at,
+        office_location_id,
         leads (
           id,
           first_name,
@@ -192,6 +193,26 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    // Fetch all office locations for appointments that have office_location_id
+    const officeLocationIds = (appointments || [])
+      .map((apt: any) => apt.office_location_id)
+      .filter((id: any): id is string => !!id);
+    
+    let officeLocationsMap: Record<string, { city: string | null; province: string | null }> = {};
+    if (officeLocationIds.length > 0) {
+      const { data: officeLocations } = await supabaseServer
+        .from('office_locations')
+        .select('id, city, province')
+        .in('id', officeLocationIds);
+      
+      if (officeLocations) {
+        officeLocationsMap = officeLocations.reduce((acc: any, loc: any) => {
+          acc[loc.id] = { city: loc.city, province: loc.province };
+          return acc;
+        }, {});
+      }
+    }
+
     // Map appointments to format expected by schedule page
     // Use confirmed_at (exact booking time) if available, otherwise infer from requested_window
     const mappedAppointments = (appointments || []).map((apt: any) => {
@@ -251,10 +272,25 @@ export async function GET(req: NextRequest) {
         (lead?.first_name && lead?.last_name ? `${lead.first_name} ${lead.last_name}` : null) ||
         "Client";
       
-      // Format location: use lead's city and province (the city where the family booked)
-      // This ensures it shows the searched city (e.g., Penticton) not the agent's default city
+      // Get location from office_location_id if available, otherwise fall back to lead's city
       let location: string | null = null;
-      if (lead) {
+      
+      if (apt.office_location_id && officeLocationsMap[apt.office_location_id]) {
+        const officeLocation = officeLocationsMap[apt.office_location_id];
+        const city = (officeLocation.city || '').trim();
+        const province = (officeLocation.province || '').trim();
+        
+        if (city && province) {
+          location = `${city}, ${province}`;
+        } else if (city) {
+          location = city;
+        } else if (province) {
+          location = province;
+        }
+      }
+      
+      // Fallback to lead's city if no office_location_id or office location not found
+      if (!location && lead) {
         const city = (lead.city || '').trim();
         const province = (lead.province || '').trim();
         
