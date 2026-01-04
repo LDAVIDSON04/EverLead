@@ -350,6 +350,7 @@ export async function POST(req: NextRequest) {
       requested_window: requestedWindow,
       status: "confirmed",
       notes: notesWithHour || null,
+      office_location_id: officeLocationId || null,
     });
     
     // Build appointment data
