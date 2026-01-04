@@ -1431,6 +1431,41 @@ function SearchResults() {
                 : specialistName;
               const agentId = agent?.id || appointment.id;
               
+              // Find office location that matches the search location
+              let matchingOfficeLocation: { street_address: string | null; city: string | null; province: string | null; postal_code: string | null } | null = null;
+              if (agent?.officeLocations && agent.officeLocations.length > 0 && searchLocation) {
+                const normalizeLocation = (loc: string | null | undefined): string => {
+                  if (!loc) return '';
+                  let normalized = loc.split(',').map(s => s.trim())[0];
+                  normalized = normalized.replace(/\s+office$/i, '').trim();
+                  return normalized.toLowerCase();
+                };
+                
+                const searchCity = normalizeLocation(decodeURIComponent(searchLocation.replace(/\+/g, ' ')));
+                matchingOfficeLocation = agent.officeLocations.find((loc: any) => 
+                  normalizeLocation(loc.city) === searchCity
+                ) || null;
+              }
+              
+              // Use matching office location, or fall back to first office location, or business address
+              const displayAddress = matchingOfficeLocation 
+                ? (matchingOfficeLocation.street_address && matchingOfficeLocation.city && matchingOfficeLocation.province && matchingOfficeLocation.postal_code
+                    ? `${matchingOfficeLocation.street_address}, ${matchingOfficeLocation.city}, ${matchingOfficeLocation.province} ${matchingOfficeLocation.postal_code}`
+                    : matchingOfficeLocation.street_address && matchingOfficeLocation.city && matchingOfficeLocation.province
+                    ? `${matchingOfficeLocation.street_address}, ${matchingOfficeLocation.city}, ${matchingOfficeLocation.province}`
+                    : matchingOfficeLocation.city && matchingOfficeLocation.province
+                    ? `${matchingOfficeLocation.city}, ${matchingOfficeLocation.province}`
+                    : matchingOfficeLocation.city || null)
+                : (agent?.officeLocations && agent.officeLocations.length > 0
+                    ? (agent.officeLocations[0].street_address && agent.officeLocations[0].city && agent.officeLocations[0].province && agent.officeLocations[0].postal_code
+                        ? `${agent.officeLocations[0].street_address}, ${agent.officeLocations[0].city}, ${agent.officeLocations[0].province} ${agent.officeLocations[0].postal_code}`
+                        : agent.officeLocations[0].city && agent.officeLocations[0].province
+                        ? `${agent.officeLocations[0].city}, ${agent.officeLocations[0].province}`
+                        : null)
+                    : (agent?.business_street && agent?.business_city && agent?.business_province && agent?.business_zip
+                        ? `${agent.business_street}, ${agent.business_city}, ${agent.business_province} ${agent.business_zip}`
+                        : agent?.business_address || null));
+              
               return (
                 <div key={`${appointment.id}-${searchLocation}`} className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
                   <div className="flex gap-6">
@@ -1468,14 +1503,12 @@ function SearchResults() {
                         </span>
                       </div>
 
-                      {/* Company Address - Show if available (formatted like Zocdoc) */}
-                      {(agent?.business_street || agent?.business_address) && (
+                      {/* Office/Company Address - Show matching office location or fallback */}
+                      {displayAddress && (
                         <div className="flex items-start gap-2 mb-3">
                           <MapPin className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
                           <span className="text-gray-500 text-xs">
-                            {agent.business_street && agent.business_city && agent.business_province && agent.business_zip
-                              ? `${agent.business_street}, ${agent.business_city}, ${agent.business_province} ${agent.business_zip}`
-                              : agent.business_address || `${agent.business_street || ''}${agent.business_city ? `, ${agent.business_city}` : ''}${agent.business_province ? `, ${agent.business_province}` : ''}${agent.business_zip ? ` ${agent.business_zip}` : ''}`.trim()}
+                            {displayAddress}
                           </span>
                         </div>
                       )}
