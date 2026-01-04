@@ -146,7 +146,7 @@ export default function AboutPage() {
         <section className="text-center max-w-3xl mx-auto py-12 mb-16">
           <h2 className="mb-6 text-3xl font-semibold text-[#1a3a2e]">A platform built on trust</h2>
           <p className="text-lg leading-relaxed mb-4">
-            At its core, Soradin is about trust, trust in information, trust in professionals, and trust in the process itself.
+            At its core, Soradin is about trust: trust in information, trust in professionals, and trust in the process itself.
           </p>
           <p className="text-lg leading-relaxed text-[#4a4a4a] mb-8">
             By focusing on transparency, education, and respectful connection, Soradin aims to set a new standard for how families and professionals come together around life&apos;s most important planning decisions.
