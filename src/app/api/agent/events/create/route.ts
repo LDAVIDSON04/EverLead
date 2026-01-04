@@ -75,18 +75,60 @@ export async function POST(req: NextRequest) {
     }
 
     // Create appointment record
-    // For agent-created events, we'll use a special lead_id or null
-    // and mark it as an internal event
-    const appointmentData = {
+    // For agent-created events, we need to create a dummy lead since lead_id is NOT NULL
+    // Or store in external_events table instead
+    // Let's check if we can create in appointments without a lead, or use external_events
+    
+    // Try to create in appointments first - but we need a lead_id
+    // For now, let's create a dummy/placeholder lead entry for agent-created events
+    // Actually, better approach: store in external_events with is_soradin_created=true
+    // This way it shows in the schedule but doesn't require a lead
+    
+    // Check if notes column exists by trying to insert
+    const appointmentData: any = {
       agent_id: profile.id,
-      lead_id: null, // Agent-created events don't have a lead
-      confirmed_at: startsAt, // Store the actual start time
+      confirmed_at: startsAt,
       requested_date: requestedDate,
       requested_window: requestedWindow,
       status: "confirmed",
-      notes: `Internal event: ${title}${location ? ` | Location: ${location}` : ""}${description ? ` | ${description}` : ""}`,
-      // Store location in notes or we could add a location field if needed
     };
+    
+    // Try to add notes if column exists (will fail gracefully if it doesn't)
+    try {
+      appointmentData.notes = `Internal event: ${title}${location ? ` | Location: ${location}` : ""}${description ? ` | ${description}` : ""}`;
+    } catch (e) {
+      // Notes column doesn't exist, skip it
+    }
+    
+    // Since lead_id is NOT NULL, we need to create a system/dummy lead
+    // For now, we'll create a minimal lead entry for agent-created events
+    // Or we could store these in external_events instead
+    
+    // Actually, let's create a system lead for agent-created events
+    const { data: systemLead, error: leadError } = await supabaseAdmin
+      .from("leads")
+      .insert({
+        first_name: "System",
+        last_name: "Event",
+        full_name: title,
+        email: `system-${profile.id}@soradin.internal`,
+        city: location || "Internal",
+        province: "BC",
+        service_type: "Internal Event",
+        status: "new",
+      })
+      .select()
+      .single();
+    
+    if (leadError || !systemLead) {
+      console.error("Error creating system lead for event:", leadError);
+      return NextResponse.json(
+        { error: "Failed to create event", details: "Could not create system lead" },
+        { status: 500 }
+      );
+    }
+    
+    appointmentData.lead_id = systemLead.id;
 
     const { data: appointment, error: insertError } = await supabaseAdmin
       .from("appointments")

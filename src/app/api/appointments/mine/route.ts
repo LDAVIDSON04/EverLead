@@ -67,7 +67,12 @@ export async function GET(req: NextRequest) {
     sevenDaysAgo.setDate(now.getDate() - 7);
     const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0]; // YYYY-MM-DD
     
-    const { data: appointments, error: appointmentsError } = await supabaseServer
+    // Fetch appointments - try with notes first, fallback without if column doesn't exist
+    let appointments: any[] | null = null;
+    let appointmentsError: any = null;
+    let hasNotesColumn = true;
+    
+    const result = await supabaseServer
       .from("appointments")
       .select(
         `
@@ -96,6 +101,50 @@ export async function GET(req: NextRequest) {
       .in("status", ["pending", "confirmed", "booked"])
       .order("requested_date", { ascending: true })
       .order("created_at", { ascending: true });
+    
+    if (result.error) {
+      // Check if error is due to missing notes column
+      if (result.error.code === '42703' && result.error.message?.includes('notes')) {
+        console.log("Notes column not found, fetching appointments without notes");
+        hasNotesColumn = false;
+        const resultWithoutNotes = await supabaseServer
+          .from("appointments")
+          .select(
+            `
+            id,
+            lead_id,
+            requested_date,
+            requested_window,
+            status,
+            created_at,
+            confirmed_at,
+            office_location_id,
+            leads (
+              id,
+              first_name,
+              last_name,
+              full_name,
+              email,
+              city,
+              province
+            )
+          `
+          )
+          .eq("agent_id", userId)
+          .gte("requested_date", sevenDaysAgoStr)
+          .in("status", ["pending", "confirmed", "booked"])
+          .order("requested_date", { ascending: true })
+          .order("created_at", { ascending: true });
+        
+        appointments = resultWithoutNotes.data;
+        appointmentsError = resultWithoutNotes.error;
+      } else {
+        appointments = result.data;
+        appointmentsError = result.error;
+      }
+    } else {
+      appointments = result.data;
+    }
 
     // Also fetch external calendar events (booked by coworkers/front desk)
     // These should appear in the agent's schedule alongside Soradin appointments
@@ -279,10 +328,14 @@ export async function GET(req: NextRequest) {
       // Get family name and location from lead
       const lead = Array.isArray(apt.leads) ? apt.leads[0] : apt.leads;
       
-      // For agent-created events (no lead_id), extract title from notes
+      // Get family name
+      // Check if this is an agent-created event by looking for system lead pattern
       let familyName: string;
-      if (!apt.lead_id && apt.notes) {
-        // Extract title from notes format: "Internal event: {title} | Location: {location}"
+      if (lead?.email?.includes('@soradin.internal') && lead?.first_name === 'System' && lead?.last_name === 'Event') {
+        // This is an agent-created event - use full_name which contains the title
+        familyName = lead?.full_name || "Event";
+      } else if (apt.notes && apt.notes.includes('Internal event:')) {
+        // Fallback: try to extract from notes if available
         const notesMatch = apt.notes.match(/^Internal event:\s*(.+?)(?:\s*\||$)/i);
         familyName = notesMatch ? notesMatch[1].trim() : apt.notes.split('|')[0].trim() || "Event";
       } else {
@@ -308,15 +361,22 @@ export async function GET(req: NextRequest) {
             location = province;
           }
         }
-      } else if (!apt.lead_id && apt.notes) {
-        // For agent-created events, extract location from notes
-        const locationMatch = apt.notes.match(/Location:\s*(.+?)(?:\s*$)/i);
+      }
+      
+      // Try to extract location from notes for agent-created events if no office_location_id
+      if (!location && apt.notes && apt.notes.includes('Location:')) {
+        const locationMatch = apt.notes.match(/Location:\s*(.+?)(?:\s*\||$)/i);
         if (locationMatch) {
           location = locationMatch[1].trim();
         }
       }
       
-      // If no office_location_id and no location in notes, location will be null and will display as "N/A"
+      // If still no location, try to get from lead city (for system events)
+      if (!location && lead?.email?.includes('@soradin.internal') && lead?.city) {
+        location = lead.city;
+      }
+      
+      // If no location found, it will be null and will display as "N/A"
       
       const result = {
         id: apt.id,
