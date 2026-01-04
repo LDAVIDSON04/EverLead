@@ -208,6 +208,14 @@ export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId }: Clie
           ) : isAgentEvent && leadData ? (
             // Simplified view for agent-created events
             <div className="space-y-6">
+              {/* Event Title */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Event Title</h3>
+                <div>
+                  <p className="text-gray-900">{leadData.full_name || 'Untitled Event'}</p>
+                </div>
+              </div>
+
               {/* Date & Time */}
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Date & Time</h3>
@@ -228,7 +236,19 @@ export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId }: Clie
                     <label className="text-sm font-medium text-gray-500">Time</label>
                     <p className="text-gray-900">
                       {appointmentData?.starts_at && appointmentData?.ends_at
-                        ? `${formatTime(appointmentData.starts_at)} - ${formatTime(appointmentData.ends_at)}`
+                        ? (() => {
+                            const startTime = formatTime(appointmentData.starts_at);
+                            const endTime = formatTime(appointmentData.ends_at);
+                            const start = new Date(appointmentData.starts_at);
+                            const end = new Date(appointmentData.ends_at);
+                            const durationMinutes = Math.round((end.getTime() - start.getTime()) / (1000 * 60));
+                            const durationHours = Math.floor(durationMinutes / 60);
+                            const durationMins = durationMinutes % 60;
+                            const durationStr = durationHours > 0 
+                              ? `${durationHours} ${durationHours === 1 ? 'hour' : 'hours'}${durationMins > 0 ? ` ${durationMins} ${durationMins === 1 ? 'minute' : 'minutes'}` : ''}`
+                              : `${durationMins} ${durationMins === 1 ? 'minute' : 'minutes'}`;
+                            return `${startTime} - ${endTime} (${durationStr})`;
+                          })()
                         : appointmentData?.starts_at
                         ? formatTime(appointmentData.starts_at)
                         : appointmentData?.confirmed_at

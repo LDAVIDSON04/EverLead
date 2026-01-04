@@ -117,6 +117,8 @@ export async function POST(req: NextRequest) {
     const appointmentData: any = {
       agent_id: profile.id,
       confirmed_at: startsAt,
+      starts_at: startsAt, // Set exact start time
+      ends_at: endsAt, // Set exact end time
       requested_date: requestedDate,
       requested_window: requestedWindow,
       status: "confirmed",
