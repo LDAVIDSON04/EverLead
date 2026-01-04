@@ -783,18 +783,14 @@ export default function SchedulePage() {
                                     setViewingExternalAppointment(apt);
                                   }
                                 }}
-                                className={`absolute inset-x-0.5 ${color} rounded p-0.5 md:p-1 shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-all border border-gray-200`}
+                                className={`absolute inset-x-0.5 ${color} rounded p-0.5 md:p-1 shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-all border border-gray-200 appointment-block`}
                                 style={{
-                                  '--top-offset': `${(apt.minute / 60) * 48}px`,
-                                  '--top-offset-md': `${(apt.minute / 60) * 80}px`,
-                                  '--height': `${Math.max((apt.durationMinutes / 60) * 48, 24)}px`,
-                                  '--height-md': `${Math.max((apt.durationMinutes / 60) * 80, 40)}px`,
-                                  top: 'var(--top-offset)',
-                                  height: 'var(--height)',
+                                  '--top-mobile': `${(apt.minute / 60) * 48}px`,
+                                  '--top-desktop': `${(apt.minute / 60) * 80}px`,
+                                  '--height-mobile': `${Math.max((apt.durationMinutes / 60) * 48, 24)}px`,
+                                  '--height-desktop': `${Math.max((apt.durationMinutes / 60) * 80, 40)}px`,
                                   zIndex: 5,
                                 } as React.CSSProperties & Record<string, string>}
-                                data-top-md={`${(apt.minute / 60) * 80}px`}
-                                data-height-md={`${Math.max((apt.durationMinutes / 60) * 80, 40)}px`}
                               >
                                 <div className="h-full flex flex-col gap-0.5 px-0.5 md:px-1 py-0.5">
                                   {/* Customer Name */}
