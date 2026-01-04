@@ -64,6 +64,10 @@ export default function SchedulePage() {
     minute: number;
   } | null>(null);
   const [appointmentLength, setAppointmentLength] = useState(60); // Default 60 minutes
+  const [editingEvent, setEditingEvent] = useState<{
+    appointmentId: string;
+    leadId: string;
+  } | null>(null);
 
   // Check for query parameter to open availability modal
   useEffect(() => {
@@ -1079,6 +1083,9 @@ export default function SchedulePage() {
         }}
         leadId={viewingLeadId}
         appointmentId={viewingAppointmentId}
+        onEdit={(appointmentId, leadId) => {
+          setEditingEvent({ appointmentId, leadId });
+        }}
       />
 
       {/* External Appointment Modal */}
