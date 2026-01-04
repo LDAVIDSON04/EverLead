@@ -334,9 +334,7 @@ export async function GET(req: NextRequest) {
         return null;
       }
       
-      // Get family name and location from lead
-      const lead = Array.isArray(apt.leads) ? apt.leads[0] : apt.leads;
-      
+      // Get family name and location from lead (lead already defined above)
       // Get family name
       // Check if this is an agent-created event by looking for system lead pattern
       let familyName: string;
