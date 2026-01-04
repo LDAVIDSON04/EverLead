@@ -217,6 +217,8 @@ export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId }: Clie
                     <p className="text-gray-900">
                       {appointmentData?.starts_at 
                         ? formatDate(appointmentData.starts_at)
+                        : appointmentData?.confirmed_at
+                        ? formatDate(appointmentData.confirmed_at)
                         : appointmentData?.requested_date 
                         ? formatDate(appointmentData.requested_date)
                         : 'Not provided'}
@@ -229,6 +231,8 @@ export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId }: Clie
                         ? `${formatTime(appointmentData.starts_at)} - ${formatTime(appointmentData.ends_at)}`
                         : appointmentData?.starts_at
                         ? formatTime(appointmentData.starts_at)
+                        : appointmentData?.confirmed_at
+                        ? formatTime(appointmentData.confirmed_at)
                         : 'Not provided'}
                     </p>
                   </div>
@@ -272,17 +276,18 @@ export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId }: Clie
                         </div>
                       )}
                     </>
-                  ) : leadData.city ? (
+                  ) : leadData.city && leadData.city !== 'Internal' ? (
                     <div>
                       <label className="text-sm font-medium text-gray-500">Location</label>
                       <p className="text-gray-900">
                         {leadData.city}
-                        {leadData.province ? `, ${leadData.province}` : ''}
+                        {leadData.province && leadData.province !== 'BC' ? `, ${leadData.province}` : ''}
                       </p>
                     </div>
                   ) : (
                     <div>
-                      <p className="text-gray-500">Not specified</p>
+                      <label className="text-sm font-medium text-gray-500">Location</label>
+                      <p className="text-gray-900">Not provided</p>
                     </div>
                   )}
                 </div>
