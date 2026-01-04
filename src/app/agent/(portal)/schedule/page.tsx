@@ -10,6 +10,7 @@ import { ClientInfoModal } from "../my-appointments/components/ClientInfoModal";
 import { downloadClientInfo } from "@/lib/downloadClientInfo";
 import { AddAvailabilityModal } from "./components/AddAvailabilityModal";
 import { CalendarSyncModal } from "./components/CalendarSyncModal";
+import { CreateEventModal } from "./components/CreateEventModal";
 
 type Specialist = {
   id: string;
@@ -56,6 +57,13 @@ export default function SchedulePage() {
   const [viewingExternalAppointment, setViewingExternalAppointment] = useState<any | null>(null);
   const [showAddAvailabilityModal, setShowAddAvailabilityModal] = useState(false);
   const [showCalendarSyncModal, setShowCalendarSyncModal] = useState(false);
+  const [showCreateEventModal, setShowCreateEventModal] = useState(false);
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState<{
+    date: Date;
+    hour: number;
+    minute: number;
+  } | null>(null);
+  const [appointmentLength, setAppointmentLength] = useState(60); // Default 60 minutes
 
   // Check for query parameter to open availability modal
   useEffect(() => {
@@ -248,6 +256,12 @@ export default function SchedulePage() {
         } else if (profileData?.metadata?.availability?.timezone) {
           setAgentTimezone(profileData.metadata.availability.timezone);
         }
+
+        // Get appointment length from metadata
+        const metadata = profileData?.metadata || {};
+        const availability = (metadata as any)?.availability || {};
+        const length = availability.appointmentLength ? parseInt(availability.appointmentLength, 10) : 60;
+        setAppointmentLength(length);
 
         let specialistData = null;
         if (specialistRes.ok) {
@@ -515,6 +529,49 @@ export default function SchedulePage() {
   const weekHours = calculateHours(weekAppointments);
   const dayHours = calculateHours(dayAppointments);
 
+  // Handle empty time block click
+  const handleEmptyBlockClick = (date: Date, hour: number, minute: number = 0) => {
+    setSelectedTimeSlot({ date, hour, minute });
+    setShowCreateEventModal(true);
+  };
+
+  // Handle event save
+  const handleEventSave = async (eventData: {
+    title: string;
+    startsAt: string;
+    endsAt: string;
+    location?: string;
+    description?: string;
+  }) => {
+    const session = await supabaseClient.auth.getSession();
+    if (!session.data.session?.access_token) {
+      throw new Error("Not authenticated");
+    }
+
+    const response = await fetch("/api/agent/events/create", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session.data.session.access_token}`,
+      },
+      body: JSON.stringify(eventData),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || "Failed to create event");
+    }
+
+    // Reload appointments to show the new event
+    const appointmentsRes = await fetch("/api/appointments/mine", {
+      headers: { Authorization: `Bearer ${session.data.session.access_token}` },
+    });
+    if (appointmentsRes.ok) {
+      const newAppointments = await appointmentsRes.json();
+      setAppointments(newAppointments || []);
+    }
+  };
+
   // Render appointment box (shared across views)
   const renderAppointmentBox = (apt: any, color: string, showLocation: boolean = true) => {
     const cleanLocation = apt.location && 
@@ -683,8 +740,17 @@ export default function SchedulePage() {
                       return (
                         <div
                           key={`${day}-${hour}`}
-                          className="flex-1 min-w-[50px] md:min-w-[100px] border-l border-gray-200 relative h-12 md:h-20 overflow-visible"
+                          className="flex-1 min-w-[50px] md:min-w-[100px] border-l border-gray-200 relative h-12 md:h-20 overflow-visible cursor-pointer hover:bg-gray-50 transition-colors"
+                          onClick={(e) => {
+                            // Only handle click if clicking on empty space (not on an appointment)
+                            if (e.target === e.currentTarget || (e.target as HTMLElement).closest('.empty-block')) {
+                              handleEmptyBlockClick(weekDates[dayIndex], hour, 0);
+                            }
+                          }}
                         >
+                          {cellAppointments.length === 0 && (
+                            <div className="empty-block absolute inset-0" />
+                          )}
                           {cellAppointments.map((apt: any) => {
                             // Calculate top offset within this hour (based on minutes)
                             const pxPerHour = 48;
@@ -780,7 +846,18 @@ export default function SchedulePage() {
                     <div className="w-12 md:w-20 flex-shrink-0 pr-1 md:pr-3 pt-1 md:pt-1.5 text-[10px] md:text-xs text-gray-500 text-right">
                       {hour === 12 ? '12 PM' : hour > 12 ? `${hour - 12} PM` : `${hour} AM`}
                     </div>
-                    <div className="flex-1 min-w-[50px] md:min-w-[100px] border-l border-gray-200 relative h-12 md:h-20 overflow-visible">
+                    <div 
+                      className="flex-1 min-w-[50px] md:min-w-[100px] border-l border-gray-200 relative h-12 md:h-20 overflow-visible cursor-pointer hover:bg-gray-50 transition-colors"
+                      onClick={(e) => {
+                        // Only handle click if clicking on empty space (not on an appointment)
+                        if (e.target === e.currentTarget || (e.target as HTMLElement).closest('.empty-block')) {
+                          handleEmptyBlockClick(dayDate, hour, 0);
+                        }
+                      }}
+                    >
+                      {cellAppointments.length === 0 && (
+                        <div className="empty-block absolute inset-0" />
+                      )}
                       {cellAppointments.map((apt: any) => {
                         const pxPerHour = 48;
                         const topOffset = (apt.minute / 60) * pxPerHour;
@@ -981,6 +1058,23 @@ export default function SchedulePage() {
           setShowAddAvailabilityModal(false);
         }}
       />
+
+      {/* Create Event Modal */}
+      {selectedTimeSlot && (
+        <CreateEventModal
+          isOpen={showCreateEventModal}
+          onClose={() => {
+            setShowCreateEventModal(false);
+            setSelectedTimeSlot(null);
+          }}
+          initialDate={selectedTimeSlot.date}
+          initialHour={selectedTimeSlot.hour}
+          initialMinute={selectedTimeSlot.minute}
+          agentTimezone={agentTimezone}
+          appointmentLength={appointmentLength}
+          onSave={handleEventSave}
+        />
+      )}
 
       {/* Client Info Modal */}
       <ClientInfoModal

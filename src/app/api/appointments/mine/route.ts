@@ -79,6 +79,7 @@ export async function GET(req: NextRequest) {
         created_at,
         confirmed_at,
         office_location_id,
+        notes,
         leads (
           id,
           first_name,
@@ -277,12 +278,20 @@ export async function GET(req: NextRequest) {
       
       // Get family name and location from lead
       const lead = Array.isArray(apt.leads) ? apt.leads[0] : apt.leads;
-      const familyName = lead?.full_name || 
-        (lead?.first_name && lead?.last_name ? `${lead.first_name} ${lead.last_name}` : null) ||
-        "Client";
       
-      // Get location from office_location_id ONLY
-      // DO NOT fall back to lead.city because lead.city is the family's city, not the office location
+      // For agent-created events (no lead_id), extract title from notes
+      let familyName: string;
+      if (!apt.lead_id && apt.notes) {
+        // Extract title from notes format: "Internal event: {title} | Location: {location}"
+        const notesMatch = apt.notes.match(/^Internal event:\s*(.+?)(?:\s*\||$)/i);
+        familyName = notesMatch ? notesMatch[1].trim() : apt.notes.split('|')[0].trim() || "Event";
+      } else {
+        familyName = lead?.full_name || 
+          (lead?.first_name && lead?.last_name ? `${lead.first_name} ${lead.last_name}` : null) ||
+          "Client";
+      }
+      
+      // Get location from office_location_id or from notes (for agent-created events)
       let location: string | null = null;
       
       if (apt.office_location_id) {
@@ -299,10 +308,15 @@ export async function GET(req: NextRequest) {
             location = province;
           }
         }
+      } else if (!apt.lead_id && apt.notes) {
+        // For agent-created events, extract location from notes
+        const locationMatch = apt.notes.match(/Location:\s*(.+?)(?:\s*$)/i);
+        if (locationMatch) {
+          location = locationMatch[1].trim();
+        }
       }
       
-      // If no office_location_id, location will be null and will display as "N/A"
-      // This is correct because we cannot determine the office location for old appointments
+      // If no office_location_id and no location in notes, location will be null and will display as "N/A"
       
       const result = {
         id: apt.id,
