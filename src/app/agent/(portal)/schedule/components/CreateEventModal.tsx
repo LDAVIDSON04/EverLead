@@ -12,6 +12,15 @@ interface CreateEventModalProps {
   initialMinute?: number;
   agentTimezone: string;
   appointmentLength: number; // in minutes
+  editingEvent?: {
+    appointmentId: string;
+    leadId: string;
+    title?: string;
+    startsAt?: string;
+    endsAt?: string;
+    location?: string;
+    description?: string;
+  } | null;
   onSave: (eventData: {
     title: string;
     startsAt: string;
@@ -102,6 +111,18 @@ export function CreateEventModal({
   };
 
   if (!isOpen) return null;
+
+  if (loading) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
+          <div className="flex items-center justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-700"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Format date for display
   const formattedDate = date.toLocaleDateString("en-US", {

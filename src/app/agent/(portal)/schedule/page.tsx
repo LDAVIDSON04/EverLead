@@ -552,8 +552,15 @@ export default function SchedulePage() {
       throw new Error("Not authenticated");
     }
 
-    const response = await fetch("/api/agent/events/create", {
-      method: "POST",
+    // If editing, use PUT to update; otherwise POST to create
+    const isEditing = editingEvent !== null;
+    const url = isEditing
+      ? `/api/agent/events/${editingEvent?.appointmentId}`
+      : "/api/agent/events/create";
+    const method = isEditing ? "PUT" : "POST";
+
+    const response = await fetch(url, {
+      method,
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${session.data.session.access_token}`,
@@ -563,16 +570,21 @@ export default function SchedulePage() {
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.error || "Failed to create event");
+      throw new Error(error.error || `Failed to ${isEditing ? "update" : "create"} event`);
     }
 
-    // Reload appointments to show the new event
+    // Reload appointments to show the updated/new event
     const appointmentsRes = await fetch("/api/appointments/mine", {
       headers: { Authorization: `Bearer ${session.data.session.access_token}` },
     });
     if (appointmentsRes.ok) {
       const newAppointments = await appointmentsRes.json();
       setAppointments(newAppointments || []);
+    }
+
+    // Close edit mode if we were editing
+    if (isEditing) {
+      setEditingEvent(null);
     }
   };
 
@@ -1057,19 +1069,21 @@ export default function SchedulePage() {
         }}
       />
 
-      {/* Create Event Modal */}
-      {selectedTimeSlot && (
+      {/* Create/Edit Event Modal */}
+      {(selectedTimeSlot || editingEvent) && (
         <CreateEventModal
-          isOpen={showCreateEventModal}
+          isOpen={showCreateEventModal || editingEvent !== null}
           onClose={() => {
             setShowCreateEventModal(false);
             setSelectedTimeSlot(null);
+            setEditingEvent(null);
           }}
-          initialDate={selectedTimeSlot.date}
-          initialHour={selectedTimeSlot.hour}
-          initialMinute={selectedTimeSlot.minute}
+          initialDate={selectedTimeSlot?.date || new Date()}
+          initialHour={selectedTimeSlot?.hour || 9}
+          initialMinute={selectedTimeSlot?.minute || 0}
           agentTimezone={agentTimezone}
           appointmentLength={appointmentLength}
+          editingEvent={editingEvent}
           onSave={handleEventSave}
         />
       )}
@@ -1085,6 +1099,7 @@ export default function SchedulePage() {
         appointmentId={viewingAppointmentId}
         onEdit={(appointmentId, leadId) => {
           setEditingEvent({ appointmentId, leadId });
+          setShowCreateEventModal(true);
         }}
       />
 

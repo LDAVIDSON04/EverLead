@@ -5,8 +5,20 @@ import { DateTime } from "luxon";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-export async function POST(req: NextRequest) {
+export async function PUT(
+  req: NextRequest,
+  context: { params: Promise<{ appointmentId: string }> }
+) {
   try {
+    const { appointmentId } = await context.params;
+
+    if (!appointmentId) {
+      return NextResponse.json(
+        { error: "Missing appointment ID" },
+        { status: 400 }
+      );
+    }
+
     // Get agent from session
     const authHeader = req.headers.get("authorization");
     if (!authHeader) {
@@ -37,6 +49,35 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Agent not found" }, { status: 404 });
     }
 
+    // Verify the appointment belongs to this agent
+    const { data: appointment, error: appointmentError } = await supabaseAdmin
+      .from("appointments")
+      .select("id, agent_id, lead_id")
+      .eq("id", appointmentId)
+      .eq("agent_id", profile.id)
+      .single();
+
+    if (appointmentError || !appointment) {
+      return NextResponse.json(
+        { error: "Appointment not found or access denied" },
+        { status: 404 }
+      );
+    }
+
+    // Verify it's an agent-created event (system lead)
+    const { data: lead, error: leadError } = await supabaseAdmin
+      .from("leads")
+      .select("id, email")
+      .eq("id", appointment.lead_id)
+      .single();
+
+    if (leadError || !lead || !lead.email?.includes("@soradin.internal")) {
+      return NextResponse.json(
+        { error: "This event cannot be edited" },
+        { status: 403 }
+      );
+    }
+
     const body = await req.json();
     const { title, startsAt, endsAt, location, description } = body;
 
@@ -65,7 +106,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Get agent's timezone from metadata or infer from province
+    // Get agent's timezone
     let agentTimezone = "America/Vancouver"; // Default fallback
     if (profile.metadata?.timezone) {
       agentTimezone = profile.metadata.timezone;
@@ -87,7 +128,7 @@ export async function POST(req: NextRequest) {
         agentTimezone = "America/Montreal";
       }
     }
-    
+
     const localStart = startDate.setZone(agentTimezone);
     const localEnd = endDate.setZone(agentTimezone);
 
@@ -101,72 +142,38 @@ export async function POST(req: NextRequest) {
       requestedWindow = "evening";
     }
 
-    // Create appointment record
-    // For agent-created events, we need to create a dummy lead since lead_id is NOT NULL
-    // Or store in external_events table instead
-    // Let's check if we can create in appointments without a lead, or use external_events
-    
-    // Try to create in appointments first - but we need a lead_id
-    // For now, let's create a dummy/placeholder lead entry for agent-created events
-    // Actually, better approach: store in external_events with is_soradin_created=true
-    // This way it shows in the schedule but doesn't require a lead
-    
-    // Create appointment data
-    // Note: The appointments table doesn't have starts_at/ends_at columns
-    // We store the start time in confirmed_at and calculate duration separately
-    const appointmentData: any = {
-      agent_id: profile.id,
-      confirmed_at: startsAt, // Store start time here
-      requested_date: requestedDate,
-      requested_window: requestedWindow,
-      status: "confirmed",
-    };
-    
-    // Since lead_id is NOT NULL, we need to create a system/dummy lead
-    // For now, we'll create a minimal lead entry for agent-created events
-    // Or we could store these in external_events instead
-    
-    // Actually, let's create a system lead for agent-created events
-    // Need to include required fields like lead_price
-    // Store description in additional_notes field
-    const { data: systemLead, error: leadError } = await supabaseAdmin
+    // Update the lead (title, location, description)
+    const { error: updateLeadError } = await supabaseAdmin
       .from("leads")
-      .insert({
-        first_name: "System",
-        last_name: "Event",
+      .update({
         full_name: title,
-        email: `system-${profile.id}@soradin.internal`,
         city: location || "Internal",
-        province: "BC",
-        service_type: "Internal Event",
-        status: "new",
-        lead_price: 0, // Required field - set to 0 for system/internal events
-        urgency_level: "cold", // Required for pricing calculation
-        additional_notes: description || null, // Store event description here
+        additional_notes: description || null,
       })
-      .select()
-      .single();
-    
-    if (leadError || !systemLead) {
-      console.error("Error creating system lead for event:", leadError);
+      .eq("id", appointment.lead_id);
+
+    if (updateLeadError) {
+      console.error("Error updating lead:", updateLeadError);
       return NextResponse.json(
-        { error: "Failed to create event", details: "Could not create system lead" },
+        { error: "Failed to update event", details: updateLeadError.message },
         { status: 500 }
       );
     }
-    
-    appointmentData.lead_id = systemLead.id;
 
-    const { data: appointment, error: insertError } = await supabaseAdmin
+    // Update the appointment
+    const { error: updateAppointmentError } = await supabaseAdmin
       .from("appointments")
-      .insert(appointmentData)
-      .select()
-      .single();
+      .update({
+        confirmed_at: startsAt,
+        requested_date: requestedDate,
+        requested_window: requestedWindow,
+      })
+      .eq("id", appointmentId);
 
-    if (insertError) {
-      console.error("Error creating event:", insertError);
+    if (updateAppointmentError) {
+      console.error("Error updating appointment:", updateAppointmentError);
       return NextResponse.json(
-        { error: "Failed to create event", details: insertError.message },
+        { error: "Failed to update event", details: updateAppointmentError.message },
         { status: 500 }
       );
     }
@@ -174,13 +181,12 @@ export async function POST(req: NextRequest) {
     // Sync to external calendars if connected
     try {
       const { syncAgentAppointmentToGoogleCalendar, syncAgentAppointmentToMicrosoftCalendar } = await import("@/lib/calendarSyncAgent");
-      
-      // Sync using the appointment ID (the functions will fetch the appointment details)
+
       await Promise.all([
-        syncAgentAppointmentToGoogleCalendar(appointment.id).catch(err => {
+        syncAgentAppointmentToGoogleCalendar(appointmentId).catch(err => {
           console.error("Error syncing to Google Calendar (non-fatal):", err);
         }),
-        syncAgentAppointmentToMicrosoftCalendar(appointment.id).catch(err => {
+        syncAgentAppointmentToMicrosoftCalendar(appointmentId).catch(err => {
           console.error("Error syncing to Microsoft Calendar (non-fatal):", err);
         }),
       ]);
@@ -192,7 +198,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: true,
       appointment: {
-        id: appointment.id,
+        id: appointmentId,
         title,
         startsAt,
         endsAt,
@@ -201,7 +207,7 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (error: any) {
-    console.error("Error in create event API:", error);
+    console.error("Error in update event API:", error);
     return NextResponse.json(
       { error: "Internal server error", details: error.message },
       { status: 500 }
