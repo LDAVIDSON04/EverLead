@@ -790,7 +790,7 @@ export default function SchedulePage() {
                                   '--height-mobile': `${Math.max((apt.durationMinutes / 60) * 48, 24)}px`,
                                   '--height-desktop': `${Math.max((apt.durationMinutes / 60) * 80, 40)}px`,
                                   zIndex: 5,
-                                } as React.CSSProperties & Record<string, string>}
+                                } as React.CSSProperties}
                               >
                                 <div className="h-full flex flex-col gap-0.5 px-0.5 md:px-1 py-0.5">
                                   {/* Customer Name */}
