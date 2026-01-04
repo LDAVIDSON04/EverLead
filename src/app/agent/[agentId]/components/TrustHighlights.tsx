@@ -44,11 +44,12 @@ export function TrustHighlights({ rating = 0, reviewCount = 0 }: TrustHighlights
       case 'shield': 
         return (
           <div className="relative">
-            <Shield {...iconProps} />
+            <Shield {...iconProps} fill="#2d7a4a" />
             <Check 
-              className="w-4 h-4 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" 
+              className="w-5 h-5 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" 
               style={{ color: '#ffffff' }}
-              strokeWidth={3}
+              strokeWidth={3.5}
+              fill="#ffffff"
             />
           </div>
         );

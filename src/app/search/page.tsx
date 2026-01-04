@@ -2072,7 +2072,10 @@ function SearchResults() {
                       </div>
 
                       {/* Trust Highlights */}
-                      <TrustHighlights />
+                      <TrustHighlights 
+                        rating={portfolioAgentData.rating || 0} 
+                        reviewCount={portfolioAgentData.reviewCount || 0} 
+                      />
                     </div>
 
                     {/* Right Column - Sticky Booking Panel (5 columns) */}
