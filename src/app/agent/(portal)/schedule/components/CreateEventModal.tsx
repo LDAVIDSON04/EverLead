@@ -38,6 +38,7 @@ export function CreateEventModal({
   initialMinute = 0,
   agentTimezone,
   appointmentLength,
+  editingEvent,
   onSave,
 }: CreateEventModalProps) {
   const [title, setTitle] = useState("");
@@ -49,20 +50,56 @@ export function CreateEventModal({
   const [duration, setDuration] = useState(appointmentLength);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  // Reset form when modal opens with new initial values
+  // Load existing event data when editing
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && editingEvent) {
+      setLoading(true);
+      // Load event data
+      fetch(`/api/appointments/${editingEvent.appointmentId}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.starts_at) {
+            const startDate = new Date(data.starts_at);
+            setDate(startDate);
+            setStartHour(startDate.getHours());
+            setStartMinute(startDate.getMinutes());
+          }
+          if (data.ends_at && data.starts_at) {
+            const start = new Date(data.starts_at);
+            const end = new Date(data.ends_at);
+            const durationMinutes = Math.round((end.getTime() - start.getTime()) / (1000 * 60));
+            setDuration(durationMinutes);
+          }
+          if (data.lead?.full_name) {
+            setTitle(data.lead.full_name);
+          }
+          if (data.lead?.city && data.lead.city !== 'Internal') {
+            setLocation(data.lead.city);
+          }
+          if (data.lead?.additional_notes) {
+            setDescription(data.lead.additional_notes);
+          }
+          setLoading(false);
+        })
+        .catch(err => {
+          console.error("Error loading event data:", err);
+          setError("Failed to load event data");
+          setLoading(false);
+        });
+    } else if (isOpen) {
+      // Reset form for new event
       setTitle("");
       setLocation("");
       setDescription("");
       setDate(new Date(initialDate));
       setStartHour(initialHour);
-      setStartMinute(initialMinute);
+      setStartMinute(initialMinute || 0);
       setDuration(appointmentLength);
       setError(null);
     }
-  }, [isOpen, initialDate, initialHour, initialMinute, appointmentLength]);
+  }, [isOpen, editingEvent, initialDate, initialHour, initialMinute, appointmentLength]);
 
   const handleSave = async () => {
     if (!title.trim()) {
@@ -298,7 +335,7 @@ export function CreateEventModal({
             disabled={saving || !title.trim()}
             className="px-6 py-2 bg-[#0C6F3C] text-white rounded-lg hover:bg-[#0C6F3C]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
           >
-            {saving ? "Saving..." : "Save"}
+            {saving ? (editingEvent ? "Updating..." : "Saving...") : (editingEvent ? "Update" : "Save")}
           </button>
         </div>
       </div>
