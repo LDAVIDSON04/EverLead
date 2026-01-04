@@ -284,6 +284,14 @@ export async function GET(req: NextRequest) {
       // Get location from office_location_id if available, otherwise fall back to lead's city
       let location: string | null = null;
       
+      // Log appointment details for debugging
+      console.log(`🔍 Processing appointment ${apt.id}:`, {
+        office_location_id: apt.office_location_id,
+        lead_id: apt.lead_id,
+        leadCity: lead?.city,
+        leadProvince: lead?.province,
+      });
+      
       if (apt.office_location_id) {
         const officeLocation = officeLocationsMap[apt.office_location_id];
         if (officeLocation) {
@@ -297,10 +305,14 @@ export async function GET(req: NextRequest) {
           } else if (province) {
             location = province;
           }
+          console.log(`✅ Appointment ${apt.id} using office_location_id ${apt.office_location_id}: ${location}`);
         } else {
           // office_location_id exists but not found in map - log warning
           console.warn(`⚠️ Office location ${apt.office_location_id} not found in officeLocationsMap for appointment ${apt.id}`);
+          console.log(`   Available office location IDs in map:`, Object.keys(officeLocationsMap));
         }
+      } else {
+        console.log(`⚠️ Appointment ${apt.id} has NO office_location_id - will fallback to lead.city if available`);
       }
       
       // Only fallback to lead's city if no office_location_id was set
@@ -322,6 +334,11 @@ export async function GET(req: NextRequest) {
         } else if (province) {
           location = province;
         }
+        console.log(`🔄 Appointment ${apt.id} falling back to lead.city: ${location} (lead_id: ${apt.lead_id})`);
+      }
+      
+      if (!location) {
+        console.warn(`❌ Appointment ${apt.id} has NO location - office_location_id: ${apt.office_location_id}, lead.city: ${lead?.city}`);
       }
       
       const result = {
