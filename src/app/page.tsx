@@ -691,7 +691,7 @@ export default function HomePage() {
       <section className="py-24 px-4 bg-[#D9C7A3]/20">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-4xl mb-12 text-[#1A1A1A] font-medium tracking-tight">
-            find funeral professionals near you
+            Find funeral professionals near you
           </h2>
 
           <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
