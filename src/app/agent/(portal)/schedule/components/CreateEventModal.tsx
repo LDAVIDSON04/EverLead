@@ -185,7 +185,9 @@ export function CreateEventModal({
       >
         {/* Header */}
         <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-gray-900">Create Event</h2>
+          <h2 className="text-xl font-semibold text-gray-900">
+            {editingEvent ? "Edit Event" : "Create Event"}
+          </h2>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition-colors"
