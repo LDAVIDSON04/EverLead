@@ -37,19 +37,33 @@ interface LeadData {
   created_at: string | null;
 }
 
+interface OfficeLocation {
+  id: string;
+  name: string | null;
+  city: string | null;
+  street_address: string | null;
+  province: string | null;
+  postal_code: string | null;
+}
+
 export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId }: ClientInfoModalProps) {
   const [leadData, setLeadData] = useState<LeadData | null>(null);
+  const [officeLocation, setOfficeLocation] = useState<OfficeLocation | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen && leadId) {
       loadLeadData();
+      if (appointmentId) {
+        loadAppointmentData();
+      }
     } else {
       setLeadData(null);
+      setOfficeLocation(null);
       setError(null);
     }
-  }, [isOpen, leadId]);
+  }, [isOpen, leadId, appointmentId]);
 
   async function loadLeadData() {
     if (!leadId) return;
@@ -76,6 +90,26 @@ export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId }: Clie
       setError('An unexpected error occurred.');
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function loadAppointmentData() {
+    if (!appointmentId) return;
+
+    try {
+      const response = await fetch(`/api/appointments/${appointmentId}`);
+      if (!response.ok) {
+        console.error('Error loading appointment data');
+        return;
+      }
+
+      const appointmentData = await response.json();
+      if (appointmentData.office_location) {
+        setOfficeLocation(appointmentData.office_location);
+      }
+    } catch (err) {
+      console.error('Error loading appointment data:', err);
+      // Don't show error to user, just log it
     }
   }
 
@@ -142,6 +176,51 @@ export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId }: Clie
                     <label className="text-sm font-medium text-gray-500">Phone</label>
                     <p className="text-gray-900">{formatField('', leadData.phone)}</p>
                   </div>
+                </div>
+              </div>
+
+              {/* Meeting Location */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Meeting Location</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {officeLocation ? (
+                    <>
+                      {officeLocation.name && (
+                        <div>
+                          <label className="text-sm font-medium text-gray-500">Office Name</label>
+                          <p className="text-gray-900">{officeLocation.name}</p>
+                        </div>
+                      )}
+                      {officeLocation.city && (
+                        <div>
+                          <label className="text-sm font-medium text-gray-500">City</label>
+                          <p className="text-gray-900">{officeLocation.city}</p>
+                        </div>
+                      )}
+                      {officeLocation.street_address && (
+                        <div className="md:col-span-2">
+                          <label className="text-sm font-medium text-gray-500">Street Address</label>
+                          <p className="text-gray-900">{officeLocation.street_address}</p>
+                        </div>
+                      )}
+                      {officeLocation.province && (
+                        <div>
+                          <label className="text-sm font-medium text-gray-500">Province</label>
+                          <p className="text-gray-900">{officeLocation.province}</p>
+                        </div>
+                      )}
+                      {officeLocation.postal_code && (
+                        <div>
+                          <label className="text-sm font-medium text-gray-500">Postal Code</label>
+                          <p className="text-gray-900">{officeLocation.postal_code}</p>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div>
+                      <p className="text-gray-500">Not specified</p>
+                    </div>
+                  )}
                 </div>
               </div>
 
