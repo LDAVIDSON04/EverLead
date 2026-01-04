@@ -230,6 +230,9 @@ export default function HomePage() {
           <div className="flex items-center gap-6">
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center gap-6">
+              <Link href="/about" className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors">
+                About Us
+              </Link>
               <Link href="/what-is-pre-need-funeral-planning" className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors">
                 What are pre arrangements?
               </Link>
