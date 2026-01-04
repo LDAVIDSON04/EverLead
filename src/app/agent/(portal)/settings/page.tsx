@@ -635,17 +635,6 @@ function ProfileSection({
       </div>
 
       <div className="mb-4">
-        <Label htmlFor="regionsServed">Region(s) Served *</Label>
-        <Input
-          id="regionsServed"
-          value={profileData.regionsServed}
-          onChange={(e) => setProfileData({ ...profileData, regionsServed: e.target.value })}
-          className="mt-1"
-          placeholder="e.g., Toronto, GTA, Mississauga"
-        />
-      </div>
-
-      <div className="mb-4">
         <Label htmlFor="specialty">Specialty / Services Offered *</Label>
         <Textarea
           id="specialty"
@@ -1829,11 +1818,10 @@ function NotificationsSection({ email, phone }: { email: string; phone: string }
   const [saveMessage, setSaveMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [agentEmail, setAgentEmail] = useState<string>("");
   const [notifications, setNotifications] = useState({
-    newAppointment: { email: true, sms: false },
-    appointmentCancelled: { email: true, sms: true },
-    paymentReceived: { email: true, sms: false },
-    calendarSyncError: { email: true, sms: false },
-    appointmentReminder: { email: true, sms: true },
+    newAppointment: { email: true },
+    appointmentCancelled: { email: true },
+    paymentReceived: { email: true },
+    appointmentReminder: { email: true },
   });
 
   useEffect(() => {
@@ -1927,23 +1915,17 @@ function NotificationsSection({ email, phone }: { email: string; phone: string }
       description: "When a payment has been processed",
     },
     {
-      id: "calendarSyncError",
-      label: "Calendar Sync Error",
-      description: "When there's an issue syncing with your calendar",
-    },
-    {
       id: "appointmentReminder",
       label: "Appointment Reminder",
       description: "Reminder before your upcoming appointments (24h before)",
     },
   ];
 
-  const toggleNotification = (type: string, channel: "email" | "sms") => {
+  const toggleNotification = (type: string) => {
     setNotifications({
       ...notifications,
       [type]: {
-        ...notifications[type as keyof typeof notifications],
-        [channel]: !notifications[type as keyof typeof notifications][channel],
+        email: !notifications[type as keyof typeof notifications].email,
       },
     });
   };
@@ -1972,12 +1954,6 @@ function NotificationsSection({ email, phone }: { email: string; phone: string }
                     <span className="text-sm text-gray-600">Email</span>
                   </div>
                 </th>
-                <th className="text-center py-3 px-4">
-                  <div className="flex items-center justify-center gap-2">
-                    <Smartphone size={16} className="text-gray-600" />
-                    <span className="text-sm text-gray-600">SMS</span>
-                  </div>
-                </th>
               </tr>
             </thead>
             <tbody>
@@ -1995,16 +1971,7 @@ function NotificationsSection({ email, phone }: { email: string; phone: string }
                       <div className="flex justify-center">
                         <Switch
                           checked={settings.email}
-                          onCheckedChange={() => toggleNotification(type.id, "email")}
-                        />
-                      </div>
-                    </td>
-                    <td className="py-4 px-4 text-center">
-                      <div className="flex justify-center">
-                        <Switch
-                          checked={settings.sms}
-                          onCheckedChange={() => toggleNotification(type.id, "sms")}
-                          disabled={!settings.email}
+                          onCheckedChange={() => toggleNotification(type.id)}
                         />
                       </div>
                     </td>
@@ -2024,19 +1991,6 @@ function NotificationsSection({ email, phone }: { email: string; phone: string }
           </div>
           <p className="text-xs text-gray-600">
             Email notifications are sent to: <strong>{agentEmail || email || "Not set"}</strong>
-          </p>
-        </div>
-
-        <div className="bg-gray-50 rounded-lg p-4">
-          <div className="flex items-center gap-3 mb-2">
-            <Smartphone size={18} className="text-gray-600" />
-            <span className="font-medium text-sm">SMS Notifications</span>
-          </div>
-          <p className="text-xs text-gray-600 mb-2">
-            SMS notifications are sent to: <strong>{phone || "Not set"}</strong>
-          </p>
-          <p className="text-xs text-gray-500 italic">
-            SMS notifications may incur additional charges. Currently available for selected notification types.
           </p>
         </div>
       </div>
@@ -2589,23 +2543,6 @@ function ProfileBioSection() {
             </label>
           ))}
         </div>
-      </div>
-
-      {/* Typical Response Time */}
-      <div className="mb-6">
-        <Label htmlFor="typicalResponseTime">Typical Response Time</Label>
-        <Select
-          value={bioData.typical_response_time}
-          onValueChange={(value) => setBioData({ ...bioData, typical_response_time: value })}
-          className="mt-1"
-        >
-          <option value="">Select...</option>
-          <option value="within-1-hour">Within 1 hour</option>
-          <option value="within-2-hours">Within 2 hours</option>
-          <option value="within-4-hours">Within 4 hours</option>
-          <option value="within-24-hours">Within 24 hours</option>
-          <option value="within-48-hours">Within 48 hours</option>
-        </Select>
       </div>
 
       {/* Action Buttons */}
