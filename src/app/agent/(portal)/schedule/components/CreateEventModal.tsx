@@ -79,7 +79,10 @@ export function CreateEventModal({
             setLocation(data.lead.city);
           }
           if (data.lead?.additional_notes) {
-            setDescription(data.lead.additional_notes);
+            // Extract description from additional_notes (remove EVENT_DURATION prefix if present)
+            const notes = data.lead.additional_notes;
+            const descriptionMatch = notes.match(/^EVENT_DURATION:\d+\|(.*)$/);
+            setDescription(descriptionMatch ? descriptionMatch[1] : notes);
           }
           setLoading(false);
         })

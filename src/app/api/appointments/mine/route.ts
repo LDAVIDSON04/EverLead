@@ -278,10 +278,19 @@ export async function GET(req: NextRequest) {
       let startsAt: string | null = null;
       let endsAt: string | null = null;
       
-      // Get appointment length from agent's settings (default to 60 minutes)
-      const appointmentLengthMinutes = agentProfile?.metadata?.availability?.appointmentLength 
+      // Try to get duration from lead's additional_notes for agent-created events
+      let appointmentLengthMinutes = agentProfile?.metadata?.availability?.appointmentLength 
         ? parseInt(agentProfile.metadata.availability.appointmentLength, 10) 
-        : 60;
+        : 60; // Default to 60 minutes
+      
+      const lead = Array.isArray(apt.leads) ? apt.leads[0] : apt.leads;
+      if (lead?.additional_notes) {
+        const durationMatch = lead.additional_notes.match(/^EVENT_DURATION:(\d+)\|/);
+        if (durationMatch) {
+          appointmentLengthMinutes = parseInt(durationMatch[1], 10);
+        }
+      }
+      
       const appointmentLengthMs = appointmentLengthMinutes * 60 * 1000;
       
       // If we have confirmed_at, use it directly (this is the exact booking time)

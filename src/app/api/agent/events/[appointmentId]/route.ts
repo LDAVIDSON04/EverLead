@@ -142,13 +142,25 @@ export async function PUT(
       requestedWindow = "evening";
     }
 
-    // Update the lead (title, location, description)
+    // Calculate duration from startsAt and endsAt
+    const start = DateTime.fromISO(startsAt);
+    const end = DateTime.fromISO(endsAt);
+    const durationMinutes = Math.round(end.diff(start, 'minutes').minutes);
+    
+    // Store duration and description in additional_notes
+    // Format: "EVENT_DURATION:120|Description text"
+    let notesContent = description || '';
+    if (durationMinutes > 0) {
+      notesContent = `EVENT_DURATION:${durationMinutes}|${notesContent}`;
+    }
+
+    // Update the lead (title, location, description with duration)
     const { error: updateLeadError } = await supabaseAdmin
       .from("leads")
       .update({
         full_name: title,
         city: location || "Internal",
-        additional_notes: description || null,
+        additional_notes: notesContent || null,
       })
       .eq("id", appointment.lead_id);
 

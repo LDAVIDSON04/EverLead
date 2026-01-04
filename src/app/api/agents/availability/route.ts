@@ -243,9 +243,23 @@ export async function GET(req: NextRequest) {
     // Include confirmed_at to get exact booking time for precise conflict detection
     // IMPORTANT: Agent-created events are stored as appointments with status="confirmed" and confirmed_at set
     // They will automatically block availability slots via the conflict detection below
+    // Also fetch leads to get duration for agent-created events
     const { data: appointments, error: appointmentsError } = await supabaseAdmin
       .from("appointments")
-      .select("id, requested_date, requested_window, status, created_at, confirmed_at")
+      .select(`
+        id, 
+        requested_date, 
+        requested_window, 
+        status, 
+        created_at, 
+        confirmed_at,
+        lead_id,
+        leads (
+          id,
+          additional_notes,
+          email
+        )
+      `)
       .eq("agent_id", agentId)
       .in("status", ["pending", "confirmed", "booked"])
       .gte("requested_date", startDate)
@@ -405,22 +419,28 @@ export async function GET(req: NextRequest) {
             return false;
           }
           
-          // Convert confirmed_at to Date and get ISO string
-          const aptConfirmedDate = new Date(apt.confirmed_at);
-          const aptConfirmedISO = aptConfirmedDate.toISOString();
+          // Get duration from lead's additional_notes if it's an agent-created event
+          let durationMinutes = appointmentLength; // Default to standard appointment length
+          const lead = Array.isArray(apt.leads) ? apt.leads[0] : apt.leads;
+          if (lead?.additional_notes) {
+            const durationMatch = lead.additional_notes.match(/^EVENT_DURATION:(\d+)\|/);
+            if (durationMatch) {
+              durationMinutes = parseInt(durationMatch[1], 10);
+            }
+          }
           
-          // Compare ISO strings directly (most reliable - exact match)
-          const isoMatch = slotStartISO === aptConfirmedISO;
+          // Convert confirmed_at to Date
+          const aptStartDate = new Date(apt.confirmed_at);
+          const aptStartTime = aptStartDate.getTime();
+          const aptEndTime = aptStartTime + (durationMinutes * 60 * 1000);
           
-          // Also compare timestamps with tolerance (1 minute) as backup
-          const aptStartTime = aptConfirmedDate.getTime();
-          const tolerance = 60 * 1000; // 1 minute in milliseconds
-          const timeDifference = Math.abs(slotStartTime - aptStartTime);
-          const timeMatch = timeDifference <= tolerance;
+          // Check if the slot overlaps with the appointment's time range
+          // Slot overlaps if: slotStart < aptEnd AND slotEnd > aptStart
+          const slotOverlaps = slotStartTime < aptEndTime && slotEndTime > aptStartTime;
           
-          if (isoMatch || timeMatch) {
+          if (slotOverlaps) {
             // Verify the date also matches (safety check)
-            const aptDateStr = aptConfirmedDate.toISOString().split("T")[0];
+            const aptDateStr = aptStartDate.toISOString().split("T")[0];
             if (aptDateStr !== dateStr) {
               return false;
             }
@@ -428,7 +448,9 @@ export async function GET(req: NextRequest) {
             console.log("✅ CONFLICT FOUND (Appointment) - BLOCKING SLOT:", {
               dateStr,
               slotStartISO,
-              aptConfirmedISO,
+              aptStartISO: aptStartDate.toISOString(),
+              aptEndISO: new Date(aptEndTime).toISOString(),
+              durationMinutes,
               appointmentId: apt.id,
             });
             return true;

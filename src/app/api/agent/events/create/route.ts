@@ -126,9 +126,21 @@ export async function POST(req: NextRequest) {
     // For now, we'll create a minimal lead entry for agent-created events
     // Or we could store these in external_events instead
     
+    // Calculate duration from startsAt and endsAt
+    const start = DateTime.fromISO(startsAt);
+    const end = DateTime.fromISO(endsAt);
+    const durationMinutes = Math.round(end.diff(start, 'minutes').minutes);
+    
+    // Store duration and description in additional_notes
+    // Format: "EVENT_DURATION:120|Description text"
+    let notesContent = description || '';
+    if (durationMinutes > 0) {
+      notesContent = `EVENT_DURATION:${durationMinutes}|${notesContent}`;
+    }
+
     // Actually, let's create a system lead for agent-created events
     // Need to include required fields like lead_price
-    // Store description in additional_notes field
+    // Store description and duration in additional_notes field
     const { data: systemLead, error: leadError } = await supabaseAdmin
       .from("leads")
       .insert({
@@ -142,7 +154,7 @@ export async function POST(req: NextRequest) {
         status: "new",
         lead_price: 0, // Required field - set to 0 for system/internal events
         urgency_level: "cold", // Required for pricing calculation
-        additional_notes: description || null, // Store event description here
+        additional_notes: notesContent || null, // Store event duration and description here
       })
       .select()
       .single();

@@ -319,7 +319,12 @@ export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId, onEdit
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Description</h3>
                 <div>
                   <p className="text-gray-900">
-                    {leadData.additional_notes || leadData.notes_from_family || 'No description provided'}
+                    {(() => {
+                      // Extract description from additional_notes (remove EVENT_DURATION prefix if present)
+                      const notes = leadData.additional_notes || leadData.notes_from_family || '';
+                      const descriptionMatch = notes.match(/^EVENT_DURATION:\d+\|(.*)$/);
+                      return descriptionMatch ? descriptionMatch[1] : notes || 'No description provided';
+                    })()}
                   </p>
                 </div>
               </div>

@@ -189,9 +189,18 @@ export async function GET(
     let calculatedEndsAt = appointment.ends_at || null;
     
     if (calculatedStartsAt && !calculatedEndsAt) {
-      // Calculate end time: default to 60 minutes duration
+      // Try to get duration from lead's additional_notes
+      let durationMinutes = 60; // Default 60 minutes
+      if (lead?.additional_notes) {
+        const durationMatch = lead.additional_notes.match(/^EVENT_DURATION:(\d+)\|/);
+        if (durationMatch) {
+          durationMinutes = parseInt(durationMatch[1], 10);
+        }
+      }
+      
+      // Calculate end time using the stored duration
       const startDate = DateTime.fromISO(calculatedStartsAt, { zone: "utc" });
-      const endDate = startDate.plus({ minutes: 60 }); // Default 60 minutes
+      const endDate = startDate.plus({ minutes: durationMinutes });
       calculatedEndsAt = endDate.toISO();
     }
 
