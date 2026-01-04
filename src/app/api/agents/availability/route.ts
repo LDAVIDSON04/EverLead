@@ -241,6 +241,8 @@ export async function GET(req: NextRequest) {
 
     // Load existing appointments for this agent
     // Include confirmed_at to get exact booking time for precise conflict detection
+    // IMPORTANT: Agent-created events are stored as appointments with status="confirmed" and confirmed_at set
+    // They will automatically block availability slots via the conflict detection below
     const { data: appointments, error: appointmentsError } = await supabaseAdmin
       .from("appointments")
       .select("id, requested_date, requested_window, status, created_at, confirmed_at")

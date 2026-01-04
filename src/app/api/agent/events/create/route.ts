@@ -25,9 +25,15 @@ export async function POST(req: NextRequest) {
       .from("profiles")
       .select("id, role, agent_timezone")
       .eq("id", user.id)
-      .maybeSingle();
+      .single();
 
-    if (profileError || !profile || profile.role !== "agent") {
+    if (profileError) {
+      console.error("Error fetching profile:", profileError);
+      return NextResponse.json({ error: "Agent not found", details: profileError.message }, { status: 404 });
+    }
+
+    if (!profile || profile.role !== "agent") {
+      console.error("Profile not found or not an agent:", { userId: user.id, profile });
       return NextResponse.json({ error: "Agent not found" }, { status: 404 });
     }
 
