@@ -894,10 +894,8 @@ export default function SchedulePage() {
                                   '--top-desktop': `${(apt.minute / 60) * 80}px`,
                                   '--height-mobile': `${Math.max((apt.durationMinutes / 60) * 48, 24)}px`,
                                   '--height-desktop': `${Math.max((apt.durationMinutes / 60) * 80, 40)}px`,
-                                  top: 'var(--top-mobile)',
-                                  height: 'var(--height-mobile)',
                                   zIndex: 5,
-                                } as React.CSSProperties & Record<string, string>}
+                                } as React.CSSProperties}
                           >
                             <div className="h-full flex flex-col gap-0.5 px-0.5 md:px-1 py-0.5">
                               <div className="text-[9px] md:text-xs font-medium text-gray-700 leading-tight line-clamp-1 break-words">
