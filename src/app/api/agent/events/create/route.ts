@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
     // Verify user is an agent
     const { data: profile, error: profileError } = await supabaseAdmin
       .from("profiles")
-      .select("id, role, agent_timezone")
+      .select("id, role, metadata, agent_province")
       .eq("id", user.id)
       .single();
 
@@ -65,8 +65,29 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Get agent's timezone
-    const agentTimezone = profile.agent_timezone || "America/Vancouver";
+    // Get agent's timezone from metadata or infer from province
+    let agentTimezone = "America/Vancouver"; // Default fallback
+    if (profile.metadata?.timezone) {
+      agentTimezone = profile.metadata.timezone;
+    } else if (profile.metadata?.availability?.timezone) {
+      agentTimezone = profile.metadata.availability.timezone;
+    } else if (profile.agent_province) {
+      const province = profile.agent_province.toUpperCase();
+      if (province === "BC" || province === "BRITISH COLUMBIA") {
+        agentTimezone = "America/Vancouver";
+      } else if (province === "AB" || province === "ALBERTA") {
+        agentTimezone = "America/Edmonton";
+      } else if (province === "SK" || province === "SASKATCHEWAN") {
+        agentTimezone = "America/Regina";
+      } else if (province === "MB" || province === "MANITOBA") {
+        agentTimezone = "America/Winnipeg";
+      } else if (province === "ON" || province === "ONTARIO") {
+        agentTimezone = "America/Toronto";
+      } else if (province === "QC" || province === "QUEBEC") {
+        agentTimezone = "America/Montreal";
+      }
+    }
+    
     const localStart = startDate.setZone(agentTimezone);
     const localEnd = endDate.setZone(agentTimezone);
 
