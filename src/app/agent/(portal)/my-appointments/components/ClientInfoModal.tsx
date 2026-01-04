@@ -264,40 +264,8 @@ export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId, onEdit
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Location</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {officeLocation ? (
-                    <>
-                      {officeLocation.name && (
-                        <div>
-                          <label className="text-sm font-medium text-gray-500">Office Name</label>
-                          <p className="text-gray-900">{officeLocation.name}</p>
-                        </div>
-                      )}
-                      {officeLocation.city && (
-                        <div>
-                          <label className="text-sm font-medium text-gray-500">City</label>
-                          <p className="text-gray-900">{officeLocation.city}</p>
-                        </div>
-                      )}
-                      {officeLocation.street_address && (
-                        <div className="md:col-span-2">
-                          <label className="text-sm font-medium text-gray-500">Street Address</label>
-                          <p className="text-gray-900">{officeLocation.street_address}</p>
-                        </div>
-                      )}
-                      {officeLocation.province && (
-                        <div>
-                          <label className="text-sm font-medium text-gray-500">Province</label>
-                          <p className="text-gray-900">{officeLocation.province}</p>
-                        </div>
-                      )}
-                      {officeLocation.postal_code && (
-                        <div>
-                          <label className="text-sm font-medium text-gray-500">Postal Code</label>
-                          <p className="text-gray-900">{officeLocation.postal_code}</p>
-                        </div>
-                      )}
-                    </>
-                  ) : leadData.city && leadData.city !== 'Internal' ? (
+                  {/* For agent-created events, only show the location text the agent entered, not office address */}
+                  {leadData.city && leadData.city !== 'Internal' ? (
                     <div>
                       <label className="text-sm font-medium text-gray-500">Location</label>
                       <p className="text-gray-900">
