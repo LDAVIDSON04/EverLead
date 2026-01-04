@@ -740,18 +740,15 @@ export default function SchedulePage() {
                       return (
                         <div
                           key={`${day}-${hour}`}
-                          className="flex-1 min-w-[50px] md:min-w-[100px] border-l border-gray-200 relative h-12 md:h-20 overflow-visible cursor-pointer hover:bg-gray-50 transition-colors"
-                          onClick={(e) => {
-                            // Only handle click if clicking on empty space (not on an appointment)
-                            if (e.target === e.currentTarget || (e.target as HTMLElement).closest('.empty-block')) {
-                              handleEmptyBlockClick(weekDates[dayIndex], hour, 0);
-                            }
-                          }}
+                          className="flex-1 min-w-[50px] md:min-w-[100px] border-l border-gray-200 relative h-12 md:h-20 overflow-visible"
                         >
-                          {cellAppointments.length === 0 && (
-                            <div className="empty-block absolute inset-0" />
-                          )}
-                          {cellAppointments.map((apt: any) => {
+                          {cellAppointments.length === 0 ? (
+                            <div
+                              className="absolute inset-0 cursor-pointer hover:bg-gray-50 transition-colors"
+                              onClick={() => handleEmptyBlockClick(weekDates[dayIndex], hour, 0)}
+                            />
+                          ) : (
+                            cellAppointments.map((apt: any) => {
                             // Calculate top offset within this hour (based on minutes)
                             const pxPerHour = 48;
                             const topOffset = (apt.minute / 60) * pxPerHour;
@@ -806,7 +803,8 @@ export default function SchedulePage() {
                                 </div>
                               </div>
                             );
-                          })}
+                          })
+                          )}
                         </div>
                       );
                     })}
@@ -846,19 +844,14 @@ export default function SchedulePage() {
                     <div className="w-12 md:w-20 flex-shrink-0 pr-1 md:pr-3 pt-1 md:pt-1.5 text-[10px] md:text-xs text-gray-500 text-right">
                       {hour === 12 ? '12 PM' : hour > 12 ? `${hour - 12} PM` : `${hour} AM`}
                     </div>
-                    <div 
-                      className="flex-1 min-w-[50px] md:min-w-[100px] border-l border-gray-200 relative h-12 md:h-20 overflow-visible cursor-pointer hover:bg-gray-50 transition-colors"
-                      onClick={(e) => {
-                        // Only handle click if clicking on empty space (not on an appointment)
-                        if (e.target === e.currentTarget || (e.target as HTMLElement).closest('.empty-block')) {
-                          handleEmptyBlockClick(dayDate, hour, 0);
-                        }
-                      }}
-                    >
-                      {cellAppointments.length === 0 && (
-                        <div className="empty-block absolute inset-0" />
-                      )}
-                      {cellAppointments.map((apt: any) => {
+                    <div className="flex-1 min-w-[50px] md:min-w-[100px] border-l border-gray-200 relative h-12 md:h-20 overflow-visible">
+                      {cellAppointments.length === 0 ? (
+                        <div
+                          className="absolute inset-0 cursor-pointer hover:bg-gray-50 transition-colors"
+                          onClick={() => handleEmptyBlockClick(dayDate, hour, 0)}
+                        />
+                      ) : (
+                        cellAppointments.map((apt: any) => {
                         const pxPerHour = 48;
                         const topOffset = (apt.minute / 60) * pxPerHour;
                         const height = (apt.durationMinutes / 60) * pxPerHour;
@@ -904,7 +897,8 @@ export default function SchedulePage() {
                             </div>
                           </div>
                         );
-                      })}
+                      })
+                      )}
                     </div>
                   </div>
                 );
