@@ -281,16 +281,9 @@ export async function GET(req: NextRequest) {
         (lead?.first_name && lead?.last_name ? `${lead.first_name} ${lead.last_name}` : null) ||
         "Client";
       
-      // Get location from office_location_id if available, otherwise fall back to lead's city
+      // Get location from office_location_id ONLY
+      // DO NOT fall back to lead.city because lead.city is the family's city, not the office location
       let location: string | null = null;
-      
-      // Log appointment details for debugging
-      console.log(`🔍 Processing appointment ${apt.id}:`, {
-        office_location_id: apt.office_location_id,
-        lead_id: apt.lead_id,
-        leadCity: lead?.city,
-        leadProvince: lead?.province,
-      });
       
       if (apt.office_location_id) {
         const officeLocation = officeLocationsMap[apt.office_location_id];
@@ -305,41 +298,11 @@ export async function GET(req: NextRequest) {
           } else if (province) {
             location = province;
           }
-          console.log(`✅ Appointment ${apt.id} using office_location_id ${apt.office_location_id}: ${location}`);
-        } else {
-          // office_location_id exists but not found in map - log warning
-          console.warn(`⚠️ Office location ${apt.office_location_id} not found in officeLocationsMap for appointment ${apt.id}`);
-          console.log(`   Available office location IDs in map:`, Object.keys(officeLocationsMap));
         }
-      } else {
-        console.log(`⚠️ Appointment ${apt.id} has NO office_location_id - will fallback to lead.city if available`);
       }
       
-      // Only fallback to lead's city if no office_location_id was set
-      // This ensures we don't use lead.city for appointments that should have office_location_id
-      if (!location && !apt.office_location_id && lead) {
-        const city = (lead.city || '').trim();
-        const province = (lead.province || '').trim();
-        
-        // Build location string, avoiding duplication
-        if (city && province) {
-          // Check if city already contains province to avoid duplication
-          if (city.toLowerCase().includes(province.toLowerCase())) {
-            location = city; // City already includes province
-          } else {
-            location = `${city}, ${province}`;
-          }
-        } else if (city) {
-          location = city;
-        } else if (province) {
-          location = province;
-        }
-        console.log(`🔄 Appointment ${apt.id} falling back to lead.city: ${location} (lead_id: ${apt.lead_id})`);
-      }
-      
-      if (!location) {
-        console.warn(`❌ Appointment ${apt.id} has NO location - office_location_id: ${apt.office_location_id}, lead.city: ${lead?.city}`);
-      }
+      // If no office_location_id, location will be null and will display as "N/A"
+      // This is correct because we cannot determine the office location for old appointments
       
       const result = {
         id: apt.id,
