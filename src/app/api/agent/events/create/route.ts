@@ -111,7 +111,9 @@ export async function POST(req: NextRequest) {
     // Actually, better approach: store in external_events with is_soradin_created=true
     // This way it shows in the schedule but doesn't require a lead
     
-    // Check if notes column exists by trying to insert
+    // Create appointment data
+    // Note: We don't include notes field as it doesn't exist in the appointments table
+    // The event information is stored in the lead's full_name field instead
     const appointmentData: any = {
       agent_id: profile.id,
       confirmed_at: startsAt,
@@ -119,13 +121,6 @@ export async function POST(req: NextRequest) {
       requested_window: requestedWindow,
       status: "confirmed",
     };
-    
-    // Try to add notes if column exists (will fail gracefully if it doesn't)
-    try {
-      appointmentData.notes = `Internal event: ${title}${location ? ` | Location: ${location}` : ""}${description ? ` | ${description}` : ""}`;
-    } catch (e) {
-      // Notes column doesn't exist, skip it
-    }
     
     // Since lead_id is NOT NULL, we need to create a system/dummy lead
     // For now, we'll create a minimal lead entry for agent-created events
