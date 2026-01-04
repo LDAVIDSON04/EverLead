@@ -29,6 +29,8 @@ export async function GET(
         requested_date,
         requested_window,
         confirmed_at,
+        starts_at,
+        ends_at,
         lead_id,
         leads (
           id,
@@ -186,6 +188,8 @@ export async function GET(
       requested_date: appointment.requested_date,
       requested_window: appointment.requested_window,
       confirmed_at: appointment.confirmed_at,
+      starts_at: appointment.starts_at,
+      ends_at: appointment.ends_at,
       formatted_date: formattedDate,
       time_display: timeDisplay,
       exact_time: exactTime,

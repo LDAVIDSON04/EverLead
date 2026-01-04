@@ -46,9 +46,20 @@ interface OfficeLocation {
   postal_code: string | null;
 }
 
+interface AppointmentData {
+  id: string;
+  starts_at: string | null;
+  ends_at: string | null;
+  confirmed_at: string | null;
+  requested_date: string | null;
+  requested_window: string | null;
+  office_location: OfficeLocation | null;
+}
+
 export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId }: ClientInfoModalProps) {
   const [leadData, setLeadData] = useState<LeadData | null>(null);
   const [officeLocation, setOfficeLocation] = useState<OfficeLocation | null>(null);
+  const [appointmentData, setAppointmentData] = useState<AppointmentData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -103,9 +114,10 @@ export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId }: Clie
         return;
       }
 
-      const appointmentData = await response.json();
-      if (appointmentData.office_location) {
-        setOfficeLocation(appointmentData.office_location);
+      const data = await response.json();
+      setAppointmentData(data);
+      if (data.office_location) {
+        setOfficeLocation(data.office_location);
       }
     } catch (err) {
       console.error('Error loading appointment data:', err);
@@ -133,12 +145,47 @@ export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId }: Clie
     }
   };
 
+  const formatTime = (dateString: string | null): string => {
+    if (!dateString) return 'Not provided';
+    try {
+      return new Date(dateString).toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+      });
+    } catch {
+      return dateString;
+    }
+  };
+
+  const formatDateTime = (dateString: string | null): string => {
+    if (!dateString) return 'Not provided';
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+      });
+    } catch {
+      return dateString;
+    }
+  };
+
+  // Check if this is an agent-created event
+  const isAgentEvent = leadData?.email?.includes('@soradin.internal') || false;
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-2xl font-semibold text-gray-900">Client Information</h2>
+          <h2 className="text-2xl font-semibold text-gray-900">
+            {isAgentEvent ? 'Event Details' : 'Client Information'}
+          </h2>
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -158,7 +205,101 @@ export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId }: Clie
             <div className="text-center py-12">
               <p className="text-red-600">{error}</p>
             </div>
+          ) : isAgentEvent && leadData ? (
+            // Simplified view for agent-created events
+            <div className="space-y-6">
+              {/* Date & Time */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Date & Time</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Date</label>
+                    <p className="text-gray-900">
+                      {appointmentData?.starts_at 
+                        ? formatDate(appointmentData.starts_at)
+                        : appointmentData?.requested_date 
+                        ? formatDate(appointmentData.requested_date)
+                        : 'Not provided'}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Time</label>
+                    <p className="text-gray-900">
+                      {appointmentData?.starts_at && appointmentData?.ends_at
+                        ? `${formatTime(appointmentData.starts_at)} - ${formatTime(appointmentData.ends_at)}`
+                        : appointmentData?.starts_at
+                        ? formatTime(appointmentData.starts_at)
+                        : 'Not provided'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Location */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Location</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {officeLocation ? (
+                    <>
+                      {officeLocation.name && (
+                        <div>
+                          <label className="text-sm font-medium text-gray-500">Office Name</label>
+                          <p className="text-gray-900">{officeLocation.name}</p>
+                        </div>
+                      )}
+                      {officeLocation.city && (
+                        <div>
+                          <label className="text-sm font-medium text-gray-500">City</label>
+                          <p className="text-gray-900">{officeLocation.city}</p>
+                        </div>
+                      )}
+                      {officeLocation.street_address && (
+                        <div className="md:col-span-2">
+                          <label className="text-sm font-medium text-gray-500">Street Address</label>
+                          <p className="text-gray-900">{officeLocation.street_address}</p>
+                        </div>
+                      )}
+                      {officeLocation.province && (
+                        <div>
+                          <label className="text-sm font-medium text-gray-500">Province</label>
+                          <p className="text-gray-900">{officeLocation.province}</p>
+                        </div>
+                      )}
+                      {officeLocation.postal_code && (
+                        <div>
+                          <label className="text-sm font-medium text-gray-500">Postal Code</label>
+                          <p className="text-gray-900">{officeLocation.postal_code}</p>
+                        </div>
+                      )}
+                    </>
+                  ) : leadData.city ? (
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">Location</label>
+                      <p className="text-gray-900">
+                        {leadData.city}
+                        {leadData.province ? `, ${leadData.province}` : ''}
+                      </p>
+                    </div>
+                  ) : (
+                    <div>
+                      <p className="text-gray-500">Not specified</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Description */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Description</h3>
+                <div>
+                  <p className="text-gray-900">
+                    {leadData.additional_notes || leadData.notes_from_family || 'No description provided'}
+                  </p>
+                </div>
+              </div>
+            </div>
           ) : leadData ? (
+            // Full view for regular client appointments
             <div className="space-y-6">
               {/* Personal Information */}
               <div>

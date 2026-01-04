@@ -128,6 +128,7 @@ export async function POST(req: NextRequest) {
     
     // Actually, let's create a system lead for agent-created events
     // Need to include required fields like lead_price
+    // Store description in additional_notes field
     const { data: systemLead, error: leadError } = await supabaseAdmin
       .from("leads")
       .insert({
@@ -141,6 +142,7 @@ export async function POST(req: NextRequest) {
         status: "new",
         lead_price: 0, // Required field - set to 0 for system/internal events
         urgency_level: "cold", // Required for pricing calculation
+        additional_notes: description || null, // Store event description here
       })
       .select()
       .single();
