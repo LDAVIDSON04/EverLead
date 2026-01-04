@@ -657,18 +657,6 @@ function ProfileSection({
         />
       </div>
 
-      <div className="mb-6">
-        <Label htmlFor="businessAddress">Business Address</Label>
-        <Input
-          id="businessAddress"
-          value={profileData.businessAddress}
-          onChange={(e) => setProfileData({ ...profileData, businessAddress: e.target.value })}
-          className="mt-1"
-          placeholder="Optional but useful"
-        />
-        <p className="text-xs text-gray-500 mt-1">Or fill in the detailed address fields below</p>
-      </div>
-
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <div>
           <Label htmlFor="businessStreet">Street Address</Label>
