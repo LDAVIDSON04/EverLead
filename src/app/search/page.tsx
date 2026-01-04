@@ -2103,17 +2103,20 @@ function SearchResults() {
                       {portfolioAgentData.reviewCount === 0 ? (
                         <p className="text-gray-600">This agent has no reviews.</p>
                       ) : (() => {
-                        // Filter reviews to only those with comments/text
-                        const reviewsWithComments = portfolioReviews.filter((review) => 
-                          review.comment && review.comment.trim().length > 0
-                        );
-                        
-                        // Sort by rating (highest first), then by date (most recent first)
-                        const sortedReviews = [...reviewsWithComments].sort((a, b) => {
+                        // Sort ALL reviews by rating (highest first), then by date (most recent first)
+                        // Prioritize reviews with comments, but include all reviews
+                        const sortedReviews = [...portfolioReviews].sort((a, b) => {
+                          // First priority: rating (highest first)
                           if (b.rating !== a.rating) {
                             return b.rating - a.rating;
                           }
-                          // If ratings are equal, sort by date (most recent first)
+                          // Second priority: reviews with comments come before those without
+                          const aHasComment = a.comment && a.comment.trim().length > 0;
+                          const bHasComment = b.comment && b.comment.trim().length > 0;
+                          if (aHasComment !== bHasComment) {
+                            return bHasComment ? 1 : -1;
+                          }
+                          // Third priority: date (most recent first)
                           return new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime();
                         });
                         
