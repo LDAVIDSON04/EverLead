@@ -132,6 +132,7 @@ export async function POST(req: NextRequest) {
     // Or we could store these in external_events instead
     
     // Actually, let's create a system lead for agent-created events
+    // Need to include required fields like lead_price
     const { data: systemLead, error: leadError } = await supabaseAdmin
       .from("leads")
       .insert({
@@ -143,6 +144,8 @@ export async function POST(req: NextRequest) {
         province: "BC",
         service_type: "Internal Event",
         status: "new",
+        lead_price: 0, // Required field - set to 0 for system/internal events
+        urgency_level: "cold", // Required for pricing calculation
       })
       .select()
       .single();
