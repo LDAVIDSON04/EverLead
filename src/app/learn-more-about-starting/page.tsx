@@ -14,7 +14,6 @@ export default function LearnMoreAboutStartingPage() {
       <Header />
       <main>
         <HeroSection />
-        <TrustedBySection />
         <SolutionsSection />
         <CaseStudiesSection />
         <IntegrationSection />
