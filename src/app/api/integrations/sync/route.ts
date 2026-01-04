@@ -183,6 +183,8 @@ async function syncConnection(
 
   // Process each external event
   console.log(`📅 Processing ${externalEvents.length} external events for ${connection.provider} calendar (specialist ${connection.specialist_id})`);
+  const fetchedEventIds = new Set<string>();
+  
   for (const event of externalEvents) {
     try {
       console.log(`  Processing event: ${event.providerEventId}`, {
@@ -193,6 +195,7 @@ async function syncConnection(
         hasAppointmentId: !!event.appointmentId,
       });
       await processExternalEvent(connection, event);
+      fetchedEventIds.add(event.providerEventId);
       console.log(`  ✅ Saved external event: ${event.providerEventId}`);
     } catch (error: any) {
       console.error(
@@ -202,6 +205,10 @@ async function syncConnection(
       // Continue with other events even if one fails
     }
   }
+  
+  // Delete events from database that no longer exist in Google Calendar
+  // This handles deletions - if an event was deleted in Google Calendar, it won't be in the fetched list
+  await deleteMissingEvents(connection, fetchedEventIds, timeMin, timeMax);
   
   // Also trigger an immediate sync after processing to ensure availability is updated
   // This ensures that even if webhooks fail, polling will catch changes quickly
@@ -414,6 +421,88 @@ async function processExternalEvent(
         }
       }
     }
+  }
+}
+
+/**
+ * Deletes events from database that no longer exist in the external calendar
+ * This handles deletions - when an event is deleted in Google/Microsoft Calendar,
+ * it won't be in the fetched list, so we delete it from our database
+ */
+async function deleteMissingEvents(
+  connection: CalendarConnection,
+  fetchedEventIds: Set<string>,
+  timeMin: string,
+  timeMax: string
+): Promise<void> {
+  try {
+    // Fetch all events from database within the sync window
+    const { data: dbEvents, error: fetchError } = await supabaseServer
+      .from("external_events")
+      .select("id, provider_event_id, appointment_id, is_soradin_created")
+      .eq("specialist_id", connection.specialist_id)
+      .eq("provider", connection.provider)
+      .gte("starts_at", timeMin)
+      .lte("starts_at", timeMax);
+
+    if (fetchError) {
+      console.error("Error fetching events for deletion check:", fetchError);
+      return;
+    }
+
+    if (!dbEvents || dbEvents.length === 0) {
+      return; // Nothing to delete
+    }
+
+    // Find events in database that are NOT in the fetched list (deleted in external calendar)
+    const eventsToDelete = dbEvents.filter(
+      (dbEvent) => !fetchedEventIds.has(dbEvent.provider_event_id)
+    );
+
+    if (eventsToDelete.length === 0) {
+      return; // Nothing to delete
+    }
+
+    console.log(`🗑️ Found ${eventsToDelete.length} events to delete (no longer in ${connection.provider} calendar)`);
+
+    // Handle Soradin-created appointments that were deleted in external calendar
+    const allowExternalEdits = process.env.ALLOW_EXTERNAL_EDITS === "true" || false;
+    
+    for (const eventToDelete of eventsToDelete) {
+      // If this is a Soradin-created appointment that was deleted externally, cancel it
+      if (eventToDelete.is_soradin_created && eventToDelete.appointment_id && allowExternalEdits) {
+        console.log(`⚠️ Soradin appointment ${eventToDelete.appointment_id} was deleted in ${connection.provider} calendar - cancelling in Soradin`);
+        
+        const { error: cancelError } = await supabaseServer
+          .from("appointments")
+          .update({
+            status: "cancelled",
+            notes: `Cancelled externally via ${connection.provider} calendar on ${new Date().toISOString()}`,
+          })
+          .eq("id", eventToDelete.appointment_id);
+
+        if (cancelError) {
+          console.error(`Failed to cancel appointment ${eventToDelete.appointment_id}:`, cancelError);
+        } else {
+          console.log(`✅ Cancelled appointment ${eventToDelete.appointment_id} after deletion in ${connection.provider} calendar`);
+        }
+      }
+
+      // Delete the external event from database
+      const { error: deleteError } = await supabaseServer
+        .from("external_events")
+        .delete()
+        .eq("id", eventToDelete.id);
+
+      if (deleteError) {
+        console.error(`Error deleting external event ${eventToDelete.id}:`, deleteError);
+      } else {
+        console.log(`✅ Deleted external event ${eventToDelete.provider_event_id} (no longer in ${connection.provider} calendar)`);
+      }
+    }
+  } catch (error: any) {
+    console.error("Error in deleteMissingEvents:", error);
+    // Don't throw - this is a cleanup operation
   }
 }
 
