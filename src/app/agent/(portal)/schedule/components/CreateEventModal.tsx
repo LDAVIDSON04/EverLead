@@ -78,13 +78,17 @@ export function CreateEventModal({
       );
 
       // Convert to UTC for storage
-      const startsAt = localDateTime.toUTC().toISO();
-      const endsAt = localDateTime.plus({ minutes: duration }).toUTC().toISO();
+      const startsAtISO = localDateTime.toUTC().toISO();
+      const endsAtISO = localDateTime.plus({ minutes: duration }).toUTC().toISO();
+
+      if (!startsAtISO || !endsAtISO) {
+        throw new Error("Failed to convert date/time to ISO format");
+      }
 
       await onSave({
         title: title.trim(),
-        startsAt,
-        endsAt,
+        startsAt: startsAtISO,
+        endsAt: endsAtISO,
         location: location.trim() || undefined,
         description: description.trim() || undefined,
       });
