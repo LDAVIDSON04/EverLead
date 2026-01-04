@@ -200,16 +200,25 @@ export async function GET(req: NextRequest) {
     
     let officeLocationsMap: Record<string, { city: string | null; province: string | null }> = {};
     if (officeLocationIds.length > 0) {
-      const { data: officeLocations } = await supabaseServer
+      const uniqueOfficeLocationIds = Array.from(new Set(officeLocationIds)); // Remove duplicates
+      const { data: officeLocations, error: officeLocError } = await supabaseServer
         .from('office_locations')
         .select('id, city, province')
-        .in('id', officeLocationIds);
+        .in('id', uniqueOfficeLocationIds);
+      
+      if (officeLocError) {
+        console.error('❌ Error fetching office locations:', officeLocError);
+      }
       
       if (officeLocations) {
         officeLocationsMap = officeLocations.reduce((acc: any, loc: any) => {
           acc[loc.id] = { city: loc.city, province: loc.province };
           return acc;
         }, {});
+        
+        console.log(`📍 Fetched ${officeLocations.length} office locations for ${uniqueOfficeLocationIds.length} unique IDs:`, 
+          officeLocations.map((loc: any) => ({ id: loc.id, city: loc.city, province: loc.province }))
+        );
       }
     }
 
@@ -275,22 +284,28 @@ export async function GET(req: NextRequest) {
       // Get location from office_location_id if available, otherwise fall back to lead's city
       let location: string | null = null;
       
-      if (apt.office_location_id && officeLocationsMap[apt.office_location_id]) {
+      if (apt.office_location_id) {
         const officeLocation = officeLocationsMap[apt.office_location_id];
-        const city = (officeLocation.city || '').trim();
-        const province = (officeLocation.province || '').trim();
-        
-        if (city && province) {
-          location = `${city}, ${province}`;
-        } else if (city) {
-          location = city;
-        } else if (province) {
-          location = province;
+        if (officeLocation) {
+          const city = (officeLocation.city || '').trim();
+          const province = (officeLocation.province || '').trim();
+          
+          if (city && province) {
+            location = `${city}, ${province}`;
+          } else if (city) {
+            location = city;
+          } else if (province) {
+            location = province;
+          }
+        } else {
+          // office_location_id exists but not found in map - log warning
+          console.warn(`⚠️ Office location ${apt.office_location_id} not found in officeLocationsMap for appointment ${apt.id}`);
         }
       }
       
-      // Fallback to lead's city if no office_location_id or office location not found
-      if (!location && lead) {
+      // Only fallback to lead's city if no office_location_id was set
+      // This ensures we don't use lead.city for appointments that should have office_location_id
+      if (!location && !apt.office_location_id && lead) {
         const city = (lead.city || '').trim();
         const province = (lead.province || '').trim();
         
@@ -309,15 +324,27 @@ export async function GET(req: NextRequest) {
         }
       }
       
-      return {
-      id: apt.id,
+      const result = {
+        id: apt.id,
         lead_id: apt.lead_id || (lead?.id || null),
         starts_at: startsAt,
         ends_at: endsAt,
-      status: apt.status,
+        status: apt.status,
         family_name: familyName,
         location: location || "N/A",
       };
+      
+      // Debug logging for location assignment
+      if (!location || location === "N/A") {
+        console.log(`⚠️ Appointment ${apt.id} has no location:`, {
+          office_location_id: apt.office_location_id,
+          hasOfficeLocationInMap: apt.office_location_id ? !!officeLocationsMap[apt.office_location_id] : false,
+          leadCity: lead?.city,
+          leadProvince: lead?.province,
+        });
+      }
+      
+      return result;
     });
 
     // Filter out any null entries from failed date conversions
