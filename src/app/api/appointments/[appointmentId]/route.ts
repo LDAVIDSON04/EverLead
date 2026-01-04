@@ -39,7 +39,8 @@ export async function GET(
           full_name,
           email,
           city,
-          province
+          province,
+          additional_notes
         )
       `)
       .eq("id", appointmentId)
