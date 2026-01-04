@@ -1,8 +1,32 @@
 import Image from "next/image";
+import Link from "next/link";
 
 export default function AboutPage() {
   return (
     <div className="min-h-screen bg-white">
+      {/* Header with Logo and Home Button */}
+      <header className="w-full bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-3">
+            <Image 
+              src="/logo.png" 
+              alt="Soradin Logo" 
+              width={40} 
+              height={40}
+              className="h-10 w-10 object-contain"
+            />
+            <span className="text-2xl font-medium text-[#1A1A1A]">Soradin</span>
+          </Link>
+          
+          <Link 
+            href="/"
+            className="px-4 py-2 text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors font-medium"
+          >
+            Home
+          </Link>
+        </div>
+      </header>
+
       {/* Hero Section */}
       <section className="bg-white py-20 px-6">
         <div className="max-w-4xl mx-auto text-center">
