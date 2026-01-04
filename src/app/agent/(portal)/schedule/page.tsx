@@ -716,7 +716,7 @@ export default function SchedulePage() {
       </div>
 
       {/* Calendar Views */}
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 overflow-auto overflow-x-hidden">
         {/* Week View - EXACTLY AS BEFORE */}
         {view === 'week' && (
           <div className="inline-block min-w-full">
@@ -740,10 +740,10 @@ export default function SchedulePage() {
             </div>
 
             {/* Time Grid */}
-            <div className="relative">
+            <div className="relative overflow-visible">
               {weekHours.map((hour) => {
                 return (
-                  <div key={hour} className="flex border-t border-gray-200">
+                  <div key={hour} className="flex border-t border-gray-200 overflow-visible">
                     <div className="w-12 md:w-20 flex-shrink-0 pr-1 md:pr-3 pt-1 md:pt-1.5 text-[10px] md:text-xs text-gray-500 text-right">
                       {hour === 12 ? '12 PM' : hour > 12 ? `${hour - 12} PM` : `${hour} AM`}
                     </div>
@@ -757,6 +757,7 @@ export default function SchedulePage() {
                         <div
                           key={`${day}-${hour}`}
                           className="flex-1 min-w-[50px] md:min-w-[100px] border-l border-gray-200 relative h-12 md:h-20 overflow-visible"
+                          style={{ overflow: 'visible' }}
                         >
                           {cellAppointments.length === 0 ? (
                             <div
@@ -852,17 +853,19 @@ export default function SchedulePage() {
             </div>
 
             {/* Time Grid */}
-            <div className="relative">
+            <div className="relative overflow-visible">
               {dayHours.map((hour) => {
                 const cellAppointments = dayAppointments.filter((apt: any) => apt.hour === hour);
                 const dayIndex = dayDate.getDay();
 
                 return (
-                  <div key={hour} className="flex border-t border-gray-200">
+                  <div key={hour} className="flex border-t border-gray-200 overflow-visible">
                     <div className="w-12 md:w-20 flex-shrink-0 pr-1 md:pr-3 pt-1 md:pt-1.5 text-[10px] md:text-xs text-gray-500 text-right">
                       {hour === 12 ? '12 PM' : hour > 12 ? `${hour - 12} PM` : `${hour} AM`}
                     </div>
-                    <div className="flex-1 min-w-[50px] md:min-w-[100px] border-l border-gray-200 relative h-12 md:h-20 overflow-visible">
+                    <div className="flex-1 min-w-[50px] md:min-w-[100px] border-l border-gray-200 relative h-12 md:h-20 overflow-visible"
+                      style={{ overflow: 'visible' }}
+                    >
                       {cellAppointments.length === 0 ? (
                         <div
                           className="absolute inset-0 cursor-pointer hover:bg-gray-50 transition-colors"
