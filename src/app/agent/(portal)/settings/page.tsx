@@ -2226,7 +2226,6 @@ function ProfileBioSection() {
     practice_philosophy_appreciate: '',
     practice_philosophy_situations: [] as string[],
     languages_spoken: [] as string[],
-    typical_response_time: '',
   });
   const [generatedBio, setGeneratedBio] = useState<string | null>(null);
 
@@ -2274,7 +2273,6 @@ function ProfileBioSection() {
           practice_philosophy_appreciate: bio.practice_philosophy_appreciate || '',
           practice_philosophy_situations: bio.practice_philosophy_situations || [],
           languages_spoken: bio.languages_spoken || [],
-          typical_response_time: bio.typical_response_time || '',
         });
 
         setGeneratedBio(profile.ai_generated_bio);
