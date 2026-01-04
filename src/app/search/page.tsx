@@ -145,6 +145,7 @@ function SearchResults() {
   const [portfolioLoading, setPortfolioLoading] = useState(false);
   const [portfolioReviews, setPortfolioReviews] = useState<any[]>([]);
   const [portfolioReviewsLoading, setPortfolioReviewsLoading] = useState(false);
+  const [showAllReviews, setShowAllReviews] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   
   // Debug: Log modal state changes
@@ -1545,6 +1546,7 @@ function SearchResults() {
                               setPortfolioLoading(true);
                               setPortfolioAgentData(null);
                               setPortfolioReviews([]);
+                              setShowAllReviews(false);
                               
                               try {
                                 console.log("Fetching agent data for:", agent.id);
@@ -1989,6 +1991,7 @@ function SearchResults() {
             if (e.target === e.currentTarget) {
               setShowPortfolioModal(false);
               setPortfolioAgentData(null);
+              setShowAllReviews(false);
             }
           }}
         >
@@ -2000,6 +2003,7 @@ function SearchResults() {
                   onClick={() => {
                     setShowPortfolioModal(false);
                     setPortfolioAgentData(null);
+                    setShowAllReviews(false);
                   }}
                   className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
                 >
@@ -2098,37 +2102,67 @@ function SearchResults() {
                       </div>
                       {portfolioAgentData.reviewCount === 0 ? (
                         <p className="text-gray-600">This agent has no reviews.</p>
-                      ) : (
-                        <div className="space-y-4">
-                          {portfolioReviews.map((review) => (
-                            <div key={review.id} className="p-4 bg-gray-50 rounded-lg">
-                              <div className="flex items-start justify-between mb-3">
-                                <div>
-                                  <div className="flex items-center gap-2 mb-1">
-                                    <span className="text-gray-900 font-medium">{review.author}</span>
-                                    {review.verified && (
-                                      <span className="px-2 py-0.5 text-xs rounded-full" style={{ backgroundColor: '#e8f5e9', color: '#1a4d2e' }}>
-                                        Verified Client
-                                      </span>
-                                    )}
-                                  </div>
-                                  <div className="flex items-center gap-2">
-                                    <div className="flex">
-                                      {[...Array(5)].map((_, i) => (
-                                        <Star key={i} className={`w-3 h-3 ${i < review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} />
-                                      ))}
+                      ) : (() => {
+                        // Filter reviews to only those with comments/text
+                        const reviewsWithComments = portfolioReviews.filter((review) => 
+                          review.comment && review.comment.trim().length > 0
+                        );
+                        
+                        // Sort by rating (highest first), then by date (most recent first)
+                        const sortedReviews = [...reviewsWithComments].sort((a, b) => {
+                          if (b.rating !== a.rating) {
+                            return b.rating - a.rating;
+                          }
+                          // If ratings are equal, sort by date (most recent first)
+                          return new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime();
+                        });
+                        
+                        // Show top 3 initially, or all if expanded
+                        const reviewsToShow = showAllReviews ? sortedReviews : sortedReviews.slice(0, 3);
+                        const hasMoreReviews = sortedReviews.length > 3;
+                        
+                        return (
+                          <div>
+                            <div className="space-y-4">
+                              {reviewsToShow.map((review) => (
+                                <div key={review.id} className="p-4 bg-gray-50 rounded-lg">
+                                  <div className="flex items-start justify-between mb-3">
+                                    <div>
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <span className="text-gray-900 font-medium">{review.author}</span>
+                                        {review.verified && (
+                                          <span className="px-2 py-0.5 text-xs rounded-full" style={{ backgroundColor: '#e8f5e9', color: '#1a4d2e' }}>
+                                            Verified Client
+                                          </span>
+                                        )}
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <div className="flex">
+                                          {[...Array(5)].map((_, i) => (
+                                            <Star key={i} className={`w-3 h-3 ${i < review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} />
+                                          ))}
+                                        </div>
+                                        <span className="text-sm text-gray-500">{review.date}</span>
+                                      </div>
                                     </div>
-                                    <span className="text-sm text-gray-500">{review.date}</span>
                                   </div>
+                                  {review.comment && (
+                                    <p className="text-gray-700">{review.comment}</p>
+                                  )}
                                 </div>
-                              </div>
-                              {review.comment && (
-                                <p className="text-gray-700">{review.comment}</p>
-                              )}
+                              ))}
                             </div>
-                          ))}
-                        </div>
-                      )}
+                            {hasMoreReviews && (
+                              <button
+                                onClick={() => setShowAllReviews(!showAllReviews)}
+                                className="mt-4 text-[#0C6F3C] hover:text-[#0C6F3C]/80 transition-colors font-medium text-sm"
+                              >
+                                {showAllReviews ? 'Show fewer reviews' : `See more reviews (${sortedReviews.length - 3} more)`}
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </div>
 
                     {/* Office Locations */}
@@ -2143,6 +2177,7 @@ function SearchResults() {
                       onClick={() => {
                         setShowPortfolioModal(false);
                         setPortfolioAgentData(null);
+                        setShowAllReviews(false);
                       }}
                       className="px-4 py-2 bg-[#1a4d2e] hover:bg-[#0f2e1c] text-white font-semibold rounded-lg transition-colors"
                     >
