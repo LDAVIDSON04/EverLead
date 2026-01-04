@@ -789,13 +789,14 @@ export default function SchedulePage() {
                                     setViewingExternalAppointment(apt);
                                   }
                                 }}
-                                className={`absolute inset-x-0.5 ${color} rounded p-0.5 md:p-1 shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-all border border-gray-200 appointment-block`}
+                                className={`absolute inset-x-0.5 ${color} rounded p-0.5 md:p-1 shadow-sm cursor-pointer hover:shadow-md transition-all border border-gray-200 appointment-block`}
                                 style={{
                                   '--top-mobile': `${(apt.minute / 60) * 48}px`,
                                   '--top-desktop': `${(apt.minute / 60) * 80}px`,
-                                  '--height-mobile': `${Math.max((apt.durationMinutes / 60) * 48, 24)}px`,
-                                  '--height-desktop': `${Math.max((apt.durationMinutes / 60) * 80, 40)}px`,
-                                  zIndex: 5,
+                                  '--height-mobile': `${(apt.durationMinutes / 60) * 48}px`,
+                                  '--height-desktop': `${(apt.durationMinutes / 60) * 80}px`,
+                                  zIndex: 10,
+                                  overflow: 'visible',
                                 } as React.CSSProperties}
                               >
                                 <div className="h-full flex flex-col gap-0.5 px-0.5 md:px-1 py-0.5">
@@ -901,14 +902,15 @@ export default function SchedulePage() {
                                 setViewingExternalAppointment(apt);
                               }
                             }}
-                                className={`absolute inset-x-0.5 ${color} rounded p-0.5 md:p-1 shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-all border border-gray-200 appointment-block`}
-                                style={{
-                                  '--top-mobile': `${(apt.minute / 60) * 48}px`,
-                                  '--top-desktop': `${(apt.minute / 60) * 80}px`,
-                                  '--height-mobile': `${Math.max((apt.durationMinutes / 60) * 48, 24)}px`,
-                                  '--height-desktop': `${Math.max((apt.durationMinutes / 60) * 80, 40)}px`,
-                                  zIndex: 5,
-                                } as React.CSSProperties}
+                            className={`absolute inset-x-0.5 ${color} rounded p-0.5 md:p-1 shadow-sm cursor-pointer hover:shadow-md transition-all border border-gray-200 appointment-block`}
+                            style={{
+                              '--top-mobile': `${(apt.minute / 60) * 48}px`,
+                              '--top-desktop': `${(apt.minute / 60) * 80}px`,
+                              '--height-mobile': `${(apt.durationMinutes / 60) * 48}px`,
+                              '--height-desktop': `${(apt.durationMinutes / 60) * 80}px`,
+                              zIndex: 10,
+                              overflow: 'visible',
+                            } as React.CSSProperties}
                           >
                             <div className="h-full flex flex-col gap-0.5 px-0.5 md:px-1 py-0.5">
                               <div className="text-[9px] md:text-xs font-medium text-gray-700 leading-tight line-clamp-1 break-words">
