@@ -8,6 +8,7 @@
   top: var(--top-mobile);
   height: var(--height-mobile);
   min-height: var(--height-mobile);
+  overflow: visible !important;
 }
 
 @media (min-width: 768px) {
