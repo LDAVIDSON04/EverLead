@@ -9,6 +9,7 @@ interface ClientInfoModalProps {
   onClose: () => void;
   leadId: string | null;
   appointmentId: string | null;
+  onEdit?: (appointmentId: string, leadId: string) => void;
 }
 
 interface LeadData {
@@ -56,7 +57,7 @@ interface AppointmentData {
   office_location: OfficeLocation | null;
 }
 
-export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId }: ClientInfoModalProps) {
+export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId, onEdit }: ClientInfoModalProps) {
   const [leadData, setLeadData] = useState<LeadData | null>(null);
   const [officeLocation, setOfficeLocation] = useState<OfficeLocation | null>(null);
   const [appointmentData, setAppointmentData] = useState<AppointmentData | null>(null);
@@ -428,7 +429,20 @@ export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId }: Clie
         </div>
 
         {/* Footer */}
-        <div className="border-t border-gray-200 p-6 flex justify-end gap-3">
+        <div className="border-t border-gray-200 p-6 flex justify-between items-center">
+          {isAgentEvent && appointmentId && leadId && onEdit ? (
+            <button
+              onClick={() => {
+                onEdit(appointmentId, leadId);
+                onClose();
+              }}
+              className="px-4 py-2 text-white bg-green-700 rounded-lg hover:bg-green-800 transition-colors"
+            >
+              Edit Event
+            </button>
+          ) : (
+            <div></div>
+          )}
           <button
             onClick={onClose}
             className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"

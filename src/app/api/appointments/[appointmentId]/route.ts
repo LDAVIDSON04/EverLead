@@ -20,7 +20,11 @@ export async function GET(
       );
     }
 
-    const { data: appointment, error } = await supabaseAdmin
+    // Try to fetch with starts_at/ends_at first, fallback if columns don't exist
+    let appointment: any = null;
+    let error: any = null;
+    
+    const result = await supabaseAdmin
       .from("appointments")
       .select(`
         id,
@@ -45,8 +49,49 @@ export async function GET(
       `)
       .eq("id", appointmentId)
       .maybeSingle();
+    
+    appointment = result.data;
+    error = result.error;
+    
+    // If error is due to missing columns, retry without them
+    if (error && error.code === '42703' && (error.message?.includes('starts_at') || error.message?.includes('ends_at'))) {
+      const resultWithoutTimes = await supabaseAdmin
+        .from("appointments")
+        .select(`
+          id,
+          agent_id,
+          status,
+          requested_date,
+          requested_window,
+          confirmed_at,
+          lead_id,
+          leads (
+            id,
+            first_name,
+            last_name,
+            full_name,
+            email,
+            city,
+            province,
+            additional_notes
+          )
+        `)
+        .eq("id", appointmentId)
+        .maybeSingle();
+      
+      appointment = resultWithoutTimes.data;
+      error = resultWithoutTimes.error;
+    }
 
-    if (error || !appointment) {
+    if (error) {
+      console.error("Error fetching appointment:", error);
+      return NextResponse.json(
+        { error: "Error fetching appointment", details: error.message },
+        { status: 500 }
+      );
+    }
+
+    if (!appointment) {
       return NextResponse.json(
         { error: "Appointment not found" },
         { status: 404 }
@@ -138,6 +183,18 @@ export async function GET(
 
     const lead = Array.isArray(appointment.leads) ? appointment.leads[0] : appointment.leads;
 
+    // Calculate starts_at and ends_at from confirmed_at if not already set
+    // For agent-created events, confirmed_at is the start time
+    let calculatedStartsAt = appointment.starts_at || appointment.confirmed_at;
+    let calculatedEndsAt = appointment.ends_at || null;
+    
+    if (calculatedStartsAt && !calculatedEndsAt) {
+      // Calculate end time: default to 60 minutes duration
+      const startDate = DateTime.fromISO(calculatedStartsAt, { zone: "utc" });
+      const endDate = startDate.plus({ minutes: 60 }); // Default 60 minutes
+      calculatedEndsAt = endDate.toISO();
+    }
+
     // Fetch office location directly using office_location_id if available
     let officeLocation = null;
     if (appointment.office_location_id) {
@@ -189,8 +246,8 @@ export async function GET(
       requested_date: appointment.requested_date,
       requested_window: appointment.requested_window,
       confirmed_at: appointment.confirmed_at,
-      starts_at: appointment.starts_at,
-      ends_at: appointment.ends_at,
+      starts_at: calculatedStartsAt,
+      ends_at: calculatedEndsAt,
       formatted_date: formattedDate,
       time_display: timeDisplay,
       exact_time: exactTime,
