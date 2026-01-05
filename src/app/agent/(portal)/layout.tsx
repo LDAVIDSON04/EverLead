@@ -124,15 +124,16 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
     };
 
     // Listen for profile updates
-    const handleProfileUpdate = (event?: CustomEvent) => {
+    const handleProfileUpdate = (event: Event) => {
       // If event has profile picture URL, update immediately
-      if (event?.detail?.profilePictureUrl) {
-        setProfilePictureUrl(event.detail.profilePictureUrl);
+      const customEvent = event as CustomEvent;
+      if (customEvent?.detail?.profilePictureUrl) {
+        setProfilePictureUrl(customEvent.detail.profilePictureUrl);
       }
       loadProfileData();
     };
 
-    window.addEventListener('profileUpdated', handleProfileUpdate as EventListener);
+    window.addEventListener('profileUpdated', handleProfileUpdate);
     
     // Also listen for auth state changes to reload profile
     const { data: { subscription } } = supabaseClient.auth.onAuthStateChange((event, session) => {
