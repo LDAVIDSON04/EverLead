@@ -740,10 +740,10 @@ export default function SchedulePage() {
             </div>
 
             {/* Time Grid */}
-            <div className="relative" style={{ overflow: 'visible' }}>
+            <div className="relative">
               {weekHours.map((hour) => {
                 return (
-                  <div key={hour} className="flex border-t border-gray-200" style={{ overflow: 'visible', position: 'relative' }}>
+                  <div key={hour} className="flex border-t border-gray-200">
                     <div className="w-12 md:w-20 flex-shrink-0 pr-1 md:pr-3 pt-1 md:pt-1.5 text-[10px] md:text-xs text-gray-500 text-right">
                       {hour === 12 ? '12 PM' : hour > 12 ? `${hour - 12} PM` : `${hour} AM`}
                     </div>
@@ -756,13 +756,7 @@ export default function SchedulePage() {
                       return (
                         <div
                           key={`${day}-${hour}`}
-                          className="flex-1 min-w-[50px] md:min-w-[100px] border-l border-gray-200 relative"
-                          style={{ 
-                            minHeight: '48px',
-                            height: '48px',
-                            overflow: 'visible',
-                            position: 'relative'
-                          }}
+                          className="flex-1 min-w-[50px] md:min-w-[100px] border-l border-gray-200 relative h-12 md:h-20"
                         >
                           {cellAppointments.length === 0 ? (
                             <div
@@ -795,8 +789,7 @@ export default function SchedulePage() {
                                   '--top-desktop': `${(apt.minute / 60) * 80}px`,
                                   '--height-mobile': `${(apt.durationMinutes / 60) * 48}px`,
                                   '--height-desktop': `${(apt.durationMinutes / 60) * 80}px`,
-                                  zIndex: 10,
-                                  overflow: 'visible',
+                                  zIndex: 5,
                                 } as React.CSSProperties}
                               >
                                 <div className="h-full flex flex-col gap-0.5 px-0.5 md:px-1 py-0.5">
@@ -859,23 +852,17 @@ export default function SchedulePage() {
             </div>
 
             {/* Time Grid */}
-            <div className="relative" style={{ overflow: 'visible' }}>
+            <div className="relative">
               {dayHours.map((hour) => {
                 const cellAppointments = dayAppointments.filter((apt: any) => apt.hour === hour);
                 const dayIndex = dayDate.getDay();
 
                 return (
-                  <div key={hour} className="flex border-t border-gray-200" style={{ overflow: 'visible', position: 'relative' }}>
+                  <div key={hour} className="flex border-t border-gray-200">
                     <div className="w-12 md:w-20 flex-shrink-0 pr-1 md:pr-3 pt-1 md:pt-1.5 text-[10px] md:text-xs text-gray-500 text-right">
                       {hour === 12 ? '12 PM' : hour > 12 ? `${hour - 12} PM` : `${hour} AM`}
                     </div>
-                    <div className="flex-1 min-w-[50px] md:min-w-[100px] border-l border-gray-200 relative"
-                      style={{ 
-                        minHeight: '48px',
-                        height: '48px',
-                        overflow: 'visible',
-                        position: 'relative'
-                      }}
+                    <div className="flex-1 min-w-[50px] md:min-w-[100px] border-l border-gray-200 relative h-12 md:h-20"
                     >
                       {cellAppointments.length === 0 ? (
                         <div
@@ -908,8 +895,7 @@ export default function SchedulePage() {
                               '--top-desktop': `${(apt.minute / 60) * 80}px`,
                               '--height-mobile': `${(apt.durationMinutes / 60) * 48}px`,
                               '--height-desktop': `${(apt.durationMinutes / 60) * 80}px`,
-                              zIndex: 10,
-                              overflow: 'visible',
+                              zIndex: 5,
                             } as React.CSSProperties}
                           >
                             <div className="h-full flex flex-col gap-0.5 px-0.5 md:px-1 py-0.5">
