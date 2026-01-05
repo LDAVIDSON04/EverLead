@@ -360,7 +360,7 @@ export default function CreateAccountPage() {
                   type="text"
                   value={basicInfo.street}
                   onChange={(e) => setBasicInfo({ ...basicInfo, street: e.target.value })}
-                  placeholder="Street Address *"
+                  placeholder="Home Address *"
                   className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-700 outline-none transition-colors"
                   required
                 />

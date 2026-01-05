@@ -652,7 +652,7 @@ function ProfileSection({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <div>
-          <Label htmlFor="businessStreet">Street Address</Label>
+          <Label htmlFor="businessStreet">Home Address</Label>
           <Input
             id="businessStreet"
             value={profileData.businessStreet}

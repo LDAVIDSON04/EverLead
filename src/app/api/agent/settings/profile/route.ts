@@ -41,10 +41,21 @@ export async function GET(request: NextRequest) {
       console.error("Error fetching email from auth:", authError);
     }
 
-    // Add email to profile object for frontend
-    const profileWithEmail = profile ? { ...profile, email } : null;
+    // Add email and address details to profile object for frontend
+    if (profile) {
+      // Add email from auth.users
+      (profile as any).email = email;
+      // Add address details from metadata
+      const addressMetadata = (profile.metadata as any)?.address;
+      if (addressMetadata) {
+        (profile as any).street_address = addressMetadata.street;
+        (profile as any).city = addressMetadata.city;
+        (profile as any).province = addressMetadata.province;
+        (profile as any).postal_code = addressMetadata.postalCode;
+      }
+    }
 
-    return NextResponse.json({ profile: profileWithEmail });
+    return NextResponse.json({ profile });
   } catch (err: any) {
     console.error("Error in GET /api/agent/settings/profile:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
