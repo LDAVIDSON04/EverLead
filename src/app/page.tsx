@@ -198,6 +198,7 @@ export default function HomePage() {
   const handleLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setLocation(value);
+    setSearchError(null); // Clear error when user types
     
     if (value.length > 0) {
       const filtered = cities.filter(city => 
