@@ -43,16 +43,10 @@ export default function CreateAccountPage() {
   const [businessInfo, setBusinessInfo] = useState({
     businessName: '',
     professionalTitle: '',
-    regionsServed: [] as string[],
-    specialty: '',
     trustageEnrollerNumber: 'no' as 'yes' | 'no',
     llqpLicense: 'no' as 'yes' | 'no',
     llqpQuebec: 'non-applicable' as 'yes' | 'no' | 'non-applicable',
   });
-  const [newRegion, setNewRegion] = useState('');
-  const [regionSuggestions, setRegionSuggestions] = useState<string[]>([]);
-  const [showRegionSuggestions, setShowRegionSuggestions] = useState(false);
-  const [highlightedSuggestionIndex, setHighlightedSuggestionIndex] = useState(-1);
   const [officeLocations, setOfficeLocations] = useState<OfficeLocation[]>([]);
   const [showAddLocation, setShowAddLocation] = useState(false);
   const [newLocation, setNewLocation] = useState<OfficeLocation>({
@@ -66,83 +60,12 @@ export default function CreateAccountPage() {
   // Step 3: Profile Bio
   const [bioData, setBioData] = useState({
     years_of_experience: '',
-    specialties: [] as string[],
     practice_philosophy_help: '',
     practice_philosophy_appreciate: '',
-    practice_philosophy_situations: [] as string[],
-    languages_spoken: [] as string[],
-    typical_response_time: '',
   });
 
   const provinces = ['AB', 'BC', 'MB', 'NB', 'NL', 'NS', 'NT', 'NU', 'ON', 'PE', 'QC', 'SK', 'YT'];
-  
-  // Comprehensive list of Canadian cities and regions for autocomplete
-  const canadianRegions = [
-    // Ontario
-    'Toronto', 'GTA', 'Greater Toronto Area', 'Mississauga', 'Brampton', 'Oakville', 'Burlington',
-    'Hamilton', 'Ottawa', 'London', 'Kitchener', 'Waterloo', 'Cambridge', 'Windsor', 'Oshawa',
-    'Sudbury', 'Barrie', 'Guelph', 'Kingston', 'Thunder Bay', 'Sarnia', 'St. Catharines', 'Niagara Falls',
-    'Peterborough', 'Belleville', 'Sault Ste. Marie', 'North Bay', 'Cornwall', 'Orillia', 'Brantford',
-    'Markham', 'Richmond Hill', 'Vaughan', 'Ajax', 'Pickering', 'Whitby', 'Newmarket', 'Aurora',
-    'Milton', 'Caledon', 'Halton Hills', 'Grimsby', 'Stoney Creek', 'Dundas', 'Ancaster',
-    // British Columbia
-    'Vancouver', 'Victoria', 'Surrey', 'Burnaby', 'Richmond', 'Coquitlam', 'Kelowna', 'Abbotsford',
-    'Langley', 'North Vancouver', 'West Vancouver', 'New Westminster', 'Port Coquitlam', 'Maple Ridge',
-    'Nanaimo', 'Chilliwack', 'Kamloops', 'Prince George', 'Vernon', 'Penticton', 'Campbell River',
-    'Courtenay', 'Port Alberni', 'Salmon Arm', 'Fort St. John', 'Prince Rupert', 'Duncan',
-    'Lower Mainland', 'Fraser Valley', 'Okanagan Valley', 'Vancouver Island',
-    // Alberta
-    'Calgary', 'Edmonton', 'Red Deer', 'Lethbridge', 'St. Albert', 'Medicine Hat', 'Grande Prairie',
-    'Airdrie', 'Spruce Grove', 'Leduc', 'Fort McMurray', 'Sherwood Park', 'Okotoks', 'Cochrane',
-    'Canmore', 'Banff', 'Jasper', 'Strathcona County',
-    // Quebec
-    'Montreal', 'Quebec City', 'Laval', 'Gatineau', 'Longueuil', 'Sherbrooke', 'Saguenay', 'Levis',
-    'Trois-Rivieres', 'Terrebonne', 'Brossard', 'Repentigny', 'Drummondville', 'Saint-Jean-sur-Richelieu',
-    'Granby', 'Blainville', 'Saint-Jerome', 'Chateauguay', 'Mirabel', 'Saint-Hyacinthe', 'Shawinigan',
-    'Dollard-des-Ormeaux', 'Pointe-Claire', 'Westmount', 'Outremont', 'Verdun',
-    // Manitoba
-    'Winnipeg', 'Brandon', 'Steinbach', 'Thompson', 'Portage la Prairie', 'Winkler', 'Selkirk',
-    'Morden', 'Dauphin', 'The Pas',
-    // Saskatchewan
-    'Saskatoon', 'Regina', 'Prince Albert', 'Moose Jaw', 'Swift Current', 'Yorkton', 'North Battleford',
-    'Estevan', 'Weyburn', 'Melfort', 'Lloydminster',
-    // Nova Scotia
-    'Halifax', 'Dartmouth', 'Sydney', 'Truro', 'New Glasgow', 'Glace Bay', 'Kentville', 'Amherst',
-    'Bridgewater', 'Yarmouth', 'Liverpool',
-    // New Brunswick
-    'Saint John', 'Moncton', 'Fredericton', 'Dieppe', 'Miramichi', 'Edmundston', 'Riverview',
-    'Bathurst', 'Campbellton', 'Sackville',
-    // Newfoundland and Labrador
-    'St. John\'s', 'Mount Pearl', 'Corner Brook', 'Conception Bay South', 'Grand Falls-Windsor',
-    'Gander', 'Happy Valley-Goose Bay', 'Labrador City', 'Stephenville',
-    // Prince Edward Island
-    'Charlottetown', 'Summerside', 'Stratford', 'Cornwall',
-    // Yukon
-    'Whitehorse', 'Dawson City', 'Watson Lake',
-    // Northwest Territories
-    'Yellowknife', 'Hay River', 'Inuvik', 'Fort Smith',
-    // Nunavut
-    'Iqaluit', 'Rankin Inlet', 'Arviat',
-  ].sort();
 
-  const specialtyOptions = [
-    'Pre-need planning',
-    'Estate planning support',
-    'Grief counseling',
-    'Family facilitation',
-    'Cremation planning',
-    'Cultural/religious planning',
-  ];
-
-  const situationOptions = [
-    'Immediate planning needs',
-    'Future planning',
-    'Family discussions',
-    'Estate coordination',
-    'Cultural/religious considerations',
-  ];
-
-  const languageOptions = ['English', 'French', 'Spanish', 'Mandarin', 'Cantonese', 'Punjabi', 'Tagalog', 'Arabic', 'Other'];
 
   // Validation
   const validateStep1 = (): boolean => {
@@ -163,64 +86,16 @@ export default function CreateAccountPage() {
   };
 
   const validateStep2 = (): boolean => {
-    if (!businessInfo.businessName || !businessInfo.professionalTitle ||
-        businessInfo.regionsServed.length === 0 || !businessInfo.specialty) {
+    if (!businessInfo.businessName || !businessInfo.professionalTitle) {
       setError('Please fill in all required fields.');
       return false;
     }
     return true;
   };
 
-  const handleRegionInputChange = (value: string) => {
-    setNewRegion(value);
-    if (value.trim().length > 0) {
-      const filtered = canadianRegions.filter(region =>
-        region.toLowerCase().includes(value.toLowerCase()) &&
-        !businessInfo.regionsServed.includes(region)
-      ).slice(0, 8); // Limit to 8 suggestions
-      setRegionSuggestions(filtered);
-      setShowRegionSuggestions(filtered.length > 0);
-      setHighlightedSuggestionIndex(-1);
-    } else {
-      setRegionSuggestions([]);
-      setShowRegionSuggestions(false);
-    }
-    setError(null);
-  };
-
-  const selectRegion = (region: string) => {
-    if (!businessInfo.regionsServed.includes(region)) {
-      setBusinessInfo({ ...businessInfo, regionsServed: [...businessInfo.regionsServed, region] });
-    }
-    setNewRegion('');
-    setRegionSuggestions([]);
-    setShowRegionSuggestions(false);
-    setHighlightedSuggestionIndex(-1);
-    setError(null);
-  };
-
-  const addRegion = () => {
-    const trimmedRegion = newRegion.trim();
-    if (!trimmedRegion) {
-      setError('Please enter a region name.');
-      return;
-    }
-    if (businessInfo.regionsServed.includes(trimmedRegion)) {
-      setError('This region has already been added.');
-      return;
-    }
-    selectRegion(trimmedRegion);
-  };
-
-  const removeRegion = (index: number) => {
-    setBusinessInfo({
-      ...businessInfo,
-      regionsServed: businessInfo.regionsServed.filter((_, i) => i !== index),
-    });
-  };
 
   const validateStep3 = (): boolean => {
-    if (!bioData.years_of_experience || bioData.specialties.length === 0 ||
+    if (!bioData.years_of_experience ||
         !bioData.practice_philosophy_help || !bioData.practice_philosophy_appreciate) {
       setError('Please fill in all required fields.');
       return false;
@@ -273,34 +148,6 @@ export default function CreateAccountPage() {
     setOfficeLocations(officeLocations.filter((_, i) => i !== index));
   };
 
-  const toggleSpecialty = (specialty: string) => {
-    setBioData(prev => ({
-      ...prev,
-      specialties: prev.specialties.includes(specialty)
-        ? prev.specialties.filter(s => s !== specialty)
-        : prev.specialties.length < 5
-        ? [...prev.specialties, specialty]
-        : prev.specialties
-    }));
-  };
-
-  const toggleSituation = (situation: string) => {
-    setBioData(prev => ({
-      ...prev,
-      practice_philosophy_situations: prev.practice_philosophy_situations.includes(situation)
-        ? prev.practice_philosophy_situations.filter(s => s !== situation)
-        : [...prev.practice_philosophy_situations, situation]
-    }));
-  };
-
-  const toggleLanguage = (language: string) => {
-    setBioData(prev => ({
-      ...prev,
-      languages_spoken: prev.languages_spoken.includes(language)
-        ? prev.languages_spoken.filter(l => l !== language)
-        : [...prev.languages_spoken, language]
-    }));
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -334,9 +181,6 @@ export default function CreateAccountPage() {
         
         // Metadata fields
         metadata: {
-          regions_served: businessInfo.regionsServed.join(', '),
-          regions_served_array: businessInfo.regionsServed,
-          specialty: businessInfo.specialty,
           trustage_enroller_number: businessInfo.trustageEnrollerNumber === 'yes',
           llqp_license: businessInfo.llqpLicense === 'yes',
           llqp_quebec: businessInfo.llqpQuebec,
@@ -677,108 +521,6 @@ export default function CreateAccountPage() {
             </div>
           </div>
 
-            <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Region(s) Served *</label>
-                <div className="space-y-3">
-                  <div className="relative">
-                    <div className="flex gap-2">
-                      <div className="flex-1 relative">
-                  <input
-                          type="text"
-                          value={newRegion}
-                          onChange={(e) => handleRegionInputChange(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              e.preventDefault();
-                              if (highlightedSuggestionIndex >= 0 && regionSuggestions[highlightedSuggestionIndex]) {
-                                selectRegion(regionSuggestions[highlightedSuggestionIndex]);
-                              } else {
-                                addRegion();
-                              }
-                            } else if (e.key === 'ArrowDown') {
-                              e.preventDefault();
-                              setHighlightedSuggestionIndex(prev => 
-                                prev < regionSuggestions.length - 1 ? prev + 1 : prev
-                              );
-                            } else if (e.key === 'ArrowUp') {
-                              e.preventDefault();
-                              setHighlightedSuggestionIndex(prev => prev > 0 ? prev - 1 : -1);
-                            } else if (e.key === 'Escape') {
-                              setShowRegionSuggestions(false);
-                              setHighlightedSuggestionIndex(-1);
-                            }
-                          }}
-                          onFocus={() => {
-                            if (newRegion.trim().length > 0 && regionSuggestions.length > 0) {
-                              setShowRegionSuggestions(true);
-                            }
-                          }}
-                          onBlur={() => {
-                            // Delay hiding suggestions to allow click events
-                            setTimeout(() => setShowRegionSuggestions(false), 200);
-                          }}
-                          placeholder="Start typing to see suggestions..."
-                          className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-700 outline-none transition-colors"
-                        />
-                        {showRegionSuggestions && regionSuggestions.length > 0 && (
-                          <div className="absolute z-10 w-full mt-1 bg-white border-2 border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto">
-                            {regionSuggestions.map((suggestion, index) => (
-                              <button
-                                key={suggestion}
-                                type="button"
-                                onClick={() => selectRegion(suggestion)}
-                                className={`w-full text-left px-4 py-2 hover:bg-green-50 transition-colors ${
-                                  index === highlightedSuggestionIndex ? 'bg-green-100' : ''
-                                } ${index === 0 ? 'rounded-t-lg' : ''} ${index === regionSuggestions.length - 1 ? 'rounded-b-lg' : ''}`}
-                              >
-                                <span className="text-sm text-gray-700">{suggestion}</span>
-                              </button>
-                            ))}
-              </div>
-                        )}
-                      </div>
-                      <button
-                        type="button"
-                        onClick={addRegion}
-                        disabled={!newRegion.trim()}
-                        className="px-6 py-3 bg-green-700 text-white rounded-lg hover:bg-green-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-                      >
-                        Add
-                      </button>
-                    </div>
-                    <p className="mt-1 text-xs text-gray-500">Type to search Canadian cities and regions, or enter your own</p>
-                  </div>
-                  {businessInfo.regionsServed.length > 0 && (
-                    <div className="flex flex-wrap gap-2 pt-2">
-                      {businessInfo.regionsServed.map((region, index) => (
-                        <div key={index} className="flex items-center gap-2 px-3 py-1.5 bg-green-50 border border-green-200 rounded-lg shadow-sm">
-                          <span className="text-sm font-medium text-gray-700">{region}</span>
-                          <button
-                            type="button"
-                            onClick={() => removeRegion(index)}
-                            className="text-red-600 hover:text-red-800 transition-colors"
-                            aria-label={`Remove ${region}`}
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-            </div>
-          </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Specialty / Services Offered *</label>
-                <textarea
-                  value={businessInfo.specialty}
-                  onChange={(e) => setBusinessInfo({ ...businessInfo, specialty: e.target.value })}
-                  placeholder="Describe your specialties and services..."
-                  rows={3}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-700 outline-none transition-colors resize-none"
-                  required
-                />
-          </div>
 
               {/* Office Locations */}
               <div className="border-t pt-6">
@@ -898,36 +640,17 @@ export default function CreateAccountPage() {
                 <select
                   value={bioData.years_of_experience}
                   onChange={(e) => setBioData({ ...bioData, years_of_experience: e.target.value })}
-                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-700 outline-none transition-colors"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-700 outline-none transition-colors"
                   required
                 >
                   <option value="">Select...</option>
-                  <option value="1-3">1-3 years</option>
-                  <option value="4-7">4-7 years</option>
-                  <option value="8-12">8-12 years</option>
-                  <option value="12+">12+ years</option>
+                  {Array.from({ length: 50 }, (_, i) => i + 1).map((num) => (
+                    <option key={num} value={num.toString()}>
+                      {num} {num === 1 ? 'year' : 'years'}
+                    </option>
+                  ))}
                 </select>
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Specialties (Select up to 5) *</label>
-                <div className="grid grid-cols-2 gap-3">
-                  {specialtyOptions.map((specialty) => (
-                    <label key={specialty} className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                        checked={bioData.specialties.includes(specialty)}
-                        onChange={() => toggleSpecialty(specialty)}
-                        className="w-4 h-4 text-green-800 border-gray-300 rounded focus:ring-green-800"
-                      />
-                      <span className="text-sm text-gray-700">{specialty}</span>
-                </label>
-              ))}
-            </div>
-                {bioData.specialties.length >= 5 && (
-                  <p className="text-xs text-gray-500 mt-2">Maximum 5 specialties selected</p>
-                )}
-          </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -969,57 +692,6 @@ export default function CreateAccountPage() {
                 <p className="text-xs text-gray-500 mt-1">{bioData.practice_philosophy_appreciate.length}/200 characters</p>
                       </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  What situations are you best suited for? (Select all that apply)
-                </label>
-                <div className="grid grid-cols-2 gap-3">
-                  {situationOptions.map((situation) => (
-                    <label key={situation} className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                        checked={bioData.practice_philosophy_situations.includes(situation)}
-                        onChange={() => toggleSituation(situation)}
-                        className="w-4 h-4 text-green-800 border-gray-300 rounded focus:ring-green-800"
-                      />
-                      <span className="text-sm text-gray-700">{situation}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Languages Spoken</label>
-                <div className="flex flex-wrap gap-3">
-                  {languageOptions.map((lang) => (
-                    <label key={lang} className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                        checked={bioData.languages_spoken.includes(lang)}
-                        onChange={() => toggleLanguage(lang)}
-                        className="w-4 h-4 text-green-800 border-gray-300 rounded focus:ring-green-800"
-                      />
-                      <span className="text-sm text-gray-700">{lang}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Typical Response Time</label>
-                <select
-                  value={bioData.typical_response_time}
-                  onChange={(e) => setBioData({ ...bioData, typical_response_time: e.target.value })}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-700 outline-none transition-colors"
-                >
-                  <option value="">Select...</option>
-                  <option value="within-1-hour">Within 1 hour</option>
-                  <option value="within-2-hours">Within 2 hours</option>
-                  <option value="within-4-hours">Within 4 hours</option>
-                  <option value="within-24-hours">Within 24 hours</option>
-                  <option value="within-48-hours">Within 48 hours</option>
-                </select>
-              </div>
             </div>
           )}
 
