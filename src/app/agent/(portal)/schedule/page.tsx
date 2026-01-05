@@ -772,20 +772,32 @@ export default function SchedulePage() {
                             const pxPerHourDesktop = 80;
                             const topOffsetMobile = (apt.minute / 60) * pxPerHourMobile;
                             const topOffsetDesktop = (apt.minute / 60) * pxPerHourDesktop;
+                            
+                            // Log all appointments to debug
+                            if (apt.family_name?.includes('Seminar') || apt.family_name?.includes('seminar')) {
+                              console.log(`📅 SEMINAR appointment found:`, {
+                                title: apt.family_name,
+                                durationMinutes: apt.durationMinutes,
+                                startsAt: apt.starts_at,
+                                endsAt: apt.ends_at,
+                                hour: apt.hour,
+                                minute: apt.minute,
+                              });
+                            }
+                            
                             // Calculate height based on duration - for 2 hours = 2 * 80px = 160px on desktop
                             const heightMobile = (apt.durationMinutes / 60) * pxPerHourMobile;
                             const heightDesktop = (apt.durationMinutes / 60) * pxPerHourDesktop;
                             const color = getDayColor(dayIndex);
                             
-                            // Debug log for 2-hour appointments
-                            if (apt.durationMinutes >= 115 && apt.durationMinutes <= 125) {
-                              console.log(`📅 2-hour appointment detected:`, {
+                            // Debug log for any appointment with duration > 60 minutes
+                            if (apt.durationMinutes > 60) {
+                              console.log(`📅 Multi-hour appointment:`, {
                                 title: apt.family_name,
                                 durationMinutes: apt.durationMinutes,
                                 heightMobile: `${heightMobile}px`,
                                 heightDesktop: `${heightDesktop}px`,
-                                startsAt: apt.starts_at,
-                                endsAt: apt.ends_at,
+                                calculatedHeight: `${(apt.durationMinutes / 60) * pxPerHourDesktop}px`,
                               });
                             }
 
