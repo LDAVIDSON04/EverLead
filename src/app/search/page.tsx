@@ -105,7 +105,6 @@ function SearchResults() {
   const [searchQuery, setSearchQuery] = useState(query);
   const [searchLocation, setSearchLocation] = useState(decodedLocation);
   const [searchService, setSearchService] = useState(service);
-  const [locationDetected, setLocationDetected] = useState(false); // Track if we've tried to detect location
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [selectedAppointmentIndex, setSelectedAppointmentIndex] = useState<number>(0);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
