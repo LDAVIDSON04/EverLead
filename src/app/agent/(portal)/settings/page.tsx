@@ -367,8 +367,12 @@ function ProfileSection({
 
       console.log("Upload successful, URL:", publicUrl);
 
-      // Update local state immediately for preview
-      setProfileData({ ...profileData, profilePictureUrl: publicUrl });
+      // Update local state immediately for preview (with cache busting to force refresh)
+      const urlWithCacheBust = `${publicUrl}?t=${Date.now()}`;
+      setProfileData({ ...profileData, profilePictureUrl: urlWithCacheBust });
+      
+      // Trigger a custom event to refresh the layout and other pages immediately
+      window.dispatchEvent(new CustomEvent("profileUpdated", { detail: { profilePictureUrl: urlWithCacheBust } }));
 
       // Reload profile data to show updated picture
       const reloadRes = await fetch("/api/agent/settings/profile", {
