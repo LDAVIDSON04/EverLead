@@ -310,25 +310,21 @@ export default function SchedulePage() {
     loadSpecialist();
   }, [router]);
 
-  // Scroll to 8am when view or appointments change
+  // Scroll to 8am when view changes or calendar loads
   useEffect(() => {
-    if (calendarScrollRef.current && !loading) {
+    if (calendarScrollRef.current && !loading && (view === 'week' || view === 'day')) {
+      // Scroll to 8am (hour index 8)
+      // Each hour is 48px on mobile, 80px on desktop
       const scrollToHour = 8;
-      const hours = view === 'week' ? weekHours : (view === 'day' ? dayHours : []);
-      if (hours.length > 0) {
-        const firstHour = hours[0];
-        if (firstHour <= scrollToHour) {
-          const hourIndex = scrollToHour - firstHour;
-          const scrollTop = hourIndex * (isDesktop ? 80 : 48);
-          setTimeout(() => {
-            if (calendarScrollRef.current) {
-              calendarScrollRef.current.scrollTop = scrollTop;
-            }
-          }, 200);
+      const scrollTop = scrollToHour * (isDesktop ? 80 : 48);
+      
+      setTimeout(() => {
+        if (calendarScrollRef.current) {
+          calendarScrollRef.current.scrollTop = scrollTop;
         }
-      }
+      }, 300);
     }
-  }, [view, weekHours, dayHours, loading, isDesktop]);
+  }, [view, loading, isDesktop]);
 
   async function checkCalendarConnections(specialistId: string, accessToken: string) {
     try {
