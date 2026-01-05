@@ -285,10 +285,25 @@ export async function GET(req: NextRequest) {
       
       const lead = Array.isArray(apt.leads) ? apt.leads[0] : apt.leads;
       if (lead?.additional_notes) {
+        console.log(`🔍 Parsing duration from additional_notes:`, {
+          appointmentId: apt.id,
+          title: lead.full_name,
+          additional_notes: lead.additional_notes,
+          notesLength: lead.additional_notes?.length,
+        });
         const durationMatch = lead.additional_notes.match(/^EVENT_DURATION:(\d+)\|/);
         if (durationMatch) {
           appointmentLengthMinutes = parseInt(durationMatch[1], 10);
+          console.log(`✅ Found duration in notes: ${appointmentLengthMinutes} minutes`);
+        } else {
+          console.log(`❌ No duration match found. Regex pattern: /^EVENT_DURATION:(\\d+)\\|/`);
         }
+      } else {
+        console.log(`⚠️ No additional_notes found for appointment:`, {
+          appointmentId: apt.id,
+          hasLead: !!lead,
+          leadEmail: lead?.email,
+        });
       }
       
       const appointmentLengthMs = appointmentLengthMinutes * 60 * 1000;
