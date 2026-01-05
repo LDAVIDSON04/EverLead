@@ -163,7 +163,6 @@ function SearchResults() {
       console.log("📍 Syncing location from URL:", decoded);
       setSearchLocation(decoded);
       setInputLocation(decoded);
-      setLocationDetected(true); // Mark as detected so we don't auto-detect again
     } else {
       // Clear location if it's removed from URL
       setSearchLocation("");
@@ -173,45 +172,8 @@ function SearchResults() {
     setInputService(service);
   }, [query, location, service]);
 
-  // Auto-detect location on page load if no location is provided
-  useEffect(() => {
-    // Only detect if:
-    // 1. No location in URL params
-    // 2. No location in state
-    // 3. We haven't tried to detect yet
-    if (!location && !searchLocation && !locationDetected) {
-      setLocationDetected(true);
-      
-      // Call geolocation API to detect family's location from IP
-      fetch("/api/geolocation")
-        .then(res => res.json())
-        .then(data => {
-          if (data.location) {
-            const decodedLocation = decodeURIComponent(data.location.replace(/\+/g, ' '));
-            console.log("📍 Auto-detected location from IP:", decodedLocation);
-            
-            // Update both input and search state immediately so it shows in search bar and triggers search
-            setSearchLocation(decodedLocation);
-            setInputLocation(decodedLocation);
-            
-            // Update URL with location so it triggers search and shows in search bar
-            const params = new URLSearchParams();
-            params.set("location", decodedLocation);
-            if (searchQuery) params.set("q", searchQuery);
-            if (searchService) params.set("service", searchService);
-            
-            // Update URL to include location - this will trigger the URL param sync useEffect
-            router.replace(`/search?${params.toString()}`);
-          } else {
-            console.warn("📍 Could not detect location from IP");
-          }
-        })
-        .catch(err => {
-          console.error("Error detecting location:", err);
-          // Silently fail - user can still type location manually
-        });
-    }
-  }, [location, searchLocation, locationDetected, searchQuery, searchService, router]);
+  // No longer auto-detect location - user must provide location
+  // Auto-detection is only used by homepage cards (See reviews, Book appointment)
 
   useEffect(() => {
     async function loadAgents() {
