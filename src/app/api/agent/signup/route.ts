@@ -507,6 +507,26 @@ export async function POST(req: NextRequest) {
             }
           }
 
+          // Generate bio automatically if bio data is provided
+          if (metadataFromBody?.bio) {
+            try {
+              const bioRes = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/agents/generate-bio`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ agentId: userId }),
+              });
+
+              if (bioRes.ok) {
+                console.log(`✅ Bio generated automatically for agent ${userId}`);
+              } else {
+                console.warn(`⚠️ Bio generation failed for agent ${userId}, but signup succeeded`);
+              }
+            } catch (bioErr: any) {
+              console.error("Error generating bio during signup:", bioErr);
+              // Don't fail the signup if bio generation fails
+            }
+          }
+
           return NextResponse.json(
             { 
               success: true,
@@ -582,6 +602,32 @@ export async function POST(req: NextRequest) {
       } catch (locationsErr: any) {
         console.error("Error processing office locations:", locationsErr);
         // Don't fail the signup if office locations fail
+      }
+    }
+
+    // Generate bio automatically if bio data is provided
+    if (metadataFromBody?.bio) {
+      try {
+        // Use internal API call - construct the full URL
+        const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL 
+          ? `https://${process.env.VERCEL_URL}` 
+          : 'http://localhost:3000';
+        
+        const bioRes = await fetch(`${baseUrl}/api/agents/generate-bio`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ agentId: userId }),
+        });
+
+        if (bioRes.ok) {
+          console.log(`✅ Bio generated automatically for agent ${userId}`);
+        } else {
+          const errorData = await bioRes.json().catch(() => ({}));
+          console.warn(`⚠️ Bio generation failed for agent ${userId}:`, errorData);
+        }
+      } catch (bioErr: any) {
+        console.error("Error generating bio during signup:", bioErr);
+        // Don't fail the signup if bio generation fails
       }
     }
 

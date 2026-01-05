@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseClient } from '@/lib/supabaseClient';
+import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
 // AI Bio Generation API
 // This generates a professional bio based on structured inputs from the agent's profile
@@ -13,7 +14,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Get agent profile with structured bio inputs
-    const { data: profile, error: profileError } = await supabaseClient
+    // Use supabaseAdmin for internal API calls (like from signup)
+    const { data: profile, error: profileError } = await supabaseAdmin
       .from('profiles')
       .select('id, full_name, job_title, funeral_home, agent_city, agent_province, metadata, bio_approval_status, ai_generated_bio, bio_audit_log')
       .eq('id', agentId)
@@ -32,19 +34,16 @@ export async function POST(request: NextRequest) {
 
     // Extract structured inputs
     const yearsOfExperience = bioData.years_of_experience || null;
-    const specialties = bioData.specialties || [];
     const practicePhilosophyHelp = bioData.practice_philosophy_help || '';
     const practicePhilosophyAppreciate = bioData.practice_philosophy_appreciate || '';
-    const practicePhilosophySituations = bioData.practice_philosophy_situations || [];
-    const languages = bioData.languages_spoken || [];
     const location = profile.agent_city && profile.agent_province
       ? `${profile.agent_city}, ${profile.agent_province}`
       : profile.agent_city || profile.agent_province || '';
 
     // Check if we have enough data to generate a bio
-    if (!yearsOfExperience && specialties.length === 0 && !practicePhilosophyHelp) {
+    if (!yearsOfExperience || !practicePhilosophyHelp || !practicePhilosophyAppreciate) {
       return NextResponse.json({ 
-        error: 'Insufficient data. Please fill out at least years of experience, specialties, or practice philosophy.' 
+        error: 'Insufficient data. Please fill out years of experience and both practice philosophy fields.' 
       }, { status: 400 });
     }
 
@@ -58,12 +57,9 @@ Profile Data:
 - Professional Title: ${profile.job_title || 'Pre-need Planning Specialist'}
 - Organization: ${profile.funeral_home || ''}
 - Location: ${location}
-- Years of Experience: ${yearsOfExperience || 'Not specified'}
-- Specialties: ${specialties.join(', ') || 'General pre-need planning'}
-- How they help families: ${practicePhilosophyHelp || ''}
-- What families appreciate: ${practicePhilosophyAppreciate || ''}
-- Best suited for: ${practicePhilosophySituations.join(', ') || ''}
-- Languages: ${languages.join(', ') || 'English'}
+- Years of Experience: ${yearsOfExperience} ${yearsOfExperience === '1' ? 'year' : 'years'}
+- How they help families: ${practicePhilosophyHelp}
+- What families appreciate: ${practicePhilosophyAppreciate}
 
 Requirements:
 - Focus on years of experience, areas of support, and family-centered approach
@@ -119,18 +115,14 @@ Generate the bio now:`;
     } else {
       // Fallback: Generate a simple template-based bio if AI is not configured
       const experienceText = yearsOfExperience 
-        ? `with over ${yearsOfExperience === '12+' ? '12' : yearsOfExperience} years of experience`
-        : '';
-      
-      const specialtiesText = specialties.length > 0 
-        ? `specializing in ${specialties.slice(0, 3).join(', ')}`
+        ? `with ${yearsOfExperience} ${yearsOfExperience === '1' ? 'year' : 'years'} of experience`
         : '';
       
       const locationText = location ? `Based in ${location}, ` : '';
       
-      generatedBio = `${profile.full_name || 'This professional'} is a ${profile.job_title || 'licensed funeral planning professional'} ${experienceText} ${specialtiesText ? `, ${specialtiesText}` : ''}. ${locationText}${practicePhilosophyHelp || 'They work closely with families to navigate sensitive decisions with clarity and care.'}
+      generatedBio = `${profile.full_name || 'This professional'} is a ${profile.job_title || 'licensed funeral planning professional'} ${experienceText}. ${locationText}${practicePhilosophyHelp}
 
-${practicePhilosophyAppreciate || 'Clients value their thoughtful approach, clear communication, and commitment to ensuring every family feels supported throughout the planning process.'}`;
+${practicePhilosophyAppreciate}`;
     }
 
     if (!generatedBio) {
@@ -145,7 +137,7 @@ ${practicePhilosophyAppreciate || 'Clients value their thoughtful approach, clea
       bio: generatedBio,
     };
     
-    const { error: updateError } = await supabaseClient
+    const { error: updateError } = await supabaseAdmin
       .from('profiles')
       .update({
         ai_generated_bio: generatedBio,
