@@ -77,8 +77,13 @@ export async function GET(req: NextRequest) {
           // Single unified approval - check only approval_status
           // When admin approves, both profile and bio are approved together
           if (profile.approval_status !== "approved") {
-            console.log(`[AGENT SEARCH] Agent ${profile.id} not approved: ${profile.approval_status}`);
+            console.log(`[AGENT SEARCH] Agent ${profile.id} (${profile.full_name || 'unnamed'}) not approved: ${profile.approval_status}`);
             return false;
+          }
+          
+          // Debug log for the specific agent we're looking for
+          if (profile.id === 'f7f6aeca-1059-4ae8-ae93-a059ad583b8f') {
+            console.log(`[AGENT SEARCH] ✅ Agent ${profile.id} passed approval check`);
           }
 
           // Check availability - handle different metadata structures
@@ -96,8 +101,13 @@ export async function GET(req: NextRequest) {
 
           // Filter out paused agents (agents with paused_account flag set to true)
           if ((metadata as any)?.paused_account === true) {
-            console.log(`[AGENT SEARCH] Agent ${profile.id} is paused - excluding from results`);
+            console.log(`[AGENT SEARCH] Agent ${profile.id} (${profile.full_name || 'unnamed'}) is paused - excluding from results`);
             return false;
+          }
+          
+          // Debug log for the specific agent we're looking for
+          if (profile.id === 'f7f6aeca-1059-4ae8-ae93-a059ad583b8f') {
+            console.log(`[AGENT SEARCH] ✅ Agent ${profile.id} passed paused_account check`);
           }
 
           const availability = (metadata as any)?.availability || {};
@@ -215,8 +225,13 @@ export async function GET(req: NextRequest) {
           }
 
           if (!hasPaymentMethod) {
-            console.log(`[AGENT SEARCH] Agent ${agent.id} has no payment method - excluding from results`);
+            console.log(`[AGENT SEARCH] Agent ${agent.id} (${agent.full_name || 'unnamed'}) has no payment method - excluding from results`);
             return null;
+          }
+          
+          // Debug log for the specific agent we're looking for
+          if (agent.id === 'f7f6aeca-1059-4ae8-ae93-a059ad583b8f') {
+            console.log(`[AGENT SEARCH] ✅ Agent ${agent.id} passed payment method check`);
           }
 
           return agent;
