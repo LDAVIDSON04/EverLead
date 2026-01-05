@@ -91,7 +91,7 @@ export function BookingPanel({ agentId, initialLocation }: BookingPanelProps) {
               id: loc.id,
               name: loc.name || `${loc.city}, ${loc.province}`,
               address: address,
-              nextAvailable: 'Next available tomorrow',
+              nextAvailable: 'Loading...', // Will be updated after fetching availability
               locationName: locationName
             };
           });
@@ -169,7 +169,7 @@ export function BookingPanel({ agentId, initialLocation }: BookingPanelProps) {
               id: String(index + 1),
               name: `${agent.funeral_home || 'Office'} - ${locationName}`,
               address: address || `${locationName}`,
-              nextAvailable: 'Next available tomorrow',
+              nextAvailable: 'Loading...', // Will be updated after fetching availability
               locationName: locationName
             });
           });
@@ -184,7 +184,7 @@ export function BookingPanel({ agentId, initialLocation }: BookingPanelProps) {
             id: '1',
             name: agent.funeral_home || 'Main Office',
             address: address || 'Location not specified',
-            nextAvailable: 'Next available tomorrow',
+            nextAvailable: 'Loading...', // Will be updated after fetching availability
             locationName: defaultLocationName
           });
         }
@@ -193,7 +193,7 @@ export function BookingPanel({ agentId, initialLocation }: BookingPanelProps) {
           id: '1',
           name: agent.funeral_home || 'Main Office',
           address: `${agent.agent_city || ''}, ${agent.agent_province || ''}`,
-          nextAvailable: 'Next available tomorrow',
+          nextAvailable: 'Loading...', // Will be updated after fetching availability
           locationName: (agent.agent_city || '').trim()
         }];
         
@@ -247,7 +247,109 @@ export function BookingPanel({ agentId, initialLocation }: BookingPanelProps) {
     fetchAgentData();
   }, [agentId, normalizedSearchLocation, searchLocationParam]);
 
-  // Fetch availability
+  // Helper function to format next available date
+  const formatNextAvailable = (dateStr: string): string => {
+    if (!dateStr) return 'No availability';
+    
+    const [year, month, dayOfMonth] = dateStr.split("-").map(Number);
+    const date = new Date(Date.UTC(year, month - 1, dayOfMonth));
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // Compare dates (ignoring time)
+    const dateOnly = new Date(date);
+    dateOnly.setHours(0, 0, 0, 0);
+    
+    const diffTime = dateOnly.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) {
+      return 'Next available today';
+    } else if (diffDays === 1) {
+      return 'Next available tomorrow';
+    } else if (diffDays === 2) {
+      return 'Next available in 2 days';
+    } else if (diffDays <= 7) {
+      const monthName = date.toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' });
+      return `Next available ${monthName} ${dayOfMonth}`;
+    } else {
+      const monthName = date.toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' });
+      return `Next available ${monthName} ${dayOfMonth}`;
+    }
+  };
+
+  // Fetch availability for all locations to calculate next available dates
+  useEffect(() => {
+    if (officeLocations.length === 0) return;
+    
+    // Check if we already have calculated next available dates (not "Loading...")
+    const needsUpdate = officeLocations.some(loc => loc.nextAvailable === 'Loading...' || loc.nextAvailable === 'Next available tomorrow');
+    if (!needsUpdate) return;
+    
+    const fetchNextAvailableForAllLocations = async () => {
+      try {
+        const today = new Date();
+        const startDate = today.toISOString().split("T")[0];
+        const endDate = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]; // Check 30 days ahead
+        
+        // Fetch availability for each location
+        const locationPromises = officeLocations.map(async (location) => {
+          // Skip if already calculated (unless it's the hardcoded "Next available tomorrow")
+          if (location.nextAvailable !== 'Loading...' && location.nextAvailable !== 'Next available tomorrow') {
+            return location;
+          }
+          
+          const locationName = location.locationName?.trim() || '';
+          if (!locationName) {
+            return {
+              ...location,
+              nextAvailable: 'No availability'
+            };
+          }
+          
+          const url = `/api/agents/availability?agentId=${agentId}&startDate=${startDate}&endDate=${endDate}${locationName ? `&location=${encodeURIComponent(locationName)}` : ''}`;
+          
+          try {
+            const res = await fetch(url);
+            if (res.ok) {
+              const availabilityData: any[] = await res.json();
+              
+              // Find first day with available slots
+              const firstAvailableDay = availabilityData.find(day => day.slots && day.slots.length > 0);
+              
+              if (firstAvailableDay) {
+                return {
+                  ...location,
+                  nextAvailable: formatNextAvailable(firstAvailableDay.date)
+                };
+              } else {
+                return {
+                  ...location,
+                  nextAvailable: 'No availability'
+                };
+              }
+            }
+          } catch (err) {
+            console.error(`Error fetching availability for location ${locationName}:`, err);
+          }
+          
+          return {
+            ...location,
+            nextAvailable: 'No availability'
+          };
+        });
+        
+        const updatedLocations = await Promise.all(locationPromises);
+        setOfficeLocations(updatedLocations);
+      } catch (err) {
+        console.error("Error fetching next available dates:", err);
+      }
+    };
+    
+    fetchNextAvailableForAllLocations();
+  }, [agentId, officeLocations]); // Run when officeLocations change
+
+  // Fetch availability for selected location (for calendar display)
   useEffect(() => {
     if (officeLocations.length === 0) return; // Wait for locations to load
     
