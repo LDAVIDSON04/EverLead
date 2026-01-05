@@ -147,6 +147,16 @@ export async function GET(req: NextRequest) {
           // This ensures agents show up for all cities where they have offices OR have set availability
           const allLocationCities = Array.from(new Set([...availabilityLocations, ...officeLocationCities]));
           
+          // Debug log for the specific agent we're looking for
+          if (profile.id === 'f7f6aeca-1059-4ae8-ae93-a059ad583b8f') {
+            console.log(`[AGENT SEARCH] 📍 Agent ${profile.id} location data:`, {
+              availabilityLocations,
+              officeLocationCities,
+              allLocationCities,
+              availabilityByLocationKeys: Object.keys(availabilityByLocation),
+            });
+          }
+          
           return {
             id: profile.id,
             full_name: profile.full_name,
