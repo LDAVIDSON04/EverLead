@@ -82,6 +82,12 @@ export async function GET(req: NextRequest) {
             return false;
           }
           
+          // Require profile picture
+          if (!profile.profile_picture_url) {
+            console.log(`[AGENT SEARCH] Agent ${profile.id} (${profile.full_name || 'unnamed'}) missing profile picture`);
+            return false;
+          }
+          
           // Debug log for the specific agent we're looking for
           if (profile.id === 'f7f6aeca-1059-4ae8-ae93-a059ad583b8f') {
             console.log(`[AGENT SEARCH] ✅ Agent ${profile.id} passed approval check`);

@@ -105,6 +105,8 @@ export default function BillingPage() {
         // Reload payment methods
         setTimeout(() => {
           loadBilling();
+          // Dispatch onboarding step completion event
+          window.dispatchEvent(new CustomEvent("onboardingStepCompleted", { detail: { step: 3 } }));
           // Clean up URL
           window.history.replaceState({}, '', window.location.pathname);
         }, 1000);
