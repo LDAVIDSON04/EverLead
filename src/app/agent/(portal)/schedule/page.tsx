@@ -738,23 +738,6 @@ export default function SchedulePage() {
       <div 
         ref={calendarScrollRef}
         className="flex-1 overflow-auto overflow-x-hidden"
-        onLoad={() => {
-          // Scroll to 8am when calendar loads
-          if (calendarScrollRef.current) {
-            const scrollToHour = 8;
-            const hours = view === 'week' ? weekHours : dayHours;
-            const firstHour = hours[0] || 8;
-            if (firstHour <= scrollToHour) {
-              const hourIndex = scrollToHour - firstHour;
-              const scrollTop = hourIndex * (isDesktop ? 80 : 48);
-              setTimeout(() => {
-                if (calendarScrollRef.current) {
-                  calendarScrollRef.current.scrollTop = scrollTop;
-                }
-              }, 100);
-            }
-          }
-        }}
       >
         {/* Week View - EXACTLY AS BEFORE */}
         {view === 'week' && (
