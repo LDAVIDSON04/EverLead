@@ -121,24 +121,50 @@ export async function POST(request: NextRequest) {
       new Set((officeLocations || []).map((loc: any) => loc.city).filter(Boolean))
     );
 
-    // CRITICAL: Merge locations from the request with:
-    // 1. Office location cities (always include these)
-    // 2. Any cities that have availability data set (even if not in office locations)
-    // This ensures all cities with availability are saved
-    const allCitiesSet = new Set<string>();
-    
-    // Add office location cities
-    officeLocationCities.forEach(city => allCitiesSet.add(city));
-    
-    // Add locations from request
-    (locations || []).forEach((city: string) => allCitiesSet.add(city));
-    
-    // Add any cities that have availability data (even if not explicitly in locations array)
+    // Normalize location names for comparison (remove province, "Office" suffix, lowercase)
+    const normalizeLocation = (loc: string): string => {
+      if (!loc) return '';
+      let normalized = loc.split(',').map(s => s.trim())[0]; // Remove province
+      normalized = normalized.replace(/\s+office$/i, '').trim(); // Remove "Office" suffix
+      return normalized.toLowerCase();
+    };
+
+    // Validate: ALL locations in availabilityByLocation must match office location cities
+    // This prevents typos like "pentction" instead of "Penticton"
+    const invalidLocations: string[] = [];
     Object.keys(availabilityByLocation || {}).forEach((city: string) => {
-      if (city && city.trim()) {
-        allCitiesSet.add(city.trim());
+      if (!city || !city.trim()) return;
+      const normalizedCity = normalizeLocation(city);
+      const normalizedOfficeCities = officeLocationCities.map(normalizeLocation);
+      
+      // Check if this city matches any office location (case-insensitive, normalized)
+      const isValid = normalizedOfficeCities.some(officeCity => 
+        normalizedCity === officeCity
+      );
+      
+      if (!isValid) {
+        invalidLocations.push(city);
       }
     });
+
+    if (invalidLocations.length > 0) {
+      return NextResponse.json(
+        { 
+          error: "Invalid location names found. Please check your spelling. Locations must match your office location cities.",
+          invalidLocations,
+          validLocations: officeLocationCities,
+          details: `The following locations are invalid: ${invalidLocations.join(', ')}. Valid locations are: ${officeLocationCities.join(', ')}`
+        },
+        { status: 400 }
+      );
+    }
+
+    // CRITICAL: Only include cities from office locations
+    // This ensures no typos are saved
+    const allCitiesSet = new Set<string>();
+    
+    // Only add office location cities (agents can't add arbitrary locations)
+    officeLocationCities.forEach(city => allCitiesSet.add(city));
 
     const validLocations = Array.from(allCitiesSet);
 

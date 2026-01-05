@@ -106,6 +106,33 @@ export async function POST(request: NextRequest) {
 
     const normalizedLocation = normalizeLocation(location);
 
+    // Validate: location must match an office location city
+    const { data: officeLocations } = await supabaseAdmin
+      .from("office_locations")
+      .select("city")
+      .eq("agent_id", user.id);
+
+    const officeLocationCities: string[] = Array.from(
+      new Set((officeLocations || []).map((loc: any) => loc.city).filter(Boolean))
+    );
+
+    // Check if location matches any office location (case-insensitive, normalized)
+    const normalizedOfficeCities = officeLocationCities.map(normalizeLocation);
+    const isValidLocation = normalizedOfficeCities.some(officeCity => 
+      normalizedLocation === officeCity
+    );
+
+    if (!isValidLocation) {
+      return NextResponse.json(
+        { 
+          error: "Invalid location name. Please check your spelling. Location must match one of your office location cities.",
+          providedLocation: location,
+          validLocations: officeLocationCities,
+        },
+        { status: 400 }
+      );
+    }
+
     // Upsert daily availability (using unique constraint on specialist_id, location, date)
     const { data, error } = await supabaseAdmin
       .from("daily_availability")
