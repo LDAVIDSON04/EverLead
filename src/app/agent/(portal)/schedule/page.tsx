@@ -69,6 +69,7 @@ export default function SchedulePage() {
     leadId: string;
   } | null>(null);
   const [isDesktop, setIsDesktop] = useState(false);
+  const calendarScrollRef = useRef<HTMLDivElement>(null);
 
   // Detect if we're on desktop
   useEffect(() => {
