@@ -84,19 +84,26 @@ export default function FilesPage() {
           return;
         }
 
-        // Transform data to match Appointment type
-        const transformed = (data || []).map((item: any) => {
-          const { created_at, updated_at, ...rest } = item;
-          return {
-            ...rest,
-            leads: Array.isArray(item.leads) ? item.leads[0] || null : item.leads || null,
-          };
-        });
+        // Transform data to match Appointment type and filter out agent-created events
+        const transformed = (data || [])
+          .map((item: any) => {
+            const { created_at, updated_at, ...rest } = item;
+            return {
+              ...rest,
+              leads: Array.isArray(item.leads) ? item.leads[0] || null : item.leads || null,
+            };
+          })
+          // Filter out agent-created events (those with @soradin.internal email)
+          .filter((apt: any) => {
+            const lead = Array.isArray(apt.leads) ? apt.leads[0] : apt.leads;
+            // Only include appointments from real family bookings, not agent-created events
+            return lead?.email && !lead.email.includes('@soradin.internal');
+          });
 
         setAppointments(transformed as Appointment[]);
 
         // Convert appointments to file data format
-        // For now, we'll create placeholder files based on appointments
+        // Only include appointments from real family bookings (already filtered above)
         // TODO: Replace with actual file data from storage/database
         const fileData: FileData[] = transformed.map((apt: any) => {
           const lead = Array.isArray(apt.leads) ? apt.leads[0] : apt.leads;
@@ -178,42 +185,33 @@ export default function FilesPage() {
     }
   };
 
-  // Filter files based on active filter
-  const filteredFiles = files.filter((file) => {
-    switch (activeFilter) {
-      case 'all':
-        return true;
-      case 'appointment':
-        return true; // Show all, could be enhanced to group by appointment
-      case 'client':
-        return true; // Show all, could be enhanced to group by client
-      case 'uploaded':
-        return file.uploadedBy === 'Agent';
-      case 'shared':
-        return file.uploadedBy === 'Client';
-      default:
-        return true;
-    }
-  }).sort((a, b) => {
-    // Sort by date (newest first) after filtering
+  // Filter files - only show files from real family bookings (already filtered when loading)
+  const filteredFiles = files.sort((a, b) => {
+    // Sort by date (newest first)
     const dateA = (a as any)._sortDate || 0;
     const dateB = (b as any)._sortDate || 0;
     return dateB - dateA; // Descending order (newest first)
   });
 
-  // Format appointments for the upload modal
-  const appointmentOptions = appointments.map((apt) => {
-    const lead = apt.leads;
-    const clientName = lead?.full_name || 'Client';
-    const date = new Date(apt.requested_date);
-    const formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    
-    return {
-      id: apt.id,
-      displayName: `${clientName} – ${formattedDate}`,
-      date: formattedDate,
-    };
-  });
+  // Format appointments for the upload modal (only real family bookings, already filtered)
+  const appointmentOptions = appointments
+    .filter((apt) => {
+      // Double-check: exclude agent-created events
+      const lead = apt.leads;
+      return lead?.email && !lead.email.includes('@soradin.internal');
+    })
+    .map((apt) => {
+      const lead = apt.leads;
+      const clientName = lead?.full_name || 'Client';
+      const date = new Date(apt.requested_date);
+      const formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      
+      return {
+        id: apt.id,
+        displayName: `${clientName} – ${formattedDate}`,
+        date: formattedDate,
+      };
+    });
 
   if (loading) {
     return (

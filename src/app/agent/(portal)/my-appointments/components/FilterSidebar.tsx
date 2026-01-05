@@ -1,6 +1,6 @@
 'use client';
 
-import { FileText, Calendar, User, Upload, Share2 } from 'lucide-react';
+import { FileText } from 'lucide-react';
 
 interface FilterSidebarProps {
   activeFilter: string;
@@ -10,10 +10,6 @@ interface FilterSidebarProps {
 export function FilterSidebar({ activeFilter, onFilterChange }: FilterSidebarProps) {
   const filters = [
     { id: 'all', label: 'All Files', icon: FileText },
-    { id: 'appointment', label: 'By Appointment', icon: Calendar },
-    { id: 'client', label: 'By Client', icon: User },
-    { id: 'uploaded', label: 'Uploaded by Me', icon: Upload },
-    { id: 'shared', label: 'Shared with Me', icon: Share2 },
   ];
 
   return (
