@@ -45,7 +45,6 @@ export default function ProfileBioPage() {
     practice_philosophy_help: '',
     practice_philosophy_appreciate: '',
   });
-  const [bioStatus, setBioStatus] = useState<'pending' | 'approved' | 'rejected' | null>(null);
   const [generatedBio, setGeneratedBio] = useState<string | null>(null);
 
   useEffect(() => {
@@ -74,7 +73,6 @@ export default function ProfileBioPage() {
           practice_philosophy_appreciate: bio.practice_philosophy_appreciate || '',
         });
 
-        setBioStatus(profile.bio_approval_status as any);
         setGeneratedBio(profile.ai_generated_bio);
       }
     } catch (err) {
@@ -132,7 +130,6 @@ export default function ProfileBioPage() {
 
       const data = await res.json();
       setGeneratedBio(data.bio);
-      setBioStatus('approved');
       setSaveMessage({ type: 'success', text: 'Bio information saved and updated successfully!' });
       
       // Reload to get updated status
