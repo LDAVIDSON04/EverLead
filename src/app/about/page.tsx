@@ -65,7 +65,7 @@ export default function AboutPage() {
       <div className="max-w-6xl mx-auto px-6 pb-16">
         {/* Section 1 */}
         <section className="mb-24 md:mb-24 -mt-16 md:mt-0">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
+          <div className="grid md:grid-cols-2 gap-2 md:gap-12 items-center">
             <div className="order-1 md:order-1">
               <Image
                 src="/about-us-1.png"
@@ -75,7 +75,7 @@ export default function AboutPage() {
                 className="w-full h-[400px] object-contain rounded-lg"
               />
             </div>
-            <div className="order-2 md:order-2">
+            <div className="order-2 md:order-2 -mt-2 md:mt-0">
               <p className="text-lg leading-relaxed mb-4">
                 Soradin was created after seeing, up close, how confusing and overwhelming end of life and future planning can be for families. These are not decisions people make often, and when they do, they are usually navigating unfamiliar information during emotional moments.
               </p>
