@@ -910,27 +910,40 @@ export default function SchedulePage() {
                             const heightDesktop = (apt.durationMinutes / 60) * pxPerHourDesktop;
                             const color = getDayColor(dayIndex);
 
-                        return (
-                          <div
-                            key={apt.id}
-                            onClick={() => {
-                              if (apt.lead_id && !apt.is_external) {
-                                setViewingLeadId(apt.lead_id);
-                                setViewingAppointmentId(apt.id);
-                              } else if (apt.is_external) {
-                                setViewingExternalAppointment(apt);
-                              }
-                            }}
-                            className={`absolute inset-x-0.5 ${color} rounded p-0.5 md:p-1 shadow-sm cursor-pointer hover:shadow-md transition-all border border-gray-200 appointment-responsive`}
-                            style={{
-                              '--top-mobile': `${topOffsetMobile}px`,
-                              '--top-desktop': `${topOffsetDesktop}px`,
-                              '--height-mobile': `${heightMobile}px`,
-                              '--height-desktop': `${heightDesktop}px`,
-                              top: `${topOffsetMobile}px`,
-                              height: `${heightMobile}px`,
-                              zIndex: 5,
-                            } as React.CSSProperties}
+                            // Use desktop values if on desktop, mobile otherwise
+                            const finalTop = isDesktop ? topOffsetDesktop : topOffsetMobile;
+                            const finalHeight = isDesktop ? heightDesktop : heightMobile;
+
+                            // Debug log for ALL appointments
+                            if (apt.family_name?.includes('Seminar') || apt.durationMinutes > 60) {
+                              console.log(`📅 Appointment rendering:`, {
+                                title: apt.family_name,
+                                durationMinutes: apt.durationMinutes,
+                                isDesktop,
+                                finalHeight: `${finalHeight}px`,
+                                heightMobile: `${heightMobile}px`,
+                                heightDesktop: `${heightDesktop}px`,
+                                calculation: `${apt.durationMinutes}min / 60 * ${isDesktop ? 80 : 48}px = ${finalHeight}px`,
+                              });
+                            }
+
+                            return (
+                              <div
+                                key={apt.id}
+                                onClick={() => {
+                                  if (apt.lead_id && !apt.is_external) {
+                                    setViewingLeadId(apt.lead_id);
+                                    setViewingAppointmentId(apt.id);
+                                  } else if (apt.is_external) {
+                                    setViewingExternalAppointment(apt);
+                                  }
+                                }}
+                                className={`absolute inset-x-0.5 ${color} rounded p-0.5 md:p-1 shadow-sm cursor-pointer hover:shadow-md transition-all border border-gray-200`}
+                                style={{
+                                  top: `${finalTop}px`,
+                                  height: `${finalHeight}px`,
+                                  zIndex: 5,
+                                } as React.CSSProperties}
                           >
                             <div className="h-full flex flex-col gap-0.5 px-0.5 md:px-1 py-0.5">
                               <div className="text-[9px] md:text-xs font-medium text-gray-700 leading-tight line-clamp-1 break-words">

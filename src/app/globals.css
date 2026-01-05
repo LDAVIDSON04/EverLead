@@ -2,17 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Responsive appointment block heights for schedule calendar */
-.appointment-responsive {
-  position: absolute;
-}
-
-@media (min-width: 768px) {
-  .appointment-responsive {
-    top: var(--top-desktop) !important;
-    height: var(--height-desktop) !important;
-  }
-}
+/* Responsive appointment block heights are handled via inline styles */
 
 /* Global styles for EverLead */
 
