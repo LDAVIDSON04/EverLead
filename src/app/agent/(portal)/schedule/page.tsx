@@ -812,14 +812,14 @@ export default function SchedulePage() {
                                     setViewingExternalAppointment(apt);
                                   }
                                 }}
-                                className={`absolute inset-x-0.5 ${color} rounded p-0.5 md:p-1 shadow-sm cursor-pointer hover:shadow-md transition-all border border-gray-200 appointment-block`}
+                                className={`absolute inset-x-0.5 ${color} rounded p-0.5 md:p-1 shadow-sm cursor-pointer hover:shadow-md transition-all border border-gray-200`}
                                 style={{
-                                  '--top-mobile': `${topOffsetMobile}px`,
-                                  '--top-desktop': `${topOffsetDesktop}px`,
-                                  '--height-mobile': `${heightMobile}px`,
-                                  '--height-desktop': `${heightDesktop}px`,
+                                  top: `${topOffsetMobile}px`,
+                                  height: `${heightMobile}px`,
                                   zIndex: 5,
                                 } as React.CSSProperties}
+                                data-top-desktop={topOffsetDesktop}
+                                data-height-desktop={heightDesktop}
                               >
                                 <div className="h-full flex flex-col gap-0.5 px-0.5 md:px-1 py-0.5">
                                   {/* Customer Name */}
@@ -902,10 +902,12 @@ export default function SchedulePage() {
                       ) : (
                         cellAppointments.map((apt: any) => {
                             // Hour cells are h-12 (48px) on mobile, h-20 (80px) on desktop
-                            // Use responsive calculation: base on 48px, scale up for desktop
-                            const pxPerHour = typeof window !== 'undefined' && window.innerWidth >= 768 ? 80 : 48;
-                            const topOffset = (apt.minute / 60) * pxPerHour;
-                            const height = (apt.durationMinutes / 60) * pxPerHour;
+                            const pxPerHourMobile = 48;
+                            const pxPerHourDesktop = 80;
+                            const topOffsetMobile = (apt.minute / 60) * pxPerHourMobile;
+                            const topOffsetDesktop = (apt.minute / 60) * pxPerHourDesktop;
+                            const heightMobile = (apt.durationMinutes / 60) * pxPerHourMobile;
+                            const heightDesktop = (apt.durationMinutes / 60) * pxPerHourDesktop;
                             const color = getDayColor(dayIndex);
 
                         return (
@@ -919,12 +921,14 @@ export default function SchedulePage() {
                                 setViewingExternalAppointment(apt);
                               }
                             }}
-                            className={`absolute inset-x-0.5 ${color} rounded p-0.5 md:p-1 shadow-sm cursor-pointer hover:shadow-md transition-all border border-gray-200 appointment-block`}
+                            className={`absolute inset-x-0.5 ${color} rounded p-0.5 md:p-1 shadow-sm cursor-pointer hover:shadow-md transition-all border border-gray-200 appointment-responsive`}
                             style={{
-                              '--top-mobile': `${(apt.minute / 60) * 48}px`,
-                              '--top-desktop': `${(apt.minute / 60) * 80}px`,
-                              '--height-mobile': `${(apt.durationMinutes / 60) * 48}px`,
-                              '--height-desktop': `${(apt.durationMinutes / 60) * 80}px`,
+                              '--top-mobile': `${topOffsetMobile}px`,
+                              '--top-desktop': `${topOffsetDesktop}px`,
+                              '--height-mobile': `${heightMobile}px`,
+                              '--height-desktop': `${heightDesktop}px`,
+                              top: `${topOffsetMobile}px`,
+                              height: `${heightMobile}px`,
                               zIndex: 5,
                             } as React.CSSProperties}
                           >

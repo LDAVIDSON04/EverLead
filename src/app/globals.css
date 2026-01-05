@@ -3,18 +3,14 @@
 @tailwind utilities;
 
 /* Responsive appointment block heights for schedule calendar */
-.appointment-block {
+.appointment-responsive {
   position: absolute;
-  top: var(--top-mobile);
-  height: var(--height-mobile);
-  min-height: var(--height-mobile);
 }
 
 @media (min-width: 768px) {
-  .appointment-block {
-    top: var(--top-desktop);
-    height: var(--height-desktop);
-    min-height: var(--height-desktop);
+  .appointment-responsive {
+    top: var(--top-desktop) !important;
+    height: var(--height-desktop) !important;
   }
 }
 
