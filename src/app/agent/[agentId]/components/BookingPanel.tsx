@@ -254,59 +254,89 @@ export function BookingPanel({ agentId, initialLocation }: BookingPanelProps) {
   const formatNextAvailable = (dateStr: string): string => {
     if (!dateStr) return 'No availability';
     
-    const [year, month, dayOfMonth] = dateStr.split("-").map(Number);
-    const date = new Date(Date.UTC(year, month - 1, dayOfMonth));
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    // Compare dates (ignoring time)
-    const dateOnly = new Date(date);
-    dateOnly.setHours(0, 0, 0, 0);
-    
-    const diffTime = dateOnly.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    if (diffDays === 0) {
-      return 'Next available today';
-    } else if (diffDays === 1) {
-      return 'Next available tomorrow';
-    } else if (diffDays === 2) {
-      return 'Next available in 2 days';
-    } else if (diffDays <= 7) {
-      const monthName = date.toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' });
-      return `Next available ${monthName} ${dayOfMonth}`;
-    } else {
-      const monthName = date.toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' });
-      return `Next available ${monthName} ${dayOfMonth}`;
+    try {
+      // Parse date string (YYYY-MM-DD) as local date
+      const [year, month, dayOfMonth] = dateStr.split("-").map(Number);
+      const availableDate = new Date(year, month - 1, dayOfMonth);
+      
+      // Get today at midnight local time
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      // Set available date to midnight local time for comparison
+      const dateOnly = new Date(year, month - 1, dayOfMonth);
+      dateOnly.setHours(0, 0, 0, 0);
+      
+      // Calculate difference in days
+      const diffTime = dateOnly.getTime() - today.getTime();
+      const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+      
+      if (diffDays < 0) {
+        // Past date, should not happen but handle gracefully
+        return 'Next available today';
+      } else if (diffDays === 0) {
+        return 'Next available today';
+      } else if (diffDays === 1) {
+        return 'Next available tomorrow';
+      } else if (diffDays === 2) {
+        return 'Next available in 2 days';
+      } else if (diffDays <= 7) {
+        const monthName = availableDate.toLocaleDateString('en-US', { month: 'short' });
+        return `Next available ${monthName} ${dayOfMonth}`;
+      } else {
+        const monthName = availableDate.toLocaleDateString('en-US', { month: 'short' });
+        return `Next available ${monthName} ${dayOfMonth}`;
+      }
+    } catch (err) {
+      console.error('Error formatting next available date:', err, dateStr);
+      return 'No availability';
     }
   };
 
   // Fetch availability for all locations to calculate next available dates
   useEffect(() => {
-    if (officeLocations.length === 0 || nextAvailableCalculated) return;
+    if (officeLocations.length === 0) return;
     
     // Check if we need to calculate (has "Loading..." or old hardcoded value)
-    const needsUpdate = officeLocations.some(loc => loc.nextAvailable === 'Loading...' || loc.nextAvailable === 'Next available tomorrow');
-    if (!needsUpdate) {
-      setNextAvailableCalculated(true);
-      return;
-    }
+    const needsUpdate = officeLocations.some(loc => 
+      loc.nextAvailable === 'Loading...' || 
+      loc.nextAvailable === 'Next available tomorrow' ||
+      !loc.nextAvailable ||
+      loc.nextAvailable.trim() === ''
+    );
+    
+    if (!needsUpdate && nextAvailableCalculated) return;
     
     const fetchNextAvailableForAllLocations = async () => {
       try {
         const today = new Date();
-        const startDate = today.toISOString().split("T")[0];
-        const endDate = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]; // Check 30 days ahead
+        // Use local date for startDate to avoid timezone issues
+        const startDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+        const endDateObj = new Date(today.getTime() + 60 * 24 * 60 * 60 * 1000); // Check 60 days ahead
+        const endDate = `${endDateObj.getFullYear()}-${String(endDateObj.getMonth() + 1).padStart(2, '0')}-${String(endDateObj.getDate()).padStart(2, '0')}`;
+        
+        console.log('🕐 Fetching next available dates for all locations:', {
+          agentId,
+          startDate,
+          endDate,
+          locations: officeLocations.map(loc => ({ name: loc.name, locationName: loc.locationName, currentNextAvailable: loc.nextAvailable }))
+        });
         
         // Fetch availability for each location
         const locationPromises = officeLocations.map(async (location) => {
-          // Skip if already calculated (unless it's the hardcoded "Next available tomorrow")
-          if (location.nextAvailable !== 'Loading...' && location.nextAvailable !== 'Next available tomorrow') {
+          // Skip if already calculated (unless it's a placeholder value)
+          if (location.nextAvailable && 
+              location.nextAvailable !== 'Loading...' && 
+              location.nextAvailable !== 'Next available tomorrow' &&
+              !location.nextAvailable.startsWith('Next available') && // Skip if it's already a calculated date
+              location.nextAvailable !== 'No availability') {
+            console.log(`⏭️ Skipping ${location.locationName} - already calculated: ${location.nextAvailable}`);
             return location;
           }
           
           const locationName = location.locationName?.trim() || '';
           if (!locationName) {
+            console.log(`⚠️ Location ${location.id} has no locationName`);
             return {
               ...location,
               nextAvailable: 'No availability'
@@ -316,27 +346,43 @@ export function BookingPanel({ agentId, initialLocation }: BookingPanelProps) {
           const url = `/api/agents/availability?agentId=${agentId}&startDate=${startDate}&endDate=${endDate}${locationName ? `&location=${encodeURIComponent(locationName)}` : ''}`;
           
           try {
+            console.log(`📡 Fetching availability for ${locationName}:`, url);
             const res = await fetch(url);
             if (res.ok) {
               const availabilityData: any[] = await res.json();
               
-              // Find first day with available slots
-              const firstAvailableDay = availabilityData.find(day => day.slots && day.slots.length > 0);
+              console.log(`✅ Received availability data for ${locationName}:`, {
+                totalDays: availabilityData.length,
+                daysWithSlots: availabilityData.filter(d => d.slots && d.slots.length > 0).length,
+                firstAvailableDate: availabilityData.find(d => d.slots && d.slots.length > 0)?.date
+              });
+              
+              // Find first day with available slots (sorted by date)
+              const sortedDays = availabilityData
+                .filter(day => day.date && day.slots && day.slots.length > 0)
+                .sort((a, b) => a.date.localeCompare(b.date));
+              
+              const firstAvailableDay = sortedDays[0];
               
               if (firstAvailableDay) {
+                const formatted = formatNextAvailable(firstAvailableDay.date);
+                console.log(`✅ Calculated next available for ${locationName}: ${firstAvailableDay.date} -> ${formatted}`);
                 return {
                   ...location,
-                  nextAvailable: formatNextAvailable(firstAvailableDay.date)
+                  nextAvailable: formatted
                 };
               } else {
+                console.log(`❌ No available slots found for ${locationName} in next 60 days`);
                 return {
                   ...location,
                   nextAvailable: 'No availability'
                 };
               }
+            } else {
+              console.error(`❌ Failed to fetch availability for ${locationName}:`, res.status, res.statusText);
             }
           } catch (err) {
-            console.error(`Error fetching availability for location ${locationName}:`, err);
+            console.error(`❌ Error fetching availability for location ${locationName}:`, err);
           }
           
           return {
@@ -346,15 +392,20 @@ export function BookingPanel({ agentId, initialLocation }: BookingPanelProps) {
         });
         
         const updatedLocations = await Promise.all(locationPromises);
+        console.log('✅ Updated all location next available dates:', updatedLocations.map(loc => ({ 
+          name: loc.name, 
+          locationName: loc.locationName, 
+          nextAvailable: loc.nextAvailable 
+        })));
         setOfficeLocations(updatedLocations);
         setNextAvailableCalculated(true);
       } catch (err) {
-        console.error("Error fetching next available dates:", err);
+        console.error("❌ Error fetching next available dates:", err);
       }
     };
     
     fetchNextAvailableForAllLocations();
-  }, [agentId, officeLocations.length, nextAvailableCalculated]); // Only run when locations count changes or not yet calculated
+  }, [agentId, officeLocations.length]); // Run when locations are loaded or count changes
 
   // Fetch availability for selected location (for calendar display)
   useEffect(() => {
