@@ -1138,7 +1138,26 @@ export default function SchedulePage() {
         onClose={() => setShowAddAvailabilityModal(false)}
         onSave={(message) => {
           if (message) {
-            alert(message);
+            // Show modern toast notification instead of alert
+            if (typeof window !== 'undefined') {
+              const toastDiv = document.createElement('div');
+              toastDiv.className = 'fixed top-4 right-4 z-50 flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg border-2 bg-green-600 border-green-700 text-white min-w-[300px] max-w-md transform transition-all duration-300 translate-x-0 opacity-100';
+              toastDiv.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0">
+                  <path d="M20 6L9 17l-5-5"/>
+                </svg>
+                <p class="flex-1 text-sm font-medium">${message}</p>
+                <button class="flex-shrink-0 hover:opacity-80 transition-opacity" onclick="this.parentElement.remove()">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+              `;
+              document.body.appendChild(toastDiv);
+              setTimeout(() => {
+                toastDiv.style.transform = 'translateX(100%)';
+                toastDiv.style.opacity = '0';
+                setTimeout(() => toastDiv.remove(), 300);
+              }, 4000);
+            }
           }
           setShowAddAvailabilityModal(false);
           // Dispatch onboarding step completion event

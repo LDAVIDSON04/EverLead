@@ -112,9 +112,16 @@ export async function GET(req: NextRequest) {
             return false;
           }
           
+          // Check if onboarding is completed - agents must complete all 3 steps before appearing in marketplace
+          const onboardingCompleted = (metadata as any)?.onboarding_completed === true;
+          if (!onboardingCompleted) {
+            console.log(`[AGENT SEARCH] Agent ${profile.id} (${profile.full_name || 'unnamed'}) has not completed onboarding - excluding from results`);
+            return false;
+          }
+          
           // Debug log for the specific agent we're looking for
           if (profile.id === 'f7f6aeca-1059-4ae8-ae93-a059ad583b8f') {
-            console.log(`[AGENT SEARCH] ✅ Agent ${profile.id} passed paused_account check`);
+            console.log(`[AGENT SEARCH] ✅ Agent ${profile.id} passed paused_account and onboarding checks`);
           }
 
           const availability = (metadata as any)?.availability || {};

@@ -107,6 +107,37 @@ export default function BillingPage() {
           loadBilling();
           // Dispatch onboarding step completion event
           window.dispatchEvent(new CustomEvent("onboardingStepCompleted", { detail: { step: 3 } }));
+          
+          // Show completion popup
+          if (typeof window !== 'undefined') {
+            const popupDiv = document.createElement('div');
+            popupDiv.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4';
+            popupDiv.innerHTML = `
+              <div class="bg-white rounded-xl max-w-md w-full p-8 shadow-2xl transform transition-all">
+                <div class="text-center">
+                  <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M20 6L9 17l-5-5"/>
+                    </svg>
+                  </div>
+                  <h3 class="text-2xl font-bold text-gray-900 mb-2">Onboarding Complete!</h3>
+                  <p class="text-gray-600 mb-6">You're now ready to accept appointments and will appear in family search results.</p>
+                  <button onclick="this.closest('.fixed').remove()" class="w-full px-6 py-3 bg-green-800 text-white rounded-lg hover:bg-green-900 transition-colors font-medium">
+                    Get Started
+                  </button>
+                </div>
+              </div>
+            `;
+            document.body.appendChild(popupDiv);
+            // Auto-close after 10 seconds
+            setTimeout(() => {
+              if (popupDiv.parentElement) {
+                popupDiv.style.opacity = '0';
+                setTimeout(() => popupDiv.remove(), 300);
+              }
+            }, 10000);
+          }
+          
           // Clean up URL
           window.history.replaceState({}, '', window.location.pathname);
         }, 1000);

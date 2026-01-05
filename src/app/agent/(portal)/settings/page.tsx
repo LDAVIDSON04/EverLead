@@ -198,11 +198,11 @@ export default function SettingsPage() {
             regionsServed: metadata.regions_served || "",
             specialty: metadata.specialty || "",
             licenseNumber: metadata.license_number || "",
-            businessAddress: metadata.business_address || metadata.address?.street || "",
-            businessStreet: metadata.business_street || metadata.address?.street || "",
-            businessCity: metadata.business_city || metadata.address?.city || "",
-            businessProvince: metadata.business_province || metadata.address?.province || "",
-            businessZip: metadata.business_zip || metadata.address?.postalCode || "",
+            businessAddress: metadata.address?.street || metadata.business_address || "",
+            businessStreet: metadata.address?.street || metadata.business_street || "",
+            businessCity: metadata.address?.city || metadata.business_city || "",
+            businessProvince: metadata.address?.province || metadata.business_province || "",
+            businessZip: metadata.address?.postalCode || metadata.business_zip || "",
             profilePictureUrl: profile.profile_picture_url || "",
           });
 
@@ -518,9 +518,22 @@ function ProfileSection({
 
       // Trigger a custom event to refresh the layout and other pages
       window.dispatchEvent(new CustomEvent("profileUpdated"));
+      
+      // If profile picture was just added, dispatch onboarding step completion
+      if (saveData.profilePictureUrl) {
+        window.dispatchEvent(new CustomEvent("onboardingStepCompleted", { detail: { step: 1 } }));
+      }
 
       setSaveMessage({ type: "success", text: "Profile saved successfully!" });
       setTimeout(() => setSaveMessage(null), 3000);
+      
+      // Check if we should show onboarding modal after saving profile
+      if (saveData.profilePictureUrl) {
+        // Small delay to let the profile update event process
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent("checkOnboarding"));
+        }, 500);
+      }
     } catch (err: any) {
       console.error("Error saving profile:", err);
       setSaveMessage({ type: "error", text: err.message || "Failed to save profile" });

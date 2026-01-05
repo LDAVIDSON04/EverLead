@@ -583,8 +583,15 @@ export async function POST(req: NextRequest) {
     console.log("✅ Profile created successfully:", { userId, email, profileId: profileDataResult.id });
 
     // Create office locations if provided (using admin client since user isn't authenticated yet)
-    if (office_locations && Array.isArray(office_locations) && office_locations.length > 0) {
+    // Only create if we didn't already create them in the update path above
+    if (office_locations && Array.isArray(office_locations) && office_locations.length > 0 && !profileExists) {
       try {
+        // Delete any existing office locations first to prevent duplicates
+        await supabaseAdmin
+          .from("office_locations")
+          .delete()
+          .eq("agent_id", userId);
+        
         const locationInserts = office_locations.map((loc: any) => ({
           agent_id: userId,
           name: loc.name,

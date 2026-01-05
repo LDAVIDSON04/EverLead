@@ -167,8 +167,29 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
       }
     };
 
+    // Listen for check onboarding event (triggered after profile save)
+    const handleCheckOnboarding = async () => {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (session?.access_token) {
+        const res = await fetch('/api/agent/onboarding-status', {
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        });
+        if (res.ok) {
+          const status = await res.json();
+          setOnboardingStatus(status);
+          // Show modal if onboarding is not completed
+          if (status.needsOnboarding && !status.onboardingCompleted) {
+            setShowOnboarding(true);
+          }
+        }
+      }
+    };
+
     window.addEventListener('profileUpdated', handleProfileUpdate);
     window.addEventListener('onboardingStepCompleted', handleOnboardingStepCompleted);
+    window.addEventListener('checkOnboarding', handleCheckOnboarding);
     
     // Also listen for auth state changes to reload profile
     const { data: { subscription } } = supabaseClient.auth.onAuthStateChange((event, session) => {
@@ -676,97 +697,101 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
         </div>
       )}
 
-      {/* Onboarding Modal - Sequential Design */}
+      {/* Onboarding Modal - Modern Design */}
       {showOnboarding && onboardingStatus && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl max-w-2xl w-full p-8 shadow-2xl">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900">Complete Your Setup</h2>
-                <p className="text-gray-600 text-sm mt-1">Finish these steps to start receiving appointments</p>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-2xl w-full shadow-2xl transform transition-all animate-in fade-in zoom-in duration-200">
+            <div className="bg-gradient-to-r from-green-800 to-green-700 rounded-t-2xl p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold text-white">Complete Your Setup</h2>
+                  <p className="text-green-100 text-sm mt-1">Finish these steps to start receiving appointments</p>
+                </div>
+                {onboardingStatus.onboardingCompleted && (
+                  <button
+                    onClick={() => setShowOnboarding(false)}
+                    className="text-white/80 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10"
+                  >
+                    <X size={24} />
+                  </button>
+                )}
               </div>
-              {onboardingStatus.onboardingCompleted && (
-                <button
-                  onClick={() => setShowOnboarding(false)}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
-                >
-                  <X size={24} />
-                </button>
-              )}
             </div>
+            
+            <div className="p-8">
 
-            <div className="space-y-4 mb-6">
-              {/* Step 1: Update Profile Photo */}
-              <div className={`relative flex items-start gap-4 p-4 rounded-xl border-2 transition-all ${
+            <div className="space-y-3 mb-6">
+              {/* Step 1: Update Profile */}
+              <div className={`relative flex items-start gap-4 p-5 rounded-xl border-2 transition-all shadow-sm ${
                 onboardingStatus.hasProfilePicture 
-                  ? 'bg-green-50 border-green-300' 
+                  ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-300 shadow-green-100' 
                   : onboardingStatus.hasProfilePicture === false
-                  ? 'bg-white border-gray-200'
+                  ? 'bg-white border-gray-200 hover:border-gray-300'
                   : 'bg-gray-50 border-gray-200 opacity-60'
               }`}>
-                <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${
+                <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center font-bold text-sm shadow-md transition-all ${
                   onboardingStatus.hasProfilePicture 
-                    ? 'bg-green-600 text-white' 
+                    ? 'bg-gradient-to-br from-green-600 to-green-700 text-white shadow-green-300' 
                     : 'bg-gray-300 text-gray-600'
                 }`}>
                   {onboardingStatus.hasProfilePicture ? (
-                    <Check size={20} className="text-white" />
+                    <Check size={24} className="text-white" />
                   ) : (
-                    '1'
+                    <span className="text-base">1</span>
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="font-semibold text-gray-900">Update Profile</div>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="font-bold text-gray-900 text-base">Update Profile</div>
                     {onboardingStatus.hasProfilePicture && (
-                      <span className="text-xs font-medium text-green-700 bg-green-100 px-2 py-1 rounded-full">Complete</span>
+                      <span className="text-xs font-semibold text-green-700 bg-green-200 px-3 py-1 rounded-full">Complete</span>
                     )}
                   </div>
-                  <div className="text-sm text-gray-600 mb-3">Add your profile photo to appear professional</div>
+                  <div className="text-sm text-gray-600 mb-3">Add your profile photo and update your information</div>
                   {!onboardingStatus.hasProfilePicture && (
                     <button
                       onClick={() => {
                         setShowOnboarding(false);
                         router.push('/agent/settings?tab=profile');
                       }}
-                      className="px-4 py-2 bg-green-800 text-white text-sm font-medium rounded-lg hover:bg-green-900 transition-colors"
+                      className="px-5 py-2.5 bg-gradient-to-r from-green-800 to-green-700 text-white text-sm font-semibold rounded-lg hover:from-green-900 hover:to-green-800 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                     >
-                      Add Photo
+                      Update Profile
                     </button>
                   )}
                 </div>
               </div>
 
               {/* Step 2: Add Availability */}
-              <div className={`relative flex items-start gap-4 p-4 rounded-xl border-2 transition-all ${
+              <div className={`relative flex items-start gap-4 p-5 rounded-xl border-2 transition-all shadow-sm ${
                 onboardingStatus.hasAvailability 
-                  ? 'bg-green-50 border-green-300' 
+                  ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-300 shadow-green-100' 
                   : !onboardingStatus.hasProfilePicture
                   ? 'bg-gray-50 border-gray-200 opacity-60'
-                  : 'bg-white border-gray-200'
+                  : 'bg-white border-gray-200 hover:border-gray-300'
               }`}>
-                <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${
+                <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center font-bold text-sm shadow-md transition-all ${
                   onboardingStatus.hasAvailability 
-                    ? 'bg-green-600 text-white' 
+                    ? 'bg-gradient-to-br from-green-600 to-green-700 text-white shadow-green-300' 
                     : !onboardingStatus.hasProfilePicture
                     ? 'bg-gray-200 text-gray-400'
                     : 'bg-gray-300 text-gray-600'
                 }`}>
                   {onboardingStatus.hasAvailability ? (
-                    <Check size={20} className="text-white" />
+                    <Check size={24} className="text-white" />
                   ) : !onboardingStatus.hasProfilePicture ? (
-                    <Lock size={18} className="text-gray-400" />
+                    <Lock size={20} className="text-gray-400" />
                   ) : (
-                    '2'
+                    <span className="text-base">2</span>
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between mb-1">
-                    <div className={`font-semibold ${!onboardingStatus.hasProfilePicture ? 'text-gray-400' : 'text-gray-900'}`}>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className={`font-bold text-base ${!onboardingStatus.hasProfilePicture ? 'text-gray-400' : 'text-gray-900'}`}>
                       Add Availability
                     </div>
                     {onboardingStatus.hasAvailability && (
-                      <span className="text-xs font-medium text-green-700 bg-green-100 px-2 py-1 rounded-full">Complete</span>
+                      <span className="text-xs font-semibold text-green-700 bg-green-200 px-3 py-1 rounded-full">Complete</span>
                     )}
                   </div>
                   <div className={`text-sm mb-3 ${!onboardingStatus.hasProfilePicture ? 'text-gray-400' : 'text-gray-600'}`}>
@@ -780,7 +805,7 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
                         setShowOnboarding(false);
                         router.push('/agent/schedule?openAvailability=true');
                       }}
-                      className="px-4 py-2 bg-green-800 text-white text-sm font-medium rounded-lg hover:bg-green-900 transition-colors"
+                      className="px-5 py-2.5 bg-gradient-to-r from-green-800 to-green-700 text-white text-sm font-semibold rounded-lg hover:from-green-900 hover:to-green-800 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                     >
                       Add Availability
                     </button>
@@ -788,7 +813,7 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
                   {!onboardingStatus.hasProfilePicture && (
                     <button
                       disabled
-                      className="px-4 py-2 bg-gray-300 text-gray-500 text-sm font-medium rounded-lg cursor-not-allowed"
+                      className="px-5 py-2.5 bg-gray-300 text-gray-500 text-sm font-semibold rounded-lg cursor-not-allowed"
                     >
                       Locked
                     </button>
@@ -797,35 +822,35 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
               </div>
 
               {/* Step 3: Add Payment Method */}
-              <div className={`relative flex items-start gap-4 p-4 rounded-xl border-2 transition-all ${
+              <div className={`relative flex items-start gap-4 p-5 rounded-xl border-2 transition-all shadow-sm ${
                 onboardingStatus.hasPaymentMethod 
-                  ? 'bg-green-50 border-green-300' 
+                  ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-300 shadow-green-100' 
                   : !onboardingStatus.hasAvailability || !onboardingStatus.hasProfilePicture
                   ? 'bg-gray-50 border-gray-200 opacity-60'
-                  : 'bg-white border-gray-200'
+                  : 'bg-white border-gray-200 hover:border-gray-300'
               }`}>
-                <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${
+                <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center font-bold text-sm shadow-md transition-all ${
                   onboardingStatus.hasPaymentMethod 
-                    ? 'bg-green-600 text-white' 
+                    ? 'bg-gradient-to-br from-green-600 to-green-700 text-white shadow-green-300' 
                     : !onboardingStatus.hasAvailability || !onboardingStatus.hasProfilePicture
                     ? 'bg-gray-200 text-gray-400'
                     : 'bg-gray-300 text-gray-600'
                 }`}>
                   {onboardingStatus.hasPaymentMethod ? (
-                    <Check size={20} className="text-white" />
+                    <Check size={24} className="text-white" />
                   ) : !onboardingStatus.hasAvailability || !onboardingStatus.hasProfilePicture ? (
-                    <Lock size={18} className="text-gray-400" />
+                    <Lock size={20} className="text-gray-400" />
                   ) : (
-                    '3'
+                    <span className="text-base">3</span>
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between mb-1">
-                    <div className={`font-semibold ${!onboardingStatus.hasAvailability || !onboardingStatus.hasProfilePicture ? 'text-gray-400' : 'text-gray-900'}`}>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className={`font-bold text-base ${!onboardingStatus.hasAvailability || !onboardingStatus.hasProfilePicture ? 'text-gray-400' : 'text-gray-900'}`}>
                       Add Payment Method
                     </div>
                     {onboardingStatus.hasPaymentMethod && (
-                      <span className="text-xs font-medium text-green-700 bg-green-100 px-2 py-1 rounded-full">Complete</span>
+                      <span className="text-xs font-semibold text-green-700 bg-green-200 px-3 py-1 rounded-full">Complete</span>
                     )}
                   </div>
                   <div className={`text-sm mb-3 ${!onboardingStatus.hasAvailability || !onboardingStatus.hasProfilePicture ? 'text-gray-400' : 'text-gray-600'}`}>
@@ -839,7 +864,7 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
                         setShowOnboarding(false);
                         router.push('/agent/billing');
                       }}
-                      className="px-4 py-2 bg-green-800 text-white text-sm font-medium rounded-lg hover:bg-green-900 transition-colors"
+                      className="px-5 py-2.5 bg-gradient-to-r from-green-800 to-green-700 text-white text-sm font-semibold rounded-lg hover:from-green-900 hover:to-green-800 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                     >
                       Add Payment
                     </button>
@@ -847,7 +872,7 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
                   {(!onboardingStatus.hasAvailability || !onboardingStatus.hasProfilePicture) && (
                     <button
                       disabled
-                      className="px-4 py-2 bg-gray-300 text-gray-500 text-sm font-medium rounded-lg cursor-not-allowed"
+                      className="px-5 py-2.5 bg-gray-300 text-gray-500 text-sm font-semibold rounded-lg cursor-not-allowed"
                     >
                       Locked
                     </button>
@@ -858,13 +883,13 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
 
             {/* Completion Message */}
             {onboardingStatus.hasProfilePicture && onboardingStatus.hasPaymentMethod && onboardingStatus.hasAvailability && (
-              <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-300 rounded-xl p-6 mb-6">
-                <div className="flex items-start gap-3">
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-green-600 flex items-center justify-center">
-                    <Check size={20} className="text-white" />
+              <div className="bg-gradient-to-r from-green-50 via-emerald-50 to-green-50 border-2 border-green-300 rounded-xl p-6 mb-6 shadow-md">
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-green-600 to-green-700 flex items-center justify-center shadow-lg">
+                    <Check size={28} className="text-white" />
                   </div>
                   <div>
-                    <p className="text-lg font-bold text-green-900 mb-1">
+                    <p className="text-xl font-bold text-green-900 mb-2">
                       🎉 Onboarding Complete!
                     </p>
                     <p className="text-sm text-green-800">
@@ -876,7 +901,7 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
             )}
 
             {/* Action Buttons */}
-            <div className="flex gap-3 pt-4 border-t">
+            <div className="flex gap-3 pt-6 border-t border-gray-200">
               <button
                 onClick={async () => {
                   const { data: { session } } = await supabaseClient.auth.getSession();
@@ -893,7 +918,7 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
                     }
                   }
                 }}
-                className="flex-1 bg-gray-100 text-gray-700 px-4 py-2.5 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+                className="flex-1 bg-gray-100 text-gray-700 px-4 py-2.5 rounded-lg font-semibold hover:bg-gray-200 transition-colors"
               >
                 Refresh Status
               </button>
@@ -937,11 +962,12 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
                       setShowOnboarding(false);
                     }
                   }}
-                  className="flex-1 bg-green-800 text-white px-4 py-2.5 rounded-lg font-medium hover:bg-green-900 transition-colors"
+                  className="flex-1 bg-gradient-to-r from-green-800 to-green-700 text-white px-4 py-2.5 rounded-lg font-semibold hover:from-green-900 hover:to-green-800 transition-all shadow-md hover:shadow-lg"
                 >
                   Continue
                 </button>
               )}
+            </div>
             </div>
           </div>
         </div>
