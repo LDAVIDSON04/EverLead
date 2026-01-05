@@ -300,6 +300,18 @@ export async function GET(req: NextRequest) {
         
         startsAt = confirmedDate.toISOString();
         endsAt = confirmedEnd.toISOString();
+        
+        // Debug log for agent-created events with duration
+        if (lead?.email?.includes('@soradin.internal')) {
+          console.log(`📅 Agent event duration calculation:`, {
+            title: lead.full_name,
+            confirmed_at: apt.confirmed_at,
+            appointmentLengthMinutes,
+            startsAt,
+            endsAt,
+            durationMs: appointmentLengthMs,
+          });
+        }
       } else {
         // Fallback: infer from requested_window (for old appointments without confirmed_at)
         const dateStr = apt.requested_date; // Format: YYYY-MM-DD
