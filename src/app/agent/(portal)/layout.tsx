@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import { supabaseClient } from '@/lib/supabaseClient';
-import { Home, Calendar, File, Mail, User, XCircle, Upload, X, Settings, CreditCard, Menu } from 'lucide-react';
+import { Home, Calendar, File, Mail, User, XCircle, Upload, X, Settings, CreditCard, Menu, Lock, Check, AlertTriangle } from 'lucide-react';
 import { usePrefetchOnHover } from '@/lib/hooks/usePrefetch';
 
 type AgentLayoutProps = {
@@ -25,20 +25,32 @@ function NavLinkWithPrefetch({
   href, 
   isActive, 
   icon: Icon, 
-  label 
+  label,
+  onHomeClick
 }: { 
   href: string; 
   isActive: boolean; 
   icon: any; 
   label: string;
+  onHomeClick?: () => void;
 }) {
   const prefetchHandler = usePrefetchOnHover(href);
+  
+  const handleClick = async (e: React.MouseEvent) => {
+    if (onHomeClick && href === '/agent/dashboard') {
+      e.preventDefault();
+      await onHomeClick();
+      // Navigate after checking onboarding
+      window.location.href = href;
+    }
+  };
   
   return (
     <Link
       href={href}
       prefetch={true}
       onMouseEnter={prefetchHandler}
+      onClick={onHomeClick ? handleClick : undefined}
       className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-left ${
         isActive 
           ? 'bg-green-900/30 text-white' 
@@ -72,6 +84,7 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
   const [profilePicturePreview, setProfilePicturePreview] = useState<string | null>(null);
   const [onboardingStatus, setOnboardingStatus] = useState<{
     needsOnboarding: boolean;
+    hasProfilePicture: boolean;
     hasPaymentMethod: boolean;
     hasAvailability: boolean;
     onboardingCompleted?: boolean;
@@ -133,7 +146,29 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
       loadProfileData();
     };
 
+    // Listen for onboarding step completion events
+    const handleOnboardingStepCompleted = async () => {
+      // Refresh onboarding status and show modal if needed
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (session?.access_token) {
+        const res = await fetch('/api/agent/onboarding-status', {
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        });
+        if (res.ok) {
+          const status = await res.json();
+          setOnboardingStatus(status);
+          // Show modal if onboarding is not completed
+          if (status.needsOnboarding && !status.onboardingCompleted) {
+            setShowOnboarding(true);
+          }
+        }
+      }
+    };
+
     window.addEventListener('profileUpdated', handleProfileUpdate);
+    window.addEventListener('onboardingStepCompleted', handleOnboardingStepCompleted);
     
     // Also listen for auth state changes to reload profile
     const { data: { subscription } } = supabaseClient.auth.onAuthStateChange((event, session) => {
@@ -257,6 +292,7 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
     return () => {
       mounted = false;
       window.removeEventListener('profileUpdated', handleProfileUpdate);
+      window.removeEventListener('onboardingStepCompleted', handleOnboardingStepCompleted);
       subscription.unsubscribe();
     };
   }, []); // Empty dependency array - only run once on mount
@@ -414,6 +450,25 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
                   isActive={isActive}
                   icon={Icon}
                   label={item.label}
+                  onHomeClick={item.href === '/agent/dashboard' ? async () => {
+                    // Check onboarding status when Home is clicked
+                    const { data: { session } } = await supabaseClient.auth.getSession();
+                    if (session?.access_token) {
+                      const res = await fetch('/api/agent/onboarding-status', {
+                        headers: {
+                          Authorization: `Bearer ${session.access_token}`,
+                        },
+                      });
+                      if (res.ok) {
+                        const status = await res.json();
+                        setOnboardingStatus(status);
+                        // Show modal if onboarding is not completed
+                        if (status.needsOnboarding && !status.onboardingCompleted) {
+                          setShowOnboarding(true);
+                        }
+                      }
+                    }
+                  } : undefined}
                 />
               );
             })}
@@ -621,132 +676,209 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
         </div>
       )}
 
-      {/* Onboarding Modal */}
+      {/* Onboarding Modal - Sequential Design */}
       {showOnboarding && onboardingStatus && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl max-w-lg w-full p-6 shadow-xl">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold text-gray-900">Finish Onboarding</h2>
-              <button
-                onClick={() => setShowOnboarding(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X size={20} />
-              </button>
+          <div className="bg-white rounded-xl max-w-2xl w-full p-8 shadow-2xl">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">Complete Your Setup</h2>
+                <p className="text-gray-600 text-sm mt-1">Finish these steps to start receiving appointments</p>
+              </div>
+              {onboardingStatus.onboardingCompleted && (
+                <button
+                  onClick={() => setShowOnboarding(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <X size={24} />
+                </button>
+              )}
             </div>
 
-            <div className="mb-6">
-              <p className="text-gray-600 text-sm mb-4">
-                Please complete the following items to finish setting up your account:
-              </p>
-
-              <div className="space-y-3">
-                {/* Availability Status */}
-                <div className={`flex items-center gap-3 p-3 rounded-lg border-2 ${
-                  onboardingStatus.hasAvailability 
-                    ? 'bg-green-50 border-green-200' 
-                    : 'bg-gray-50 border-gray-200'
+            <div className="space-y-4 mb-6">
+              {/* Step 1: Update Profile Photo */}
+              <div className={`relative flex items-start gap-4 p-4 rounded-xl border-2 transition-all ${
+                onboardingStatus.hasProfilePicture 
+                  ? 'bg-green-50 border-green-300' 
+                  : onboardingStatus.hasProfilePicture === false
+                  ? 'bg-white border-gray-200'
+                  : 'bg-gray-50 border-gray-200 opacity-60'
+              }`}>
+                <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${
+                  onboardingStatus.hasProfilePicture 
+                    ? 'bg-green-600 text-white' 
+                    : 'bg-gray-300 text-gray-600'
                 }`}>
-                  <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
-                    onboardingStatus.hasAvailability ? 'bg-green-600' : 'bg-gray-300'
-                  }`}>
-                    {onboardingStatus.hasAvailability && (
-                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
+                  {onboardingStatus.hasProfilePicture ? (
+                    <Check size={20} className="text-white" />
+                  ) : (
+                    '1'
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="font-semibold text-gray-900">Update Profile</div>
+                    {onboardingStatus.hasProfilePicture && (
+                      <span className="text-xs font-medium text-green-700 bg-green-100 px-2 py-1 rounded-full">Complete</span>
                     )}
                   </div>
-                  <div className="flex-1">
-                    <div className="font-medium text-gray-900">Add Availability</div>
-                    <div className="text-sm text-gray-600">Set your schedule and availability</div>
+                  <div className="text-sm text-gray-600 mb-3">Add your profile photo to appear professional</div>
+                  {!onboardingStatus.hasProfilePicture && (
+                    <button
+                      onClick={() => {
+                        setShowOnboarding(false);
+                        router.push('/agent/settings?tab=profile');
+                      }}
+                      className="px-4 py-2 bg-green-800 text-white text-sm font-medium rounded-lg hover:bg-green-900 transition-colors"
+                    >
+                      Add Photo
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Step 2: Add Availability */}
+              <div className={`relative flex items-start gap-4 p-4 rounded-xl border-2 transition-all ${
+                onboardingStatus.hasAvailability 
+                  ? 'bg-green-50 border-green-300' 
+                  : !onboardingStatus.hasProfilePicture
+                  ? 'bg-gray-50 border-gray-200 opacity-60'
+                  : 'bg-white border-gray-200'
+              }`}>
+                <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${
+                  onboardingStatus.hasAvailability 
+                    ? 'bg-green-600 text-white' 
+                    : !onboardingStatus.hasProfilePicture
+                    ? 'bg-gray-200 text-gray-400'
+                    : 'bg-gray-300 text-gray-600'
+                }`}>
+                  {onboardingStatus.hasAvailability ? (
+                    <Check size={20} className="text-white" />
+                  ) : !onboardingStatus.hasProfilePicture ? (
+                    <Lock size={18} className="text-gray-400" />
+                  ) : (
+                    '2'
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between mb-1">
+                    <div className={`font-semibold ${!onboardingStatus.hasProfilePicture ? 'text-gray-400' : 'text-gray-900'}`}>
+                      Add Availability
+                    </div>
+                    {onboardingStatus.hasAvailability && (
+                      <span className="text-xs font-medium text-green-700 bg-green-100 px-2 py-1 rounded-full">Complete</span>
+                    )}
                   </div>
-                  {!onboardingStatus.hasAvailability && (
+                  <div className={`text-sm mb-3 ${!onboardingStatus.hasProfilePicture ? 'text-gray-400' : 'text-gray-600'}`}>
+                    {!onboardingStatus.hasProfilePicture 
+                      ? 'Complete Step 1 first' 
+                      : 'Set your schedule and availability'}
+                  </div>
+                  {!onboardingStatus.hasAvailability && onboardingStatus.hasProfilePicture && (
                     <button
                       onClick={() => {
                         setShowOnboarding(false);
                         router.push('/agent/schedule?openAvailability=true');
                       }}
-                      className="px-4 py-2 bg-green-800 text-white text-sm rounded-lg hover:bg-green-900"
+                      className="px-4 py-2 bg-green-800 text-white text-sm font-medium rounded-lg hover:bg-green-900 transition-colors"
                     >
-                      Add
+                      Add Availability
+                    </button>
+                  )}
+                  {!onboardingStatus.hasProfilePicture && (
+                    <button
+                      disabled
+                      className="px-4 py-2 bg-gray-300 text-gray-500 text-sm font-medium rounded-lg cursor-not-allowed"
+                    >
+                      Locked
                     </button>
                   )}
                 </div>
+              </div>
 
-                {/* Payment Method Status */}
-                <div className={`flex items-center gap-3 p-3 rounded-lg border-2 ${
+              {/* Step 3: Add Payment Method */}
+              <div className={`relative flex items-start gap-4 p-4 rounded-xl border-2 transition-all ${
+                onboardingStatus.hasPaymentMethod 
+                  ? 'bg-green-50 border-green-300' 
+                  : !onboardingStatus.hasAvailability || !onboardingStatus.hasProfilePicture
+                  ? 'bg-gray-50 border-gray-200 opacity-60'
+                  : 'bg-white border-gray-200'
+              }`}>
+                <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${
                   onboardingStatus.hasPaymentMethod 
-                    ? 'bg-green-50 border-green-200' 
-                    : 'bg-gray-50 border-gray-200'
+                    ? 'bg-green-600 text-white' 
+                    : !onboardingStatus.hasAvailability || !onboardingStatus.hasProfilePicture
+                    ? 'bg-gray-200 text-gray-400'
+                    : 'bg-gray-300 text-gray-600'
                 }`}>
-                  <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
-                    onboardingStatus.hasPaymentMethod ? 'bg-green-600' : 'bg-gray-300'
-                  }`}>
+                  {onboardingStatus.hasPaymentMethod ? (
+                    <Check size={20} className="text-white" />
+                  ) : !onboardingStatus.hasAvailability || !onboardingStatus.hasProfilePicture ? (
+                    <Lock size={18} className="text-gray-400" />
+                  ) : (
+                    '3'
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between mb-1">
+                    <div className={`font-semibold ${!onboardingStatus.hasAvailability || !onboardingStatus.hasProfilePicture ? 'text-gray-400' : 'text-gray-900'}`}>
+                      Add Payment Method
+                    </div>
                     {onboardingStatus.hasPaymentMethod && (
-                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
+                      <span className="text-xs font-medium text-green-700 bg-green-100 px-2 py-1 rounded-full">Complete</span>
                     )}
                   </div>
-                  <div className="flex-1">
-                    <div className="font-medium text-gray-900">Add Payment Method</div>
-                    <div className="text-sm text-gray-600">Required to receive appointments</div>
+                  <div className={`text-sm mb-3 ${!onboardingStatus.hasAvailability || !onboardingStatus.hasProfilePicture ? 'text-gray-400' : 'text-gray-600'}`}>
+                    {!onboardingStatus.hasAvailability || !onboardingStatus.hasProfilePicture
+                      ? 'Complete previous steps first' 
+                      : 'Required to receive appointments'}
                   </div>
-                  {!onboardingStatus.hasPaymentMethod && (
+                  {!onboardingStatus.hasPaymentMethod && onboardingStatus.hasAvailability && onboardingStatus.hasProfilePicture && (
                     <button
                       onClick={() => {
                         setShowOnboarding(false);
                         router.push('/agent/billing');
                       }}
-                      className="px-4 py-2 bg-green-800 text-white text-sm rounded-lg hover:bg-green-900"
+                      className="px-4 py-2 bg-green-800 text-white text-sm font-medium rounded-lg hover:bg-green-900 transition-colors"
                     >
-                      Add
+                      Add Payment
+                    </button>
+                  )}
+                  {(!onboardingStatus.hasAvailability || !onboardingStatus.hasProfilePicture) && (
+                    <button
+                      disabled
+                      className="px-4 py-2 bg-gray-300 text-gray-500 text-sm font-medium rounded-lg cursor-not-allowed"
+                    >
+                      Locked
                     </button>
                   )}
                 </div>
               </div>
             </div>
 
-            {onboardingStatus.hasPaymentMethod && onboardingStatus.hasAvailability && (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-                <p className="text-sm text-green-800 font-medium">
-                  ✅ All set! Your account is fully set up.
-                </p>
+            {/* Completion Message */}
+            {onboardingStatus.hasProfilePicture && onboardingStatus.hasPaymentMethod && onboardingStatus.hasAvailability && (
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-300 rounded-xl p-6 mb-6">
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-green-600 flex items-center justify-center">
+                    <Check size={20} className="text-white" />
+                  </div>
+                  <div>
+                    <p className="text-lg font-bold text-green-900 mb-1">
+                      🎉 Onboarding Complete!
+                    </p>
+                    <p className="text-sm text-green-800">
+                      You're now ready to receive appointments and will appear in family search results.
+                    </p>
+                  </div>
+                </div>
               </div>
             )}
 
+            {/* Action Buttons */}
             <div className="flex gap-3 pt-4 border-t">
               <button
                 onClick={async () => {
-                  // Mark onboarding as completed when user clicks "Continue"
-                  if (onboardingStatus.hasPaymentMethod && onboardingStatus.hasAvailability) {
-                    try {
-                      const { data: { session } } = await supabaseClient.auth.getSession();
-                      if (session?.access_token) {
-                        const { data: { user } } = await supabaseClient.auth.getUser();
-                        if (user) {
-                          const { data: profile } = await supabaseClient
-                            .from("profiles")
-                            .select("metadata")
-                            .eq("id", user.id)
-                            .maybeSingle();
-                          
-                          await supabaseClient
-                            .from("profiles")
-                            .update({
-                              metadata: {
-                                ...(profile?.metadata || {}),
-                                onboarding_completed: true,
-                              },
-                            })
-                            .eq("id", user.id);
-                        }
-                      }
-                    } catch (err) {
-                      console.error("Error marking onboarding as completed:", err);
-                    }
-                  }
-                  // Refresh onboarding status
                   const { data: { session } } = await supabaseClient.auth.getSession();
                   if (session?.access_token) {
                     const res = await fetch('/api/agent/onboarding-status', {
@@ -761,14 +893,13 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
                     }
                   }
                 }}
-                className="flex-1 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+                className="flex-1 bg-gray-100 text-gray-700 px-4 py-2.5 rounded-lg font-medium hover:bg-gray-200 transition-colors"
               >
                 Refresh Status
               </button>
-              {(onboardingStatus.hasPaymentMethod && onboardingStatus.hasAvailability) && (
+              {(onboardingStatus.hasProfilePicture && onboardingStatus.hasPaymentMethod && onboardingStatus.hasAvailability) && (
                 <button
                   onClick={async () => {
-                    // Mark onboarding as completed when user clicks "Continue"
                     try {
                       const { data: { session } } = await supabaseClient.auth.getSession();
                       if (session?.access_token) {
@@ -794,9 +925,19 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
                     } catch (err) {
                       console.error("Error marking onboarding as completed:", err);
                     }
-                    setShowOnboarding(false);
+                    const { data: { session } } = await supabaseClient.auth.getSession();
+                    if (session?.access_token) {
+                      const res = await fetch('/api/agent/onboarding-status', {
+                        headers: {
+                          Authorization: `Bearer ${session.access_token}`,
+                        },
+                      });
+                      const status = await res.json();
+                      setOnboardingStatus(status);
+                      setShowOnboarding(false);
+                    }
                   }}
-                  className="flex-1 bg-green-800 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-900 transition-colors"
+                  className="flex-1 bg-green-800 text-white px-4 py-2.5 rounded-lg font-medium hover:bg-green-900 transition-colors"
                 >
                   Continue
                 </button>

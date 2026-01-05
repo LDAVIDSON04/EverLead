@@ -47,11 +47,12 @@ export async function GET(req: NextRequest) {
 
     // Get all agents (we'll filter by approval and availability)
     // Include metadata to check availability.locations
-    // Include bio fields to check bio approval status
+    // Include bio fields and profile picture to check approval status
     const { data: profiles, error } = await supabaseAdmin
       .from("profiles")
       .select("id, full_name, first_name, last_name, profile_picture_url, funeral_home, job_title, agent_city, agent_province, metadata, approval_status, ai_generated_bio, bio_approval_status")
-      .eq("role", "agent");
+      .eq("role", "agent")
+      .not("profile_picture_url", "is", null); // Require profile picture
 
     if (error) {
       console.error("Error fetching agents:", error);

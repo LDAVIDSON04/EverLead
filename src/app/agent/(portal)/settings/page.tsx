@@ -373,6 +373,9 @@ function ProfileSection({
       
       // Trigger a custom event to refresh the layout and other pages immediately
       window.dispatchEvent(new CustomEvent("profileUpdated", { detail: { profilePictureUrl: urlWithCacheBust } }));
+      
+      // Dispatch onboarding step completion event
+      window.dispatchEvent(new CustomEvent("onboardingStepCompleted", { detail: { step: 1 } }));
 
       // Reload profile data to show updated picture
       const reloadRes = await fetch("/api/agent/settings/profile", {

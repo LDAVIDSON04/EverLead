@@ -1141,6 +1141,10 @@ export default function SchedulePage() {
             alert(message);
           }
           setShowAddAvailabilityModal(false);
+          // Dispatch onboarding step completion event
+          window.dispatchEvent(new CustomEvent('onboardingStepCompleted', {
+            detail: { step: 2 }
+          }));
         }}
       />
 

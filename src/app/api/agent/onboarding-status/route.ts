@@ -28,10 +28,10 @@ export async function GET(request: NextRequest) {
 
     console.log(`[ONBOARDING-STATUS] Agent ${agentId}: Auth user email from user.email: ${user.email}, from user_metadata: ${user.user_metadata?.email}, final: ${agentEmail}`);
 
-    // Get profile with approval status
+    // Get profile with approval status and profile picture
     const { data: profile, error: profileError } = await supabaseAdmin
       .from("profiles")
-      .select("id, approval_status, metadata, email")
+      .select("id, approval_status, metadata, email, profile_picture_url")
       .eq("id", agentId)
       .maybeSingle();
 
@@ -39,17 +39,37 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Profile not found" }, { status: 404 });
     }
 
+    // Check if onboarding is already completed (one-time flag)
+    const metadata = profile.metadata || {};
+    const onboardingCompleted = (metadata as any)?.onboarding_completed === true;
+    
+    // If onboarding is completed, never show modal again
+    if (onboardingCompleted) {
+      return NextResponse.json({
+        needsOnboarding: false,
+        hasProfilePicture: !!profile.profile_picture_url,
+        hasPaymentMethod: false, // Don't need to check if completed
+        hasAvailability: false, // Don't need to check if completed
+        onboardingCompleted: true,
+      });
+    }
+
     // Only check onboarding if agent is approved
     if (profile.approval_status !== "approved") {
       return NextResponse.json({
         needsOnboarding: false,
+        hasProfilePicture: false,
         hasPaymentMethod: false,
         hasAvailability: false,
+        onboardingCompleted: false,
       });
     }
 
+    // Check for profile picture
+    const hasProfilePicture = !!profile.profile_picture_url;
+    console.log(`[ONBOARDING-STATUS] Agent ${agentId}: hasProfilePicture: ${hasProfilePicture}`);
+
     // Check for availability in metadata
-    const metadata = profile.metadata || {};
     const availabilityData = metadata.availability || {};
     
     // Also get office locations to merge with availability
@@ -170,16 +190,13 @@ export async function GET(request: NextRequest) {
     
     console.log(`[ONBOARDING-STATUS] Agent ${agentId}: Final hasPaymentMethod: ${hasPaymentMethod}`);
 
-    // CRITICAL FIX: If agent has both payment method AND availability, they are done with onboarding
-    // Return needsOnboarding: false immediately - don't even check the flag
-    // This ensures the modal NEVER shows once both requirements are met
-    console.log(`[ONBOARDING-STATUS] Agent ${agentId}: Evaluating onboarding status. hasPaymentMethod: ${hasPaymentMethod}, hasAvailability: ${hasAvailability}`);
+    // Check if all 3 steps are complete: profile picture + availability + payment method
+    console.log(`[ONBOARDING-STATUS] Agent ${agentId}: Evaluating onboarding status. hasProfilePicture: ${hasProfilePicture}, hasPaymentMethod: ${hasPaymentMethod}, hasAvailability: ${hasAvailability}`);
     
-    if (hasPaymentMethod && hasAvailability) {
-      console.log(`[ONBOARDING-STATUS] Agent ${agentId}: BOTH CONDITIONS MET - marking as completed`);
+    if (hasProfilePicture && hasPaymentMethod && hasAvailability) {
+      console.log(`[ONBOARDING-STATUS] Agent ${agentId}: ALL 3 CONDITIONS MET - marking as completed`);
       
       // Auto-mark as completed in the database for future reference
-      const onboardingCompleted = (metadata as any)?.onboarding_completed === true;
       if (!onboardingCompleted) {
         try {
           await supabaseAdmin
@@ -198,27 +215,28 @@ export async function GET(request: NextRequest) {
         }
       }
       
-      // CRITICAL: Return needsOnboarding: false immediately when both are present
-      console.log(`[ONBOARDING-STATUS] Agent ${agentId}: RETURNING needsOnboarding: false (has both payment and availability)`);
+      // CRITICAL: Return needsOnboarding: false immediately when all 3 are present
+      console.log(`[ONBOARDING-STATUS] Agent ${agentId}: RETURNING needsOnboarding: false (has all 3 requirements)`);
       return NextResponse.json({
         needsOnboarding: false,
+        hasProfilePicture: true,
         hasPaymentMethod: true,
         hasAvailability: true,
         onboardingCompleted: true,
       });
     }
     
-    console.log(`[ONBOARDING-STATUS] Agent ${agentId}: Conditions NOT met. hasPaymentMethod: ${hasPaymentMethod}, hasAvailability: ${hasAvailability}`);
+    console.log(`[ONBOARDING-STATUS] Agent ${agentId}: Conditions NOT met. hasProfilePicture: ${hasProfilePicture}, hasPaymentMethod: ${hasPaymentMethod}, hasAvailability: ${hasAvailability}`);
 
-    // If either is missing, needs onboarding
-    const needsOnboarding = !hasPaymentMethod || !hasAvailability;
-    const onboardingCompleted = (metadata as any)?.onboarding_completed === true;
+    // If any step is missing, needs onboarding
+    const needsOnboarding = !hasProfilePicture || !hasPaymentMethod || !hasAvailability;
 
     return NextResponse.json({
       needsOnboarding: needsOnboarding && !onboardingCompleted,
+      hasProfilePicture,
       hasPaymentMethod,
       hasAvailability,
-      onboardingCompleted,
+      onboardingCompleted: false,
     });
   } catch (err: any) {
     console.error("Error in GET /api/agent/onboarding-status:", err);
