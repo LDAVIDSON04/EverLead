@@ -2227,30 +2227,10 @@ function ProfileBioSection() {
   const [saveMessage, setSaveMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [bioData, setBioData] = useState({
     years_of_experience: '',
-    specialties: [] as string[],
     practice_philosophy_help: '',
     practice_philosophy_appreciate: '',
-    practice_philosophy_situations: [] as string[],
-    languages_spoken: [] as string[],
   });
   const [generatedBio, setGeneratedBio] = useState<string | null>(null);
-
-  const specialtyOptions = [
-    'Pre-need planning',
-    'Estate planning support',
-    'Grief counseling',
-    'Family facilitation',
-    'Cremation planning',
-    'Cultural/religious planning',
-  ];
-
-  const situationOptions = [
-    'Immediate planning needs',
-    'Future planning',
-    'Family discussions',
-    'Estate coordination',
-    'Cultural/religious considerations',
-  ];
 
   useEffect(() => {
     loadBioData();
@@ -2274,11 +2254,8 @@ function ProfileBioSection() {
         
         setBioData({
           years_of_experience: bio.years_of_experience || '',
-          specialties: bio.specialties || [],
           practice_philosophy_help: bio.practice_philosophy_help || '',
           practice_philosophy_appreciate: bio.practice_philosophy_appreciate || '',
-          practice_philosophy_situations: bio.practice_philosophy_situations || [],
-          languages_spoken: bio.languages_spoken || [],
         });
 
         setGeneratedBio(profile.ai_generated_bio);
@@ -2316,7 +2293,23 @@ function ProfileBioSection() {
 
       if (error) throw error;
 
-      setSaveMessage({ type: 'success', text: 'Bio information saved successfully!' });
+      // Auto-generate bio after saving
+      const res = await fetch('/api/agents/generate-bio', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ agentId: user.id }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setGeneratedBio(data.bio);
+        setSaveMessage({ type: 'success', text: 'Bio information saved and updated successfully!' });
+      } else {
+        setSaveMessage({ type: 'success', text: 'Bio information saved successfully!' });
+      }
+      
+      // Reload to get updated status
+      await loadBioData();
     } catch (err: any) {
       setSaveMessage({ type: 'error', text: err.message || 'Failed to save bio information' });
     } finally {
@@ -2374,34 +2367,6 @@ function ProfileBioSection() {
     }
   }
 
-  function toggleSpecialty(specialty: string) {
-    setBioData(prev => ({
-      ...prev,
-      specialties: prev.specialties.includes(specialty)
-        ? prev.specialties.filter(s => s !== specialty)
-        : prev.specialties.length < 5
-        ? [...prev.specialties, specialty]
-        : prev.specialties
-    }));
-  }
-
-  function toggleSituation(situation: string) {
-    setBioData(prev => ({
-      ...prev,
-      practice_philosophy_situations: prev.practice_philosophy_situations.includes(situation)
-        ? prev.practice_philosophy_situations.filter(s => s !== situation)
-        : [...prev.practice_philosophy_situations, situation]
-    }));
-  }
-
-  function toggleLanguage(language: string) {
-    setBioData(prev => ({
-      ...prev,
-      languages_spoken: prev.languages_spoken.includes(language)
-        ? prev.languages_spoken.filter(l => l !== language)
-        : [...prev.languages_spoken, language]
-    }));
-  }
 
   if (loading) {
     return (
@@ -2449,32 +2414,10 @@ function ProfileBioSection() {
           className="mt-1"
         >
           <option value="">Select...</option>
-          <option value="1-3">1-3 years</option>
-          <option value="4-7">4-7 years</option>
-          <option value="8-12">8-12 years</option>
-          <option value="12+">12+ years</option>
-        </Select>
-      </div>
-
-      {/* Specialties */}
-      <div className="mb-6">
-        <Label>Specialties (Select up to 5) *</Label>
-        <div className="mt-2 grid grid-cols-2 gap-3">
-          {specialtyOptions.map((specialty) => (
-            <label key={specialty} className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={bioData.specialties.includes(specialty)}
-                onChange={() => toggleSpecialty(specialty)}
-                className="w-4 h-4 text-green-800 border-gray-300 rounded focus:ring-green-800"
-              />
-              <span className="text-sm text-gray-700">{specialty}</span>
-            </label>
+          {Array.from({ length: 50 }, (_, i) => i + 1).map(year => (
+            <option key={year} value={year}>{year} year{year > 1 ? 's' : ''}</option>
           ))}
-        </div>
-        {bioData.specialties.length >= 5 && (
-          <p className="text-xs text-gray-500 mt-2">Maximum 5 specialties selected</p>
-        )}
+        </Select>
       </div>
 
       {/* Practice Philosophy */}
@@ -2514,40 +2457,6 @@ function ProfileBioSection() {
         <p className="text-xs text-gray-500 mt-1">{bioData.practice_philosophy_appreciate.length}/200 characters</p>
       </div>
 
-      <div className="mb-6">
-        <Label>What situations are you best suited for? (Select all that apply)</Label>
-        <div className="mt-2 grid grid-cols-2 gap-3">
-          {situationOptions.map((situation) => (
-            <label key={situation} className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={bioData.practice_philosophy_situations.includes(situation)}
-                onChange={() => toggleSituation(situation)}
-                className="w-4 h-4 text-green-800 border-gray-300 rounded focus:ring-green-800"
-              />
-              <span className="text-sm text-gray-700">{situation}</span>
-            </label>
-          ))}
-        </div>
-      </div>
-
-      {/* Languages */}
-      <div className="mb-6">
-        <Label>Languages Spoken</Label>
-        <div className="mt-2 flex flex-wrap gap-2">
-          {['English', 'French', 'Spanish', 'Mandarin', 'Cantonese', 'Punjabi', 'Tagalog', 'Arabic', 'Other'].map((lang) => (
-            <label key={lang} className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={bioData.languages_spoken.includes(lang)}
-                onChange={() => toggleLanguage(lang)}
-                className="w-4 h-4 text-green-800 border-gray-300 rounded focus:ring-green-800"
-              />
-              <span className="text-sm text-gray-700">{lang}</span>
-            </label>
-          ))}
-        </div>
-      </div>
 
       {/* Action Buttons */}
       <div className="flex gap-3 justify-end">
@@ -2560,7 +2469,7 @@ function ProfileBioSection() {
         </button>
         <button
           onClick={handleGenerateBio}
-          disabled={generating || !bioData.years_of_experience || bioData.specialties.length === 0 || !bioData.practice_philosophy_help}
+          disabled={generating || !bioData.years_of_experience || !bioData.practice_philosophy_help || !bioData.practice_philosophy_appreciate}
           className="px-6 py-2 bg-green-800 text-white rounded-lg hover:bg-green-900 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
         >
           {generating ? (
