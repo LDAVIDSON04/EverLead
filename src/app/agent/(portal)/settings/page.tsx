@@ -2197,15 +2197,35 @@ function SecuritySection() {
                   className="bg-red-600 hover:bg-red-700"
                   onClick={async () => {
                     try {
-                      // Delete account - this would typically involve:
-                      // 1. Delete all related data (appointments, leads, etc.)
-                      // 2. Delete profile
-                      // 3. Delete auth user
-                      // For now, we'll just sign out and redirect
+                      // Get the session token for authentication
+                      const { data: { session } } = await supabaseClient.auth.getSession();
+                      if (!session?.access_token) {
+                        alert('You must be logged in to delete your account.');
+                        return;
+                      }
+
+                      // Call the delete account API
+                      const response = await fetch('/api/agent/delete-account', {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                          'Authorization': `Bearer ${session.access_token}`,
+                        },
+                      });
+
+                      const data = await response.json();
+
+                      if (!response.ok) {
+                        alert(data.error || 'Failed to delete account. Please try again or contact support.');
+                        return;
+                      }
+
+                      // Account deleted successfully - sign out and redirect
                       await supabaseClient.auth.signOut();
                       router.push("/agent");
                     } catch (err) {
                       console.error("Error deleting account:", err);
+                      alert('An error occurred while deleting your account. Please try again or contact support.');
                     }
                   }}
                 >
