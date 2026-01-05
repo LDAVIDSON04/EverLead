@@ -696,7 +696,7 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
                     <button
                       onClick={() => {
                         setShowOnboarding(false);
-                        router.push('/agent/settings?tab=billing');
+                        router.push('/agent/billing');
                       }}
                       className="px-4 py-2 bg-green-800 text-white text-sm rounded-lg hover:bg-green-900"
                     >
