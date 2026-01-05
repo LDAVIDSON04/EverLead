@@ -61,6 +61,7 @@ export function BookingPanel({ agentId, initialLocation }: BookingPanelProps) {
   const [allAvailabilityDays, setAllAvailabilityDays] = useState<AvailabilityDay[]>([]);
   const [loadingTimeSlots, setLoadingTimeSlots] = useState(false);
   const [agentInfo, setAgentInfo] = useState<any>(null);
+  const [nextAvailableCalculated, setNextAvailableCalculated] = useState(false);
 
   // Get search location from URL parameters or prop (prop takes precedence for modal usage)
   const searchLocationParam = initialLocation || searchParams?.get('location') || null;
@@ -114,6 +115,7 @@ export function BookingPanel({ agentId, initialLocation }: BookingPanelProps) {
           }
           
           setOfficeLocations(finalLocations);
+          setNextAvailableCalculated(false); // Reset flag so next available dates will be calculated
           
           // Set selected location
           if (normalizedSearchLocation && finalLocations.length > 0) {
@@ -217,6 +219,7 @@ export function BookingPanel({ agentId, initialLocation }: BookingPanelProps) {
         }
         
         setOfficeLocations(finalLocations);
+        setNextAvailableCalculated(false); // Reset flag so next available dates will be calculated
         
         // Set selected location: if searchLocation matches, select it; otherwise default to first
         if (normalizedSearchLocation && finalLocations.length > 0) {
@@ -280,11 +283,14 @@ export function BookingPanel({ agentId, initialLocation }: BookingPanelProps) {
 
   // Fetch availability for all locations to calculate next available dates
   useEffect(() => {
-    if (officeLocations.length === 0) return;
+    if (officeLocations.length === 0 || nextAvailableCalculated) return;
     
-    // Check if we already have calculated next available dates (not "Loading...")
+    // Check if we need to calculate (has "Loading..." or old hardcoded value)
     const needsUpdate = officeLocations.some(loc => loc.nextAvailable === 'Loading...' || loc.nextAvailable === 'Next available tomorrow');
-    if (!needsUpdate) return;
+    if (!needsUpdate) {
+      setNextAvailableCalculated(true);
+      return;
+    }
     
     const fetchNextAvailableForAllLocations = async () => {
       try {
@@ -341,13 +347,14 @@ export function BookingPanel({ agentId, initialLocation }: BookingPanelProps) {
         
         const updatedLocations = await Promise.all(locationPromises);
         setOfficeLocations(updatedLocations);
+        setNextAvailableCalculated(true);
       } catch (err) {
         console.error("Error fetching next available dates:", err);
       }
     };
     
     fetchNextAvailableForAllLocations();
-  }, [agentId, officeLocations]); // Run when officeLocations change
+  }, [agentId, officeLocations.length, nextAvailableCalculated]); // Only run when locations count changes or not yet calculated
 
   // Fetch availability for selected location (for calendar display)
   useEffect(() => {
