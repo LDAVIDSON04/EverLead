@@ -198,11 +198,11 @@ export default function SettingsPage() {
             regionsServed: metadata.regions_served || "",
             specialty: metadata.specialty || "",
             licenseNumber: metadata.license_number || "",
-            businessAddress: metadata.address?.street || metadata.business_address || "",
-            businessStreet: metadata.address?.street || metadata.business_street || "",
-            businessCity: metadata.address?.city || metadata.business_city || "",
-            businessProvince: metadata.address?.province || metadata.business_province || "",
-            businessZip: metadata.address?.postalCode || metadata.business_zip || "",
+            businessAddress: metadata.address?.street || profile.street_address || metadata.business_address || "",
+            businessStreet: metadata.address?.street || profile.street_address || metadata.business_street || "",
+            businessCity: metadata.address?.city || profile.city || metadata.business_city || "",
+            businessProvince: metadata.address?.province || profile.province || metadata.business_province || "",
+            businessZip: metadata.address?.postalCode || profile.postal_code || metadata.business_zip || "",
             profilePictureUrl: profile.profile_picture_url || "",
           });
 

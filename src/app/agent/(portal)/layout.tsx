@@ -260,6 +260,8 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
         // Check onboarding status for agents (non-blocking, async) - only if profile exists and is approved
         if (profile && profile.role === 'agent' && profile.approval_status === 'approved' && mounted) {
           checkAgentOnboarding(mounted);
+          // Generate bio if not already generated when agent is approved
+          generateBioIfNeeded(user.id, profile);
         } else if (profile && profile.approval_status !== 'approved' && profile.approval_status !== 'pending') {
           // Handle declined status
           setApprovalStatus(profile.approval_status);
@@ -268,6 +270,42 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
         console.error('Error checking approval:', error);
         // On error, allow access rather than redirecting (prevents loops)
         setCheckingAuth(false);
+      }
+    }
+
+    async function generateBioIfNeeded(userId: string, profile: any) {
+      try {
+        const metadata = profile.metadata || {};
+        const bioData = metadata.bio || {};
+        
+        // Check if bio is already generated
+        if (profile.ai_generated_bio) {
+          return; // Bio already exists
+        }
+        
+        // Check if we have the required bio data
+        if (!bioData.years_of_experience || !bioData.practice_philosophy_help || !bioData.practice_philosophy_appreciate) {
+          return; // Not enough data to generate bio
+        }
+        
+        // Generate bio
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (!session?.access_token) return;
+        
+        const bioRes = await fetch('/api/agents/generate-bio', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({ agentId: userId }),
+        });
+        
+        if (bioRes.ok) {
+          console.log('✅ Bio generated automatically after approval');
+        }
+      } catch (err) {
+        console.error('Error generating bio after approval:', err);
       }
     }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabaseClient } from "@/lib/supabaseClient";
 import { useRequireRole } from "@/lib/hooks/useRequireRole";
@@ -310,6 +310,26 @@ export default function SchedulePage() {
     loadSpecialist();
   }, [router]);
 
+  // Scroll to 8am when view or appointments change
+  useEffect(() => {
+    if (calendarScrollRef.current && !loading) {
+      const scrollToHour = 8;
+      const hours = view === 'week' ? weekHours : (view === 'day' ? dayHours : []);
+      if (hours.length > 0) {
+        const firstHour = hours[0];
+        if (firstHour <= scrollToHour) {
+          const hourIndex = scrollToHour - firstHour;
+          const scrollTop = hourIndex * (isDesktop ? 80 : 48);
+          setTimeout(() => {
+            if (calendarScrollRef.current) {
+              calendarScrollRef.current.scrollTop = scrollTop;
+            }
+          }, 200);
+        }
+      }
+    }
+  }, [view, weekHours, dayHours, loading, isDesktop]);
+
   async function checkCalendarConnections(specialistId: string, accessToken: string) {
     try {
       setCheckingConnection(true);
@@ -525,18 +545,25 @@ export default function SchedulePage() {
   const dayAppointments = getDayAppointments();
   const monthAppointments = getMonthAppointments();
 
-  // Calculate hours for display (8 AM to 8 PM, or based on appointments)
+  // Calculate hours for display - always default to 8 AM to 4 PM (16), but allow scrolling
   const calculateHours = (appts: any[]) => {
+    // Always show 8am-4pm (8-16) as the default view, but extend range if appointments exist outside
+    const defaultStart = 8;
+    const defaultEnd = 16; // 4 PM
+    
     if (appts.length === 0) {
-      return Array.from({ length: 13 }, (_, i) => i + 8); // 8 AM to 8 PM
+      // Default view: 8 AM to 4 PM
+      return Array.from({ length: defaultEnd - defaultStart + 1 }, (_, i) => i + defaultStart);
     }
     
+    // Find actual appointment range
     const appointmentHours = appts.map((apt: any) => apt.hour);
     const earliestHour = Math.min(...appointmentHours);
     const latestHour = Math.max(...appointmentHours);
     
-    const startHour = Math.max(8, earliestHour - 1);
-    const endHour = Math.min(20, latestHour + 1);
+    // Extend range if appointments are outside default view, but default view is still 8-4pm
+    const startHour = Math.min(defaultStart, Math.max(0, earliestHour - 1));
+    const endHour = Math.max(defaultEnd, Math.min(23, latestHour + 1));
     
     return Array.from({ length: endHour - startHour + 1 }, (_, i) => i + startHour);
   };
@@ -727,7 +754,27 @@ export default function SchedulePage() {
       </div>
 
       {/* Calendar Views */}
-      <div className="flex-1 overflow-auto overflow-x-hidden">
+      <div 
+        ref={calendarScrollRef}
+        className="flex-1 overflow-auto overflow-x-hidden"
+        onLoad={() => {
+          // Scroll to 8am when calendar loads
+          if (calendarScrollRef.current) {
+            const scrollToHour = 8;
+            const hours = view === 'week' ? weekHours : dayHours;
+            const firstHour = hours[0] || 8;
+            if (firstHour <= scrollToHour) {
+              const hourIndex = scrollToHour - firstHour;
+              const scrollTop = hourIndex * (isDesktop ? 80 : 48);
+              setTimeout(() => {
+                if (calendarScrollRef.current) {
+                  calendarScrollRef.current.scrollTop = scrollTop;
+                }
+              }, 100);
+            }
+          }
+        }}
+      >
         {/* Week View - EXACTLY AS BEFORE */}
         {view === 'week' && (
           <div className="inline-block min-w-full">

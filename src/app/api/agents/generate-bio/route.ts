@@ -48,9 +48,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Build the prompt for AI generation
-    const prompt = `Generate a professional, neutral, and compassionate "About the Specialist" section for a funeral planning professional.
+    const prompt = `Generate a comprehensive, professional, and compassionate "About the Specialist" section for a funeral planning professional.
 
-Use only the verified profile data provided below. Do not add claims, pricing, guarantees, or marketing language. Maintain a calm, respectful tone suitable for sensitive end-of-life planning. Limit to 2-3 short paragraphs.
+Use only the verified profile data provided below. Do not add claims, pricing, guarantees, or marketing language. Maintain a calm, respectful tone suitable for sensitive end-of-life planning. The bio should be detailed and thorough, providing families with a complete understanding of the specialist's background and approach.
 
 Profile Data:
 - Name: ${profile.full_name || 'This professional'}
@@ -62,15 +62,22 @@ Profile Data:
 - What families appreciate: ${practicePhilosophyAppreciate}
 
 Requirements:
+- Create a comprehensive bio with 4-5 detailed paragraphs
+- First paragraph: Introduction with name, title, organization, location, and years of experience
+- Second paragraph: Detailed explanation of how they help families, their approach, and areas of specialization
+- Third paragraph: What families appreciate about their service, their communication style, and values
+- Fourth paragraph: Their commitment to providing compassionate, respectful care during sensitive times
+- Optional fifth paragraph: Additional context about their dedication to helping families plan ahead
 - Focus on years of experience, areas of support, and family-centered approach
 - Mention professional credentials if relevant
 - Do not exaggerate or invent information
 - No superlatives ("best", "leading", "top")
 - No guarantees or promises
 - Calm, professional, compassionate tone
-- 2-3 short paragraphs maximum
+- Each paragraph should be 3-4 sentences minimum
+- Total word count should be 200-300 words
 
-Generate the bio now:`;
+Generate the comprehensive bio now:`;
 
     // Call OpenAI API (or your preferred AI service)
     // For now, we'll use a simple template-based approach until you configure your AI service
@@ -100,7 +107,7 @@ Generate the bio now:`;
             }
           ],
           temperature: 0.7,
-          max_tokens: 300,
+          max_tokens: 500,
         }),
       });
 

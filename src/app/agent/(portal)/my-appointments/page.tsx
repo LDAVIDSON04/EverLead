@@ -3,10 +3,8 @@
 import { useEffect, useState } from 'react';
 import { supabaseClient } from '@/lib/supabaseClient';
 import { useRequireRole } from '@/lib/hooks/useRequireRole';
-import { Upload } from 'lucide-react';
 import { FilterSidebar } from './components/FilterSidebar';
 import { FileTable, FileData } from './components/FileTable';
-import { FileUploadModal } from './components/FileUploadModal';
 import { EmptyState } from './components/EmptyState';
 
 type Lead = {
@@ -35,7 +33,6 @@ export default function FilesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState('all');
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     async function loadAppointments() {
@@ -144,47 +141,6 @@ export default function FilesPage() {
     loadAppointments();
   }, []);
 
-  const handleUpload = async (data: { file: File | null; appointment: string; note: string }) => {
-    if (!data.file || !data.appointment) return;
-
-    try {
-      // TODO: Implement actual file upload to storage
-      // For now, just add to local state
-      const appointment = appointments.find(a => a.id === data.appointment);
-      if (!appointment) return;
-
-      const lead = appointment.leads;
-      const clientName = lead?.full_name || 'Client';
-      const date = new Date(appointment.requested_date);
-      const formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-
-      const uploadDate = new Date();
-      const newFile: FileData = {
-        id: Date.now().toString(),
-        fileName: data.file.name,
-        appointment: `${clientName} – ${formattedDate}`,
-        client: clientName,
-        uploadedBy: 'Agent',
-        date: uploadDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        leadId: lead?.id || null,
-        appointmentId: appointment.id,
-        // Store the actual date for sorting
-        _sortDate: uploadDate.getTime(),
-      };
-
-      // Add new file and re-sort by date
-      const updatedFiles = [newFile, ...files];
-      updatedFiles.sort((a, b) => {
-        const dateA = (a as any)._sortDate || 0;
-        const dateB = (b as any)._sortDate || 0;
-        return dateB - dateA; // Descending order (newest first)
-      });
-      setFiles(updatedFiles);
-    } catch (err) {
-      console.error('Error uploading file:', err);
-    }
-  };
-
   // Filter files - only show files from real family bookings (already filtered when loading)
   const filteredFiles = files.sort((a, b) => {
     // Sort by date (newest first)
@@ -192,26 +148,6 @@ export default function FilesPage() {
     const dateB = (b as any)._sortDate || 0;
     return dateB - dateA; // Descending order (newest first)
   });
-
-  // Format appointments for the upload modal (only real family bookings, already filtered)
-  const appointmentOptions = appointments
-    .filter((apt) => {
-      // Double-check: exclude agent-created events
-      const lead = apt.leads;
-      return lead?.email && !lead.email.includes('@soradin.internal');
-    })
-    .map((apt) => {
-      const lead = apt.leads;
-      const clientName = lead?.full_name || 'Client';
-      const date = new Date(apt.requested_date);
-      const formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      
-      return {
-        id: apt.id,
-        displayName: `${clientName} – ${formattedDate}`,
-        date: formattedDate,
-      };
-    });
 
   if (loading) {
     return (
@@ -257,20 +193,13 @@ export default function FilesPage() {
 
       <main className="max-w-7xl mx-auto px-8 py-8">
         {filteredFiles.length === 0 ? (
-          <EmptyState onUploadClick={() => setIsModalOpen(true)} />
+          <EmptyState onUploadClick={() => {}} />
         ) : (
           <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
             <FileTable files={filteredFiles} />
           </div>
         )}
       </main>
-
-      <FileUploadModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onUpload={handleUpload}
-        appointments={appointmentOptions}
-      />
     </div>
   );
 }
