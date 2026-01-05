@@ -172,11 +172,21 @@ export default function HomePage() {
     "Advanced Planning Director",
   ];
 
+  const [searchError, setSearchError] = useState<string | null>(null);
+
   const handleSearch = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
+    
+    // Require location for search
+    if (!location || location.trim() === "") {
+      setSearchError("Please enter a location to search");
+      return;
+    }
+    
+    setSearchError(null);
     const params = new URLSearchParams();
     if (specialty) params.set("q", specialty);
-    if (location) params.set("location", location);
+    params.set("location", location);
     router.push(`/search?${params.toString()}`);
   };
 
