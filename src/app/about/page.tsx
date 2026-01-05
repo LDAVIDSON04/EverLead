@@ -66,7 +66,7 @@ export default function AboutPage() {
         {/* Section 1 */}
         <section className="mb-24">
           <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div className="order-2 md:order-1">
+            <div className="order-1 md:order-1">
               <Image
                 src="/about-us-1.png"
                 alt="Two people in conversation"
@@ -75,7 +75,7 @@ export default function AboutPage() {
                 className="w-full h-[400px] object-contain rounded-lg"
               />
             </div>
-            <div className="order-1 md:order-2">
+            <div className="order-2 md:order-2">
               <p className="text-lg leading-relaxed mb-4">
                 Soradin was created after seeing, up close, how confusing and overwhelming end of life and future planning can be for families. These are not decisions people make often, and when they do, they are usually navigating unfamiliar information during emotional moments.
               </p>
@@ -90,7 +90,7 @@ export default function AboutPage() {
         <section className="mb-24">
           <div className="bg-[#f8f9fa] p-12 rounded-lg">
             <div className="grid md:grid-cols-2 gap-12 items-center">
-              <div>
+              <div className="order-2 md:order-1">
                 <h2 className="mb-6 text-3xl font-semibold text-[#1a3a2e]">Planning should feel supportive, not transactional</h2>
                 <p className="text-lg leading-relaxed mb-4">
                   Too often, families are forced to jump between websites, professionals, and sales conversations without a clear starting point. Important planning decisions become fragmented, rushed, or delayed simply because the process feels overwhelming.
@@ -102,7 +102,7 @@ export default function AboutPage() {
                   Instead of pushing families down a sales funnel, Soradin creates space for education, discovery, and thoughtful conversations. Families can learn, explore options, and connect with qualified professionals when they&apos;re ready, not when they&apos;re pressured.
                 </p>
               </div>
-              <div>
+              <div className="order-1 md:order-2">
                 <Image
                   src="/about-us-3.png"
                   alt="Professional guiding client through planning"
