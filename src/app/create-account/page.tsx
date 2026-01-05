@@ -66,12 +66,35 @@ export default function CreateAccountPage() {
 
   const provinces = ['AB', 'BC', 'MB', 'NB', 'NL', 'NS', 'NT', 'NU', 'ON', 'PE', 'QC', 'SK', 'YT'];
 
+  // Phone number formatting function
+  const formatPhoneNumber = (value: string): string => {
+    // Remove all non-digit characters
+    const phoneNumber = value.replace(/\D/g, '');
+    
+    // Limit to 10 digits
+    const phoneNumberLength = phoneNumber.length;
+    if (phoneNumberLength < 4) return phoneNumber;
+    if (phoneNumberLength < 7) {
+      return `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3)}`;
+    }
+    return `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3, 6)}-${phoneNumber.slice(6, 10)}`;
+  };
+
+  // Email validation function
+  const isValidEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
 
   // Validation
   const validateStep1 = (): boolean => {
     if (!basicInfo.fullName || !basicInfo.email || !basicInfo.phone || !basicInfo.password || !basicInfo.confirmPassword ||
         !basicInfo.street || !basicInfo.city || !basicInfo.province || !basicInfo.postalCode) {
       setError('Please fill in all required fields.');
+      return false;
+    }
+    if (!isValidEmail(basicInfo.email)) {
+      setError('Please enter a valid email address.');
       return false;
     }
     if (basicInfo.password !== basicInfo.confirmPassword) {
@@ -296,9 +319,26 @@ export default function CreateAccountPage() {
                 <input
                   type="email"
                   value={basicInfo.email}
-                  onChange={(e) => setBasicInfo({ ...basicInfo, email: e.target.value })}
+                  onChange={(e) => {
+                    const emailValue = e.target.value;
+                    setBasicInfo({ ...basicInfo, email: emailValue });
+                    // Clear error if email becomes valid
+                    if (error && emailValue && isValidEmail(emailValue)) {
+                      setError(null);
+                    }
+                  }}
+                  onBlur={(e) => {
+                    // Validate email on blur
+                    if (e.target.value && !isValidEmail(e.target.value)) {
+                      setError('Please enter a valid email address.');
+                    }
+                  }}
                   placeholder="Email *"
-                  className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-700 outline-none transition-colors"
+                  className={`w-full pl-10 pr-4 py-3 border-2 rounded-lg focus:border-green-700 outline-none transition-colors ${
+                    basicInfo.email && !isValidEmail(basicInfo.email) 
+                      ? 'border-red-300' 
+                      : 'border-gray-300'
+                  }`}
                   required
                 />
               </div>
@@ -308,10 +348,14 @@ export default function CreateAccountPage() {
                 <input
                   type="tel"
                   value={basicInfo.phone}
-                  onChange={(e) => setBasicInfo({ ...basicInfo, phone: e.target.value })}
+                  onChange={(e) => {
+                    const formatted = formatPhoneNumber(e.target.value);
+                    setBasicInfo({ ...basicInfo, phone: formatted });
+                  }}
                   placeholder="Phone *"
                   className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-700 outline-none transition-colors"
                   required
+                  maxLength={14} // (XXX) XXX-XXXX = 14 characters
                 />
               </div>
 
