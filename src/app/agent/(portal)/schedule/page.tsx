@@ -545,27 +545,11 @@ export default function SchedulePage() {
   const dayAppointments = getDayAppointments();
   const monthAppointments = getMonthAppointments();
 
-  // Calculate hours for display - always default to 8 AM to 4 PM (16), but allow scrolling
+  // Calculate hours for display - always show full day range (0-23) but default view scrolls to 8am-4pm
   const calculateHours = (appts: any[]) => {
-    // Always show 8am-4pm (8-16) as the default view, but extend range if appointments exist outside
-    const defaultStart = 8;
-    const defaultEnd = 16; // 4 PM
-    
-    if (appts.length === 0) {
-      // Default view: 8 AM to 4 PM
-      return Array.from({ length: defaultEnd - defaultStart + 1 }, (_, i) => i + defaultStart);
-    }
-    
-    // Find actual appointment range
-    const appointmentHours = appts.map((apt: any) => apt.hour);
-    const earliestHour = Math.min(...appointmentHours);
-    const latestHour = Math.max(...appointmentHours);
-    
-    // Extend range if appointments are outside default view, but default view is still 8-4pm
-    const startHour = Math.min(defaultStart, Math.max(0, earliestHour - 1));
-    const endHour = Math.max(defaultEnd, Math.min(23, latestHour + 1));
-    
-    return Array.from({ length: endHour - startHour + 1 }, (_, i) => i + startHour);
+    // Always return full day range (0-23) so agent can scroll to see all times
+    // The calendar will default scroll position to 8am-4pm view
+    return Array.from({ length: 24 }, (_, i) => i);
   };
 
   const weekHours = calculateHours(weekAppointments);
