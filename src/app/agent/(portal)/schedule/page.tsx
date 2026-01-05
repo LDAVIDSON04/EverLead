@@ -812,6 +812,18 @@ export default function SchedulePage() {
                               });
                             }
 
+                            // Use desktop values if on desktop, mobile otherwise
+                            const finalTop = isDesktop ? topOffsetDesktop : topOffsetMobile;
+                            const finalHeight = isDesktop ? heightDesktop : heightMobile;
+                            
+                            // Debug log for ALL appointments
+                            console.log(`📅 Appointment: ${apt.family_name}`, {
+                              durationMinutes: apt.durationMinutes,
+                              isDesktop,
+                              finalHeight: `${finalHeight}px`,
+                              calculation: `${apt.durationMinutes}min / 60 * ${isDesktop ? 80 : 48}px = ${finalHeight}px`,
+                            });
+
                             return (
                               <div
                                 key={apt.id}
@@ -825,12 +837,10 @@ export default function SchedulePage() {
                                 }}
                                 className={`absolute inset-x-0.5 ${color} rounded p-0.5 md:p-1 shadow-sm cursor-pointer hover:shadow-md transition-all border border-gray-200`}
                                 style={{
-                                  top: `${topOffsetMobile}px`,
-                                  height: `${heightMobile}px`,
+                                  top: `${finalTop}px`,
+                                  height: `${finalHeight}px`,
                                   zIndex: 5,
                                 } as React.CSSProperties}
-                                data-top-desktop={topOffsetDesktop}
-                                data-height-desktop={heightDesktop}
                               >
                                 <div className="h-full flex flex-col gap-0.5 px-0.5 md:px-1 py-0.5">
                                   {/* Customer Name */}
