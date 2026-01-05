@@ -7,12 +7,14 @@
   position: absolute;
   top: var(--top-mobile);
   height: var(--height-mobile);
+  min-height: var(--height-mobile);
 }
 
 @media (min-width: 768px) {
   .appointment-block {
     top: var(--top-desktop);
     height: var(--height-desktop);
+    min-height: var(--height-desktop);
   }
 }
 
