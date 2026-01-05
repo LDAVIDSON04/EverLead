@@ -693,17 +693,12 @@ export default function AgentLandingPage() {
                   <div className="space-y-2">
                     <p className="text-zinc-700 text-center">
                       Don't have an account?{' '}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setMode("signup");
-                          setError(null);
-                          setShowForgotPassword(false);
-                        }}
+                      <Link
+                        href="/create-account"
                         className="text-emerald-700 hover:text-emerald-800 transition-colors underline"
                       >
-                        create one now
-                      </button>
+                        create account now
+                      </Link>
                     </p>
                     <p className="text-zinc-700 text-center">
                       <button
