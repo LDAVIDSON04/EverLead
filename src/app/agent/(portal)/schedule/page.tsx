@@ -768,10 +768,26 @@ export default function SchedulePage() {
                             cellAppointments.map((apt: any) => {
                             // Calculate top offset within this hour (based on minutes)
                             // Hour cells are h-12 (48px) on mobile, h-20 (80px) on desktop
-                            const pxPerHour = typeof window !== 'undefined' && window.innerWidth >= 768 ? 80 : 48;
-                            const topOffset = (apt.minute / 60) * pxPerHour;
-                            const height = (apt.durationMinutes / 60) * pxPerHour;
+                            const pxPerHourMobile = 48;
+                            const pxPerHourDesktop = 80;
+                            const topOffsetMobile = (apt.minute / 60) * pxPerHourMobile;
+                            const topOffsetDesktop = (apt.minute / 60) * pxPerHourDesktop;
+                            // Calculate height based on duration - for 2 hours = 2 * 80px = 160px on desktop
+                            const heightMobile = (apt.durationMinutes / 60) * pxPerHourMobile;
+                            const heightDesktop = (apt.durationMinutes / 60) * pxPerHourDesktop;
                             const color = getDayColor(dayIndex);
+                            
+                            // Debug log for 2-hour appointments
+                            if (apt.durationMinutes >= 115 && apt.durationMinutes <= 125) {
+                              console.log(`📅 2-hour appointment detected:`, {
+                                title: apt.family_name,
+                                durationMinutes: apt.durationMinutes,
+                                heightMobile: `${heightMobile}px`,
+                                heightDesktop: `${heightDesktop}px`,
+                                startsAt: apt.starts_at,
+                                endsAt: apt.ends_at,
+                              });
+                            }
 
                             return (
                               <div
@@ -786,10 +802,10 @@ export default function SchedulePage() {
                                 }}
                                 className={`absolute inset-x-0.5 ${color} rounded p-0.5 md:p-1 shadow-sm cursor-pointer hover:shadow-md transition-all border border-gray-200 appointment-block`}
                                 style={{
-                                  '--top-mobile': `${(apt.minute / 60) * 48}px`,
-                                  '--top-desktop': `${(apt.minute / 60) * 80}px`,
-                                  '--height-mobile': `${(apt.durationMinutes / 60) * 48}px`,
-                                  '--height-desktop': `${(apt.durationMinutes / 60) * 80}px`,
+                                  '--top-mobile': `${topOffsetMobile}px`,
+                                  '--top-desktop': `${topOffsetDesktop}px`,
+                                  '--height-mobile': `${heightMobile}px`,
+                                  '--height-desktop': `${heightDesktop}px`,
                                   zIndex: 5,
                                 } as React.CSSProperties}
                               >
