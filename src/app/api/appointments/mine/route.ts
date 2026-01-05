@@ -127,7 +127,8 @@ export async function GET(req: NextRequest) {
               full_name,
               email,
               city,
-              province
+              province,
+              additional_notes
             )
           `
           )
