@@ -32,7 +32,19 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Failed to fetch profile" }, { status: 500 });
     }
 
-    return NextResponse.json({ profile });
+    // Get email from auth.users since it's not in profiles table
+    let email = null;
+    try {
+      const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(user.id);
+      email = authUser?.user?.email || null;
+    } catch (authError) {
+      console.error("Error fetching email from auth:", authError);
+    }
+
+    // Add email to profile object for frontend
+    const profileWithEmail = profile ? { ...profile, email } : null;
+
+    return NextResponse.json({ profile: profileWithEmail });
   } catch (err: any) {
     console.error("Error in GET /api/agent/settings/profile:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

@@ -198,11 +198,11 @@ export default function SettingsPage() {
             regionsServed: metadata.regions_served || "",
             specialty: metadata.specialty || "",
             licenseNumber: metadata.license_number || "",
-            businessAddress: metadata.business_address || "",
-            businessStreet: metadata.business_street || "",
-            businessCity: metadata.business_city || "",
-            businessProvince: metadata.business_province || "",
-            businessZip: metadata.business_zip || "",
+            businessAddress: metadata.business_address || metadata.address?.street || "",
+            businessStreet: metadata.business_street || metadata.address?.street || "",
+            businessCity: metadata.business_city || metadata.address?.city || "",
+            businessProvince: metadata.business_province || metadata.address?.province || "",
+            businessZip: metadata.business_zip || metadata.address?.postalCode || "",
             profilePictureUrl: profile.profile_picture_url || "",
           });
 
@@ -2149,7 +2149,6 @@ function SecuritySection() {
       <div className="border-t border-gray-200 pt-8">
         <h3 className="font-semibold mb-4 text-red-600 flex items-center gap-2">
           <AlertTriangle size={18} />
-          Danger Zone
         </h3>
 
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">

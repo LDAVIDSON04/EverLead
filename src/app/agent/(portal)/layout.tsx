@@ -124,11 +124,15 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
     };
 
     // Listen for profile updates
-    const handleProfileUpdate = () => {
+    const handleProfileUpdate = (event?: CustomEvent) => {
+      // If event has profile picture URL, update immediately
+      if (event?.detail?.profilePictureUrl) {
+        setProfilePictureUrl(event.detail.profilePictureUrl);
+      }
       loadProfileData();
     };
 
-    window.addEventListener('profileUpdated', handleProfileUpdate);
+    window.addEventListener('profileUpdated', handleProfileUpdate as EventListener);
     
     // Also listen for auth state changes to reload profile
     const { data: { subscription } } = supabaseClient.auth.onAuthStateChange((event, session) => {
@@ -659,7 +663,7 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
                     <button
                       onClick={() => {
                         setShowOnboarding(false);
-                        router.push('/agent/settings?tab=calendar');
+                        router.push('/agent/schedule?openAvailability=true');
                       }}
                       className="px-4 py-2 bg-green-800 text-white text-sm rounded-lg hover:bg-green-900"
                     >
