@@ -184,30 +184,12 @@ export default function ProfileBioPage() {
           )}
 
           {/* Bio Status */}
-          {bioStatus && (
-            <div className={`mb-6 p-4 rounded-lg ${
-              bioStatus === 'approved' 
-                ? 'bg-green-50 border border-green-200' 
-                : bioStatus === 'rejected'
-                ? 'bg-red-50 border border-red-200'
-                : 'bg-yellow-50 border border-yellow-200'
-            }`}>
+          {generatedBio && (
+            <div className="mb-6 p-4 rounded-lg bg-green-50 border border-green-200">
               <div className="flex items-center gap-2">
-                {bioStatus === 'approved' ? (
-                  <Check className="w-5 h-5 text-green-600" />
-                ) : bioStatus === 'rejected' ? (
-                  <X className="w-5 h-5 text-red-600" />
-                ) : (
-                  <Clock className="w-5 h-5 text-yellow-600" />
-                )}
-                <p className={`text-sm font-medium ${
-                  bioStatus === 'approved' ? 'text-green-800' : bioStatus === 'rejected' ? 'text-red-800' : 'text-yellow-800'
-                }`}>
-                  {bioStatus === 'approved' 
-                    ? 'Your bio has been approved and is live on your profile.'
-                    : bioStatus === 'rejected'
-                    ? 'Your bio was rejected. Please update your information and generate a new bio.'
-                    : 'Your bio is pending admin approval.'}
+                <Check className="w-5 h-5 text-green-600" />
+                <p className="text-sm font-medium text-green-800">
+                  Your bio is live on your profile and will update automatically when you save changes.
                 </p>
               </div>
             </div>
