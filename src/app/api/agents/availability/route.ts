@@ -104,6 +104,45 @@ export async function GET(req: NextRequest) {
       return normalized;
     };
     
+    // Simple fuzzy matching for location names (handles minor typos)
+    // Returns true if locations are similar enough (allows 1-2 character differences)
+    const fuzzyLocationMatch = (loc1: string, loc2: string): boolean => {
+      const n1 = normalizeLocation(loc1)?.toLowerCase().trim() || '';
+      const n2 = normalizeLocation(loc2)?.toLowerCase().trim() || '';
+      
+      // Exact match
+      if (n1 === n2) return true;
+      
+      // If lengths differ by more than 2, probably not a match
+      if (Math.abs(n1.length - n2.length) > 2) return false;
+      
+      // Calculate simple edit distance (Levenshtein-like)
+      // For short strings (<=10 chars), allow 1-2 differences
+      // For longer strings, allow up to 2-3 differences
+      const maxDiff = n1.length <= 10 ? 2 : 3;
+      
+      // Simple character-based similarity check
+      // Count matching characters in order
+      let matches = 0;
+      let i = 0, j = 0;
+      const common = new Set([...n1].filter(c => n2.includes(c)));
+      const similarity = (common.size * 2) / (n1.length + n2.length);
+      
+      // If similarity is high enough (>75%), consider it a match
+      if (similarity > 0.75) {
+        // Additional check: one string contains most of the other
+        if (n1.length >= n2.length) {
+          const contains = n2.split('').every(c => n1.includes(c));
+          if (contains) return true;
+        } else {
+          const contains = n1.split('').every(c => n2.includes(c));
+          if (contains) return true;
+        }
+      }
+      
+      return false;
+    };
+    
     // Use the specified location, or fall back to first location, or agent's default city
     let selectedLocation = location ? normalizeLocation(location) : undefined;
     if (!selectedLocation && locations.length > 0) {
@@ -161,12 +200,25 @@ export async function GET(req: NextRequest) {
         locationSchedule = availabilityByLocation[selectedLocation];
       } else {
         // Try normalized match - normalize both the key and selectedLocation for comparison
-        const matchingLocation = Object.keys(availabilityByLocation).find(
+        let matchingLocation = Object.keys(availabilityByLocation).find(
           loc => {
             const normalizedKey = normalizeLocation(loc)?.toLowerCase().trim() || loc.toLowerCase().trim();
             return normalizedKey === normalizedSelected;
           }
         );
+        
+        // If no exact match, try fuzzy matching for typos
+        if (!matchingLocation && selectedLocation) {
+          const finalSelected = selectedLocation; // Capture for closure
+          matchingLocation = Object.keys(availabilityByLocation).find(
+            loc => fuzzyLocationMatch(finalSelected, loc)
+          );
+          
+          if (matchingLocation) {
+            console.log(`🔍 [AVAILABILITY API] Fuzzy matched location: "${selectedLocation}" -> "${matchingLocation}"`);
+          }
+        }
+        
         if (matchingLocation) {
           locationSchedule = availabilityByLocation[matchingLocation];
           // Update selectedLocation to the matched key for consistency
