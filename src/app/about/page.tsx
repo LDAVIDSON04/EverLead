@@ -52,7 +52,7 @@ export default function AboutPage() {
       </header>
 
       {/* Hero Section */}
-      <section className="bg-white py-20 px-6">
+      <section className="bg-white py-20 px-6 md:py-20">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="mb-6 text-5xl font-semibold text-[#1a3a2e]">About Soradin</h1>
           <p className="text-xl text-[#4a4a4a] max-w-2xl mx-auto leading-relaxed">
@@ -64,7 +64,7 @@ export default function AboutPage() {
       {/* Main Content */}
       <div className="max-w-6xl mx-auto px-6 pb-16">
         {/* Section 1 */}
-        <section className="mb-24">
+        <section className="mb-24 md:mb-24 -mt-8 md:mt-0">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div className="order-1 md:order-1">
               <Image
