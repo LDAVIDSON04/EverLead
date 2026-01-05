@@ -68,6 +68,17 @@ export default function SchedulePage() {
     appointmentId: string;
     leadId: string;
   } | null>(null);
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  // Detect if we're on desktop
+  useEffect(() => {
+    const checkDesktop = () => {
+      setIsDesktop(window.innerWidth >= 768);
+    };
+    checkDesktop();
+    window.addEventListener('resize', checkDesktop);
+    return () => window.removeEventListener('resize', checkDesktop);
+  }, []);
 
   // Check for query parameter to open availability modal
   useEffect(() => {
