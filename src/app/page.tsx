@@ -8,7 +8,7 @@ import { useState } from "react";
 
 export default function HomePage() {
   const router = useRouter();
-  const [specialty, setSpecialty] = useState("");
+  const [specialty, setSpecialty] = useState("Advanced Planning Director");
   const [location, setLocation] = useState("");
   const [showSpecialtyDropdown, setShowSpecialtyDropdown] = useState(false);
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
