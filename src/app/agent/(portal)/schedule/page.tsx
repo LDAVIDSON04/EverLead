@@ -431,10 +431,18 @@ export default function SchedulePage() {
 
   // Get appointments for the week (Sunday-Saturday)
   const getWeekAppointments = () => {
-    const weekStart = new Date(weekDates[0]);
-    const weekEnd = new Date(weekDates[6]);
-    weekStart.setHours(0, 0, 0, 0);
-    weekEnd.setHours(23, 59, 59, 999);
+    // Normalize week boundaries to agent's timezone for consistent comparison
+    const weekStartDate = weekDates[0];
+    const weekEndDate = weekDates[6];
+    
+    // Create DateTime objects in agent's timezone for the start and end of the week
+    const weekStartDT = DateTime.fromJSDate(weekStartDate, { zone: agentTimezone })
+      .set({ hour: 0, minute: 0, second: 0, millisecond: 0 });
+    const weekEndDT = DateTime.fromJSDate(weekEndDate, { zone: agentTimezone })
+      .set({ hour: 23, minute: 59, second: 59, millisecond: 999 });
+    
+    const weekStart = weekStartDT.toJSDate();
+    const weekEnd = weekEndDT.toJSDate();
 
     return appointments
       .map(apt => {
@@ -443,10 +451,12 @@ export default function SchedulePage() {
         const aptDate = localStart.toJSDate();
         
         if (aptDate >= weekStart && aptDate <= weekEnd) {
+          // Compare dates in agent's timezone
           const dayIndex = weekDates.findIndex((date, idx) => {
-            const dateStr = date.toDateString();
-            const aptDateStr = aptDate.toDateString();
-            return dateStr === aptDateStr;
+            const dateDT = DateTime.fromJSDate(date, { zone: agentTimezone })
+              .set({ hour: 0, minute: 0, second: 0, millisecond: 0 });
+            const aptDateDT = localStart.set({ hour: 0, minute: 0, second: 0, millisecond: 0 });
+            return dateDT.hasSame(aptDateDT, 'day');
           });
           
           if (dayIndex >= 0 && dayIndex < 7) {
