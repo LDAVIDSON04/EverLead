@@ -8,10 +8,10 @@ export const runtime = "nodejs";
 
 export async function GET(
   req: NextRequest,
-  context: { params: Promise<{ appointmentId: string }> }
+  { params }: { params: Promise<{ appointmentId: string }> }
 ) {
   try {
-    const { appointmentId } = await context.params;
+    const { appointmentId } = await params;
 
     if (!appointmentId) {
       return NextResponse.json(
