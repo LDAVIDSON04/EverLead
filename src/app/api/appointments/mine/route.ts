@@ -60,12 +60,12 @@ export async function GET(req: NextRequest) {
     }
 
     // Fetch appointments for this agent (using old schema: agent_id, lead_id)
-    // Fetch appointments from the past 7 days to ensure we get appointments from the current week
+    // Fetch appointments from the past 30 days to ensure we get all appointments from the current week
     // This allows the schedule view to show all appointments in the week, including past days
     const now = new Date();
-    const sevenDaysAgo = new Date(now);
-    sevenDaysAgo.setDate(now.getDate() - 7);
-    const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0]; // YYYY-MM-DD
+    const thirtyDaysAgo = new Date(now);
+    thirtyDaysAgo.setDate(now.getDate() - 30);
+    const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split('T')[0]; // YYYY-MM-DD
     
     // Fetch appointments - try with notes first, fallback without if column doesn't exist
     let appointments: any[] | null = null;
@@ -133,7 +133,7 @@ export async function GET(req: NextRequest) {
           `
           )
           .eq("agent_id", userId)
-          .gte("requested_date", sevenDaysAgoStr)
+          .gte("requested_date", thirtyDaysAgoStr)
           .in("status", ["pending", "confirmed", "booked"])
           .order("requested_date", { ascending: true })
           .order("created_at", { ascending: true });
@@ -150,6 +150,7 @@ export async function GET(req: NextRequest) {
 
     // Also fetch external calendar events (booked by coworkers/front desk)
     // These should appear in the agent's schedule alongside Soradin appointments
+    // Fetch events from the past 30 days to show all events in the current week view
     // Try to fetch with title and location columns, but handle gracefully if columns don't exist yet
     let externalEvents: any[] | null = null;
     let externalEventsError: any = null;
@@ -161,7 +162,7 @@ export async function GET(req: NextRequest) {
         .eq("specialist_id", userId) // specialist_id in external_events = agent_id (user ID)
         .eq("status", "confirmed") // Only show confirmed events
         .eq("is_soradin_created", false) // Only show external events (not Soradin-created)
-        .gte("starts_at", now.toISOString()) // Only future events
+        .gte("starts_at", thirtyDaysAgo.toISOString()) // Include past events from the past 30 days
         .order("starts_at", { ascending: true });
       
       externalEvents = result.data;
@@ -176,7 +177,7 @@ export async function GET(req: NextRequest) {
           .eq("specialist_id", userId)
           .eq("status", "confirmed")
           .eq("is_soradin_created", false)
-          .gte("starts_at", now.toISOString())
+          .gte("starts_at", thirtyDaysAgo.toISOString())
           .order("starts_at", { ascending: true });
         
         externalEvents = result.data;
