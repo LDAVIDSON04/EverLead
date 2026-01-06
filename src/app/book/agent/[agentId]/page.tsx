@@ -31,18 +31,7 @@ export default function BookAgentPage() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null); // 'YYYY-MM-DD'
   const [selectedSlot, setSelectedSlot] = useState<AvailabilitySlot | null>(null);
   const [isLoadingAvailability, setIsLoadingAvailability] = useState(false);
-  const [isBooking, setIsBooking] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [showModal, setShowModal] = useState(false);
-  const [showBookingForm, setShowBookingForm] = useState(false);
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    dateOfBirth: "",
-  });
-  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [agentInfo, setAgentInfo] = useState<{
     full_name: string | null;
     first_name: string | null;
@@ -196,122 +185,6 @@ export default function BookAgentPage() {
     reloadAvailability();
   };
 
-  const validateForm = (): boolean => {
-    const errors: Record<string, string> = {};
-
-    if (!formData.firstName.trim()) {
-      errors.firstName = "First name is required";
-    }
-
-    if (!formData.lastName.trim()) {
-      errors.lastName = "Last name is required";
-    }
-
-    if (!formData.email.trim()) {
-      errors.email = "Email is required";
-    } else {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(formData.email)) {
-        errors.email = "Please enter a valid email address";
-      }
-    }
-
-    if (!formData.dateOfBirth.trim()) {
-      errors.dateOfBirth = "Date of birth is required";
-    } else {
-      const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
-      if (!dateRegex.test(formData.dateOfBirth)) {
-        errors.dateOfBirth = "Please enter date in mm/dd/yyyy format";
-      }
-    }
-
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
-  const handleFormChange = (field: string, value: string) => {
-    // Auto-format date of birth with slashes
-    if (field === "dateOfBirth") {
-      // Remove all non-digit characters
-      const digitsOnly = value.replace(/\D/g, "");
-      
-      // Format with slashes: mm/dd/yyyy
-      let formatted = "";
-      if (digitsOnly.length > 0) {
-        formatted = digitsOnly.substring(0, 2);
-      }
-      if (digitsOnly.length > 2) {
-        formatted += "/" + digitsOnly.substring(2, 4);
-      }
-      if (digitsOnly.length > 4) {
-        formatted += "/" + digitsOnly.substring(4, 8);
-      }
-      
-      // Limit to 10 characters (mm/dd/yyyy)
-      if (formatted.length > 10) {
-        formatted = formatted.substring(0, 10);
-      }
-      
-      value = formatted;
-    }
-    
-    setFormData((prev) => ({ ...prev, [field]: value }));
-    // Clear error when user starts typing
-    if (formErrors[field]) {
-      setFormErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[field];
-        return newErrors;
-      });
-    }
-  };
-
-  const handleOpenBookingForm = () => {
-    if (!selectedDate || !selectedSlot) {
-      setError("Please select a date and time");
-      return;
-    }
-    setShowBookingForm(true);
-    setError(null);
-  };
-
-  const handleCloseBookingForm = () => {
-    setShowBookingForm(false);
-    setFormData({
-      firstName: "",
-      lastName: "",
-      email: "",
-      dateOfBirth: "",
-    });
-    setFormErrors({});
-  };
-
-  const handleContinue = () => {
-    if (!selectedDate || !selectedSlot) {
-      setError("Please select a date and time");
-      return;
-    }
-
-    if (!validateForm()) {
-      return;
-    }
-
-    // Navigate to step2 with form data in URL params
-    const params = new URLSearchParams({
-      agentId,
-      startsAt: selectedSlot.startsAt,
-      endsAt: selectedSlot.endsAt,
-      date: selectedDate,
-      email: formData.email,
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      dateOfBirth: formData.dateOfBirth,
-      ...(searchedCity ? { city: searchedCity } : {}),
-      ...(officeLocationName ? { officeLocation: officeLocationName } : {}),
-    });
-
-    router.push(`/book/step2?${params.toString()}`);
-  };
 
   const formatTime = (isoString: string): string => {
     const date = new Date(isoString);
@@ -512,164 +385,28 @@ export default function BookAgentPage() {
             {selectedSlot && (
               <div className="mt-6 pt-6 border-t border-gray-200">
                 <button
-                  onClick={handleOpenBookingForm}
+                  onClick={() => {
+                    if (!selectedDate || !selectedSlot) {
+                      setError("Please select a date and time");
+                      return;
+                    }
+                    // Navigate to step1 with time slot data
+                    const params = new URLSearchParams({
+                      agentId,
+                      startsAt: selectedSlot.startsAt,
+                      endsAt: selectedSlot.endsAt,
+                      date: selectedDate,
+                      ...(searchedCity ? { city: searchedCity } : {}),
+                      ...(officeLocationName ? { officeLocation: officeLocationName } : {}),
+                    });
+                    router.push(`/book/step1?${params.toString()}`);
+                  }}
                   className="w-full bg-green-800 text-white py-3 px-6 rounded-lg font-semibold hover:bg-green-900 transition-colors"
                 >
                   Book Appointment
                 </button>
               </div>
             )}
-          </div>
-        )}
-
-        {/* Booking Form Modal */}
-        {showBookingForm && selectedSlot && (
-          <div
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-            onClick={(e) => {
-              if (e.target === e.currentTarget && !isBooking) {
-                handleCloseBookingForm();
-              }
-            }}
-          >
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-              {/* Header */}
-              <div className="flex items-center justify-between p-6 border-b border-gray-200 sticky top-0 bg-white z-10">
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-900">Book Appointment</h2>
-                  {selectedDate && selectedSlot && (
-                    <p className="text-sm text-gray-600 mt-1">
-                      {formatDate(selectedDate)} at {formatTime(selectedSlot.startsAt)}
-                    </p>
-                  )}
-                </div>
-                <button
-                  onClick={handleCloseBookingForm}
-                  disabled={isBooking}
-                  className="text-gray-400 hover:text-gray-600 disabled:opacity-50"
-                >
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
-
-              {/* Form */}
-              <div className="p-6">
-                <div className="space-y-4">
-                  {/* Email */}
-                  <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                      Email <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="email"
-                      id="email"
-                      value={formData.email}
-                      onChange={(e) => handleFormChange("email", e.target.value)}
-                      className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800 ${
-                        formErrors.email ? "border-red-500" : "border-gray-300"
-                      }`}
-                      placeholder="your.email@example.com"
-                      disabled={isBooking}
-                    />
-                    {formErrors.email && (
-                      <p className="text-sm text-red-500 mt-1">{formErrors.email}</p>
-                    )}
-                  </div>
-
-                  {/* First Name */}
-                  <div>
-                    <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
-                      First Name <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      id="firstName"
-                      value={formData.firstName}
-                      onChange={(e) => handleFormChange("firstName", e.target.value)}
-                      className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800 ${
-                        formErrors.firstName ? "border-red-500" : "border-gray-300"
-                      }`}
-                      placeholder="John"
-                      disabled={isBooking}
-                    />
-                    {formErrors.firstName && (
-                      <p className="text-sm text-red-500 mt-1">{formErrors.firstName}</p>
-                    )}
-                  </div>
-
-                  {/* Last Name */}
-                  <div>
-                    <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">
-                      Last Name <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      id="lastName"
-                      value={formData.lastName}
-                      onChange={(e) => handleFormChange("lastName", e.target.value)}
-                      className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800 ${
-                        formErrors.lastName ? "border-red-500" : "border-gray-300"
-                      }`}
-                      placeholder="Doe"
-                      disabled={isBooking}
-                    />
-                    {formErrors.lastName && (
-                      <p className="text-sm text-red-500 mt-1">{formErrors.lastName}</p>
-                    )}
-                  </div>
-
-                  {/* Date of Birth */}
-                  <div>
-                    <label htmlFor="dateOfBirth" className="block text-sm font-medium text-gray-700 mb-1">
-                      Date of Birth <span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                      <input
-                        type="text"
-                        id="dateOfBirth"
-                        value={formData.dateOfBirth}
-                        onChange={(e) => handleFormChange("dateOfBirth", e.target.value)}
-                        className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800 ${
-                          formErrors.dateOfBirth ? "border-red-500" : "border-gray-300"
-                        }`}
-                        placeholder="mm/dd/yyyy"
-                        maxLength={10}
-                        disabled={isBooking}
-                      />
-                    </div>
-                    {formErrors.dateOfBirth && (
-                      <p className="text-sm text-red-500 mt-1">{formErrors.dateOfBirth}</p>
-                    )}
-                  </div>
-
-                  {/* Error Message */}
-                  {error && (
-                    <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                      <p className="text-sm text-red-600">{error}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Footer */}
-              <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200 sticky bottom-0 bg-white">
-                <button
-                  onClick={handleCloseBookingForm}
-                  disabled={isBooking}
-                  className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleContinue}
-                  disabled={isBooking}
-                  className="px-6 py-2 bg-green-800 text-white rounded-lg font-semibold hover:bg-green-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  Continue
-                </button>
-              </div>
-            </div>
           </div>
         )}
 
