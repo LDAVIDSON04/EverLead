@@ -1190,56 +1190,41 @@ function SearchResults() {
         <div className="max-w-[1200px] mx-auto px-4 py-4">
           {/* Mobile Header */}
           <div className="md:hidden">
-            <div className="flex items-center gap-3 mb-3">
-              {/* Logo and Soradin */}
-              <Link href="/" className="flex items-center gap-2 flex-shrink-0">
-                <Image
-                  src="/Soradin.png"
-                  alt="Soradin Logo"
-                  width={40}
-                  height={40}
-                  className="h-10 w-10 object-contain"
-                />
-                <span className="text-xl font-semibold text-gray-900">Soradin</span>
-              </Link>
+            <div className="flex items-start justify-between">
+              {/* Left side: Logo + Providers count */}
+              <div className="flex flex-col">
+                {/* Logo and Soradin */}
+                <Link href="/" className="flex items-center gap-2 mb-2">
+                  <Image
+                    src="/Soradin.png"
+                    alt="Soradin Logo"
+                    width={40}
+                    height={40}
+                    className="h-10 w-10 object-contain"
+                  />
+                  <span className="text-xl font-semibold text-gray-900">Soradin</span>
+                </Link>
+                {/* Providers count - below logo */}
+                <h2 className="text-lg text-gray-900">
+                  {loading ? "Loading..." : `${appointments.length} ${appointments.length === 1 ? 'provider' : 'providers'} available`}
+                </h2>
+              </div>
 
-              {/* City Search - Mobile only */}
-              <input
-                type="text"
-                placeholder="Location"
-                value={inputLocation}
-                onChange={(e) => setInputLocation(e.target.value)}
-                onBlur={(e) => {
-                  setSearchLocation(inputLocation);
-                  const params = new URLSearchParams();
-                  if (inputQuery) params.set("q", inputQuery);
-                  if (inputLocation) params.set("location", inputLocation);
-                  if (inputService) params.set("service", inputService);
-                  router.push(`/search?${params.toString()}`);
-                }}
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    setSearchLocation(inputLocation);
-                    const params = new URLSearchParams();
-                    if (inputQuery) params.set("q", inputQuery);
-                    if (inputLocation) params.set("location", inputLocation);
-                    if (inputService) params.set("service", inputService);
-                    router.push(`/search?${params.toString()}`);
-                  }
-                }}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800 text-sm"
-              />
-            </div>
-
-            {/* Hamburger Menu Button - Under logo row */}
-            <div className="flex items-center">
-              <button
-                onClick={() => setShowMobileMenu(!showMobileMenu)}
-                className="p-2 text-gray-700 hover:text-gray-900"
-              >
-                <Menu className="w-6 h-6" />
-              </button>
+              {/* Right side: Nav + Date */}
+              <div className="flex flex-col items-end">
+                {/* Hamburger Menu Button - Top right */}
+                <button
+                  onClick={() => setShowMobileMenu(!showMobileMenu)}
+                  className="p-2 text-gray-700 hover:text-gray-900 mb-2"
+                >
+                  <Menu className="w-6 h-6" />
+                </button>
+                {/* Date - Below nav */}
+                <button className="flex items-center gap-2 text-gray-700 hover:text-gray-900 text-sm">
+                  <span>{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</span>
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           </div>
 
@@ -1319,15 +1304,45 @@ function SearchResults() {
       {/* Main Content */}
       <main className="max-w-[1200px] mx-auto px-4 py-6">
 
-        {/* Results Header */}
-        <div className="flex items-center justify-between mb-6 md:mb-6 mb-2 md:mb-6">
-          <h2 className="text-xl md:text-2xl text-gray-900">
+        {/* Desktop Results Header */}
+        <div className="hidden md:flex items-center justify-between mb-6">
+          <h2 className="text-2xl text-gray-900">
             {loading ? "Loading..." : `${appointments.length} ${appointments.length === 1 ? 'provider' : 'providers'} available`}
           </h2>
-          <button className="flex items-center gap-2 text-gray-700 hover:text-gray-900 text-sm md:text-base">
+          <button className="flex items-center gap-2 text-gray-700 hover:text-gray-900">
             <span>{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</span>
-            <ChevronRight className="w-4 h-4 md:w-5 md:h-5" />
+            <ChevronRight className="w-5 h-5" />
           </button>
+        </div>
+
+        {/* Mobile: Location Search Bar - Directly above agent cards */}
+        <div className="md:hidden mb-4">
+          <input
+            type="text"
+            placeholder="Location"
+            value={inputLocation}
+            onChange={(e) => setInputLocation(e.target.value)}
+            onBlur={(e) => {
+              setSearchLocation(inputLocation);
+              const params = new URLSearchParams();
+              if (inputQuery) params.set("q", inputQuery);
+              if (inputLocation) params.set("location", inputLocation);
+              if (inputService) params.set("service", inputService);
+              router.push(`/search?${params.toString()}`);
+            }}
+            onKeyPress={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                setSearchLocation(inputLocation);
+                const params = new URLSearchParams();
+                if (inputQuery) params.set("q", inputQuery);
+                if (inputLocation) params.set("location", inputLocation);
+                if (inputService) params.set("service", inputService);
+                router.push(`/search?${params.toString()}`);
+              }
+            }}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800 text-sm"
+          />
         </div>
 
         {/* Appointment Cards */}
@@ -1436,22 +1451,146 @@ function SearchResults() {
                         )}
                       </div>
 
-                      {/* Mobile: Location and Rating inline under profile pic */}
-                      <div className="md:hidden flex flex-wrap items-center gap-2 mb-2">
-                        {/* Location - Show searched location */}
+                      {/* Mobile: Stacked vertically under profile pic */}
+                      <div className="md:hidden space-y-1">
+                        {/* 1. Location */}
                         <div className="flex items-center gap-1">
                           <MapPin className="w-3 h-3 text-gray-500 flex-shrink-0" />
-                          <span className="text-gray-600 text-xs">
+                          <span className="text-gray-600 text-sm">
                             {searchLocation ? decodeURIComponent(searchLocation.replace(/\+/g, ' ')) : location ? decodeURIComponent(location.replace(/\+/g, ' ')) : 'Location not specified'}
                           </span>
                         </div>
 
-                        {/* Rating inline */}
+                        {/* 2. Office Address */}
+                        {displayAddress && (
+                          <div className="flex items-start gap-1">
+                            <MapPin className="w-3 h-3 text-gray-400 mt-0.5 flex-shrink-0" />
+                            <span className="text-gray-500 text-xs">
+                              {displayAddress}
+                            </span>
+                          </div>
+                        )}
+
+                        {/* 3. First star with rating */}
                         {agent && agent.rating && agent.rating > 0 && agent.reviewCount && agent.reviewCount > 0 && (
                           <div className="flex items-center gap-1">
                             <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                            <span className="text-gray-900 text-xs">{agent.rating.toFixed(1)}</span>
-                            <span className="text-gray-500 text-xs">· {agent.reviewCount} {agent.reviewCount === 1 ? 'review' : 'reviews'}</span>
+                            <span className="text-gray-900 text-sm">{agent.rating.toFixed(1)}</span>
+                            <span className="text-gray-500 text-sm">· {agent.reviewCount} {agent.reviewCount === 1 ? 'review' : 'reviews'}</span>
+                          </div>
+                        )}
+
+                        {/* 4. 5-star row */}
+                        {agent && agent.rating && agent.rating > 0 && (
+                          <div className="flex items-center gap-0.5">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <Star
+                                key={star}
+                                className={`w-3 h-3 ${star <= Math.round(agent.rating) ? 'fill-yellow-400 text-yellow-400' : 'fill-gray-300 text-gray-300'}`}
+                              />
+                            ))}
+                          </div>
+                        )}
+
+                        {/* 5. Learn more about */}
+                        {agent?.id && (
+                          <div>
+                            <button
+                              type="button"
+                              onClick={async (e) => {
+                                console.log("Portfolio button clicked for agent:", agent.id);
+                                e.preventDefault();
+                                e.stopPropagation();
+                                
+                                console.log("Setting modal to show");
+                                setShowPortfolioModal(true);
+                                setPortfolioLoading(true);
+                                setPortfolioAgentData(null);
+                                setPortfolioReviews([]);
+                                setShowAllReviews(false);
+                                
+                                try {
+                                  console.log("Fetching agent data for:", agent.id);
+                                  const { data, error } = await supabaseClient
+                                    .from("profiles")
+                                    .select("id, full_name, first_name, last_name, profile_picture_url, job_title, funeral_home, agent_city, agent_province, email, phone, metadata, ai_generated_bio, bio_approval_status, approval_status")
+                                    .eq("id", agent.id)
+                                    .eq("role", "agent")
+                                    .maybeSingle();
+                                  
+                                  if (error) {
+                                    console.error("Error loading agent:", error);
+                                  } else if (data) {
+                                    console.log("Agent data loaded:", data);
+                                    const metadata = data.metadata || {};
+                                    const specialty = (metadata as any)?.specialty || null;
+                                    const licenseNumber = (metadata as any)?.license_number || null;
+                                    const location = data.agent_city && data.agent_province
+                                      ? `${data.agent_city}, ${data.agent_province}`
+                                      : data.agent_city || data.agent_province || 'Location not specified';
+                                    
+                                    // Single unified approval - check only approval_status
+                                    if (data.approval_status !== "approved") {
+                                      setPortfolioAgentData(null);
+                                      return;
+                                    }
+                                    
+                                    // Use AI-generated bio if it exists (bios are auto-approved on creation)
+                                    const hasApprovedBio = !!data.ai_generated_bio;
+                                    const fallbackSummary = `${data.full_name || 'This agent'} brings years of compassionate expertise in end-of-life planning and grief support. ${specialty || 'They help'} families navigate difficult decisions with dignity and care.`;
+                                    const fallbackFullBio = `${data.full_name || 'This agent'}'s journey into end-of-life care is driven by a commitment to helping families during life's most challenging moments.\n\n${specialty || 'Their expertise'} allows them to address both the emotional and practical aspects of end-of-life planning.\n\nThey are known for their patient, non-judgmental approach and their ability to facilitate difficult family conversations.`;
+                                    
+                                    // Fetch review stats
+                                    let rating = 0;
+                                    let reviewCount = 0;
+                                    try {
+                                      const reviewResponse = await fetch(`/api/reviews/agent/${agent.id}`);
+                                      if (reviewResponse.ok) {
+                                        const reviewData = await reviewResponse.json();
+                                        rating = reviewData.averageRating || 0;
+                                        reviewCount = reviewData.totalReviews || 0;
+                                        // Set the reviews for display
+                                        setPortfolioReviews(reviewData.reviews || []);
+                                      } else {
+                                        setPortfolioReviews([]);
+                                      }
+                                    } catch (err) {
+                                      console.error("Error fetching review stats:", err);
+                                      setPortfolioReviews([]);
+                                    }
+                                    
+                                    setPortfolioAgentData({
+                                      ...data,
+                                      business_address: (metadata as any)?.business_address || null,
+                                      business_street: (metadata as any)?.business_street || null,
+                                      business_city: (metadata as any)?.business_city || null,
+                                      business_province: (metadata as any)?.business_province || null,
+                                      business_zip: (metadata as any)?.business_zip || null,
+                                      specialty: specialty,
+                                      license_number: licenseNumber,
+                                      credentials: licenseNumber ? `LFD, ${licenseNumber}` : 'LFD',
+                                      rating: rating,
+                                      reviewCount: reviewCount,
+                                      verified: true,
+                                      location: location,
+                                      summary: hasApprovedBio ? data.ai_generated_bio.split('\n\n')[0] || data.ai_generated_bio : fallbackSummary,
+                                      fullBio: hasApprovedBio ? data.ai_generated_bio : fallbackFullBio,
+                                      aiGeneratedBio: hasApprovedBio ? data.ai_generated_bio : null,
+                                    });
+                                  }
+                                } catch (err) {
+                                  console.error("Error:", err);
+                                } finally {
+                                  setPortfolioLoading(false);
+                                }
+                              }}
+                              onMouseDown={(e) => {
+                                e.stopPropagation();
+                              }}
+                              className="text-gray-900 hover:text-gray-700 underline decoration-black hover:decoration-gray-700 text-xs font-medium transition-colors cursor-pointer bg-transparent border-none p-0 relative z-10"
+                            >
+                              Learn more about {agentName}
+                            </button>
                           </div>
                         )}
                       </div>
@@ -1464,9 +1603,9 @@ function SearchResults() {
                         </span>
                       </div>
 
-                      {/* Office/Company Address - Show matching office location or fallback */}
+                      {/* Desktop: Office/Company Address - Show matching office location or fallback */}
                       {displayAddress && (
-                        <div className="flex items-start gap-2 mb-3">
+                        <div className="hidden md:flex items-start gap-2 mb-3">
                           <MapPin className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
                           <span className="text-gray-500 text-xs">
                             {displayAddress}
@@ -1488,108 +1627,6 @@ function SearchResults() {
                           <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                           <span className="text-gray-900">{agent.rating.toFixed(1)}</span>
                           <span className="text-gray-500">· {agent.reviewCount} {agent.reviewCount === 1 ? 'review' : 'reviews'}</span>
-                        </div>
-                      )}
-                      
-                      {/* Learn more about button - Mobile inline, Desktop below */}
-                      {agent?.id && (
-                        <div className="md:hidden flex items-center gap-1 mb-2">
-                          <button
-                            type="button"
-                            onClick={async (e) => {
-                              console.log("Portfolio button clicked for agent:", agent.id);
-                              e.preventDefault();
-                              e.stopPropagation();
-                              
-                              console.log("Setting modal to show");
-                              setShowPortfolioModal(true);
-                              setPortfolioLoading(true);
-                              setPortfolioAgentData(null);
-                              setPortfolioReviews([]);
-                              setShowAllReviews(false);
-                              
-                              try {
-                                console.log("Fetching agent data for:", agent.id);
-                                const { data, error } = await supabaseClient
-                                  .from("profiles")
-                                  .select("id, full_name, first_name, last_name, profile_picture_url, job_title, funeral_home, agent_city, agent_province, email, phone, metadata, ai_generated_bio, bio_approval_status, approval_status")
-                                  .eq("id", agent.id)
-                                  .eq("role", "agent")
-                                  .maybeSingle();
-                                
-                                if (error) {
-                                  console.error("Error loading agent:", error);
-                                } else if (data) {
-                                  console.log("Agent data loaded:", data);
-                                  const metadata = data.metadata || {};
-                                  const specialty = (metadata as any)?.specialty || null;
-                                  const licenseNumber = (metadata as any)?.license_number || null;
-                                  const location = data.agent_city && data.agent_province
-                                    ? `${data.agent_city}, ${data.agent_province}`
-                                    : data.agent_city || data.agent_province || 'Location not specified';
-                                  
-                                  // Single unified approval - check only approval_status
-                                  if (data.approval_status !== "approved") {
-                                    setPortfolioAgentData(null);
-                                    return;
-                                  }
-                                  
-                                  // Use AI-generated bio if it exists (bios are auto-approved on creation)
-                                  const hasApprovedBio = !!data.ai_generated_bio;
-                                  const fallbackSummary = `${data.full_name || 'This agent'} brings years of compassionate expertise in end-of-life planning and grief support. ${specialty || 'They help'} families navigate difficult decisions with dignity and care.`;
-                                  const fallbackFullBio = `${data.full_name || 'This agent'}'s journey into end-of-life care is driven by a commitment to helping families during life's most challenging moments.\n\n${specialty || 'Their expertise'} allows them to address both the emotional and practical aspects of end-of-life planning.\n\nThey are known for their patient, non-judgmental approach and their ability to facilitate difficult family conversations.`;
-                                  
-                                  // Fetch review stats
-                                  let rating = 0;
-                                  let reviewCount = 0;
-                                  try {
-                                    const reviewResponse = await fetch(`/api/reviews/agent/${agent.id}`);
-                                    if (reviewResponse.ok) {
-                                      const reviewData = await reviewResponse.json();
-                                      rating = reviewData.averageRating || 0;
-                                      reviewCount = reviewData.totalReviews || 0;
-                                      // Set the reviews for display
-                                      setPortfolioReviews(reviewData.reviews || []);
-                                    } else {
-                                      setPortfolioReviews([]);
-                                    }
-                                  } catch (err) {
-                                    console.error("Error fetching review stats:", err);
-                                    setPortfolioReviews([]);
-                                  }
-                                  
-                                  setPortfolioAgentData({
-                                    ...data,
-                                    business_address: (metadata as any)?.business_address || null,
-                                    business_street: (metadata as any)?.business_street || null,
-                                    business_city: (metadata as any)?.business_city || null,
-                                    business_province: (metadata as any)?.business_province || null,
-                                    business_zip: (metadata as any)?.business_zip || null,
-                                    specialty: specialty,
-                                    license_number: licenseNumber,
-                                    credentials: licenseNumber ? `LFD, ${licenseNumber}` : 'LFD',
-                                    rating: rating,
-                                    reviewCount: reviewCount,
-                                    verified: true,
-                                    location: location,
-                                    summary: hasApprovedBio ? data.ai_generated_bio.split('\n\n')[0] || data.ai_generated_bio : fallbackSummary,
-                                    fullBio: hasApprovedBio ? data.ai_generated_bio : fallbackFullBio,
-                                    aiGeneratedBio: hasApprovedBio ? data.ai_generated_bio : null,
-                                  });
-                                }
-                              } catch (err) {
-                                console.error("Error:", err);
-                              } finally {
-                                setPortfolioLoading(false);
-                              }
-                            }}
-                            onMouseDown={(e) => {
-                              e.stopPropagation();
-                            }}
-                            className="text-gray-900 hover:text-gray-700 underline decoration-black hover:decoration-gray-700 text-xs font-medium transition-colors cursor-pointer bg-transparent border-none p-0 relative z-10"
-                          >
-                            Learn more about {agentName}
-                          </button>
                         </div>
                       )}
                       {/* Desktop: Learn more about button */}
