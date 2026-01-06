@@ -368,9 +368,8 @@ export async function POST(req: NextRequest) {
       slotStartTime: slotStart.getTime(),
     });
     
-    // Get price per appointment
-    // TEMP: set to $0.01 as requested
-    const pricePerAppointment = 0.01;
+    // Get price per appointment (Stripe minimum is $0.50)
+    const pricePerAppointment = 0.50;
     const priceCents = Math.round(pricePerAppointment * 100);
     
     const appointmentData: any = {
