@@ -1190,41 +1190,26 @@ function SearchResults() {
         <div className="max-w-[1200px] mx-auto px-4 py-4">
           {/* Mobile Header */}
           <div className="md:hidden">
-            <div className="flex items-start justify-between">
-              {/* Left side: Logo + Providers count */}
-              <div className="flex flex-col">
-                {/* Logo and Soradin */}
-                <Link href="/" className="flex items-center gap-2 mb-2">
-                  <Image
-                    src="/Soradin.png"
-                    alt="Soradin Logo"
-                    width={40}
-                    height={40}
-                    className="h-10 w-10 object-contain"
-                  />
-                  <span className="text-xl font-semibold text-gray-900">Soradin</span>
-                </Link>
-                {/* Providers count - below logo */}
-                <h2 className="text-lg text-gray-900">
-                  {loading ? "Loading..." : `${appointments.length} ${appointments.length === 1 ? 'provider' : 'providers'} available`}
-                </h2>
-              </div>
+            <div className="flex items-center justify-between mb-2">
+              {/* Logo and Soradin */}
+              <Link href="/" className="flex items-center gap-2">
+                <Image
+                  src="/Soradin.png"
+                  alt="Soradin Logo"
+                  width={40}
+                  height={40}
+                  className="h-10 w-10 object-contain"
+                />
+                <span className="text-xl font-semibold text-gray-900">Soradin</span>
+              </Link>
 
-              {/* Right side: Nav + Date */}
-              <div className="flex flex-col items-end">
-                {/* Hamburger Menu Button - Top right */}
-                <button
-                  onClick={() => setShowMobileMenu(!showMobileMenu)}
-                  className="p-2 text-gray-700 hover:text-gray-900 mb-2"
-                >
-                  <Menu className="w-6 h-6" />
-                </button>
-                {/* Date - Below nav */}
-                <button className="flex items-center gap-2 text-gray-700 hover:text-gray-900 text-sm">
-                  <span>{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</span>
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
+              {/* Hamburger Menu Button - Top right */}
+              <button
+                onClick={() => setShowMobileMenu(!showMobileMenu)}
+                className="p-2 text-gray-700 hover:text-gray-900"
+              >
+                <Menu className="w-6 h-6" />
+              </button>
             </div>
           </div>
 
@@ -1315,8 +1300,17 @@ function SearchResults() {
           </button>
         </div>
 
-        {/* Mobile: Location Search Bar - Directly above agent cards */}
-        <div className="md:hidden mb-4">
+        {/* Mobile: Providers count, Date, and Location Search Bar */}
+        <div className="md:hidden mb-4 space-y-2">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg text-gray-900">
+              {loading ? "Loading..." : `${appointments.length} ${appointments.length === 1 ? 'provider' : 'providers'} available`}
+            </h2>
+            <button className="flex items-center gap-2 text-gray-700 hover:text-gray-900 text-sm">
+              <span>{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</span>
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
           <input
             type="text"
             placeholder="Location"
@@ -1441,7 +1435,8 @@ function SearchResults() {
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <div className="mb-2">
+                      {/* Desktop: Name, title, etc */}
+                      <div className="mb-2 hidden md:block">
                         <h3 className="text-xl text-gray-900 font-semibold">{agentName}</h3>
                         <p className="text-gray-600 mt-1">
                           {agent?.job_title || appointment.service_type || 'Pre-need Planning Specialist'}
@@ -1451,53 +1446,18 @@ function SearchResults() {
                         )}
                       </div>
 
-                      {/* Mobile: Stacked vertically under profile pic */}
-                      <div className="md:hidden space-y-1">
-                        {/* 1. Location */}
-                        <div className="flex items-center gap-1">
-                          <MapPin className="w-3 h-3 text-gray-500 flex-shrink-0" />
-                          <span className="text-gray-600 text-sm">
-                            {searchLocation ? decodeURIComponent(searchLocation.replace(/\+/g, ' ')) : location ? decodeURIComponent(location.replace(/\+/g, ' ')) : 'Location not specified'}
-                          </span>
+                      {/* Mobile: Name and title to the right of picture, info under picture */}
+                      <div className="md:hidden">
+                        <div className="mb-2">
+                          <h3 className="text-xl text-gray-900 font-semibold">{agentName}</h3>
+                          <p className="text-gray-600 mt-1">
+                            {agent?.job_title || appointment.service_type || 'Pre-need Planning Specialist'}
+                          </p>
+                          {agent?.funeral_home && (
+                            <p className="text-gray-500 text-sm mt-1">{agent.funeral_home}</p>
+                          )}
                         </div>
-
-                        {/* 2. Office Address */}
-                        {displayAddress && (
-                          <div className="flex items-start gap-1">
-                            <MapPin className="w-3 h-3 text-gray-400 mt-0.5 flex-shrink-0" />
-                            <span className="text-gray-500 text-xs">
-                              {displayAddress}
-                            </span>
-                          </div>
-                        )}
-
-                        {/* 3. First star with rating */}
-                        {agent && agent.rating && agent.rating > 0 && agent.reviewCount && agent.reviewCount > 0 && (
-                          <div className="flex items-center gap-1">
-                            <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                            <span className="text-gray-900 text-sm">{agent.rating.toFixed(1)}</span>
-                            <span className="text-gray-500 text-sm">· {agent.reviewCount} {agent.reviewCount === 1 ? 'review' : 'reviews'}</span>
-                          </div>
-                        )}
-
-                        {/* 4. 5-star row */}
-                        {agent && agent.rating && agent.rating > 0 && (
-                          <div className="flex items-center gap-0.5">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                              <Star
-                                key={star}
-                                className={`w-3 h-3 ${star <= Math.round(agent.rating || 0) ? 'fill-yellow-400 text-yellow-400' : 'fill-gray-300 text-gray-300'}`}
-                              />
-                            ))}
-                          </div>
-                        )}
-
-                        {/* 5. Learn more about */}
-                        {agent?.id && (
-                          <div>
-                            <button
-                              type="button"
-                              onClick={async (e) => {
+                      </div>
                                 console.log("Portfolio button clicked for agent:", agent.id);
                                 e.preventDefault();
                                 e.stopPropagation();
