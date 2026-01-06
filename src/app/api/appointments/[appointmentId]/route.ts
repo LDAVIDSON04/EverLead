@@ -103,7 +103,7 @@ export async function GET(
     if (appointment.agent_id) {
       const { data: agentProfile } = await supabaseAdmin
         .from("profiles")
-        .select("id, full_name, profile_picture_url, funeral_home, agent_city, agent_province, metadata")
+        .select("id, full_name, profile_picture_url, job_title, funeral_home, agent_city, agent_province, metadata")
         .eq("id", appointment.agent_id)
         .maybeSingle();
 
@@ -113,6 +113,7 @@ export async function GET(
           id: agentProfile.id,
           full_name: agentProfile.full_name,
           profile_picture_url: agentProfile.profile_picture_url,
+          job_title: agentProfile.job_title,
           funeral_home: agentProfile.funeral_home,
           agent_city: agentProfile.agent_city,
           agent_province: agentProfile.agent_province,

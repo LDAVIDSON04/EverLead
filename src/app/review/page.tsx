@@ -130,14 +130,50 @@ function ReviewContent() {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-8">
       <div className="max-w-2xl w-full bg-white rounded-lg shadow-md p-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Share Your Experience</h1>
-        {appointmentData?.agentName ? (
-          <p className="text-gray-600 mb-6">
-            How was your appointment with <strong>{appointmentData.agentName}</strong>?
-          </p>
-        ) : appointmentData === null ? (
+        <h1 className="text-2xl font-bold text-gray-900 mb-6">Share Your Experience</h1>
+        
+        {/* Agent Card */}
+        {appointmentData?.agentName && (
+          <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+            <div className="flex items-center gap-4">
+              {/* Agent Photo */}
+              {appointmentData.agentPhoto ? (
+                <img
+                  src={appointmentData.agentPhoto}
+                  alt={appointmentData.agentName}
+                  className="w-16 h-16 rounded-full object-cover flex-shrink-0"
+                />
+              ) : (
+                <div className="w-16 h-16 rounded-full bg-green-800 flex items-center justify-center flex-shrink-0">
+                  <span className="text-white text-2xl font-semibold">
+                    {appointmentData.agentName[0]?.toUpperCase() || 'A'}
+                  </span>
+                </div>
+              )}
+              
+              {/* Agent Info */}
+              <div className="flex-1 min-w-0">
+                <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                  {appointmentData.agentName}
+                </h3>
+                {appointmentData.agentJobTitle && (
+                  <p className="text-sm text-gray-600 mb-1">
+                    {appointmentData.agentJobTitle}
+                  </p>
+                )}
+                {appointmentData.agentFuneralHome && (
+                  <p className="text-sm text-gray-500">
+                    {appointmentData.agentFuneralHome}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {appointmentData === null && (
           <p className="text-gray-500 mb-6 text-sm">Loading appointment details...</p>
-        ) : null}
+        )}
 
         {status === "success" ? (
           <div className="text-center py-8">
