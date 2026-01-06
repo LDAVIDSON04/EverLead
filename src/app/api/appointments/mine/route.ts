@@ -60,18 +60,19 @@ export async function GET(req: NextRequest) {
     }
 
     // Fetch appointments for this agent (using old schema: agent_id, lead_id)
-    // Fetch appointments from the past 30 days to ensure we get all appointments from the current week
-    // This allows the schedule view to show all appointments in the week, including past days
+    // Fetch appointments without date filtering - we'll filter by actual appointment date after mapping
+    // This ensures we get all appointments for the current week view, including past days
     const now = new Date();
     const thirtyDaysAgo = new Date(now);
     thirtyDaysAgo.setDate(now.getDate() - 30);
-    const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split('T')[0]; // YYYY-MM-DD
+    const thirtyDaysAgoISO = thirtyDaysAgo.toISOString();
     
     // Fetch appointments - try with notes first, fallback without if column doesn't exist
     let appointments: any[] | null = null;
     let appointmentsError: any = null;
     let hasNotesColumn = true;
     
+    // Fetch all confirmed/booked appointments - we'll filter by actual appointment date (confirmed_at or requested_date) after mapping
     const result = await supabaseServer
       .from("appointments")
       .select(
@@ -98,7 +99,6 @@ export async function GET(req: NextRequest) {
       `
       )
       .eq("agent_id", userId)
-      .gte("requested_date", thirtyDaysAgoStr)
       .in("status", ["pending", "confirmed", "booked"])
       .order("requested_date", { ascending: true })
       .order("created_at", { ascending: true });
@@ -133,7 +133,6 @@ export async function GET(req: NextRequest) {
           `
           )
           .eq("agent_id", userId)
-          .gte("requested_date", thirtyDaysAgoStr)
           .in("status", ["pending", "confirmed", "booked"])
           .order("requested_date", { ascending: true })
           .order("created_at", { ascending: true });
@@ -443,7 +442,15 @@ export async function GET(req: NextRequest) {
     });
 
     // Filter out any null entries from failed date conversions
-    const validAppointments = mappedAppointments.filter((apt): apt is NonNullable<typeof apt> => apt !== null);
+    let validAppointments = mappedAppointments.filter((apt): apt is NonNullable<typeof apt> => apt !== null);
+    
+    // Filter appointments to only include those within the past 30 days (based on actual appointment date)
+    // This ensures we get all appointments for the current week view, including past days
+    validAppointments = validAppointments.filter((apt) => {
+      if (!apt.starts_at) return false;
+      const appointmentDate = new Date(apt.starts_at);
+      return appointmentDate >= thirtyDaysAgo;
+    });
 
     // Map external events to the same format as appointments
     // These represent meetings booked by coworkers/front desk in external calendars
