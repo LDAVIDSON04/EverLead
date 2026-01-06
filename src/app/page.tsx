@@ -448,6 +448,17 @@ export default function HomePage() {
                         setTimeout(() => setShowLocationDropdown(false), 200);
                       }}
                     />
+                    {/* Modern popup below location box */}
+                    {searchError && (
+                      <div className="absolute top-full left-0 right-0 mt-2 animate-in fade-in slide-in-from-top-2 duration-200 z-50">
+                        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg shadow-lg p-3 backdrop-blur-sm">
+                          <p className="text-sm text-blue-700 font-medium flex items-center gap-2">
+                            <MapPin className="w-4 h-4" />
+                            Please enter a location
+                          </p>
+                        </div>
+                      </div>
+                    )}
                     {/* Location Autocomplete Dropdown */}
                     {showLocationDropdown && locationSuggestions.length > 0 && (
                       <div 
