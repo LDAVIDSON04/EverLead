@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { Star, MapPin, X, Calendar } from "lucide-react";
+import { Star, MapPin } from "lucide-react";
 import { supabaseClient } from "@/lib/supabaseClient";
 
 // Types matching our API
@@ -410,36 +410,6 @@ export default function BookAgentPage() {
           </div>
         )}
 
-        {/* Success Modal */}
-        {showModal && successMessage && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">Success</h3>
-                <button
-                  onClick={() => {
-                    setShowModal(false);
-                    setSuccessMessage(null);
-                  }}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-              <p className="text-gray-600 mb-4">{successMessage}</p>
-              <button
-                onClick={() => {
-                  setShowModal(false);
-                  setSuccessMessage(null);
-                  router.push("/search");
-                }}
-                className="w-full bg-green-800 text-white py-2 px-4 rounded-lg hover:bg-green-900"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        )}
       </main>
     </div>
   );
