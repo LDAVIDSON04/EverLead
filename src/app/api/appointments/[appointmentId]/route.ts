@@ -13,7 +13,10 @@ export async function GET(
   try {
     const { appointmentId } = await params;
 
+    console.log("🔍 [APPOINTMENTS API] Fetching appointment:", appointmentId);
+
     if (!appointmentId) {
+      console.error("❌ [APPOINTMENTS API] Missing appointment ID");
       return NextResponse.json(
         { error: "Missing appointment ID" },
         { status: 400 }
@@ -52,6 +55,12 @@ export async function GET(
     
     appointment = result.data;
     error = result.error;
+    
+    console.log("📋 [APPOINTMENTS API] Appointment fetch result:", { 
+      found: !!appointment, 
+      error: error?.message,
+      appointmentId 
+    });
     
     // If error is due to missing columns, retry without them
     if (error && error.code === '42703' && (error.message?.includes('starts_at') || error.message?.includes('ends_at'))) {
