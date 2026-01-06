@@ -23,10 +23,7 @@ export async function GET(
       );
     }
 
-    // Try to fetch with starts_at/ends_at first, fallback if columns don't exist
-    let appointment: any = null;
-    let error: any = null;
-    
+    // Fetch appointment (starts_at/ends_at don't exist in DB, calculated later from confirmed_at)
     const result = await supabaseAdmin
       .from("appointments")
       .select(`
@@ -36,9 +33,8 @@ export async function GET(
         requested_date,
         requested_window,
         confirmed_at,
-        starts_at,
-        ends_at,
         lead_id,
+        office_location_id,
         leads (
           id,
           first_name,
@@ -53,44 +49,14 @@ export async function GET(
       .eq("id", appointmentId)
       .maybeSingle();
     
-    appointment = result.data;
-    error = result.error;
+    const appointment = result.data;
+    const error = result.error;
     
     console.log("📋 [APPOINTMENTS API] Appointment fetch result:", { 
       found: !!appointment, 
       error: error?.message,
       appointmentId 
     });
-    
-    // If error is due to missing columns, retry without them
-    if (error && error.code === '42703' && (error.message?.includes('starts_at') || error.message?.includes('ends_at'))) {
-      const resultWithoutTimes = await supabaseAdmin
-        .from("appointments")
-        .select(`
-          id,
-          agent_id,
-          status,
-          requested_date,
-          requested_window,
-          confirmed_at,
-          lead_id,
-          leads (
-            id,
-            first_name,
-            last_name,
-            full_name,
-            email,
-            city,
-            province,
-            additional_notes
-          )
-        `)
-        .eq("id", appointmentId)
-        .maybeSingle();
-      
-      appointment = resultWithoutTimes.data;
-      error = resultWithoutTimes.error;
-    }
 
     if (error) {
       console.error("Error fetching appointment:", error);
