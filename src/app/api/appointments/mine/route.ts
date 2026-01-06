@@ -99,7 +99,7 @@ export async function GET(req: NextRequest) {
       `
       )
       .eq("agent_id", userId)
-      .in("status", ["pending", "confirmed", "booked"])
+      .neq("status", "cancelled") // Include all appointments except cancelled ones
       .order("requested_date", { ascending: true })
       .order("created_at", { ascending: true });
     
@@ -133,7 +133,7 @@ export async function GET(req: NextRequest) {
           `
           )
           .eq("agent_id", userId)
-          .in("status", ["pending", "confirmed", "booked"])
+          .neq("status", "cancelled") // Include all appointments except cancelled ones
           .order("requested_date", { ascending: true })
           .order("created_at", { ascending: true });
         
