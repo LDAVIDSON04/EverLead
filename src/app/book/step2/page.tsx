@@ -373,7 +373,7 @@ function BookingStep2Content() {
             Tell us a bit about you
           </h1>
           <p className="text-gray-600 mb-8">
-            To book your appointment, we need to verify a few things for {agentInfo?.full_name || "the agent"}'s office.
+            To book your appointment, we need to confirm a few things for {agentInfo?.full_name || "the agent"}.
           </p>
 
           <div className="space-y-6 mb-8">
