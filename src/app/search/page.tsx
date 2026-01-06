@@ -1465,14 +1465,6 @@ function SearchResults() {
                         </div>
                       )}
 
-                      {/* Desktop: Review count with gold star */}
-                      {agent?.id && (
-                        <div className="hidden md:block mb-2" style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', width: '100%' }}>
-                          <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                          <span className="text-gray-900 text-sm">{agent.reviewCount ?? 0}</span>
-                        </div>
-                      )}
-
                       {/* Desktop: Rating */}
                       {agent && agent.rating && agent.rating > 0 && agent.reviewCount && agent.reviewCount > 0 && (
                         <div className="hidden md:flex items-center gap-1 mb-3">
