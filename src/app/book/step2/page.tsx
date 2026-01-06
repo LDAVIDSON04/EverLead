@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { Star, MapPin, Calendar, ArrowLeft, Info } from "lucide-react";
+import { Star, MapPin, Calendar, ArrowLeft, Info, Lock } from "lucide-react";
 import { supabaseClient } from "@/lib/supabaseClient";
 import { DateTime } from "luxon";
 
@@ -32,21 +32,18 @@ function BookingStep2Content() {
     agent_province: string | null;
   } | null>(null);
 
-  // Form data (previously from Step 1)
+  // Form data for Step 2
   const [formData, setFormData] = useState({
     email: "",
     legalFirstName: "",
     legalLastName: "",
     dateOfBirth: "",
-    phone: "",
-    city: "",
   });
 
   const [selectedOfficeLocation, setSelectedOfficeLocation] = useState<string>("");
   const [officeLocationId, setOfficeLocationId] = useState<string | null>(null);
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
-  const [selectedService, setSelectedService] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
   const [isBooking, setIsBooking] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -273,33 +270,11 @@ function BookingStep2Content() {
       }
     }
 
-    if (!formData.phone.trim()) {
-      errors.phone = "Telephone number is required";
-    }
-
-    if (!formData.city.trim()) {
-      errors.city = "City is required";
-    }
-
-    if (!selectedService) {
-      errors.service = "Please select a service type";
-    }
 
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
-  const handleServiceSelect = (service: string) => {
-    setSelectedService(service);
-    setError(null);
-    if (formErrors.service) {
-      setFormErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors.service;
-        return newErrors;
-      });
-    }
-  };
 
   const handleBook = async () => {
     if (!validateForm()) {
@@ -394,9 +369,7 @@ function BookingStep2Content() {
             </Link>
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-1 text-sm text-gray-600">
-                <span className="w-4 h-4 rounded-full border-2 border-green-800 flex items-center justify-center">
-                  <span className="w-2 h-2 rounded-full bg-green-800"></span>
-                </span>
+                <Lock className="w-4 h-4" />
                 <span>Secure</span>
               </div>
             </div>
@@ -438,13 +411,10 @@ function BookingStep2Content() {
                     {formatDate(date)}, {formatTime(startsAt)}
                   </span>
                 </div>
-                {(searchedCity || agentInfo.agent_city) && (
+                {selectedOfficeLocation && (
                   <div className="flex items-center gap-2">
                     <MapPin className="w-4 h-4" />
-                    <span>
-                      {searchedCity || agentInfo.agent_city}
-                      {agentInfo.agent_province && `, ${agentInfo.agent_province}`}
-                    </span>
+                    <span>{selectedOfficeLocation}</span>
                   </div>
                 )}
               </div>
@@ -560,134 +530,6 @@ function BookingStep2Content() {
               )}
             </div>
 
-            {/* Telephone Number */}
-            <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
-                Telephone number <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="tel"
-                id="phone"
-                name="phone"
-                required
-                value={formData.phone}
-                onChange={(e) => handleInputChange("phone", e.target.value)}
-                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800 ${
-                  formErrors.phone ? "border-red-500" : "border-gray-300"
-                }`}
-                placeholder="(555) 123-4567"
-                maxLength={14}
-              />
-              {formErrors.phone && (
-                <p className="text-sm text-red-500 mt-1">{formErrors.phone}</p>
-              )}
-            </div>
-
-            {/* City */}
-            <div>
-              <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-2">
-                City <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                id="city"
-                name="city"
-                required
-                value={formData.city}
-                onChange={(e) => handleInputChange("city", e.target.value)}
-                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800 ${
-                  formErrors.city ? "border-red-500" : "border-gray-300"
-                }`}
-                placeholder="City"
-              />
-              {formErrors.city && (
-                <p className="text-sm text-red-500 mt-1">{formErrors.city}</p>
-              )}
-            </div>
-
-            {/* Confirm Office Location */}
-            {selectedOfficeLocation && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Confirm office location
-                </label>
-                <div className="px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <MapPin className="w-5 h-5 text-green-800" />
-                    <span className="text-gray-900">{selectedOfficeLocation}</span>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="mb-8">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-2">
-              What type of arrangement are you looking for? <span className="text-red-500">*</span>
-            </h2>
-            <p className="text-gray-600 mb-4">
-              Help us understand your needs so we can better prepare for your appointment.
-            </p>
-
-            <div className="space-y-4">
-              {/* Service Options */}
-              <label
-                className={`flex items-center gap-4 p-4 border-2 rounded-lg cursor-pointer transition-colors ${
-                  selectedService === "cremation"
-                    ? "border-green-800 bg-green-50"
-                    : "border-gray-300 hover:border-gray-400"
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="service"
-                  value="cremation"
-                  checked={selectedService === "cremation"}
-                  onChange={() => handleServiceSelect("cremation")}
-                  className="w-5 h-5 text-green-800 focus:ring-green-800"
-                />
-                <span className="text-gray-900 font-medium">Cremation</span>
-              </label>
-
-              <label
-                className={`flex items-center gap-4 p-4 border-2 rounded-lg cursor-pointer transition-colors ${
-                  selectedService === "burial"
-                    ? "border-green-800 bg-green-50"
-                    : "border-gray-300 hover:border-gray-400"
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="service"
-                  value="burial"
-                  checked={selectedService === "burial"}
-                  onChange={() => handleServiceSelect("burial")}
-                  className="w-5 h-5 text-green-800 focus:ring-green-800"
-                />
-                <span className="text-gray-900 font-medium">Burial</span>
-              </label>
-
-              <label
-                className={`flex items-center gap-4 p-4 border-2 rounded-lg cursor-pointer transition-colors ${
-                  selectedService === "unsure"
-                    ? "border-green-800 bg-green-50"
-                    : "border-gray-300 hover:border-gray-400"
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="service"
-                  value="unsure"
-                  checked={selectedService === "unsure"}
-                  onChange={() => handleServiceSelect("unsure")}
-                  className="w-5 h-5 text-green-800 focus:ring-green-800"
-                />
-                <span className="text-gray-900 font-medium">Unsure</span>
-              </label>
-            </div>
-            {formErrors.service && (
-              <p className="text-sm text-red-500 mt-2">{formErrors.service}</p>
-            )}
           </div>
 
           {/* Error Message */}
@@ -704,7 +546,7 @@ function BookingStep2Content() {
                 return;
               }
               
-              // Navigate to step3 with all form data in URL params
+              // Navigate to step3 with form data in URL params
               const params = new URLSearchParams({
                 agentId,
                 startsAt,
@@ -714,9 +556,6 @@ function BookingStep2Content() {
                 legalFirstName: formData.legalFirstName,
                 legalLastName: formData.legalLastName,
                 dateOfBirth: formData.dateOfBirth,
-                phone: formData.phone,
-                city: formData.city,
-                serviceType: selectedService,
                 ...(searchedCity ? { searchedCity } : {}),
                 ...(officeLocationName ? { officeLocation: officeLocationName } : {}),
                 ...(officeLocationId ? { officeLocationId } : {}),
