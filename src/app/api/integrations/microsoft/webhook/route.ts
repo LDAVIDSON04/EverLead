@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
       req.nextUrl.searchParams.get("validationToken");
     
     if (validationToken) {
-      console.log("Microsoft webhook validation request received");
+      console.log("Microsoft webhook validation request received (from header/query)");
       // Return validation token IMMEDIATELY to confirm subscription
       // Must return 200 OK with the validation token as plain text
       // This is critical - Microsoft requires a fast response (< 3 seconds)
@@ -49,39 +49,76 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Parse notification body
+    // Microsoft may also send validation token in the request body as plain text
+    // Check the raw body first before trying to parse as JSON
+    const contentType = req.headers.get("content-type") || "";
+    if (contentType.includes("text/plain") || !contentType.includes("application/json")) {
+      try {
+        const textBody = await req.text();
+        // If it's a short string (likely validation token), return it
+        if (textBody && textBody.length < 200 && !textBody.startsWith("{")) {
+          console.log("Microsoft webhook validation request received (from body)");
+          return new NextResponse(textBody, {
+            status: 200,
+            headers: {
+              "Content-Type": "text/plain",
+              "Cache-Control": "no-cache",
+            },
+          });
+        }
+        // If it's not a validation token, try to parse as JSON
+        try {
+          const body = JSON.parse(textBody);
+          return await handleNotificationBody(body);
+        } catch {
+          // If parsing fails, return OK anyway
+          return new NextResponse("OK", { status: 200 });
+        }
+      } catch (textError) {
+        console.warn("Failed to read request body:", textError);
+        return new NextResponse("OK", { status: 200 });
+      }
+    }
+
+    // Parse notification body as JSON
     let body;
     try {
       body = await req.json();
+      return await handleNotificationBody(body);
     } catch (parseError) {
       // If body parsing fails, might be a validation request without proper header
       console.warn("Failed to parse webhook body, might be validation request:", parseError);
       return new NextResponse("OK", { status: 200 });
     }
-    
-    const notifications = body.value || [];
-
-    console.log("Microsoft Calendar webhook received:", {
-      notificationCount: notifications.length,
-    });
-
-    // Process each notification
-    for (const notification of notifications) {
-      try {
-        await handleMicrosoftNotification(notification);
-      } catch (error: any) {
-        console.error("Error processing Microsoft notification:", error);
-        // Continue with other notifications
-      }
-    }
-
-    return NextResponse.json({ received: true }, { status: 200 });
   } catch (error: any) {
     console.error("Error processing Microsoft Calendar webhook:", error);
     // Always return 200 to Microsoft to prevent retries for transient errors
     // But log the error for debugging
-    return NextResponse.json({ error: error.message }, { status: 200 });
+    return new NextResponse("OK", { status: 200 });
   }
+}
+
+/**
+ * Handle notification body (after validation check)
+ */
+async function handleNotificationBody(body: any) {
+  const notifications = body.value || [];
+
+  console.log("Microsoft Calendar webhook received:", {
+    notificationCount: notifications.length,
+  });
+
+  // Process each notification
+  for (const notification of notifications) {
+    try {
+      await handleMicrosoftNotification(notification);
+    } catch (error: any) {
+      console.error("Error processing Microsoft notification:", error);
+      // Continue with other notifications
+    }
+  }
+
+  return NextResponse.json({ received: true }, { status: 200 });
 }
 
 /**
