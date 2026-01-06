@@ -91,6 +91,15 @@ export default function SchedulePage() {
       // Clean up URL by removing the query parameter
       router.replace('/agent/schedule', { scroll: false });
     }
+    
+    // Check for calendar sync success
+    const calendarSyncSuccess = searchParams.get('calendarSyncSuccess');
+    if (calendarSyncSuccess === 'google' || calendarSyncSuccess === 'microsoft') {
+      setSyncProvider(calendarSyncSuccess);
+      setShowSyncSuccessModal(true);
+      // Remove the query parameter from URL
+      router.replace('/agent/schedule', { scroll: false });
+    }
   }, [searchParams, router]);
 
   // Calculate Sunday-Saturday week starting from Sunday of the current week
@@ -1144,6 +1153,36 @@ export default function SchedulePage() {
         isOpen={showCalendarSyncModal}
         onClose={() => setShowCalendarSyncModal(false)}
       />
+
+      {/* Calendar Sync Success Modal */}
+      {showSyncSuccessModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg w-full max-w-md shadow-xl">
+            <div className="p-6">
+              <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full">
+                <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <h2 className="text-xl font-semibold text-gray-900 text-center mb-2">
+                Calendar Synced Successfully!
+              </h2>
+              <p className="text-sm text-gray-600 text-center mb-6">
+                Your {syncProvider === 'google' ? 'Google' : 'Microsoft'} Calendar has been connected and synced. Your appointments will now automatically sync with your calendar.
+              </p>
+              <button
+                onClick={() => {
+                  setShowSyncSuccessModal(false);
+                  setSyncProvider(null);
+                }}
+                className="w-full px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-800 transition-colors"
+              >
+                Got it
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Add Availability Modal */}
       <AddAvailabilityModal
