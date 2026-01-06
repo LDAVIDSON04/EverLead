@@ -17,6 +17,86 @@ function Badge({ className = "", children, ...props }: React.HTMLAttributes<HTML
   );
 }
 
+// Modern confirm modal for removing a payment method
+function RemovePaymentButton({ paymentMethodId, onRemoved }: { paymentMethodId: string; onRemoved: () => Promise<void> | void }) {
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const handleRemove = async () => {
+    try {
+      setLoading(true);
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session?.access_token) return;
+
+      const res = await fetch("/api/agent/settings/payment-methods", {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ paymentMethodId }),
+      });
+
+      if (!res.ok) {
+        const error = await res.json().catch(() => ({}));
+        throw new Error(error.error || "Failed to remove payment method");
+      }
+
+      await onRemoved();
+      setOpen(false);
+    } catch (err: any) {
+      console.error("Error removing payment method:", err);
+      alert(err.message || "Failed to remove payment method. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <>
+      <button
+        onClick={() => setOpen(true)}
+        className="px-3 py-1 text-sm text-red-600 hover:text-red-800"
+      >
+        Remove
+      </button>
+      {open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => !loading && setOpen(false)}>
+          <div className="bg-white rounded-xl w-full max-w-md shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="p-6">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-full bg-red-100 text-red-700 flex items-center justify-center">
+                  <AlertCircle size={20} />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">Remove payment method?</h3>
+              </div>
+              <p className="text-sm text-gray-600 mb-4">
+                You must keep at least one payment method on file. Removing this card will stop charges to it for new appointments.
+              </p>
+              <div className="flex items-center justify-end gap-3">
+                <button
+                  disabled={loading}
+                  onClick={() => setOpen(false)}
+                  className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  disabled={loading}
+                  onClick={handleRemove}
+                  className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
+                >
+                  {loading ? "Removing…" : "Remove"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
 export default function BillingPage() {
   const [loading, setLoading] = useState(true);
   const [addingPaymentMethod, setAddingPaymentMethod] = useState(false);

@@ -12,11 +12,8 @@ export const runtime = "nodejs";
 
 // Make this route publicly accessible (no authentication required)
 // Microsoft webhooks need to be accessible without auth for validation
-export const config = {
-  api: {
-    bodyParser: false, // Handle raw body for validation tokens
-  },
-};
+// Note: Next.js app router ignores legacy config export here.
+// We read the raw body via req.text(), so no special config is needed.
 
 /**
  * GET: Handle browser access / health check
