@@ -1332,7 +1332,7 @@ function SearchResults() {
             {loading ? "Loading..." : `${appointments.length} ${appointments.length === 1 ? 'provider' : 'providers'} available`}
           </h2>
           <button className="flex items-center gap-2 text-gray-700 hover:text-gray-900">
-            <span>Today, {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {new Date(Date.now() + 13 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+            <span>{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</span>
             <ChevronRight className="w-5 h-5" />
           </button>
         </div>
