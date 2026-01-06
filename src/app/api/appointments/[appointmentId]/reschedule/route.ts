@@ -33,9 +33,24 @@ export async function POST(
     const { startsAt, endsAt } = validation.data;
 
     // Validate appointment exists and is not cancelled
+    // Include related lead email so we can notify the customer
     const { data: appointment, error: fetchError } = await supabaseAdmin
       .from("appointments")
-      .select("id, agent_id, lead_id, status, requested_date")
+      .select(`
+        id,
+        agent_id,
+        lead_id,
+        status,
+        requested_date,
+        office_location_id,
+        leads (
+          id,
+          first_name,
+          last_name,
+          full_name,
+          email
+        )
+      `)
       .eq("id", appointmentId)
       .single();
 
@@ -166,13 +181,33 @@ export async function POST(
         .maybeSingle();
       const agentName = agentProfile?.full_name || null;
 
-      // Get lead data
-      const lead = Array.isArray(appointment.leads) ? appointment.leads[0] : appointment.leads;
-      const consumerName = lead?.full_name || 
+      // Get lead data (robust to shape)
+      let lead = Array.isArray(appointment.leads) ? appointment.leads[0] : appointment.leads;
+      let consumerName = lead?.full_name || 
         (lead?.first_name && lead?.last_name
           ? [lead?.first_name, lead?.last_name].filter(Boolean).join(' ')
           : null);
-      const consumerEmail = lead?.email;
+      let consumerEmail = lead?.email || null;
+      
+      // Fallback: if lead relation missing email, fetch from leads table
+      if (!consumerEmail && appointment.lead_id) {
+        try {
+          const { data: fallbackLead } = await supabaseAdmin
+            .from("leads")
+            .select("first_name, last_name, full_name, email")
+            .eq("id", appointment.lead_id)
+            .maybeSingle();
+          if (fallbackLead) {
+            consumerName = fallbackLead.full_name || 
+              (fallbackLead.first_name && fallbackLead.last_name
+                ? [fallbackLead.first_name, fallbackLead.last_name].filter(Boolean).join(' ')
+                : consumerName);
+            consumerEmail = fallbackLead.email || consumerEmail;
+          }
+        } catch (e) {
+          console.warn("⚠️ Unable to fetch lead fallback for email:", e);
+        }
+      }
 
       // Get office location for agent email
       let locationAddress = null;
