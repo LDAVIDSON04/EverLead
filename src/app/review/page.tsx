@@ -18,6 +18,9 @@ function ReviewContent() {
   const [message, setMessage] = useState<string>("");
   const [appointmentData, setAppointmentData] = useState<{
     agentName: string | null;
+    agentPhoto: string | null;
+    agentJobTitle: string | null;
+    agentFuneralHome: string | null;
   } | null>(null);
 
   useEffect(() => {
@@ -35,6 +38,9 @@ function ReviewContent() {
           const data = await response.json();
           setAppointmentData({
             agentName: data.agent?.full_name || null,
+            agentPhoto: data.agent?.profile_picture_url || null,
+            agentJobTitle: data.agent?.job_title || null,
+            agentFuneralHome: data.agent?.funeral_home || null,
           });
         } else {
           // If appointment not found, show error
