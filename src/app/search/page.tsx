@@ -1760,8 +1760,8 @@ function SearchResults() {
                     </div>
                   </div>
 
-                    {/* Availability Calendar */}
-                    <div className="mt-4">
+                  {/* Availability Calendar */}
+                  <div className="mt-4">
                       <div className="grid grid-cols-4 gap-2">
                         {availability.map((slot, slotIndex) => {
                           const hasSpots = slot.spots > 0;
