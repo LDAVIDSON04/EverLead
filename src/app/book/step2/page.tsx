@@ -704,13 +704,37 @@ function BookingStep2Content() {
             </div>
           )}
 
-          {/* Book Appointment Button */}
+          {/* Continue Button */}
           <button
-            onClick={handleBook}
-            disabled={isBooking}
-            className="w-full bg-green-800 text-white py-4 px-6 rounded-lg font-semibold text-lg hover:bg-green-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={() => {
+              if (!validateForm()) {
+                return;
+              }
+              
+              // Navigate to step3 with all form data in URL params
+              const params = new URLSearchParams({
+                agentId,
+                startsAt,
+                endsAt,
+                date,
+                email: formData.email,
+                legalFirstName: formData.legalFirstName,
+                legalLastName: formData.legalLastName,
+                dateOfBirth: formData.dateOfBirth,
+                phone: formData.phone,
+                city: formData.city,
+                serviceType: selectedService,
+                ...(searchedCity ? { searchedCity } : {}),
+                ...(officeLocationName ? { officeLocation: officeLocationName } : {}),
+                ...(officeLocationId ? { officeLocationId } : {}),
+                ...(rescheduleAppointmentId ? { rescheduleAppointmentId } : {}),
+              });
+              
+              router.push(`/book/step3?${params.toString()}`);
+            }}
+            className="w-full bg-green-800 text-white py-4 px-6 rounded-lg font-semibold text-lg hover:bg-green-900 transition-colors"
           >
-            {isBooking ? "Booking..." : "Book Appointment"}
+            Continue
           </button>
         </div>
       </main>
