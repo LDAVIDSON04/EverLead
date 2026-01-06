@@ -125,11 +125,13 @@ function ReviewContent() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-8">
       <div className="max-w-2xl w-full bg-white rounded-lg shadow-md p-8">
         <h1 className="text-2xl font-bold text-gray-900 mb-2">Share Your Experience</h1>
-        {appointmentData?.agentName && (
+        {appointmentData?.agentName ? (
           <p className="text-gray-600 mb-6">
             How was your appointment with <strong>{appointmentData.agentName}</strong>?
           </p>
-        )}
+        ) : appointmentData === null ? (
+          <p className="text-gray-500 mb-6 text-sm">Loading appointment details...</p>
+        ) : null}
 
         {status === "success" ? (
           <div className="text-center py-8">
