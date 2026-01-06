@@ -45,7 +45,6 @@ function BookingStep2Content() {
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(true);
-  const [isBooking, setIsBooking] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Fetch agent info and office locations
@@ -276,59 +275,6 @@ function BookingStep2Content() {
   };
 
 
-  const handleBook = async () => {
-    if (!validateForm()) {
-      return;
-    }
-
-    setIsBooking(true);
-    setError(null);
-
-    try {
-      const res = await fetch("/api/agents/book", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          agentId,
-          startsAt,
-          endsAt,
-          firstName: formData.legalFirstName,
-          lastName: formData.legalLastName,
-          email: formData.email,
-          phone: formData.phone.trim(),
-          city: formData.city.trim() || searchedCity || agentInfo?.agent_city || null,
-          province: agentInfo?.agent_province || null,
-          serviceType: selectedService,
-          notes: `Date of Birth: ${formData.dateOfBirth}`,
-          officeLocationId: officeLocationId || null,
-          ...(rescheduleAppointmentId ? { rescheduleAppointmentId } : {}),
-        }),
-      });
-
-      if (res.status === 409) {
-        const errorData = await res.json();
-        setError(errorData.error || "This time slot is no longer available. Please select another time.");
-        setIsBooking(false);
-        return;
-      }
-
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        console.error("Booking API error:", errorData);
-        throw new Error(errorData.error || errorData.details || "Failed to book appointment");
-      }
-
-      const data = await res.json();
-      
-      // Navigate to success page or show success message
-      router.push(`/book/success?appointmentId=${data.appointment?.id || ""}&email=${encodeURIComponent(formData.email)}`);
-    } catch (err: any) {
-      console.error("Error booking appointment:", err);
-      setError(err.message || "Failed to book appointment");
-    } finally {
-      setIsBooking(false);
-    }
-  };
 
   if (isLoading) {
     return (
