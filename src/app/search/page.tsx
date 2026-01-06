@@ -1620,10 +1620,9 @@ function SearchResults() {
                       </div>
                     </div>
 
-                    {/* Desktop: Location and other info */}
-                    <div className="hidden md:block flex-1 min-w-0">
+                    <div className="flex-1 min-w-0">
                       {/* Desktop: Location - Show searched location (the city the family is searching from) */}
-                      <div className="flex items-start gap-2 mb-2">
+                      <div className="hidden md:flex items-start gap-2 mb-2">
                         <MapPin className="w-4 h-4 text-gray-500 mt-1 flex-shrink-0" />
                         <span className="text-gray-600 text-sm">
                           {searchLocation ? decodeURIComponent(searchLocation.replace(/\+/g, ' ')) : location ? decodeURIComponent(location.replace(/\+/g, ' ')) : 'Location not specified'}
