@@ -111,11 +111,10 @@ function BookingStep2Content() {
             // Store the office_location_id
             setOfficeLocationId(matchingLocation.id);
             
-            // Set display name
-            const locationDisplay = matchingLocation.name || 
-              (matchingLocation.street_address 
-                ? `${matchingLocation.street_address}, ${matchingLocation.city}, ${matchingLocation.province}${matchingLocation.postal_code ? ` ${matchingLocation.postal_code}` : ''}`
-                : `${matchingLocation.city}, ${matchingLocation.province}`);
+            // Set display name - prioritize street address over name
+            const locationDisplay = matchingLocation.street_address 
+              ? `${matchingLocation.street_address}, ${matchingLocation.city}, ${matchingLocation.province}${matchingLocation.postal_code ? ` ${matchingLocation.postal_code}` : ''}`
+              : (matchingLocation.name || `${matchingLocation.city}, ${matchingLocation.province}`);
             setSelectedOfficeLocation(locationDisplay);
           }
         }

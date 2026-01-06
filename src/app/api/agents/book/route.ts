@@ -571,13 +571,51 @@ export async function POST(req: NextRequest) {
       const familyName = leadData?.full_name || 
         (leadData?.first_name && leadData?.last_name ? `${leadData.first_name} ${leadData.last_name}` : "Family");
       
-      // Build location address from lead data
-      const locationParts = [];
-      if (leadData?.address_line1) locationParts.push(leadData.address_line1);
-      if (leadData?.city) locationParts.push(leadData.city);
-      if (leadData?.province) locationParts.push(leadData.province);
-      if (leadData?.postal_code) locationParts.push(leadData.postal_code);
-      const locationAddress = locationParts.length > 0 ? locationParts.join(", ") : "Location to be confirmed";
+      // Build location address from office location if available, otherwise from lead data
+      let locationAddress = "Location to be confirmed";
+      
+      // First, try to get office location address if officeLocationId was provided
+      if (officeLocationId) {
+        const { data: officeLocation } = await supabaseAdmin
+          .from("office_locations")
+          .select("street_address, city, province, postal_code, name")
+          .eq("id", officeLocationId)
+          .single();
+        
+        if (officeLocation) {
+          const officeParts = [];
+          if (officeLocation.street_address) officeParts.push(officeLocation.street_address);
+          if (officeLocation.city) officeParts.push(officeLocation.city);
+          if (officeLocation.province) officeParts.push(officeLocation.province);
+          if (officeLocation.postal_code) officeParts.push(officeLocation.postal_code);
+          if (officeParts.length > 0) {
+            locationAddress = officeParts.join(", ");
+          }
+        }
+      }
+      
+      // Fallback to lead data if no office location
+      if (locationAddress === "Location to be confirmed") {
+        const locationParts = [];
+        if (leadData?.address_line1) locationParts.push(leadData.address_line1);
+        if (leadData?.city) {
+          // Check if city already contains province (e.g., "Penticton, BC")
+          const cityValue = leadData.city.trim();
+          const provinceValue = leadData?.province?.trim();
+          if (provinceValue && !cityValue.includes(provinceValue)) {
+            locationParts.push(cityValue);
+            if (provinceValue) locationParts.push(provinceValue);
+          } else {
+            locationParts.push(cityValue);
+          }
+        } else if (leadData?.province) {
+          locationParts.push(leadData.province);
+        }
+        if (leadData?.postal_code) locationParts.push(leadData.postal_code);
+        if (locationParts.length > 0) {
+          locationAddress = locationParts.join(", ");
+        }
+      }
       
       // Get agent name, address, and timezone
       const { data: agentProfile } = await supabaseAdmin
