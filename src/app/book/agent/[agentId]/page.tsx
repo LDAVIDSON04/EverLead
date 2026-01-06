@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { Star, MapPin, X } from "lucide-react";
+import { Star, MapPin, X, Calendar } from "lucide-react";
 import { supabaseClient } from "@/lib/supabaseClient";
 
 // Types matching our API
@@ -23,6 +23,8 @@ export default function BookAgentPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const agentId = (params?.agentId as string) || "";
+  const searchedCity = searchParams.get("city") || "";
+  const officeLocationName = searchParams.get("officeLocation") || "";
 
   // State
   const [availability, setAvailability] = useState<AvailabilityDay[]>([]);
@@ -38,10 +40,7 @@ export default function BookAgentPage() {
     firstName: "",
     lastName: "",
     email: "",
-    phone: "",
-    city: "",
-    province: "",
-    notes: "",
+    dateOfBirth: "",
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [agentInfo, setAgentInfo] = useState<{
@@ -217,13 +216,12 @@ export default function BookAgentPage() {
       }
     }
 
-    if (!formData.phone.trim()) {
-      errors.phone = "Phone number is required";
+    if (!formData.dateOfBirth.trim()) {
+      errors.dateOfBirth = "Date of birth is required";
     } else {
-      // Basic phone validation (allows various formats)
-      const phoneRegex = /^[\d\s\-\+\(\)]+$/;
-      if (!phoneRegex.test(formData.phone) || formData.phone.replace(/\D/g, "").length < 10) {
-        errors.phone = "Please enter a valid phone number";
+      const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
+      if (!dateRegex.test(formData.dateOfBirth)) {
+        errors.dateOfBirth = "Please enter date in mm/dd/yyyy format";
       }
     }
 
@@ -232,6 +230,31 @@ export default function BookAgentPage() {
   };
 
   const handleFormChange = (field: string, value: string) => {
+    // Auto-format date of birth with slashes
+    if (field === "dateOfBirth") {
+      // Remove all non-digit characters
+      const digitsOnly = value.replace(/\D/g, "");
+      
+      // Format with slashes: mm/dd/yyyy
+      let formatted = "";
+      if (digitsOnly.length > 0) {
+        formatted = digitsOnly.substring(0, 2);
+      }
+      if (digitsOnly.length > 2) {
+        formatted += "/" + digitsOnly.substring(2, 4);
+      }
+      if (digitsOnly.length > 4) {
+        formatted += "/" + digitsOnly.substring(4, 8);
+      }
+      
+      // Limit to 10 characters (mm/dd/yyyy)
+      if (formatted.length > 10) {
+        formatted = formatted.substring(0, 10);
+      }
+      
+      value = formatted;
+    }
+    
     setFormData((prev) => ({ ...prev, [field]: value }));
     // Clear error when user starts typing
     if (formErrors[field]) {
@@ -258,12 +281,36 @@ export default function BookAgentPage() {
       firstName: "",
       lastName: "",
       email: "",
-      phone: "",
-      city: "",
-      province: "",
-      notes: "",
+      dateOfBirth: "",
     });
     setFormErrors({});
+  };
+
+  const handleContinue = () => {
+    if (!selectedDate || !selectedSlot) {
+      setError("Please select a date and time");
+      return;
+    }
+
+    if (!validateForm()) {
+      return;
+    }
+
+    // Navigate to step2 with form data in URL params
+    const params = new URLSearchParams({
+      agentId,
+      startsAt: selectedSlot.startsAt,
+      endsAt: selectedSlot.endsAt,
+      date: selectedDate,
+      email: formData.email,
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      dateOfBirth: formData.dateOfBirth,
+      ...(searchedCity ? { city: searchedCity } : {}),
+      ...(officeLocationName ? { officeLocation: officeLocationName } : {}),
+    });
+
+    router.push(`/book/step2?${params.toString()}`);
   };
 
   const handleBook = async () => {
@@ -580,6 +627,27 @@ export default function BookAgentPage() {
               {/* Form */}
               <div className="p-6">
                 <div className="space-y-4">
+                  {/* Email */}
+                  <div>
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                      Email <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="email"
+                      id="email"
+                      value={formData.email}
+                      onChange={(e) => handleFormChange("email", e.target.value)}
+                      className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800 ${
+                        formErrors.email ? "border-red-500" : "border-gray-300"
+                      }`}
+                      placeholder="your.email@example.com"
+                      disabled={isBooking}
+                    />
+                    {formErrors.email && (
+                      <p className="text-sm text-red-500 mt-1">{formErrors.email}</p>
+                    )}
+                  </div>
+
                   {/* First Name */}
                   <div>
                     <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
@@ -622,94 +690,29 @@ export default function BookAgentPage() {
                     )}
                   </div>
 
-                  {/* Email */}
+                  {/* Date of Birth */}
                   <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                      Email <span className="text-red-500">*</span>
+                    <label htmlFor="dateOfBirth" className="block text-sm font-medium text-gray-700 mb-1">
+                      Date of Birth <span className="text-red-500">*</span>
                     </label>
-                    <input
-                      type="email"
-                      id="email"
-                      value={formData.email}
-                      onChange={(e) => handleFormChange("email", e.target.value)}
-                      className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800 ${
-                        formErrors.email ? "border-red-500" : "border-gray-300"
-                      }`}
-                      placeholder="john.doe@example.com"
-                      disabled={isBooking}
-                    />
-                    {formErrors.email && (
-                      <p className="text-sm text-red-500 mt-1">{formErrors.email}</p>
-                    )}
-                  </div>
-
-                  {/* Phone */}
-                  <div>
-                    <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
-                      Phone Number <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="tel"
-                      id="phone"
-                      value={formData.phone}
-                      onChange={(e) => handleFormChange("phone", e.target.value)}
-                      className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800 ${
-                        formErrors.phone ? "border-red-500" : "border-gray-300"
-                      }`}
-                      placeholder="(555) 123-4567"
-                      disabled={isBooking}
-                    />
-                    {formErrors.phone && (
-                      <p className="text-sm text-red-500 mt-1">{formErrors.phone}</p>
-                    )}
-                  </div>
-
-                  {/* City and Province */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1">
-                        City
-                      </label>
+                    <div className="relative">
+                      <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                       <input
                         type="text"
-                        id="city"
-                        value={formData.city}
-                        onChange={(e) => handleFormChange("city", e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800"
-                        placeholder="Toronto"
+                        id="dateOfBirth"
+                        value={formData.dateOfBirth}
+                        onChange={(e) => handleFormChange("dateOfBirth", e.target.value)}
+                        className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800 ${
+                          formErrors.dateOfBirth ? "border-red-500" : "border-gray-300"
+                        }`}
+                        placeholder="mm/dd/yyyy"
+                        maxLength={10}
                         disabled={isBooking}
                       />
                     </div>
-                    <div>
-                      <label htmlFor="province" className="block text-sm font-medium text-gray-700 mb-1">
-                        Province
-                      </label>
-                      <input
-                        type="text"
-                        id="province"
-                        value={formData.province}
-                        onChange={(e) => handleFormChange("province", e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800"
-                        placeholder="ON"
-                        disabled={isBooking}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Notes */}
-                  <div>
-                    <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">
-                      Additional Notes (Optional)
-                    </label>
-                    <textarea
-                      id="notes"
-                      value={formData.notes}
-                      onChange={(e) => handleFormChange("notes", e.target.value)}
-                      rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800"
-                      placeholder="Any additional information you'd like to share..."
-                      disabled={isBooking}
-                    />
+                    {formErrors.dateOfBirth && (
+                      <p className="text-sm text-red-500 mt-1">{formErrors.dateOfBirth}</p>
+                    )}
                   </div>
 
                   {/* Error Message */}
@@ -731,11 +734,11 @@ export default function BookAgentPage() {
                   Cancel
                 </button>
                 <button
-                  onClick={handleBook}
+                  onClick={handleContinue}
                   disabled={isBooking}
                   className="px-6 py-2 bg-green-800 text-white rounded-lg font-semibold hover:bg-green-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
-                  {isBooking ? "Booking..." : "Confirm Booking"}
+                  Continue
                 </button>
               </div>
             </div>

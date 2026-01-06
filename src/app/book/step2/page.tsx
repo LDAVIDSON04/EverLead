@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { Star, MapPin, Calendar, ArrowLeft, Info } from "lucide-react";
+import { Star, MapPin, Calendar, ArrowLeft, Info, Lock } from "lucide-react";
 import { supabaseClient } from "@/lib/supabaseClient";
 import { DateTime } from "luxon";
 
@@ -20,6 +20,12 @@ function BookingStep2Content() {
   const searchedCity = searchParams.get("city") || ""; // City from search (e.g., Penticton)
   const officeLocationName = searchParams.get("officeLocation") || ""; // Office location name
   const rescheduleAppointmentId = searchParams.get("rescheduleAppointmentId") || null; // ID of appointment being rescheduled
+  
+  // Get Step 1 data from URL params
+  const step1Email = searchParams.get("email") || "";
+  const step1FirstName = searchParams.get("firstName") || "";
+  const step1LastName = searchParams.get("lastName") || "";
+  const step1DateOfBirth = searchParams.get("dateOfBirth") || "";
 
   const [agentInfo, setAgentInfo] = useState<{
     full_name: string | null;
@@ -32,14 +38,9 @@ function BookingStep2Content() {
     agent_province: string | null;
   } | null>(null);
 
-  // Form data (previously from Step 1)
+  // Form data (Step 2 only - phone and service type)
   const [formData, setFormData] = useState({
-    email: "",
-    legalFirstName: "",
-    legalLastName: "",
-    dateOfBirth: "",
     phone: "",
-    city: "",
   });
 
   const [selectedOfficeLocation, setSelectedOfficeLocation] = useState<string>("");
@@ -181,31 +182,6 @@ function BookingStep2Content() {
   };
 
   const handleInputChange = (field: string, value: string) => {
-    // Auto-format date of birth with slashes
-    if (field === "dateOfBirth") {
-      // Remove all non-digit characters
-      const digitsOnly = value.replace(/\D/g, "");
-      
-      // Format with slashes: mm/dd/yyyy
-      let formatted = "";
-      if (digitsOnly.length > 0) {
-        formatted = digitsOnly.substring(0, 2);
-      }
-      if (digitsOnly.length > 2) {
-        formatted += "/" + digitsOnly.substring(2, 4);
-      }
-      if (digitsOnly.length > 4) {
-        formatted += "/" + digitsOnly.substring(4, 8);
-      }
-      
-      // Limit to 10 characters (mm/dd/yyyy)
-      if (formatted.length > 10) {
-        formatted = formatted.substring(0, 10);
-      }
-      
-      value = formatted;
-    }
-    
     // Auto-format phone number: (XXX) XXX-XXXX
     if (field === "phone") {
       // Remove all non-digit characters
@@ -247,38 +223,22 @@ function BookingStep2Content() {
   const validateForm = (): boolean => {
     const errors: Record<string, string> = {};
 
-    if (!formData.email.trim()) {
-      errors.email = "Email is required";
-    } else {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(formData.email)) {
-        errors.email = "Please enter a valid email address";
-      }
+    // Validate Step 1 data from URL params
+    if (!step1Email.trim()) {
+      errors.step1 = "Missing email. Please go back and complete Step 1.";
     }
-
-    if (!formData.legalFirstName.trim()) {
-      errors.legalFirstName = "Legal first name is required";
+    if (!step1FirstName.trim()) {
+      errors.step1 = "Missing first name. Please go back and complete Step 1.";
     }
-
-    if (!formData.legalLastName.trim()) {
-      errors.legalLastName = "Legal last name is required";
+    if (!step1LastName.trim()) {
+      errors.step1 = "Missing last name. Please go back and complete Step 1.";
     }
-
-    if (!formData.dateOfBirth.trim()) {
-      errors.dateOfBirth = "Date of birth is required";
-    } else {
-      const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
-      if (!dateRegex.test(formData.dateOfBirth)) {
-        errors.dateOfBirth = "Please enter date in mm/dd/yyyy format";
-      }
+    if (!step1DateOfBirth.trim()) {
+      errors.step1 = "Missing date of birth. Please go back and complete Step 1.";
     }
 
     if (!formData.phone.trim()) {
       errors.phone = "Telephone number is required";
-    }
-
-    if (!formData.city.trim()) {
-      errors.city = "City is required";
     }
 
     if (!selectedService) {
@@ -317,14 +277,14 @@ function BookingStep2Content() {
           agentId,
           startsAt,
           endsAt,
-          firstName: formData.legalFirstName,
-          lastName: formData.legalLastName,
-          email: formData.email,
+          firstName: step1FirstName,
+          lastName: step1LastName,
+          email: step1Email,
           phone: formData.phone.trim(),
-          city: formData.city.trim() || searchedCity || agentInfo?.agent_city || null,
+          city: searchedCity || agentInfo?.agent_city || null,
           province: agentInfo?.agent_province || null,
           serviceType: selectedService,
-          notes: `Date of Birth: ${formData.dateOfBirth}`,
+          notes: `Date of Birth: ${step1DateOfBirth}`,
           officeLocationId: officeLocationId || null,
           ...(rescheduleAppointmentId ? { rescheduleAppointmentId } : {}),
         }),
@@ -346,7 +306,7 @@ function BookingStep2Content() {
       const data = await res.json();
       
       // Navigate to success page or show success message
-      router.push(`/book/success?appointmentId=${data.appointment?.id || ""}&email=${encodeURIComponent(formData.email)}`);
+      router.push(`/book/success?appointmentId=${data.appointment?.id || ""}&email=${encodeURIComponent(step1Email)}`);
     } catch (err: any) {
       console.error("Error booking appointment:", err);
       setError(err.message || "Failed to book appointment");
@@ -394,9 +354,7 @@ function BookingStep2Content() {
             </Link>
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-1 text-sm text-gray-600">
-                <span className="w-4 h-4 rounded-full border-2 border-green-800 flex items-center justify-center">
-                  <span className="w-2 h-2 rounded-full bg-green-800"></span>
-                </span>
+                <Lock className="w-4 h-4" />
                 <span>Secure</span>
               </div>
             </div>
@@ -438,13 +396,10 @@ function BookingStep2Content() {
                     {formatDate(date)}, {formatTime(startsAt)}
                   </span>
                 </div>
-                {(searchedCity || agentInfo.agent_city) && (
+                {selectedOfficeLocation && (
                   <div className="flex items-center gap-2">
                     <MapPin className="w-4 h-4" />
-                    <span>
-                      {searchedCity || agentInfo.agent_city}
-                      {agentInfo.agent_province && `, ${agentInfo.agent_province}`}
-                    </span>
+                    <span>{selectedOfficeLocation}</span>
                   </div>
                 )}
               </div>
@@ -458,108 +413,25 @@ function BookingStep2Content() {
             Tell us a bit about you
           </h1>
           <p className="text-gray-600 mb-8">
-            To book your appointment, we need to verify a few things for {agentInfo?.full_name || "the agent"}'s office.
+            To book your appointment, we need to confirm a few things for {agentInfo?.full_name || (agentInfo?.first_name && agentInfo?.last_name ? `${agentInfo.first_name} ${agentInfo.last_name}` : "the agent")}.
           </p>
 
+          {/* Confirm Office Location */}
+          {selectedOfficeLocation && (
+            <div className="mb-8">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Meeting Location
+              </label>
+              <div className="px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <MapPin className="w-5 h-5 text-green-800" />
+                  <span className="text-gray-900">{selectedOfficeLocation}</span>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="space-y-6 mb-8">
-            {/* Email */}
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                Email <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                required
-                value={formData.email}
-                onChange={(e) => handleInputChange("email", e.target.value)}
-                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800 ${
-                  formErrors.email ? "border-red-500" : "border-gray-300"
-                }`}
-                placeholder="your.email@example.com"
-              />
-              {formErrors.email && (
-                <p className="text-sm text-red-500 mt-1">{formErrors.email}</p>
-              )}
-            </div>
-
-            {/* Legal First Name and Last Name */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="legalFirstName" className="block text-sm font-medium text-gray-700 mb-2">
-                  <div className="flex items-center gap-1">
-                    Legal first name <span className="text-red-500">*</span>
-                    <Info className="w-4 h-4 text-gray-400" />
-                  </div>
-                </label>
-                <input
-                  type="text"
-                  id="legalFirstName"
-                  name="legalFirstName"
-                  required
-                  value={formData.legalFirstName}
-                  onChange={(e) => handleInputChange("legalFirstName", e.target.value)}
-                  className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800 ${
-                    formErrors.legalFirstName ? "border-red-500" : "border-gray-300"
-                  }`}
-                  placeholder="John"
-                />
-                {formErrors.legalFirstName && (
-                  <p className="text-sm text-red-500 mt-1">{formErrors.legalFirstName}</p>
-                )}
-              </div>
-              <div>
-                <label htmlFor="legalLastName" className="block text-sm font-medium text-gray-700 mb-2">
-                  <div className="flex items-center gap-1">
-                    Legal last name <span className="text-red-500">*</span>
-                    <Info className="w-4 h-4 text-gray-400" />
-                  </div>
-                </label>
-                <input
-                  type="text"
-                  id="legalLastName"
-                  name="legalLastName"
-                  required
-                  value={formData.legalLastName}
-                  onChange={(e) => handleInputChange("legalLastName", e.target.value)}
-                  className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800 ${
-                    formErrors.legalLastName ? "border-red-500" : "border-gray-300"
-                  }`}
-                  placeholder="Doe"
-                />
-                {formErrors.legalLastName && (
-                  <p className="text-sm text-red-500 mt-1">{formErrors.legalLastName}</p>
-                )}
-              </div>
-            </div>
-
-            {/* Date of Birth */}
-            <div>
-              <label htmlFor="dateOfBirth" className="block text-sm font-medium text-gray-700 mb-2">
-                Date of birth <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  type="text"
-                  id="dateOfBirth"
-                  name="dateOfBirth"
-                  required
-                  value={formData.dateOfBirth}
-                  onChange={(e) => handleInputChange("dateOfBirth", e.target.value)}
-                  className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800 ${
-                    formErrors.dateOfBirth ? "border-red-500" : "border-gray-300"
-                  }`}
-                  placeholder="mm/dd/yyyy"
-                  maxLength={10}
-                />
-              </div>
-              {formErrors.dateOfBirth && (
-                <p className="text-sm text-red-500 mt-1">{formErrors.dateOfBirth}</p>
-              )}
-            </div>
-
             {/* Telephone Number */}
             <div>
               <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
@@ -582,43 +454,6 @@ function BookingStep2Content() {
                 <p className="text-sm text-red-500 mt-1">{formErrors.phone}</p>
               )}
             </div>
-
-            {/* City */}
-            <div>
-              <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-2">
-                City <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                id="city"
-                name="city"
-                required
-                value={formData.city}
-                onChange={(e) => handleInputChange("city", e.target.value)}
-                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800 ${
-                  formErrors.city ? "border-red-500" : "border-gray-300"
-                }`}
-                placeholder="City"
-              />
-              {formErrors.city && (
-                <p className="text-sm text-red-500 mt-1">{formErrors.city}</p>
-              )}
-            </div>
-
-            {/* Confirm Office Location */}
-            {selectedOfficeLocation && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Confirm office location
-                </label>
-                <div className="px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <MapPin className="w-5 h-5 text-green-800" />
-                    <span className="text-gray-900">{selectedOfficeLocation}</span>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
 
           <div className="mb-8">
@@ -696,11 +531,11 @@ function BookingStep2Content() {
               <p className="text-sm text-red-600">{error}</p>
             </div>
           )}
-
-          {/* Error Message */}
-          {error && (
+          
+          {/* Step 1 validation error */}
+          {formErrors.step1 && (
             <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-sm text-red-600">{error}</p>
+              <p className="text-sm text-red-600">{formErrors.step1}</p>
             </div>
           )}
 
