@@ -10,6 +10,14 @@ import type { CalendarConnection } from "@/lib/calendarProviders/types";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
+// Make this route publicly accessible (no authentication required)
+// Microsoft webhooks need to be accessible without auth for validation
+export const config = {
+  api: {
+    bodyParser: false, // Handle raw body for validation tokens
+  },
+};
+
 /**
  * GET: Handle browser access / health check
  */
@@ -38,29 +46,6 @@ export async function POST(req: NextRequest) {
       hasBody: !!req.body,
     });
 
-    // Microsoft sends validation requests first
-    // Check both header name variations (Microsoft sometimes uses different casing)
-    // Also check query parameters as Microsoft sometimes sends validation tokens there
-    const validationToken = 
-      req.headers.get("validation-token") || 
-      req.headers.get("Validation-Token") ||
-      req.headers.get("VALIDATION-TOKEN") ||
-      req.headers.get("validationToken") ||
-      req.nextUrl.searchParams.get("validationToken");
-    
-    if (validationToken) {
-      console.log("✅ Microsoft webhook validation request received (from header/query):", validationToken.substring(0, 20) + "...");
-      // Return validation token IMMEDIATELY to confirm subscription
-      // Must return 200 OK with the validation token as plain text
-      // This is critical - Microsoft requires a fast response (< 3 seconds)
-      return new NextResponse(validationToken, {
-        status: 200,
-        headers: {
-          "Content-Type": "text/plain",
-          "Cache-Control": "no-cache",
-        },
-      });
-    }
 
     // Microsoft may also send validation token in the request body as plain text
     // Check the raw body first before trying to parse as JSON
