@@ -1586,14 +1586,14 @@ function SearchResults() {
                         )}
                       </div>
 
-                      {/* Mobile: Name, job title, and company to the right of picture */}
+                      {/* Mobile: Name, job title, and company to the right of picture - wrapping around image */}
                       <div className="md:hidden">
-                        <h3 className="text-xl text-gray-900 font-semibold mb-1">{agentName}</h3>
-                        <p className="text-gray-600 text-sm mb-1">
+                        <h3 className="text-xl text-gray-900 font-semibold leading-tight mb-1">{agentName}</h3>
+                        <p className="text-gray-600 text-sm leading-tight mb-1">
                           {agent?.job_title || appointment.service_type || 'Pre-need Planning Specialist'}
                         </p>
                         {agent?.funeral_home && (
-                          <p className="text-gray-500 text-sm">{agent.funeral_home}</p>
+                          <p className="text-gray-500 text-sm leading-tight">{agent.funeral_home}</p>
                         )}
                       </div>
 
