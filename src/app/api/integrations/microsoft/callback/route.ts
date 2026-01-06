@@ -224,9 +224,9 @@ export async function GET(req: NextRequest) {
       console.log(`⏳ Microsoft Calendar webhook will be set up in 5 seconds (async, non-blocking)`);
     }
 
-    // Redirect to login page with success message - user can log back in and go to settings
+    // Redirect back to schedule page with success message
     return NextResponse.redirect(
-      `${baseUrl}/agent?calendarConnected=microsoft&message=${encodeURIComponent("Microsoft Calendar connected successfully! Please log in to continue.")}`
+      `${baseUrl}/agent/schedule?calendarSyncSuccess=microsoft`
     );
   } catch (error: any) {
     console.error("Error in /api/integrations/microsoft/callback:", error);

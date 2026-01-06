@@ -70,6 +70,8 @@ export default function SchedulePage() {
   } | null>(null);
   const [isDesktop, setIsDesktop] = useState(false);
   const calendarScrollRef = useRef<HTMLDivElement>(null);
+  const [showSyncSuccessModal, setShowSyncSuccessModal] = useState(false);
+  const [syncProvider, setSyncProvider] = useState<"google" | "microsoft" | null>(null);
 
   // Detect if we're on desktop
   useEffect(() => {
