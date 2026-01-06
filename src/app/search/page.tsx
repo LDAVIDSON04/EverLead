@@ -1636,15 +1636,7 @@ function SearchResults() {
                           </div>
                         )}
 
-                        {/* 4. Star with review count */}
-                        {agent && agent.reviewCount && agent.reviewCount > 0 && (
-                          <div className="flex items-center gap-1">
-                            <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                            <span className="text-gray-900 text-sm">{agent.reviewCount}</span>
-                          </div>
-                        )}
-
-                        {/* 5. Learn more about */}
+                        {/* 4. Learn more about */}
                         {agent?.id && (
                           <div>
                             <button
