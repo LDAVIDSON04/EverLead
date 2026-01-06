@@ -1419,8 +1419,8 @@ function SearchResults() {
               return (
                 <div key={`${appointment.id}-${searchLocation}`} className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
                   <div className="flex gap-4 md:gap-6">
-                    {/* Agent Avatar */}
-                    <div className="flex-shrink-0">
+                    {/* Agent Avatar - Mobile: with info below, Desktop: just avatar */}
+                    <div className="flex-shrink-0 md:flex-shrink-0">
                       {agent?.profile_picture_url ? (
                         <img
                           src={agent.profile_picture_url}
@@ -1432,32 +1432,42 @@ function SearchResults() {
                           <span className="text-white text-2xl">{agentName[0]?.toUpperCase() || 'A'}</span>
                       </div>
                       )}
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                      {/* Desktop: Name, title, etc */}
-                      <div className="mb-2 hidden md:block">
-                        <h3 className="text-xl text-gray-900 font-semibold">{agentName}</h3>
-                        <p className="text-gray-600 mt-1">
-                          {agent?.job_title || appointment.service_type || 'Pre-need Planning Specialist'}
-                        </p>
-                        {agent?.funeral_home && (
-                          <p className="text-gray-500 text-sm mt-1">{agent.funeral_home}</p>
-                        )}
-                      </div>
-
-                      {/* Mobile: Name and title to the right of picture, info under picture */}
-                      <div className="md:hidden">
-                        <div className="mb-2">
-                          <h3 className="text-xl text-gray-900 font-semibold">{agentName}</h3>
-                          <p className="text-gray-600 mt-1">
-                            {agent?.job_title || appointment.service_type || 'Pre-need Planning Specialist'}
-                          </p>
-                          {agent?.funeral_home && (
-                            <p className="text-gray-500 text-sm mt-1">{agent.funeral_home}</p>
-                          )}
+                      
+                      {/* Mobile: Info under profile pic - hugging left border */}
+                      <div className="md:hidden mt-2 space-y-1">
+                        {/* 1. Location */}
+                        <div className="flex items-center gap-1">
+                          <MapPin className="w-3 h-3 text-gray-500 flex-shrink-0" />
+                          <span className="text-gray-600 text-sm">
+                            {searchLocation ? decodeURIComponent(searchLocation.replace(/\+/g, ' ')) : location ? decodeURIComponent(location.replace(/\+/g, ' ')) : 'Location not specified'}
+                          </span>
                         </div>
-                      </div>
+
+                        {/* 2. Office Address */}
+                        {displayAddress && (
+                          <div className="flex items-start gap-1">
+                            <MapPin className="w-3 h-3 text-gray-400 mt-0.5 flex-shrink-0" />
+                            <span className="text-gray-500 text-xs">
+                              {displayAddress}
+                            </span>
+                          </div>
+                        )}
+
+                        {/* 3. Rating with star */}
+                        {agent && agent.rating && agent.rating > 0 && agent.reviewCount && agent.reviewCount > 0 && (
+                          <div className="flex items-center gap-1">
+                            <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                            <span className="text-gray-900 text-sm">{agent.rating.toFixed(1)}</span>
+                            <span className="text-gray-500 text-sm">· {agent.reviewCount} {agent.reviewCount === 1 ? 'review' : 'reviews'}</span>
+                          </div>
+                        )}
+
+                        {/* 4. Learn more about */}
+                        {agent?.id && (
+                          <div>
+                            <button
+                              type="button"
+                              onClick={async (e) => {
                                 console.log("Portfolio button clicked for agent:", agent.id);
                                 e.preventDefault();
                                 e.stopPropagation();
@@ -1553,6 +1563,32 @@ function SearchResults() {
                             </button>
                           </div>
                         )}
+                      </div>
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      {/* Desktop: Name, title, etc */}
+                      <div className="mb-2 hidden md:block">
+                        <h3 className="text-xl text-gray-900 font-semibold">{agentName}</h3>
+                        <p className="text-gray-600 mt-1">
+                          {agent?.job_title || appointment.service_type || 'Pre-need Planning Specialist'}
+                        </p>
+                        {agent?.funeral_home && (
+                          <p className="text-gray-500 text-sm mt-1">{agent.funeral_home}</p>
+                        )}
+                      </div>
+
+                      {/* Mobile: Name and title to the right of picture */}
+                      <div className="md:hidden">
+                        <div className="mb-2">
+                          <h3 className="text-xl text-gray-900 font-semibold">{agentName}</h3>
+                          <p className="text-gray-600 mt-1">
+                            {agent?.job_title || appointment.service_type || 'Pre-need Planning Specialist'}
+                          </p>
+                          {agent?.funeral_home && (
+                            <p className="text-gray-500 text-sm mt-1">{agent.funeral_home}</p>
+                          )}
+                        </div>
                       </div>
 
                       {/* Desktop: Location - Show searched location (the city the family is searching from) */}
