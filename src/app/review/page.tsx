@@ -36,9 +36,16 @@ function ReviewContent() {
           setAppointmentData({
             agentName: data.agent?.full_name || null,
           });
+        } else {
+          // If appointment not found, show error
+          const errorData = await response.json().catch(() => ({}));
+          setStatus("error");
+          setMessage(errorData.error || "Appointment not found");
         }
       } catch (error) {
         console.error("Error fetching appointment:", error);
+        setStatus("error");
+        setMessage("Failed to load appointment details");
       }
     }
 
