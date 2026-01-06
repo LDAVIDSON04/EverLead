@@ -2190,7 +2190,11 @@ function SearchResults() {
                               .trim();
                             
                             const bioParagraphs = displayBio.split('\n\n').filter((p: string) => p.trim().length > 0);
-                            return bioParagraphs.map((paragraph: string, index: number) => (
+                            
+                            // Limit to max 2 paragraphs
+                            const limitedParagraphs = bioParagraphs.slice(0, 2);
+                            
+                            return limitedParagraphs.map((paragraph: string, index: number) => (
                               <p key={index}>{paragraph}</p>
                             ));
                           })()}
