@@ -1475,7 +1475,7 @@ function SearchResults() {
                       )}
                       {/* Desktop: Learn more about button */}
                       {agent?.id && (
-                        <div className="hidden md:block">
+                        <div className="hidden md:block mb-4">
                           <button
                             type="button"
                             onClick={async (e) => {
