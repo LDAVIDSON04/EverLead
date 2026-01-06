@@ -380,49 +380,6 @@ function BookingStep2Content() {
 
       {/* Main Content */}
       <main className="max-w-[800px] mx-auto px-4 py-8">
-        {/* Booking Summary Card */}
-        <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6 mb-8">
-          <div className="flex items-start gap-4">
-            {agentInfo.profile_picture_url ? (
-              <img
-                src={agentInfo.profile_picture_url}
-                alt={agentInfo.full_name || "Agent"}
-                className="w-16 h-16 rounded-full object-cover flex-shrink-0"
-              />
-            ) : (
-              <div className="w-16 h-16 bg-green-800 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-white text-2xl">
-                  {agentInfo.first_name?.[0]?.toUpperCase() || agentInfo.full_name?.[0]?.toUpperCase() || "A"}
-                </span>
-              </div>
-            )}
-            <div className="flex-1">
-              <h2 className="text-lg font-semibold text-gray-900 mb-1">
-                {agentInfo.full_name || (agentInfo.first_name && agentInfo.last_name 
-                  ? `${agentInfo.first_name} ${agentInfo.last_name}`
-                  : "Pre-need Specialist")}
-              </h2>
-              <p className="text-gray-600 text-sm mb-3">
-                {agentInfo.job_title || "Pre-need Planning Specialist"}
-              </p>
-              <div className="space-y-2 text-sm text-gray-600">
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4" />
-                  <span>
-                    {formatDate(date)}, {formatTime(startsAt)}
-                  </span>
-                </div>
-                {selectedOfficeLocation && (
-                  <div className="flex items-center gap-2">
-                    <MapPin className="w-4 h-4" />
-                    <span>{selectedOfficeLocation}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Form Section */}
         <div>
           <h1 className="text-3xl font-semibold text-gray-900 mb-2">
