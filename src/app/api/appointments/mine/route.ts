@@ -98,7 +98,7 @@ export async function GET(req: NextRequest) {
       `
       )
       .eq("agent_id", userId)
-      .gte("requested_date", sevenDaysAgoStr)
+      .gte("requested_date", thirtyDaysAgoStr)
       .in("status", ["pending", "confirmed", "booked"])
       .order("requested_date", { ascending: true })
       .order("created_at", { ascending: true });
