@@ -323,7 +323,6 @@ function CancelAppointmentContent() {
     if (!pendingTimeSlot || !appointmentId) return;
 
     setRescheduling(true);
-    setPendingTimeSlot(null); // Close popup immediately
     try {
       const response = await fetch(`/api/appointments/${appointmentId}/reschedule`, {
         method: "POST",
@@ -341,7 +340,7 @@ function CancelAppointmentContent() {
       if (!response.ok) {
         setStatus("error");
         setMessage(data.error || "Failed to reschedule appointment. Please try again.");
-        setShowRescheduleModal(false);
+        // Keep the popup visible so the user can try again or cancel
         return;
       }
 
@@ -349,6 +348,7 @@ function CancelAppointmentContent() {
       setMessage("Your appointment has been rescheduled successfully.");
       setShowRescheduleModal(false);
       setSelectedTimeSlot(null);
+      setPendingTimeSlot(null);
       
       // Refresh appointment data
       if (appointmentId) {
@@ -362,7 +362,7 @@ function CancelAppointmentContent() {
       console.error("Error rescheduling appointment:", error);
       setStatus("error");
       setMessage("An error occurred while rescheduling. Please try again.");
-      setShowRescheduleModal(false);
+      // Keep modal open; allow user to choose a different slot
     } finally {
       setRescheduling(false);
     }

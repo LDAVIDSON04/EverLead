@@ -196,6 +196,12 @@ export async function POST(
 
       // Send email to agent
       if (agentEmail) {
+        console.log("📧 Sending agent reschedule email", {
+          to: agentEmail,
+          appointmentId,
+          requestedDate,
+          requestedWindow,
+        });
         sendAgentRescheduleEmail({
           to: agentEmail,
           agentName,
@@ -211,6 +217,12 @@ export async function POST(
 
       // Send email to customer
       if (consumerEmail) {
+        console.log("📧 Sending consumer reschedule email", {
+          to: consumerEmail,
+          appointmentId,
+          requestedDate,
+          requestedWindow,
+        });
         sendConsumerRescheduleEmail({
           to: consumerEmail,
           name: consumerName,
