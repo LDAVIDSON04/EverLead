@@ -1302,14 +1302,7 @@ function SearchResults() {
                   placeholder="Location"
                   value={inputLocation}
                   onChange={(e) => setInputLocation(e.target.value)}
-                  className="w-32 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800"
-                />
-                <input
-                  type="text"
-                  placeholder="Service type"
-                  value={inputService}
-                  onChange={(e) => setInputService(e.target.value)}
-                  className="w-32 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800"
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800 min-w-[200px]"
                 />
                 <button 
                   type="submit"
