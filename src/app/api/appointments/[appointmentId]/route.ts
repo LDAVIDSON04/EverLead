@@ -23,7 +23,29 @@ export async function GET(
       );
     }
 
-    // Fetch appointment (starts_at/ends_at don't exist in DB, calculated later from confirmed_at)
+    // Fetch appointment without the leads join first to see if it exists
+    const simpleResult = await supabaseAdmin
+      .from("appointments")
+      .select("id, agent_id, status, lead_id")
+      .eq("id", appointmentId)
+      .maybeSingle();
+    
+    console.log("🔍 [APPOINTMENTS API] Simple appointment check:", { 
+      found: !!simpleResult.data,
+      error: simpleResult.error?.message,
+      appointmentId,
+      data: simpleResult.data
+    });
+
+    if (!simpleResult.data) {
+      console.warn("⚠️ [APPOINTMENTS API] Appointment not found in database:", appointmentId);
+      return NextResponse.json(
+        { error: "Appointment not found" },
+        { status: 404 }
+      );
+    }
+
+    // Now fetch with leads relationship
     const result = await supabaseAdmin
       .from("appointments")
       .select(`
@@ -52,10 +74,17 @@ export async function GET(
     const appointment = result.data;
     const error = result.error;
     
-    console.log("📋 [APPOINTMENTS API] Appointment fetch result:", { 
+    console.log("📋 [APPOINTMENTS API] Full appointment fetch result:", { 
       found: !!appointment, 
       error: error?.message,
-      appointmentId 
+      errorCode: error?.code,
+      appointmentId,
+      appointmentData: appointment ? { 
+        id: appointment.id, 
+        agent_id: appointment.agent_id, 
+        status: appointment.status,
+        hasLead: !!appointment.leads
+      } : null
     });
 
     if (error) {
