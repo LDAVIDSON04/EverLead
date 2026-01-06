@@ -729,7 +729,7 @@ export default function SchedulePage() {
             onClick={() => setShowAddAvailabilityModal(true)}
             className="px-3 py-1.5 md:px-6 md:py-2 text-xs md:text-sm bg-green-700 text-white rounded-lg hover:bg-green-800 transition-colors"
           >
-            Add availability
+            Edit availability
           </button>
         </div>
       </div>
