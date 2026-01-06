@@ -4,6 +4,7 @@ import { z } from "zod";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { DateTime } from "luxon";
 import { deleteExternalEventsForAgentAppointment, syncAgentAppointmentToGoogleCalendar, syncAgentAppointmentToMicrosoftCalendar } from "@/lib/calendarSyncAgent";
+import { sendAgentRescheduleEmail, sendConsumerRescheduleEmail } from "@/lib/emails";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -150,6 +151,80 @@ export async function POST(
     } catch (syncError: any) {
       console.error("Error syncing appointment to calendars (non-fatal):", syncError);
       // Don't fail the reschedule if calendar sync fails
+    }
+
+    // Send notification emails to both agent and customer (non-blocking)
+    try {
+      // Get agent email and profile
+      const { data: agentAuth } = await supabaseAdmin.auth.admin.getUserById(appointment.agent_id);
+      const agentEmail = agentAuth?.user?.email;
+      
+      const { data: agentProfile } = await supabaseAdmin
+        .from("profiles")
+        .select("full_name, agent_province")
+        .eq("id", appointment.agent_id)
+        .maybeSingle();
+      const agentName = agentProfile?.full_name || null;
+
+      // Get lead data
+      const lead = Array.isArray(appointment.leads) ? appointment.leads[0] : appointment.leads;
+      const consumerName = lead?.full_name || 
+        (lead?.first_name && lead?.last_name
+          ? [lead?.first_name, lead?.last_name].filter(Boolean).join(' ')
+          : null);
+      const consumerEmail = lead?.email;
+
+      // Get office location for agent email
+      let locationAddress = null;
+      if (appointment.office_location_id) {
+        const { data: location } = await supabaseAdmin
+          .from('office_locations')
+          .select('street_address, city, province, postal_code')
+          .eq('id', appointment.office_location_id)
+          .maybeSingle();
+        
+        if (location) {
+          const parts = [
+            location.street_address,
+            location.city,
+            location.province,
+            location.postal_code
+          ].filter(Boolean);
+          locationAddress = parts.join(', ');
+        }
+      }
+
+      // Send email to agent
+      if (agentEmail) {
+        sendAgentRescheduleEmail({
+          to: agentEmail,
+          agentName,
+          consumerName,
+          requestedDate: requestedDate,
+          requestedWindow: requestedWindow,
+          confirmedAt: startsAt,
+          locationAddress,
+        }).catch((err) => {
+          console.error('Error sending agent reschedule email (non-fatal):', err);
+        });
+      }
+
+      // Send email to customer
+      if (consumerEmail) {
+        sendConsumerRescheduleEmail({
+          to: consumerEmail,
+          name: consumerName,
+          requestedDate: requestedDate,
+          requestedWindow: requestedWindow,
+          appointmentId: appointmentId,
+          confirmedAt: startsAt,
+          agentName,
+        }).catch((err) => {
+          console.error('Error sending consumer reschedule email (non-fatal):', err);
+        });
+      }
+    } catch (emailError: any) {
+      console.error('Error preparing reschedule emails (non-fatal):', emailError);
     }
 
     return NextResponse.json({

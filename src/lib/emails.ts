@@ -982,6 +982,606 @@ export async function sendAgentRebookingEmail({
 }
 
 /**
+ * Send cancellation notification email to consumer/family
+ */
+export async function sendConsumerCancellationEmail({
+  to,
+  name,
+  requestedDate,
+  requestedWindow,
+  agentName,
+}: ConsumerEmailArgs & { agentName?: string | null }) {
+  if (!to) {
+    console.warn('sendConsumerCancellationEmail: No email address provided');
+    return;
+  }
+
+  const resendApiKey = process.env.RESEND_API_KEY;
+  const resendFromEmail = process.env.RESEND_FROM_EMAIL || 'Soradin <notifications@soradin.com>';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://soradin.com';
+
+  if (!resendApiKey) {
+    console.log('📧 sendConsumerCancellationEmail: RESEND_API_KEY not set, skipping email');
+    return;
+  }
+
+  const [year, month, day] = requestedDate.split('-').map(Number);
+  const date = new Date(year, month - 1, day);
+  const prettyDate = date.toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+
+  const timeWindowLabel = requestedWindow.charAt(0).toUpperCase() + requestedWindow.slice(1);
+
+  let fromEmail = resendFromEmail;
+  if (fromEmail && !fromEmail.includes('<')) {
+    fromEmail = `Soradin <${fromEmail}>`;
+  } else if (fromEmail && fromEmail.includes('<')) {
+    const emailMatch = fromEmail.match(/<(.+@.+?)>/);
+    if (emailMatch) {
+      fromEmail = `Soradin <${emailMatch[1]}>`;
+    }
+  } else {
+    fromEmail = 'Soradin <notifications@soradin.com>';
+  }
+
+  try {
+    let cleanSiteUrl = (siteUrl || '').trim().replace(/\/+$/, '');
+    if (!cleanSiteUrl.startsWith('http')) {
+      cleanSiteUrl = `https://${cleanSiteUrl}`;
+    }
+
+    const emailBody = {
+      from: fromEmail,
+      to: [to],
+      subject: `Appointment Cancelled - ${prettyDate}`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Appointment Cancelled</title>
+        </head>
+        <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f5f5f5;">
+          <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 40px 20px;">
+            <tr>
+              <td align="center">
+                <table width="800" cellpadding="0" cellspacing="0" style="background-color: #ffffff; max-width: 800px;">
+                  <!-- Header -->
+                  <tr>
+                    <td style="background-color: #1a4d2e; padding: 32px 24px;">
+                      <table width="100%" cellpadding="0" cellspacing="0">
+                        <tr>
+                          <td style="vertical-align: middle;">
+                            <h1 style="color: #ffffff; font-size: 32px; font-weight: bold; margin: 0;">SORADIN</h1>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                  
+                  <!-- Content -->
+                  <tr>
+                    <td style="padding: 40px 32px;">
+                      <h2 style="color: #111827; font-size: 28px; margin: 0 0 32px 0; font-weight: 600; line-height: 1.3;">Appointment Cancelled</h2>
+                      
+                      <p style="color: #374151; font-size: 16px; margin: 0 0 24px 0; line-height: 1.6;">
+                        ${name ? `Hi ${name},` : 'Hello,'}
+                      </p>
+                      
+                      <p style="color: #374151; font-size: 16px; margin: 0 0 24px 0; line-height: 1.6;">
+                        Your appointment${agentName ? ` with ${agentName}` : ''} scheduled for <strong>${prettyDate}</strong> at <strong>${timeWindowLabel}</strong> has been cancelled.
+                      </p>
+                      
+                      <p style="color: #374151; font-size: 16px; margin: 0; line-height: 1.6;">
+                        If you need to reschedule or have any questions, please contact your specialist directly or visit <a href="${cleanSiteUrl}" style="color: #1a4d2e; text-decoration: underline;">${cleanSiteUrl}</a>.
+                      </p>
+                    </td>
+                  </tr>
+                  
+                  <!-- Footer -->
+                  <tr>
+                    <td style="background-color: #000000; padding: 16px;">
+                      <table width="100%" cellpadding="0" cellspacing="0">
+                        <tr>
+                          <td style="color: #ffffff; font-size: 12px;">
+                            © ${new Date().getFullYear()} Soradin. All rights reserved.
+                          </td>
+                          <td align="right" style="color: #9ca3af; font-size: 12px;">
+                            This is an automated message, please do not reply.
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
+      `,
+    };
+
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${resendApiKey}`,
+      },
+      body: JSON.stringify(emailBody),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ Resend API error for consumer cancellation email:', {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorText,
+        to,
+      });
+      throw new Error(`Resend API error: ${response.status} ${response.statusText}`);
+    }
+
+    const result = await response.json();
+    console.log('✅ Consumer cancellation email sent successfully:', {
+      emailId: result.id,
+      to,
+    });
+    
+    return result;
+  } catch (error: any) {
+    console.error('❌ Error sending consumer cancellation email:', {
+      error: error.message,
+      stack: error.stack,
+      to,
+    });
+    throw error;
+  }
+}
+
+/**
+ * Send reschedule notification email to consumer/family
+ */
+export async function sendConsumerRescheduleEmail({
+  to,
+  name,
+  requestedDate,
+  requestedWindow,
+  appointmentId,
+  confirmedAt,
+  agentName,
+}: ConsumerEmailArgs & { agentName?: string | null }) {
+  if (!to) {
+    console.warn('sendConsumerRescheduleEmail: No email address provided');
+    return;
+  }
+
+  const resendApiKey = process.env.RESEND_API_KEY;
+  const resendFromEmail = process.env.RESEND_FROM_EMAIL || 'Soradin <notifications@soradin.com>';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://soradin.com';
+
+  if (!resendApiKey) {
+    console.log('📧 sendConsumerRescheduleEmail: RESEND_API_KEY not set, skipping email');
+    return;
+  }
+
+  const [year, month, day] = requestedDate.split('-').map(Number);
+  const date = new Date(year, month - 1, day);
+  const prettyDate = date.toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+
+  // Format time if confirmedAt is provided
+  let timeDisplay = requestedWindow.charAt(0).toUpperCase() + requestedWindow.slice(1);
+  if (confirmedAt) {
+    try {
+      const { DateTime } = await import('luxon');
+      const confirmedDate = DateTime.fromISO(confirmedAt, { zone: "utc" });
+      const localDate = confirmedDate.setZone("America/Vancouver");
+      const hours = localDate.hour;
+      const minutes = localDate.minute;
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      const displayHours = hours % 12 || 12;
+      const endDate = localDate.plus({ hours: 1 });
+      const endHours = endDate.hour % 12 || 12;
+      const endAmpm = endDate.hour >= 12 ? 'PM' : 'AM';
+      timeDisplay = `${displayHours}:${String(minutes).padStart(2, '0')} ${ampm} - ${endHours}:${String(endDate.minute).padStart(2, '0')} ${endAmpm}`;
+    } catch (error) {
+      console.error('Error formatting time:', error);
+    }
+  }
+
+  let fromEmail = resendFromEmail;
+  if (fromEmail && !fromEmail.includes('<')) {
+    fromEmail = `Soradin <${fromEmail}>`;
+  } else if (fromEmail && fromEmail.includes('<')) {
+    const emailMatch = fromEmail.match(/<(.+@.+?)>/);
+    if (emailMatch) {
+      fromEmail = `Soradin <${emailMatch[1]}>`;
+    }
+  } else {
+    fromEmail = 'Soradin <notifications@soradin.com>';
+  }
+
+  try {
+    let cleanSiteUrl = (siteUrl || '').trim().replace(/\/+$/, '');
+    if (!cleanSiteUrl.startsWith('http')) {
+      cleanSiteUrl = `https://${cleanSiteUrl}`;
+    }
+
+    const emailBody = {
+      from: fromEmail,
+      to: [to],
+      subject: `Appointment Rescheduled - ${prettyDate}`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Appointment Rescheduled</title>
+        </head>
+        <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f5f5f5;">
+          <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 40px 20px;">
+            <tr>
+              <td align="center">
+                <table width="800" cellpadding="0" cellspacing="0" style="background-color: #ffffff; max-width: 800px;">
+                  <!-- Header -->
+                  <tr>
+                    <td style="background-color: #1a4d2e; padding: 32px 24px;">
+                      <table width="100%" cellpadding="0" cellspacing="0">
+                        <tr>
+                          <td style="vertical-align: middle;">
+                            <h1 style="color: #ffffff; font-size: 32px; font-weight: bold; margin: 0;">SORADIN</h1>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                  
+                  <!-- Content -->
+                  <tr>
+                    <td style="padding: 40px 32px;">
+                      <h2 style="color: #111827; font-size: 28px; margin: 0 0 32px 0; font-weight: 600; line-height: 1.3;">Appointment Rescheduled</h2>
+                      
+                      <p style="color: #374151; font-size: 16px; margin: 0 0 24px 0; line-height: 1.6;">
+                        ${name ? `Hi ${name},` : 'Hello,'}
+                      </p>
+                      
+                      <p style="color: #374151; font-size: 16px; margin: 0 0 24px 0; line-height: 1.6;">
+                        Your appointment${agentName ? ` with ${agentName}` : ''} has been rescheduled to:
+                      </p>
+                      
+                      <!-- Two Column Layout for Details -->
+                      <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 32px;">
+                        <tr>
+                          <td width="50%" style="padding-right: 16px; padding-bottom: 20px;">
+                            <table cellpadding="0" cellspacing="0" style="border-left: 3px solid #0D5C3D; padding-left: 20px;">
+                              <tr>
+                                <td style="padding-top: 4px; padding-bottom: 4px;">
+                                  <p style="color: #6b7280; font-size: 13px; margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500;">Date</p>
+                                  <p style="color: #111827; font-size: 18px; margin: 0; font-weight: 500; line-height: 1.4;">${prettyDate}</p>
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                          <td width="50%" style="padding-left: 20px; padding-bottom: 20px;">
+                            <table cellpadding="0" cellspacing="0" style="border-left: 3px solid #0D5C3D; padding-left: 20px;">
+                              <tr>
+                                <td style="padding-top: 4px; padding-bottom: 4px;">
+                                  <p style="color: #6b7280; font-size: 13px; margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500;">Time</p>
+                                  <p style="color: #111827; font-size: 18px; margin: 0; font-weight: 500; line-height: 1.4;">${timeDisplay}</p>
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                        </tr>
+                      </table>
+                      
+                      <p style="color: #374151; font-size: 16px; margin: 0 0 24px 0; line-height: 1.6;">
+                        Please arrive 10 minutes before your scheduled appointment time.
+                      </p>
+                      
+                      ${appointmentId ? `<p style="color: #374151; font-size: 16px; margin: 0; line-height: 1.6;">
+                        <a href="${cleanSiteUrl}/book/cancel?appointmentId=${appointmentId}" style="color: #1a4d2e; text-decoration: underline; font-weight: 500;">Cancel Or Reschedule Appointment</a>
+                      </p>` : ''}
+                    </td>
+                  </tr>
+                  
+                  <!-- Footer -->
+                  <tr>
+                    <td style="background-color: #000000; padding: 16px;">
+                      <table width="100%" cellpadding="0" cellspacing="0">
+                        <tr>
+                          <td style="color: #ffffff; font-size: 12px;">
+                            © ${new Date().getFullYear()} Soradin. All rights reserved.
+                          </td>
+                          <td align="right" style="color: #9ca3af; font-size: 12px;">
+                            This is an automated message, please do not reply.
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
+      `,
+    };
+
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${resendApiKey}`,
+      },
+      body: JSON.stringify(emailBody),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ Resend API error for consumer reschedule email:', {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorText,
+        to,
+      });
+      throw new Error(`Resend API error: ${response.status} ${response.statusText}`);
+    }
+
+    const result = await response.json();
+    console.log('✅ Consumer reschedule email sent successfully:', {
+      emailId: result.id,
+      to,
+    });
+    
+    return result;
+  } catch (error: any) {
+    console.error('❌ Error sending consumer reschedule email:', {
+      error: error.message,
+      stack: error.stack,
+      to,
+    });
+    throw error;
+  }
+}
+
+/**
+ * Send reschedule notification email to agent
+ */
+export async function sendAgentRescheduleEmail({
+  to,
+  agentName,
+  consumerName,
+  requestedDate,
+  requestedWindow,
+  confirmedAt,
+  locationAddress,
+}: AgentEmailArgs) {
+  if (!to) {
+    console.warn('sendAgentRescheduleEmail: No email address provided');
+    return;
+  }
+
+  const resendApiKey = process.env.RESEND_API_KEY;
+  const resendFromEmail = process.env.RESEND_FROM_EMAIL || 'Soradin <notifications@soradin.com>';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://soradin.com';
+
+  if (!resendApiKey) {
+    console.log('📧 sendAgentRescheduleEmail: RESEND_API_KEY not set, skipping email');
+    return;
+  }
+
+  const [year, month, day] = requestedDate.split('-').map(Number);
+  const date = new Date(year, month - 1, day);
+  const prettyDate = date.toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+
+  // Format time if confirmedAt is provided
+  let timeDisplay = requestedWindow.charAt(0).toUpperCase() + requestedWindow.slice(1);
+  if (confirmedAt) {
+    try {
+      const { DateTime } = await import('luxon');
+      const confirmedDate = DateTime.fromISO(confirmedAt, { zone: "utc" });
+      // Infer timezone from location or default to Vancouver
+      let timezone = "America/Vancouver";
+      const localDate = confirmedDate.setZone(timezone);
+      const hours = localDate.hour;
+      const minutes = localDate.minute;
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      const displayHours = hours % 12 || 12;
+      const endHours = (hours + 1) % 12 || 12;
+      timeDisplay = `${displayHours}:${String(minutes).padStart(2, '0')} ${ampm} - ${endHours}:${String(minutes).padStart(2, '0')} ${ampm}`;
+    } catch (error) {
+      console.error('Error formatting time:', error);
+    }
+  }
+
+  let fromEmail = resendFromEmail;
+  if (fromEmail && !fromEmail.includes('<')) {
+    fromEmail = `Soradin <${fromEmail}>`;
+  } else if (fromEmail && fromEmail.includes('<')) {
+    const emailMatch = fromEmail.match(/<(.+@.+?)>/);
+    if (emailMatch) {
+      fromEmail = `Soradin <${emailMatch[1]}>`;
+    }
+  } else {
+    fromEmail = 'Soradin <notifications@soradin.com>';
+  }
+
+  try {
+    let cleanSiteUrl = (siteUrl || '').trim().replace(/\/+$/, '');
+    if (!cleanSiteUrl.startsWith('http')) {
+      cleanSiteUrl = `https://${cleanSiteUrl}`;
+    }
+
+    const emailBody = {
+      from: fromEmail,
+      to: [to],
+      subject: `Appointment Rescheduled: ${consumerName || 'Client'} - ${prettyDate}`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Appointment Rescheduled</title>
+        </head>
+        <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f5f5f5;">
+          <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 40px 20px;">
+            <tr>
+              <td align="center">
+                <table width="800" cellpadding="0" cellspacing="0" style="background-color: #ffffff; max-width: 800px;">
+                  <!-- Header -->
+                  <tr>
+                    <td style="background-color: #1a4d2e; padding: 32px 24px;">
+                      <table width="100%" cellpadding="0" cellspacing="0">
+                        <tr>
+                          <td style="vertical-align: middle;">
+                            <h1 style="color: #ffffff; font-size: 32px; font-weight: bold; margin: 0;">SORADIN</h1>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                  
+                  <!-- Content -->
+                  <tr>
+                    <td style="padding: 40px 32px;">
+                      <h2 style="color: #111827; font-size: 28px; margin: 0 0 32px 0; font-weight: 600; line-height: 1.3;">Appointment Rescheduled</h2>
+                      
+                      <!-- Two Column Layout for Details -->
+                      <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 32px;">
+                        <tr>
+                          <td width="50%" style="padding-right: 16px; padding-bottom: 20px;">
+                            <table cellpadding="0" cellspacing="0" style="border-left: 3px solid #0D5C3D; padding-left: 20px;">
+                              <tr>
+                                <td style="padding-top: 4px; padding-bottom: 4px;">
+                                  <p style="color: #6b7280; font-size: 13px; margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500;">Date</p>
+                                  <p style="color: #111827; font-size: 18px; margin: 0; font-weight: 500; line-height: 1.4;">${prettyDate}</p>
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                          <td width="50%" style="padding-left: 20px; padding-bottom: 20px;">
+                            <table cellpadding="0" cellspacing="0" style="border-left: 3px solid #0D5C3D; padding-left: 20px;">
+                              <tr>
+                                <td style="padding-top: 4px; padding-bottom: 4px;">
+                                  <p style="color: #6b7280; font-size: 13px; margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500;">Time</p>
+                                  <p style="color: #111827; font-size: 18px; margin: 0; font-weight: 500; line-height: 1.4;">${timeDisplay}</p>
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                        </tr>
+                        ${locationAddress ? `
+                        <tr>
+                          <td width="50%" style="padding-right: 16px; padding-bottom: 20px;">
+                            <table cellpadding="0" cellspacing="0" style="border-left: 3px solid #0D5C3D; padding-left: 20px;">
+                              <tr>
+                                <td style="padding-top: 4px; padding-bottom: 4px;">
+                                  <p style="color: #6b7280; font-size: 13px; margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500;">Location</p>
+                                  <p style="color: #111827; font-size: 18px; margin: 0; font-weight: 500; line-height: 1.4;">${locationAddress}</p>
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                          <td width="50%" style="padding-left: 20px; padding-bottom: 20px;"></td>
+                        </tr>
+                        ` : ''}
+                        <tr>
+                          <td width="50%" style="padding-right: 16px; padding-bottom: 20px;">
+                            <table cellpadding="0" cellspacing="0" style="border-left: 3px solid #0D5C3D; padding-left: 20px;">
+                              <tr>
+                                <td style="padding-top: 4px; padding-bottom: 4px;">
+                                  <p style="color: #6b7280; font-size: 13px; margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500;">With</p>
+                                  <p style="color: #111827; font-size: 18px; margin: 0; font-weight: 500; line-height: 1.4;">${consumerName || 'Client'}</p>
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                  
+                  <!-- Footer -->
+                  <tr>
+                    <td style="background-color: #000000; padding: 16px;">
+                      <table width="100%" cellpadding="0" cellspacing="0">
+                        <tr>
+                          <td style="color: #ffffff; font-size: 12px;">
+                            © ${new Date().getFullYear()} Soradin. All rights reserved.
+                          </td>
+                          <td align="right" style="color: #9ca3af; font-size: 12px;">
+                            This is an automated message, please do not reply.
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
+      `,
+    };
+
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${resendApiKey}`,
+      },
+      body: JSON.stringify(emailBody),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ Resend API error for agent reschedule email:', {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorText,
+        to,
+      });
+      throw new Error(`Resend API error: ${response.status} ${response.statusText}`);
+    }
+
+    const result = await response.json();
+    console.log('✅ Agent reschedule email sent successfully:', {
+      emailId: result.id,
+      to,
+    });
+    
+    return result;
+  } catch (error: any) {
+    console.error('❌ Error sending agent reschedule email:', {
+      error: error.message,
+      stack: error.stack,
+      to,
+    });
+    throw error;
+  }
+}
+
+/**
  * Send review follow-up email to family (24 hours after appointment)
  */
 export async function sendReviewFollowUpEmail({

@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { deleteExternalEventsForAgentAppointment } from "@/lib/calendarSyncAgent";
-import { sendAgentCancellationEmail, sendAgentRebookingEmail } from "@/lib/emails";
+import { sendAgentCancellationEmail, sendAgentRebookingEmail, sendConsumerCancellationEmail } from "@/lib/emails";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -91,7 +91,15 @@ export async function POST(req: NextRequest) {
       // Don't fail the cancellation if sync deletion fails
     }
 
-    // Send notification email to agent (non-blocking)
+    // Get lead data for emails
+    const lead = Array.isArray(appointment.leads) ? appointment.leads[0] : appointment.leads;
+    const consumerName = lead?.full_name || 
+      (lead?.first_name && lead?.last_name
+        ? [lead?.first_name, lead?.last_name].filter(Boolean).join(' ')
+        : null);
+    const consumerEmail = lead?.email;
+
+    // Send notification emails to both agent and customer (non-blocking)
     if (appointment.agent_id) {
       try {
         // Get agent email and name
@@ -105,16 +113,9 @@ export async function POST(req: NextRequest) {
           .maybeSingle();
         const agentName = agentProfile?.full_name || null;
 
-        // Get lead name
-        const lead = Array.isArray(appointment.leads) ? appointment.leads[0] : appointment.leads;
-        const consumerName = lead?.full_name || 
-          (lead?.first_name && lead?.last_name
-            ? [lead?.first_name, lead?.last_name].filter(Boolean).join(' ')
-            : null);
-
         if (agentEmail) {
           if (action === "rebook") {
-            // Send rebooking notification
+            // Send rebooking notification to agent
             sendAgentRebookingEmail({
               to: agentEmail,
               agentName,
@@ -125,7 +126,7 @@ export async function POST(req: NextRequest) {
               console.error('Error sending agent rebooking email (non-fatal):', err);
             });
           } else {
-            // Send cancellation notification
+            // Send cancellation notification to agent
             sendAgentCancellationEmail({
               to: agentEmail,
               agentName,
@@ -139,6 +140,23 @@ export async function POST(req: NextRequest) {
         }
       } catch (emailError: any) {
         console.error('Error preparing agent cancellation email (non-fatal):', emailError);
+      }
+    }
+
+    // Send cancellation email to customer (non-blocking)
+    if (consumerEmail) {
+      try {
+        sendConsumerCancellationEmail({
+          to: consumerEmail,
+          name: consumerName,
+          requestedDate: appointment.requested_date,
+          requestedWindow: appointment.requested_window,
+          agentName: null, // Will be fetched if needed
+        }).catch((err) => {
+          console.error('Error sending consumer cancellation email (non-fatal):', err);
+        });
+      } catch (emailError: any) {
+        console.error('Error preparing consumer cancellation email (non-fatal):', emailError);
       }
     }
 
