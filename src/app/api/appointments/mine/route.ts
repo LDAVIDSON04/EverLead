@@ -106,7 +106,7 @@ export async function GET(req: NextRequest) {
     if (result.error) {
       // Check if error is due to missing notes column
       if (result.error.code === '42703' && result.error.message?.includes('notes')) {
-        console.log("Notes column not found, fetching appointments without notes");
+        // Notes column doesn't exist - this is fine, we'll continue without it
         hasNotesColumn = false;
         const resultWithoutNotes = await supabaseServer
           .from("appointments")
@@ -286,6 +286,8 @@ export async function GET(req: NextRequest) {
         : 60; // Default to 60 minutes
       
       const lead = Array.isArray(apt.leads) ? apt.leads[0] : apt.leads;
+      const isAgentEvent = lead?.email?.includes('@soradin.internal');
+      
       if (lead?.additional_notes) {
         console.log(`🔍 Parsing duration from additional_notes:`, {
           appointmentId: apt.id,
@@ -300,13 +302,15 @@ export async function GET(req: NextRequest) {
         } else {
           console.log(`❌ No duration match found. Regex pattern: /^EVENT_DURATION:(\\d+)\\|/`);
         }
-      } else {
-        console.log(`⚠️ No additional_notes found for appointment:`, {
+      } else if (isAgentEvent) {
+        // Only warn if this is an agent-created event that should have additional_notes
+        console.log(`⚠️ No additional_notes found for agent-created event:`, {
           appointmentId: apt.id,
           hasLead: !!lead,
           leadEmail: lead?.email,
         });
       }
+      // Regular appointments don't need additional_notes, so no warning needed
       
       const appointmentLengthMs = appointmentLengthMinutes * 60 * 1000;
       
