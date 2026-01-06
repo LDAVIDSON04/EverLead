@@ -179,7 +179,7 @@ export default function HomePage() {
     
     // Require location for search
     if (!location || location.trim() === "") {
-      setSearchError("Please enter a location to search");
+      setSearchError("Let's find specialists near you! Please add your location to get started.");
       return;
     }
     
@@ -377,8 +377,8 @@ export default function HomePage() {
             {/* Horizontal search bar */}
             <form onSubmit={handleSearch} className="bg-white rounded-2xl p-3 shadow-lg border border-[#1A1A1A]/5 relative z-30 md:mb-8 mb-4">
               {searchError && (
-                <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-sm text-red-600">{searchError}</p>
+                <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm text-blue-700">{searchError}</p>
                 </div>
               )}
               <div className="flex flex-col lg:flex-row items-stretch gap-0">
