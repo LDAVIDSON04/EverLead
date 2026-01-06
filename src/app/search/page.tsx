@@ -1620,31 +1620,10 @@ function SearchResults() {
                       </div>
                     </div>
 
-                    <div className="flex-1 min-w-0">
-                      {/* Desktop: Name, title, etc */}
-                      <div className="mb-2 hidden md:block">
-                        <h3 className="text-xl text-gray-900 font-semibold">{agentName}</h3>
-                        <p className="text-gray-600 mt-1">
-                          {agent?.job_title || appointment.service_type || 'Pre-need Planning Specialist'}
-                        </p>
-                        {agent?.funeral_home && (
-                          <p className="text-gray-500 text-sm mt-1">{agent.funeral_home}</p>
-                        )}
-                      </div>
-
-                      {/* Mobile: Name, job title, and company to the right of picture - wrapping around image */}
-                      <div className="md:hidden">
-                        <h3 className="text-xl text-gray-900 font-semibold leading-tight mb-1">{agentName}</h3>
-                        <p className="text-gray-600 text-sm leading-tight mb-1">
-                          {agent?.job_title || appointment.service_type || 'Pre-need Planning Specialist'}
-                        </p>
-                        {agent?.funeral_home && (
-                          <p className="text-gray-500 text-sm leading-tight">{agent.funeral_home}</p>
-                        )}
-                      </div>
-
+                    {/* Desktop: Location and other info */}
+                    <div className="hidden md:block flex-1 min-w-0">
                       {/* Desktop: Location - Show searched location (the city the family is searching from) */}
-                      <div className="hidden md:flex items-start gap-2 mb-2">
+                      <div className="flex items-start gap-2 mb-2">
                         <MapPin className="w-4 h-4 text-gray-500 mt-1 flex-shrink-0" />
                         <span className="text-gray-600 text-sm">
                           {searchLocation ? decodeURIComponent(searchLocation.replace(/\+/g, ' ')) : location ? decodeURIComponent(location.replace(/\+/g, ' ')) : 'Location not specified'}
