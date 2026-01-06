@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     }
 
     const agentId = user.id;
-    const pricePerAppointment = 0.50; // Testing price - Stripe minimum is $0.50, change to 29.0 for production
+    const pricePerAppointment = 0.01; // TEMP: set to $0.01 as requested
 
     // Get agent's timezone from profile
     let agentTimezone = "America/Vancouver"; // Default

@@ -368,8 +368,9 @@ export async function POST(req: NextRequest) {
       slotStartTime: slotStart.getTime(),
     });
     
-    // Get price per appointment from billing settings (default to 50 cents for testing - Stripe minimum is $0.50)
-    const pricePerAppointment = 0.50; // $0.50 - minimum Stripe allows, change to 29.0 for production
+    // Get price per appointment
+    // TEMP: set to $0.01 as requested
+    const pricePerAppointment = 0.01;
     const priceCents = Math.round(pricePerAppointment * 100);
     
     const appointmentData: any = {
