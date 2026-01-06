@@ -26,6 +26,18 @@ export async function GET(req: NextRequest) {
  */
 export async function POST(req: NextRequest) {
   try {
+    // Log all headers for debugging
+    const allHeaders: Record<string, string> = {};
+    req.headers.forEach((value, key) => {
+      allHeaders[key] = value;
+    });
+    console.log("Microsoft webhook request received:", {
+      method: req.method,
+      url: req.url,
+      headers: allHeaders,
+      hasBody: !!req.body,
+    });
+
     // Microsoft sends validation requests first
     // Check both header name variations (Microsoft sometimes uses different casing)
     // Also check query parameters as Microsoft sometimes sends validation tokens there
@@ -33,10 +45,11 @@ export async function POST(req: NextRequest) {
       req.headers.get("validation-token") || 
       req.headers.get("Validation-Token") ||
       req.headers.get("VALIDATION-TOKEN") ||
+      req.headers.get("validationToken") ||
       req.nextUrl.searchParams.get("validationToken");
     
     if (validationToken) {
-      console.log("Microsoft webhook validation request received (from header/query)");
+      console.log("✅ Microsoft webhook validation request received (from header/query):", validationToken.substring(0, 20) + "...");
       // Return validation token IMMEDIATELY to confirm subscription
       // Must return 200 OK with the validation token as plain text
       // This is critical - Microsoft requires a fast response (< 3 seconds)
@@ -52,32 +65,42 @@ export async function POST(req: NextRequest) {
     // Microsoft may also send validation token in the request body as plain text
     // Check the raw body first before trying to parse as JSON
     const contentType = req.headers.get("content-type") || "";
-    if (contentType.includes("text/plain") || !contentType.includes("application/json")) {
-      try {
-        const textBody = await req.text();
-        // If it's a short string (likely validation token), return it
-        if (textBody && textBody.length < 200 && !textBody.startsWith("{")) {
-          console.log("Microsoft webhook validation request received (from body)");
-          return new NextResponse(textBody, {
-            status: 200,
-            headers: {
-              "Content-Type": "text/plain",
-              "Cache-Control": "no-cache",
-            },
-          });
-        }
-        // If it's not a validation token, try to parse as JSON
+    console.log("Content-Type:", contentType);
+    
+    // Always try to read as text first to catch validation tokens
+    try {
+      const textBody = await req.text();
+      console.log("Request body (first 200 chars):", textBody.substring(0, 200));
+      
+      // If it's a short string (likely validation token), return it
+      if (textBody && textBody.length < 500 && !textBody.trim().startsWith("{")) {
+        console.log("✅ Microsoft webhook validation request received (from body):", textBody.substring(0, 50) + "...");
+        return new NextResponse(textBody, {
+          status: 200,
+          headers: {
+            "Content-Type": "text/plain",
+            "Cache-Control": "no-cache",
+          },
+        });
+      }
+      
+      // If it's JSON, parse and handle
+      if (textBody.trim().startsWith("{")) {
         try {
           const body = JSON.parse(textBody);
           return await handleNotificationBody(body);
-        } catch {
-          // If parsing fails, return OK anyway
+        } catch (parseError) {
+          console.error("Failed to parse JSON body:", parseError);
           return new NextResponse("OK", { status: 200 });
         }
-      } catch (textError) {
-        console.warn("Failed to read request body:", textError);
-        return new NextResponse("OK", { status: 200 });
       }
+      
+      // If it's empty or unknown format, return OK
+      return new NextResponse("OK", { status: 200 });
+    } catch (textError: any) {
+      console.error("Failed to read request body:", textError);
+      // Return OK to prevent Microsoft from retrying
+      return new NextResponse("OK", { status: 200 });
     }
 
     // Parse notification body as JSON
