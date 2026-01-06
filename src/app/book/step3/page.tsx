@@ -141,7 +141,24 @@ function BookingStep3Content() {
             <div className="space-y-3 text-sm">
               <div>
                 <span className="font-medium text-gray-700">Date & Time:</span>{" "}
-                <span className="text-gray-900">{date} at {new Date(startsAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })}</span>
+                <span className="text-gray-900">
+                  {(() => {
+                    const dateObj = new Date(date + "T00:00:00");
+                    const formattedDate = dateObj.toLocaleDateString("en-US", {
+                      weekday: "long",
+                      month: "long",
+                      day: "numeric",
+                    });
+                    const utcDate = DateTime.fromISO(startsAt, { zone: "utc" });
+                    const localDate = utcDate.setZone("America/Vancouver"); // Default timezone
+                    const hours = localDate.hour;
+                    const minutes = localDate.minute;
+                    const ampm = hours >= 12 ? "PM" : "AM";
+                    const displayHours = hours % 12 || 12;
+                    const formattedTime = `${displayHours}:${String(minutes).padStart(2, "0")} ${ampm}`;
+                    return `${formattedDate} at ${formattedTime}`;
+                  })()}
+                </span>
               </div>
               <div>
                 <span className="font-medium text-gray-700">Name:</span>{" "}
