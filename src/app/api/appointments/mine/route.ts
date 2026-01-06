@@ -442,15 +442,9 @@ export async function GET(req: NextRequest) {
     });
 
     // Filter out any null entries from failed date conversions
-    let validAppointments = mappedAppointments.filter((apt): apt is NonNullable<typeof apt> => apt !== null);
-    
-    // Filter appointments to only include those within the past 30 days (based on actual appointment date)
-    // This ensures we get all appointments for the current week view, including past days
-    validAppointments = validAppointments.filter((apt) => {
-      if (!apt.starts_at) return false;
-      const appointmentDate = new Date(apt.starts_at);
-      return appointmentDate >= thirtyDaysAgo;
-    });
+    // Don't filter by date here - let the client-side filtering handle showing only the week being viewed
+    // This ensures all appointments are available, including those from past days in the current week
+    const validAppointments = mappedAppointments.filter((apt): apt is NonNullable<typeof apt> => apt !== null);
 
     // Map external events to the same format as appointments
     // These represent meetings booked by coworkers/front desk in external calendars
