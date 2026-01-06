@@ -1486,7 +1486,7 @@ function SearchResults() {
                             {[1, 2, 3, 4, 5].map((star) => (
                               <Star
                                 key={star}
-                                className={`w-3 h-3 ${star <= Math.round(agent.rating) ? 'fill-yellow-400 text-yellow-400' : 'fill-gray-300 text-gray-300'}`}
+                                className={`w-3 h-3 ${star <= Math.round(agent.rating || 0) ? 'fill-yellow-400 text-yellow-400' : 'fill-gray-300 text-gray-300'}`}
                               />
                             ))}
                           </div>
