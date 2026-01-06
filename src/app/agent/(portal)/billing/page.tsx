@@ -102,43 +102,9 @@ export default function BillingPage() {
         // Process outstanding payments and unpause account
         handlePaymentMethodUpdated();
         
-        // Reload payment methods
+        // Reload payment methods, then clean URL — no onboarding popup here
         setTimeout(() => {
           loadBilling();
-          // Dispatch onboarding step completion event
-          window.dispatchEvent(new CustomEvent("onboardingStepCompleted", { detail: { step: 3 } }));
-          
-          // Show completion popup
-          if (typeof window !== 'undefined') {
-            const popupDiv = document.createElement('div');
-            popupDiv.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4';
-            popupDiv.innerHTML = `
-              <div class="bg-white rounded-xl max-w-md w-full p-8 shadow-2xl transform transition-all">
-                <div class="text-center">
-                  <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M20 6L9 17l-5-5"/>
-                    </svg>
-                  </div>
-                  <h3 class="text-2xl font-bold text-gray-900 mb-2">Onboarding Complete!</h3>
-                  <p class="text-gray-600 mb-6">You're now ready to accept appointments and will appear in family search results.</p>
-                  <button onclick="this.closest('.fixed').remove()" class="w-full px-6 py-3 bg-green-800 text-white rounded-lg hover:bg-green-900 transition-colors font-medium">
-                    Get Started
-                  </button>
-                </div>
-              </div>
-            `;
-            document.body.appendChild(popupDiv);
-            // Auto-close after 10 seconds
-            setTimeout(() => {
-              if (popupDiv.parentElement) {
-                popupDiv.style.opacity = '0';
-                setTimeout(() => popupDiv.remove(), 300);
-              }
-            }, 10000);
-          }
-          
-          // Clean up URL
           window.history.replaceState({}, '', window.location.pathname);
         }, 1000);
       } else if (paymentMethodStatus === 'cancelled') {
@@ -234,41 +200,7 @@ export default function BillingPage() {
                     </div>
                   </div>
                   {paymentMethods.length > 1 && (
-                    <button
-                      onClick={async () => {
-                        if (!confirm("Are you sure you want to remove this payment method? You must have at least one payment method on file.")) {
-                          return;
-                        }
-                        
-                        try {
-                          const { data: { session } } = await supabaseClient.auth.getSession();
-                          if (!session?.access_token) return;
-
-                          const res = await fetch("/api/agent/settings/payment-methods", {
-                            method: "DELETE",
-                            headers: {
-                              Authorization: `Bearer ${session.access_token}`,
-                              "Content-Type": "application/json",
-                            },
-                            body: JSON.stringify({ paymentMethodId: pm.id }),
-                          });
-
-                          if (!res.ok) {
-                            const error = await res.json();
-                            throw new Error(error.error || "Failed to remove payment method");
-                          }
-
-                          // Reload payment methods
-                          await loadBilling();
-                        } catch (err: any) {
-                          console.error("Error removing payment method:", err);
-                          alert(err.message || "Failed to remove payment method. Please try again.");
-                        }
-                      }}
-                      className="px-3 py-1 text-sm text-red-600 hover:text-red-800"
-                    >
-                      Remove
-                    </button>
+                    <RemovePaymentButton paymentMethodId={pm.id} onRemoved={loadBilling} />
                   )}
                 </div>
               ))}
