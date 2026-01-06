@@ -1418,23 +1418,69 @@ function SearchResults() {
               
               return (
                 <div key={`${appointment.id}-${searchLocation}`} className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
-                  <div className="flex gap-4 md:gap-6">
-                    {/* Agent Avatar - Mobile: with info below, Desktop: just avatar */}
-                    <div className="flex-shrink-0 md:flex-shrink-0">
+                  {/* Desktop: Standard flex layout */}
+                  <div className="hidden md:flex gap-4 md:gap-6">
+                    {/* Agent Avatar */}
+                    <div className="flex-shrink-0">
                       {agent?.profile_picture_url ? (
                         <img
                           src={agent.profile_picture_url}
                           alt={agentName}
-                          className="w-16 h-16 md:w-16 md:h-16 rounded-full object-cover"
+                          className="w-16 h-16 rounded-full object-cover"
                         />
                       ) : (
-                      <div className={`w-16 h-16 md:w-16 md:h-16 ${avatarColors[index % avatarColors.length]} rounded-full flex items-center justify-center`}>
+                      <div className={`w-16 h-16 ${avatarColors[index % avatarColors.length]} rounded-full flex items-center justify-center`}>
                           <span className="text-white text-2xl">{agentName[0]?.toUpperCase() || 'A'}</span>
                       </div>
                       )}
-                      
-                      {/* Mobile: Info under profile pic - hugging left border */}
-                      <div className="md:hidden mt-2 space-y-1">
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      {/* Desktop: Name, title, etc */}
+                      <div className="mb-2">
+                        <h3 className="text-xl text-gray-900 font-semibold">{agentName}</h3>
+                        <p className="text-gray-600 mt-1">
+                          {agent?.job_title || appointment.service_type || 'Pre-need Planning Specialist'}
+                        </p>
+                        {agent?.funeral_home && (
+                          <p className="text-gray-500 text-sm mt-1">{agent.funeral_home}</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Mobile: Picture with text wrapping around */}
+                  <div className="md:hidden">
+                    <div className="flex gap-4 items-start">
+                      {/* Agent Avatar - Mobile: picture only */}
+                      <div className="flex-shrink-0">
+                        {agent?.profile_picture_url ? (
+                          <img
+                            src={agent.profile_picture_url}
+                            alt={agentName}
+                            className="w-16 h-16 rounded-full object-cover"
+                          />
+                        ) : (
+                        <div className={`w-16 h-16 ${avatarColors[index % avatarColors.length]} rounded-full flex items-center justify-center`}>
+                            <span className="text-white text-2xl">{agentName[0]?.toUpperCase() || 'A'}</span>
+                        </div>
+                        )}
+                      </div>
+
+                      {/* Mobile: Name, job title, and company to the right of picture - wrapping around */}
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-xl text-gray-900 font-semibold leading-tight mb-1">{agentName}</h3>
+                        <p className="text-gray-600 text-sm leading-tight mb-1">
+                          {agent?.job_title || appointment.service_type || 'Pre-need Planning Specialist'}
+                        </p>
+                        {agent?.funeral_home && (
+                          <p className="text-gray-500 text-sm leading-tight">{agent.funeral_home}</p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Mobile: Info under profile pic - hugging left border */}
+                    <div className="mt-2 space-y-1">
                         {/* 1. Location */}
                         <div className="flex items-center gap-1">
                           <MapPin className="w-3 h-3 text-gray-500 flex-shrink-0" />
