@@ -84,6 +84,37 @@ export async function POST(request: NextRequest) {
     const results = await Promise.allSettled(
       declinedPayments.map(async (payment: { id: string; appointment_id: string; amount_cents: number }) => {
         try {
+          // Stripe minimum is $0.50 (50 cents) - if amount is below this, mark as resolved automatically
+          if (payment.amount_cents < 50) {
+            console.log(`⚠️ Payment ${payment.id} amount (${payment.amount_cents} cents) is below Stripe minimum - marking as resolved automatically`);
+            
+            // Mark as resolved (can't charge amounts below Stripe minimum)
+            await supabaseAdmin
+              .from("declined_payments")
+              .update({
+                status: "resolved",
+                resolved_at: new Date().toISOString(),
+                resolved_payment_intent_id: null, // No payment intent for auto-resolved
+              })
+              .eq("id", payment.id);
+
+            // Update appointment to clear payment failure notes
+            await supabaseAdmin
+              .from("appointments")
+              .update({
+                notes: null, // Clear any payment failure notes
+              })
+              .eq("id", payment.appointment_id);
+
+            return {
+              paymentId: payment.id,
+              appointmentId: payment.appointment_id,
+              success: true,
+              paymentIntentId: null,
+              autoResolved: true,
+            };
+          }
+
           const chargeResult = await chargeAgentForAppointment(
             agentId,
             payment.amount_cents,
@@ -127,6 +158,37 @@ export async function POST(request: NextRequest) {
             };
           }
         } catch (error: any) {
+          // Check if error is due to amount being too small
+          if (error.code === 'amount_too_small' || error.message?.includes('at least $0.50')) {
+            console.log(`⚠️ Payment ${payment.id} amount (${payment.amount_cents} cents) is below Stripe minimum - marking as resolved automatically`);
+            
+            // Mark as resolved (can't charge amounts below Stripe minimum)
+            await supabaseAdmin
+              .from("declined_payments")
+              .update({
+                status: "resolved",
+                resolved_at: new Date().toISOString(),
+                resolved_payment_intent_id: null,
+              })
+              .eq("id", payment.id);
+
+            // Update appointment to clear payment failure notes
+            await supabaseAdmin
+              .from("appointments")
+              .update({
+                notes: null,
+              })
+              .eq("id", payment.appointment_id);
+
+            return {
+              paymentId: payment.id,
+              appointmentId: payment.appointment_id,
+              success: true,
+              paymentIntentId: null,
+              autoResolved: true,
+            };
+          }
+          
           console.error(`Error charging payment ${payment.id}:`, error);
           return {
             paymentId: payment.id,
