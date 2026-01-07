@@ -708,12 +708,12 @@ export default function SchedulePage() {
 
   // Debug: Log weekAppointments right before rendering
   console.log(`🎯 [RENDER] weekAppointments has ${weekAppointments.length} appointments:`, 
-    weekAppointments.map(apt => ({
-      family_name: apt.family_name,
-      day: apt.day,
-      hour: apt.hour,
-      minute: apt.minute,
-      dayName: weekDays[apt.day]
+    weekAppointments.map((apt: any) => ({
+      family_name: apt?.family_name,
+      day: apt?.day,
+      hour: apt?.hour,
+      minute: apt?.minute,
+      dayName: weekDays[apt?.day || 0]
     }))
   );
 
