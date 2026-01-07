@@ -325,9 +325,9 @@ export default function SchedulePage() {
   // Scroll to 8am when view changes or calendar loads
   useEffect(() => {
     if (calendarScrollRef.current && !loading && (view === 'week' || view === 'day')) {
-      // Scroll to 8am (hour index 8)
+      // Scroll to 9am (hour index 9)
       // Each hour is 60px on mobile, 70px on desktop
-      const scrollToHour = 8;
+      const scrollToHour = 9;
       const scrollTop = scrollToHour * (isDesktop ? 70 : 60);
       
       setTimeout(() => {
@@ -925,12 +925,12 @@ export default function SchedulePage() {
         ref={calendarScrollRef}
         className="overflow-auto overflow-x-hidden"
         style={{
-          // Limit viewport height to show 8am-4pm (8 hours: 8am, 9am, 10am, 11am, 12pm, 1pm, 2pm, 3pm)
-          // Each hour is 60px on mobile, 70px on desktop (smaller to fit 8 hours)
-          // 8 hours * height per hour = 480px mobile, 560px desktop
-          height: isDesktop ? '560px' : '480px',
-          maxHeight: isDesktop ? '560px' : '480px',
-          minHeight: isDesktop ? '560px' : '480px',
+          // Limit viewport height to show 9am-4pm (7 hours: 9am, 10am, 11am, 12pm, 1pm, 2pm, 3pm)
+          // Each hour is 60px on mobile, 70px on desktop
+          // 7 hours * height per hour = 420px mobile, 490px desktop
+          height: isDesktop ? '490px' : '420px',
+          maxHeight: isDesktop ? '490px' : '420px',
+          minHeight: isDesktop ? '490px' : '420px',
         }}
       >
         {/* Week View - EXACTLY AS BEFORE */}
