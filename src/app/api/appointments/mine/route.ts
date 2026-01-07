@@ -189,7 +189,7 @@ export async function GET(req: NextRequest) {
         .select("id, starts_at, ends_at, status, provider, is_soradin_created, title, location")
         .eq("specialist_id", userId) // specialist_id in external_events = agent_id (user ID)
         .eq("status", "confirmed") // Only show confirmed events
-        // Include BOTH external events AND Soradin-created events - all should be visible in calendar
+        .eq("is_soradin_created", false) // Only fetch EXTERNAL events - Soradin-created ones are duplicates of appointments table
         // Removed date filter - fetch all events so past appointments are visible when navigating to previous weeks/days
         .order("starts_at", { ascending: true });
       
@@ -204,7 +204,7 @@ export async function GET(req: NextRequest) {
             .select("id, starts_at, ends_at, status, provider, is_soradin_created")
             .eq("specialist_id", userId)
             .eq("status", "confirmed")
-            // Include BOTH external events AND Soradin-created events - all should be visible in calendar
+            .eq("is_soradin_created", false) // Only fetch EXTERNAL events - Soradin-created ones are duplicates of appointments table
             // Removed date filter - fetch all events so past appointments are visible when navigating to previous weeks/days
             .order("starts_at", { ascending: true });
         
@@ -526,6 +526,11 @@ export async function GET(req: NextRequest) {
     
     const mappedExternalEvents = (externalEvents || [])
       .filter((evt: any) => {
+        // Skip Soradin-created events - these are duplicates of appointments already in the appointments table
+        if (evt.is_soradin_created) {
+          return false;
+        }
+        
         // Only include events from the current year (filter out previous years)
         if (!evt.starts_at) {
           console.log(`⚠️ External event missing starts_at:`, evt.id);
