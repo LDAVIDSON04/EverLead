@@ -711,11 +711,22 @@ export default function SchedulePage() {
     weekAppointments.map((apt: any) => ({
       family_name: apt?.family_name,
       day: apt?.day,
+      dayName: weekDays[apt?.day || 0],
       hour: apt?.hour,
       minute: apt?.minute,
-      dayName: weekDays[apt?.day || 0]
+      starts_at: apt?.starts_at,
+      location: apt?.location
     }))
   );
+  
+  // Verify ALL appointments are included (past and future) - past appointments should always show
+  const now = new Date();
+  const pastAppointments = weekAppointments.filter((apt: any) => {
+    if (!apt?.starts_at) return false;
+    const aptTime = new Date(apt.starts_at);
+    return aptTime < now;
+  });
+  console.log(`⏰ [RENDER] Past appointments in week view: ${pastAppointments.length} out of ${weekAppointments.length} total (past appointments should always be visible)`);
 
   // Calculate hours for display - show full day range (0-23) but viewport is limited to 8am-4pm
   const calculateHours = (appts: any[]) => {
