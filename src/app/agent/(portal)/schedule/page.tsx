@@ -987,7 +987,6 @@ export default function SchedulePage() {
                           key={`${day}-${hour}`}
                           className="flex-1 min-w-[50px] md:min-w-[100px] border-l border-gray-200 relative"
                           style={{ height: isDesktop ? '70px' : '60px', overflow: 'visible' }}
-                          style={{ overflow: 'visible' }}
                         >
                           {cellAppointments.length === 0 ? (
                             <div
