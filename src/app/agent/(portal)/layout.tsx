@@ -150,7 +150,7 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
     };
 
     // Listen for profile updates
-    const handleProfileUpdate = (event: Event) => {
+    const handleProfileUpdate = async (event: Event) => {
       console.log('[NAV] Profile update event received');
       // If event has profile picture URL, update immediately
       const customEvent = event as CustomEvent;
@@ -158,10 +158,53 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
         setProfilePictureUrl(customEvent.detail.profilePictureUrl);
       }
       // Always reload full profile data to ensure name and other fields are updated
-      // Add small delay to ensure database write has completed
-      setTimeout(() => {
-        loadProfileData();
-      }, 300);
+      // Add small delay to ensure database write has completed, then force a fresh query
+      setTimeout(async () => {
+        if (!mounted) return;
+        
+        try {
+          const { data: { user } } = await supabaseClient.auth.getUser();
+          if (!user || !mounted) return;
+
+          // Force a fresh query by fetching directly
+          const { data: profile, error: profileError } = await supabaseClient
+            .from('profiles')
+            .select('full_name, first_name, last_name, profile_picture_url, email, phone, funeral_home, job_title, metadata')
+            .eq('id', user.id)
+            .maybeSingle();
+
+          if (profileError) {
+            console.error('[NAV] Error fetching profile after update:', profileError);
+            // Fallback to loadProfileData if direct query fails
+            loadProfileData();
+            return;
+          }
+
+          if (profile && mounted) {
+            const firstName = profile.first_name || (profile.full_name ? profile.full_name.split(' ')[0] : 'Agent');
+            const lastName = profile.last_name || (profile.full_name ? profile.full_name.split(' ').slice(1).join(' ') : '');
+            
+            console.log('[NAV] Updating name from fresh profile query:', {
+              full_name: profile.full_name,
+              first_name: profile.first_name,
+              last_name: profile.last_name,
+              firstName,
+              lastName
+            });
+            
+            setUserName(profile.full_name || `${firstName} ${lastName}`.trim() || 'Agent');
+            setUserFirstName(firstName);
+            setUserLastName(lastName);
+            if (profile.profile_picture_url) {
+              setProfilePictureUrl(profile.profile_picture_url);
+            }
+          }
+        } catch (error) {
+          console.error('[NAV] Error in handleProfileUpdate:', error);
+          // Fallback to loadProfileData on error
+          loadProfileData();
+        }
+      }, 400);
     };
 
     // Listen for onboarding step completion events
