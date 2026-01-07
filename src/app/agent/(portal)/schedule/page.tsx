@@ -443,8 +443,15 @@ export default function SchedulePage() {
     
     const weekStart = weekStartDT.toJSDate();
     const weekEnd = weekEndDT.toJSDate();
+    
+    console.log(`📅 [SCHEDULE] Filtering appointments for week:`, {
+      weekStart: weekStartDT.toISO(),
+      weekEnd: weekEndDT.toISO(),
+      totalAppointments: appointments.length,
+      agentTimezone
+    });
 
-    return appointments
+    const filtered = appointments
       .map(apt => {
         const startDate = DateTime.fromISO(apt.starts_at, { zone: "utc" });
         const localStart = startDate.setZone(agentTimezone);
@@ -474,10 +481,23 @@ export default function SchedulePage() {
               endTime: `${String(localEnd.hour).padStart(2, '0')}:${String(localEnd.minute).padStart(2, '0')}`,
             };
           }
+        } else {
+          console.log(`📅 [SCHEDULE] Appointment filtered out (outside week range):`, {
+            family_name: apt.family_name,
+            starts_at: apt.starts_at,
+            aptDate: aptDate.toISOString(),
+            weekStart: weekStart.toISOString(),
+            weekEnd: weekEnd.toISOString(),
+            beforeStart: aptDate < weekStart,
+            afterEnd: aptDate > weekEnd
+          });
         }
         return null;
       })
       .filter(Boolean);
+    
+    console.log(`📅 [SCHEDULE] Found ${filtered.length} appointments for this week (${weekStartDT.toFormat('MMM d')} - ${weekEndDT.toFormat('MMM d')})`);
+    return filtered;
   };
 
   // Get appointments for a single day

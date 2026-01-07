@@ -445,6 +445,16 @@ export async function GET(req: NextRequest) {
     // Don't filter by date here - let the client-side filtering handle showing only the week being viewed
     // This ensures all appointments are available, including those from past days in the current week
     const validAppointments = mappedAppointments.filter((apt): apt is NonNullable<typeof apt> => apt !== null);
+    
+    // Log appointments for debugging
+    console.log(`📅 [APPOINTMENTS API] Returning ${validAppointments.length} appointments:`, 
+      validAppointments.map(apt => ({
+        id: apt.id,
+        family_name: apt.family_name,
+        starts_at: apt.starts_at,
+        status: apt.status
+      }))
+    );
 
     // Map external events to the same format as appointments
     // These represent meetings booked by coworkers/front desk in external calendars
