@@ -839,10 +839,10 @@ export default function SchedulePage() {
   }
 
   return (
-    <div className="w-full h-screen flex flex-col bg-white relative overflow-hidden p-8 pt-[56px] md:pt-8 pb-0">
+    <div className="w-full h-screen flex flex-col bg-white relative overflow-hidden px-8 pt-[56px] md:pt-8 pb-0">
       {/* Calendar container with fixed height for 8am-4pm viewport */}
       {/* Header */}
-      <div className="mb-4 md:mb-8">
+      <div className="mb-4 md:mb-8 flex-shrink-0">
         {/* Date range and View Selector */}
         <div className="mb-3 md:mb-0 flex items-center justify-between gap-4 flex-wrap">
           <h1 className="text-lg md:text-3xl font-semibold">{formatDateRange()}</h1>
@@ -924,16 +924,14 @@ export default function SchedulePage() {
       {/* Calendar Views */}
       <div 
         ref={calendarScrollRef}
-        className="overflow-auto overflow-x-hidden"
+        className="overflow-auto overflow-x-hidden flex-1"
         style={{
           borderBottom: 'none',
           // Limit viewport height to show 8am-4pm (8 hours: 8am, 9am, 10am, 11am, 12pm, 1pm, 2pm, 3pm)
           // Each hour is 55px on mobile, 65px on desktop
           // 8 hours * height per hour + borders (7 borders between 8 rows) = 440px + 7px mobile, 520px + 7px desktop
           // Add extra padding to ensure last hour is fully visible
-          height: isDesktop ? '528px' : '448px',
           maxHeight: isDesktop ? '528px' : '448px',
-          minHeight: isDesktop ? '528px' : '448px',
         }}
       >
         {/* Week View - EXACTLY AS BEFORE */}
