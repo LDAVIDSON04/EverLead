@@ -497,6 +497,8 @@ export default function SchedulePage() {
           const aptEndDate = localEnd.toJSDate();
           
           // Include appointment if it starts, ends, or overlaps with the week range
+          // IMPORTANT: This includes PAST appointments - appointments that have already happened
+          // remain visible in the calendar (like Google Calendar). We do NOT filter by current time.
           const startsInRange = aptDate >= weekStart && aptDate <= weekEnd;
           const endsInRange = aptEndDate >= weekStart && aptEndDate <= weekEnd;
           const overlapsRange = aptDate <= weekEnd && aptEndDate >= weekStart;
@@ -1040,12 +1042,12 @@ export default function SchedulePage() {
                                 } as React.CSSProperties}
                               >
                                 <div className="h-full flex flex-col gap-0.5 px-0.5 md:px-1 py-0.5">
-                                  {/* Customer Name */}
+                                  {/* Customer Name - shows for both past and future appointments */}
                                   <div className="text-[9px] md:text-xs font-medium text-gray-700 leading-tight line-clamp-1 break-words">
                                     {apt.family_name || 'Appointment'}
                                   </div>
                                   
-                                  {/* Location with pin - filter out provider names */}
+                                  {/* Location with pin - filter out provider names - shows for both past and future */}
                                   {(() => {
                                     // Filter out provider names and invalid locations
                                     const validLocation = apt.location && 
