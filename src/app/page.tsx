@@ -371,7 +371,7 @@ export default function HomePage() {
           {/* Headline and Search Bar - Full Width */}
           <div className="max-w-4xl">
             <h1 className="text-6xl md:text-6xl text-2xl md:mb-8 mb-3 text-[#1A1A1A] font-semibold tracking-tight leading-none text-left" style={{ paddingTop: '4px' }}>
-              Book trusted local funeral planning professionals
+              Book local funeral professionals
             </h1>
 
             {/* Horizontal search bar */}
