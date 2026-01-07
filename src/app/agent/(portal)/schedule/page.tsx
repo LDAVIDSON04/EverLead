@@ -326,9 +326,9 @@ export default function SchedulePage() {
   useEffect(() => {
     if (calendarScrollRef.current && !loading && (view === 'week' || view === 'day')) {
       // Scroll to 8am (hour index 8)
-      // Each hour is 48px on mobile, 80px on desktop
+      // Each hour is 60px on mobile, 70px on desktop
       const scrollToHour = 8;
-      const scrollTop = scrollToHour * (isDesktop ? 80 : 48);
+      const scrollTop = scrollToHour * (isDesktop ? 70 : 60);
       
       setTimeout(() => {
         if (calendarScrollRef.current) {
@@ -926,11 +926,11 @@ export default function SchedulePage() {
         className="overflow-auto overflow-x-hidden"
         style={{
           // Limit viewport height to show 8am-4pm (8 hours: 8am, 9am, 10am, 11am, 12pm, 1pm, 2pm, 3pm)
-          // Each hour is 48px on mobile, 80px on desktop
-          // 8 hours * height per hour = 384px mobile, 640px desktop
-          height: isDesktop ? '640px' : '384px',
-          maxHeight: isDesktop ? '640px' : '384px',
-          minHeight: isDesktop ? '640px' : '384px',
+          // Each hour is 60px on mobile, 70px on desktop (smaller to fit 8 hours)
+          // 8 hours * height per hour = 480px mobile, 560px desktop
+          height: isDesktop ? '560px' : '480px',
+          maxHeight: isDesktop ? '560px' : '480px',
+          minHeight: isDesktop ? '560px' : '480px',
         }}
       >
         {/* Week View - EXACTLY AS BEFORE */}
@@ -985,7 +985,8 @@ export default function SchedulePage() {
                       return (
                         <div
                           key={`${day}-${hour}`}
-                          className="flex-1 min-w-[50px] md:min-w-[100px] border-l border-gray-200 relative h-12 md:h-20"
+                          className="flex-1 min-w-[50px] md:min-w-[100px] border-l border-gray-200 relative"
+                          style={{ height: isDesktop ? '70px' : '60px', overflow: 'visible' }}
                           style={{ overflow: 'visible' }}
                         >
                           {cellAppointments.length === 0 ? (
@@ -996,9 +997,9 @@ export default function SchedulePage() {
                           ) : (
                             cellAppointments.map((apt: any) => {
                             // Calculate top offset within this hour (based on minutes)
-                            // Hour cells are h-12 (48px) on mobile, h-20 (80px) on desktop
-                            const pxPerHourMobile = 48;
-                            const pxPerHourDesktop = 80;
+                            // Hour cells are 60px on mobile, 70px on desktop (smaller to fit 8am-4pm)
+                            const pxPerHourMobile = 60;
+                            const pxPerHourDesktop = 70;
                             const topOffsetMobile = (apt.minute / 60) * pxPerHourMobile;
                             const topOffsetDesktop = (apt.minute / 60) * pxPerHourDesktop;
                             
@@ -1140,9 +1141,9 @@ export default function SchedulePage() {
                         />
                       ) : (
                         cellAppointments.map((apt: any) => {
-                            // Hour cells are h-12 (48px) on mobile, h-20 (80px) on desktop
-                            const pxPerHourMobile = 48;
-                            const pxPerHourDesktop = 80;
+                            // Hour cells are 60px on mobile, 70px on desktop (smaller to fit 8am-4pm)
+                            const pxPerHourMobile = 60;
+                            const pxPerHourDesktop = 70;
                             const topOffsetMobile = (apt.minute / 60) * pxPerHourMobile;
                             const topOffsetDesktop = (apt.minute / 60) * pxPerHourDesktop;
                             const heightMobile = (apt.durationMinutes / 60) * pxPerHourMobile;
