@@ -30,10 +30,7 @@ export async function GET(request: NextRequest) {
     const metadata = profile?.metadata || {};
     const defaultNotifications = {
       newAppointment: { email: true, sms: false },
-      appointmentCancelled: { email: true, sms: true },
-      paymentReceived: { email: true, sms: false },
-      calendarSyncError: { email: true, sms: false },
-      appointmentReminder: { email: true, sms: true },
+      appointmentCancelled: { email: true, sms: false },
     };
 
     return NextResponse.json({

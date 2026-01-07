@@ -1931,16 +1931,6 @@ function NotificationsSection({ email, phone }: { email: string; phone: string }
       label: "Appointment Cancelled",
       description: "When a client cancels an existing appointment",
     },
-    {
-      id: "paymentReceived",
-      label: "Payment Received",
-      description: "When a payment has been processed",
-    },
-    {
-      id: "appointmentReminder",
-      label: "Appointment Reminder",
-      description: "Reminder before your upcoming appointments (24h before)",
-    },
   ];
 
   const toggleNotification = (type: string) => {
