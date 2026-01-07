@@ -83,27 +83,35 @@ CREATE POLICY "Leads can update their own reviews"
   );
 
 -- ============================================================================
--- NOTE: Service Role Policies are INTENTIONAL
+-- ISSUE 4-13: Service Role Policies are REDUNDANT (not vulnerabilities, but flagged by scanner)
 -- ============================================================================
--- The "Service role can manage X" policies with USING (true) and WITH CHECK (true)
--- are INTENTIONAL and CORRECT. The service role is a trusted admin role that
--- should bypass RLS. These policies are flagged by security scanners but are
--- not actual vulnerabilities because:
--- 1. Service role is only used server-side with the service role key
--- 2. Service role key is never exposed to clients
--- 3. Service role is meant to have full database access for admin operations
+-- PROBLEM: Security scanner flags "Service role can manage X" policies because they
+-- have USING (true) and WITH CHECK (true), which looks like unrestricted access.
 --
--- These policies are safe and should remain as-is:
--- - Service role can manage appointment_types
--- - Service role can manage calendar_connections
--- - Service role can manage external_events
--- - Service role can manage families
--- - Service role can manage marketing_expenses
--- - Service role can manage payments
--- - Service role can manage profiles
--- - Service role can manage specialist_availability
--- - Service role can manage specialist_time_off
--- - Service role can manage specialists
+-- REALITY: These policies are REDUNDANT because:
+-- 1. In Supabase, the service role automatically bypasses RLS by default
+-- 2. When using the service role key (server-side only), RLS is not enforced
+-- 3. These policies don't add any security benefit or risk
+--
+-- FIX: Remove the redundant policies. Service role will still have full access
+-- because it bypasses RLS automatically. This removes the scanner warnings
+-- while maintaining the same security posture.
+
+-- Remove redundant service role policies (service role bypasses RLS automatically)
+DROP POLICY IF EXISTS "Service role can manage appointment types" ON public.appointment_types;
+DROP POLICY IF EXISTS "Service role can manage calendar connections" ON public.calendar_connections;
+DROP POLICY IF EXISTS "Service role can manage external events" ON public.external_events;
+DROP POLICY IF EXISTS "Service role can manage families" ON public.families;
+DROP POLICY IF EXISTS "Service role can manage expenses" ON public.marketing_expenses;
+DROP POLICY IF EXISTS "Service role can manage payments" ON public.payments;
+DROP POLICY IF EXISTS "Service role can manage profiles" ON public.profiles;
+DROP POLICY IF EXISTS "Service role can manage specialist availability" ON public.specialist_availability;
+DROP POLICY IF EXISTS "Service role can manage specialist time off" ON public.specialist_time_off;
+DROP POLICY IF EXISTS "Service role can manage specialists" ON public.specialists;
+
+-- Note: Service role will continue to have full access to all tables because
+-- it automatically bypasses RLS in Supabase. These policies were redundant.
+
 --
 -- ============================================================================
 -- RECOMMENDATION: Enable HaveIBeenPwned Password Check
