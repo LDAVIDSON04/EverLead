@@ -839,7 +839,7 @@ export default function SchedulePage() {
   }
 
   return (
-    <div className="w-full h-screen flex flex-col bg-white relative overflow-hidden p-8 pt-[56px] md:pt-8">
+    <div className="w-full h-screen flex flex-col bg-white relative overflow-hidden p-8 pt-[56px] md:pt-8 pb-0">
       {/* Calendar container with fixed height for 8am-4pm viewport */}
       {/* Header */}
       <div className="mb-4 md:mb-8">
