@@ -118,9 +118,13 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
         }
 
         if (profile && mounted) {
-          setUserName(profile.full_name || 'Agent');
-          setUserFirstName(profile.first_name || profile.full_name?.split(' ')[0] || 'Agent');
-          setUserLastName(profile.last_name || profile.full_name?.split(' ').slice(1).join(' ') || '');
+          // Use first_name and last_name from database, fallback to parsing full_name if needed
+          const firstName = profile.first_name || (profile.full_name ? profile.full_name.split(' ')[0] : 'Agent');
+          const lastName = profile.last_name || (profile.full_name ? profile.full_name.split(' ').slice(1).join(' ') : '');
+          
+          setUserName(profile.full_name || `${firstName} ${lastName}`.trim() || 'Agent');
+          setUserFirstName(firstName);
+          setUserLastName(lastName);
           setProfilePictureUrl(profile.profile_picture_url || null);
           
           // Check if account is paused
@@ -143,6 +147,7 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
       if (customEvent?.detail?.profilePictureUrl) {
         setProfilePictureUrl(customEvent.detail.profilePictureUrl);
       }
+      // Always reload full profile data to ensure name and other fields are updated
       loadProfileData();
     };
 
@@ -236,9 +241,13 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
 
         // Success - set user name and allow render
         if (profile) {
-          setUserName(profile.full_name || 'Agent');
-          setUserFirstName(profile.first_name || profile.full_name?.split(' ')[0] || 'Agent');
-          setUserLastName(profile.last_name || profile.full_name?.split(' ').slice(1).join(' ') || '');
+          // Use first_name and last_name from database, fallback to parsing full_name if needed
+          const firstName = profile.first_name || (profile.full_name ? profile.full_name.split(' ')[0] : 'Agent');
+          const lastName = profile.last_name || (profile.full_name ? profile.full_name.split(' ').slice(1).join(' ') : '');
+          
+          setUserName(profile.full_name || `${firstName} ${lastName}`.trim() || 'Agent');
+          setUserFirstName(firstName);
+          setUserLastName(lastName);
           setProfilePictureUrl(profile.profile_picture_url || null);
           
           // Check if account is paused
