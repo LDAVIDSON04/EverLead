@@ -356,7 +356,7 @@ export default function HomePage() {
           style={{ 
             width: "1500px", 
             height: "auto",
-            bottom: "-50px",
+            bottom: "-80px",
             right: "-350px",
           }}
         >
