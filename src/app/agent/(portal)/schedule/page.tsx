@@ -923,13 +923,14 @@ export default function SchedulePage() {
       {/* Calendar Views */}
       <div 
         ref={calendarScrollRef}
-        className="flex-1 overflow-auto overflow-x-hidden"
+        className="overflow-auto overflow-x-hidden"
         style={{
-          // Limit viewport height to show 8am-4pm (8 hours) initially
+          // Limit viewport height to show 8am-4pm (8 hours: 8am, 9am, 10am, 11am, 12pm, 1pm, 2pm, 3pm)
           // Each hour is 48px on mobile, 80px on desktop
-          // Add some padding: 8 hours * height per hour
-          maxHeight: isDesktop ? `${8 * 80}px` : `${8 * 48}px`,
-          height: isDesktop ? `${8 * 80}px` : `${8 * 48}px`,
+          // 8 hours * height per hour = 384px mobile, 640px desktop
+          height: isDesktop ? '640px' : '384px',
+          maxHeight: isDesktop ? '640px' : '384px',
+          minHeight: isDesktop ? '640px' : '384px',
         }}
       >
         {/* Week View - EXACTLY AS BEFORE */}
