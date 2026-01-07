@@ -926,6 +926,16 @@ export default function SchedulePage() {
         ref={calendarScrollRef}
         className="overflow-auto overflow-x-hidden"
         style={{
+          borderBottom: 'none',
+          // Limit viewport height to show 8am-4pm (8 hours: 8am, 9am, 10am, 11am, 12pm, 1pm, 2pm, 3pm)
+          // Each hour is 55px on mobile, 65px on desktop
+          // 8 hours * height per hour + borders (7 borders between 8 rows) = 440px + 7px mobile, 520px + 7px desktop
+          // Add extra padding to ensure last hour is fully visible
+          height: isDesktop ? '528px' : '448px',
+          maxHeight: isDesktop ? '528px' : '448px',
+          minHeight: isDesktop ? '528px' : '448px',
+        }}
+        style={{
           // Limit viewport height to show 8am-4pm (8 hours: 8am, 9am, 10am, 11am, 12pm, 1pm, 2pm, 3pm)
           // Each hour is 55px on mobile, 65px on desktop
           // 8 hours * height per hour + borders (7 borders between 8 rows) = 440px + 7px mobile, 520px + 7px desktop
@@ -937,7 +947,7 @@ export default function SchedulePage() {
       >
         {/* Week View - EXACTLY AS BEFORE */}
         {view === 'week' && (
-          <div className="inline-block min-w-full">
+          <div className="inline-block min-w-full" style={{ borderBottom: 'none' }}>
             {/* Day Headers */}
             <div className="flex sticky top-0 bg-white z-20 border-b border-gray-200 shadow-sm">
               <div className="w-20 flex-shrink-0"></div>
@@ -958,7 +968,7 @@ export default function SchedulePage() {
             </div>
 
             {/* Time Grid */}
-            <div className="relative">
+            <div className="relative" style={{ borderBottom: 'none !important' }}>
               {weekHours.map((hour, hourIndex) => {
                 const isLastHour = hourIndex === weekHours.length - 1;
                 return (
