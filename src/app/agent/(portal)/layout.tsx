@@ -106,6 +106,7 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
           return;
         }
 
+        // Add cache-busting timestamp to ensure we get fresh data
         const { data: profile, error: profileError } = await supabaseClient
           .from('profiles')
           .select('full_name, first_name, last_name, profile_picture_url, email, phone, funeral_home, job_title, metadata')
@@ -121,6 +122,14 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
           // Use first_name and last_name from database, fallback to parsing full_name if needed
           const firstName = profile.first_name || (profile.full_name ? profile.full_name.split(' ')[0] : 'Agent');
           const lastName = profile.last_name || (profile.full_name ? profile.full_name.split(' ').slice(1).join(' ') : '');
+          
+          console.log('[NAV] Updating name from profile:', {
+            full_name: profile.full_name,
+            first_name: profile.first_name,
+            last_name: profile.last_name,
+            firstName,
+            lastName
+          });
           
           setUserName(profile.full_name || `${firstName} ${lastName}`.trim() || 'Agent');
           setUserFirstName(firstName);
@@ -142,13 +151,17 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
 
     // Listen for profile updates
     const handleProfileUpdate = (event: Event) => {
+      console.log('[NAV] Profile update event received');
       // If event has profile picture URL, update immediately
       const customEvent = event as CustomEvent;
       if (customEvent?.detail?.profilePictureUrl) {
         setProfilePictureUrl(customEvent.detail.profilePictureUrl);
       }
       // Always reload full profile data to ensure name and other fields are updated
-      loadProfileData();
+      // Add small delay to ensure database write has completed
+      setTimeout(() => {
+        loadProfileData();
+      }, 300);
     };
 
     // Listen for onboarding step completion events
