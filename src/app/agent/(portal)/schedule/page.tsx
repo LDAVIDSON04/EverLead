@@ -430,6 +430,9 @@ export default function SchedulePage() {
   };
 
   // Get appointments for the week (Sunday-Saturday)
+  // NOTE: This function does NOT filter out past appointments - it only filters by date range.
+  // Past appointments remain visible when viewing that week (like Google Calendar).
+  // If it's Wednesday and you view the current week, Monday's appointments will still show.
   const getWeekAppointments = () => {
     // Normalize week boundaries to agent's timezone for consistent comparison
     const weekStartDate = weekDates[0];
@@ -456,83 +459,145 @@ export default function SchedulePage() {
       agentTimezone
     });
 
+    // Log ALL appointments first to see what we're working with
+    console.log(`📅 [SCHEDULE] All ${appointments.length} appointments received:`, 
+      appointments.map(apt => ({
+        id: apt.id,
+        family_name: apt.family_name,
+        starts_at: apt.starts_at,
+        ends_at: apt.ends_at
+      }))
+    );
+
     const filtered = appointments
-      .map(apt => {
+      .map((apt, index) => {
         if (!apt.starts_at) {
-          console.warn(`⚠️ Appointment missing starts_at:`, apt);
+          console.warn(`⚠️ Appointment ${index} missing starts_at:`, apt);
           return null;
         }
         
-        const startDate = DateTime.fromISO(apt.starts_at, { zone: "utc" });
-        const localStart = startDate.setZone(agentTimezone);
-        const aptDate = localStart.toJSDate();
-        const aptDateFormatted = localStart.toFormat('MMM d, yyyy HH:mm');
-        
-        // More inclusive check - appointments that start OR end within the week should be included
-        const endDate = DateTime.fromISO(apt.ends_at || apt.starts_at, { zone: "utc" });
-        const localEnd = endDate.setZone(agentTimezone);
-        const aptEndDate = localEnd.toJSDate();
-        
-        // Include appointment if it starts or ends within the week range
-        const startsInRange = aptDate >= weekStart && aptDate <= weekEnd;
-        const endsInRange = aptEndDate >= weekStart && aptEndDate <= weekEnd;
-        const overlapsRange = aptDate <= weekEnd && aptEndDate >= weekStart;
-        
-        if (startsInRange || endsInRange || overlapsRange) {
-          // Compare dates in agent's timezone to find which day of the week
-          const dayIndex = weekDates.findIndex((date, idx) => {
-            const dateDT = DateTime.fromJSDate(date, { zone: agentTimezone })
-              .set({ hour: 0, minute: 0, second: 0, millisecond: 0 });
-            const aptDateDT = localStart.set({ hour: 0, minute: 0, second: 0, millisecond: 0 });
-            return dateDT.hasSame(aptDateDT, 'day');
+        try {
+          const startDate = DateTime.fromISO(apt.starts_at, { zone: "utc" });
+          if (!startDate.isValid) {
+            console.error(`❌ Invalid start date for appointment ${index}:`, apt.starts_at, startDate.invalidReason);
+            return null;
+          }
+          
+          const localStart = startDate.setZone(agentTimezone);
+          const aptDate = localStart.toJSDate();
+          const aptDateFormatted = localStart.toFormat('MMM d, yyyy HH:mm');
+          
+          // More inclusive check - appointments that start OR end within the week should be included
+          const endDateStr = apt.ends_at || apt.starts_at;
+          const endDate = DateTime.fromISO(endDateStr, { zone: "utc" });
+          if (!endDate.isValid) {
+            console.error(`❌ Invalid end date for appointment ${index}:`, endDateStr, endDate.invalidReason);
+            return null;
+          }
+          
+          const localEnd = endDate.setZone(agentTimezone);
+          const aptEndDate = localEnd.toJSDate();
+          
+          // Include appointment if it starts, ends, or overlaps with the week range
+          const startsInRange = aptDate >= weekStart && aptDate <= weekEnd;
+          const endsInRange = aptEndDate >= weekStart && aptEndDate <= weekEnd;
+          const overlapsRange = aptDate <= weekEnd && aptEndDate >= weekStart;
+          
+          // Log every appointment's date comparison for debugging
+          console.log(`🔍 [SCHEDULE] Checking appointment ${index}:`, {
+            family_name: apt.family_name,
+            starts_at_utc: apt.starts_at,
+            localStart: aptDateFormatted,
+            localEnd: localEnd.toFormat('MMM d, yyyy HH:mm'),
+            weekStart: weekStartDT.toFormat('MMM d, yyyy HH:mm'),
+            weekEnd: weekEndDT.toFormat('MMM d, yyyy HH:mm'),
+            startsInRange,
+            endsInRange,
+            overlapsRange,
+            willInclude: startsInRange || endsInRange || overlapsRange
           });
           
-          if (dayIndex >= 0 && dayIndex < 7) {
-            const durationMinutes = localEnd.diff(localStart, 'minutes').minutes;
-            
-            console.log(`✅ Including appointment:`, {
-              family_name: apt.family_name,
-              starts_at: apt.starts_at,
-              localStart: aptDateFormatted,
-              dayIndex,
-              day: weekDates[dayIndex]?.toLocaleDateString(),
-              hour: localStart.hour,
-              minute: localStart.minute
+          if (startsInRange || endsInRange || overlapsRange) {
+            // Compare dates in agent's timezone to find which day of the week
+            const dayIndex = weekDates.findIndex((date, idx) => {
+              const dateDT = DateTime.fromJSDate(date, { zone: agentTimezone })
+                .set({ hour: 0, minute: 0, second: 0, millisecond: 0 });
+              const aptDateDT = localStart.set({ hour: 0, minute: 0, second: 0, millisecond: 0 });
+              const sameDay = dateDT.hasSame(aptDateDT, 'day');
+              
+              if (sameDay) {
+                console.log(`📍 Found day match:`, {
+                  appointment: apt.family_name,
+                  appointmentDate: aptDateDT.toFormat('MMM d, yyyy'),
+                  weekDate: dateDT.toFormat('MMM d, yyyy'),
+                  dayIndex: idx,
+                  dayName: weekDays[idx]
+                });
+              }
+              
+              return sameDay;
             });
             
-            return {
-              ...apt,
-              day: dayIndex,
-              hour: localStart.hour,
-              minute: localStart.minute,
-              durationMinutes,
-              startTime: `${String(localStart.hour).padStart(2, '0')}:${String(localStart.minute).padStart(2, '0')}`,
-              endTime: `${String(localEnd.hour).padStart(2, '0')}:${String(localEnd.minute).padStart(2, '0')}`,
-            };
+            if (dayIndex >= 0 && dayIndex < 7) {
+              const durationMinutes = localEnd.diff(localStart, 'minutes').minutes;
+              
+              console.log(`✅ INCLUDING appointment:`, {
+                family_name: apt.family_name,
+                starts_at: apt.starts_at,
+                localStart: aptDateFormatted,
+                dayIndex,
+                dayName: weekDays[dayIndex],
+                day: weekDates[dayIndex]?.toLocaleDateString(),
+                hour: localStart.hour,
+                minute: localStart.minute,
+                durationMinutes
+              });
+              
+              return {
+                ...apt,
+                day: dayIndex,
+                hour: localStart.hour,
+                minute: localStart.minute,
+                durationMinutes,
+                startTime: `${String(localStart.hour).padStart(2, '0')}:${String(localStart.minute).padStart(2, '0')}`,
+                endTime: `${String(localEnd.hour).padStart(2, '0')}:${String(localEnd.minute).padStart(2, '0')}`,
+              };
+            } else {
+              console.warn(`⚠️ Appointment falls in week range but dayIndex not found:`, {
+                family_name: apt.family_name,
+                starts_at: apt.starts_at,
+                localStart: aptDateFormatted,
+                dayIndex,
+                weekDates: weekDates.map((d, i) => ({
+                  index: i,
+                  date: d.toLocaleDateString(),
+                  dayName: weekDays[i]
+                })),
+                appointmentDay: localStart.toFormat('EEEE, MMM d, yyyy')
+              });
+            }
           } else {
-            console.log(`⚠️ Appointment falls in week range but dayIndex not found:`, {
-              family_name: apt.family_name,
-              starts_at: apt.starts_at,
-              localStart: aptDateFormatted,
-              dayIndex,
-              weekDates: weekDates.map(d => d.toLocaleDateString())
-            });
+            // Log if it's close to the range (within 3 days) to help debug
+            const daysFromStart = localStart.diff(weekStartDT, 'days').days;
+            const daysFromEnd = localStart.diff(weekEndDT, 'days').days;
+            if (Math.abs(daysFromStart) < 3 || Math.abs(daysFromEnd) < 3) {
+              console.log(`❌ Appointment OUTSIDE week range:`, {
+                family_name: apt.family_name,
+                starts_at: apt.starts_at,
+                localStart: aptDateFormatted,
+                weekStart: weekStartDT.toFormat('MMM d, yyyy HH:mm'),
+                weekEnd: weekEndDT.toFormat('MMM d, yyyy HH:mm'),
+                daysFromStart: daysFromStart.toFixed(2),
+                daysFromEnd: daysFromEnd.toFixed(2),
+                beforeStart: aptDate < weekStart,
+                afterEnd: aptDate > weekEnd
+              });
+            }
           }
-        } else {
-          // Only log if it's close to the range to avoid spam
-          const daysDiff = Math.abs(localStart.diff(weekStartDT, 'days').days);
-          if (daysDiff < 2) {
-            console.log(`📅 [SCHEDULE] Appointment filtered out (outside week range):`, {
-              family_name: apt.family_name,
-              starts_at: apt.starts_at,
-              localStart: aptDateFormatted,
-              weekStart: weekStartDT.toFormat('MMM d, yyyy HH:mm'),
-              weekEnd: weekEndDT.toFormat('MMM d, yyyy HH:mm'),
-              beforeStart: aptDate < weekStart,
-              afterEnd: aptDate > weekEnd
-            });
-          }
+        } catch (error) {
+          console.error(`❌ Error processing appointment ${index}:`, error, apt);
         }
+        
         return null;
       })
       .filter(Boolean);
