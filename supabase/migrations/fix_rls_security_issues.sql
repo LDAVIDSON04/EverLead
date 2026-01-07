@@ -17,6 +17,9 @@
 -- Drop the unrestricted public insert policy if it exists
 DROP POLICY IF EXISTS "public_insert_leads" ON public.leads;
 
+-- Drop existing policy if it exists (in case migration was run before)
+DROP POLICY IF EXISTS "Authenticated users can insert leads" ON public.leads;
+
 -- Create a more restrictive policy that requires authentication
 -- Note: The API uses service role, so this policy is mainly for direct database access
 CREATE POLICY "Authenticated users can insert leads"
