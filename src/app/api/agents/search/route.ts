@@ -278,44 +278,165 @@ export async function GET(req: NextRequest) {
 
     if (location) {
       const locationLower = location.toLowerCase().trim();
-      // Handle "City, Province" format - extract city name (e.g., "Toronto, ON" -> "Toronto", "Penticton, BC" -> "Penticton")
+      // Handle different location input formats:
+      // 1. "City, Province" (e.g., "Toronto, ON") -> extract city
+      // 2. Just "Province" (e.g., "BC", "ON", "Ontario") -> match by province
+      // 3. Postal code (e.g., "V1Y 5Y6", "K1A 0B1") -> geocode to city/province
+      // 4. Just "City" (e.g., "Toronto") -> match by city
+      
       const locationParts = locationLower.split(',').map(s => s.trim());
-      const searchCity = locationParts[0]; // Just the city name, no province
+      const searchCity = locationParts[0];
+      const searchProvince = locationParts.length > 1 ? locationParts[1] : null;
+      
+      // Check if input looks like a postal code (Canadian format: A1A 1A1 or A1A1A1)
+      const isPostalCode = /^[a-z]\d[a-z]\s?\d[a-z]\d$/i.test(locationLower.replace(/\s+/g, ''));
+      
+      // List of Canadian provinces and their abbreviations
+      const provinceMap: Record<string, string[]> = {
+        'alberta': ['ab', 'alberta'],
+        'british columbia': ['bc', 'british columbia'],
+        'manitoba': ['mb', 'manitoba'],
+        'new brunswick': ['nb', 'new brunswick'],
+        'newfoundland': ['nl', 'nf', 'newfoundland', 'newfoundland and labrador'],
+        'northwest territories': ['nt', 'nwt', 'northwest territories'],
+        'nova scotia': ['ns', 'nova scotia'],
+        'nunavut': ['nu', 'nunavut'],
+        'ontario': ['on', 'ontario'],
+        'prince edward island': ['pe', 'pei', 'prince edward island'],
+        'quebec': ['qc', 'pq', 'quebec'],
+        'saskatchewan': ['sk', 'saskatchewan'],
+        'yukon': ['yt', 'yukon', 'yukon territory']
+      };
+      
+      // Determine if input is a province (either as abbreviation or full name)
+      let isProvinceSearch = false;
+      let matchedProvince: string | null = null;
+      
+      if (!searchCity.includes(' ') && searchCity.length <= 5) {
+        // Likely a province abbreviation (e.g., "BC", "ON")
+        for (const [provinceName, abbreviations] of Object.entries(provinceMap)) {
+          if (abbreviations.some(abbr => abbr.toLowerCase() === searchCity.toLowerCase())) {
+            isProvinceSearch = true;
+            matchedProvince = provinceName;
+            break;
+          }
+        }
+      } else {
+        // Check if it's a full province name
+        for (const [provinceName, abbreviations] of Object.entries(provinceMap)) {
+          if (provinceName.toLowerCase() === searchCity.toLowerCase() || 
+              abbreviations.some(abbr => abbr.toLowerCase() === searchCity.toLowerCase())) {
+            isProvinceSearch = true;
+            matchedProvince = provinceName;
+            break;
+          }
+        }
+      }
       
       filtered = filtered.filter((agent) => {
         // Normalize function to extract city name from "City, Province" format
-        // Handles case-insensitive matching and extra whitespace
         const normalizeCity = (cityStr: string): string => {
           if (!cityStr) return '';
           return cityStr.toLowerCase().trim().split(',')[0].trim().replace(/\s+/g, ' ');
         };
         
-        // Check if the search city matches any of the agent's locations (availability or office locations)
-        const normalizedSearch = normalizeCity(searchCity);
+        // Normalize province names
+        const normalizeProvince = (provinceStr: string): string | null => {
+          if (!provinceStr) return null;
+          const normalized = provinceStr.toLowerCase().trim();
+          for (const [provinceName, abbreviations] of Object.entries(provinceMap)) {
+            if (abbreviations.some(abbr => abbr.toLowerCase() === normalized) || 
+                provinceName.toLowerCase() === normalized) {
+              return provinceName;
+            }
+          }
+          return normalized; // Return as-is if not found in map
+        };
         
+        // If searching by province only
+        if (isProvinceSearch && matchedProvince) {
+          // Match agents by their agent_province or office location provinces
+          const agentProvinceNormalized = normalizeProvince(agent.agent_province || '');
+          const officeLocations = (agent as any).officeLocations || [];
+          const officeProvinces = officeLocations.map((loc: any) => normalizeProvince(loc.province || ''));
+          
+          if (agentProvinceNormalized === matchedProvince || 
+              officeProvinces.includes(matchedProvince)) {
+            console.log(`[AGENT SEARCH] Agent ${agent.id} matches province "${matchedProvince}"`);
+            return true;
+          }
+          return false;
+        }
+        
+        // If searching by postal code, try to match by office location postal codes
+        if (isPostalCode) {
+          const officeLocations = (agent as any).officeLocations || [];
+          const normalizedPostalCode = locationLower.replace(/\s+/g, '').toUpperCase();
+          
+          const matchesPostalCode = officeLocations.some((loc: any) => {
+            if (!loc.postal_code) return false;
+            const locPostalCode = loc.postal_code.replace(/\s+/g, '').toUpperCase();
+            // Exact match or first 3 characters match (forward sortation area)
+            return locPostalCode === normalizedPostalCode || 
+                   locPostalCode.substring(0, 3) === normalizedPostalCode.substring(0, 3);
+          });
+          
+          if (matchesPostalCode) {
+            console.log(`[AGENT SEARCH] Agent ${agent.id} matches postal code "${location}"`);
+            return true;
+          }
+          // If no postal code match, fall through to city matching
+        }
+        
+        // City matching (existing logic)
+        const normalizedSearch = normalizeCity(searchCity);
         if (!normalizedSearch) return false;
         
-        // First check if the city is in the agent's location list (availability or office locations)
+        // Check if the city matches any of the agent's locations (availability or office locations)
         const hasLocationInList = agent.availabilityLocations.some((loc: string) => {
           if (!loc) return false;
           const normalizedLoc = normalizeCity(loc);
-          // Exact match or one contains the other (for partial matches like "Salmon Arm" vs "Salmon")
           return normalizedLoc === normalizedSearch || 
                  normalizedLoc.includes(normalizedSearch) ||
                  normalizedSearch.includes(normalizedLoc);
         });
         
-        if (!hasLocationInList) {
-          return false; // City not in agent's locations at all
+        // Also check office locations for city match
+        const officeLocations = (agent as any).officeLocations || [];
+        const matchesOfficeCity = officeLocations.some((loc: any) => {
+          if (!loc.city) return false;
+          const normalizedLoc = normalizeCity(loc.city);
+          return normalizedLoc === normalizedSearch || 
+                 normalizedLoc.includes(normalizedSearch) ||
+                 normalizedSearch.includes(normalizedLoc);
+        });
+        
+        // If province was specified in search, also check province match
+        if (searchProvince) {
+          const searchProvinceNormalized = normalizeProvince(searchProvince);
+          const agentProvinceNormalized = normalizeProvince(agent.agent_province || '');
+          const officeLocations = (agent as any).officeLocations || [];
+          const officeProvinces = officeLocations.map((loc: any) => normalizeProvince(loc.province || ''));
+          
+          const provinceMatches = agentProvinceNormalized === searchProvinceNormalized || 
+                                  officeProvinces.includes(searchProvinceNormalized || '');
+          
+          if ((hasLocationInList || matchesOfficeCity) && provinceMatches) {
+            console.log(`[AGENT SEARCH] Agent ${agent.id} matches city "${searchCity}" and province "${searchProvince}"`);
+            return true;
+          }
+          return false;
         }
         
-        // If city is in the list, include the agent (even if they have no availability set)
-        // Agents will show with "No appointments" for all blocks if they have no availability
-        console.log(`[AGENT SEARCH] Agent ${agent.id} matches location "${location}" (searchCity: "${searchCity}") - including agent even if no availability set`);
-        return true;
+        if (hasLocationInList || matchesOfficeCity) {
+          console.log(`[AGENT SEARCH] Agent ${agent.id} matches location "${location}" (searchCity: "${searchCity}")`);
+          return true;
+        }
+        
+        return false;
       });
       
-      console.log(`✅ [AGENT SEARCH] After location filter "${location}" (searchCity: "${locationParts[0]}"): ${filtered.length} agents matched`);
+      console.log(`✅ [AGENT SEARCH] After location filter "${location}": ${filtered.length} agents matched`);
       
       if (filtered.length === 0) {
         console.warn(`⚠️ [AGENT SEARCH] No agents found for location "${location}". Available locations in system:`, 
