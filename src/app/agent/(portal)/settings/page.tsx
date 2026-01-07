@@ -445,11 +445,16 @@ function ProfileSection({
         }
       }
 
-      // Ensure we always send first_name and last_name if we have fullName
-      if (saveData.fullName && !saveData.firstName && !saveData.lastName) {
+      // ALWAYS parse fullName into firstName and lastName to keep them in sync
+      // This ensures the database first_name and last_name fields match the fullName
+      if (saveData.fullName && saveData.fullName.trim()) {
         const nameParts = saveData.fullName.trim().split(/\s+/);
         saveData.firstName = nameParts[0] || '';
         saveData.lastName = nameParts.slice(1).join(' ') || '';
+      } else if (saveData.fullName === '') {
+        // If fullName is cleared, also clear firstName and lastName
+        saveData.firstName = '';
+        saveData.lastName = '';
       }
 
       console.log("Saving profile data:", {
