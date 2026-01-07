@@ -526,21 +526,16 @@ function ProfileSection({
         window.dispatchEvent(new CustomEvent("profileUpdated"));
       }, 200);
       
-      // If profile picture was just added, dispatch onboarding step completion
+      // If profile picture exists, dispatch onboarding step completion after Save
+      // This ensures Step 1 is only marked complete when user explicitly saves
       if (saveData.profilePictureUrl) {
-        window.dispatchEvent(new CustomEvent("onboardingStepCompleted", { detail: { step: 1 } }));
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent("onboardingStepCompleted", { detail: { step: 1 } }));
+        }, 300);
       }
 
       setSaveMessage({ type: "success", text: "Profile saved successfully!" });
       setTimeout(() => setSaveMessage(null), 3000);
-      
-      // Check if we should show onboarding modal after saving profile
-      if (saveData.profilePictureUrl) {
-        // Small delay to let the profile update event process
-        setTimeout(() => {
-          window.dispatchEvent(new CustomEvent("checkOnboarding"));
-        }, 500);
-      }
     } catch (err: any) {
       console.error("Error saving profile:", err);
       setSaveMessage({ type: "error", text: err.message || "Failed to save profile" });
