@@ -451,14 +451,19 @@ export async function GET(req: NextRequest) {
         return aptDate >= currentYearStart;
       });
     
-    // Log appointments for debugging
+    // Log appointments for debugging - show all appointments with their dates
     console.log(`📅 [APPOINTMENTS API] Returning ${validAppointments.length} appointments:`, 
-      validAppointments.map(apt => ({
-        id: apt.id,
-        family_name: apt.family_name,
-        starts_at: apt.starts_at,
-        status: apt.status
-      }))
+      validAppointments.map(apt => {
+        const aptDate = new Date(apt.starts_at);
+        return {
+          id: apt.id,
+          family_name: apt.family_name,
+          starts_at: apt.starts_at,
+          date: aptDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }),
+          time: aptDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+          status: apt.status
+        };
+      })
     );
 
     // Map external events to the same format as appointments
