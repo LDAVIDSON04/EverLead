@@ -439,13 +439,11 @@ export default function SchedulePage() {
     const weekEndDate = weekDates[6];
     
     // Create DateTime objects in agent's timezone for the start and end of the week
-    // Use a wider range to ensure we don't miss appointments due to timezone edge cases
+    // Use exact day boundaries without buffers - the weekDates are already correct dates
     const weekStartDT = DateTime.fromJSDate(weekStartDate, { zone: agentTimezone })
-      .set({ hour: 0, minute: 0, second: 0, millisecond: 0 })
-      .minus({ hours: 1 }); // Add 1 hour buffer to catch edge cases
+      .set({ hour: 0, minute: 0, second: 0, millisecond: 0 });
     const weekEndDT = DateTime.fromJSDate(weekEndDate, { zone: agentTimezone })
-      .set({ hour: 23, minute: 59, second: 59, millisecond: 999 })
-      .plus({ hours: 1 }); // Add 1 hour buffer to catch edge cases
+      .set({ hour: 23, minute: 59, second: 59, millisecond: 999 });
     
     const weekStart = weekStartDT.toJSDate();
     const weekEnd = weekEndDT.toJSDate();
