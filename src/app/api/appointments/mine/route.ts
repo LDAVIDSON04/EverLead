@@ -526,9 +526,25 @@ export async function GET(req: NextRequest) {
     
     const mappedExternalEvents = (externalEvents || [])
       .filter((evt: any) => {
-        // Only include events from the current year
+        // Only include events from the current year (filter out previous years)
+        if (!evt.starts_at) {
+          console.log(`⚠️ External event missing starts_at:`, evt.id);
+          return false;
+        }
+        
         const evtDate = new Date(evt.starts_at);
-        return evtDate >= currentYearStart;
+        const isInCurrentYear = evtDate >= currentYearStart;
+        
+        if (!isInCurrentYear) {
+          console.log(`⏭️ Skipping external event from previous year:`, {
+            id: evt.id,
+            starts_at: evt.starts_at,
+            year: evtDate.getFullYear(),
+            currentYear
+          });
+        }
+        
+        return isInCurrentYear;
       })
       .map((evt: any) => {
       const providerName = evt.provider === "google" ? "Google Calendar" : 
@@ -557,7 +573,10 @@ export async function GET(req: NextRequest) {
         is_external: true, // Flag to identify external events in the UI
         provider: evt.provider,
       };
-    });
+    })
+    .filter((evt): evt is NonNullable<typeof evt> => evt !== null); // Remove any null entries from invalid events
+
+    console.log(`📅 [APPOINTMENTS API] After filtering external events: ${mappedExternalEvents.length} events from current year (${(externalEvents || []).length - mappedExternalEvents.length} filtered out as previous year or invalid)`);
 
     // Combine appointments and external events, sort by start time
     const allEvents = [...validAppointments, ...mappedExternalEvents].sort((a, b) => {
