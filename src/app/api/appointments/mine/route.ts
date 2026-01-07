@@ -186,7 +186,7 @@ export async function GET(req: NextRequest) {
     try {
       const result = await supabaseServer
         .from("external_events")
-        .select("id, starts_at, ends_at, status, provider, is_soradin_created, title, location")
+        .select("id, starts_at, ends_at, status, provider, is_soradin_created, appointment_id, title, location")
         .eq("specialist_id", userId) // specialist_id in external_events = agent_id (user ID)
         .eq("status", "confirmed") // Only show confirmed events
         .eq("is_soradin_created", false) // Only fetch EXTERNAL events - Soradin-created ones are duplicates of appointments table
@@ -201,7 +201,7 @@ export async function GET(req: NextRequest) {
         console.log("Title or location column not found, fetching external events without them");
           const result = await supabaseServer
             .from("external_events")
-            .select("id, starts_at, ends_at, status, provider, is_soradin_created")
+            .select("id, starts_at, ends_at, status, provider, is_soradin_created, appointment_id")
             .eq("specialist_id", userId)
             .eq("status", "confirmed")
             .eq("is_soradin_created", false) // Only fetch EXTERNAL events - Soradin-created ones are duplicates of appointments table
@@ -524,10 +524,25 @@ export async function GET(req: NextRequest) {
       }))
     });
     
+    // Create a set of appointment IDs that exist in the appointments table
+    // This prevents external events linked to Soradin appointments from showing as external
+    const appointmentIds = new Set((appointments || []).map((apt: any) => apt.id));
+    
     const mappedExternalEvents = (externalEvents || [])
       .filter((evt: any) => {
         // Skip Soradin-created events - these are duplicates of appointments already in the appointments table
         if (evt.is_soradin_created) {
+          return false;
+        }
+        
+        // Skip external events that have an appointment_id linked to an existing Soradin appointment
+        // This prevents rescheduled/cancelled Soradin appointments from appearing as external
+        if (evt.appointment_id && appointmentIds.has(evt.appointment_id)) {
+          console.log(`⏭️ Skipping external event linked to Soradin appointment:`, {
+            externalEventId: evt.id,
+            appointmentId: evt.appointment_id,
+            starts_at: evt.starts_at
+          });
           return false;
         }
         

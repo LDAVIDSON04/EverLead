@@ -299,23 +299,27 @@ function CancelAppointmentContent() {
   };
 
   const handleTimeSlotClick = (timeSlot: { startsAt: string; endsAt: string; time: string }, date: string) => {
-    // Format the date for display
+    // Format the date for display - use the date string directly to avoid timezone issues
+    // date is in format YYYY-MM-DD, parse it correctly
     const [year, month, dayOfMonth] = date.split("-").map(Number);
-    const dateObj = new Date(Date.UTC(year, month - 1, dayOfMonth));
+    
+    // Create date object in local timezone (not UTC) to avoid day shift issues
+    const dateObj = new Date(year, month - 1, dayOfMonth);
     const displayDate = dateObj.toLocaleDateString('en-US', { 
       weekday: 'long', 
       month: 'long', 
       day: 'numeric', 
-      year: 'numeric' 
+      year: 'numeric',
+      timeZone: 'America/Vancouver' // Use a consistent timezone for date formatting
     });
     
-    // Show confirmation popup
+    // Show confirmation popup immediately with the correct date and time
     setPendingTimeSlot({
       startsAt: timeSlot.startsAt,
       endsAt: timeSlot.endsAt,
-      date: date,
-      time: timeSlot.time,
-      displayDate: displayDate,
+      date: date, // Store the original date string (YYYY-MM-DD)
+      time: timeSlot.time, // Time is already formatted correctly
+      displayDate: displayDate, // Formatted date for display
     });
   };
 
@@ -345,9 +349,16 @@ function CancelAppointmentContent() {
       }
 
       setStatus("success");
-      setMessage("Your appointment has been rescheduled successfully.");
+      // Include the new time in the success message immediately
+      const successMessage = pendingTimeSlot 
+        ? `Your appointment has been rescheduled successfully for ${pendingTimeSlot.displayDate} at ${pendingTimeSlot.time}.`
+        : "Your appointment has been rescheduled successfully.";
+      setMessage(successMessage);
       setShowRescheduleModal(false);
       setSelectedTimeSlot(null);
+      
+      // Keep pendingTimeSlot until after refresh so success message shows correct time
+      const timeSlotToShow = pendingTimeSlot;
       setPendingTimeSlot(null);
       
       // Refresh appointment data
@@ -397,8 +408,13 @@ function CancelAppointmentContent() {
       }
 
       setStatus("success");
-      setMessage("Your appointment has been rescheduled successfully.");
+      // Include the new time in the success message immediately
+      const successMessage = selectedTimeSlot 
+        ? `Your appointment has been rescheduled successfully for ${selectedTimeSlot.date ? new Date(selectedTimeSlot.date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }) : 'the selected date'} at ${selectedTimeSlot.time || 'the selected time'}.`
+        : "Your appointment has been rescheduled successfully.";
+      setMessage(successMessage);
       setShowRescheduleModal(false);
+      const timeSlotForMessage = selectedTimeSlot;
       setSelectedTimeSlot(null);
       
       // Refresh appointment data
@@ -819,10 +835,11 @@ function CancelAppointmentContent() {
                         return null;
                       }
                       
-                      const date = new Date(Date.UTC(year, month - 1, dayOfMonth));
-                      const dayName = date.toLocaleDateString("en-US", { weekday: "long", timeZone: "UTC" });
-                      const monthName = date.toLocaleDateString("en-US", { month: "long", timeZone: "UTC" });
-                      const dayNum = date.getUTCDate();
+                      // Use local timezone (not UTC) to avoid day shift issues
+                      const date = new Date(year, month - 1, dayOfMonth);
+                      const dayName = date.toLocaleDateString("en-US", { weekday: "long" });
+                      const monthName = date.toLocaleDateString("en-US", { month: "long" });
+                      const dayNum = date.getDate();
                       const displayDate = `${dayName}, ${monthName} ${dayNum}`;
                       
                       const normalizedSelectedDate = selectedDayForModal?.trim() || "";
