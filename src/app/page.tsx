@@ -430,7 +430,7 @@ export default function HomePage() {
                     <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#1A1A1A]/40 z-10" />
                     <input
                       type="text"
-                      placeholder="City"
+                      placeholder="City, Province or zip"
                       className="w-full pl-12 pr-4 py-3 bg-transparent border-none focus:outline-none text-[#1A1A1A] placeholder:text-[#1A1A1A]/40 relative z-10"
                       value={location}
                       onChange={handleLocationChange}
