@@ -840,6 +840,7 @@ export default function SchedulePage() {
 
   return (
     <div className="w-full h-screen flex flex-col bg-white relative overflow-hidden p-8 pt-[56px] md:pt-8">
+      {/* Calendar container with fixed height for 8am-4pm viewport */}
       {/* Header */}
       <div className="mb-4 md:mb-8">
         {/* Date range and View Selector */}
@@ -959,7 +960,7 @@ export default function SchedulePage() {
             <div className="relative">
               {weekHours.map((hour) => {
                 return (
-                  <div key={hour} className="flex border-t border-gray-200" style={{ overflow: 'visible', position: 'relative' }}>
+                  <div key={hour} className="flex border-t border-gray-200" style={{ overflow: 'visible', position: 'relative', height: isDesktop ? '65px' : '55px' }}>
                     <div className="w-12 md:w-20 flex-shrink-0 pr-1 md:pr-3 pt-1 md:pt-1.5 text-[10px] md:text-xs text-gray-500 text-right">
                       {hour === 12 ? '12 PM' : hour > 12 ? `${hour - 12} PM` : `${hour} AM`}
                     </div>
@@ -1126,7 +1127,7 @@ export default function SchedulePage() {
                 const dayIndex = dayDate.getDay();
 
                 return (
-                  <div key={hour} className="flex border-t border-gray-200" style={{ overflow: 'visible', position: 'relative' }}>
+                  <div key={hour} className="flex border-t border-gray-200" style={{ overflow: 'visible', position: 'relative', height: isDesktop ? '65px' : '55px' }}>
                     <div className="w-12 md:w-20 flex-shrink-0 pr-1 md:pr-3 pt-1 md:pt-1.5 text-[10px] md:text-xs text-gray-500 text-right">
                       {hour === 12 ? '12 PM' : hour > 12 ? `${hour - 12} PM` : `${hour} AM`}
                     </div>
