@@ -189,7 +189,7 @@ export async function GET(req: NextRequest) {
         .select("id, starts_at, ends_at, status, provider, is_soradin_created, title, location")
         .eq("specialist_id", userId) // specialist_id in external_events = agent_id (user ID)
         .eq("status", "confirmed") // Only show confirmed events
-        .eq("is_soradin_created", false) // Only show external events (not Soradin-created)
+        // Include BOTH external events AND Soradin-created events - all should be visible in calendar
         // Removed date filter - fetch all events so past appointments are visible when navigating to previous weeks/days
         .order("starts_at", { ascending: true });
       
@@ -199,14 +199,14 @@ export async function GET(req: NextRequest) {
       // If title or location column doesn't exist, try without them
       if (err?.code === '42703' || err?.message?.includes('does not exist')) {
         console.log("Title or location column not found, fetching external events without them");
-        const result = await supabaseServer
-          .from("external_events")
-          .select("id, starts_at, ends_at, status, provider, is_soradin_created")
-          .eq("specialist_id", userId)
-          .eq("status", "confirmed")
-          .eq("is_soradin_created", false)
-          // Removed date filter - fetch all events so past appointments are visible when navigating to previous weeks/days
-          .order("starts_at", { ascending: true });
+          const result = await supabaseServer
+            .from("external_events")
+            .select("id, starts_at, ends_at, status, provider, is_soradin_created")
+            .eq("specialist_id", userId)
+            .eq("status", "confirmed")
+            // Include BOTH external events AND Soradin-created events - all should be visible in calendar
+            // Removed date filter - fetch all events so past appointments are visible when navigating to previous weeks/days
+            .order("starts_at", { ascending: true });
         
         externalEvents = result.data;
         externalEventsError = result.error;
