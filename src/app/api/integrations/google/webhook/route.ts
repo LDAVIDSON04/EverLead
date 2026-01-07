@@ -13,6 +13,35 @@ export const runtime = "nodejs";
 // Google Calendar webhook verification token
 const WEBHOOK_SECRET = process.env.GOOGLE_WEBHOOK_SECRET || "soradin-webhook-secret";
 
+// Google Calendar webhook IP ranges (for additional security validation)
+// These are Google's known IP ranges - we can validate against them if needed
+// Note: Google may use various IPs, so this is optional validation
+const GOOGLE_IP_RANGES = [
+  // Google Cloud IP ranges (approximate)
+  "66.249.0.0/16",
+  "64.233.160.0/19",
+  "72.14.192.0/18",
+  "209.85.128.0/17",
+  "216.239.32.0/19",
+  "108.177.8.0/21",
+  "173.194.0.0/16",
+  // Add more as needed
+];
+
+/**
+ * Basic IP validation (optional - Google IPs can vary)
+ * This is a lightweight check that won't block legitimate requests
+ */
+function isValidGoogleIP(ip: string | null): boolean {
+  if (!ip || !process.env.VALIDATE_GOOGLE_IPS || process.env.VALIDATE_GOOGLE_IPS !== "true") {
+    // Skip validation if not enabled
+    return true;
+  }
+  // For now, always return true - implement proper CIDR matching if needed
+  // This is a placeholder for future IP validation
+  return true;
+}
+
 /**
  * GET: Verify webhook subscription (Google requires this for initial setup)
  * Also handles browser access for testing
@@ -39,11 +68,25 @@ export async function GET(req: NextRequest) {
  */
 export async function POST(req: NextRequest) {
   try {
+    // Get client IP for validation (optional)
+    const clientIP = req.headers.get("x-forwarded-for")?.split(",")[0] || 
+                     req.headers.get("x-real-ip") || 
+                     "unknown";
+    
+    // Optional: Validate IP is from Google (if validation is enabled)
+    if (!isValidGoogleIP(clientIP)) {
+      console.warn("Webhook request from unknown IP:", clientIP);
+      // Don't block - Google may use various IPs, but log for monitoring
+    }
+
     // Verify webhook secret (if configured)
     const authHeader = req.headers.get("x-goog-channel-token");
-    if (WEBHOOK_SECRET && authHeader !== WEBHOOK_SECRET) {
-      console.warn("Invalid webhook secret");
-      // Still process but log warning
+    if (WEBHOOK_SECRET && WEBHOOK_SECRET !== "soradin-webhook-secret") {
+      // Only validate if a custom secret is set
+      if (authHeader !== WEBHOOK_SECRET) {
+        console.warn("Invalid webhook secret from IP:", clientIP);
+        // Still process but log warning - Google doesn't always send this header
+      }
     }
 
     // Get channel information from headers
