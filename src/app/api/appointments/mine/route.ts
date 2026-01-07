@@ -438,9 +438,18 @@ export async function GET(req: NextRequest) {
     });
 
     // Filter out any null entries from failed date conversions
-    // Don't filter by date here - let the client-side filtering handle showing only the week being viewed
-    // This ensures all appointments are available, including those from past days in the current week
-    const validAppointments = mappedAppointments.filter((apt): apt is NonNullable<typeof apt> => apt !== null);
+    // Filter to only include appointments from the current year (to exclude previous years)
+    // This allows viewing past weeks/months in the current year while excluding old data
+    const currentYear = new Date().getFullYear();
+    const currentYearStart = new Date(currentYear, 0, 1); // Jan 1 of current year
+    
+    const validAppointments = mappedAppointments
+      .filter((apt): apt is NonNullable<typeof apt> => apt !== null)
+      .filter((apt) => {
+        // Only include appointments from the current year
+        const aptDate = new Date(apt.starts_at);
+        return aptDate >= currentYearStart;
+      });
     
     // Log appointments for debugging
     console.log(`📅 [APPOINTMENTS API] Returning ${validAppointments.length} appointments:`, 
@@ -454,7 +463,14 @@ export async function GET(req: NextRequest) {
 
     // Map external events to the same format as appointments
     // These represent meetings booked by coworkers/front desk in external calendars
-    const mappedExternalEvents = (externalEvents || []).map((evt: any) => {
+    // Filter to only include events from the current year
+    const mappedExternalEvents = (externalEvents || [])
+      .filter((evt: any) => {
+        // Only include events from the current year
+        const evtDate = new Date(evt.starts_at);
+        return evtDate >= currentYearStart;
+      })
+      .map((evt: any) => {
       const providerName = evt.provider === "google" ? "Google Calendar" : 
                           evt.provider === "microsoft" ? "Microsoft Calendar" : 
                           evt.provider === "ics" ? "ICS Calendar" : 
