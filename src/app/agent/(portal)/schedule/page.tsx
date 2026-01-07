@@ -706,6 +706,17 @@ export default function SchedulePage() {
   const dayAppointments = getDayAppointments();
   const monthAppointments = getMonthAppointments();
 
+  // Debug: Log weekAppointments right before rendering
+  console.log(`🎯 [RENDER] weekAppointments has ${weekAppointments.length} appointments:`, 
+    weekAppointments.map(apt => ({
+      family_name: apt.family_name,
+      day: apt.day,
+      hour: apt.hour,
+      minute: apt.minute,
+      dayName: weekDays[apt.day]
+    }))
+  );
+
   // Calculate hours for display - always show full day range (0-23) but default view scrolls to 8am-4pm
   const calculateHours = (appts: any[]) => {
     // Always return full day range (0-23) so agent can scroll to see all times
