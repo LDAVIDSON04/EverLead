@@ -927,11 +927,12 @@ export default function SchedulePage() {
         className="overflow-auto overflow-x-hidden"
         style={{
           // Limit viewport height to show 8am-4pm (8 hours: 8am, 9am, 10am, 11am, 12pm, 1pm, 2pm, 3pm)
-          // Each hour is 55px on mobile, 65px on desktop (smaller to fit all 8 hours)
-          // 8 hours * height per hour = 440px mobile, 520px desktop
-          height: isDesktop ? '520px' : '440px',
-          maxHeight: isDesktop ? '520px' : '440px',
-          minHeight: isDesktop ? '520px' : '440px',
+          // Each hour is 55px on mobile, 65px on desktop
+          // 8 hours * height per hour + borders (7 borders between 8 rows) = 440px + 7px mobile, 520px + 7px desktop
+          // Add extra padding to ensure last hour is fully visible
+          height: isDesktop ? '528px' : '448px',
+          maxHeight: isDesktop ? '528px' : '448px',
+          minHeight: isDesktop ? '528px' : '448px',
         }}
       >
         {/* Week View - EXACTLY AS BEFORE */}
