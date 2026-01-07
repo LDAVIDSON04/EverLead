@@ -324,13 +324,17 @@ export function BookingPanel({ agentId, initialLocation }: BookingPanelProps) {
         
         // Fetch availability for each location
         const locationPromises = officeLocations.map(async (location) => {
-          // Skip if already calculated (unless it's a placeholder value)
-          if (location.nextAvailable && 
+          // Skip if already has a calculated date format (e.g., "Jan 7", "Jan 15") but recalculate placeholders
+          const hasCalculatedDate = location.nextAvailable && 
               location.nextAvailable !== 'Loading...' && 
+              location.nextAvailable !== 'Next available today' &&
               location.nextAvailable !== 'Next available tomorrow' &&
-              !location.nextAvailable.startsWith('Next available') && // Skip if it's already a calculated date
-              location.nextAvailable !== 'No availability') {
-            console.log(`⏭️ Skipping ${location.locationName} - already calculated: ${location.nextAvailable}`);
+              location.nextAvailable !== 'Next available in 2 days' &&
+              location.nextAvailable !== 'No availability' &&
+              !location.nextAvailable.match(/^Next available (today|tomorrow|in \d+ days)$/);
+          
+          if (hasCalculatedDate) {
+            console.log(`⏭️ Skipping ${location.locationName} - already has calculated date: ${location.nextAvailable}`);
             return location;
           }
           
