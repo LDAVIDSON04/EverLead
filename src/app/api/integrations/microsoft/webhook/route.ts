@@ -31,7 +31,23 @@ export async function GET(req: NextRequest) {
  */
 export async function POST(req: NextRequest) {
   try {
-    // Log all headers for debugging
+    // Microsoft sends validation tokens in the query parameter OR request body
+    // Check query parameter first (most common method)
+    const { searchParams } = new URL(req.url);
+    const validationToken = searchParams.get("validationToken");
+    
+    if (validationToken) {
+      console.log("✅ Microsoft webhook validation request received (from query param):", validationToken.substring(0, 50) + "...");
+      return new NextResponse(validationToken, {
+        status: 200,
+        headers: {
+          "Content-Type": "text/plain",
+          "Cache-Control": "no-cache",
+        },
+      });
+    }
+
+    // Log all headers for debugging (only if not validation)
     const allHeaders: Record<string, string> = {};
     req.headers.forEach((value, key) => {
       allHeaders[key] = value;
@@ -43,19 +59,19 @@ export async function POST(req: NextRequest) {
       hasBody: !!req.body,
     });
 
-
     // Microsoft may also send validation token in the request body as plain text
     // Check the raw body first before trying to parse as JSON
     const contentType = req.headers.get("content-type") || "";
     console.log("Content-Type:", contentType);
     
-    // Always try to read as text first to catch validation tokens
+    // Read body as text first to catch validation tokens
+    let textBody: string;
     try {
-      const textBody = await req.text();
+      textBody = await req.text();
       console.log("Request body (first 200 chars):", textBody.substring(0, 200));
       
       // If it's a short string (likely validation token), return it
-      if (textBody && textBody.length < 500 && !textBody.trim().startsWith("{")) {
+      if (textBody && textBody.length > 0 && textBody.length < 500 && !textBody.trim().startsWith("{")) {
         console.log("✅ Microsoft webhook validation request received (from body):", textBody.substring(0, 50) + "...");
         return new NextResponse(textBody, {
           status: 200,
@@ -82,17 +98,6 @@ export async function POST(req: NextRequest) {
     } catch (textError: any) {
       console.error("Failed to read request body:", textError);
       // Return OK to prevent Microsoft from retrying
-      return new NextResponse("OK", { status: 200 });
-    }
-
-    // Parse notification body as JSON
-    let body;
-    try {
-      body = await req.json();
-      return await handleNotificationBody(body);
-    } catch (parseError) {
-      // If body parsing fails, might be a validation request without proper header
-      console.warn("Failed to parse webhook body, might be validation request:", parseError);
       return new NextResponse("OK", { status: 200 });
     }
   } catch (error: any) {

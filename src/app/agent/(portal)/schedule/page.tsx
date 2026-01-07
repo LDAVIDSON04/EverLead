@@ -240,6 +240,20 @@ export default function SchedulePage() {
     return date.getMonth() === monthData.currentMonth && date.getFullYear() === monthData.currentYear;
   };
 
+  // Function to fetch appointments (reusable for polling)
+  const fetchAppointments = async (sessionToken: string) => {
+    try {
+      const appointmentsData = await fetch("/api/appointments/mine", {
+        headers: { Authorization: `Bearer ${sessionToken}` },
+      }).then(res => res.ok ? res.json() : []).catch(() => []);
+      setAppointments(appointmentsData || []);
+      return appointmentsData || [];
+    } catch (err) {
+      console.error("Error fetching appointments:", err);
+      return [];
+    }
+  };
+
   useEffect(() => {
     async function loadSpecialist() {
       try {
@@ -268,9 +282,7 @@ export default function SchedulePage() {
           fetch("/api/specialists/me", {
             headers: { Authorization: `Bearer ${session.access_token}` },
           }),
-          fetch("/api/appointments/mine", {
-            headers: { Authorization: `Bearer ${session.access_token}` },
-          }).then(res => res.ok ? res.json() : []).catch(() => []),
+          fetchAppointments(session.access_token),
         ]);
 
         const profileData = profileResult.data;
@@ -296,8 +308,6 @@ export default function SchedulePage() {
           setSpecialist(specialistData);
         }
 
-        setAppointments(appointmentsData || []);
-
         if (specialistData?.id) {
           Promise.all([
             checkCalendarConnections(specialistData.id, session.access_token),
@@ -321,6 +331,33 @@ export default function SchedulePage() {
 
     loadSpecialist();
   }, [router]);
+
+  // Auto-refresh appointments every 30 seconds to catch new external calendar events
+  useEffect(() => {
+    if (loading) return; // Don't poll while initial load is happening
+
+    const refreshAppointments = async () => {
+      try {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (session?.access_token) {
+          await fetchAppointments(session.access_token);
+        }
+      } catch (err) {
+        console.error("Error refreshing appointments:", err);
+      }
+    };
+
+    // Refresh immediately, then every 30 seconds
+    const interval = setInterval(refreshAppointments, 30000);
+    
+    // Also refresh after a short delay to catch immediate changes
+    const initialRefresh = setTimeout(refreshAppointments, 2000);
+
+    return () => {
+      clearInterval(interval);
+      clearTimeout(initialRefresh);
+    };
+  }, [loading]);
 
   // Scroll to 8am when view changes or calendar loads
   useEffect(() => {
