@@ -717,10 +717,10 @@ export default function SchedulePage() {
     }))
   );
 
-  // Calculate hours for display - always show full day range (0-23) but default view scrolls to 8am-4pm
+  // Calculate hours for display - show full day range (0-23) but viewport is limited to 8am-4pm
   const calculateHours = (appts: any[]) => {
     // Always return full day range (0-23) so agent can scroll to see all times
-    // The calendar will default scroll position to 8am-4pm view
+    // The calendar container height will be limited to show 8am-4pm (8 hours) by default
     return Array.from({ length: 24 }, (_, i) => i);
   };
 
@@ -913,6 +913,13 @@ export default function SchedulePage() {
       <div 
         ref={calendarScrollRef}
         className="flex-1 overflow-auto overflow-x-hidden"
+        style={{
+          // Limit viewport height to show 8am-4pm (8 hours) initially
+          // Each hour is 48px on mobile, 80px on desktop
+          // Add some padding: 8 hours * height per hour
+          maxHeight: isDesktop ? `${8 * 80}px` : `${8 * 48}px`,
+          height: isDesktop ? `${8 * 80}px` : `${8 * 48}px`,
+        }}
       >
         {/* Week View - EXACTLY AS BEFORE */}
         {view === 'week' && (
