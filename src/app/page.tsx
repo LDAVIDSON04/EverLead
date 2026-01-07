@@ -356,8 +356,8 @@ export default function HomePage() {
           style={{ 
             width: "1500px", 
             height: "auto",
-            bottom: "-70px",
-            right: "-350px",
+            bottom: "-4.5vh",
+            right: "-22vw",
           }}
         >
           <Image
