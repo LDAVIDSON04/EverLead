@@ -96,8 +96,11 @@ export async function GET(req: NextRequest) {
       )
       .eq("agent_id", userId)
       .neq("status", "cancelled") // Include all appointments except cancelled ones
+      // NO DATE FILTER - fetch ALL appointments (past and future) so they remain visible like Google Calendar
       .order("requested_date", { ascending: true })
       .order("created_at", { ascending: true });
+    
+    console.log(`📅 [APPOINTMENTS API] Fetched ${result.data?.length || 0} appointments from database (before filtering)`);
     
     if (result.error) {
       // Check if error is due to missing notes column
@@ -446,10 +449,22 @@ export async function GET(req: NextRequest) {
     const validAppointments = mappedAppointments
       .filter((apt): apt is NonNullable<typeof apt> => apt !== null)
       .filter((apt) => {
-        // Only include appointments from the current year
+        // Only include appointments from the current year (exclude previous years, but keep ALL appointments from current year including past ones)
         const aptDate = new Date(apt.starts_at);
-        return aptDate >= currentYearStart;
+        const isInCurrentYear = aptDate >= currentYearStart;
+        if (!isInCurrentYear) {
+          console.log(`⏭️ Skipping appointment from previous year:`, {
+            id: apt.id,
+            family_name: apt.family_name,
+            starts_at: apt.starts_at,
+            year: aptDate.getFullYear(),
+            currentYear
+          });
+        }
+        return isInCurrentYear;
       });
+    
+    console.log(`📅 [APPOINTMENTS API] After filtering: ${validAppointments.length} appointments from current year (${mappedAppointments.filter(a => a !== null).length - validAppointments.length} filtered out as previous year)`);
     
     // Log appointments for debugging - show all appointments with their dates
     console.log(`📅 [APPOINTMENTS API] Returning ${validAppointments.length} appointments:`, 
