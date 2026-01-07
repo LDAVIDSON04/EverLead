@@ -517,7 +517,10 @@ function ProfileSection({
       }
 
       // Trigger a custom event to refresh the layout and other pages
-      window.dispatchEvent(new CustomEvent("profileUpdated"));
+      // Add small delay to ensure database write has fully propagated
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent("profileUpdated"));
+      }, 200);
       
       // If profile picture was just added, dispatch onboarding step completion
       if (saveData.profilePictureUrl) {
