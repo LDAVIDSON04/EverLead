@@ -42,8 +42,8 @@ const protectedRoutes = [
 ];
 
 export const metadata: Metadata = {
-  title: "Soradin | Gentle funeral pre-planning, online.",
-  description: "Soradin helps families thoughtfully plan funeral wishes in advance and connects them with trusted local professionals when they're ready.",
+  title: "Soradin - Thoughtful funeral pre-planning, made simple",
+  description: "Soradin helps families plan funeral wishes in advance and connect with trusted local professionals without pressure or urgency.",
   icons: {
     icon: [
       { url: '/Soradin.png', sizes: 'any' },
@@ -52,8 +52,8 @@ export const metadata: Metadata = {
     apple: '/Soradin.png',
   },
   openGraph: {
-    title: "Soradin | Gentle funeral pre-planning, online.",
-    description: "Soradin helps families thoughtfully plan funeral wishes in advance and connects them with trusted local professionals when they're ready.",
+    title: "Soradin - Thoughtful funeral pre-planning, made simple",
+    description: "Soradin helps families plan funeral wishes in advance and connect with trusted local professionals without pressure or urgency.",
     images: [
       {
         url: '/logo.png',
@@ -67,8 +67,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary',
-    title: "Soradin | Gentle funeral pre-planning, online.",
-    description: "Soradin helps families thoughtfully plan funeral wishes in advance and connects them with trusted local professionals when they're ready.",
+    title: "Soradin - Thoughtful funeral pre-planning, made simple",
+    description: "Soradin helps families plan funeral wishes in advance and connect with trusted local professionals without pressure or urgency.",
     images: ['/logo.png'],
   },
 };
@@ -78,6 +78,25 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // Structured data for Google Knowledge Panel and logo in search results
+  const organizationSchema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Soradin",
+    "url": "https://soradin.com",
+    "logo": "https://soradin.com/Soradin.png",
+    "description": "Soradin helps families plan funeral wishes in advance and connect with trusted local professionals without pressure or urgency.",
+    "email": "support@soradin.com",
+    "sameAs": [
+      "https://www.facebook.com/profile.php?id=61583953961107"
+    ],
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "email": "support@soradin.com",
+      "contactType": "Customer Service"
+    }
+  };
+
   return (
     <html lang="en">
       <head>
@@ -85,6 +104,10 @@ export default function RootLayout({
         <link rel="icon" href="/Soradin.png" type="image/png" />
         <link rel="shortcut icon" href="/Soradin.png" type="image/png" />
         <link rel="apple-touch-icon" href="/Soradin.png" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+        />
       </head>
       <body className="min-h-screen bg-slate-50 text-slate-900">
         {children}
