@@ -6,7 +6,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Suspense, useState, useEffect } from "react";
-import { Search, Star, MapPin, Calendar, Clock, Stethoscope, Video, SlidersHorizontal, ChevronRight, X, ArrowLeft, Shield, ExternalLink, Menu } from "lucide-react";
+import { Search, Star, MapPin, Calendar, Clock, Stethoscope, Video, SlidersHorizontal, ChevronRight, X, ArrowLeft, Shield, ExternalLink, Menu, Instagram, Facebook } from "lucide-react";
 import { supabaseClient } from "@/lib/supabaseClient";
 import { BookingPanel } from "@/app/agent/[agentId]/components/BookingPanel";
 import { OfficeLocationMap } from "@/components/OfficeLocationMap";
@@ -2301,6 +2301,159 @@ function SearchResults() {
           </div>
         </div>
       )}
+
+      {/* FOOTER */}
+      <footer className="bg-[#1A1A1A] text-white">
+        {/* Main Footer */}
+        <div className="py-16 px-4">
+          <div className="max-w-7xl mx-auto">
+            <div className="grid md:grid-cols-5 gap-12 mb-12">
+              {/* Column 1 - Soradin */}
+              <div>
+                <h4 className="mb-6 text-lg font-medium">Soradin</h4>
+                <ul className="space-y-3">
+                  <li>
+                    <Link href="/" className="text-white/60 hover:text-white transition-colors">
+                      Home
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/about" className="text-white/60 hover:text-white transition-colors">
+                      About us
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="mailto:support@soradin.com" className="text-white/60 hover:text-white transition-colors">
+                      Contact us
+                    </Link>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Column 2 - Discover */}
+              <div>
+                <h4 className="mb-6 text-lg font-medium">Discover</h4>
+                <ul className="space-y-3">
+                  <li>
+                    <Link href="/learn-more-about-starting" className="text-white/60 hover:text-white transition-colors">
+                      Resources for specialists
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/privacy" className="text-white/60 hover:text-white transition-colors">
+                      Data and privacy
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="#" className="text-white/60 hover:text-white transition-colors">
+                      Verified reviews
+                    </Link>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Column 3 - For Specialists */}
+              <div>
+                <h4 className="mb-6 text-lg font-medium">For Specialists</h4>
+                <ul className="space-y-3">
+                  <li>
+                    <Link href="/learn-more-about-starting" className="text-white/60 hover:text-white transition-colors">
+                      List your practice
+                    </Link>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Column 4 - Services */}
+              <div>
+                <h4 className="mb-6 text-lg font-medium">Services</h4>
+                <ul className="space-y-3">
+                  <li>
+                    <Link href="#" className="text-white/60 hover:text-white transition-colors">
+                      Funeral Planning
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="#" className="text-white/60 hover:text-white transition-colors">
+                      Estate Planning
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="#" className="text-white/60 hover:text-white transition-colors">
+                      Grief Counseling
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="#" className="text-white/60 hover:text-white transition-colors">
+                      Memorial Services
+                    </Link>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Column 5 - Are you a specialist */}
+              <div>
+                <h4 className="mb-6 text-lg font-medium">Are you a funeral specialist?</h4>
+                <ul className="space-y-3">
+                  <li>
+                    <Link href="/learn-more-about-starting" className="text-white/60 hover:text-white transition-colors">
+                      List your availability on Soradin
+                    </Link>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Bottom section */}
+            <div className="border-t border-white/10 pt-10">
+              <div className="flex flex-col md:flex-row justify-between items-center gap-6 mb-6">
+                <div className="flex items-center gap-3">
+                  <Image
+                    src="/logo - white.png"
+                    alt="Soradin Logo"
+                    width={40}
+                    height={40}
+                    className="h-10 w-10 object-contain"
+                  />
+                  <span className="text-2xl font-medium">Soradin</span>
+                </div>
+
+                <div className="flex gap-5">
+                  <Link
+                    href="#"
+                    className="text-white/50 hover:text-white transition-colors"
+                    aria-label="Instagram"
+                  >
+                    <Instagram className="w-5 h-5" />
+                  </Link>
+                  <Link
+                    href="https://www.facebook.com/profile.php?id=61583953961107"
+                    className="text-white/50 hover:text-white transition-colors"
+                    aria-label="Facebook"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Facebook className="w-5 h-5" />
+                  </Link>
+                </div>
+              </div>
+
+              <div className="text-sm text-white/40 text-center md:text-left">
+                <p>
+                  © {new Date().getFullYear()} Soradin, Inc.{" "}
+                  <Link href="/terms" className="hover:text-white/60 transition-colors underline">
+                    Terms
+                  </Link>
+                  {" · "}
+                  <Link href="/privacy" className="hover:text-white/60 transition-colors underline">
+                    Privacy
+                  </Link>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </footer>
 
     </div>
   );
