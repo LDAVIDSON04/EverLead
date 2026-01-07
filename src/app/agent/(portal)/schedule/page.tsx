@@ -1130,8 +1130,8 @@ export default function SchedulePage() {
                     <div className="w-12 md:w-20 flex-shrink-0 pr-1 md:pr-3 pt-1 md:pt-1.5 text-[10px] md:text-xs text-gray-500 text-right">
                       {hour === 12 ? '12 PM' : hour > 12 ? `${hour - 12} PM` : `${hour} AM`}
                     </div>
-                    <div className="flex-1 min-w-[50px] md:min-w-[100px] border-l border-gray-200 relative h-12 md:h-20"
-                      style={{ overflow: 'visible' }}
+                    <div className="flex-1 min-w-[50px] md:min-w-[100px] border-l border-gray-200 relative"
+                      style={{ height: isDesktop ? '70px' : '60px', overflow: 'visible' }}
                     >
                       {cellAppointments.length === 0 ? (
                         <div
