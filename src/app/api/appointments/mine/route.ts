@@ -119,10 +119,10 @@ export async function GET(req: NextRequest) {
     if (result.data && result.data.length > 0) {
       console.log(`📅 [APPOINTMENTS API] Sample appointment from DB:`, {
         id: result.data[0]?.id,
-        agent_id: result.data[0]?.agent_id,
         status: result.data[0]?.status,
         requested_date: result.data[0]?.requested_date,
-        confirmed_at: result.data[0]?.confirmed_at
+        confirmed_at: result.data[0]?.confirmed_at,
+        lead_id: result.data[0]?.lead_id
       });
     }
     
