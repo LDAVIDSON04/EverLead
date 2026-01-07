@@ -936,8 +936,21 @@ export default function SchedulePage() {
                     {weekDays.map((day, dayIndex) => {
                       // Find appointments that start in this hour for this day
                       const cellAppointments = weekAppointments.filter((apt: any) => {
-                        return apt.day === dayIndex && apt.hour === hour;
+                        const matches = apt.day === dayIndex && apt.hour === hour;
+                        if (matches) {
+                          console.log(`🎨 Rendering appointment at ${day} ${hour}:00 - ${apt.family_name}`, {
+                            dayIndex,
+                            hour,
+                            appointment: apt
+                          });
+                        }
+                        return matches;
                       });
+                      
+                      // Debug log for each cell
+                      if (cellAppointments.length > 0) {
+                        console.log(`📋 Cell (${day} ${hour}:00) has ${cellAppointments.length} appointment(s)`, cellAppointments);
+                      }
 
                       return (
                         <div
