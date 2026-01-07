@@ -160,6 +160,12 @@ export async function GET(req: NextRequest) {
           .order("requested_date", { ascending: true })
           .order("created_at", { ascending: true });
         
+        console.log(`📅 [APPOINTMENTS API] Retry query without notes column:`, {
+          dataCount: resultWithoutNotes.data?.length || 0,
+          hasError: !!resultWithoutNotes.error,
+          error: resultWithoutNotes.error
+        });
+        
         appointments = resultWithoutNotes.data;
         appointmentsError = resultWithoutNotes.error;
       } else {
