@@ -100,7 +100,31 @@ export async function GET(req: NextRequest) {
       .order("requested_date", { ascending: true })
       .order("created_at", { ascending: true });
     
-    console.log(`📅 [APPOINTMENTS API] Fetched ${result.data?.length || 0} appointments from database (before filtering)`);
+    console.log(`📅 [APPOINTMENTS API] Appointments table query result:`, {
+      dataCount: result.data?.length || 0,
+      hasError: !!result.error,
+      error: result.error ? {
+        message: result.error.message,
+        code: result.error.code,
+        details: result.error.details,
+        hint: result.error.hint
+      } : null,
+      userId,
+      queryFilters: {
+        agent_id: userId,
+        status_not: 'cancelled'
+      }
+    });
+    
+    if (result.data && result.data.length > 0) {
+      console.log(`📅 [APPOINTMENTS API] Sample appointment from DB:`, {
+        id: result.data[0]?.id,
+        agent_id: result.data[0]?.agent_id,
+        status: result.data[0]?.status,
+        requested_date: result.data[0]?.requested_date,
+        confirmed_at: result.data[0]?.confirmed_at
+      });
+    }
     
     if (result.error) {
       // Check if error is due to missing notes column
@@ -484,6 +508,16 @@ export async function GET(req: NextRequest) {
     // Map external events to the same format as appointments
     // These represent meetings booked by coworkers/front desk in external calendars
     // Filter to only include events from the current year
+    console.log(`📅 [APPOINTMENTS API] External events query result:`, {
+      dataCount: externalEvents?.length || 0,
+      events: externalEvents?.slice(0, 3).map((evt: any) => ({
+        id: evt.id,
+        starts_at: evt.starts_at,
+        status: evt.status,
+        is_soradin_created: evt.is_soradin_created
+      }))
+    });
+    
     const mappedExternalEvents = (externalEvents || [])
       .filter((evt: any) => {
         // Only include events from the current year
