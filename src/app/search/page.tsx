@@ -1288,7 +1288,7 @@ function SearchResults() {
 
       {/* Main Content */}
       {/* Main Content Area - Takes up space and pushes footer down */}
-      <main className="flex-1 max-w-[1200px] mx-auto px-4 py-6 w-full">
+      <main className="flex-1 min-h-[calc(100vh-200px)] max-w-[1200px] mx-auto px-4 py-6 w-full">
 
         {/* Desktop Results Header */}
         <div className="hidden md:flex items-center justify-between mb-6">
