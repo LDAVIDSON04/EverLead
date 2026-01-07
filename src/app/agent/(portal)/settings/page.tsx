@@ -2434,7 +2434,16 @@ function ProfileBioSection() {
       {generatedBio && (
         <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
           <h3 className="text-sm font-semibold text-gray-900 mb-2">Generated Bio Preview</h3>
-          <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{generatedBio}</p>
+          <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
+            {generatedBio
+              .replace(/^\*\*About the Specialist\*\*\s*/i, '')
+              .replace(/^About the Specialist\s*/i, '')
+              .replace(/^##\s*About the Specialist\s*/i, '')
+              .replace(/^#\s*About the Specialist\s*/i, '')
+              .replace(/^\*\*About\*\*\s*/i, '')
+              .replace(/^About\s*/i, '')
+              .trim()}
+          </p>
         </div>
       )}
 
