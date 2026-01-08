@@ -248,6 +248,12 @@ export async function POST(req: NextRequest) {
         province: address.province,
         postalCode: address.postalCode,
       };
+      console.log("🔍 [SIGNUP] Saving address to metadata:", {
+        address_from_form: address,
+        metadata_address: profileData.metadata.address,
+      });
+    } else {
+      console.log("⚠️ [SIGNUP] No address provided in signup data");
     }
 
     // Add notification cities
