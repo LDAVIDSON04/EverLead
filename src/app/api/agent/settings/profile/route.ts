@@ -211,6 +211,13 @@ export async function POST(request: NextRequest) {
         province: businessProvince || (existingMetadata as any)?.address?.province || '',
         postalCode: businessZip || (existingMetadata as any)?.address?.postalCode || '',
       };
+      console.log("🔍 [API POST] Saving address to metadata.address:", {
+        businessStreet,
+        businessCity,
+        businessProvince,
+        businessZip,
+        metadata_address: metadata.address,
+      });
     }
 
     if (Object.keys(metadata).length > 0) {
