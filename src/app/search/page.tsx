@@ -11,6 +11,7 @@ import { supabaseClient } from "@/lib/supabaseClient";
 import { BookingPanel } from "@/app/agent/[agentId]/components/BookingPanel";
 import { OfficeLocationMap } from "@/components/OfficeLocationMap";
 import { TrustHighlights } from "@/app/agent/[agentId]/components/TrustHighlights";
+import { DateTime } from 'luxon';
 
 type Appointment = {
   id: string;
@@ -510,11 +511,14 @@ function SearchResults() {
             const firstDayWithSlots = availabilityData.find(day => day.slots.length > 0) || availabilityData[0];
             setSelectedDayForModal(firstDayWithSlots.date);
             
-            // Format slots for the first day
+            // Format slots for the first day in the agent's timezone
             const formattedSlots = firstDayWithSlots.slots.map(slot => {
-              const startDate = new Date(slot.startsAt);
-              const hours = startDate.getHours();
-              const minutes = startDate.getMinutes();
+              const agentTimezone = firstDayWithSlots.timezone || 'America/Toronto';
+              const utcTime = DateTime.fromISO(slot.startsAt, { zone: 'utc' });
+              const agentLocalTime = utcTime.setZone(agentTimezone);
+              
+              const hours = agentLocalTime.hour;
+              const minutes = agentLocalTime.minute;
               const ampm = hours >= 12 ? 'PM' : 'AM';
               const displayHours = hours % 12 || 12;
               const timeStr = `${displayHours}:${String(minutes).padStart(2, '0')} ${ampm}`;
@@ -821,10 +825,14 @@ function SearchResults() {
     const selectedDay = allAvailabilityDays.find(day => day.date === date);
     if (selectedDay) {
       setSelectedDayForModal(date);
+      // Format time slots in the agent's timezone
       const formattedSlots = selectedDay.slots.map(slot => {
-        const startDate = new Date(slot.startsAt);
-        const hours = startDate.getHours();
-        const minutes = startDate.getMinutes();
+        const agentTimezone = selectedDay.timezone || 'America/Toronto';
+        const utcTime = DateTime.fromISO(slot.startsAt, { zone: 'utc' });
+        const agentLocalTime = utcTime.setZone(agentTimezone);
+        
+        const hours = agentLocalTime.hour;
+        const minutes = agentLocalTime.minute;
         const ampm = hours >= 12 ? 'PM' : 'AM';
         const displayHours = hours % 12 || 12;
         const timeStr = `${displayHours}:${String(minutes).padStart(2, '0')} ${ampm}`;
@@ -1991,10 +1999,15 @@ function SearchResults() {
                       }
                       
                       // Format time slots for this day
+                      // Format time slots for this day in the agent's timezone
                       const formattedSlots = day.slots.map(slot => {
-                        const startDate = new Date(slot.startsAt);
-                        const hours = startDate.getHours();
-                        const minutes = startDate.getMinutes();
+                        // Parse the UTC ISO string and convert to agent's timezone
+                        const agentTimezone = day.timezone || 'America/Toronto'; // Default fallback
+                        const utcTime = DateTime.fromISO(slot.startsAt, { zone: 'utc' });
+                        const agentLocalTime = utcTime.setZone(agentTimezone);
+                        
+                        const hours = agentLocalTime.hour;
+                        const minutes = agentLocalTime.minute;
                         const ampm = hours >= 12 ? 'PM' : 'AM';
                         const displayHours = hours % 12 || 12;
                         const timeStr = `${displayHours}:${String(minutes).padStart(2, '0')} ${ampm}`;
