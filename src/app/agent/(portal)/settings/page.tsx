@@ -187,16 +187,26 @@ export default function SettingsPage() {
         if (profile) {
           const metadata = profile.metadata || {};
           
-          // Debug logging for address
+          // Debug logging for address - log everything to see what's available
           console.log("🔍 [SETTINGS] Loading profile data:", {
             metadata_address: metadata.address,
+            metadata_full: metadata,
             profile_street_address: profile.street_address,
             profile_city: profile.city,
             profile_province: profile.province,
             profile_postal_code: profile.postal_code,
+            agent_city: profile.agent_city,
+            agent_province: profile.agent_province,
             metadata_business_street: metadata.business_street,
             metadata_business_city: metadata.business_city,
+            full_profile: profile, // Log entire profile to see all fields
           });
+          
+          // Try multiple fallback locations for address
+          const addressStreet = metadata.address?.street || profile.street_address || metadata.business_street || "";
+          const addressCity = metadata.address?.city || profile.city || profile.agent_city || metadata.business_city || "";
+          const addressProvince = metadata.address?.province || profile.province || profile.agent_province || metadata.business_province || "";
+          const addressZip = metadata.address?.postalCode || profile.postal_code || metadata.business_zip || "";
           
           setProfileData({
             fullName: profile.full_name || "",
@@ -208,19 +218,19 @@ export default function SettingsPage() {
             phone: profile.phone || "",
             regionsServed: metadata.regions_served || "",
             licenseNumber: metadata.license_number || "",
-            businessAddress: metadata.address?.street || profile.street_address || metadata.business_address || "",
-            businessStreet: metadata.address?.street || profile.street_address || metadata.business_street || "",
-            businessCity: metadata.address?.city || profile.city || metadata.business_city || "",
-            businessProvince: metadata.address?.province || profile.province || metadata.business_province || "",
-            businessZip: metadata.address?.postalCode || profile.postal_code || metadata.business_zip || "",
+            businessAddress: addressStreet,
+            businessStreet: addressStreet,
+            businessCity: addressCity,
+            businessProvince: addressProvince,
+            businessZip: addressZip,
             profilePictureUrl: profile.profile_picture_url || "",
           });
           
-          console.log("🔍 [SETTINGS] Set profile data:", {
-            businessStreet: metadata.address?.street || profile.street_address || metadata.business_street || "",
-            businessCity: metadata.address?.city || profile.city || metadata.business_city || "",
-            businessProvince: metadata.address?.province || profile.province || metadata.business_province || "",
-            businessZip: metadata.address?.postalCode || profile.postal_code || metadata.business_zip || "",
+          console.log("🔍 [SETTINGS] Set profile data (final values):", {
+            businessStreet: addressStreet,
+            businessCity: addressCity,
+            businessProvince: addressProvince,
+            businessZip: addressZip,
           });
 
         }
