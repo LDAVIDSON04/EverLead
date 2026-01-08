@@ -26,6 +26,7 @@ export default function AdminAppointmentsPage() {
   const [dateFilter, setDateFilter] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [paymentFilter, setPaymentFilter] = useState<string>("all");
+  const [appointmentsThisMonth, setAppointmentsThisMonth] = useState<number>(0);
 
   useEffect(() => {
     async function load() {
@@ -108,6 +109,18 @@ export default function AdminAppointmentsPage() {
         });
 
         setAppointments(rows);
+
+        // Calculate appointments this month
+        const now = new Date();
+        const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+        
+        const thisMonthCount = rows.filter((apt) => {
+          const aptDate = new Date(apt.starts_at);
+          return aptDate >= firstDayOfMonth && aptDate <= lastDayOfMonth;
+        }).length;
+        
+        setAppointmentsThisMonth(thisMonthCount);
       } catch (err: any) {
         console.error("Error loading admin appointments:", err);
         setError(err.message || "Failed to load appointments");
@@ -160,9 +173,15 @@ export default function AdminAppointmentsPage() {
 
   return (
     <div className="p-8">
-      <div className="mb-8">
-        <h1 className="text-3xl mb-2 text-black">Appointments</h1>
-        <p className="text-neutral-600">View and manage appointment disputes</p>
+      <div className="mb-8 flex justify-between items-start">
+        <div>
+          <h1 className="text-3xl mb-2 text-black">Appointments</h1>
+          <p className="text-neutral-600">View and manage appointment disputes</p>
+        </div>
+        <div className="bg-emerald-50 border border-emerald-200 rounded-lg px-6 py-4 min-w-[200px]">
+          <p className="text-sm text-emerald-700 font-medium mb-1">Appointments This Month</p>
+          <p className="text-3xl font-bold text-emerald-900">{appointmentsThisMonth}</p>
+        </div>
       </div>
 
       {error && (
