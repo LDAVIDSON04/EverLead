@@ -22,10 +22,10 @@ export async function POST(
       );
     }
 
-    // Fetch appointment with payment details
+    // Fetch appointment
     const { data: appointment, error: appointmentError } = await supabaseAdmin
       .from("appointments")
-      .select("id, agent_id, price_cents, stripe_payment_intent_id, status")
+      .select("id, agent_id, price_cents, status")
       .eq("id", appointmentId)
       .single();
 
@@ -45,12 +45,30 @@ export async function POST(
       );
     }
 
+    // Look up payment intent from payments table
+    let stripePaymentIntentId: string | null = null;
+    if (appointment.price_cents) {
+      const { data: payment, error: paymentError } = await supabaseAdmin
+        .from("payments")
+        .select("stripe_payment_intent_id")
+        .eq("appointment_id", appointmentId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (paymentError) {
+        console.error("Error fetching payment:", paymentError);
+      } else if (payment?.stripe_payment_intent_id) {
+        stripePaymentIntentId = payment.stripe_payment_intent_id;
+      }
+    }
+
     // Check if there's a payment to refund
-    if (appointment.stripe_payment_intent_id && appointment.price_cents) {
+    if (stripePaymentIntentId && appointment.price_cents) {
       try {
         // Create refund via Stripe
         const refund = await stripe.refunds.create({
-          payment_intent: appointment.stripe_payment_intent_id,
+          payment_intent: stripePaymentIntentId,
           amount: appointment.price_cents, // Refund in cents
           reason: "requested_by_customer",
           metadata: {
@@ -86,6 +104,9 @@ export async function POST(
           { status: 500 }
         );
       }
+    } else if (appointment.price_cents && !stripePaymentIntentId) {
+      // Appointment has a price but no payment intent found - still cancel but warn
+      console.warn("Appointment has price but no payment intent found:", appointmentId);
     }
 
     // Update appointment status to cancelled
@@ -107,8 +128,10 @@ export async function POST(
 
     return NextResponse.json({
       success: true,
-      message: "Appointment cancelled and refunded successfully",
-      refunded: !!appointment.stripe_payment_intent_id,
+      message: stripePaymentIntentId 
+        ? "Appointment cancelled and refunded successfully" 
+        : "Appointment cancelled successfully (no payment to refund)",
+      refunded: !!stripePaymentIntentId,
     });
   } catch (error: any) {
     console.error("Error in refund endpoint:", error);

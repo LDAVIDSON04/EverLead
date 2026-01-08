@@ -43,6 +43,8 @@ export default function AdminAppointmentsPage() {
       try {
         // Check if appointments table has new structure (family_id) or old structure (lead_id)
         // Old structure uses requested_date, new structure uses starts_at/ends_at
+        // Only fetch Soradin-created appointments (those with lead_id)
+        // This excludes appointments agents added themselves manually
         let query = supabaseClient
           .from("appointments")
           .select(
@@ -55,6 +57,7 @@ export default function AdminAppointmentsPage() {
               agent_id
             `
           )
+          .not("lead_id", "is", null) // Only appointments created through Soradin (have a lead_id)
           .order("requested_date", { ascending: false })
           .limit(100);
 
