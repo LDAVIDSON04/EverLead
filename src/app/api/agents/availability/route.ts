@@ -212,7 +212,7 @@ export async function GET(req: NextRequest) {
         );
         
         // If no normalized match, try fuzzy matching
-        if (!matchingLocation) {
+        if (!matchingLocation && selectedLocation) {
           matchingLocation = Object.keys(availabilityByLocation).find(
             loc => fuzzyCityMatch(loc, selectedLocation)
           );
