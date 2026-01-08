@@ -19,6 +19,7 @@ const querySchema = z.object({
 type AvailabilityDay = {
   date: string; // YYYY-MM-DD
   slots: { startsAt: string; endsAt: string }[]; // ISO timestamps in UTC
+  timezone?: string; // Agent's timezone (e.g., "America/Toronto")
 };
 
 export async function GET(req: NextRequest) {
@@ -681,7 +682,8 @@ export async function GET(req: NextRequest) {
         daysWithSlots: days.filter(d => d.slots.length > 0).length,
       });
 
-      return NextResponse.json(days);
+      // Include timezone in response for frontend display
+      return NextResponse.json(days.map(day => ({ ...day, timezone: agentTimezone })));
     }
 
     // Recurring mode: Use existing logic
@@ -851,7 +853,8 @@ export async function GET(req: NextRequest) {
     const daysWithSlots = days.filter(day => day.slots.length > 0).length;
     console.log(`📊 Availability API Summary: ${days.length} days processed, ${daysWithSlots} days with slots, ${totalSlots} total slots`);
 
-    return NextResponse.json(days);
+    // Include timezone in response for frontend display
+    return NextResponse.json(days.map(day => ({ ...day, timezone: agentTimezone })));
   } catch (error: any) {
     console.error("Error in /api/agents/availability:", error);
     return NextResponse.json(

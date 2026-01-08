@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, ChevronDown, Check, MapPin, X, Calendar, Clock } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabaseClient } from '@/lib/supabaseClient';
+import { DateTime } from 'luxon';
 import Image from 'next/image';
 
 interface DayAvailability {
@@ -26,6 +27,7 @@ interface OfficeLocation {
 
 interface AvailabilityDay {
   date: string;
+  timezone?: string; // Agent's timezone (e.g., "America/Toronto")
   slots: Array<{
     startsAt: string;
     endsAt: string;
@@ -905,11 +907,15 @@ export function BookingPanel({ agentId, initialLocation }: BookingPanelProps) {
                       const dayNum = date.getUTCDate();
                       const displayDate = `${dayName}, ${monthName} ${dayNum}`;
                       
-                      // Format time slots for this day
+                      // Format time slots for this day in the agent's timezone
                       const formattedSlots = day.slots.map(slot => {
-                        const startDate = new Date(slot.startsAt);
-                        const hours = startDate.getHours();
-                        const minutes = startDate.getMinutes();
+                        // Parse the UTC ISO string and convert to agent's timezone
+                        const agentTimezone = day.timezone || 'America/Toronto'; // Default fallback
+                        const utcTime = DateTime.fromISO(slot.startsAt, { zone: 'utc' });
+                        const agentLocalTime = utcTime.setZone(agentTimezone);
+                        
+                        const hours = agentLocalTime.hour;
+                        const minutes = agentLocalTime.minute;
                         const ampm = hours >= 12 ? 'PM' : 'AM';
                         const displayHours = hours % 12 || 12;
                         const timeStr = `${displayHours}:${String(minutes).padStart(2, '0')} ${ampm}`;
