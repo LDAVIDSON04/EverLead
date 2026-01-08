@@ -3,6 +3,100 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { createClient } from "@supabase/supabase-js";
 
+async function sendRequestInfoEmail(email: string, fullName: string | null, notes: string) {
+  const resendApiKey = process.env.RESEND_API_KEY;
+  if (!resendApiKey) {
+    console.log("📧 Request info email notification (not sent - no RESEND_API_KEY):", {
+      to: email,
+      notes,
+    });
+    return;
+  }
+
+  try {
+    const subject = "Additional Information Required for Your Soradin Agent Application";
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://soradin.com";
+    
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <img src="${siteUrl}/logo%20-%20white.png" alt="Soradin" style="height: 40px; width: auto; margin: 0 auto 10px; display: block;" />
+          <div style="display: none;">
+            <h1 style="color: #2a2a2a; font-size: 28px; margin: 0; font-weight: 300;">Soradin</h1>
+            <p style="color: #6b6b6b; font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; margin: 5px 0 0 0;">Pre-Planning</p>
+          </div>
+        </div>
+        <h2 style="color: #2a2a2a; margin-bottom: 20px;">Additional Information Required</h2>
+        <p>Hi ${fullName || "there"},</p>
+        <p>Thank you for your interest in becoming a Soradin agent. We've reviewed your application and need a bit more information to complete the approval process.</p>
+        
+        <div style="background-color: #fff7ed; border-left: 4px solid #f97316; padding: 16px; margin: 24px 0; border-radius: 4px;">
+          <p style="margin: 0 0 12px 0; font-weight: 600; color: #9a3412;">Information Needed:</p>
+          <p style="margin: 0; color: #7c2d12; white-space: pre-wrap;">${notes.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>
+        </div>
+        
+        <p style="margin-top: 24px;">Please log in to your agent portal and update your application with the requested information.</p>
+        
+        <p style="margin-top: 30px;">
+          <a href="${siteUrl}/agent" style="background-color: #2a2a2a; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: 500;">
+            Update My Application
+          </a>
+        </p>
+        
+        <p style="margin-top: 30px; color: #6b6b6b; font-size: 14px;">
+          If you have any questions or need assistance, please contact our support team.
+        </p>
+        <hr style="border: none; border-top: 1px solid #e5e5e5; margin: 30px 0;" />
+        <p style="color: #6b6b6b; font-size: 12px; margin: 0;">
+          © ${new Date().getFullYear()} Soradin. All rights reserved.
+        </p>
+      </div>
+    `;
+
+    // Ensure email is branded as Soradin
+    let fromEmail = process.env.RESEND_FROM_EMAIL || "Soradin <notifications@soradin.com>";
+    
+    // If RESEND_FROM_EMAIL doesn't have the Soradin name, wrap it
+    if (fromEmail && !fromEmail.includes('<')) {
+      const emailMatch = fromEmail.match(/^(.+@(.+))$/);
+      if (emailMatch) {
+        fromEmail = `Soradin <${fromEmail}>`;
+      } else {
+        fromEmail = "Soradin <notifications@soradin.com>";
+      }
+    } else if (fromEmail && fromEmail.includes('<')) {
+      const emailMatch = fromEmail.match(/<(.+@.+?)>/);
+      if (emailMatch) {
+        fromEmail = `Soradin <${emailMatch[1]}>`;
+      }
+    }
+
+    const resendResponse = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${resendApiKey}`,
+      },
+      body: JSON.stringify({
+        from: fromEmail,
+        to: [email],
+        subject,
+        html,
+      }),
+    });
+
+    if (!resendResponse.ok) {
+      const errorText = await resendResponse.text();
+      throw new Error(`Resend API error: ${resendResponse.status} - ${errorText}`);
+    }
+    
+    console.log(`✅ Request info email sent successfully to ${email}`);
+  } catch (error) {
+    console.error("Error sending request info email:", error);
+    // Don't throw - email failure shouldn't block the action
+  }
+}
+
 async function sendApprovalEmail(email: string, fullName: string | null, approved: boolean, notes?: string) {
   const resendApiKey = process.env.RESEND_API_KEY;
   if (!resendApiKey) {
@@ -233,8 +327,16 @@ export async function POST(req: NextRequest) {
         notes
       );
     } else if (agentEmail && action === "request-info") {
-      // TODO: Send "request more info" email notification
-      console.log(`Request more info email should be sent to ${agentEmail} with notes: ${notes}`);
+      // Send "request more info" email notification
+      if (notes) {
+        await sendRequestInfoEmail(
+          agentEmail,
+          agentProfile.full_name,
+          notes
+        );
+      } else {
+        console.warn(`Request info action without notes - email not sent to ${agentEmail}`);
+      }
     } else {
       console.warn(`Skipping email notification for agent ${agentId} - no email found`);
     }
