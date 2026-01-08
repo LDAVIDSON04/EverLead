@@ -47,6 +47,13 @@ export async function GET(request: NextRequest) {
       (profile as any).email = email;
       // Add address details from metadata
       const addressMetadata = (profile.metadata as any)?.address;
+      
+      console.log("🔍 [API GET] Loading profile for settings:", {
+        has_metadata: !!profile.metadata,
+        metadata_address: addressMetadata,
+        full_metadata: profile.metadata,
+      });
+      
       if (addressMetadata) {
         (profile as any).street_address = addressMetadata.street;
         (profile as any).city = addressMetadata.city;
