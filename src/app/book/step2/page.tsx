@@ -164,16 +164,7 @@ function BookingStep2Content() {
       }
     }
     
-    // Use luxon to properly convert UTC to agent's local timezone
-    const utcDate = DateTime.fromISO(isoString, { zone: "utc" });
-    const localDate = utcDate.setZone(timezone);
-    
-    // Format in 12-hour format
-    const hours = localDate.hour;
-    const minutes = localDate.minute;
-    const ampm = hours >= 12 ? "PM" : "AM";
-    const displayHours = hours % 12 || 12;
-    return `${displayHours}:${String(minutes).padStart(2, "0")} ${ampm}`;
+    return formatTimeWithTimezone(isoString, timezone);
   };
 
   const handleInputChange = (field: string, value: string) => {
