@@ -175,6 +175,15 @@ export async function POST(request: NextRequest) {
       updateData.profile_picture_url = profilePictureUrl;
     }
 
+    // Get existing metadata first (needed for address merging)
+    const { data: existingProfile } = await supabaseAdmin
+      .from("profiles")
+      .select("metadata")
+      .eq("id", user.id)
+      .maybeSingle();
+    
+    const existingMetadata = existingProfile?.metadata || {};
+
     // Store additional fields in metadata JSONB or as separate fields
     // We'll use a metadata field to store these extra settings
     const metadata: any = {};
@@ -190,23 +199,14 @@ export async function POST(request: NextRequest) {
     // Also save home address to metadata.address (matches signup structure)
     if (businessStreet !== undefined || businessCity !== undefined || businessProvince !== undefined || businessZip !== undefined) {
       metadata.address = {
-        street: businessStreet || (existingProfile?.metadata as any)?.address?.street || '',
-        city: businessCity || (existingProfile?.metadata as any)?.address?.city || '',
-        province: businessProvince || (existingProfile?.metadata as any)?.address?.province || '',
-        postalCode: businessZip || (existingProfile?.metadata as any)?.address?.postalCode || '',
+        street: businessStreet || (existingMetadata as any)?.address?.street || '',
+        city: businessCity || (existingMetadata as any)?.address?.city || '',
+        province: businessProvince || (existingMetadata as any)?.address?.province || '',
+        postalCode: businessZip || (existingMetadata as any)?.address?.postalCode || '',
       };
     }
 
     if (Object.keys(metadata).length > 0) {
-      // Get existing metadata first
-      const { data: existingProfile } = await supabaseAdmin
-        .from("profiles")
-        .select("metadata")
-        .eq("id", user.id)
-        .maybeSingle();
-
-      const existingMetadata = existingProfile?.metadata || {};
-      
       // Merge metadata, preserving existing address if new address fields aren't provided
       updateData.metadata = {
         ...existingMetadata,
