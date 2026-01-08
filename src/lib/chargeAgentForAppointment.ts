@@ -20,10 +20,10 @@ export async function chargeAgentForAppointment(
       appointmentId,
     });
 
-    // Get agent's profile to find Stripe customer ID
+    // Get agent's profile to find Stripe customer ID and email
     const { data: profile, error: profileError } = await supabaseAdmin
       .from("profiles")
-      .select("metadata")
+      .select("metadata, email")
       .eq("id", agentId)
       .maybeSingle();
 
@@ -33,29 +33,33 @@ export async function chargeAgentForAppointment(
     }
 
     let stripeCustomerId = (profile.metadata as any)?.stripe_customer_id;
+    let agentEmail: string | null = profile.email || null;
+    
     console.log("🔍 [chargeAgentForAppointment] Stripe customer ID:", stripeCustomerId ? "Found" : "NOT FOUND", {
       agentId,
       hasMetadata: !!profile.metadata,
       stripeCustomerId: stripeCustomerId || "MISSING",
+      hasEmail: !!agentEmail,
     });
 
     // If no customer ID in metadata, try to find or create one by email
     if (!stripeCustomerId) {
       console.log("⚠️ [chargeAgentForAppointment] No customer ID in metadata, attempting to find by email...");
       
-      // Get agent's email
-      let agentEmail: string | null = null;
-      try {
-        const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(agentId);
-        agentEmail = authUser?.user?.email || null;
-      } catch (authError) {
-        console.error("❌ [chargeAgentForAppointment] Error fetching agent email:", authError);
-        return { success: false, error: "Failed to fetch agent email" };
-      }
-
+      // Get agent's email if not already fetched
       if (!agentEmail) {
-        console.error("❌ [chargeAgentForAppointment] Agent email not found");
-        return { success: false, error: "Agent email not found" };
+        try {
+          const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(agentId);
+          agentEmail = authUser?.user?.email || null;
+        } catch (authError) {
+          console.error("❌ [chargeAgentForAppointment] Error fetching agent email:", authError);
+          return { success: false, error: "Failed to fetch agent email" };
+        }
+
+        if (!agentEmail) {
+          console.error("❌ [chargeAgentForAppointment] Agent email not found");
+          return { success: false, error: "Agent email not found" };
+        }
       }
 
       // Try to find existing Stripe customer by email
@@ -121,6 +125,7 @@ export async function chargeAgentForAppointment(
       off_session: true, // Charge without requiring customer interaction (for saved cards)
       confirm: true,
       description: `Appointment booking fee - Appointment ${appointmentId}`,
+      receipt_email: agentEmail || undefined, // Enable Stripe to send receipt email automatically
       metadata: {
         agent_id: agentId,
         appointment_id: appointmentId,
