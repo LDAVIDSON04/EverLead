@@ -471,30 +471,12 @@ export async function GET(req: NextRequest) {
     });
 
     // Filter out any null entries from failed date conversions
-    // Filter to only include appointments from the current year (to exclude previous years)
-    // This allows viewing past weeks/months in the current year while excluding old data
-    const currentYear = new Date().getFullYear();
-    const currentYearStart = new Date(currentYear, 0, 1); // Jan 1 of current year
-    
+    // IMPORTANT: Do NOT filter by year - past appointments should remain visible when navigating to previous weeks/months
+    // The schedule page will filter appointments by the viewed date range, so we don't need to limit here
     const validAppointments = mappedAppointments
-      .filter((apt): apt is NonNullable<typeof apt> => apt !== null)
-      .filter((apt) => {
-        // Only include appointments from the current year (exclude previous years, but keep ALL appointments from current year including past ones)
-        const aptDate = new Date(apt.starts_at);
-        const isInCurrentYear = aptDate >= currentYearStart;
-        if (!isInCurrentYear) {
-          console.log(`⏭️ Skipping appointment from previous year:`, {
-            id: apt.id,
-            family_name: apt.family_name,
-            starts_at: apt.starts_at,
-            year: aptDate.getFullYear(),
-            currentYear
-          });
-        }
-        return isInCurrentYear;
-      });
+      .filter((apt): apt is NonNullable<typeof apt> => apt !== null);
     
-    console.log(`📅 [APPOINTMENTS API] After filtering: ${validAppointments.length} appointments from current year (${mappedAppointments.filter(a => a !== null).length - validAppointments.length} filtered out as previous year)`);
+    console.log(`📅 [APPOINTMENTS API] Returning ${validAppointments.length} appointments (all past and future appointments included)`);
     
     // Log appointments for debugging - show all appointments with their dates
     console.log(`📅 [APPOINTMENTS API] Returning ${validAppointments.length} appointments:`, 
@@ -513,7 +495,7 @@ export async function GET(req: NextRequest) {
 
     // Map external events to the same format as appointments
     // These represent meetings booked by coworkers/front desk in external calendars
-    // Filter to only include events from the current year
+    // IMPORTANT: Do NOT filter by year - past external events should remain visible when navigating to previous weeks/months
     console.log(`📅 [APPOINTMENTS API] External events query result:`, {
       dataCount: externalEvents?.length || 0,
       events: externalEvents?.slice(0, 3).map((evt: any) => ({
@@ -546,25 +528,13 @@ export async function GET(req: NextRequest) {
           return false;
         }
         
-        // Only include events from the current year (filter out previous years)
+        // Require starts_at but don't filter by year - past events should remain visible
         if (!evt.starts_at) {
           console.log(`⚠️ External event missing starts_at:`, evt.id);
           return false;
         }
         
-        const evtDate = new Date(evt.starts_at);
-        const isInCurrentYear = evtDate >= currentYearStart;
-        
-        if (!isInCurrentYear) {
-          console.log(`⏭️ Skipping external event from previous year:`, {
-            id: evt.id,
-            starts_at: evt.starts_at,
-            year: evtDate.getFullYear(),
-            currentYear
-          });
-        }
-        
-        return isInCurrentYear;
+        return true;
       })
       .map((evt: any) => {
       const providerName = evt.provider === "google" ? "Google Calendar" : 
@@ -596,7 +566,7 @@ export async function GET(req: NextRequest) {
     })
     .filter((evt): evt is NonNullable<typeof evt> => evt !== null); // Remove any null entries from invalid events
 
-    console.log(`📅 [APPOINTMENTS API] After filtering external events: ${mappedExternalEvents.length} events from current year (${(externalEvents || []).length - mappedExternalEvents.length} filtered out as previous year or invalid)`);
+    console.log(`📅 [APPOINTMENTS API] Returning ${mappedExternalEvents.length} external events (all past and future events included)`);
 
     // Combine appointments and external events, sort by start time
     const allEvents = [...validAppointments, ...mappedExternalEvents].sort((a, b) => {
