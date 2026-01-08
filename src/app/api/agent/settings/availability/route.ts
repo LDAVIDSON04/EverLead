@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { supabaseServer } from "@/lib/supabaseServer";
+import { normalizeCityName } from "@/lib/cityNormalization";
 
 export async function GET(request: NextRequest) {
   try {
@@ -34,11 +35,11 @@ export async function GET(request: NextRequest) {
       .eq("agent_id", user.id)
       .order("display_order", { ascending: true });
 
-    // Extract unique cities from office locations
+    // Extract unique cities from office locations and normalize them
     const citiesFromOfficeLocations: string[] = Array.from(
       new Set(
         (officeLocations || [])
-          .map((loc: any) => loc.city)
+          .map((loc: any) => normalizeCityName(loc.city))
           .filter((city: any) => city && typeof city === 'string')
       )
     ) as string[];
@@ -111,14 +112,14 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { locations, availabilityByLocation, appointmentLength, availabilityTypeByLocation } = body;
 
-    // Get cities from office locations
+    // Get cities from office locations and normalize them
     const { data: officeLocations } = await supabaseAdmin
       .from("office_locations")
       .select("city")
       .eq("agent_id", user.id);
 
     const officeLocationCities: string[] = Array.from(
-      new Set((officeLocations || []).map((loc: any) => loc.city).filter(Boolean))
+      new Set((officeLocations || []).map((loc: any) => normalizeCityName(loc.city)).filter(Boolean))
     );
 
     // Normalize location names for comparison (remove province, "Office" suffix, lowercase)
@@ -169,11 +170,21 @@ export async function POST(request: NextRequest) {
     const validLocations = Array.from(allCitiesSet);
 
     // Include ALL availability data (filter by valid locations for safety)
+    // Also normalize all city keys in availabilityByLocation
     const filteredAvailabilityByLocation: Record<string, any> = {};
-    const validLocationsSet = new Set(validLocations);
-    Object.keys(availabilityByLocation || {}).forEach((city) => {
-      if (validLocationsSet.has(city)) {
-        filteredAvailabilityByLocation[city] = availabilityByLocation[city];
+    const validLocationsSet = new Set(validLocations.map(c => normalizeCityName(c)));
+    
+    // Normalize all keys in availabilityByLocation and map to correct city names
+    Object.keys(availabilityByLocation || {}).forEach((cityKey) => {
+      const normalizedKey = normalizeCityName(cityKey);
+      // Check if normalized key matches any valid location (case-insensitive)
+      const matchingLocation = validLocations.find(loc => 
+        normalizeCityName(loc).toLowerCase() === normalizedKey.toLowerCase()
+      );
+      
+      if (matchingLocation) {
+        // Use the correctly spelled location from validLocations
+        filteredAvailabilityByLocation[matchingLocation] = availabilityByLocation[cityKey];
       }
     });
 

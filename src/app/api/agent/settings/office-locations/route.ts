@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { geocodeLocation } from "@/lib/geocoding";
+import { normalizeCityName } from "@/lib/cityNormalization";
 
 // GET: Fetch all office locations for the current agent
 export async function GET(request: NextRequest) {
@@ -51,11 +52,14 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, street_address, city, province, postal_code } = body;
+    let { name, street_address, city, province, postal_code } = body;
 
     if (!city || !province) {
       return NextResponse.json({ error: "City and province are required" }, { status: 400 });
     }
+
+    // Normalize city name to correct spelling (e.g., "Vaughn" -> "Vaughan")
+    city = normalizeCityName(city);
 
     // Geocode the address to get coordinates (use full address for accuracy)
     let latitude: number | null = null;
@@ -127,10 +131,15 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { id, name, street_address, city, province, postal_code, display_order } = body;
+    let { id, name, street_address, city, province, postal_code, display_order } = body;
 
     if (!id) {
       return NextResponse.json({ error: "Location ID is required" }, { status: 400 });
+    }
+
+    // Normalize city name to correct spelling if city is being updated
+    if (city !== undefined && city !== null) {
+      city = normalizeCityName(city);
     }
 
     // Verify the location belongs to this agent
