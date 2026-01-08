@@ -94,13 +94,17 @@ export async function GET(req: NextRequest) {
     }
 
     // Normalize location by removing province suffix and "Office" suffix
-    // e.g., "Kelowna, BC" -> "Kelowna", "Kelowna Office" -> "Kelowna"
+    // e.g., "Kelowna, BC" -> "Kelowna", "Kelowna Office" -> "Kelowna", "Vaughn On" -> "Vaughn"
     const normalizeLocation = (loc: string | undefined): string | undefined => {
       if (!loc) return undefined;
       // Remove common province suffixes like ", BC", ", AB", etc.
       let normalized = loc.split(',').map(s => s.trim())[0];
       // Remove " Office" suffix if present (case-insensitive)
       normalized = normalized.replace(/\s+office$/i, '').trim();
+      // Remove province abbreviations at the end without comma (e.g., "Vaughn On" -> "Vaughn")
+      // Common province abbreviations: On, BC, AB, SK, MB, QC, NB, NS, PE, NL, YT, NT, NU
+      const provinceAbbrevs = /\s+(On|BC|AB|SK|MB|QC|NB|NS|PE|NL|YT|NT|NU)$/i;
+      normalized = normalized.replace(provinceAbbrevs, '').trim();
       return normalized;
     };
     
