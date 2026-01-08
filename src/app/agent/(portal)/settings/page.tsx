@@ -186,6 +186,18 @@ export default function SettingsPage() {
 
         if (profile) {
           const metadata = profile.metadata || {};
+          
+          // Debug logging for address
+          console.log("🔍 [SETTINGS] Loading profile data:", {
+            metadata_address: metadata.address,
+            profile_street_address: profile.street_address,
+            profile_city: profile.city,
+            profile_province: profile.province,
+            profile_postal_code: profile.postal_code,
+            metadata_business_street: metadata.business_street,
+            metadata_business_city: metadata.business_city,
+          });
+          
           setProfileData({
             fullName: profile.full_name || "",
             firstName: profile.first_name || profile.full_name?.split(" ")[0] || "",
@@ -202,6 +214,13 @@ export default function SettingsPage() {
             businessProvince: metadata.address?.province || profile.province || metadata.business_province || "",
             businessZip: metadata.address?.postalCode || profile.postal_code || metadata.business_zip || "",
             profilePictureUrl: profile.profile_picture_url || "",
+          });
+          
+          console.log("🔍 [SETTINGS] Set profile data:", {
+            businessStreet: metadata.address?.street || profile.street_address || metadata.business_street || "",
+            businessCity: metadata.address?.city || profile.city || metadata.business_city || "",
+            businessProvince: metadata.address?.province || profile.province || metadata.business_province || "",
+            businessZip: metadata.address?.postalCode || profile.postal_code || metadata.business_zip || "",
           });
 
         }
