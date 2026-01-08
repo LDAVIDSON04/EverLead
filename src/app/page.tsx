@@ -630,7 +630,7 @@ export default function HomePage() {
             {/* Left side - Image */}
             <div className="relative w-full">
               <Image
-                src="/specialist-image.png"
+                src="/specialist-image.jpg"
                 alt="Professional funeral specialist"
                 width={900}
                 height={700}
