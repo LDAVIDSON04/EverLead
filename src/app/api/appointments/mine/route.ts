@@ -250,6 +250,20 @@ export async function GET(req: NextRequest) {
       
       externalEvents = result.data;
       externalEventsError = result.error;
+      
+      // Log ALL external events with dates to help debug
+      if (externalEvents && externalEvents.length > 0) {
+        console.log(`📅 [APPOINTMENTS API] All ${externalEvents.length} external events:`, 
+          externalEvents.map((evt: any) => ({
+            id: evt.id,
+            starts_at: evt.starts_at,
+            date: evt.starts_at ? new Date(evt.starts_at).toISOString().split('T')[0] : 'N/A',
+            title: evt.title || 'N/A',
+            status: evt.status,
+            is_soradin_created: evt.is_soradin_created
+          }))
+        );
+      }
     } catch (err: any) {
       // If title or location column doesn't exist, try without them
       if (err?.code === '42703' || err?.message?.includes('does not exist')) {
@@ -560,6 +574,32 @@ export async function GET(req: NextRequest) {
         is_soradin_created: evt.is_soradin_created
       }))
     });
+    
+    // Check if there are any external events for Jan 5-6, 2026
+    if (externalEvents && externalEvents.length > 0) {
+      const jan5ExternalEvents = externalEvents.filter((evt: any) => {
+        if (!evt.starts_at) return false;
+        const evtDate = new Date(evt.starts_at).toISOString().split('T')[0];
+        return evtDate === '2026-01-05' || evtDate === '2026-01-06';
+      });
+      
+      if (jan5ExternalEvents.length > 0) {
+        console.log(`📅 [APPOINTMENTS API] Found ${jan5ExternalEvents.length} external events for Jan 5-6:`, jan5ExternalEvents);
+      } else {
+        console.log(`📅 [APPOINTMENTS API] No external events found for Jan 5-6, 2026`);
+      }
+      
+      // Log ALL external events with their dates
+      console.log(`📅 [APPOINTMENTS API] All external events dates:`, 
+        externalEvents.map((evt: any) => ({
+          id: evt.id,
+          starts_at: evt.starts_at,
+          date: evt.starts_at ? new Date(evt.starts_at).toISOString().split('T')[0] : 'N/A',
+          status: evt.status,
+          is_soradin_created: evt.is_soradin_created
+        }))
+      );
+    }
     
     // Create a set of appointment IDs that exist in the appointments table
     // This prevents external events linked to Soradin appointments from showing as external
