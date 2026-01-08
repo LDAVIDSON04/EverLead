@@ -457,11 +457,16 @@ export async function GET(req: NextRequest) {
       
       // If we have confirmed_at, use it directly (this is the exact booking time)
       if (apt.confirmed_at) {
-        const confirmedDate = new Date(apt.confirmed_at);
-        const confirmedEnd = new Date(confirmedDate.getTime() + appointmentLengthMs);
+        // Use DateTime to properly parse the UTC ISO string
+        const confirmedDate = DateTime.fromISO(apt.confirmed_at, { zone: 'utc' });
+        if (!confirmedDate.isValid) {
+          console.error(`Invalid confirmed_at for appointment ${apt.id}:`, apt.confirmed_at);
+          return null;
+        }
+        const confirmedEnd = confirmedDate.plus({ minutes: appointmentLengthMinutes });
         
-        startsAt = confirmedDate.toISOString();
-        endsAt = confirmedEnd.toISOString();
+        startsAt = confirmedDate.toISO();
+        endsAt = confirmedEnd.toISO();
         
         // Debug log for agent-created events with duration
         if (lead?.email?.includes('@soradin.internal')) {
