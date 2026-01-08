@@ -22,15 +22,50 @@ export async function POST(
       );
     }
 
-    // Fetch appointment
-    const { data: appointment, error: appointmentError } = await supabaseAdmin
-      .from("appointments")
-      .select("id, agent_id, price_cents, status")
-      .eq("id", appointmentId)
-      .single();
+    // Fetch appointment - try to get stripe_payment_intent_id if column exists
+    let appointment: any;
+    let stripePaymentIntentId: string | null = null;
 
-    if (appointmentError || !appointment) {
-      console.error("Error fetching appointment:", appointmentError);
+    // First, try to fetch with stripe_payment_intent_id column
+    const appointmentResult = await supabaseAdmin
+      .from("appointments")
+      .select("id, agent_id, price_cents, status, stripe_payment_intent_id")
+      .eq("id", appointmentId)
+      .maybeSingle();
+
+    if (appointmentResult.error) {
+      // If error due to missing column, try without it
+      if (appointmentResult.error.code === '42703' && appointmentResult.error.message?.includes('stripe_payment_intent_id')) {
+        console.log("stripe_payment_intent_id column doesn't exist, checking payments table");
+        const resultWithoutColumn = await supabaseAdmin
+          .from("appointments")
+          .select("id, agent_id, price_cents, status")
+          .eq("id", appointmentId)
+          .maybeSingle();
+        
+        if (resultWithoutColumn.error || !resultWithoutColumn.data) {
+          console.error("Error fetching appointment:", resultWithoutColumn.error);
+          return NextResponse.json(
+            { error: "Appointment not found" },
+            { status: 404 }
+          );
+        }
+        appointment = resultWithoutColumn.data;
+      } else {
+        console.error("Error fetching appointment:", appointmentResult.error);
+        return NextResponse.json(
+          { error: "Appointment not found" },
+          { status: 404 }
+        );
+      }
+    } else {
+      appointment = appointmentResult.data;
+      if (appointment?.stripe_payment_intent_id) {
+        stripePaymentIntentId = appointment.stripe_payment_intent_id;
+      }
+    }
+
+    if (!appointment) {
       return NextResponse.json(
         { error: "Appointment not found" },
         { status: 404 }
@@ -45,9 +80,8 @@ export async function POST(
       );
     }
 
-    // Look up payment intent from payments table
-    let stripePaymentIntentId: string | null = null;
-    if (appointment.price_cents) {
+    // If payment intent not found in appointments table, check payments table
+    if (!stripePaymentIntentId && appointment.price_cents) {
       const { data: payment, error: paymentError } = await supabaseAdmin
         .from("payments")
         .select("stripe_payment_intent_id")
@@ -57,9 +91,10 @@ export async function POST(
         .maybeSingle();
 
       if (paymentError) {
-        console.error("Error fetching payment:", paymentError);
+        console.error("Error fetching payment from payments table:", paymentError);
       } else if (payment?.stripe_payment_intent_id) {
         stripePaymentIntentId = payment.stripe_payment_intent_id;
+        console.log("Found payment intent in payments table:", stripePaymentIntentId);
       }
     }
 
