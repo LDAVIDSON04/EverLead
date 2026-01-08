@@ -35,6 +35,8 @@ export default function AdminAppointmentsPage() {
   const [viewModalData, setViewModalData] = useState<any>(null);
   const [viewModalLoading, setViewModalLoading] = useState(false);
   const [refunding, setRefunding] = useState<string | null>(null);
+  const [showRefundConfirm, setShowRefundConfirm] = useState(false);
+  const [appointmentToRefund, setAppointmentToRefund] = useState<AdminAppointment | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -202,16 +204,20 @@ export default function AdminAppointmentsPage() {
     }
   };
 
-  const handleRefund = async (appointment: AdminAppointment) => {
-    if (!confirm(`Are you sure you want to cancel and refund this appointment?\n\nClient: ${appointment.family_name || "Unknown"}\nAgent: ${appointment.specialist_name || "Unknown"}\nAmount: ${appointment.amount_cents ? `$${((appointment.amount_cents) / 100).toFixed(2)}` : "$0.00"}`)) {
-      return;
-    }
+  const handleRefundClick = (appointment: AdminAppointment) => {
+    setAppointmentToRefund(appointment);
+    setShowRefundConfirm(true);
+  };
 
-    setRefunding(appointment.id);
+  const handleRefundConfirm = async () => {
+    if (!appointmentToRefund) return;
+
+    setShowRefundConfirm(false);
+    setRefunding(appointmentToRefund.id);
     setError(null);
 
     try {
-      const response = await fetch(`/api/admin/appointments/${appointment.id}/refund`, {
+      const response = await fetch(`/api/admin/appointments/${appointmentToRefund.id}/refund`, {
         method: "POST",
       });
 
@@ -226,6 +232,7 @@ export default function AdminAppointmentsPage() {
     } catch (error: any) {
       console.error("Error refunding appointment:", error);
       setError(error.message || "Failed to refund appointment");
+      setAppointmentToRefund(null);
     } finally {
       setRefunding(null);
     }
@@ -379,7 +386,7 @@ export default function AdminAppointmentsPage() {
                           View
                         </button>
                         <button
-                          onClick={() => handleRefund(apt)}
+                          onClick={() => handleRefundClick(apt)}
                           disabled={refunding === apt.id || apt.status === "cancelled"}
                           className="px-3 py-1.5 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:bg-neutral-400 disabled:cursor-not-allowed text-sm flex items-center gap-1"
                         >
@@ -552,13 +559,62 @@ export default function AdminAppointmentsPage() {
                 <button
                   onClick={() => {
                     setShowViewModal(false);
-                    handleRefund(selectedAppointment);
+                    handleRefundClick(selectedAppointment);
                   }}
                   className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
                 >
                   Cancel & Refund
                 </button>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Refund Confirmation Modal */}
+      {showRefundConfirm && appointmentToRefund && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full shadow-xl">
+            <div className="px-6 py-4 border-b border-neutral-200">
+              <h2 className="text-xl font-semibold text-black">Confirm Refund</h2>
+            </div>
+            <div className="px-6 py-4">
+              <p className="text-neutral-700 mb-4">
+                Are you sure you want to cancel and refund this appointment?
+              </p>
+              <div className="bg-neutral-50 rounded-lg p-4 space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-neutral-600">Client:</span>
+                  <span className="text-black font-medium">{appointmentToRefund.family_name || "Unknown"}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-neutral-600">Agent:</span>
+                  <span className="text-black font-medium">{appointmentToRefund.specialist_name || "Unknown"}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-neutral-600">Amount:</span>
+                  <span className="text-black font-medium">
+                    {appointmentToRefund.amount_cents ? `$${((appointmentToRefund.amount_cents) / 100).toFixed(2)}` : "$0.00"}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div className="px-6 py-4 border-t border-neutral-200 flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setShowRefundConfirm(false);
+                  setAppointmentToRefund(null);
+                }}
+                className="px-4 py-2 border border-neutral-300 text-neutral-700 rounded-md hover:bg-neutral-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleRefundConfirm}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+              >
+                Confirm Refund
+              </button>
             </div>
           </div>
         </div>

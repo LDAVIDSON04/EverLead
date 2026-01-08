@@ -85,21 +85,24 @@ export async function POST(
         });
       } catch (stripeError: any) {
         console.error("Error creating refund:", stripeError);
-        // If refund fails, still cancel the appointment but note the error
+        // If refund fails, still cancel the appointment
         // This allows admin to handle refund manually if needed
-        await supabaseAdmin
+        const { error: cancelError } = await supabaseAdmin
           .from("appointments")
           .update({
             status: "cancelled",
-            notes: `Cancelled by admin. Refund failed: ${stripeError.message}. Manual refund may be required.`,
           })
           .eq("id", appointmentId);
+
+        if (cancelError) {
+          console.error("Error cancelling appointment after refund failure:", cancelError);
+        }
 
         return NextResponse.json(
           {
             error: "Failed to process refund",
             details: stripeError.message,
-            appointmentCancelled: true,
+            appointmentCancelled: !cancelError,
           },
           { status: 500 }
         );
@@ -109,12 +112,11 @@ export async function POST(
       console.warn("Appointment has price but no payment intent found:", appointmentId);
     }
 
-    // Update appointment status to cancelled
+    // Update appointment status to cancelled (no notes column in appointments table)
     const { error: updateError } = await supabaseAdmin
       .from("appointments")
       .update({
         status: "cancelled",
-        notes: `Cancelled and refunded by admin on ${new Date().toISOString()}.`,
       })
       .eq("id", appointmentId);
 
