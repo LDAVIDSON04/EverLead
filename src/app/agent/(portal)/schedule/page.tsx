@@ -276,7 +276,7 @@ export default function SchedulePage() {
         const [profileResult, specialistRes, appointmentsData] = await Promise.all([
           supabaseClient
             .from("profiles")
-            .select("full_name, metadata")
+            .select("full_name, metadata, agent_province")
             .eq("id", user.id)
             .maybeSingle(),
           fetch("/api/specialists/me", {
@@ -290,11 +290,43 @@ export default function SchedulePage() {
           setUserName(profileData.full_name);
         }
 
+        // Get timezone from metadata, or infer from agent_province, or use default
+        let timezoneToUse = "America/Vancouver"; // Default fallback
         if (profileData?.metadata?.timezone) {
-          setAgentTimezone(profileData.metadata.timezone);
+          timezoneToUse = profileData.metadata.timezone;
         } else if (profileData?.metadata?.availability?.timezone) {
-          setAgentTimezone(profileData.metadata.availability.timezone);
+          timezoneToUse = profileData.metadata.availability.timezone;
+        } else if (profileData?.agent_province) {
+          // Infer timezone from province (same logic as API)
+          const province = profileData.agent_province.toUpperCase();
+          if (province === "BC" || province === "BRITISH COLUMBIA") {
+            timezoneToUse = "America/Vancouver"; // PST/PDT
+          } else if (province === "AB" || province === "ALBERTA") {
+            timezoneToUse = "America/Edmonton"; // MST/MDT
+          } else if (province === "SK" || province === "SASKATCHEWAN") {
+            timezoneToUse = "America/Regina"; // CST (no DST)
+          } else if (province === "MB" || province === "MANITOBA") {
+            timezoneToUse = "America/Winnipeg"; // CST/CDT
+          } else if (province === "ON" || province === "ONTARIO") {
+            timezoneToUse = "America/Toronto"; // EST/EDT
+          } else if (province === "QC" || province === "QUEBEC") {
+            timezoneToUse = "America/Montreal"; // EST/EDT
+          } else if (province === "NB" || province === "NEW BRUNSWICK" || 
+                     province === "NS" || province === "NOVA SCOTIA" ||
+                     province === "PE" || province === "PRINCE EDWARD ISLAND") {
+            timezoneToUse = "America/Halifax"; // AST/ADT
+          } else if (province === "NL" || province === "NEWFOUNDLAND") {
+            timezoneToUse = "America/St_Johns"; // NST/NDT
+          }
         }
+        setAgentTimezone(timezoneToUse);
+        console.log(`🕐 [TIMEZONE] Setting agent timezone:`, {
+          timezone: timezoneToUse,
+          fromMetadata: !!profileData?.metadata?.timezone,
+          fromAvailability: !!profileData?.metadata?.availability?.timezone,
+          fromProvince: profileData?.agent_province || null,
+          province: profileData?.agent_province
+        });
 
         // Get appointment length from metadata
         const metadata = profileData?.metadata || {};
