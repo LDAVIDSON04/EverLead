@@ -148,7 +148,6 @@ export default function SettingsPage() {
     email: "",
     phone: "",
     regionsServed: "",
-    specialty: "",
     licenseNumber: "",
     businessAddress: "",
     businessStreet: "",
@@ -196,7 +195,6 @@ export default function SettingsPage() {
             email: profile.email || "",
             phone: profile.phone || "",
             regionsServed: metadata.regions_served || "",
-            specialty: metadata.specialty || "",
             licenseNumber: metadata.license_number || "",
             businessAddress: metadata.address?.street || profile.street_address || metadata.business_address || "",
             businessStreet: metadata.address?.street || profile.street_address || metadata.business_street || "",
@@ -508,7 +506,6 @@ function ProfileSection({
             email: updatedProfile.email || "",
             phone: updatedProfile.phone || "",
             regionsServed: metadata.regions_served || "",
-            specialty: metadata.specialty || "",
             licenseNumber: metadata.license_number || "",
             businessAddress: metadata.business_address || "",
             businessStreet: metadata.business_street || "",
@@ -656,17 +653,6 @@ function ProfileSection({
         </div>
       </div>
 
-      <div className="mb-4">
-        <Label htmlFor="specialty">Specialty / Services Offered *</Label>
-        <Textarea
-          id="specialty"
-          value={profileData.specialty}
-          onChange={(e) => setProfileData({ ...profileData, specialty: e.target.value })}
-          className="mt-1"
-          rows={3}
-          placeholder="e.g., Residential Sales, First-time Buyers, Investment Properties"
-        />
-      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <div>

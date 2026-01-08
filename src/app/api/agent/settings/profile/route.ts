@@ -186,6 +186,16 @@ export async function POST(request: NextRequest) {
     if (businessCity !== undefined) metadata.business_city = businessCity;
     if (businessProvince !== undefined) metadata.business_province = businessProvince;
     if (businessZip !== undefined) metadata.business_zip = businessZip;
+    
+    // Also save home address to metadata.address (matches signup structure)
+    if (businessStreet !== undefined || businessCity !== undefined || businessProvince !== undefined || businessZip !== undefined) {
+      metadata.address = {
+        street: businessStreet || (existingProfile?.metadata as any)?.address?.street || '',
+        city: businessCity || (existingProfile?.metadata as any)?.address?.city || '',
+        province: businessProvince || (existingProfile?.metadata as any)?.address?.province || '',
+        postalCode: businessZip || (existingProfile?.metadata as any)?.address?.postalCode || '',
+      };
+    }
 
     if (Object.keys(metadata).length > 0) {
       // Get existing metadata first
@@ -195,9 +205,14 @@ export async function POST(request: NextRequest) {
         .eq("id", user.id)
         .maybeSingle();
 
+      const existingMetadata = existingProfile?.metadata || {};
+      
+      // Merge metadata, preserving existing address if new address fields aren't provided
       updateData.metadata = {
-        ...(existingProfile?.metadata || {}),
+        ...existingMetadata,
         ...metadata,
+        // Preserve existing address structure if we're not updating address fields
+        address: metadata.address || existingMetadata.address || undefined,
       };
     }
 
