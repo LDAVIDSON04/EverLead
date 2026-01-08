@@ -117,6 +117,20 @@ export async function GET(req: NextRequest) {
       }
     });
     
+    // Log ALL raw appointments with their dates BEFORE mapping to see what we're working with
+    if (result.data && result.data.length > 0) {
+      console.log(`📅 [APPOINTMENTS API] Raw appointments from database (BEFORE mapping):`, 
+        result.data.map((apt: any) => ({
+          id: apt.id,
+          requested_date: apt.requested_date,
+          confirmed_at: apt.confirmed_at,
+          status: apt.status,
+          requested_window: apt.requested_window,
+          family_name: apt.leads?.full_name || apt.leads?.[0]?.full_name || 'Unknown'
+        }))
+      );
+    }
+    
     if (result.data && result.data.length > 0) {
       console.log(`📅 [APPOINTMENTS API] Sample appointment from DB:`, {
         id: result.data[0]?.id,
@@ -125,6 +139,19 @@ export async function GET(req: NextRequest) {
         confirmed_at: result.data[0]?.confirmed_at,
         lead_id: result.data[0]?.lead_id
       });
+      
+      // Check if there are any appointments for Jan 5-6, 2026
+      const jan5Appts = result.data.filter((apt: any) => {
+        const reqDate = apt.requested_date;
+        const confDate = apt.confirmed_at ? new Date(apt.confirmed_at).toISOString().split('T')[0] : null;
+        return reqDate === '2026-01-05' || reqDate === '2026-01-06' || confDate === '2026-01-05' || confDate === '2026-01-06';
+      });
+      
+      if (jan5Appts.length > 0) {
+        console.log(`📅 [APPOINTMENTS API] Found ${jan5Appts.length} appointments for Jan 5-6:`, jan5Appts);
+      } else {
+        console.log(`📅 [APPOINTMENTS API] No appointments found for Jan 5-6, 2026 in database`);
+      }
     }
     
     if (result.error) {
@@ -166,6 +193,33 @@ export async function GET(req: NextRequest) {
           hasError: !!resultWithoutNotes.error,
           error: resultWithoutNotes.error
         });
+        
+        // Log raw appointments from retry query too
+        if (resultWithoutNotes.data && resultWithoutNotes.data.length > 0) {
+          console.log(`📅 [APPOINTMENTS API] Raw appointments from retry query (BEFORE mapping):`, 
+            resultWithoutNotes.data.map((apt: any) => ({
+              id: apt.id,
+              requested_date: apt.requested_date,
+              confirmed_at: apt.confirmed_at,
+              status: apt.status,
+              requested_window: apt.requested_window,
+              family_name: apt.leads?.full_name || apt.leads?.[0]?.full_name || 'Unknown'
+            }))
+          );
+          
+          // Check if there are any appointments for Jan 5-6, 2026
+          const jan5Appts = resultWithoutNotes.data.filter((apt: any) => {
+            const reqDate = apt.requested_date;
+            const confDate = apt.confirmed_at ? new Date(apt.confirmed_at).toISOString().split('T')[0] : null;
+            return reqDate === '2026-01-05' || reqDate === '2026-01-06' || confDate === '2026-01-05' || confDate === '2026-01-06';
+          });
+          
+          if (jan5Appts.length > 0) {
+            console.log(`📅 [APPOINTMENTS API] Found ${jan5Appts.length} appointments for Jan 5-6 in retry query:`, jan5Appts);
+          } else {
+            console.log(`📅 [APPOINTMENTS API] No appointments found for Jan 5-6, 2026 in retry query`);
+          }
+        }
         
         appointments = resultWithoutNotes.data;
         appointmentsError = resultWithoutNotes.error;
