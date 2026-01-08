@@ -443,13 +443,48 @@ export async function POST(req: NextRequest) {
     
     if (chargeResult.success && chargeResult.paymentIntentId) {
       // Payment succeeded - update appointment with payment details
-      await supabaseAdmin
-        .from("appointments")
-        .update({ 
-          price_cents: priceCents,
-          stripe_payment_intent_id: chargeResult.paymentIntentId,
-        })
-        .eq("id", appointment.id);
+      // Try to update appointments table (in case stripe_payment_intent_id column exists)
+      try {
+        await supabaseAdmin
+          .from("appointments")
+          .update({ 
+            price_cents: priceCents,
+            stripe_payment_intent_id: chargeResult.paymentIntentId,
+          })
+          .eq("id", appointment.id);
+      } catch (updateError: any) {
+        // If stripe_payment_intent_id column doesn't exist, just update price_cents
+        if (updateError?.code === '42703' && updateError?.message?.includes('stripe_payment_intent_id')) {
+          await supabaseAdmin
+            .from("appointments")
+            .update({ 
+              price_cents: priceCents,
+            })
+            .eq("id", appointment.id);
+        } else {
+          throw updateError;
+        }
+      }
+      
+      // ALWAYS create a payment record in payments table for proper tracking and refunds
+      try {
+        await supabaseAdmin
+          .from("payments")
+          .insert({
+            appointment_id: appointment.id,
+            stripe_payment_intent_id: chargeResult.paymentIntentId,
+            amount_cents: priceCents,
+            currency: 'CAD',
+            status: 'completed',
+          });
+        console.log("✅ Payment record created in payments table:", {
+          appointmentId: appointment.id,
+          paymentIntentId: chargeResult.paymentIntentId,
+        });
+      } catch (paymentInsertError: any) {
+        // Log error but don't fail - payment was successful, just tracking failed
+        console.error("⚠️ Failed to create payment record in payments table:", paymentInsertError);
+      }
       
       console.log("✅ Agent charged successfully for appointment:", {
         appointmentId: appointment.id,
