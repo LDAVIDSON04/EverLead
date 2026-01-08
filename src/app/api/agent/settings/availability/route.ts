@@ -77,21 +77,11 @@ export async function GET(request: NextRequest) {
     // Get availability type per location (which type is active: "recurring" or "daily")
     const availabilityTypeByLocation = availabilityData.availabilityTypeByLocation || {};
 
-    // Normalize locations array before returning
-    const normalizedLocations = validLocations.map(city => normalizeCityName(city));
-    
-    // Normalize availabilityTypeByLocation keys
-    const normalizedAvailabilityTypeByLocation: Record<string, string> = {};
-    Object.keys(availabilityTypeByLocation || {}).forEach(key => {
-      const normalizedKey = normalizeCityName(key);
-      normalizedAvailabilityTypeByLocation[normalizedKey] = availabilityTypeByLocation[key];
-    });
-    
     return NextResponse.json({
-      locations: normalizedLocations,
+      locations: validLocations,
       availabilityByLocation: validAvailabilityByLocation,
       appointmentLength: availabilityData.appointmentLength || "30",
-      availabilityTypeByLocation: normalizedAvailabilityTypeByLocation, // e.g., { "Kelowna": "recurring", "Penticton": "daily" }
+      availabilityTypeByLocation, // e.g., { "Kelowna": "recurring", "Penticton": "daily" }
     });
   } catch (err: any) {
     console.error("Error in GET /api/agent/settings/availability:", err);
