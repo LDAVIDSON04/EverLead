@@ -465,8 +465,23 @@ export async function GET(req: NextRequest) {
         }
         const confirmedEnd = confirmedDate.plus({ minutes: appointmentLengthMinutes });
         
+        // Convert to agent's timezone for debugging
+        const localTime = confirmedDate.setZone(agentTimezone);
+        
         startsAt = confirmedDate.toISO();
         endsAt = confirmedEnd.toISO();
+        
+        // Debug log to verify timezone conversion
+        console.log(`📅 [APPOINTMENTS API] Appointment time conversion:`, {
+          appointmentId: apt.id,
+          confirmed_at_utc: apt.confirmed_at,
+          starts_at_iso: startsAt,
+          utc_time: confirmedDate.toFormat('yyyy-MM-dd HH:mm ZZZZ'),
+          agent_timezone: agentTimezone,
+          local_time: localTime.toFormat('yyyy-MM-dd HH:mm ZZZZ'),
+          local_hour: localTime.hour,
+          local_minute: localTime.minute,
+        });
         
         // Debug log for agent-created events with duration
         if (lead?.email?.includes('@soradin.internal')) {
