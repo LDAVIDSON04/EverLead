@@ -138,12 +138,13 @@ export async function GET(req: NextRequest) {
     
     if (selectedLocation && locationType === "recurring") {
       // Try exact match first (case-sensitive)
-      if (selectedLocation && availabilityByLocation[selectedLocation]) {
+      if (availabilityByLocation[selectedLocation]) {
         locationSchedule = availabilityByLocation[selectedLocation];
-      } else if (selectedLocation) {
+      } else {
         // Try case-insensitive match
+        const normalizedSelected = selectedLocation.toLowerCase().trim();
         const matchingLocation = Object.keys(availabilityByLocation).find(
-          loc => loc.toLowerCase().trim() === selectedLocation.toLowerCase().trim()
+          loc => loc.toLowerCase().trim() === normalizedSelected
         );
         
         if (matchingLocation) {
