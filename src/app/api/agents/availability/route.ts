@@ -138,9 +138,9 @@ export async function GET(req: NextRequest) {
     
     if (selectedLocation && locationType === "recurring") {
       // Try exact match first (case-sensitive)
-      if (availabilityByLocation[selectedLocation]) {
+      if (selectedLocation && availabilityByLocation[selectedLocation]) {
         locationSchedule = availabilityByLocation[selectedLocation];
-      } else {
+      } else if (selectedLocation) {
         // Try case-insensitive match
         const matchingLocation = Object.keys(availabilityByLocation).find(
           loc => loc.toLowerCase().trim() === selectedLocation.toLowerCase().trim()
