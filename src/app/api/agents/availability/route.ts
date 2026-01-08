@@ -93,44 +93,27 @@ export async function GET(req: NextRequest) {
       return NextResponse.json([]);
     }
 
-    // Normalize location by removing province suffix and "Office" suffix
-    // e.g., "Kelowna, BC" -> "Kelowna", "Kelowna Office" -> "Kelowna", "Vaughn On" -> "Vaughn"
-    const normalizeLocation = (loc: string | undefined): string | undefined => {
-      if (!loc) return undefined;
-      // Remove common province suffixes like ", BC", ", AB", etc.
-      let normalized = loc.split(',').map(s => s.trim())[0];
-      // Remove " Office" suffix if present (case-insensitive)
-      normalized = normalized.replace(/\s+office$/i, '').trim();
-      // Remove province abbreviations at the end without comma (e.g., "Vaughn On" -> "Vaughn")
-      // Common province abbreviations: On, BC, AB, SK, MB, QC, NB, NS, PE, NL, YT, NT, NU
-      const provinceAbbrevs = /\s+(On|BC|AB|SK|MB|QC|NB|NS|PE|NL|YT|NT|NU)$/i;
-      normalized = normalized.replace(provinceAbbrevs, '').trim();
-      return normalized;
-    };
-    
     // Use the specified location, or fall back to first location, or agent's default city
-    let selectedLocation = location ? normalizeLocation(location) : undefined;
+    let selectedLocation = location ? location.trim() : undefined;
     if (!selectedLocation && locations.length > 0) {
-      selectedLocation = normalizeLocation(locations[0]) || locations[0].trim();
+      selectedLocation = locations[0].trim();
     }
     if (!selectedLocation && profile.agent_city) {
-      selectedLocation = normalizeLocation(profile.agent_city);
+      selectedLocation = profile.agent_city.trim();
     }
     if (!selectedLocation && locations.length > 0) {
-      selectedLocation = normalizeLocation(locations[0]) || locations[0].trim();
+      selectedLocation = locations[0].trim();
     }
     
-    // Ensure selectedLocation is trimmed and normalized (normalizeLocation already trims, but be safe)
+    // Ensure selectedLocation is trimmed
     if (selectedLocation) {
-      selectedLocation = normalizeLocation(selectedLocation) || selectedLocation.trim();
+      selectedLocation = selectedLocation.trim();
     }
     
-    console.log("🔍 Location normalization:", {
+    console.log("🔍 Location selection:", {
       originalLocation: location,
-      normalizedLocation: location ? normalizeLocation(location) : undefined,
       selectedLocation,
       availableLocations: locations,
-      normalizedAvailableLocations: locations.map((loc: string) => normalizeLocation(loc)),
     });
     
     // Determine which type is active for this location
@@ -140,13 +123,10 @@ export async function GET(req: NextRequest) {
     if (selectedLocation && availabilityTypeByLocation[selectedLocation]) {
       locationType = availabilityTypeByLocation[selectedLocation] as "recurring" | "daily";
     } else if (selectedLocation) {
-      // Try case-insensitive match for type (also normalize keys for comparison)
+      // Try case-insensitive match for type
       const normalizedSelected = selectedLocation.toLowerCase().trim();
       const matchingLocationKey = Object.keys(availabilityTypeByLocation).find(
-        loc => {
-          const normalizedKey = normalizeLocation(loc)?.toLowerCase().trim() || loc.toLowerCase().trim();
-          return normalizedKey === normalizedSelected;
-        }
+        loc => loc.toLowerCase().trim() === normalizedSelected
       );
       if (matchingLocationKey) {
         locationType = availabilityTypeByLocation[matchingLocationKey] as "recurring" | "daily";
@@ -157,72 +137,18 @@ export async function GET(req: NextRequest) {
     let locationSchedule: Record<string, any> = {};
     
     if (selectedLocation && locationType === "recurring") {
-      // Normalize selectedLocation for comparison
-      const normalizedSelected = normalizeLocation(selectedLocation)?.toLowerCase().trim() || selectedLocation.toLowerCase().trim();
-      
-      // Helper function for fuzzy city name matching (handles spelling variations like "Vaughan" vs "Vaughn")
-      const fuzzyCityMatch = (city1: string, city2: string): boolean => {
-        const norm1 = normalizeLocation(city1)?.toLowerCase().trim() || city1.toLowerCase().trim();
-        const norm2 = normalizeLocation(city2)?.toLowerCase().trim() || city2.toLowerCase().trim();
-        
-        // Exact match
-        if (norm1 === norm2) return true;
-        
-        // One contains the other
-        if (norm1.includes(norm2) || norm2.includes(norm1)) return true;
-        
-        // Handle common spelling variations
-        // Check if they're very similar (edit distance 1) and start with same prefix
-        if (Math.abs(norm1.length - norm2.length) <= 1) {
-          const minLen = Math.min(norm1.length, norm2.length);
-          if (minLen >= 4) {
-            const prefix1 = norm1.substring(0, Math.min(6, norm1.length));
-            const prefix2 = norm2.substring(0, Math.min(6, norm2.length));
-            // If first 4+ characters match, likely the same city
-            if (prefix1.substring(0, 4) === prefix2.substring(0, 4) && 
-                Math.abs(prefix1.length - prefix2.length) <= 1) {
-              return true;
-            }
-          }
-        }
-        
-        // Specific known variations mapping
-        const variations: Record<string, string[]> = {
-          'vaughan': ['vaughn'],
-          'vaughn': ['vaughan'],
-        };
-        
-        if (variations[norm1]?.includes(norm2) || variations[norm2]?.includes(norm1)) {
-          return true;
-        }
-        
-        return false;
-      };
-      
       // Try exact match first (case-sensitive)
       if (availabilityByLocation[selectedLocation]) {
         locationSchedule = availabilityByLocation[selectedLocation];
       } else {
-        // Try normalized match - normalize both the key and selectedLocation for comparison
-        let matchingLocation = Object.keys(availabilityByLocation).find(
-          loc => {
-            const normalizedKey = normalizeLocation(loc)?.toLowerCase().trim() || loc.toLowerCase().trim();
-            return normalizedKey === normalizedSelected;
-          }
+        // Try case-insensitive match
+        const matchingLocation = Object.keys(availabilityByLocation).find(
+          loc => loc.toLowerCase().trim() === selectedLocation.toLowerCase().trim()
         );
-        
-        // If no normalized match, try fuzzy matching
-        if (!matchingLocation && selectedLocation) {
-          matchingLocation = Object.keys(availabilityByLocation).find(
-            loc => fuzzyCityMatch(loc, selectedLocation)
-          );
-        }
         
         if (matchingLocation) {
           locationSchedule = availabilityByLocation[matchingLocation];
-          // Update selectedLocation to the matched key for consistency
           selectedLocation = matchingLocation;
-          console.log(`✅ [AVAILABILITY API] Matched location "${selectedLocation}" to "${matchingLocation}" using fuzzy matching`);
         }
       }
     }
@@ -240,12 +166,9 @@ export async function GET(req: NextRequest) {
         // Location was specified but didn't match - log warning but don't use fallback
         console.warn("⚠️ Specified location not found in availability:", {
           requestedLocation: location,
-          normalizedLocation: normalizeLocation(location),
           selectedLocation,
-          normalizedSelected: normalizeLocation(selectedLocation),
           availableLocations: locations,
           availabilityByLocationKeys: Object.keys(availabilityByLocation),
-          normalizedKeys: Object.keys(availabilityByLocation).map(loc => normalizeLocation(loc)),
         });
         // Return empty schedule instead of falling back
         return NextResponse.json([]);
@@ -260,7 +183,6 @@ export async function GET(req: NextRequest) {
       locationType,
       allLocations: locations,
       availabilityByLocationKeys: Object.keys(availabilityByLocation),
-      normalizedAvailabilityKeys: Object.keys(availabilityByLocation).map(loc => normalizeLocation(loc)),
       locationScheduleKeys: Object.keys(locationSchedule),
       hasSchedule: Object.keys(locationSchedule).length > 0,
       appointmentLength,
@@ -272,12 +194,9 @@ export async function GET(req: NextRequest) {
     if (location && locationType === "recurring" && Object.keys(locationSchedule).length === 0) {
       console.error("❌ [AVAILABILITY API] Location specified but no schedule found:", {
         requestedLocation: location,
-        normalizedRequested: normalizeLocation(location),
         selectedLocation,
-        normalizedSelected: normalizeLocation(selectedLocation),
         allLocations: locations,
         availabilityByLocationKeys: Object.keys(availabilityByLocation),
-        normalizedKeys: Object.keys(availabilityByLocation).map(loc => normalizeLocation(loc)),
       });
       return NextResponse.json([]);
     }
@@ -644,7 +563,7 @@ export async function GET(req: NextRequest) {
       const normalizedSelectedLocation = selectedLocation.toLowerCase().trim();
       const dailyAvailabilityData = (allDailyAvailability || []).filter((entry: any) => {
         if (!entry.location) return false;
-        const normalizedEntryLocation = normalizeLocation(entry.location)?.toLowerCase().trim();
+        const normalizedEntryLocation = entry.location?.toLowerCase().trim();
         return normalizedEntryLocation === normalizedSelectedLocation;
       });
 
