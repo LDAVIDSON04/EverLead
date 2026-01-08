@@ -139,7 +139,6 @@ export async function POST(
           status: paymentIntent.status,
           amount: paymentIntent.amount,
           amount_received: paymentIntent.amount_received,
-          charges: paymentIntent.charges?.data?.length || 0,
         });
 
         // Check if payment intent has been paid
