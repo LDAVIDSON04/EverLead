@@ -45,6 +45,7 @@ export default function AgentApprovalPage() {
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<{ message: string; type: 'approve' | 'decline' | 'needs-info' } | null>(null);
   const [selectedAgent, setSelectedAgent] = useState<PendingAgent | null>(null);
   const [showRequestInfoModal, setShowRequestInfoModal] = useState(false);
   const [requestInfoText, setRequestInfoText] = useState("");
@@ -100,6 +101,13 @@ export default function AgentApprovalPage() {
         throw new Error(errorData.error || "Failed to approve agent");
       }
 
+      // Show success message
+      const agentName = pendingAgents.find(a => a.id === id)?.full_name || 'Agent';
+      setSuccess({ message: `${agentName} has been successfully approved!`, type: 'approve' });
+      
+      // Clear success message after 5 seconds
+      setTimeout(() => setSuccess(null), 5000);
+      
       await loadPendingAgents();
     } catch (err: any) {
       console.error("Error approving agent:", err);
@@ -140,6 +148,13 @@ export default function AgentApprovalPage() {
         throw new Error(errorData.error || "Failed to decline agent");
       }
 
+      // Show success message
+      const agentName = pendingAgents.find(a => a.id === id)?.full_name || 'Agent';
+      setSuccess({ message: `${agentName} has been successfully declined.`, type: 'decline' });
+      
+      // Clear success message after 5 seconds
+      setTimeout(() => setSuccess(null), 5000);
+      
       await loadPendingAgents();
     } catch (err: any) {
       console.error("Error declining agent:", err);
@@ -190,6 +205,13 @@ export default function AgentApprovalPage() {
         const errorData = await res.json();
         throw new Error(errorData.error || "Failed to request information");
       }
+
+      // Show success message
+      const agentName = selectedAgent?.full_name || 'Agent';
+      setSuccess({ message: `Information request has been sent to ${agentName}.`, type: 'needs-info' });
+      
+      // Clear success message after 5 seconds
+      setTimeout(() => setSuccess(null), 5000);
 
       setShowRequestInfoModal(false);
       setSelectedAgent(null);
@@ -270,6 +292,29 @@ export default function AgentApprovalPage() {
       {error && (
         <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {error}
+        </div>
+      )}
+
+      {success && (
+        <div className={`mb-6 rounded-lg border px-4 py-3 text-sm flex items-center justify-between ${
+          success.type === 'approve' 
+            ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+            : success.type === 'decline'
+            ? 'border-red-200 bg-red-50 text-red-700'
+            : 'border-orange-200 bg-orange-50 text-orange-700'
+        }`}>
+          <div className="flex items-center gap-2">
+            {success.type === 'approve' && <Check className="w-5 h-5" />}
+            {success.type === 'decline' && <X className="w-5 h-5" />}
+            {success.type === 'needs-info' && <AlertCircle className="w-5 h-5" />}
+            <span>{success.message}</span>
+          </div>
+          <button
+            onClick={() => setSuccess(null)}
+            className="text-current opacity-70 hover:opacity-100"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
       )}
 
