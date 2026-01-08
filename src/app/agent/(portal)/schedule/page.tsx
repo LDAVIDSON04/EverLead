@@ -518,9 +518,27 @@ export default function SchedulePage() {
             return null;
           }
           
+          console.log(`🕐 [TIMEZONE DEBUG] Converting appointment time:`, {
+            starts_at_utc: apt.starts_at,
+            agentTimezone,
+            utc_hour: startDate.hour,
+            utc_time: startDate.toFormat('HH:mm'),
+          });
+          
           const localStart = startDate.setZone(agentTimezone);
           const aptDate = localStart.toJSDate();
           const aptDateFormatted = localStart.toFormat('MMM d, yyyy HH:mm');
+          
+          console.log(`🕐 [TIMEZONE DEBUG] After timezone conversion:`, {
+            localStart_iso: localStart.toISO(),
+            localStart_hour: localStart.hour,
+            localStart_minute: localStart.minute,
+            localStart_time: localStart.toFormat('HH:mm'),
+            localStart_timezone: localStart.offsetNameShort,
+            aptDate_toISOString: aptDate.toISOString(),
+            aptDate_getHours: aptDate.getHours(),
+            browserTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          });
           
           // More inclusive check - appointments that start OR end within the week should be included
           const endDateStr = apt.ends_at || apt.starts_at;
