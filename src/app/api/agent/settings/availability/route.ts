@@ -58,19 +58,22 @@ export async function GET(request: NextRequest) {
     const validLocations = Array.from(allLocationsSet);
 
     // Include availability data for all valid locations (both office locations and manually added)
-    // Also check case-insensitive matches to handle variations in city names
+    // Normalize all city names and map availability data correctly
     const validAvailabilityByLocation: Record<string, any> = {};
     validLocations.forEach((city: string) => {
-      // Try exact match first
-      if (existingAvailabilityByLocation[city]) {
-        validAvailabilityByLocation[city] = existingAvailabilityByLocation[city];
+      const normalizedCity = normalizeCityName(city);
+      // Try exact match first (with normalized city)
+      if (existingAvailabilityByLocation[normalizedCity]) {
+        validAvailabilityByLocation[normalizedCity] = existingAvailabilityByLocation[normalizedCity];
+      } else if (existingAvailabilityByLocation[city]) {
+        validAvailabilityByLocation[normalizedCity] = existingAvailabilityByLocation[city];
       } else {
-        // Try case-insensitive match
+        // Try case-insensitive/fuzzy match with normalization
         const matchingKey = Object.keys(existingAvailabilityByLocation).find(
-          key => key.toLowerCase() === city.toLowerCase()
+          key => normalizeCityName(key).toLowerCase() === normalizedCity.toLowerCase()
         );
         if (matchingKey) {
-          validAvailabilityByLocation[city] = existingAvailabilityByLocation[matchingKey];
+          validAvailabilityByLocation[normalizedCity] = existingAvailabilityByLocation[matchingKey];
         }
       }
     });
@@ -78,11 +81,21 @@ export async function GET(request: NextRequest) {
     // Get availability type per location (which type is active: "recurring" or "daily")
     const availabilityTypeByLocation = availabilityData.availabilityTypeByLocation || {};
 
+    // Normalize locations array before returning
+    const normalizedLocations = validLocations.map(city => normalizeCityName(city));
+    
+    // Normalize availabilityTypeByLocation keys
+    const normalizedAvailabilityTypeByLocation: Record<string, string> = {};
+    Object.keys(availabilityTypeByLocation || {}).forEach(key => {
+      const normalizedKey = normalizeCityName(key);
+      normalizedAvailabilityTypeByLocation[normalizedKey] = availabilityTypeByLocation[key];
+    });
+    
     return NextResponse.json({
-      locations: validLocations,
+      locations: normalizedLocations,
       availabilityByLocation: validAvailabilityByLocation,
       appointmentLength: availabilityData.appointmentLength || "30",
-      availabilityTypeByLocation, // e.g., { "Kelowna": "recurring", "Penticton": "daily" }
+      availabilityTypeByLocation: normalizedAvailabilityTypeByLocation, // e.g., { "Kelowna": "recurring", "Penticton": "daily" }
     });
   } catch (err: any) {
     console.error("Error in GET /api/agent/settings/availability:", err);
