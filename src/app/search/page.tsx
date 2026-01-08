@@ -740,13 +740,14 @@ function SearchResults() {
           
           // Set dayTimeSlots for backward compatibility (though modal uses allAvailabilityDays)
           if (dayData && dayData.slots.length > 0) {
-            // Format time slots with readable time and available status
-            // Convert UTC times back to local time for display (will show in user's browser timezone)
+            // Format time slots in the agent's timezone
             const formattedSlots = dayData.slots.map(slot => {
-              const startDate = new Date(slot.startsAt);
-              // Use getHours() instead of getUTCHours() to convert from UTC to local time
-              const hours = startDate.getHours();
-              const minutes = startDate.getMinutes();
+              const agentTimezone = dayData.timezone || 'America/Toronto';
+              const utcTime = DateTime.fromISO(slot.startsAt, { zone: 'utc' });
+              const agentLocalTime = utcTime.setZone(agentTimezone);
+              
+              const hours = agentLocalTime.hour;
+              const minutes = agentLocalTime.minute;
               const ampm = hours >= 12 ? 'PM' : 'AM';
               const displayHours = hours % 12 || 12;
               const timeStr = `${displayHours}:${String(minutes).padStart(2, '0')} ${ampm}`;
