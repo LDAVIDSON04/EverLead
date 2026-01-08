@@ -523,14 +523,14 @@ function ProfileSection({
       // Trigger a custom event to refresh the layout and other pages
       // Add small delay to ensure database write has fully propagated
       setTimeout(() => {
-        window.dispatchEvent(new CustomEvent("profileUpdated"));
+      window.dispatchEvent(new CustomEvent("profileUpdated"));
       }, 200);
       
       // If profile picture exists, dispatch onboarding step completion after Save
       // This ensures Step 1 is only marked complete when user explicitly saves
       if (saveData.profilePictureUrl) {
         setTimeout(() => {
-          window.dispatchEvent(new CustomEvent("onboardingStepCompleted", { detail: { step: 1 } }));
+        window.dispatchEvent(new CustomEvent("onboardingStepCompleted", { detail: { step: 1 } }));
         }, 300);
       }
 

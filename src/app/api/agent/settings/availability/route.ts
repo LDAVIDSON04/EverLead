@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { supabaseServer } from "@/lib/supabaseServer";
-import { normalizeCityName } from "@/lib/cityNormalization";
 
 export async function GET(request: NextRequest) {
   try {
@@ -35,11 +34,11 @@ export async function GET(request: NextRequest) {
       .eq("agent_id", user.id)
       .order("display_order", { ascending: true });
 
-    // Extract unique cities from office locations and normalize them
+    // Extract unique cities from office locations
     const citiesFromOfficeLocations: string[] = Array.from(
       new Set(
         (officeLocations || [])
-          .map((loc: any) => normalizeCityName(loc.city))
+          .map((loc: any) => loc.city)
           .filter((city: any) => city && typeof city === 'string')
       )
     ) as string[];
@@ -58,22 +57,19 @@ export async function GET(request: NextRequest) {
     const validLocations = Array.from(allLocationsSet);
 
     // Include availability data for all valid locations (both office locations and manually added)
-    // Normalize all city names and map availability data correctly
+    // Also check case-insensitive matches to handle variations in city names
     const validAvailabilityByLocation: Record<string, any> = {};
     validLocations.forEach((city: string) => {
-      const normalizedCity = normalizeCityName(city);
-      // Try exact match first (with normalized city)
-      if (existingAvailabilityByLocation[normalizedCity]) {
-        validAvailabilityByLocation[normalizedCity] = existingAvailabilityByLocation[normalizedCity];
-      } else if (existingAvailabilityByLocation[city]) {
-        validAvailabilityByLocation[normalizedCity] = existingAvailabilityByLocation[city];
+      // Try exact match first
+      if (existingAvailabilityByLocation[city]) {
+        validAvailabilityByLocation[city] = existingAvailabilityByLocation[city];
       } else {
-        // Try case-insensitive/fuzzy match with normalization
+        // Try case-insensitive match
         const matchingKey = Object.keys(existingAvailabilityByLocation).find(
-          key => normalizeCityName(key).toLowerCase() === normalizedCity.toLowerCase()
+          key => key.toLowerCase() === city.toLowerCase()
         );
         if (matchingKey) {
-          validAvailabilityByLocation[normalizedCity] = existingAvailabilityByLocation[matchingKey];
+          validAvailabilityByLocation[city] = existingAvailabilityByLocation[matchingKey];
         }
       }
     });
@@ -125,14 +121,14 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { locations, availabilityByLocation, appointmentLength, availabilityTypeByLocation } = body;
 
-    // Get cities from office locations and normalize them
+    // Get cities from office locations
     const { data: officeLocations } = await supabaseAdmin
       .from("office_locations")
       .select("city")
       .eq("agent_id", user.id);
 
     const officeLocationCities: string[] = Array.from(
-      new Set((officeLocations || []).map((loc: any) => normalizeCityName(loc.city)).filter(Boolean))
+      new Set((officeLocations || []).map((loc: any) => loc.city).filter(Boolean))
     );
 
     // Normalize location names for comparison (remove province, "Office" suffix, lowercase)
@@ -183,21 +179,11 @@ export async function POST(request: NextRequest) {
     const validLocations = Array.from(allCitiesSet);
 
     // Include ALL availability data (filter by valid locations for safety)
-    // Also normalize all city keys in availabilityByLocation
     const filteredAvailabilityByLocation: Record<string, any> = {};
-    const validLocationsSet = new Set(validLocations.map(c => normalizeCityName(c)));
-    
-    // Normalize all keys in availabilityByLocation and map to correct city names
-    Object.keys(availabilityByLocation || {}).forEach((cityKey) => {
-      const normalizedKey = normalizeCityName(cityKey);
-      // Check if normalized key matches any valid location (case-insensitive)
-      const matchingLocation = validLocations.find(loc => 
-        normalizeCityName(loc).toLowerCase() === normalizedKey.toLowerCase()
-      );
-      
-      if (matchingLocation) {
-        // Use the correctly spelled location from validLocations
-        filteredAvailabilityByLocation[matchingLocation] = availabilityByLocation[cityKey];
+    const validLocationsSet = new Set(validLocations);
+    Object.keys(availabilityByLocation || {}).forEach((city) => {
+      if (validLocationsSet.has(city)) {
+        filteredAvailabilityByLocation[city] = availabilityByLocation[city];
       }
     });
 

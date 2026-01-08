@@ -176,7 +176,7 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
           if (profileError) {
             console.error('[NAV] Error fetching profile after update:', profileError);
             // Fallback to loadProfileData if direct query fails
-            loadProfileData();
+      loadProfileData();
             return;
           }
 
