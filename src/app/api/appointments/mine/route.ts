@@ -70,6 +70,49 @@ export async function GET(req: NextRequest) {
     
     // Fetch all appointments (pending, confirmed, completed) - exclude only cancelled ones
     // IMPORTANT: Include 'completed' status so past/completed appointments remain visible
+    // DEBUG: Query ALL appointments for this agent (ANY status) to see what we're working with
+    const debugAllResult = await supabaseServer
+      .from("appointments")
+      .select("id, requested_date, confirmed_at, status, created_at")
+      .eq("agent_id", userId);
+    
+    console.log(`🔍 [DEBUG] ALL appointments for this agent (ANY status, total: ${debugAllResult.data?.length || 0}):`, 
+      debugAllResult.data?.map((apt: any) => ({
+        id: apt.id,
+        requested_date: apt.requested_date,
+        confirmed_at: apt.confirmed_at,
+        status: apt.status,
+        created_at: apt.created_at
+      })) || []
+    );
+    
+    // DEBUG: Check specifically for Jan 5-6 by requested_date
+    const debugJan5Result = await supabaseServer
+      .from("appointments")
+      .select("id, requested_date, confirmed_at, status")
+      .eq("agent_id", userId)
+      .in("requested_date", ["2026-01-05", "2026-01-06"]);
+    
+    console.log(`🔍 [DEBUG] Appointments with requested_date = Jan 5-6 (ANY status):`, {
+      found: debugJan5Result.data?.length || 0,
+      appointments: debugJan5Result.data
+    });
+    
+    // DEBUG: Check for appointments where confirmed_at falls on Jan 5-6 (in agent timezone)
+    if (debugAllResult.data) {
+      const jan5ByConfirmed = debugAllResult.data.filter((apt: any) => {
+        if (!apt.confirmed_at) return false;
+        const confDate = new Date(apt.confirmed_at);
+        const confDateStr = confDate.toISOString().split('T')[0];
+        return confDateStr === '2026-01-05' || confDateStr === '2026-01-06';
+      });
+      
+      console.log(`🔍 [DEBUG] Appointments with confirmed_at on Jan 5-6 UTC (ANY status):`, {
+        found: jan5ByConfirmed.length,
+        appointments: jan5ByConfirmed
+      });
+    }
+    
     const result = await supabaseServer
       .from("appointments")
       .select(
