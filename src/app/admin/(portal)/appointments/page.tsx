@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabaseClient } from "@/lib/supabaseClient";
 import { useRequireRole } from "@/lib/hooks/useRequireRole";
-import { Calendar, DollarSign, Eye, XCircle } from "lucide-react";
+import { Calendar, DollarSign, Eye, XCircle, X, Search } from "lucide-react";
 
 type AdminAppointment = {
   id: string;
@@ -15,6 +15,8 @@ type AdminAppointment = {
   family_email: string | null;
   specialist_name: string | null;
   specialist_region: string | null;
+  agent_id: string | null;
+  lead_id: string | null;
 };
 
 export default function AdminAppointmentsPage() {
@@ -27,6 +29,12 @@ export default function AdminAppointmentsPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [paymentFilter, setPaymentFilter] = useState<string>("all");
   const [appointmentsThisMonth, setAppointmentsThisMonth] = useState<number>(0);
+  const [agentSearch, setAgentSearch] = useState<string>("");
+  const [selectedAppointment, setSelectedAppointment] = useState<AdminAppointment | null>(null);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [viewModalData, setViewModalData] = useState<any>(null);
+  const [viewModalLoading, setViewModalLoading] = useState(false);
+  const [refunding, setRefunding] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -105,6 +113,8 @@ export default function AdminAppointmentsPage() {
             family_email: lead?.email || null,
             specialist_name: agent?.full_name || null,
             specialist_region: null,
+            agent_id: apt.agent_id || null,
+            lead_id: apt.lead_id || null,
           };
         });
 
@@ -160,8 +170,63 @@ export default function AdminAppointmentsPage() {
       const aptDate = new Date(apt.starts_at).toISOString().split("T")[0];
       if (aptDate !== dateFilter) return false;
     }
+    if (agentSearch) {
+      const searchLower = agentSearch.toLowerCase();
+      const agentName = (apt.specialist_name || "").toLowerCase();
+      if (!agentName.includes(searchLower)) return false;
+    }
     return true;
   });
+
+  const handleView = async (appointment: AdminAppointment) => {
+    setSelectedAppointment(appointment);
+    setShowViewModal(true);
+    setViewModalLoading(true);
+    setViewModalData(null);
+
+    try {
+      const response = await fetch(`/api/appointments/${appointment.id}`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch appointment details");
+      }
+      const data = await response.json();
+      setViewModalData(data);
+    } catch (error: any) {
+      console.error("Error fetching appointment details:", error);
+      setError(error.message || "Failed to load appointment details");
+    } finally {
+      setViewModalLoading(false);
+    }
+  };
+
+  const handleRefund = async (appointment: AdminAppointment) => {
+    if (!confirm(`Are you sure you want to cancel and refund this appointment?\n\nClient: ${appointment.family_name || "Unknown"}\nAgent: ${appointment.specialist_name || "Unknown"}\nAmount: ${appointment.amount_cents ? `$${((appointment.amount_cents) / 100).toFixed(2)}` : "$0.00"}`)) {
+      return;
+    }
+
+    setRefunding(appointment.id);
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/admin/appointments/${appointment.id}/refund`, {
+        method: "POST",
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to refund appointment");
+      }
+
+      // Refresh appointments
+      window.location.reload();
+    } catch (error: any) {
+      console.error("Error refunding appointment:", error);
+      setError(error.message || "Failed to refund appointment");
+    } finally {
+      setRefunding(null);
+    }
+  };
 
   if (loading) {
     return (
@@ -191,7 +256,17 @@ export default function AdminAppointmentsPage() {
       )}
 
       {/* Filters */}
-      <div className="mb-6 flex gap-4">
+      <div className="mb-6 flex gap-4 flex-wrap">
+        <div className="relative flex-1 min-w-[200px]">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-400" />
+          <input
+            type="text"
+            placeholder="Search by agent name..."
+            value={agentSearch}
+            onChange={(e) => setAgentSearch(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-700"
+          />
+        </div>
         <input
           type="date"
           value={dateFilter}
@@ -293,13 +368,20 @@ export default function AdminAppointmentsPage() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex gap-2">
-                        <button className="px-3 py-1.5 border border-neutral-300 text-neutral-700 rounded-md hover:bg-neutral-50 text-sm flex items-center gap-1">
+                        <button
+                          onClick={() => handleView(apt)}
+                          className="px-3 py-1.5 border border-neutral-300 text-neutral-700 rounded-md hover:bg-neutral-50 text-sm flex items-center gap-1"
+                        >
                           <Eye className="w-3 h-3" />
                           View
                         </button>
-                        <button className="px-3 py-1.5 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm flex items-center gap-1">
+                        <button
+                          onClick={() => handleRefund(apt)}
+                          disabled={refunding === apt.id || apt.status === "cancelled"}
+                          className="px-3 py-1.5 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:bg-neutral-400 disabled:cursor-not-allowed text-sm flex items-center gap-1"
+                        >
                           <XCircle className="w-3 h-3" />
-                          Cancel & Refund
+                          {refunding === apt.id ? "Processing..." : "Cancel & Refund"}
                         </button>
                       </div>
                     </td>
@@ -317,6 +399,167 @@ export default function AdminAppointmentsPage() {
           </table>
         </div>
       </div>
+
+      {/* View Modal */}
+      {showViewModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-neutral-200 px-6 py-4 flex justify-between items-center">
+              <h2 className="text-xl font-semibold text-black">Appointment Details</h2>
+              <button
+                onClick={() => {
+                  setShowViewModal(false);
+                  setSelectedAppointment(null);
+                  setViewModalData(null);
+                }}
+                className="text-neutral-400 hover:text-neutral-600"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="p-6">
+              {viewModalLoading ? (
+                <p className="text-sm text-neutral-600">Loading appointment details...</p>
+              ) : viewModalData ? (
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="text-sm font-semibold text-neutral-700 mb-2">Appointment Information</h3>
+                    <dl className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <dt className="text-neutral-500">Status</dt>
+                        <dd>
+                          <span className={`inline-flex px-2 py-1 rounded-full text-xs border ${getStatusColor(viewModalData.status)}`}>
+                            {viewModalData.status}
+                          </span>
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-neutral-500">Date</dt>
+                        <dd className="text-black">{viewModalData.formatted_date || new Date(viewModalData.starts_at).toLocaleDateString()}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-neutral-500">Time</dt>
+                        <dd className="text-black">{viewModalData.time_display || "Not specified"}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-neutral-500">Payment</dt>
+                        <dd className="text-black">
+                          {selectedAppointment?.amount_cents ? `$${((selectedAppointment.amount_cents) / 100).toFixed(2)}` : "$0.00"}
+                        </dd>
+                      </div>
+                    </dl>
+                  </div>
+
+                  {viewModalData.lead && (
+                    <div>
+                      <h3 className="text-sm font-semibold text-neutral-700 mb-2">Client Information</h3>
+                      <dl className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <dt className="text-neutral-500">Name</dt>
+                          <dd className="text-black">{viewModalData.lead.full_name || "Unknown"}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-neutral-500">Email</dt>
+                          <dd className="text-black">{viewModalData.lead.email || "—"}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-neutral-500">City</dt>
+                          <dd className="text-black">{viewModalData.lead.city || "—"}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-neutral-500">Province</dt>
+                          <dd className="text-black">{viewModalData.lead.province || "—"}</dd>
+                        </div>
+                      </dl>
+                      {viewModalData.lead.additional_notes && (
+                        <div className="mt-4">
+                          <dt className="text-neutral-500 text-sm mb-1">Notes</dt>
+                          <dd className="text-black text-sm">{viewModalData.lead.additional_notes}</dd>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {viewModalData.agent && (
+                    <div>
+                      <h3 className="text-sm font-semibold text-neutral-700 mb-2">Agent Information</h3>
+                      <dl className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <dt className="text-neutral-500">Name</dt>
+                          <dd className="text-black">{viewModalData.agent.full_name || "Unknown"}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-neutral-500">Location</dt>
+                          <dd className="text-black">
+                            {viewModalData.agent.agent_city && viewModalData.agent.agent_province
+                              ? `${viewModalData.agent.agent_city}, ${viewModalData.agent.agent_province}`
+                              : "—"}
+                          </dd>
+                        </div>
+                        {viewModalData.agent.funeral_home && (
+                          <div>
+                            <dt className="text-neutral-500">Funeral Home</dt>
+                            <dd className="text-black">{viewModalData.agent.funeral_home}</dd>
+                          </div>
+                        )}
+                      </dl>
+                    </div>
+                  )}
+
+                  {viewModalData.office_location && (
+                    <div>
+                      <h3 className="text-sm font-semibold text-neutral-700 mb-2">Office Location</h3>
+                      <dl className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <dt className="text-neutral-500">Name</dt>
+                          <dd className="text-black">{viewModalData.office_location.name || "—"}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-neutral-500">Address</dt>
+                          <dd className="text-black">
+                            {viewModalData.office_location.street_address || "—"}
+                            {viewModalData.office_location.city && viewModalData.office_location.province && (
+                              <span className="block text-xs text-neutral-500">
+                                {viewModalData.office_location.city}, {viewModalData.office_location.province}
+                                {viewModalData.office_location.postal_code && ` ${viewModalData.office_location.postal_code}`}
+                              </span>
+                            )}
+                          </dd>
+                        </div>
+                      </dl>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <p className="text-sm text-neutral-600">Failed to load appointment details</p>
+              )}
+            </div>
+            <div className="sticky bottom-0 bg-neutral-50 border-t border-neutral-200 px-6 py-4 flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setShowViewModal(false);
+                  setSelectedAppointment(null);
+                  setViewModalData(null);
+                }}
+                className="px-4 py-2 border border-neutral-300 text-neutral-700 rounded-md hover:bg-neutral-50"
+              >
+                Close
+              </button>
+              {selectedAppointment && selectedAppointment.status !== "cancelled" && (
+                <button
+                  onClick={() => {
+                    setShowViewModal(false);
+                    handleRefund(selectedAppointment);
+                  }}
+                  className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+                >
+                  Cancel & Refund
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
