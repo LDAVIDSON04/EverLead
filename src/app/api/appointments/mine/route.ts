@@ -68,7 +68,8 @@ export async function GET(req: NextRequest) {
     let appointmentsError: any = null;
     let hasNotesColumn = true;
     
-    // Fetch all confirmed/booked appointments - we'll filter by actual appointment date (confirmed_at or requested_date) after mapping
+    // Fetch all appointments (pending, confirmed, completed) - exclude only cancelled ones
+    // IMPORTANT: Include 'completed' status so past/completed appointments remain visible
     const result = await supabaseServer
       .from("appointments")
       .select(
@@ -95,7 +96,7 @@ export async function GET(req: NextRequest) {
       `
       )
       .eq("agent_id", userId)
-      .neq("status", "cancelled") // Include all appointments except cancelled ones
+      .in("status", ["pending", "confirmed", "completed", "booked", "no_show"]) // Explicitly include all valid statuses except cancelled
       // NO DATE FILTER - fetch ALL appointments (past and future) so they remain visible like Google Calendar
       .order("requested_date", { ascending: true })
       .order("created_at", { ascending: true });
@@ -112,7 +113,7 @@ export async function GET(req: NextRequest) {
       userId,
       queryFilters: {
         agent_id: userId,
-        status_not: 'cancelled'
+        status_in: ['pending', 'confirmed', 'completed', 'booked', 'no_show']
       }
     });
     
@@ -156,7 +157,7 @@ export async function GET(req: NextRequest) {
           `
           )
           .eq("agent_id", userId)
-          .neq("status", "cancelled") // Include all appointments except cancelled ones
+          .in("status", ["pending", "confirmed", "completed", "booked", "no_show"]) // Explicitly include all valid statuses except cancelled
           .order("requested_date", { ascending: true })
           .order("created_at", { ascending: true });
         
