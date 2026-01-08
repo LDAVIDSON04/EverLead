@@ -7,6 +7,7 @@ import Image from "next/image";
 import { Star, MapPin, Calendar, ArrowLeft, Info, Lock } from "lucide-react";
 import { supabaseClient } from "@/lib/supabaseClient";
 import { DateTime } from "luxon";
+import { formatTimeWithTimezone } from "@/lib/utils";
 
 function BookingStep2Content() {
   const router = useRouter();

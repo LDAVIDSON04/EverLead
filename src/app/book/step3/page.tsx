@@ -7,6 +7,7 @@ import Image from "next/image";
 import { Lock, Calendar, MapPin, Star, Info } from "lucide-react";
 import { DateTime } from "luxon";
 import { createClient } from "@supabase/supabase-js";
+import { formatTimeWithTimezone } from "@/lib/utils";
 
 const supabaseClient = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -154,14 +155,7 @@ function BookingStep3Content() {
       }
     }
     
-    const utcDate = DateTime.fromISO(isoString, { zone: "utc" });
-    const localDate = utcDate.setZone(timezone);
-    
-    const hours = localDate.hour;
-    const minutes = localDate.minute;
-    const ampm = hours >= 12 ? "PM" : "AM";
-    const displayHours = hours % 12 || 12;
-    return `${displayHours}:${String(minutes).padStart(2, "0")} ${ampm}`;
+    return formatTimeWithTimezone(isoString, timezone);
   };
 
   const handleInputChange = (field: string, value: string) => {

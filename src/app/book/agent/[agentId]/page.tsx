@@ -6,6 +6,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { Star, MapPin, X } from "lucide-react";
 import { supabaseClient } from "@/lib/supabaseClient";
+import { DateTime } from "luxon";
+import { formatTimeWithTimezone } from "@/lib/utils";
 
 // Types matching our API
 type AvailabilitySlot = {
@@ -15,6 +17,7 @@ type AvailabilitySlot = {
 
 type AvailabilityDay = {
   date: string; // 'YYYY-MM-DD'
+  timezone?: string; // Agent's timezone (e.g., "America/Toronto")
   slots: AvailabilitySlot[];
 };
 
@@ -26,6 +29,7 @@ export default function BookAgentPage() {
 
   // State
   const [availability, setAvailability] = useState<AvailabilityDay[]>([]);
+  const [agentTimezone, setAgentTimezone] = useState<string>("America/Toronto"); // Default fallback
   const [selectedDate, setSelectedDate] = useState<string | null>(null); // 'YYYY-MM-DD'
   const [selectedSlot, setSelectedSlot] = useState<AvailabilitySlot | null>(null);
   const [isLoadingAvailability, setIsLoadingAvailability] = useState(false);
@@ -131,6 +135,27 @@ export default function BookAgentPage() {
 
         const data: AvailabilityDay[] = await res.json();
         setAvailability(data);
+        
+        // Extract timezone from first day (all days should have same timezone)
+        if (data.length > 0 && data[0].timezone) {
+          setAgentTimezone(data[0].timezone);
+        } else if (agentInfo?.agent_province) {
+          // Fallback: infer timezone from province
+          const province = agentInfo.agent_province.toUpperCase();
+          if (province === "BC" || province === "BRITISH COLUMBIA") {
+            setAgentTimezone("America/Vancouver");
+          } else if (province === "AB" || province === "ALBERTA") {
+            setAgentTimezone("America/Edmonton");
+          } else if (province === "SK" || province === "SASKATCHEWAN") {
+            setAgentTimezone("America/Regina");
+          } else if (province === "MB" || province === "MANITOBA") {
+            setAgentTimezone("America/Winnipeg");
+          } else if (province === "ON" || province === "ONTARIO") {
+            setAgentTimezone("America/Toronto");
+          } else if (province === "QC" || province === "QUEBEC") {
+            setAgentTimezone("America/Montreal");
+          }
+        }
 
         // Set selectedDate to the date from URL params, or first day with slots
         if (dateParam) {
@@ -186,6 +211,11 @@ export default function BookAgentPage() {
 
         const data: AvailabilityDay[] = await res.json();
         setAvailability(data);
+        
+        // Extract timezone from first day
+        if (data.length > 0 && data[0].timezone) {
+          setAgentTimezone(data[0].timezone);
+        }
       } catch (err: any) {
         console.error("Error reloading availability:", err);
         setError(err.message || "Failed to load availability");
@@ -311,6 +341,11 @@ export default function BookAgentPage() {
         if (availabilityRes.ok) {
           const newAvailability = await availabilityRes.json();
           setAvailability(newAvailability);
+          
+          // Extract timezone from first day
+          if (newAvailability.length > 0 && newAvailability[0].timezone) {
+            setAgentTimezone(newAvailability[0].timezone);
+          }
         }
         setIsBooking(false);
         handleCloseBookingForm();
@@ -339,12 +374,7 @@ export default function BookAgentPage() {
   };
 
   const formatTime = (isoString: string): string => {
-    const date = new Date(isoString);
-    const hours = date.getUTCHours();
-    const minutes = date.getUTCMinutes();
-    const ampm = hours >= 12 ? "PM" : "AM";
-    const displayHours = hours % 12 || 12;
-    return `${displayHours}:${String(minutes).padStart(2, "0")} ${ampm}`;
+    return formatTimeWithTimezone(isoString, agentTimezone);
   };
 
   const formatDate = (dateStr: string): string => {
