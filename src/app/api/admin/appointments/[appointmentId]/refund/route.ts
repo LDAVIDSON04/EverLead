@@ -142,6 +142,26 @@ export async function POST(
           throw new Error(`Refund failed: ${refund.failure_reason || 'Unknown reason'}`);
         }
 
+        // Retrieve the refund to get latest status (in case it's pending)
+        const refundDetails = await stripe.refunds.retrieve(refund.id);
+        console.log("🔍 Refund details after creation:", {
+          refundId: refundDetails.id,
+          status: refundDetails.status,
+          amount: refundDetails.amount,
+          currency: refundDetails.currency,
+          charge: refundDetails.charge,
+          reason: refundDetails.reason,
+          failure_reason: refundDetails.failure_reason,
+        });
+
+        if (refundDetails.status === 'failed') {
+          throw new Error(`Refund failed: ${refundDetails.failure_reason || 'Unknown reason'}`);
+        }
+
+        if (refundDetails.status === 'pending') {
+          console.log("⚠️ Refund is pending - it may take a few moments to process");
+        }
+
         // Update payment record status to refunded in payments table
         try {
           await supabaseAdmin
