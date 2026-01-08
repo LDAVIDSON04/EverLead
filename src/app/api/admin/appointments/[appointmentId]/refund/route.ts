@@ -108,8 +108,11 @@ export async function POST(
         );
       }
     } else if (appointment.price_cents && !stripePaymentIntentId) {
-      // Appointment has a price but no payment intent found - still cancel but warn
-      console.warn("Appointment has price but no payment intent found:", appointmentId);
+      // Appointment has a price but no payment intent found - will cancel without refund
+      console.log("ℹ️ Appointment has price but no payment record found - cancelling without refund:", {
+        appointmentId,
+        priceCents: appointment.price_cents,
+      });
     }
 
     // Update appointment status to cancelled (no notes column in appointments table)
@@ -121,18 +124,24 @@ export async function POST(
       .eq("id", appointmentId);
 
     if (updateError) {
-      console.error("Error updating appointment:", updateError);
+      console.error("❌ Error updating appointment:", updateError);
       return NextResponse.json(
         { error: "Failed to cancel appointment" },
         { status: 500 }
       );
     }
 
+    console.log("✅ Appointment cancelled successfully:", {
+      appointmentId,
+      refunded: !!stripePaymentIntentId,
+      hadPaymentIntent: !!stripePaymentIntentId,
+    });
+
     return NextResponse.json({
       success: true,
       message: stripePaymentIntentId 
         ? "Appointment cancelled and refunded successfully" 
-        : "Appointment cancelled successfully (no payment to refund)",
+        : "Appointment cancelled successfully (no payment record found to refund)",
       refunded: !!stripePaymentIntentId,
     });
   } catch (error: any) {
