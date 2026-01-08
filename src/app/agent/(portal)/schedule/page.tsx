@@ -623,13 +623,26 @@ export default function SchedulePage() {
               console.log(`✅ INCLUDING appointment:`, {
                 family_name: apt.family_name,
                 starts_at: apt.starts_at,
+                starts_at_utc: apt.starts_at,
                 localStart: aptDateFormatted,
+                localStart_full: localStart.toISO(),
+                localStart_date: localStart.toFormat('yyyy-MM-dd'),
+                localStart_time: localStart.toFormat('HH:mm'),
+                agentTimezone,
                 dayIndex: finalDayIndex,
                 dayName: weekDays[finalDayIndex],
-                day: weekDates[finalDayIndex]?.toLocaleDateString(),
+                weekDate_at_dayIndex: weekDates[finalDayIndex]?.toISOString(),
+                weekDate_display: weekDates[finalDayIndex]?.toLocaleDateString(),
                 hour: localStart.hour,
                 minute: localStart.minute,
-                durationMinutes
+                durationMinutes,
+                // Debug: show what weekDates contains
+                weekDates_debug: weekDates.map((d, i) => ({
+                  index: i,
+                  dayName: weekDays[i],
+                  date: d.toISOString(),
+                  dateDisplay: d.toLocaleDateString(),
+                }))
               });
               
               return {
