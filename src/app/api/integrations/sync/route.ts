@@ -82,15 +82,18 @@ export async function GET(req: NextRequest) {
         // But skip if we recently got rate limited (429 errors) to avoid hitting rate limits repeatedly
         if (isWebhookExpiredOrExpiring(connection)) {
           // Check if we should skip webhook setup due to recent rate limiting
-          // Only attempt webhook setup every 10 minutes to avoid rate limits
-          const lastWebhookAttempt = connection.webhook_expires_at 
+          // When rate limited, webhook_expires_at is set to future retry time (1 hour ahead)
+          // Only attempt webhook setup if we've passed the retry time
+          const retryTime = connection.webhook_expires_at 
             ? new Date(connection.webhook_expires_at).getTime() 
             : 0;
-          const timeSinceLastAttempt = Date.now() - lastWebhookAttempt;
-          const minRetryInterval = 10 * 60 * 1000; // 10 minutes
+          const now = Date.now();
           
-          if (timeSinceLastAttempt < minRetryInterval && lastWebhookAttempt > 0) {
-            console.log(`Skipping webhook setup for ${connection.provider} - too soon after last attempt (rate limit protection)`);
+          // If webhook_expires_at is in the future and we're within 24 hours of it, it's likely a rate limit retry
+          // Skip if we haven't reached the retry time yet
+          if (retryTime > now && retryTime < now + 24 * 60 * 60 * 1000) {
+            const minutesUntilRetry = Math.round((retryTime - now) / (60 * 1000));
+            console.log(`Skipping webhook setup for ${connection.provider} - rate limited, retry in ${minutesUntilRetry} minutes (rate limit protection)`);
           } else {
             try {
               const { setupGoogleWebhook, setupMicrosoftWebhook } = await import("@/lib/calendarWebhooks");
