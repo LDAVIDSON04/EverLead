@@ -160,6 +160,45 @@ export async function GET(req: NextRequest) {
       // Normalize selectedLocation for comparison
       const normalizedSelected = normalizeLocation(selectedLocation)?.toLowerCase().trim() || selectedLocation.toLowerCase().trim();
       
+      // Helper function for fuzzy city name matching (handles spelling variations like "Vaughan" vs "Vaughn")
+      const fuzzyCityMatch = (city1: string, city2: string): boolean => {
+        const norm1 = normalizeLocation(city1)?.toLowerCase().trim() || city1.toLowerCase().trim();
+        const norm2 = normalizeLocation(city2)?.toLowerCase().trim() || city2.toLowerCase().trim();
+        
+        // Exact match
+        if (norm1 === norm2) return true;
+        
+        // One contains the other
+        if (norm1.includes(norm2) || norm2.includes(norm1)) return true;
+        
+        // Handle common spelling variations
+        // Check if they're very similar (edit distance 1) and start with same prefix
+        if (Math.abs(norm1.length - norm2.length) <= 1) {
+          const minLen = Math.min(norm1.length, norm2.length);
+          if (minLen >= 4) {
+            const prefix1 = norm1.substring(0, Math.min(6, norm1.length));
+            const prefix2 = norm2.substring(0, Math.min(6, norm2.length));
+            // If first 4+ characters match, likely the same city
+            if (prefix1.substring(0, 4) === prefix2.substring(0, 4) && 
+                Math.abs(prefix1.length - prefix2.length) <= 1) {
+              return true;
+            }
+          }
+        }
+        
+        // Specific known variations mapping
+        const variations: Record<string, string[]> = {
+          'vaughan': ['vaughn'],
+          'vaughn': ['vaughan'],
+        };
+        
+        if (variations[norm1]?.includes(norm2) || variations[norm2]?.includes(norm1)) {
+          return true;
+        }
+        
+        return false;
+      };
+      
       // Try exact match first (case-sensitive)
       if (availabilityByLocation[selectedLocation]) {
         locationSchedule = availabilityByLocation[selectedLocation];
@@ -172,10 +211,18 @@ export async function GET(req: NextRequest) {
           }
         );
         
+        // If no normalized match, try fuzzy matching
+        if (!matchingLocation) {
+          matchingLocation = Object.keys(availabilityByLocation).find(
+            loc => fuzzyCityMatch(loc, selectedLocation)
+          );
+        }
+        
         if (matchingLocation) {
           locationSchedule = availabilityByLocation[matchingLocation];
           // Update selectedLocation to the matched key for consistency
           selectedLocation = matchingLocation;
+          console.log(`✅ [AVAILABILITY API] Matched location "${selectedLocation}" to "${matchingLocation}" using fuzzy matching`);
         }
       }
     }
