@@ -4,11 +4,88 @@
  * due to common misspellings or variations
  */
 
+/**
+ * Common Canadian city name corrections
+ * Maps misspellings/variations to correct spellings
+ */
 const CITY_CORRECTIONS: Record<string, string> = {
-  // Common misspellings
+  // Ontario
   'vaughn': 'Vaughan',
   'vaughon': 'Vaughan',
-  // Add more corrections as needed
+  'toronto': 'Toronto',
+  'ottawa': 'Ottawa',
+  'hamilton': 'Hamilton',
+  'london': 'London',
+  'mississauga': 'Mississauga',
+  'markham': 'Markham',
+  'brampton': 'Brampton',
+  'windsor': 'Windsor',
+  'kitchener': 'Kitchener',
+  'waterloo': 'Waterloo',
+  'oakville': 'Oakville',
+  'burlington': 'Burlington',
+  'richmond hill': 'Richmond Hill',
+  'greater sudbury': 'Greater Sudbury',
+  'oshawa': 'Oshawa',
+  'barrie': 'Barrie',
+  'st. catharines': 'St. Catharines',
+  'guelph': 'Guelph',
+  'cambridge': 'Cambridge',
+  
+  // British Columbia
+  'vancouver': 'Vancouver',
+  'victoria': 'Victoria',
+  'surrey': 'Surrey',
+  'burnaby': 'Burnaby',
+  'richmond': 'Richmond',
+  'langley': 'Langley',
+  'coquitlam': 'Coquitlam',
+  'abbotsford': 'Abbotsford',
+  'kelowna': 'Kelowna',
+  'penticton': 'Penticton',
+  'west kelowna': 'West Kelowna',
+  'summerland': 'Summerland',
+  'salmon arm': 'Salmon Arm',
+  'vernon': 'Vernon',
+  'kamloops': 'Kamloops',
+  'nanaimo': 'Nanaimo',
+  'prince george': 'Prince George',
+  
+  // Alberta
+  'calgary': 'Calgary',
+  'edmonton': 'Edmonton',
+  'red deer': 'Red Deer',
+  'lethbridge': 'Lethbridge',
+  'medicine hat': 'Medicine Hat',
+  'grande prairie': 'Grande Prairie',
+  
+  // Quebec
+  'montreal': 'Montreal',
+  'quebec city': 'Quebec City',
+  'laval': 'Laval',
+  'gatineau': 'Gatineau',
+  'longueuil': 'Longueuil',
+  
+  // Manitoba
+  'winnipeg': 'Winnipeg',
+  
+  // Saskatchewan
+  'saskatoon': 'Saskatoon',
+  'regina': 'Regina',
+  
+  // Nova Scotia
+  'halifax': 'Halifax',
+  
+  // New Brunswick
+  'saint john': 'Saint John',
+  'moncton': 'Moncton',
+  
+  // Newfoundland and Labrador
+  'st. john\'s': 'St. John\'s',
+  'st johns': 'St. John\'s',
+  
+  // Prince Edward Island
+  'charlottetown': 'Charlottetown',
 };
 
 /**
