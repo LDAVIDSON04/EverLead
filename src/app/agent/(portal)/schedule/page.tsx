@@ -556,35 +556,77 @@ export default function SchedulePage() {
           
           if (startsInRange || endsInRange || overlapsRange) {
             // Compare dates in agent's timezone to find which day of the week
+            // Normalize appointment date to just year/month/day for comparison
+            const aptYear = localStart.year;
+            const aptMonth = localStart.month;
+            const aptDay = localStart.day;
+            
             const dayIndex = weekDates.findIndex((date, idx) => {
+              // Convert week date to agent's timezone and normalize to year/month/day
               const dateDT = DateTime.fromJSDate(date, { zone: agentTimezone })
                 .set({ hour: 0, minute: 0, second: 0, millisecond: 0 });
-              const aptDateDT = localStart.set({ hour: 0, minute: 0, second: 0, millisecond: 0 });
-              const sameDay = dateDT.hasSame(aptDateDT, 'day');
+              
+              // Compare year, month, and day directly
+              const sameDay = dateDT.year === aptYear && 
+                             dateDT.month === aptMonth && 
+                             dateDT.day === aptDay;
               
               if (sameDay) {
                 console.log(`📍 Found day match:`, {
                   appointment: apt.family_name,
-                  appointmentDate: aptDateDT.toFormat('MMM d, yyyy'),
+                  appointmentDate: localStart.toFormat('MMM d, yyyy'),
                   weekDate: dateDT.toFormat('MMM d, yyyy'),
                   dayIndex: idx,
-                  dayName: weekDays[idx]
+                  dayName: weekDays[idx],
+                  appointmentYMD: `${aptYear}-${aptMonth}-${aptDay}`,
+                  weekYMD: `${dateDT.year}-${dateDT.month}-${dateDT.day}`
                 });
               }
               
               return sameDay;
             });
             
-            if (dayIndex >= 0 && dayIndex < 7) {
+            // If dayIndex not found but appointment is in range, try more flexible matching
+            // This can happen with timezone edge cases
+            let finalDayIndex = dayIndex;
+            if (dayIndex < 0) {
+              // Try to match by calculating which day of the week it should be
+              const appointmentDayOfWeek = localStart.weekday; // 1 = Monday, 7 = Sunday
+              // weekDates[0] is Sunday, so we need to convert
+              // Sunday = 0 in weekDates, but 7 in luxon weekday
+              const adjustedWeekday = appointmentDayOfWeek === 7 ? 0 : appointmentDayOfWeek;
+              
+              if (adjustedWeekday >= 0 && adjustedWeekday < 7) {
+                // Verify the date actually matches the week
+                const candidateDate = weekDates[adjustedWeekday];
+                const candidateDT = DateTime.fromJSDate(candidateDate, { zone: agentTimezone })
+                  .set({ hour: 0, minute: 0, second: 0, millisecond: 0 });
+                
+                if (candidateDT.year === aptYear && 
+                    candidateDT.month === aptMonth && 
+                    candidateDT.day === aptDay) {
+                  finalDayIndex = adjustedWeekday;
+                  console.log(`📍 Found day match (fallback method):`, {
+                    appointment: apt.family_name,
+                    appointmentDate: localStart.toFormat('MMM d, yyyy'),
+                    weekDate: candidateDT.toFormat('MMM d, yyyy'),
+                    dayIndex: finalDayIndex,
+                    dayName: weekDays[finalDayIndex]
+                  });
+                }
+              }
+            }
+            
+            if (finalDayIndex >= 0 && finalDayIndex < 7) {
               const durationMinutes = localEnd.diff(localStart, 'minutes').minutes;
               
               console.log(`✅ INCLUDING appointment:`, {
                 family_name: apt.family_name,
                 starts_at: apt.starts_at,
                 localStart: aptDateFormatted,
-                dayIndex,
-                dayName: weekDays[dayIndex],
-                day: weekDates[dayIndex]?.toLocaleDateString(),
+                dayIndex: finalDayIndex,
+                dayName: weekDays[finalDayIndex],
+                day: weekDates[finalDayIndex]?.toLocaleDateString(),
                 hour: localStart.hour,
                 minute: localStart.minute,
                 durationMinutes
@@ -592,7 +634,7 @@ export default function SchedulePage() {
               
               return {
                 ...apt,
-                day: dayIndex,
+                day: finalDayIndex,
                 hour: localStart.hour,
                 minute: localStart.minute,
                 durationMinutes,
@@ -604,12 +646,19 @@ export default function SchedulePage() {
                 family_name: apt.family_name,
                 starts_at: apt.starts_at,
                 localStart: aptDateFormatted,
-                dayIndex,
-                weekDates: weekDates.map((d, i) => ({
-                  index: i,
-                  date: d.toLocaleDateString(),
-                  dayName: weekDays[i]
-                })),
+                dayIndex: dayIndex,
+                finalDayIndex: finalDayIndex,
+                appointmentYMD: `${aptYear}-${aptMonth}-${aptDay}`,
+                appointmentDayOfWeek: localStart.weekday,
+                weekDates: weekDates.map((d, i) => {
+                  const dDT = DateTime.fromJSDate(d, { zone: agentTimezone });
+                  return {
+                    index: i,
+                    date: d.toLocaleDateString(),
+                    dayName: weekDays[i],
+                    YMD: `${dDT.year}-${dDT.month}-${dDT.day}`
+                  };
+                }),
                 appointmentDay: localStart.toFormat('EEEE, MMM d, yyyy')
               });
             }
