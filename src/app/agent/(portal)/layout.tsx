@@ -26,13 +26,15 @@ function NavLinkWithPrefetch({
   isActive, 
   icon: Icon, 
   label,
-  onHomeClick
+  onHomeClick,
+  router
 }: { 
   href: string; 
   isActive: boolean; 
   icon: any; 
   label: string;
   onHomeClick?: () => void;
+  router: ReturnType<typeof useRouter>;
 }) {
   const prefetchHandler = usePrefetchOnHover(href);
   
@@ -40,8 +42,8 @@ function NavLinkWithPrefetch({
     if (onHomeClick && href === '/agent/dashboard') {
       e.preventDefault();
       await onHomeClick();
-      // Navigate after checking onboarding
-      window.location.href = href;
+      // Use Next.js router instead of window.location.href to preserve layout
+      router.push(href);
     }
   };
   
@@ -574,6 +576,7 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
                   isActive={isActive}
                   icon={Icon}
                   label={item.label}
+                  router={router}
                   onHomeClick={item.href === '/agent/dashboard' ? async () => {
                     // Check onboarding status when Home is clicked
                     const { data: { session } } = await supabaseClient.auth.getSession();
