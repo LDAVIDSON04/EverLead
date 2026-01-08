@@ -4,6 +4,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { sendRefundEmail } from "@/lib/emails";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -26,10 +27,24 @@ export async function POST(
     let appointment: any;
     let stripePaymentIntentId: string | null = null;
 
-    // First, try to fetch with stripe_payment_intent_id column
+    // First, try to fetch with stripe_payment_intent_id column and related data
     const appointmentResult = await supabaseAdmin
       .from("appointments")
-      .select("id, agent_id, price_cents, status, stripe_payment_intent_id")
+      .select(`
+        id,
+        agent_id,
+        price_cents,
+        status,
+        stripe_payment_intent_id,
+        requested_date,
+        confirmed_at,
+        leads (
+          id,
+          first_name,
+          last_name,
+          full_name
+        )
+      `)
       .eq("id", appointmentId)
       .maybeSingle();
 
@@ -39,7 +54,20 @@ export async function POST(
         console.log("stripe_payment_intent_id column doesn't exist, checking payments table");
         const resultWithoutColumn = await supabaseAdmin
           .from("appointments")
-          .select("id, agent_id, price_cents, status")
+          .select(`
+            id,
+            agent_id,
+            price_cents,
+            status,
+            requested_date,
+            confirmed_at,
+            leads (
+              id,
+              first_name,
+              last_name,
+              full_name
+            )
+          `)
           .eq("id", appointmentId)
           .maybeSingle();
         
@@ -98,6 +126,9 @@ export async function POST(
       }
     }
 
+    // Store refund ID for email
+    let refundId: string | undefined;
+
     // Check if there's a payment to refund
     if (stripePaymentIntentId && appointment.price_cents) {
       try {
@@ -127,6 +158,9 @@ export async function POST(
             refunded_by: "admin",
           },
         });
+
+        // Store refund ID for email
+        refundId = refund.id;
 
         console.log("✅ Refund created successfully:", {
           refundId: refund.id,
@@ -230,6 +264,61 @@ export async function POST(
       refunded: !!stripePaymentIntentId,
       hadPaymentIntent: !!stripePaymentIntentId,
     });
+
+    // Send refund email to agent if refund was processed
+    if (stripePaymentIntentId && appointment.price_cents) {
+      try {
+        // Fetch agent's email and name
+        const { data: agentProfile } = await supabaseAdmin
+          .from("profiles")
+          .select("email, full_name, first_name, last_name")
+          .eq("id", appointment.agent_id)
+          .maybeSingle();
+
+        if (agentProfile?.email) {
+          // Format appointment date and time
+          let appointmentDate: string | undefined;
+          let appointmentTime: string | undefined;
+          
+          if (appointment.requested_date) {
+            appointmentDate = new Date(appointment.requested_date).toLocaleDateString('en-US', {
+              weekday: 'long',
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            });
+          }
+          
+          if (appointment.confirmed_at) {
+            appointmentTime = new Date(appointment.confirmed_at).toLocaleTimeString('en-US', {
+              hour: 'numeric',
+              minute: '2-digit',
+              timeZoneName: 'short'
+            });
+          }
+
+          // Get client name from leads
+          const clientName = appointment.leads?.full_name || 
+                            (appointment.leads?.first_name && appointment.leads?.last_name 
+                              ? `${appointment.leads.first_name} ${appointment.leads.last_name}`
+                              : null);
+
+          await sendRefundEmail({
+            to: agentProfile.email,
+            agentName: agentProfile.full_name || `${agentProfile.first_name || ''} ${agentProfile.last_name || ''}`.trim(),
+            appointmentId,
+            amountCents: appointment.price_cents,
+            refundId: refundId || undefined,
+            consumerName: clientName || undefined,
+            appointmentDate,
+            appointmentTime,
+          });
+        }
+      } catch (emailError: any) {
+        // Log but don't fail the refund if email fails
+        console.error("⚠️ Failed to send refund email (non-critical):", emailError);
+      }
+    }
 
     return NextResponse.json({
       success: true,

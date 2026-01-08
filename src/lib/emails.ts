@@ -85,6 +85,17 @@ type PaymentReceiptEmailArgs = {
   appointmentTime?: string | null;
 };
 
+type RefundEmailArgs = {
+  to: string;
+  agentName?: string | null;
+  appointmentId: string;
+  amountCents: number;
+  refundId?: string | null;
+  consumerName?: string | null;
+  appointmentDate?: string | null;
+  appointmentTime?: string | null;
+};
+
 /**
  * Send booking confirmation email to consumer/family
  */
@@ -2162,6 +2173,242 @@ export async function sendPaymentReceiptEmail({
     return result;
   } catch (error: any) {
     console.error('❌ Error sending payment receipt email:', {
+      error: error.message,
+      stack: error.stack,
+      to,
+    });
+    throw error;
+  }
+}
+
+/**
+ * Send refund confirmation email to agent when their appointment is refunded
+ */
+export async function sendRefundEmail({
+  to,
+  agentName,
+  appointmentId,
+  amountCents,
+  refundId,
+  consumerName,
+  appointmentDate,
+  appointmentTime,
+}: RefundEmailArgs) {
+  if (!to) {
+    console.warn('sendRefundEmail: No email address provided');
+    return;
+  }
+
+  const resendApiKey = process.env.RESEND_API_KEY;
+  const resendFromEmail = process.env.RESEND_FROM_EMAIL || 'Soradin <notifications@soradin.com>';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://soradin.com';
+
+  if (!resendApiKey) {
+    console.log('📧 sendRefundEmail: RESEND_API_KEY not set, skipping email');
+    return;
+  }
+
+  let fromEmail = resendFromEmail;
+  if (fromEmail && !fromEmail.includes('<')) {
+    fromEmail = `Soradin <${fromEmail}>`;
+  } else if (fromEmail && fromEmail.includes('<')) {
+    const emailMatch = fromEmail.match(/<(.+@.+?)>/);
+    if (emailMatch) {
+      fromEmail = `Soradin <${emailMatch[1]}>`;
+    }
+  } else {
+    fromEmail = 'Soradin <notifications@soradin.com>';
+  }
+
+  try {
+    let cleanSiteUrl = (siteUrl || '').trim().replace(/\/+$/, '');
+    if (!cleanSiteUrl.startsWith('http')) {
+      cleanSiteUrl = `https://${cleanSiteUrl}`;
+    }
+
+    const emailBody = {
+      from: fromEmail,
+      to: [to],
+      subject: 'Refund Confirmation - Appointment Cancelled',
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Refund Confirmation</title>
+        </head>
+        <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f5f5f5;">
+          <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 40px 20px;">
+            <tr>
+              <td align="center">
+                <table width="800" cellpadding="0" cellspacing="0" style="background-color: #ffffff; max-width: 800px;">
+                  <!-- Header -->
+                  <tr>
+                    <td style="background-color: #1a4d2e; padding: 32px 24px;">
+                      <table width="100%" cellpadding="0" cellspacing="0">
+                        <tr>
+                          <td style="vertical-align: middle;">
+                            <h1 style="color: #ffffff; font-size: 32px; font-weight: bold; margin: 0;">SORADIN</h1>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                  
+                  <!-- Content -->
+                  <tr>
+                    <td style="padding: 40px 32px;">
+                      <h2 style="color: #111827; font-size: 28px; margin: 0 0 32px 0; font-weight: 600; line-height: 1.3;">Refund Confirmation</h2>
+                      
+                      <p style="color: #374151; font-size: 16px; margin: 0 0 32px 0; line-height: 1.6;">
+                        Your appointment has been cancelled and a refund has been processed for the booking fee.
+                      </p>
+                      
+                      <!-- Two Column Layout for Details -->
+                      <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 32px;">
+                        <tr>
+                          <td width="50%" style="padding-right: 16px; padding-bottom: 20px;">
+                            <table cellpadding="0" cellspacing="0" style="border-left: 3px solid #dc2626; padding-left: 20px;">
+                              <tr>
+                                <td style="padding-top: 4px; padding-bottom: 4px;">
+                                  <p style="color: #6b7280; font-size: 13px; margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500;">Amount Refunded</p>
+                                  <p style="color: #111827; font-size: 18px; margin: 0; font-weight: 500; line-height: 1.4;">$${(amountCents / 100).toFixed(2)} CAD</p>
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                          ${consumerName ? `
+                          <td width="50%" style="padding-left: 20px; padding-bottom: 20px;">
+                            <table cellpadding="0" cellspacing="0" style="border-left: 3px solid #dc2626; padding-left: 20px;">
+                              <tr>
+                                <td style="padding-top: 4px; padding-bottom: 4px;">
+                                  <p style="color: #6b7280; font-size: 13px; margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500;">Client</p>
+                                  <p style="color: #111827; font-size: 18px; margin: 0; font-weight: 500; line-height: 1.4;">${consumerName}</p>
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                          ` : ''}
+                        </tr>
+                        ${appointmentDate || appointmentTime ? `
+                        <tr>
+                          ${appointmentDate ? `
+                          <td width="50%" style="padding-right: 16px; padding-bottom: 20px;">
+                            <table cellpadding="0" cellspacing="0" style="border-left: 3px solid #dc2626; padding-left: 20px;">
+                              <tr>
+                                <td style="padding-top: 4px; padding-bottom: 4px;">
+                                  <p style="color: #6b7280; font-size: 13px; margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500;">Appointment Date</p>
+                                  <p style="color: #111827; font-size: 18px; margin: 0; font-weight: 500; line-height: 1.4;">${appointmentDate}</p>
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                          ` : ''}
+                          ${appointmentTime ? `
+                          <td width="50%" style="padding-left: 20px; padding-bottom: 20px;">
+                            <table cellpadding="0" cellspacing="0" style="border-left: 3px solid #dc2626; padding-left: 20px;">
+                              <tr>
+                                <td style="padding-top: 4px; padding-bottom: 4px;">
+                                  <p style="color: #6b7280; font-size: 13px; margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500;">Appointment Time</p>
+                                  <p style="color: #111827; font-size: 18px; margin: 0; font-weight: 500; line-height: 1.4;">${appointmentTime}</p>
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                          ` : ''}
+                        </tr>
+                        ` : ''}
+                      </table>
+                      
+                      <!-- Info Box -->
+                      <table width="100%" cellpadding="0" cellspacing="0" style="margin-top: 24px;">
+                        <tr>
+                          <td style="padding: 24px; background-color: #fef2f2; border-left: 4px solid #dc2626; border-radius: 8px;">
+                            <p style="color: #374151; font-size: 16px; margin: 0 0 12px 0; line-height: 1.5; font-weight: 500;">
+                              Refund Processing:
+                            </p>
+                            <p style="color: #6b7280; font-size: 14px; margin: 0; line-height: 1.5;">
+                              The refund of $${(amountCents / 100).toFixed(2)} CAD has been processed and will be credited back to your original payment method. It may take 5-10 business days to appear in your account. You will also receive an official refund receipt from Stripe.
+                            </p>
+                            ${refundId ? `
+                            <p style="color: #6b7280; font-size: 12px; margin: 12px 0 0 0; line-height: 1.5;">
+                              Refund ID: ${refundId}
+                            </p>
+                            ` : ''}
+                          </td>
+                        </tr>
+                      </table>
+                      
+                      ${appointmentId ? `
+                      <table width="100%" cellpadding="0" cellspacing="0" style="margin-top: 32px;">
+                        <tr>
+                          <td align="center">
+                            <p style="color: #6b7280; font-size: 14px; margin: 0;">
+                              Appointment ID: ${appointmentId}
+                            </p>
+                          </td>
+                        </tr>
+                      </table>
+                      ` : ''}
+                    </td>
+                  </tr>
+                  
+                  <!-- Footer -->
+                  <tr>
+                    <td style="background-color: #000000; padding: 16px;">
+                      <table width="100%" cellpadding="0" cellspacing="0">
+                        <tr>
+                          <td style="color: #ffffff; font-size: 12px;">
+                            © ${new Date().getFullYear()} Soradin. All rights reserved.
+                          </td>
+                          <td align="right" style="color: #9ca3af; font-size: 12px;">
+                            This is an automated message, please do not reply.
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
+      `,
+    };
+
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${resendApiKey}`,
+      },
+      body: JSON.stringify(emailBody),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ Resend API error for refund email:', {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorText,
+        to,
+      });
+      throw new Error(`Resend API error: ${response.status} ${response.statusText}`);
+    }
+
+    const result = await response.json();
+    console.log('✅ Refund email sent successfully:', {
+      emailId: result.id,
+      to,
+      appointmentId,
+      refundId,
+    });
+    
+    return result;
+  } catch (error: any) {
+    console.error('❌ Error sending refund email:', {
       error: error.message,
       stack: error.stack,
       to,
