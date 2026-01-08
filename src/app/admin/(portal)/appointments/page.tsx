@@ -56,11 +56,12 @@ export default function AdminAppointmentsPage() {
               status,
               price_cents,
               lead_id,
-              agent_id
+              agent_id,
+              created_at
             `
           )
           .not("lead_id", "is", null) // Only appointments created through Soradin (have a lead_id)
-          .order("requested_date", { ascending: false })
+          .order("created_at", { ascending: false }) // Sort by booking date (most recent first)
           .limit(100);
 
         const { data, error } = await query;
