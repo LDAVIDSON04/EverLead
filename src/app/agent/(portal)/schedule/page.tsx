@@ -491,7 +491,9 @@ export default function SchedulePage() {
       weekStartFormatted: weekStartDT.toFormat('MMM d, yyyy HH:mm'),
       weekEndFormatted: weekEndDT.toFormat('MMM d, yyyy HH:mm'),
       totalAppointments: appointments.length,
-      agentTimezone
+      agentTimezone,
+      agentTimezone_offset: weekStartDT.offsetNameShort,
+      browserTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     });
 
     // Log ALL appointments first to see what we're working with
