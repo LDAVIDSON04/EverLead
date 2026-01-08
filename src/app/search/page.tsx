@@ -83,6 +83,7 @@ type AvailabilitySlot = {
 
 type AvailabilityDay = {
   date: string;
+  timezone?: string; // Agent's timezone (e.g., "America/Toronto")
   slots: { startsAt: string; endsAt: string }[];
 };
 
