@@ -93,16 +93,31 @@ export async function GET(req: NextRequest) {
       return NextResponse.json([]);
     }
 
+    // Helper to strip province/state suffix (e.g., "Vaughan, ON" -> "Vaughan")
+    const stripProvinceSuffix = (loc: string): string => {
+      // Remove common province/state suffixes like ", BC", ", AB", ", ON", etc.
+      const trimmed = loc.trim();
+      const commaIndex = trimmed.lastIndexOf(',');
+      if (commaIndex > 0) {
+        // Check if the part after comma looks like a province/state code (2-3 letters)
+        const afterComma = trimmed.substring(commaIndex + 1).trim();
+        if (afterComma.length >= 2 && afterComma.length <= 3 && /^[A-Z]{2,3}$/i.test(afterComma)) {
+          return trimmed.substring(0, commaIndex).trim();
+        }
+      }
+      return trimmed;
+    };
+    
     // Use the specified location, or fall back to first location, or agent's default city
-    let selectedLocation = location ? location.trim() : undefined;
+    let selectedLocation = location ? stripProvinceSuffix(location) : undefined;
     if (!selectedLocation && locations.length > 0) {
-      selectedLocation = locations[0].trim();
+      selectedLocation = stripProvinceSuffix(locations[0]);
     }
     if (!selectedLocation && profile.agent_city) {
-      selectedLocation = profile.agent_city.trim();
+      selectedLocation = stripProvinceSuffix(profile.agent_city);
     }
     if (!selectedLocation && locations.length > 0) {
-      selectedLocation = locations[0].trim();
+      selectedLocation = stripProvinceSuffix(locations[0]);
     }
     
     // Ensure selectedLocation is trimmed
