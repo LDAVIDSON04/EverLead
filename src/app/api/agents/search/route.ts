@@ -335,9 +335,57 @@ export async function GET(req: NextRequest) {
       
       filtered = filtered.filter((agent) => {
         // Normalize function to extract city name from "City, Province" format
+        // Also handles province abbreviations without comma (e.g., "Vaughn On" -> "vaughn")
         const normalizeCity = (cityStr: string): string => {
           if (!cityStr) return '';
-          return cityStr.toLowerCase().trim().split(',')[0].trim().replace(/\s+/g, ' ');
+          let normalized = cityStr.toLowerCase().trim().split(',')[0].trim();
+          // Remove province abbreviations at the end without comma (e.g., "Vaughn On" -> "vaughn")
+          const provinceAbbrevs = /\s+(on|bc|ab|sk|mb|qc|nb|ns|pe|nl|yt|nt|nu)$/i;
+          normalized = normalized.replace(provinceAbbrevs, '').trim();
+          // Remove " Office" suffix if present
+          normalized = normalized.replace(/\s+office$/i, '').trim();
+          return normalized.replace(/\s+/g, ' ');
+        };
+        
+        // Helper function for fuzzy city name matching
+        // Handles common spelling variations (e.g., "Vaughan" vs "Vaughn")
+        const fuzzyCityMatch = (city1: string, city2: string): boolean => {
+          const norm1 = normalizeCity(city1);
+          const norm2 = normalizeCity(city2);
+          
+          // Exact match
+          if (norm1 === norm2) return true;
+          
+          // One contains the other
+          if (norm1.includes(norm2) || norm2.includes(norm1)) return true;
+          
+          // Handle common spelling variations
+          // "Vaughan" vs "Vaughn" - check if they're very similar (edit distance 1)
+          if (Math.abs(norm1.length - norm2.length) <= 1) {
+            // Check if they start with the same letters (at least 4 chars)
+            const minLen = Math.min(norm1.length, norm2.length);
+            if (minLen >= 4) {
+              const prefix1 = norm1.substring(0, Math.min(6, norm1.length));
+              const prefix2 = norm2.substring(0, Math.min(6, norm2.length));
+              // If first 4+ characters match, likely the same city
+              if (prefix1.substring(0, 4) === prefix2.substring(0, 4) && 
+                  Math.abs(prefix1.length - prefix2.length) <= 1) {
+                return true;
+              }
+            }
+          }
+          
+          // Specific known variations mapping
+          const variations: Record<string, string[]> = {
+            'vaughan': ['vaughn'],
+            'vaughn': ['vaughan'],
+          };
+          
+          if (variations[norm1]?.includes(norm2) || variations[norm2]?.includes(norm1)) {
+            return true;
+          }
+          
+          return false;
         };
         
         // Normalize province names
@@ -395,20 +443,14 @@ export async function GET(req: NextRequest) {
         // Check if the city matches any of the agent's locations (availability or office locations)
         const hasLocationInList = agent.availabilityLocations.some((loc: string) => {
           if (!loc) return false;
-          const normalizedLoc = normalizeCity(loc);
-          return normalizedLoc === normalizedSearch || 
-                 normalizedLoc.includes(normalizedSearch) ||
-                 normalizedSearch.includes(normalizedLoc);
+          return fuzzyCityMatch(loc, searchCity);
         });
         
         // Also check office locations for city match
         const officeLocations = (agent as any).officeLocations || [];
         const matchesOfficeCity = officeLocations.some((loc: any) => {
           if (!loc.city) return false;
-          const normalizedLoc = normalizeCity(loc.city);
-          return normalizedLoc === normalizedSearch || 
-                 normalizedLoc.includes(normalizedSearch) ||
-                 normalizedSearch.includes(normalizedLoc);
+          return fuzzyCityMatch(loc.city, searchCity);
         });
         
         // If province was specified in search, also check province match
@@ -430,7 +472,7 @@ export async function GET(req: NextRequest) {
         
         if (hasLocationInList || matchesOfficeCity) {
           console.log(`[AGENT SEARCH] Agent ${agent.id} matches location "${location}" (searchCity: "${searchCity}")`);
-          return true;
+        return true;
         }
         
         return false;
