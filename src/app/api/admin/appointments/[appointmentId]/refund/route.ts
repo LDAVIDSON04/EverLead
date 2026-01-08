@@ -101,6 +101,21 @@ export async function POST(
     // Check if there's a payment to refund
     if (stripePaymentIntentId && appointment.price_cents) {
       try {
+        // First, verify the payment intent exists and is refundable
+        const paymentIntent = await stripe.paymentIntents.retrieve(stripePaymentIntentId);
+        console.log("🔍 Payment Intent details:", {
+          id: paymentIntent.id,
+          status: paymentIntent.status,
+          amount: paymentIntent.amount,
+          amount_received: paymentIntent.amount_received,
+          charges: paymentIntent.charges?.data?.length || 0,
+        });
+
+        // Check if payment intent has been paid
+        if (paymentIntent.status !== 'succeeded') {
+          throw new Error(`Payment intent status is ${paymentIntent.status}, cannot refund. Only succeeded payments can be refunded.`);
+        }
+
         // Create refund via Stripe
         const refund = await stripe.refunds.create({
           payment_intent: stripePaymentIntentId,
@@ -117,7 +132,31 @@ export async function POST(
           refundId: refund.id,
           appointmentId,
           amount: appointment.price_cents,
+          refundStatus: refund.status,
+          refundAmount: refund.amount,
+          paymentIntentId: stripePaymentIntentId,
         });
+
+        // Verify refund was actually created and check its status
+        if (refund.status === 'failed') {
+          throw new Error(`Refund failed: ${refund.failure_reason || 'Unknown reason'}`);
+        }
+
+        // Update payment record status to refunded in payments table
+        try {
+          await supabaseAdmin
+            .from("payments")
+            .update({
+              status: 'refunded',
+            })
+            .eq("appointment_id", appointmentId)
+            .eq("stripe_payment_intent_id", stripePaymentIntentId);
+          
+          console.log("✅ Payment record updated to refunded status");
+        } catch (updatePaymentError: any) {
+          console.error("⚠️ Failed to update payment record status (non-critical):", updatePaymentError);
+          // Don't fail the refund if payment record update fails
+        }
       } catch (stripeError: any) {
         console.error("Error creating refund:", stripeError);
         // If refund fails, still cancel the appointment
