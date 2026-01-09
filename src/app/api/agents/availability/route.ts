@@ -825,44 +825,48 @@ export async function GET(req: NextRequest) {
         const currentMin = currentTimeMinutes % 60;
         const timeStr = `${String(currentHour).padStart(2, "0")}:${String(currentMin).padStart(2, "0")}`;
         
-        // Create slot start and end times in agent's timezone, then convert to UTC
-        const localDateTimeStr = `${dateStr}T${timeStr}:00`;
-        const localStart = DateTime.fromISO(localDateTimeStr, { zone: agentTimezone });
-        const localEnd = localStart.plus({ minutes: appointmentLength });
-        
-        if (!localStart.isValid || !localEnd.isValid) {
-          console.error(`Invalid slot time for ${dateStr} ${timeStr}`, {
-            localDateTimeStr,
+        // CRITICAL: Use centralized utility to convert local time to UTC
+        let slotStartUTC: string;
+        let slotEndUTC: string;
+        try {
+          slotStartUTC = localTimeToUTC(dateStr, timeStr, agentTimezone);
+          const slotStartDateTime = DateTime.fromISO(slotStartUTC, { zone: "utc" });
+          const slotEndDateTime = slotStartDateTime.plus({ minutes: appointmentLength });
+          slotEndUTC = slotEndDateTime.toISO()!;
+          
+          if (!slotStartUTC || !slotEndUTC) {
+            throw new Error("Failed to generate UTC timestamps");
+          }
+          
+          // Debug: Log first few slot generations to verify timezone conversion
+          if (slots.length < 3) {
+            const localStart = DateTime.fromISO(slotStartUTC, { zone: "utc" }).setZone(agentTimezone);
+            console.log(`🕐 [AVAILABILITY API] Generating slot ${slots.length}:`, {
+              dateStr,
+              timeStr,
+              agentTimezone,
+              localHour: localStart.hour,
+              localMinute: localStart.minute,
+              localFormatted: localStart.toFormat('yyyy-MM-dd HH:mm:ss ZZZ'),
+              utcISO: slotStartUTC,
+              utcHour: DateTime.fromISO(slotStartUTC, { zone: "utc" }).hour,
+            });
+          }
+        } catch (error) {
+          console.error(`❌ [AVAILABILITY API] Error converting time slot to UTC for ${dateStr} ${timeStr}:`, {
             agentTimezone,
-            isValid: localStart.isValid,
-            invalidReason: localStart.invalidReason,
+            error: error instanceof Error ? error.message : String(error),
           });
           continue;
         }
         
-        // Debug: Log first few slot generations to verify timezone conversion
-        if (slots.length < 3) {
-          console.log(`🕐 [AVAILABILITY API] Generating slot ${slots.length}:`, {
-            dateStr,
-            timeStr,
-            agentTimezone,
-            localDateTimeStr,
-            localStartISO: localStart.toISO(),
-            localStartFormatted: localStart.toFormat('yyyy-MM-dd HH:mm:ss ZZZ'),
-            localHour: localStart.hour,
-            localMinute: localStart.minute,
-            utcISO: localStart.toUTC().toISO(),
-            utcHour: localStart.toUTC().hour,
-          });
-        }
+        const slotStart = new Date(slotStartUTC);
+        const slotEnd = new Date(slotEndUTC);
         
-        // Convert to UTC for API response
-        const slotStart = new Date(localStart.toUTC().toISO());
-        const slotEnd = new Date(localEnd.toUTC().toISO());
+        // Get hour in agent's timezone for conflict checking
+        const localStartCheck = DateTime.fromISO(slotStartUTC, { zone: "utc" }).setZone(agentTimezone);
+        const slotHour = localStartCheck.hour;
         
-        // Get the hour in agent's timezone for conflict checking
-        const slotHour = localStart.hour;
-
         // Check for conflicts with existing appointments - this MUST block booked slots immediately
         const hasConflictResult = hasConflict(slotStart, slotEnd, dateStr, slotHour);
         
