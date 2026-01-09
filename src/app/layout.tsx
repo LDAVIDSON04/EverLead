@@ -88,8 +88,8 @@ export default function RootLayout({
     "logo": {
       "@type": "ImageObject",
       "url": "https://www.soradin.com/Soradin.png",
-      "width": 512,
-      "height": 512
+      "width": 1024,
+      "height": 1024
     },
     "image": "https://www.soradin.com/Soradin.png",
     "description": "Soradin helps families plan funeral wishes in advance and connect with trusted local professionals without pressure or urgency.",
