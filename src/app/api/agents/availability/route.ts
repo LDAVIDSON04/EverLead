@@ -826,8 +826,8 @@ export async function GET(req: NextRequest) {
         const timeStr = `${String(currentHour).padStart(2, "0")}:${String(currentMin).padStart(2, "0")}`;
         
         // CRITICAL: Use centralized utility to convert local time to UTC
-        let slotStartUTC: string;
-        let slotEndUTC: string;
+        let slotStartUTC: string | null = null;
+        let slotEndUTC: string | null = null;
         try {
           slotStartUTC = localTimeToUTC(dateStr, timeStr, agentTimezone);
           const slotStartDateTime = DateTime.fromISO(slotStartUTC, { zone: "utc" });
@@ -857,6 +857,13 @@ export async function GET(req: NextRequest) {
             agentTimezone,
             error: error instanceof Error ? error.message : String(error),
           });
+          currentTimeMinutes += appointmentLength;
+          continue;
+        }
+        
+        // Ensure we have valid UTC strings before proceeding
+        if (!slotStartUTC || !slotEndUTC) {
+          currentTimeMinutes += appointmentLength;
           continue;
         }
         
