@@ -169,13 +169,56 @@ export async function POST(request: NextRequest) {
     const validLocations = Array.from(allCitiesSet);
 
     // Include ALL availability data (filter by valid locations for safety)
+    // Also validate time ranges to catch obvious errors
     const filteredAvailabilityByLocation: Record<string, any> = {};
     const validLocationsSet = new Set(validLocations);
+    const invalidTimeWarnings: string[] = [];
+    
     Object.keys(availabilityByLocation || {}).forEach((city) => {
       if (validLocationsSet.has(city)) {
-        filteredAvailabilityByLocation[city] = availabilityByLocation[city];
+        const citySchedule = availabilityByLocation[city];
+        const validatedSchedule: Record<string, any> = {};
+        
+        // Validate each day's schedule
+        Object.keys(citySchedule).forEach((dayName) => {
+          const daySchedule = citySchedule[dayName];
+          if (daySchedule && daySchedule.enabled) {
+            // Parse start and end times
+            const [startHour, startMin] = (daySchedule.start || "09:00").split(":").map(Number);
+            const [endHour, endMin] = (daySchedule.end || "17:00").split(":").map(Number);
+            
+            // Validate times are reasonable (start between 5 AM and 11 PM, end after start)
+            if (!isNaN(startHour) && !isNaN(startMin) && !isNaN(endHour) && !isNaN(endMin)) {
+              const startMinutes = startHour * 60 + startMin;
+              const endMinutes = endHour * 60 + endMin;
+              
+              // Check for obviously wrong times (e.g., start time before 5 AM or after 11 PM)
+              if (startHour < 5 || startHour >= 23) {
+                invalidTimeWarnings.push(`${city} ${dayName}: Start time ${daySchedule.start} seems unusual (before 5 AM or after 11 PM). Please verify this is correct.`);
+              }
+              
+              // Check that end is after start
+              if (endMinutes <= startMinutes) {
+                invalidTimeWarnings.push(`${city} ${dayName}: End time (${daySchedule.end}) must be after start time (${daySchedule.start})`);
+              }
+              
+              // Check for very long hours (> 14 hours is likely wrong)
+              if (endMinutes - startMinutes > 14 * 60) {
+                invalidTimeWarnings.push(`${city} ${dayName}: Availability window is over 14 hours (${daySchedule.start} - ${daySchedule.end}). Please verify this is correct.`);
+              }
+            }
+          }
+          validatedSchedule[dayName] = daySchedule;
+        });
+        
+        filteredAvailabilityByLocation[city] = validatedSchedule;
       }
     });
+    
+    // Log warnings but don't block saving (agents might have valid reasons for unusual hours)
+    if (invalidTimeWarnings.length > 0) {
+      console.warn("⚠️ [AVAILABILITY VALIDATION] Potential time validation issues:", invalidTimeWarnings);
+    }
 
     // Store availability in agent's profile metadata or a separate table
     // For now, we'll store it in a JSONB field
