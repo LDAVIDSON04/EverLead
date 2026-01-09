@@ -1,7 +1,8 @@
 import { MetadataRoute } from 'next'
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://soradin.com'
+  // Use www.soradin.com to match actual domain (soradin.com redirects to www.soradin.com)
+  const baseUrl = 'https://www.soradin.com'
   
   return [
     {

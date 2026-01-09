@@ -7,7 +7,7 @@ export default function robots(): MetadataRoute.Robots {
       allow: '/',
       disallow: ['/agent/', '/admin/', '/api/'],
     },
-    sitemap: 'https://soradin.com/sitemap.xml',
+    sitemap: 'https://www.soradin.com/sitemap.xml',
   }
 }
 

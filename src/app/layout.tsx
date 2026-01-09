@@ -79,18 +79,19 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   // Structured data for Google Knowledge Panel and logo in search results
+  // Use www.soradin.com to avoid redirects (soradin.com redirects to www.soradin.com)
   const organizationSchema = {
     "@context": "https://schema.org",
     "@type": "Organization",
     "name": "Soradin",
-    "url": "https://soradin.com",
+    "url": "https://www.soradin.com",
     "logo": {
       "@type": "ImageObject",
-      "url": "https://soradin.com/Soradin.png",
+      "url": "https://www.soradin.com/Soradin.png",
       "width": 512,
       "height": 512
     },
-    "image": "https://soradin.com/Soradin.png",
+    "image": "https://www.soradin.com/Soradin.png",
     "description": "Soradin helps families plan funeral wishes in advance and connect with trusted local professionals without pressure or urgency.",
     "email": "support@soradin.com",
     "sameAs": [
