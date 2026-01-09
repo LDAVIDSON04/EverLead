@@ -46,8 +46,9 @@ export const metadata: Metadata = {
   description: "Soradin helps families plan funeral wishes in advance and connect with trusted local professionals without pressure or urgency.",
   icons: {
     icon: [
-      { url: '/Soradin.png', sizes: 'any' },
-      { url: '/Soradin.png', type: 'image/png' },
+      { url: '/Soradin.png', sizes: '192x192', type: 'image/png' },
+      { url: '/Soradin.png', sizes: '512x512', type: 'image/png' },
+      { url: '/Soradin.png', sizes: '1024x1024', type: 'image/png' },
     ],
     apple: '/Soradin.png',
   },
@@ -108,7 +109,11 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <BotIdClient protect={protectedRoutes} />
-        {/* Favicon is handled by Next.js via app/icon.png - no need for manual links */}
+        {/* Explicit favicon links for Google Search results - must be multiples of 48px */}
+        <link rel="icon" type="image/png" sizes="192x192" href="/Soradin.png" />
+        <link rel="icon" type="image/png" sizes="512x512" href="/Soradin.png" />
+        <link rel="icon" type="image/png" sizes="1024x1024" href="/Soradin.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/Soradin.png" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
