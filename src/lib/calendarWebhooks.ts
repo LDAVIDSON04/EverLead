@@ -5,6 +5,7 @@ import { supabaseAdmin } from "./supabaseAdmin";
 import type { CalendarConnection } from "./calendarProviders/types";
 
 // Ensure BASE_URL always uses HTTPS for production webhooks
+// IMPORTANT: Use www.soradin.com to avoid 307 redirect from non-www to www
 function getBaseUrl(): string {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
   const vercelUrl = process.env.VERCEL_URL;
@@ -12,25 +13,39 @@ function getBaseUrl(): string {
   // If NEXT_PUBLIC_SITE_URL is set, use it (should be https://soradin.com)
   if (siteUrl) {
     // Ensure it has protocol
-    if (siteUrl.startsWith('http://') || siteUrl.startsWith('https://')) {
-      return siteUrl;
+    let url = siteUrl;
+    if (!siteUrl.startsWith('http://') && !siteUrl.startsWith('https://')) {
+      // If no protocol, assume HTTPS for production
+      url = `https://${siteUrl}`;
     }
-    // If no protocol, assume HTTPS for production
-    return `https://${siteUrl}`;
+    
+    // CRITICAL: Ensure we use www. prefix to avoid 307 redirects
+    // soradin.com redirects to www.soradin.com, causing webhook validation to fail
+    if (url.includes('soradin.com') && !url.includes('www.soradin.com') && !url.includes('localhost')) {
+      url = url.replace('soradin.com', 'www.soradin.com');
+    }
+    
+    return url;
   }
   
   // If VERCEL_URL is set (in Vercel deployments), ensure it uses HTTPS
   if (vercelUrl) {
     // VERCEL_URL might be just domain without protocol, or might have protocol
+    let url = vercelUrl;
     if (vercelUrl.startsWith('http://')) {
       // Replace HTTP with HTTPS for webhook URLs
-      return vercelUrl.replace('http://', 'https://');
+      url = vercelUrl.replace('http://', 'https://');
+    } else if (!vercelUrl.startsWith('https://')) {
+      // If no protocol, add HTTPS
+      url = `https://${vercelUrl}`;
     }
-    if (vercelUrl.startsWith('https://')) {
-      return vercelUrl;
+    
+    // Ensure www. prefix for soradin.com to avoid redirects
+    if (url.includes('soradin.com') && !url.includes('www.soradin.com') && !url.includes('localhost')) {
+      url = url.replace('soradin.com', 'www.soradin.com');
     }
-    // If no protocol, add HTTPS
-    return `https://${vercelUrl}`;
+    
+    return url;
   }
   
   // Local development fallback
