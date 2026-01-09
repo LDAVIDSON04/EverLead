@@ -1010,6 +1010,9 @@ function SearchResults() {
                     src={selectedAppointment.agent.profile_picture_url}
                     alt={selectedAppointment.agent.full_name || "Agent"}
                     className="w-16 h-16 rounded-full object-cover flex-shrink-0"
+                    width={64}
+                    height={64}
+                    loading="lazy"
                   />
                 ) : (
                 <div className={`w-16 h-16 ${avatarColors[selectedAppointmentIndex % avatarColors.length]} rounded-full flex items-center justify-center flex-shrink-0`}>
@@ -1438,6 +1441,9 @@ function SearchResults() {
                           src={agent.profile_picture_url}
                           alt={agentName}
                           className="w-16 h-16 rounded-full object-cover"
+                          width={64}
+                          height={64}
+                          loading="lazy"
                         />
                       ) : (
                       <div className={`w-16 h-16 ${avatarColors[index % avatarColors.length]} rounded-full flex items-center justify-center`}>
@@ -1598,6 +1604,9 @@ function SearchResults() {
                             src={agent.profile_picture_url}
                             alt={agentName}
                             className="w-16 h-16 rounded-full object-cover"
+                            width={64}
+                            height={64}
+                            loading="lazy"
                           />
                         ) : (
                         <div className={`w-16 h-16 ${avatarColors[index % avatarColors.length]} rounded-full flex items-center justify-center`}>
@@ -2157,6 +2166,9 @@ function SearchResults() {
                                 src={portfolioAgentData.profile_picture_url}
                                 alt={portfolioAgentData.full_name || "Agent"}
                                 className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
+                                width={96}
+                                height={96}
+                                loading="lazy"
                               />
                             ) : (
                               <div className="w-24 h-24 rounded-full bg-[#1a4d2e] flex items-center justify-center border-4 border-white shadow-lg">

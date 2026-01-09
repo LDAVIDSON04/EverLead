@@ -587,6 +587,9 @@ function ProfileSection({
               src={profileData.profilePictureUrl}
               alt="Profile"
               className="w-20 h-20 rounded-full object-cover border-2 border-gray-200"
+              width={80}
+              height={80}
+              loading="lazy"
               onError={(e) => {
                 console.error("Error loading profile picture:", profileData.profilePictureUrl);
                 // Hide broken image
