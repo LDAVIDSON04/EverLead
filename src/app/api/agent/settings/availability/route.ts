@@ -110,6 +110,15 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     const { locations, availabilityByLocation, appointmentLength, availabilityTypeByLocation } = body;
+    
+    // CRITICAL: Log incoming availability data to track what's being saved
+    console.log("💾 [AVAILABILITY SAVE] Incoming availability data:", {
+      userId: user.id,
+      locations,
+      availabilityByLocation: JSON.stringify(availabilityByLocation, null, 2),
+      appointmentLength,
+      availabilityTypeByLocation,
+    });
 
     // Get cities from office locations
     const { data: officeLocations } = await supabaseAdmin

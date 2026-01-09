@@ -94,7 +94,36 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
         // Load existing schedule for selected location if it exists
         const existingSchedule = data.availabilityByLocation?.[data.locations[0]];
         if (existingSchedule) {
-          setRecurringSchedule(existingSchedule);
+          // Validate loaded schedule before setting it
+          const validatedSchedule = { ...existingSchedule };
+          let hasInvalidTimes = false;
+          
+          days.forEach((day) => {
+            const dayData = existingSchedule[day as keyof typeof existingSchedule];
+            if (dayData && dayData.enabled) {
+              // Validate time format
+              const timeRegex = /^([0-1][0-9]|2[0-3]):[0-5][0-9]$/;
+              if (!timeRegex.test(dayData.start) || !timeRegex.test(dayData.end)) {
+                console.error(`⚠️ [AVAILABILITY LOAD] Invalid time format for ${day}:`, dayData);
+                hasInvalidTimes = true;
+                // Reset to default if invalid
+                validatedSchedule[day as keyof typeof validatedSchedule] = defaultSchedule[day as keyof typeof defaultSchedule];
+              } else {
+                // Check for obviously wrong times (e.g., 1 AM start)
+                const [startHour] = dayData.start.split(":").map(Number);
+                if (startHour < 5 || startHour >= 23) {
+                  console.warn(`⚠️ [AVAILABILITY LOAD] Unusual start time for ${day} in ${data.locations[0]}: ${dayData.start} (likely incorrect)`);
+                }
+              }
+            }
+          });
+          
+          if (hasInvalidTimes) {
+            console.error("🚨 [AVAILABILITY LOAD] Invalid times detected - resetting to defaults");
+            setRecurringSchedule(getDefaultScheduleCopy());
+          } else {
+            setRecurringSchedule(validatedSchedule);
+          }
         } else {
           setRecurringSchedule(getDefaultScheduleCopy());
         }
@@ -132,6 +161,78 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
       };
 
       const normalizedLocation = normalizeLocation(selectedLocation);
+      
+      // CRITICAL: Validate time values before saving to catch any browser bugs or invalid data
+      const validateAndLogSchedule = () => {
+        const issues: string[] = [];
+        days.forEach((day) => {
+          const dayData = recurringSchedule[day as keyof typeof recurringSchedule];
+          if (dayData.enabled) {
+            // Validate time format (HH:MM)
+            const timeRegex = /^([0-1][0-9]|2[0-3]):[0-5][0-9]$/;
+            if (!timeRegex.test(dayData.start)) {
+              issues.push(`${day} start time "${dayData.start}" is invalid format`);
+            }
+            if (!timeRegex.test(dayData.end)) {
+              issues.push(`${day} end time "${dayData.end}" is invalid format`);
+            }
+            
+            // Parse hours to check for obviously wrong values
+            const [startHour, startMin] = dayData.start.split(":").map(Number);
+            const [endHour, endMin] = dayData.end.split(":").map(Number);
+            
+            // Warn if start time is before 5 AM or after 11 PM (likely wrong)
+            if (startHour < 5 || startHour >= 23) {
+              issues.push(`⚠️ ${day} start time "${dayData.start}" is unusual (before 5 AM or after 11 PM). Please verify this is correct.`);
+            }
+            
+            // Validate end is after start
+            const startMinutes = startHour * 60 + startMin;
+            const endMinutes = endHour * 60 + endMin;
+            if (endMinutes <= startMinutes) {
+              issues.push(`${day} end time must be after start time`);
+            }
+          }
+        });
+        
+        if (issues.length > 0) {
+          console.error("🚨 [AVAILABILITY VALIDATION] Issues detected before saving:", issues);
+          // Log the full schedule for debugging
+          console.log("📋 [AVAILABILITY VALIDATION] Full schedule being saved:", {
+            location: normalizedLocation,
+            schedule: recurringSchedule,
+          });
+        } else {
+          console.log("✅ [AVAILABILITY VALIDATION] Schedule validated successfully:", {
+            location: normalizedLocation,
+            schedule: recurringSchedule,
+          });
+        }
+        
+        return issues;
+      };
+      
+      // Validate before saving
+      const validationIssues = validateAndLogSchedule();
+      
+      // Separate warnings from errors
+      const warnings = validationIssues.filter(issue => issue.includes("⚠️"));
+      const criticalErrors = validationIssues.filter(issue => !issue.includes("⚠️"));
+      
+      // Block saving if there are critical errors
+      if (criticalErrors.length > 0) {
+        throw new Error(`Invalid availability times: ${criticalErrors.join("; ")}`);
+      }
+      
+      // For warnings (unusual times), show a confirmation dialog
+      if (warnings.length > 0) {
+        const warningMessage = `Warning: ${warnings.join("; ")}\n\nDo you want to save these times anyway?`;
+        const confirmed = window.confirm(warningMessage);
+        if (!confirmed) {
+          setSaving(false);
+          return;
+        }
+      }
 
       // Get current availability data
       const res = await fetch("/api/agent/settings/availability", {
@@ -297,9 +398,20 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
                                 type="time"
                                 value={dayData.start}
                                 onChange={(e) => {
+                                  const newValue = e.target.value;
+                                  // Validate time format immediately
+                                  const timeRegex = /^([0-1][0-9]|2[0-3]):[0-5][0-9]$/;
+                                  if (!timeRegex.test(newValue)) {
+                                    console.error(`Invalid time format for ${day} start:`, newValue);
+                                    return; // Don't update if invalid
+                                  }
+                                  // Log changes for debugging
+                                  if (dayData.start !== newValue) {
+                                    console.log(`📝 [AVAILABILITY] ${day} start time changed: "${dayData.start}" → "${newValue}"`);
+                                  }
                                   setRecurringSchedule({
                                     ...recurringSchedule,
-                                    [day]: { ...dayData, start: e.target.value },
+                                    [day]: { ...dayData, start: newValue },
                                   });
                                 }}
                                 className="w-32"
@@ -309,9 +421,20 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
                                 type="time"
                                 value={dayData.end}
                                 onChange={(e) => {
+                                  const newValue = e.target.value;
+                                  // Validate time format immediately
+                                  const timeRegex = /^([0-1][0-9]|2[0-3]):[0-5][0-9]$/;
+                                  if (!timeRegex.test(newValue)) {
+                                    console.error(`Invalid time format for ${day} end:`, newValue);
+                                    return; // Don't update if invalid
+                                  }
+                                  // Log changes for debugging
+                                  if (dayData.end !== newValue) {
+                                    console.log(`📝 [AVAILABILITY] ${day} end time changed: "${dayData.end}" → "${newValue}"`);
+                                  }
                                   setRecurringSchedule({
                                     ...recurringSchedule,
-                                    [day]: { ...dayData, end: e.target.value },
+                                    [day]: { ...dayData, end: newValue },
                                   });
                                 }}
                                 className="w-32"
