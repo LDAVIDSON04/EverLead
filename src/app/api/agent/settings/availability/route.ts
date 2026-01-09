@@ -138,9 +138,14 @@ export async function POST(request: NextRequest) {
       return normalized.toLowerCase();
     };
 
+    // CRITICAL: Import timezone validation utilities
+    const { validateBusinessHours, isValidTimeFormat } = await import("@/lib/timezone");
+    
     // Validate: ALL locations in availabilityByLocation must match office location cities
     // This prevents typos like "pentction" instead of "Penticton"
     const invalidLocations: string[] = [];
+    const invalidTimes: string[] = [];
+    
     Object.keys(availabilityByLocation || {}).forEach((city: string) => {
       if (!city || !city.trim()) return;
       const normalizedCity = normalizeLocation(city);
@@ -154,8 +159,49 @@ export async function POST(request: NextRequest) {
       if (!isValid) {
         invalidLocations.push(city);
       }
+      
+      // CRITICAL: Validate all time values for this location
+      const locationSchedule = availabilityByLocation[city];
+      if (locationSchedule && typeof locationSchedule === 'object') {
+        Object.keys(locationSchedule).forEach((dayName: string) => {
+          const daySchedule = locationSchedule[dayName];
+          if (daySchedule && daySchedule.enabled) {
+            const startTime = daySchedule.start;
+            const endTime = daySchedule.end;
+            
+            // Validate time format
+            if (!isValidTimeFormat(startTime)) {
+              invalidTimes.push(`${city} ${dayName}: Invalid start time format "${startTime}"`);
+            }
+            if (!isValidTimeFormat(endTime)) {
+              invalidTimes.push(`${city} ${dayName}: Invalid end time format "${endTime}"`);
+            }
+            
+            // Validate business hours (this will catch the 1 AM issue)
+            if (isValidTimeFormat(startTime) && isValidTimeFormat(endTime)) {
+              const validation = validateBusinessHours(startTime, endTime);
+              if (!validation.isValid) {
+                invalidTimes.push(`${city} ${dayName}: ${validation.error}`);
+              }
+            }
+          }
+        });
+      }
     });
 
+    // CRITICAL: Block saving if there are invalid times (this prevents 1 AM bugs)
+    if (invalidTimes.length > 0) {
+      console.error("❌ [AVAILABILITY SAVE] Invalid times detected - BLOCKING SAVE:", invalidTimes);
+      return NextResponse.json(
+        {
+          error: "Invalid availability times detected. Please fix the following issues:",
+          invalidTimes,
+          details: invalidTimes.join("; "),
+        },
+        { status: 400 }
+      );
+    }
+    
     if (invalidLocations.length > 0) {
       return NextResponse.json(
         { 

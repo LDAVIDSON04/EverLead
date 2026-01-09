@@ -5,6 +5,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { DateTime } from "luxon";
 import { z } from "zod";
+import {
+  getAgentTimezone,
+  validateBusinessHours,
+  isValidTimeFormat,
+  localTimeToUTC,
+  CanadianTimezone,
+} from "@/lib/timezone";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -368,30 +375,10 @@ export async function GET(req: NextRequest) {
 
     // Note: timeToDate helper removed - now using DateTime from luxon directly in slot generation
 
-    // Get agent's timezone for converting appointment times
-    let agentTimezone = "America/Vancouver"; // Default fallback
-    if (metadata.timezone) {
-      agentTimezone = metadata.timezone;
-    } else if (availabilityData.timezone) {
-      agentTimezone = availabilityData.timezone;
-    } else if (profile.agent_province) {
-      const province = profile.agent_province.toUpperCase();
-      if (province === "BC" || province === "BRITISH COLUMBIA") {
-        agentTimezone = "America/Vancouver";
-      } else if (province === "AB" || province === "ALBERTA") {
-        agentTimezone = "America/Edmonton";
-      } else if (province === "SK" || province === "SASKATCHEWAN") {
-        agentTimezone = "America/Regina";
-      } else if (province === "MB" || province === "MANITOBA") {
-        agentTimezone = "America/Winnipeg";
-      } else if (province === "ON" || province === "ONTARIO") {
-        agentTimezone = "America/Toronto";
-      } else if (province === "QC" || province === "QUEBEC") {
-        agentTimezone = "America/Montreal";
-      }
-    }
+    // CRITICAL: Use centralized timezone utility for 100% accuracy
+    const agentTimezone = getAgentTimezone(metadata, profile.agent_province) as CanadianTimezone;
     
-    // Debug: Log agent timezone detection
+    // Log timezone detection for debugging
     console.log("🕐 [AVAILABILITY API] Agent timezone detection:", {
       agentId,
       agentTimezone,
@@ -399,6 +386,7 @@ export async function GET(req: NextRequest) {
       availabilityDataTimezone: availabilityData.timezone,
       agentProvince: profile.agent_province,
       selectedLocation,
+      usingFallback: !metadata?.timezone && !availabilityData?.timezone,
     });
 
     // Helper to check if a time slot conflicts with an appointment or external event
@@ -657,25 +645,42 @@ export async function GET(req: NextRequest) {
           const currentMin = currentTimeMinutes % 60;
           const timeStr = `${String(currentHour).padStart(2, "0")}:${String(currentMin).padStart(2, "0")}`;
           
-          const localDateTimeStr = `${dateStr}T${timeStr}:00`;
-          const localStart = DateTime.fromISO(localDateTimeStr, { zone: agentTimezone });
-          const localEnd = localStart.plus({ minutes: appointmentLength });
-          
-          if (!localStart.isValid || !localEnd.isValid) {
+          // CRITICAL: Use centralized utility to convert local time to UTC
+          let slotStartUTC: string;
+          let slotEndUTC: string;
+          try {
+            slotStartUTC = localTimeToUTC(dateStr, timeStr, agentTimezone);
+            const slotStartDateTime = DateTime.fromISO(slotStartUTC, { zone: "utc" });
+            const slotEndDateTime = slotStartDateTime.plus({ minutes: appointmentLength });
+            slotEndUTC = slotEndDateTime.toISO()!;
+            
+            if (!slotStartUTC || !slotEndUTC) {
+              throw new Error("Failed to generate UTC timestamps");
+            }
+          } catch (error) {
+            console.error(`❌ [AVAILABILITY API] Error converting time slot to UTC:`, {
+              dateStr,
+              timeStr,
+              agentTimezone,
+              error: error instanceof Error ? error.message : String(error),
+            });
             currentTimeMinutes += appointmentLength;
             continue;
           }
           
-          const slotStart = new Date(localStart.toUTC().toISO());
-          const slotEnd = new Date(localEnd.toUTC().toISO());
+          const slotStart = new Date(slotStartUTC);
+          const slotEnd = new Date(slotEndUTC);
+          
+          // Get hour in agent's timezone for conflict checking
+          const localStart = DateTime.fromISO(slotStartUTC, { zone: "utc" }).setZone(agentTimezone);
           const slotHour = localStart.hour;
 
           const hasConflictResult = hasConflict(slotStart, slotEnd, dateStr, slotHour);
           
           if (!hasConflictResult) {
             slots.push({
-              startsAt: slotStart.toISOString(),
-              endsAt: slotEnd.toISOString(),
+              startsAt: slotStartUTC, // Use already-validated UTC string
+              endsAt: slotEndUTC,     // Use already-validated UTC string
             });
           }
 
@@ -772,17 +777,33 @@ export async function GET(req: NextRequest) {
       const startTime = daySchedule.start || "09:00";
       const endTime = daySchedule.end || "17:00";
       
-      console.log(`Generating slots for ${dayName} (${dateStr}): ${startTime} - ${endTime}`);
-      
-      const [startHour, startMin] = startTime.split(":").map(Number);
-      const [endHour, endMin] = endTime.split(":").map(Number);
-      
-      // Validate parsed times
-      if (isNaN(startHour) || isNaN(startMin) || isNaN(endHour) || isNaN(endMin)) {
-        console.error(`Invalid time format for ${dayName}: start=${startTime}, end=${endTime}, daySchedule=`, daySchedule);
+      // CRITICAL: Validate time format before processing
+      if (!isValidTimeFormat(startTime) || !isValidTimeFormat(endTime)) {
+        console.error(`❌ [AVAILABILITY API] Invalid time format for ${dayName} (${dateStr}):`, {
+          start: startTime,
+          end: endTime,
+          daySchedule,
+        });
         days.push({ date: dateStr, slots: [] });
         continue;
       }
+      
+      // CRITICAL: Validate business hours before generating slots
+      const validation = validateBusinessHours(startTime, endTime);
+      if (!validation.isValid) {
+        console.error(`❌ [AVAILABILITY API] Invalid business hours for ${dayName} (${dateStr}):`, {
+          error: validation.error,
+          start: startTime,
+          end: endTime,
+        });
+        days.push({ date: dateStr, slots: [] });
+        continue;
+      }
+      
+      console.log(`✅ Generating slots for ${dayName} (${dateStr}): ${startTime} - ${endTime} in ${agentTimezone}`);
+      
+      const [startHour, startMin] = startTime.split(":").map(Number);
+      const [endHour, endMin] = endTime.split(":").map(Number);
 
       // Convert end time to minutes for easier comparison
       const endTimeMinutes = endHour * 60 + endMin;
@@ -843,18 +864,17 @@ export async function GET(req: NextRequest) {
         const slotHour = localStart.hour;
 
         // Check for conflicts with existing appointments - this MUST block booked slots immediately
-        const slotStartsAtISO = slotStart.toISOString();
         const hasConflictResult = hasConflict(slotStart, slotEnd, dateStr, slotHour);
         
         if (!hasConflictResult) {
           slots.push({
-            startsAt: slotStartsAtISO,
-            endsAt: slotEnd.toISOString(),
+            startsAt: slotStartUTC, // Use already-validated UTC string
+            endsAt: slotEndUTC,     // Use already-validated UTC string
           });
         } else {
           // Log when a slot is blocked so we can verify it's working
           console.log(`🚫 BLOCKED SLOT - Not adding to available slots:`, {
-            slotStartsAt: slotStartsAtISO,
+            slotStartsAt: slotStartUTC,
             date: dateStr,
             slotHour,
           });
