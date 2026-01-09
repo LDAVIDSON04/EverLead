@@ -108,9 +108,7 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <BotIdClient protect={protectedRoutes} />
-        <link rel="icon" href="/Soradin.png" type="image/png" />
-        <link rel="shortcut icon" href="/Soradin.png" type="image/png" />
-        <link rel="apple-touch-icon" href="/Soradin.png" />
+        {/* Favicon is handled by Next.js via app/icon.png - no need for manual links */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
