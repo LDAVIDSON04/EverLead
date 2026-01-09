@@ -56,9 +56,9 @@ export const metadata: Metadata = {
     description: "Soradin helps families plan funeral wishes in advance and connect with trusted local professionals without pressure or urgency.",
     images: [
       {
-        url: '/logo.png',
-        width: 1200,
-        height: 630,
+        url: '/Soradin.png',
+        width: 1024,
+        height: 1024,
         alt: 'Soradin Logo',
       },
     ],
@@ -69,7 +69,7 @@ export const metadata: Metadata = {
     card: 'summary',
     title: "Soradin - Thoughtful funeral pre-planning, made simple",
     description: "Soradin helps families plan funeral wishes in advance and connect with trusted local professionals without pressure or urgency.",
-    images: ['/logo.png'],
+    images: ['/Soradin.png'],
   },
 };
 
