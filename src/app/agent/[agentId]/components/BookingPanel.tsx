@@ -907,12 +907,38 @@ export function BookingPanel({ agentId, initialLocation }: BookingPanelProps) {
                       const dayNum = date.getUTCDate();
                       const displayDate = `${dayName}, ${monthName} ${dayNum}`;
                       
+                      // Debug logging for availability data received
+                      if (dayIdx === 0) {
+                        console.log(`📅 [BOOKING MODAL] Processing availability day ${dayIdx}:`, {
+                          date: day.date,
+                          timezone: day.timezone,
+                          slotCount: day.slots?.length || 0,
+                          firstSlotUTC: day.slots?.[0]?.startsAt,
+                          lastSlotUTC: day.slots?.[day.slots?.length - 1]?.startsAt,
+                        });
+                      }
+                      
                       // Format time slots for this day in the agent's timezone
-                      const formattedSlots = day.slots.map(slot => {
+                      const formattedSlots = day.slots.map((slot, slotIdx) => {
                         // Parse the UTC ISO string and convert to agent's timezone
                         const agentTimezone = day.timezone || 'America/Toronto'; // Default fallback
                         const utcTime = DateTime.fromISO(slot.startsAt, { zone: 'utc' });
                         const agentLocalTime = utcTime.setZone(agentTimezone);
+                        
+                        // Debug logging for first few slots to diagnose timezone issues
+                        if (slotIdx < 3) {
+                          console.log(`🕐 [BOOKING MODAL] Slot ${slotIdx} timezone conversion:`, {
+                            date: day.date,
+                            slotStartsAtUTC: slot.startsAt,
+                            agentTimezone,
+                            utcHour: utcTime.hour,
+                            utcMinute: utcTime.minute,
+                            agentLocalHour: agentLocalTime.hour,
+                            agentLocalMinute: agentLocalTime.minute,
+                            agentLocalTimeISO: agentLocalTime.toISO(),
+                            agentLocalTimeFormatted: agentLocalTime.toFormat('yyyy-MM-dd HH:mm:ss ZZZ'),
+                          });
+                        }
                         
                         const hours = agentLocalTime.hour;
                         const minutes = agentLocalTime.minute;

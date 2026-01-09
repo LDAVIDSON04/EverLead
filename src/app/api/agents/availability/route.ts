@@ -390,6 +390,16 @@ export async function GET(req: NextRequest) {
         agentTimezone = "America/Montreal";
       }
     }
+    
+    // Debug: Log agent timezone detection
+    console.log("🕐 [AVAILABILITY API] Agent timezone detection:", {
+      agentId,
+      agentTimezone,
+      metadataTimezone: metadata.timezone,
+      availabilityDataTimezone: availabilityData.timezone,
+      agentProvince: profile.agent_province,
+      selectedLocation,
+    });
 
     // Helper to check if a time slot conflicts with an appointment or external event
     // SIMPLE LOGIC: Only block if we have confirmed_at and it matches the slot time
@@ -800,8 +810,29 @@ export async function GET(req: NextRequest) {
         const localEnd = localStart.plus({ minutes: appointmentLength });
         
         if (!localStart.isValid || !localEnd.isValid) {
-          console.error(`Invalid slot time for ${dateStr} ${timeStr}`);
+          console.error(`Invalid slot time for ${dateStr} ${timeStr}`, {
+            localDateTimeStr,
+            agentTimezone,
+            isValid: localStart.isValid,
+            invalidReason: localStart.invalidReason,
+          });
           continue;
+        }
+        
+        // Debug: Log first few slot generations to verify timezone conversion
+        if (slots.length < 3) {
+          console.log(`🕐 [AVAILABILITY API] Generating slot ${slots.length}:`, {
+            dateStr,
+            timeStr,
+            agentTimezone,
+            localDateTimeStr,
+            localStartISO: localStart.toISO(),
+            localStartFormatted: localStart.toFormat('yyyy-MM-dd HH:mm:ss ZZZ'),
+            localHour: localStart.hour,
+            localMinute: localStart.minute,
+            utcISO: localStart.toUTC().toISO(),
+            utcHour: localStart.toUTC().hour,
+          });
         }
         
         // Convert to UTC for API response
