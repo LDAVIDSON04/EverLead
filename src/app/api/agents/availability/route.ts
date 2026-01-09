@@ -526,19 +526,8 @@ export async function GET(req: NextRequest) {
         });
         
         if (externalEventConflict) return true;
-      } else {
-        // Log when no external events found (for debugging)
-        if (externalEventsRaw && externalEventsRaw.length === 0) {
-          console.log("ℹ️ No external events found for date range:", {
-            agentId,
-            startDate,
-            endDate,
-            rangeStart,
-            rangeEnd,
-            requestedLocation: selectedLocation,
-          });
-        }
       }
+      // Removed excessive logging - external events are checked silently per slot
       
       // No conflicts - slot is available
       return false;
@@ -791,6 +780,8 @@ export async function GET(req: NextRequest) {
       // CRITICAL: Validate business hours before generating slots
       const validation = validateBusinessHours(startTime, endTime);
       if (!validation.isValid) {
+        // Only block truly invalid times (format errors, end before start, etc.)
+        // Unusual times (before 5 AM) will generate a warning but still allow slots
         console.error(`❌ [AVAILABILITY API] Invalid business hours for ${dayName} (${dateStr}):`, {
           error: validation.error,
           start: startTime,

@@ -147,12 +147,10 @@ export function validateBusinessHours(
     return { isValid: false, error: `End time (${endTime}) must be after start time (${startTime}).` };
   }
 
-  // Check for obviously wrong start times (before 5 AM or after 11 PM)
+  // Warn for unusual start times (before 5 AM or after 11 PM) but don't block
+  // Some businesses do operate outside normal hours
   if (startHour < 5 || startHour >= 23) {
-    return {
-      isValid: false,
-      error: `Start time ${startTime} is unusual (before 5 AM or after 11 PM). Please verify this is correct.`,
-    };
+    console.warn(`⚠️ [AVAILABILITY API] Unusual start time ${startTime} (before 5 AM or after 11 PM) for ${startTime}-${endTime}. Proceeding with slot generation.`);
   }
 
   // Check for very long shifts (> 14 hours)
