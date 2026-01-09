@@ -4,7 +4,40 @@
 import { supabaseAdmin } from "./supabaseAdmin";
 import type { CalendarConnection } from "./calendarProviders/types";
 
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL || "http://localhost:3000";
+// Ensure BASE_URL always uses HTTPS for production webhooks
+function getBaseUrl(): string {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  const vercelUrl = process.env.VERCEL_URL;
+  
+  // If NEXT_PUBLIC_SITE_URL is set, use it (should be https://soradin.com)
+  if (siteUrl) {
+    // Ensure it has protocol
+    if (siteUrl.startsWith('http://') || siteUrl.startsWith('https://')) {
+      return siteUrl;
+    }
+    // If no protocol, assume HTTPS for production
+    return `https://${siteUrl}`;
+  }
+  
+  // If VERCEL_URL is set (in Vercel deployments), ensure it uses HTTPS
+  if (vercelUrl) {
+    // VERCEL_URL might be just domain without protocol, or might have protocol
+    if (vercelUrl.startsWith('http://')) {
+      // Replace HTTP with HTTPS for webhook URLs
+      return vercelUrl.replace('http://', 'https://');
+    }
+    if (vercelUrl.startsWith('https://')) {
+      return vercelUrl;
+    }
+    // If no protocol, add HTTPS
+    return `https://${vercelUrl}`;
+  }
+  
+  // Local development fallback
+  return "http://localhost:3000";
+}
+
+const BASE_URL = getBaseUrl();
 
 /**
  * Set up Google Calendar webhook subscription
@@ -242,6 +275,13 @@ export async function setupMicrosoftWebhook(connection: CalendarConnection): Pro
 
     const webhookUrl = `${BASE_URL}/api/integrations/microsoft/webhook`;
     const subscriptionId = `soradin-${connection.specialist_id}-${Date.now()}`;
+
+    // Log the webhook URL to debug redirect issues
+    console.log(`🔗 [MICROSOFT WEBHOOK] Setting up webhook with URL: ${webhookUrl}`, {
+      baseUrl: BASE_URL,
+      hasHttps: webhookUrl.startsWith('https://'),
+      hasHttp: webhookUrl.startsWith('http://'),
+    });
 
   // Note: Delay between Microsoft webhook setups is now handled in renewExpiredWebhooks()
   // to space out multiple webhook setups properly
