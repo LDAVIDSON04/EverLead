@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Search, MapPin, Star, Calendar, Check, ChevronDown, Heart, Facebook, Instagram, Menu, X, ChevronRight } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function HomePage() {
   const router = useRouter();
@@ -14,6 +14,40 @@ export default function HomePage() {
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
   const [locationSuggestions, setLocationSuggestions] = useState<string[]>([]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [locationDetecting, setLocationDetecting] = useState(false);
+
+  // Auto-detect and pre-fill location on page load
+  useEffect(() => {
+    async function detectLocation() {
+      // Only detect if location is empty (user hasn't entered anything)
+      if (location.trim() !== "") {
+        return;
+      }
+
+      setLocationDetecting(true);
+      try {
+        console.log("🔍 [HOME] Auto-detecting location from IP on page load...");
+        const res = await fetch("/api/geolocation");
+        const data = await res.json();
+        console.log("📍 [HOME] Geolocation API response:", data);
+        
+        if (data.location) {
+          console.log("✅ [HOME] Location auto-detected:", data.location);
+          // Pre-fill location field with detected city and province (e.g., "Vancouver, BC")
+          setLocation(data.location);
+        } else {
+          console.warn("⚠️ [HOME] Could not auto-detect location from IP");
+        }
+      } catch (err) {
+        console.error("❌ [HOME] Error auto-detecting location:", err);
+      } finally {
+        setLocationDetecting(false);
+      }
+    }
+
+    // Detect location on mount
+    detectLocation();
+  }, []); // Empty dependency array - only run once on mount
 
   // Function to navigate to search page with detected location from IP
   const navigateToSearchWithLocation = async (e: React.MouseEvent) => {
@@ -169,10 +203,8 @@ export default function HomePage() {
   ];
 
   const specialtySuggestions = [
-    "Funeral Pre-Planning Specialist",
-    "End of life planning",
     "Funeral Pre-Planning",
-    "Pre-need funeral planning",
+    "End of life planning",
   ];
 
   const [searchError, setSearchError] = useState<string | null>(null);
