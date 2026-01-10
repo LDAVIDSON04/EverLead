@@ -730,19 +730,20 @@ export default function HomePage() {
       <section className="py-24 px-4 bg-[#FAF9F6]">
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
-            {/* Left side - Image (mobile first, desktop right) */}
-            <div className="relative w-full order-1 lg:order-2">
+            {/* Left side - Image (mobile first, desktop right) - Fixed aspect-ratio prevents CLS */}
+            <div className="relative w-full order-1 lg:order-2" style={{ aspectRatio: "800/600" }}>
               <Image
                 src="/estate-planning-image.webp"
                 alt="Estate planning professionals"
                 width={800}
                 height={600}
-                className="w-full h-auto object-contain rounded-xl"
+                className="w-full h-full object-contain rounded-xl"
                 style={{
                   filter: "brightness(1.05) contrast(1.05)",
                   mixBlendMode: "multiply",
                 }}
-                unoptimized
+                loading="lazy"
+                fetchPriority="low"
               />
             </div>
             {/* Right side - Content (mobile second, desktop left) */}
