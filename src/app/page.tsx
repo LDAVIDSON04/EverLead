@@ -8,7 +8,7 @@ import { useState } from "react";
 
 export default function HomePage() {
   const router = useRouter();
-  const [specialty, setSpecialty] = useState("Advanced Planning Director");
+  const [specialty, setSpecialty] = useState("Funeral Pre-Planning");
   const [location, setLocation] = useState("");
   const [showSpecialtyDropdown, setShowSpecialtyDropdown] = useState(false);
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
@@ -169,7 +169,10 @@ export default function HomePage() {
   ];
 
   const specialtySuggestions = [
-    "Advanced Planning Director",
+    "Funeral Pre-Planning Specialist",
+    "End of life planning",
+    "Funeral Pre-Planning",
+    "Pre-need funeral planning",
   ];
 
   const [searchError, setSearchError] = useState<string | null>(null);
