@@ -17,17 +17,13 @@ export default function HomePage() {
   const [locationDetecting, setLocationDetecting] = useState(false);
 
   // Auto-detect and pre-fill location on page load
-  // Deferred significantly to not block Speed Index (runs after critical content paints)
+  // Use requestIdleCallback to not block Speed Index (runs when browser is idle)
   useEffect(() => {
     async function detectLocation() {
       // Only detect if location is empty (user hasn't entered anything)
       if (location.trim() !== "") {
         return;
       }
-
-      // Defer geolocation call significantly to not block initial paint and Speed Index
-      // Wait for critical content to render first
-      await new Promise(resolve => setTimeout(resolve, 1000));
 
       setLocationDetecting(true);
       try {
@@ -50,8 +46,17 @@ export default function HomePage() {
       }
     }
 
-    // Detect location on mount (deferred to not block Speed Index)
-    detectLocation();
+    // Use requestIdleCallback to run when browser is idle (doesn't block Speed Index)
+    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+      requestIdleCallback(() => {
+        detectLocation();
+      }, { timeout: 2000 }); // Fallback after 2s if browser never becomes idle
+    } else {
+      // Fallback for browsers without requestIdleCallback
+      setTimeout(() => {
+        detectLocation();
+      }, 500);
+    }
   }, []); // Empty dependency array - only run once on mount
 
   // Function to navigate to search page with detected location from IP
