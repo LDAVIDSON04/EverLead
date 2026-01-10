@@ -15,7 +15,6 @@ export default function HomePage() {
   const [locationSuggestions, setLocationSuggestions] = useState<string[]>([]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [locationDetecting, setLocationDetecting] = useState(false);
-  const [isDesktop, setIsDesktop] = useState(false);
 
   // Auto-detect and pre-fill location on page load
   // Deferred to not block initial render (improves Speed Index on mobile)
@@ -26,9 +25,9 @@ export default function HomePage() {
         return;
       }
 
-      // Defer geolocation call to not block initial render
+      // Defer geolocation call significantly to not block initial render
       // This improves Speed Index by allowing critical content to paint first
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 500));
 
       setLocationDetecting(true);
       try {
@@ -55,19 +54,6 @@ export default function HomePage() {
     detectLocation();
   }, []); // Empty dependency array - only run once on mount
 
-  // Detect if we're on desktop to conditionally load arm-image (prevents 3.2MB download on mobile)
-  useEffect(() => {
-    const checkDesktop = () => {
-      setIsDesktop(window.innerWidth >= 1024);
-    };
-    
-    // Check on mount
-    checkDesktop();
-    
-    // Optional: Update on resize (but arm-image only loads once)
-    window.addEventListener('resize', checkDesktop);
-    return () => window.removeEventListener('resize', checkDesktop);
-  }, []);
 
   // Function to navigate to search page with detected location from IP
   const navigateToSearchWithLocation = async (e: React.MouseEvent) => {
@@ -392,20 +378,23 @@ export default function HomePage() {
         </div>
 
         {/* Hero illustration - positioned absolutely on the right, above title */}
-        <div className="absolute right-10 top-10 hidden lg:block">
-          <Image
-            src="/hero-image.png"
-            alt="Book a specialist"
-            width={350}
-            height={350}
-            className="w-[350px] h-auto object-contain"
-            style={{
-              mixBlendMode: "multiply",
-            }}
-            priority
-            sizes="(max-width: 1024px) 0px, 350px"
-          />
-        </div>
+        {/* Only render on desktop to prevent unnecessary download on mobile */}
+        {isDesktop && (
+          <div className="absolute right-10 top-10 hidden lg:block">
+            <Image
+              src="/hero-image.png"
+              alt="Book a specialist"
+              width={350}
+              height={350}
+              className="w-[350px] h-auto object-contain"
+              style={{
+                mixBlendMode: "multiply",
+              }}
+              priority
+              sizes="350px"
+            />
+          </div>
+        )}
 
         {/* Arm pointing illustration - positioned to point at Find care button */}
         {/* Only render on desktop to prevent 3.2MB download on mobile (improves Speed Index) */}
