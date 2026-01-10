@@ -46,16 +46,17 @@ export default function HomePage() {
       }
     }
 
-    // Use requestIdleCallback to run when browser is idle (doesn't block Speed Index)
+    // Defer geolocation aggressively - only run after page is fully interactive (doesn't block Speed Index)
+    // Use requestIdleCallback with longer timeout to ensure it doesn't interfere with Speed Index
     if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
       requestIdleCallback(() => {
         detectLocation();
-      }, { timeout: 2000 }); // Fallback after 2s if browser never becomes idle
+      }, { timeout: 3000 }); // Longer timeout - only run when truly idle
     } else {
-      // Fallback for browsers without requestIdleCallback
+      // Fallback: defer significantly for browsers without requestIdleCallback
       setTimeout(() => {
         detectLocation();
-      }, 500);
+      }, 1500);
     }
   }, []); // Empty dependency array - only run once on mount
 
