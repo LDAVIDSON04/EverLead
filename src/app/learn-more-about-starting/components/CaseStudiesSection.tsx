@@ -14,7 +14,10 @@ export function CaseStudiesSection() {
           <img 
             src="/391d87d0bfa941287dde563e9d115601074bffda.png" 
             alt="Healthcare provider and patient" 
-            className="w-full h-full object-cover rounded-lg"
+            className="w-full h-full object-cover rounded-lg md:object-[center_40%] object-center"
+            style={{
+              objectPosition: 'center 40%'
+            }}
             onError={(e) => {
               // Fallback to placeholder if image doesn't exist
               e.currentTarget.style.display = 'none';
