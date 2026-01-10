@@ -15,14 +15,20 @@ export default function HomePage() {
   const [locationSuggestions, setLocationSuggestions] = useState<string[]>([]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [locationDetecting, setLocationDetecting] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
 
   // Auto-detect and pre-fill location on page load
+  // Deferred to not block initial render (improves Speed Index on mobile)
   useEffect(() => {
     async function detectLocation() {
       // Only detect if location is empty (user hasn't entered anything)
       if (location.trim() !== "") {
         return;
       }
+
+      // Defer geolocation call to not block initial render
+      // This improves Speed Index by allowing critical content to paint first
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       setLocationDetecting(true);
       try {
@@ -45,9 +51,23 @@ export default function HomePage() {
       }
     }
 
-    // Detect location on mount
+    // Detect location on mount (deferred to not block render)
     detectLocation();
   }, []); // Empty dependency array - only run once on mount
+
+  // Detect if we're on desktop to conditionally load arm-image (prevents 3.2MB download on mobile)
+  useEffect(() => {
+    const checkDesktop = () => {
+      setIsDesktop(window.innerWidth >= 1024);
+    };
+    
+    // Check on mount
+    checkDesktop();
+    
+    // Optional: Update on resize (but arm-image only loads once)
+    window.addEventListener('resize', checkDesktop);
+    return () => window.removeEventListener('resize', checkDesktop);
+  }, []);
 
   // Function to navigate to search page with detected location from IP
   const navigateToSearchWithLocation = async (e: React.MouseEvent) => {
@@ -382,33 +402,40 @@ export default function HomePage() {
             style={{
               mixBlendMode: "multiply",
             }}
+            priority
+            sizes="(max-width: 1024px) 0px, 350px"
           />
         </div>
 
         {/* Arm pointing illustration - positioned to point at Find care button */}
-        <div 
-          className="absolute hidden lg:block z-10 pointer-events-none arm-pointing-illustration" 
-          style={{ 
-            width: "1500px", 
-            height: "auto",
-            bottom: "-9vh",
-            right: "-22vw",
-          }}
-        >
-          <Image
-            src="/arm-image.png"
-            alt=""
-            width={1500}
-            height={800}
-            className="w-full h-auto object-contain"
-            style={{
-              mixBlendMode: "multiply",
-              imageRendering: "-webkit-optimize-contrast",
-              transform: "translateZ(0)",
-              backfaceVisibility: "hidden",
+        {/* Only render on desktop to prevent 3.2MB download on mobile (improves Speed Index) */}
+        {isDesktop && (
+          <div 
+            className="absolute hidden lg:block z-10 pointer-events-none arm-pointing-illustration" 
+            style={{ 
+              width: "1500px", 
+              height: "auto",
+              bottom: "-9vh",
+              right: "-22vw",
             }}
-          />
-        </div>
+          >
+            <Image
+              src="/arm-image.png"
+              alt=""
+              width={1500}
+              height={800}
+              className="w-full h-auto object-contain"
+              style={{
+                mixBlendMode: "multiply",
+                imageRendering: "-webkit-optimize-contrast",
+                transform: "translateZ(0)",
+                backfaceVisibility: "hidden",
+              }}
+              sizes="(max-width: 1024px) 0px, 1500px"
+              loading="lazy"
+            />
+          </div>
+        )}
 
         <div className="max-w-7xl mx-auto relative z-20 w-full md:mt-0 mt-1 overflow-visible">
           {/* Headline and Search Bar - Full Width */}
@@ -636,6 +663,8 @@ export default function HomePage() {
                     filter: "brightness(1.1) contrast(1.05)",
                     mixBlendMode: "multiply",
                   }}
+                  loading="lazy"
+                  sizes="(max-width: 768px) 200px, 384px"
                 />
               </div>
 
