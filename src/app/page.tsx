@@ -372,25 +372,28 @@ export default function HomePage() {
         </div>
 
         {/* Hero illustration - positioned absolutely on the right, above title */}
-        <div className="absolute right-10 top-10 hidden lg:block">
+        {/* Fixed aspect-ratio prevents CLS on desktop */}
+        <div className="absolute right-10 top-10 hidden lg:block" style={{ width: "350px", aspectRatio: "1/1" }}>
           <Image
             src="/hero-image.png"
             alt="Book a specialist"
             width={350}
             height={350}
-            className="w-[350px] h-auto object-contain"
+            className="w-full h-full object-contain"
             style={{
               mixBlendMode: "multiply",
             }}
+            loading="lazy"
           />
         </div>
 
         {/* Arm pointing illustration - positioned to point at Find care button */}
+        {/* Fixed aspect-ratio prevents CLS on desktop */}
         <div 
           className="absolute hidden lg:block z-10 pointer-events-none arm-pointing-illustration" 
           style={{ 
             width: "1500px", 
-            height: "auto",
+            aspectRatio: "1500/800",
             bottom: "-9vh",
             right: "-22vw",
           }}
@@ -400,13 +403,14 @@ export default function HomePage() {
             alt=""
             width={1500}
             height={800}
-            className="w-full h-auto object-contain"
+            className="w-full h-full object-contain"
             style={{
               mixBlendMode: "multiply",
               imageRendering: "-webkit-optimize-contrast",
               transform: "translateZ(0)",
               backfaceVisibility: "hidden",
             }}
+            loading="lazy"
           />
         </div>
 
@@ -592,7 +596,7 @@ export default function HomePage() {
             {/* Left Box - Read Reviews */}
             <div className="bg-[#FAF9F6] rounded-3xl p-6 border border-[#1A1A1A]/5 relative overflow-visible group hover:shadow-xl hover:shadow-black/5 transition-all flex flex-col">
               {/* Image overlapping the top */}
-              <div className="absolute -top-48 left-1/2 -translate-x-1/2 w-96 h-96 flex items-center justify-center">
+              <div className="absolute -top-48 left-1/2 -translate-x-1/2 w-96 h-96 flex items-center justify-center" style={{ aspectRatio: "1/1" }}>
                 <Image
                   src="/review-image.png"
                   alt="Person holding review card"
@@ -603,6 +607,8 @@ export default function HomePage() {
                     filter: "brightness(1.1) contrast(1.05)",
                     mixBlendMode: "multiply",
                   }}
+                  loading="lazy"
+                  fetchPriority="low"
                 />
               </div>
 
@@ -625,7 +631,7 @@ export default function HomePage() {
             {/* Right Box - Book Appointment */}
             <div className="bg-[#FAF9F6] rounded-3xl p-6 border border-[#1A1A1A]/5 relative overflow-visible group hover:shadow-xl hover:shadow-black/5 transition-all flex flex-col">
               {/* Image overlapping the top */}
-              <div className="absolute -top-48 left-1/2 -translate-x-1/2 w-96 h-96 flex items-center justify-center">
+              <div className="absolute -top-48 left-1/2 -translate-x-1/2 w-96 h-96 flex items-center justify-center" style={{ aspectRatio: "1/1" }}>
                 <Image
                   src="/booking-image.png"
                   alt="Person holding book now sign"
@@ -636,6 +642,8 @@ export default function HomePage() {
                     filter: "brightness(1.1) contrast(1.05)",
                     mixBlendMode: "multiply",
                   }}
+                  loading="lazy"
+                  fetchPriority="low"
                 />
               </div>
 
@@ -662,15 +670,16 @@ export default function HomePage() {
       <section className="py-24 px-4 bg-[#FAF9F6]">
         <div className="max-w-7xl mx-auto">
           <div className="grid md:grid-cols-[1.4fr_1fr] gap-12 items-center">
-            {/* Left side - Image */}
-            <div className="relative w-full">
+            {/* Left side - Image - Remove priority (below fold, 6.7MB hurts mobile LCP) */}
+            <div className="relative w-full" style={{ aspectRatio: "900/700" }}>
               <Image
                 src="/specialist-image.jpg"
                 alt="Professional funeral specialist"
                 width={900}
                 height={700}
-                className="w-full h-auto object-cover rounded-lg"
-                priority
+                className="w-full h-full object-cover rounded-lg"
+                loading="lazy"
+                fetchPriority="low"
               />
             </div>
 
