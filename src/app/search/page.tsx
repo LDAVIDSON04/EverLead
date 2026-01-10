@@ -5,11 +5,11 @@
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { Suspense, useState, useEffect } from "react";
+import dynamic from "next/dynamic";
+import { Suspense, useState, useEffect, useMemo, useCallback } from "react";
 import { Search, Star, MapPin, Calendar, Clock, Stethoscope, Video, SlidersHorizontal, ChevronRight, X, ArrowLeft, Shield, ExternalLink, Menu, Instagram, Facebook } from "lucide-react";
 import { supabaseClient } from "@/lib/supabaseClient";
-import { BookingPanel } from "@/app/agent/[agentId]/components/BookingPanel";
-import { OfficeLocationMap } from "@/components/OfficeLocationMap";
+// Removed static imports - now using dynamic imports below
 import { TrustHighlights } from "@/app/agent/[agentId]/components/TrustHighlights";
 import { DateTime } from 'luxon';
 
@@ -87,32 +87,8 @@ type AvailabilityDay = {
   slots: { startsAt: string; endsAt: string }[];
 };
 
-function SearchResults() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const query = searchParams.get("q") || "";
-  const location = searchParams.get("location") || "";
-  const service = searchParams.get("service") || "";
-  
-  // Decode URL-encoded location for display
-  const decodedLocation = location ? decodeURIComponent(location.replace(/\+/g, ' ')) : "";
-  
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [loading, setLoading] = useState(true);
-  // Input values (what user is typing)
-  const [inputQuery, setInputQuery] = useState(query);
-  const [inputLocation, setInputLocation] = useState(decodedLocation);
-  const [inputService, setInputService] = useState(service);
-  // Actual search values (what was searched/submitted)
-  const [searchQuery, setSearchQuery] = useState(query);
-  const [searchLocation, setSearchLocation] = useState(decodedLocation);
-  const [searchService, setSearchService] = useState(service);
-  // Location autocomplete
-  const [locationSuggestions, setLocationSuggestions] = useState<string[]>([]);
-  const [showLocationDropdown, setShowLocationDropdown] = useState(false);
-
-  // Canadian cities list for autocomplete
-  const cities = [
+// Canadian cities list for autocomplete - moved outside component to prevent recreation on every render
+const CANADIAN_CITIES = [
     // Alberta
     "Calgary, AB", "Edmonton, AB", "Red Deer, AB", "Lethbridge, AB", "Medicine Hat, AB",
     "Grande Prairie, AB", "Fort McMurray, AB", "Airdrie, AB", "St. Albert, AB", "Leduc, AB",
@@ -152,15 +128,50 @@ function SearchResults() {
     "Yellowknife, NT",
     // Nunavut
     "Iqaluit, NU",
-  ];
+] as const;
 
-  // Handle location input change with autocomplete
-  const handleLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+// Dynamic imports for heavy components to improve initial load and reduce bundle size
+const BookingPanel = dynamic(() => import("@/app/agent/[agentId]/components/BookingPanel").then(mod => ({ default: mod.BookingPanel })), {
+  loading: () => <div className="animate-pulse bg-gray-200 h-64 rounded-lg" />,
+  ssr: false,
+});
+
+const OfficeLocationMap = dynamic(() => import("@/components/OfficeLocationMap").then(mod => ({ default: mod.OfficeLocationMap })), {
+  loading: () => <div className="animate-pulse bg-gray-200 h-64 rounded-lg" />,
+  ssr: false,
+});
+
+function SearchResults() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const query = searchParams.get("q") || "";
+  const location = searchParams.get("location") || "";
+  const service = searchParams.get("service") || "";
+  
+  // Decode URL-encoded location for display
+  const decodedLocation = location ? decodeURIComponent(location.replace(/\+/g, ' ')) : "";
+  
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [loading, setLoading] = useState(true);
+  // Input values (what user is typing)
+  const [inputQuery, setInputQuery] = useState(query);
+  const [inputLocation, setInputLocation] = useState(decodedLocation);
+  const [inputService, setInputService] = useState(service);
+  // Actual search values (what was searched/submitted)
+  const [searchQuery, setSearchQuery] = useState(query);
+  const [searchLocation, setSearchLocation] = useState(decodedLocation);
+  const [searchService, setSearchService] = useState(service);
+  // Location autocomplete
+  const [locationSuggestions, setLocationSuggestions] = useState<string[]>([]);
+  const [showLocationDropdown, setShowLocationDropdown] = useState(false);
+
+  // Handle location input change with autocomplete - memoized to prevent recreation
+  const handleLocationChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setInputLocation(value);
     
     if (value.length > 0) {
-      const filtered = cities.filter(city => 
+      const filtered = CANADIAN_CITIES.filter(city => 
         city.toLowerCase().includes(value.toLowerCase())
       ).slice(0, 10); // Limit to 10 suggestions
       setLocationSuggestions(filtered);
@@ -169,10 +180,10 @@ function SearchResults() {
       setLocationSuggestions([]);
       setShowLocationDropdown(false);
     }
-  };
+  }, []);
 
-  // Handle location selection from dropdown
-  const handleLocationSelect = (city: string) => {
+  // Handle location selection from dropdown - memoized
+  const handleLocationSelect = useCallback((city: string) => {
     setInputLocation(city);
     setShowLocationDropdown(false);
     setLocationSuggestions([]);
@@ -183,7 +194,7 @@ function SearchResults() {
     params.set("location", city);
     if (inputService) params.set("service", inputService);
     router.push(`/search?${params.toString()}`);
-  };
+  }, [inputQuery, inputService, router]);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [selectedAppointmentIndex, setSelectedAppointmentIndex] = useState<number>(0);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -1365,7 +1376,7 @@ function SearchResults() {
                     onChange={handleLocationChange}
                     onFocus={() => {
                       if (inputLocation.length > 0) {
-                        const filtered = cities.filter(city => 
+                        const filtered = CANADIAN_CITIES.filter(city => 
                           city.toLowerCase().includes(inputLocation.toLowerCase())
                         ).slice(0, 10);
                         setLocationSuggestions(filtered);
@@ -1447,7 +1458,7 @@ function SearchResults() {
               onChange={handleLocationChange}
               onFocus={() => {
                 if (inputLocation.length > 0) {
-                  const filtered = cities.filter(city => 
+                  const filtered = CANADIAN_CITIES.filter(city => 
                     city.toLowerCase().includes(inputLocation.toLowerCase())
                   ).slice(0, 10);
                   setLocationSuggestions(filtered);

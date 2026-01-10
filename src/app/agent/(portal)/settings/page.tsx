@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { supabaseClient } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import { Settings, Camera, Check, AlertCircle, Lock, Trash2, AlertTriangle, Bell, Mail, Smartphone, CreditCard, ExternalLink, DollarSign, Calendar, RefreshCw, MapPin, Plus, X, FileText, Clock, Edit2 } from "lucide-react";
