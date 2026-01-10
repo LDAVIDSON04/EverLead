@@ -378,53 +378,50 @@ export default function HomePage() {
         </div>
 
         {/* Hero illustration - positioned absolutely on the right, above title */}
-        {/* Only render on desktop to prevent unnecessary download on mobile */}
-        {isDesktop && (
-          <div className="absolute right-10 top-10 hidden lg:block">
-            <Image
-              src="/hero-image.png"
-              alt="Book a specialist"
-              width={350}
-              height={350}
-              className="w-[350px] h-auto object-contain"
-              style={{
-                mixBlendMode: "multiply",
-              }}
-              priority
-              sizes="350px"
-            />
-          </div>
-        )}
+        {/* Hidden on mobile with CSS - Next.js will not prioritize loading this on mobile */}
+        <div className="absolute right-10 top-10 hidden lg:block">
+          <Image
+            src="/hero-image.png"
+            alt="Book a specialist"
+            width={350}
+            height={350}
+            className="w-[350px] h-auto object-contain"
+            style={{
+              mixBlendMode: "multiply",
+            }}
+            sizes="(max-width: 1024px) 0px, 350px"
+            loading="lazy"
+          />
+        </div>
 
         {/* Arm pointing illustration - positioned to point at Find care button */}
-        {/* Only render on desktop to prevent 3.2MB download on mobile (improves Speed Index) */}
-        {isDesktop && (
-          <div 
-            className="absolute hidden lg:block z-10 pointer-events-none arm-pointing-illustration" 
-            style={{ 
-              width: "1500px", 
-              height: "auto",
-              bottom: "-9vh",
-              right: "-22vw",
+        {/* Hidden on mobile with CSS - Next.js will not load this on mobile (improves Speed Index) */}
+        <div 
+          className="absolute hidden lg:block z-10 pointer-events-none arm-pointing-illustration" 
+          style={{ 
+            width: "1500px", 
+            height: "auto",
+            bottom: "-9vh",
+            right: "-22vw",
+          }}
+        >
+          <Image
+            src="/arm-image.png"
+            alt=""
+            width={1500}
+            height={800}
+            className="w-full h-auto object-contain"
+            style={{
+              mixBlendMode: "multiply",
+              imageRendering: "-webkit-optimize-contrast",
+              transform: "translateZ(0)",
+              backfaceVisibility: "hidden",
             }}
-          >
-            <Image
-              src="/arm-image.png"
-              alt=""
-              width={1500}
-              height={800}
-              className="w-full h-auto object-contain"
-              style={{
-                mixBlendMode: "multiply",
-                imageRendering: "-webkit-optimize-contrast",
-                transform: "translateZ(0)",
-                backfaceVisibility: "hidden",
-              }}
-              sizes="(max-width: 1024px) 0px, 1500px"
-              loading="lazy"
-            />
-          </div>
-        )}
+            sizes="(max-width: 1024px) 0px, 1500px"
+            loading="lazy"
+            fetchPriority="low"
+          />
+        </div>
 
         <div className="max-w-7xl mx-auto relative z-20 w-full md:mt-0 mt-1 overflow-visible">
           {/* Headline and Search Bar - Full Width */}
