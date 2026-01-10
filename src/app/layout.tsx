@@ -81,6 +81,8 @@ export default function RootLayout({
 }) {
   // Structured data for Google Knowledge Panel and logo in search results
   // Use www.soradin.com to avoid redirects (soradin.com redirects to www.soradin.com)
+  // Google requires: Logo minimum 112x112px, square, multiples of 48px for favicon
+  // Logo URL must be directly accessible and crawlable by Googlebot-Image
   const organizationSchema = {
     "@context": "https://schema.org",
     "@type": "Organization",
@@ -90,9 +92,16 @@ export default function RootLayout({
       "@type": "ImageObject",
       "url": "https://www.soradin.com/Soradin.png",
       "width": 1024,
+      "height": 1024,
+      "contentUrl": "https://www.soradin.com/Soradin.png",
+      "encodingFormat": "image/png"
+    },
+    "image": {
+      "@type": "ImageObject",
+      "url": "https://www.soradin.com/Soradin.png",
+      "width": 1024,
       "height": 1024
     },
-    "image": "https://www.soradin.com/Soradin.png",
     "description": "Soradin helps families plan funeral wishes in advance and connect with trusted local professionals without pressure or urgency.",
     "email": "support@soradin.com",
     "sameAs": [
@@ -109,11 +118,14 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <BotIdClient protect={protectedRoutes} />
-        {/* Explicit favicon links for Google Search results - must be multiples of 48px */}
-        <link rel="icon" type="image/png" sizes="192x192" href="/Soradin.png" />
-        <link rel="icon" type="image/png" sizes="512x512" href="/Soradin.png" />
-        <link rel="icon" type="image/png" sizes="1024x1024" href="/Soradin.png" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/Soradin.png" />
+        {/* Explicit favicon links for Google Search results - must be square and multiples of 48px */}
+        {/* Google requires: minimum 112x112px, square format, multiples of 48px (192x192, 512x512, etc.) */}
+        <link rel="icon" type="image/png" sizes="192x192" href="https://www.soradin.com/Soradin.png" />
+        <link rel="icon" type="image/png" sizes="512x512" href="https://www.soradin.com/Soradin.png" />
+        <link rel="icon" type="image/png" sizes="1024x1024" href="https://www.soradin.com/Soradin.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="https://www.soradin.com/Soradin.png" />
+        {/* Canonical favicon for maximum compatibility */}
+        <link rel="icon" type="image/png" href="https://www.soradin.com/Soradin.png" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
