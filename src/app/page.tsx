@@ -571,7 +571,8 @@ export default function HomePage() {
                     mixBlendMode: "multiply",
                     objectPosition: 'top center',
                   }}
-                  priority
+                  loading="lazy"
+                  fetchPriority="low"
                 />
               </div>
 
