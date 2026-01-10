@@ -570,7 +570,10 @@ export default function HomePage() {
                     mixBlendMode: "multiply",
                     objectPosition: 'top center',
                   }}
-                  priority
+                  loading="lazy"
+                  fetchPriority="low"
+                  decoding="async"
+                  sizes="(max-width: 768px) 100vw, 400px"
                 />
               </div>
 
@@ -606,17 +609,21 @@ export default function HomePage() {
             <div className="bg-[#FAF9F6] rounded-3xl p-6 border border-[#1A1A1A]/5 relative overflow-visible group hover:shadow-xl hover:shadow-black/5 transition-all flex flex-col">
               {/* Image overlapping the top */}
               <div className="absolute -top-48 left-1/2 -translate-x-1/2 w-96 h-96 flex items-center justify-center">
-                <Image
-                  src="/review-image.png"
-                  alt="Person holding review card"
-                  width={384}
-                  height={384}
-                  className="w-full h-full object-contain"
-                  style={{
-                    filter: "brightness(1.1) contrast(1.05)",
-                    mixBlendMode: "multiply",
-                  }}
-                />
+              <Image
+                src="/review-image.png"
+                alt="Person holding review card"
+                width={384}
+                height={384}
+                className="w-full h-full object-contain"
+                style={{
+                  filter: "brightness(1.1) contrast(1.05)",
+                  mixBlendMode: "multiply",
+                }}
+                loading="lazy"
+                fetchPriority="low"
+                decoding="async"
+                sizes="(max-width: 768px) 200px, 384px"
+              />
               </div>
 
               <div className="relative z-10 flex flex-col items-center text-center mt-20">
@@ -685,7 +692,10 @@ export default function HomePage() {
                 width={900}
                 height={700}
                 className="w-full h-auto object-cover rounded-lg"
-                priority
+                loading="lazy"
+                fetchPriority="low"
+                decoding="async"
+                sizes="(max-width: 768px) 100vw, 900px"
               />
             </div>
 
@@ -748,7 +758,10 @@ export default function HomePage() {
                   filter: "brightness(1.05) contrast(1.05)",
                   mixBlendMode: "multiply",
                 }}
-                unoptimized
+                loading="lazy"
+                fetchPriority="low"
+                decoding="async"
+                sizes="(max-width: 768px) 100vw, 800px"
               />
             </div>
             {/* Right side - Content (mobile second, desktop left) */}
