@@ -847,23 +847,23 @@ export default function HomePage() {
                 <ul className="space-y-3">
                   <li>
                     <Link href="#" className="text-white/60 hover:text-white transition-colors">
-                      Funeral Planning
+                      Funeral pre-planning
                     </Link>
                   </li>
                   <li>
-                    <Link href="#" className="text-white/60 hover:text-white transition-colors">
-                      Estate Planning
-                    </Link>
+                    <span className="text-white/60">
+                      Estate Planning Lawyer <span className="text-white/40 text-sm">(coming soon)</span>
+                    </span>
                   </li>
                   <li>
-                    <Link href="#" className="text-white/60 hover:text-white transition-colors">
-                      Grief Counseling
-                    </Link>
+                    <span className="text-white/60">
+                      Insurance Agents <span className="text-white/40 text-sm">(coming soon)</span>
+                    </span>
                   </li>
                   <li>
-                    <Link href="#" className="text-white/60 hover:text-white transition-colors">
-                      Memorial Services
-                    </Link>
+                    <span className="text-white/60">
+                      Financial Advisors <span className="text-white/40 text-sm">(coming soon)</span>
+                    </span>
                   </li>
                 </ul>
               </div>
