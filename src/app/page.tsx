@@ -15,6 +15,12 @@ export default function HomePage() {
   const [locationSuggestions, setLocationSuggestions] = useState<string[]>([]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [locationDetecting, setLocationDetecting] = useState(false);
+  
+  // Defer below-fold content rendering to improve Speed Index
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Auto-detect and pre-fill location - DISABLED on initial load to improve Speed Index
   // Location will be detected when user focuses on location input (user interaction)
@@ -527,8 +533,8 @@ export default function HomePage() {
             </form>
           </div>
           
-          {/* Mobile Only: Pre-Need Planning Box */}
-          <div className="md:hidden mt-4">
+          {/* Mobile Only: Pre-Need Planning Box - Defer render to improve Speed Index */}
+          <div className={`md:hidden mt-4 ${!mounted ? 'opacity-0' : 'opacity-100 transition-opacity duration-300'}`} style={{ contentVisibility: mounted ? 'auto' : 'hidden' }}>
             <div className="bg-[#FAF9F6] rounded-3xl p-6 border border-[#1A1A1A]/5 relative overflow-hidden group hover:shadow-xl hover:shadow-black/5 transition-all flex flex-col">
               {/* Image inside the card, showing full torso */}
               <div className="relative w-full flex items-center justify-center -mx-6 mb-2 overflow-hidden" style={{ height: '150px', minHeight: '150px', marginTop: '-72px', paddingTop: '0' }}>
@@ -568,8 +574,8 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* TWO BOXES SECTION */}
-      <section className="py-24 px-4 bg-white">
+      {/* TWO BOXES SECTION - Defer render to improve Speed Index */}
+      <section className={`py-24 px-4 bg-white ${!mounted ? 'opacity-0' : 'opacity-100 transition-opacity duration-300'}`} style={{ contentVisibility: mounted ? 'auto' : 'hidden' }}>
         <div className="max-w-6xl mx-auto">
           <h2 className="text-5xl mb-16 text-[#1A1A1A] font-semibold tracking-tight text-center">
             Let&apos;s connect you with the right person
