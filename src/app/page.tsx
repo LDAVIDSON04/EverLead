@@ -22,7 +22,7 @@ export default function HomePage() {
     setMounted(true);
   }, []);
 
-  // Auto-detect and pre-fill location on initial page load
+  // Auto-detect and pre-fill location on initial page load - deferred to avoid blocking initial render
   useEffect(() => {
     const detectLocationOnLoad = async () => {
       // Only detect if location is empty
@@ -55,7 +55,14 @@ export default function HomePage() {
       }
     };
 
-    detectLocationOnLoad();
+    // Defer geolocation call to avoid blocking initial render (improves Speed Index)
+    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+      requestIdleCallback(() => {
+        setTimeout(detectLocationOnLoad, 1500);
+      }, { timeout: 2000 });
+    } else {
+      setTimeout(detectLocationOnLoad, 1500);
+    }
   }, []); // Run once on mount
 
   // Auto-detect and pre-fill location - Also available on user interaction as fallback
