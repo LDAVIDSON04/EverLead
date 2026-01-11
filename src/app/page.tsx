@@ -22,43 +22,7 @@ export default function HomePage() {
     setMounted(true);
   }, []);
 
-  // Auto-detect and pre-fill location on initial page load
-  useEffect(() => {
-    const detectLocationOnLoad = async () => {
-      // Only detect if location is empty
-      if (location.trim() !== "") {
-        return;
-      }
-
-      // Only detect once per session
-      if (locationDetecting) {
-        return;
-      }
-
-      setLocationDetecting(true);
-      try {
-        console.log("🔍 [HOME] Auto-detecting location from IP on page load...");
-        const res = await fetch("/api/geolocation");
-        const data = await res.json();
-        console.log("📍 [HOME] Geolocation API response:", data);
-        
-        if (data.location) {
-          console.log("✅ [HOME] Location auto-detected on load:", data.location);
-          setLocation(data.location);
-        } else {
-          console.warn("⚠️ [HOME] Could not auto-detect location from IP");
-        }
-      } catch (err) {
-        console.error("❌ [HOME] Error auto-detecting location on load:", err);
-      } finally {
-        setLocationDetecting(false);
-      }
-    };
-
-    detectLocationOnLoad();
-  }, []); // Run once on mount
-
-  // Auto-detect and pre-fill location - Also available on user interaction as fallback
+  // Auto-detect and pre-fill location on user interaction (focus) to avoid blocking initial render
   const detectLocationOnFocus = async () => {
     // Only detect if location is empty (user hasn't entered anything)
     if (location.trim() !== "") {
