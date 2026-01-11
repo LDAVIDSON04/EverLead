@@ -411,7 +411,6 @@ export default function HomePage() {
         {/* Abstract background shapes - deferred to prevent blocking initial render */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ contentVisibility: 'auto' }}>
           <div className="absolute top-20 right-10 w-96 h-96 bg-[#0C6F3C]/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-10 w-80 h-80 bg-[#D9C7A3]/30 rounded-full blur-3xl" />
         </div>
 
         {/* Hero illustration - positioned absolutely on the right, above title */}
