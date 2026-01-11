@@ -4,7 +4,7 @@ import HomePageClient from "./page-client";
 
 export default async function HomePage() {
   // Get location from Vercel headers (server-side, no API call needed)
-  const headersList = headers();
+  const headersList = await headers();
   const vercelCity = headersList.get("x-vercel-ip-city");
   const vercelRegion = headersList.get("x-vercel-ip-country-region");
 
