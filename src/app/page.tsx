@@ -927,7 +927,7 @@ export default function HomePage() {
                   </li>
                   <li>
                     <span className="text-white/60">
-                      Estate Planning Lawyer <span className="text-white/40 text-sm">(coming soon)</span>
+                      Estate Lawyer <span className="text-white/40 text-sm">(coming soon)</span>
                     </span>
                   </li>
                   <li>
