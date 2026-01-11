@@ -117,29 +117,36 @@ async function sendApprovalEmail(email: string, fullName: string | null, approve
     
     const html = approved
       ? `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="text-align: center; margin-bottom: 30px;">
-            <img src="${siteUrl}/logo%20-%20white.png" alt="Soradin" style="height: 40px; width: auto; margin: 0 auto 10px; display: block;" />
-            <div style="display: none;">
-              <h1 style="color: #2a2a2a; font-size: 28px; margin: 0; font-weight: 300;">Soradin</h1>
-              <p style="color: #6b6b6b; font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; margin: 5px 0 0 0;">Pre-Planning</p>
-            </div>
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px; background-color: #ffffff;">
+          <div style="text-align: center; margin-bottom: 40px;">
+            <img src="${siteUrl}/Soradin.png" alt="Soradin" style="height: 60px; width: auto; margin: 0 auto; display: block;" />
           </div>
-          <h2 style="color: #2a2a2a; margin-bottom: 20px;">Account Approved</h2>
-          <p>Hi ${fullName || "there"},</p>
-          <p>Great news! Your Soradin agent account has been approved. You can now log in and start purchasing leads.</p>
-          <p style="margin-top: 30px;">
-            <a href="${siteUrl}/agent" style="background-color: #2a2a2a; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: 500;">
+          
+          <div style="background-color: #f0f9f4; border-left: 4px solid #0C6F3C; padding: 20px; margin-bottom: 30px; border-radius: 8px;">
+            <h1 style="color: #1A1A1A; font-size: 28px; font-weight: 600; margin: 0 0 10px 0; line-height: 1.2;">Account Approved</h1>
+            <p style="color: #0C6F3C; font-size: 16px; margin: 0; font-weight: 500;">Welcome to Soradin</p>
+          </div>
+          
+          <div style="color: #1A1A1A; font-size: 16px; line-height: 1.6;">
+            <p style="margin: 0 0 20px 0;">Hi ${fullName || "there"},</p>
+            <p style="margin: 0 0 20px 0;">Great news! Your Soradin agent account has been approved. You can now log in to access your agent portal and start connecting with families in your area.</p>
+            <p style="margin: 0 0 30px 0;">We're excited to have you join our community of trusted funeral planning professionals.</p>
+          </div>
+          
+          <div style="text-align: center; margin: 40px 0;">
+            <a href="${siteUrl}/agent" style="background-color: #0C6F3C; color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 12px; display: inline-block; font-weight: 600; font-size: 16px; box-shadow: 0 2px 4px rgba(12, 111, 60, 0.2);">
               Log In to Agent Portal
             </a>
-          </p>
-          <p style="margin-top: 30px; color: #6b6b6b; font-size: 14px;">
-            If you have any questions, please contact our support team.
-          </p>
-          <hr style="border: none; border-top: 1px solid #e5e5e5; margin: 30px 0;" />
-          <p style="color: #6b6b6b; font-size: 12px; margin: 0;">
-            © ${new Date().getFullYear()} Soradin. All rights reserved.
-          </p>
+          </div>
+          
+          <div style="margin-top: 40px; padding-top: 30px; border-top: 1px solid #e5e5e5;">
+            <p style="color: #6b6b6b; font-size: 14px; line-height: 1.6; margin: 0 0 10px 0;">
+              If you have any questions, please contact our support team at <a href="mailto:support@soradin.com" style="color: #0C6F3C; text-decoration: none;">support@soradin.com</a>.
+            </p>
+            <p style="color: #6b6b6b; font-size: 12px; margin: 20px 0 0 0;">
+              © ${new Date().getFullYear()} Soradin, Inc. All rights reserved.
+            </p>
+          </div>
         </div>
       `
       : `
