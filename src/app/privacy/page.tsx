@@ -130,7 +130,7 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-gray-700 mb-1 font-semibold">11. Contact Information</h2>
             <p className="mb-1">
-              For questions or concerns regarding privacy or data handling, contact: Email: <a href="mailto:privacy@soradin.com" className="text-gray-700 hover:underline">privacy@soradin.com</a>. Company: Soradin Inc.
+              For questions or concerns regarding privacy or data handling, contact: Email: <a href="mailto:support@soradin.com" className="text-gray-700 hover:underline">support@soradin.com</a>. Company: Soradin Inc.
             </p>
           </section>
               </div>
