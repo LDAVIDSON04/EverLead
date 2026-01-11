@@ -603,7 +603,7 @@ export default function HomePage() {
                 </div>
                 <h3 className="text-lg font-semibold text-[#1A1A1A] mb-2">Book with Confidence</h3>
                 <p className="text-sm text-[#1A1A1A]/70 leading-relaxed">
-                  Schedule a free, no pressure appointment on your terms.
+                  Schedule a free appointment on your terms.
                 </p>
               </div>
             </div>
