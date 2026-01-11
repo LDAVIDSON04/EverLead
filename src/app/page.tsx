@@ -388,32 +388,6 @@ export default function HomePage() {
           />
         </div>
 
-        {/* Arm pointing illustration - positioned to point at Find care button */}
-        {/* Fixed aspect-ratio prevents CLS on desktop */}
-        <div 
-          className="absolute hidden lg:block z-10 pointer-events-none arm-pointing-illustration" 
-          style={{ 
-            width: "1500px", 
-            aspectRatio: "1500/800",
-            bottom: "-9vh",
-            right: "-22vw",
-          }}
-        >
-          <Image
-            src="/arm-image.png"
-            alt=""
-            width={1500}
-            height={800}
-            className="w-full h-full object-contain"
-            style={{
-              mixBlendMode: "multiply",
-              imageRendering: "-webkit-optimize-contrast",
-              transform: "translateZ(0)",
-              backfaceVisibility: "hidden",
-            }}
-            loading="lazy"
-          />
-        </div>
 
         <div className="max-w-7xl mx-auto relative z-20 w-full md:mt-0 mt-1 overflow-visible">
           {/* Headline and Search Bar - Full Width */}
