@@ -566,6 +566,48 @@ export default function HomePage() {
                 </div>
               </div>
             </form>
+
+            {/* Desktop Only: How it Works Section */}
+            <div className="hidden md:flex items-center justify-center gap-8 mt-12 mb-8 max-w-4xl">
+              {/* Step 1 */}
+              <div className="flex flex-col items-center text-center flex-1">
+                <div className="w-16 h-16 rounded-full bg-[#0C6F3C]/10 flex items-center justify-center mb-4">
+                  <Search className="w-8 h-8 text-[#0C6F3C]" />
+                </div>
+                <h3 className="text-lg font-semibold text-[#1A1A1A] mb-2">Find Local Experts</h3>
+                <p className="text-sm text-[#1A1A1A]/70 leading-relaxed">
+                  Browse verified professionals in your community.
+                </p>
+              </div>
+
+              {/* Arrow */}
+              <ChevronRight className="w-6 h-6 text-[#1A1A1A]/30 flex-shrink-0" />
+
+              {/* Step 2 */}
+              <div className="flex flex-col items-center text-center flex-1">
+                <div className="w-16 h-16 rounded-full bg-[#0C6F3C]/10 flex items-center justify-center mb-4">
+                  <Calendar className="w-8 h-8 text-[#0C6F3C]" />
+                </div>
+                <h3 className="text-lg font-semibold text-[#1A1A1A] mb-2">Compare at Your Pace</h3>
+                <p className="text-sm text-[#1A1A1A]/70 leading-relaxed">
+                  Review profiles, specialties, and real availability.
+                </p>
+              </div>
+
+              {/* Arrow */}
+              <ChevronRight className="w-6 h-6 text-[#1A1A1A]/30 flex-shrink-0" />
+
+              {/* Step 3 */}
+              <div className="flex flex-col items-center text-center flex-1">
+                <div className="w-16 h-16 rounded-full bg-[#0C6F3C]/10 flex items-center justify-center mb-4">
+                  <Check className="w-8 h-8 text-[#0C6F3C]" />
+                </div>
+                <h3 className="text-lg font-semibold text-[#1A1A1A] mb-2">Book with Confidence</h3>
+                <p className="text-sm text-[#1A1A1A]/70 leading-relaxed">
+                  Schedule a free appointment on your terms.
+                </p>
+              </div>
+            </div>
           </div>
           
           {/* Mobile Only: Pre-Need Planning Box - Defer render to improve Speed Index */}
