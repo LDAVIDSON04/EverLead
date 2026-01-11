@@ -268,6 +268,7 @@ export default function HomePage() {
                 width={80}
                 height={80}
                 className="h-16 w-16 md:h-20 md:w-20 object-contain"
+                priority
               />
               <span className="text-sm md:text-2xl font-semibold text-[#1A1A1A]">Soradin</span>
             </Link>
@@ -366,8 +367,8 @@ export default function HomePage() {
 
       {/* HERO */}
       <div className="relative bg-[#FAF9F6] pb-12 px-4 min-h-[calc(100vh-80px)] flex items-start md:pt-32 pt-0 md:pb-12 -mt-2 md:mt-0" style={{ overflow: 'visible' }}>
-        {/* Abstract background shapes */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {/* Abstract background shapes - deferred to prevent blocking initial render */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ contentVisibility: 'auto' }}>
           <div className="absolute top-20 right-10 w-96 h-96 bg-[#0C6F3C]/10 rounded-full blur-3xl" />
           <div className="absolute bottom-0 left-10 w-80 h-80 bg-[#D9C7A3]/30 rounded-full blur-3xl" />
         </div>
@@ -385,6 +386,7 @@ export default function HomePage() {
               mixBlendMode: "multiply",
             }}
             loading="lazy"
+            fetchPriority="low"
           />
         </div>
 
