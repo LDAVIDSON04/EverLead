@@ -16,6 +16,8 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Optimize output for modern browsers (reduces legacy JavaScript polyfills)
+  swcMinify: true,
 };
 
 export default withBotId(nextConfig);

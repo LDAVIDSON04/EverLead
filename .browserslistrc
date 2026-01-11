@@ -1,0 +1,7 @@
+# Target modern browsers to reduce legacy JavaScript polyfills
+# This reduces bundle size by not transpiling modern JavaScript features
+> 0.5%
+last 2 versions
+Firefox ESR
+not dead
+not IE 11

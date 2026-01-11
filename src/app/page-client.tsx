@@ -708,6 +708,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                 className="w-full h-full object-cover rounded-lg"
                 loading="lazy"
                 fetchPriority="low"
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 900px"
               />
             </div>
 
