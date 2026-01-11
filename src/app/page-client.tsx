@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Search, MapPin, Star, Calendar, Check, ChevronDown, Heart, Facebook, Instagram, Menu, X, ChevronRight } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface HomePageClientProps {
   initialLocation: string;
@@ -137,7 +137,7 @@ const cities = [
 export default function HomePageClient({ initialLocation }: HomePageClientProps) {
   const router = useRouter();
   const [specialty, setSpecialty] = useState("Funeral Pre-Planning");
-  const [location, setLocation] = useState(initialLocation);
+  const [location, setLocation] = useState("");
   const [showSpecialtyDropdown, setShowSpecialtyDropdown] = useState(false);
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
   const [locationSuggestions, setLocationSuggestions] = useState<string[]>([]);
