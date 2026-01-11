@@ -1,6 +1,5 @@
-// Server component to inject location data via script tag (non-blocking)
+// Server component to get location server-side and pass as prop
 import { headers } from "next/headers";
-import Script from "next/script";
 import HomePageClient from "./page-client";
 
 export default async function HomePage() {
@@ -33,16 +32,5 @@ export default async function HomePage() {
     initialLocation = `${vercelCity}, ${province}`;
   }
 
-  return (
-    <>
-      <Script
-        id="location-data"
-        strategy="beforeInteractive"
-        dangerouslySetInnerHTML={{
-          __html: `window.__INITIAL_LOCATION__ = ${JSON.stringify(initialLocation)};`,
-        }}
-      />
-      <HomePageClient initialLocation={initialLocation} />
-    </>
-  );
+  return <HomePageClient initialLocation={initialLocation} />;
 }

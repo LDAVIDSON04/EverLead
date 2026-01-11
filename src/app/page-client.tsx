@@ -137,15 +137,7 @@ const cities = [
 export default function HomePageClient({ initialLocation }: HomePageClientProps) {
   const router = useRouter();
   const [specialty, setSpecialty] = useState("Funeral Pre-Planning");
-  // Get location from prop (server-side) or window (script tag injection)
-  const getInitialLocation = () => {
-    if (initialLocation) return initialLocation;
-    if (typeof window !== 'undefined' && (window as any).__INITIAL_LOCATION__) {
-      return (window as any).__INITIAL_LOCATION__;
-    }
-    return "";
-  };
-  const [location, setLocation] = useState(getInitialLocation());
+  const [location, setLocation] = useState(initialLocation);
   const [showSpecialtyDropdown, setShowSpecialtyDropdown] = useState(false);
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
   const [locationSuggestions, setLocationSuggestions] = useState<string[]>([]);
