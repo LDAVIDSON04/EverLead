@@ -119,7 +119,9 @@ export default function RootLayout({
       <head>
         <BotIdClient protect={protectedRoutes} />
         {/* Explicit favicon links for Google Search results - must be square and multiples of 48px */}
-        {/* Google requires: minimum 112x112px, square format, multiples of 48px (192x192, 512x512, etc.) */}
+        {/* Google requires a 48x48 version for search result snippets - add this FIRST */}
+        <link rel="icon" type="image/png" href="https://www.soradin.com/favicon-48.png" sizes="48x48" />
+        {/* Higher resolution favicons for other uses */}
         <link rel="icon" type="image/png" sizes="192x192" href="https://www.soradin.com/Soradin.png" />
         <link rel="icon" type="image/png" sizes="512x512" href="https://www.soradin.com/Soradin.png" />
         <link rel="icon" type="image/png" sizes="1024x1024" href="https://www.soradin.com/Soradin.png" />
