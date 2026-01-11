@@ -3,7 +3,15 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search, MapPin, Star, Calendar, Check, ChevronDown, Heart, Facebook, Instagram, Menu, X, ChevronRight } from "lucide-react";
+// Critical above-fold icons loaded immediately
+import { Search, MapPin, Menu, X } from "lucide-react";
+// Below-fold icons loaded dynamically
+import dynamic from "next/dynamic";
+const ChevronDown = dynamic(() => import("lucide-react").then(mod => mod.ChevronDown), { ssr: false });
+const ChevronRight = dynamic(() => import("lucide-react").then(mod => mod.ChevronRight), { ssr: false });
+const Check = dynamic(() => import("lucide-react").then(mod => mod.Check), { ssr: false });
+const Facebook = dynamic(() => import("lucide-react").then(mod => mod.Facebook), { ssr: false });
+const Instagram = dynamic(() => import("lucide-react").then(mod => mod.Instagram), { ssr: false });
 import { useState, useEffect } from "react";
 
 export default function HomePage() {

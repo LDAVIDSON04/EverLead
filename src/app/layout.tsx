@@ -1,45 +1,8 @@
 // src/app/layout.tsx
 import "./globals.css";
 import type { Metadata } from "next";
-import { Analytics } from "@vercel/analytics/react";
-import { SpeedInsights } from "@vercel/speed-insights/next";
-import { BotIdClient } from 'botid/client';
-
-// Protected routes that need bot protection
-const protectedRoutes = [
-  {
-    path: '/api/appointments/buy',
-    method: 'POST',
-  },
-  {
-    path: '/api/appointments/confirm',
-    method: 'POST',
-  },
-  {
-    path: '/api/checkout',
-    method: 'POST',
-  },
-  {
-    path: '/api/checkout/confirm',
-    method: 'POST',
-  },
-  {
-    path: '/api/agent/leads/confirm-purchase',
-    method: 'POST',
-  },
-  {
-    path: '/api/agent/signup',
-    method: 'POST',
-  },
-  {
-    path: '/api/agent/forgot-password',
-    method: 'POST',
-  },
-  {
-    path: '/api/leads/create',
-    method: 'POST',
-  },
-];
+import DeferredAnalytics from "@/components/DeferredAnalytics";
+import BotIdClientWrapper from "@/components/BotIdClientWrapper";
 
 export const metadata: Metadata = {
   title: "Soradin - Thoughtful funeral pre-planning, made simple",
@@ -117,7 +80,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <BotIdClient protect={protectedRoutes} />
+        <BotIdClientWrapper />
         {/* Explicit favicon links for Google Search results - must be square and multiples of 48px */}
         {/* Google requires: minimum 112x112px, square format, multiples of 48px (192x192, 512x512, etc.) */}
         <link rel="icon" type="image/png" sizes="192x192" href="https://www.soradin.com/Soradin.png" />
@@ -133,8 +96,8 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen bg-slate-50 text-slate-900">
         {children}
-        <Analytics />
-        <SpeedInsights />
+        {/* Defer analytics to improve initial render performance */}
+        <DeferredAnalytics />
       </body>
     </html>
   );
