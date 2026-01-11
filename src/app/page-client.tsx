@@ -572,8 +572,8 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
             </div>
           </div>
           
-          {/* Mobile Only: Pre-Need Planning Box */}
-          <div className="md:hidden mt-4">
+          {/* Mobile Only: Pre-Need Planning Box - Hidden initially on mobile to improve Speed Index */}
+          <div className="md:hidden mt-4" style={{ contentVisibility: 'auto' }}>
             <div className="bg-[#FAF9F6] rounded-3xl p-6 border border-[#1A1A1A]/5 relative overflow-hidden group hover:shadow-xl hover:shadow-black/5 transition-all flex flex-col">
               {/* Image inside the card, showing full torso */}
               <div className="relative w-full flex items-center justify-center -mx-6 mb-2 overflow-hidden" style={{ height: '150px', minHeight: '150px', marginTop: '-72px', paddingTop: '0' }}>
@@ -613,8 +613,8 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
         </div>
       </div>
 
-      {/* TWO BOXES SECTION */}
-      <section className="py-24 px-4 bg-white">
+      {/* TWO BOXES SECTION - Deferred on mobile for Speed Index */}
+      <section className="py-24 px-4 bg-white" style={{ contentVisibility: 'auto' }}>
         <div className="max-w-6xl mx-auto">
           <h2 className="text-5xl mb-16 text-[#1A1A1A] font-semibold tracking-tight text-center">
             Let&apos;s connect you with the right person
@@ -694,8 +694,8 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
         </div>
       </section>
 
-      {/* FOR SPECIALISTS SECTION */}
-      <section className="py-24 px-4 bg-[#FAF9F6]">
+      {/* FOR SPECIALISTS SECTION - Deferred on mobile for Speed Index */}
+      <section className="py-24 px-4 bg-[#FAF9F6]" style={{ contentVisibility: 'auto' }}>
         <div className="max-w-7xl mx-auto">
           <div className="grid md:grid-cols-[1.4fr_1fr] gap-12 items-center">
             {/* Left side - Image - Remove priority (below fold, 6.7MB hurts mobile LCP) */}
@@ -754,8 +754,8 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
         </div>
       </section>
 
-      {/* TRUSTED PARTNERS */}
-      <section className="py-24 px-4 bg-[#FAF9F6]">
+      {/* TRUSTED PARTNERS - Deferred on mobile for Speed Index */}
+      <section className="py-24 px-4 bg-[#FAF9F6]" style={{ contentVisibility: 'auto' }}>
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             {/* Left side - Image (mobile first, desktop right) - Fixed aspect-ratio prevents CLS */}
