@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { sendConsumerBookingEmail } from "@/lib/emails";
+import { sendConsumerBookingSMS } from "@/lib/sms";
 
 export async function POST(req: NextRequest) {
   if (!supabaseAdmin) {
@@ -37,10 +38,10 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Verify lead exists and get email/name for notification
+  // Verify lead exists and get email/name/phone for notification
   const { data: lead, error: leadError } = await supabaseAdmin
     .from('leads')
-    .select('id, email, full_name, first_name, last_name')
+    .select('id, email, phone, full_name, first_name, last_name, province')
     .eq('id', leadId)
     .single();
 
@@ -133,6 +134,39 @@ export async function POST(req: NextRequest) {
       leadId: lead.id,
       hasEmail: !!lead.email,
       emailField: lead.email,
+    });
+  }
+
+  // Send consumer SMS (fire-and-forget, but log errors)
+  if (lead.phone) {
+    const smsPromise = sendConsumerBookingSMS({
+      to: lead.phone,
+      requestedDate,
+      requestedWindow,
+      province: lead.province || undefined,
+      // Agent name not available at appointment creation time
+    });
+    
+    const smsTimeout = new Promise<void>((resolve) => {
+      setTimeout(() => {
+        console.log('⏱️ SMS send timeout (5s) - returning response, SMS may still be sending in background');
+        resolve();
+      }, 5000);
+    });
+    
+    try {
+      await Promise.race([smsPromise, smsTimeout]);
+    } catch (err: any) {
+      console.error('❌ Failed to send consumer booking SMS (non-fatal - appointment still created):', {
+        error: err?.message || err,
+        to: lead.phone,
+      });
+      // Don't throw - SMS failure shouldn't break appointment creation
+    }
+  } else {
+    console.warn('⚠️ No phone number found for lead, skipping booking confirmation SMS:', {
+      leadId: lead.id,
+      hasPhone: !!lead.phone,
     });
   }
 
