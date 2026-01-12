@@ -1018,6 +1018,22 @@ export async function POST(req: NextRequest) {
 
     // Send SMS notifications (non-blocking)
     try {
+      // Get agent name for SMS
+      const { data: agentProfileForSMS } = await supabaseAdmin
+        .from("profiles")
+        .select("full_name, first_name, last_name, phone, metadata, agent_province")
+        .eq("id", agentId)
+        .maybeSingle();
+      
+      const agentNameForSMS = agentProfileForSMS?.full_name || 
+        (agentProfileForSMS?.first_name && agentProfileForSMS?.last_name 
+          ? `${agentProfileForSMS.first_name} ${agentProfileForSMS.last_name}` 
+          : "Agent");
+      const agentPhone = agentProfileForSMS?.phone;
+      const agentMetadata = agentProfileForSMS?.metadata || {};
+      const notificationPrefs = agentMetadata.notification_preferences || {};
+      const newAppointmentSmsEnabled = notificationPrefs.newAppointment?.sms === true;
+
       // Get lead data for SMS
       const { data: leadDataForSMS } = await supabaseAdmin
         .from("leads")
@@ -1044,7 +1060,7 @@ export async function POST(req: NextRequest) {
 
         const smsPromise = sendConsumerBookingSMS({
           to: leadPhone,
-          agentName: agentName,
+          agentName: agentNameForSMS,
           requestedDate,
           requestedWindow,
           province: leadProvince || undefined,
@@ -1074,17 +1090,6 @@ export async function POST(req: NextRequest) {
       }
 
       // Send SMS to agent (if enabled in preferences)
-      const { data: agentProfileForSMS } = await supabaseAdmin
-        .from("profiles")
-        .select("phone, metadata, agent_province")
-        .eq("id", agentId)
-        .maybeSingle();
-      
-      const agentPhone = agentProfileForSMS?.phone;
-      const agentMetadata = agentProfileForSMS?.metadata || {};
-      const notificationPrefs = agentMetadata.notification_preferences || {};
-      const newAppointmentSmsEnabled = notificationPrefs.newAppointment?.sms === true;
-
       if (agentPhone && newAppointmentSmsEnabled) {
         const agentSmsPromise = sendAgentNewAppointmentSMS({
           to: agentPhone,
