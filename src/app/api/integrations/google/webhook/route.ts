@@ -137,8 +137,28 @@ async function handleSyncNotification(channelId: string | null, resourceUri: str
     .eq("webhook_channel_id", channelId)
     .maybeSingle();
 
-  if (error || !connection) {
-    console.error("Could not find calendar connection for channel:", channelId);
+  if (error) {
+    console.error("Error looking up calendar connection for channel:", channelId, error);
+    return;
+  }
+
+  if (!connection) {
+    // Better error handling: log available connections for debugging
+    const { data: allConnections } = await supabaseAdmin
+      .from("calendar_connections")
+      .select("id, specialist_id, provider, webhook_channel_id")
+      .eq("provider", "google");
+    
+    console.warn("Could not find calendar connection for channel:", channelId, {
+      receivedChannelId: channelId,
+      availableConnections: allConnections?.map(c => ({
+        id: c.id,
+        specialist_id: c.specialist_id,
+        channel_id: c.webhook_channel_id
+      })) || [],
+      totalConnections: allConnections?.length || 0
+    });
+    // This is non-fatal - calendar sync will work via regular sync, just not real-time
     return;
   }
 
@@ -182,8 +202,28 @@ async function handleEventChange(channelId: string | null, resourceUri: string |
     .eq("webhook_channel_id", channelId)
     .maybeSingle();
 
-  if (error || !connection) {
-    console.error("Could not find calendar connection for channel:", channelId);
+  if (error) {
+    console.error("Error looking up calendar connection for channel:", channelId, error);
+    return;
+  }
+
+  if (!connection) {
+    // Better error handling: log available connections for debugging
+    const { data: allConnections } = await supabaseAdmin
+      .from("calendar_connections")
+      .select("id, specialist_id, provider, webhook_channel_id")
+      .eq("provider", "google");
+    
+    console.warn("Could not find calendar connection for channel:", channelId, {
+      receivedChannelId: channelId,
+      availableConnections: allConnections?.map(c => ({
+        id: c.id,
+        specialist_id: c.specialist_id,
+        channel_id: c.webhook_channel_id
+      })) || [],
+      totalConnections: allConnections?.length || 0
+    });
+    // This is non-fatal - calendar sync will work via regular sync, just not real-time
     return;
   }
 

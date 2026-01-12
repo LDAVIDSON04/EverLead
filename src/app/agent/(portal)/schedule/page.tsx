@@ -614,9 +614,15 @@ export default function SchedulePage() {
             const aptDay = localStart.day;
             
             const dayIndex = weekDates.findIndex((date, idx) => {
-              // Convert week date to agent's timezone and normalize to year/month/day
-              const dateDT = DateTime.fromJSDate(date, { zone: agentTimezone })
-                .set({ hour: 0, minute: 0, second: 0, millisecond: 0 });
+              // Create week date directly in agent's timezone using date components
+              // This avoids timezone conversion issues from JavaScript Date objects
+              const jsDate = new Date(date);
+              const year = jsDate.getFullYear();
+              const month = jsDate.getMonth() + 1; // JavaScript months are 0-indexed
+              const day = jsDate.getDate();
+              
+              // Create DateTime in agent's timezone directly (not converting from JS Date)
+              const dateDT = DateTime.fromObject({ year, month, day }, { zone: agentTimezone });
               
               // Compare year, month, and day directly
               const sameDay = dateDT.year === aptYear && 
