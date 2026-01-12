@@ -342,6 +342,17 @@ export async function POST(req: NextRequest) {
       profileData.job_title = job_title;
     }
     
+    // Automatically store timezone based on province (if province is set)
+    if (profileData.agent_province && !metadata.timezone) {
+      const province = profileData.agent_province.toUpperCase().trim();
+      const { PROVINCE_TO_TIMEZONE } = await import("@/lib/timezone");
+      const inferredTimezone = PROVINCE_TO_TIMEZONE[province];
+      if (inferredTimezone) {
+        metadata.timezone = inferredTimezone;
+        console.log(`✅ [SIGNUP] Storing timezone ${inferredTimezone} for province ${province}`);
+      }
+    }
+    
     // Store metadata
     profileData.metadata = metadata;
 
@@ -442,6 +453,17 @@ export async function POST(req: NextRequest) {
           if (business_province) metadata.business_province = business_province;
           if (business_zip) metadata.business_zip = business_zip;
           if (business_address) metadata.business_address = business_address;
+          
+          // Automatically store timezone based on province (if province is set and timezone not already stored)
+          if (updateData.agent_province && !metadata.timezone) {
+            const province = updateData.agent_province.toUpperCase().trim();
+            const { PROVINCE_TO_TIMEZONE } = await import("@/lib/timezone");
+            const inferredTimezone = PROVINCE_TO_TIMEZONE[province];
+            if (inferredTimezone) {
+              metadata.timezone = inferredTimezone;
+              console.log(`✅ [SIGNUP UPDATE] Storing timezone ${inferredTimezone} for province ${province}`);
+            }
+          }
           
           updateData.metadata = metadata;
           

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { supabaseServer } from "@/lib/supabaseServer";
+import { PROVINCE_TO_TIMEZONE } from "@/lib/timezone";
 
 export async function GET(request: NextRequest) {
   try {
@@ -277,14 +278,25 @@ export async function POST(request: NextRequest) {
 
     // Store availability in agent's profile metadata or a separate table
     // For now, we'll store it in a JSONB field
-    // Get existing metadata
+    // Get existing metadata and province
     const { data: existingProfile } = await supabaseAdmin
       .from("profiles")
-      .select("metadata")
+      .select("metadata, agent_province")
       .eq("id", user.id)
       .maybeSingle();
 
     const existingMetadata = existingProfile?.metadata || {};
+
+    // Automatically store timezone based on province (if not already stored)
+    let timezoneToStore = existingMetadata.timezone;
+    if (!timezoneToStore && existingProfile?.agent_province) {
+      const province = existingProfile.agent_province.toUpperCase().trim();
+      const inferredTimezone = PROVINCE_TO_TIMEZONE[province];
+      if (inferredTimezone) {
+        timezoneToStore = inferredTimezone;
+        console.log(`✅ [AVAILABILITY SAVE] Storing timezone ${timezoneToStore} for province ${province}`);
+      }
+    }
 
     // Store availability type per location (which type is active)
     const availabilityTypeToStore = availabilityTypeByLocation || {};
@@ -294,6 +306,7 @@ export async function POST(request: NextRequest) {
       .update({
         metadata: {
           ...existingMetadata,
+          ...(timezoneToStore && { timezone: timezoneToStore }), // Store timezone if we have it
           availability: {
             locations: validLocations,
             availabilityByLocation: filteredAvailabilityByLocation,
