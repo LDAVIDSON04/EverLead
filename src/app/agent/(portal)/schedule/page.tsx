@@ -657,8 +657,12 @@ export default function SchedulePage() {
               if (adjustedWeekday >= 0 && adjustedWeekday < 7) {
                 // Verify the date actually matches the week
                 const candidateDate = weekDates[adjustedWeekday];
-                const candidateDT = DateTime.fromJSDate(candidateDate, { zone: agentTimezone })
-                  .set({ hour: 0, minute: 0, second: 0, millisecond: 0 });
+                // Create candidate date directly in agent's timezone using date components
+                const jsDate = new Date(candidateDate);
+                const year = jsDate.getFullYear();
+                const month = jsDate.getMonth() + 1; // JavaScript months are 0-indexed
+                const day = jsDate.getDate();
+                const candidateDT = DateTime.fromObject({ year, month, day }, { zone: agentTimezone });
                 
                 if (candidateDT.year === aptYear && 
                     candidateDT.month === aptMonth && 
