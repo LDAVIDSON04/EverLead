@@ -212,6 +212,57 @@ async function handleMicrosoftNotification(notification: any) {
       })) || [],
       totalConnections: allConnections?.length || 0
     });
+
+    // Fallback: If there's exactly one Microsoft connection, this is likely a subscription ID mismatch
+    // (Microsoft creates new subscriptions when renewing, and old ones may still send webhooks)
+    // Update the connection with the new subscription ID and proceed
+    if (allConnections && allConnections.length === 1) {
+      const singleConnection = allConnections[0];
+      console.log(`🔄 Updating Microsoft connection ${singleConnection.id} with new subscription ID: ${subscriptionId}`);
+      
+      // Update the subscription ID in the database
+      await supabaseAdmin
+        .from("calendar_connections")
+        .update({ webhook_subscription_id: subscriptionId })
+        .eq("id", singleConnection.id);
+      
+      // Fetch the full connection to proceed
+      const { data: updatedConnection } = await supabaseAdmin
+        .from("calendar_connections")
+        .select("*")
+        .eq("id", singleConnection.id)
+        .single();
+      
+      if (updatedConnection) {
+        console.log(`✅ Updated connection and proceeding with webhook processing`);
+        // Use the updated connection for the rest of the function
+        const connection = updatedConnection;
+        
+        // Fetch recent events to get the updated data
+        const now = new Date();
+        const timeMin = new Date(now.getTime() - 60 * 60 * 1000).toISOString(); // 1 hour ago
+        const timeMax = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
+
+        try {
+          const events = await fetchMicrosoftCalendarEvents(
+            connection as CalendarConnection,
+            timeMin,
+            timeMax
+          );
+
+          // Process each event
+          for (const event of events) {
+            await processExternalEvent(connection as CalendarConnection, event);
+          }
+
+          console.log(`Updated events for Microsoft Calendar ${subscriptionId} after ${changeType} notification`);
+        } catch (error: any) {
+          console.error("Error updating Microsoft Calendar events:", error);
+        }
+        return; // Exit early after handling the fallback case
+      }
+    }
+
     // This is non-fatal - calendar sync will work via regular sync, just not real-time
     return;
   }
