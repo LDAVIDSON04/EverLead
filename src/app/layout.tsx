@@ -44,14 +44,6 @@ const protectedRoutes = [
 export const metadata: Metadata = {
   title: "Soradin - Thoughtful funeral pre-planning, made simple",
   description: "Soradin helps families plan funeral wishes in advance and connect with trusted local professionals without pressure or urgency.",
-  icons: {
-    icon: [
-      { url: '/Soradin.png', sizes: '192x192', type: 'image/png' },
-      { url: '/Soradin.png', sizes: '512x512', type: 'image/png' },
-      { url: '/Soradin.png', sizes: '1024x1024', type: 'image/png' },
-    ],
-    apple: '/Soradin.png',
-  },
   openGraph: {
     title: "Soradin - Thoughtful funeral pre-planning, made simple",
     description: "Soradin helps families plan funeral wishes in advance and connect with trusted local professionals without pressure or urgency.",
@@ -118,13 +110,10 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <BotIdClient protect={protectedRoutes} />
-        {/* Explicit favicon links for Google Search results - must be square and multiples of 48px */}
-        {/* Google requires a 48x48 version for search result snippets - this MUST be first and without sizes for default */}
-        <link rel="icon" type="image/png" href="https://www.soradin.com/favicon-48.png" />
-        {/* Higher resolution favicons for other uses */}
-        <link rel="icon" type="image/png" sizes="192x192" href="https://www.soradin.com/Soradin.png" />
-        <link rel="icon" type="image/png" sizes="512x512" href="https://www.soradin.com/Soradin.png" />
+        {/* Favicon links for Google Search results - 48x48 is required for search snippets */}
+        <link rel="icon" type="image/png" sizes="48x48" href="https://www.soradin.com/favicon-48.png" />
         <link rel="apple-touch-icon" sizes="180x180" href="https://www.soradin.com/Soradin.png" />
+        <link rel="shortcut icon" href="https://www.soradin.com/favicon-48.png" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
