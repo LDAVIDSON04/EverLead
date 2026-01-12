@@ -191,8 +191,28 @@ async function handleMicrosoftNotification(notification: any) {
     .eq("webhook_subscription_id", subscriptionId)
     .maybeSingle();
 
-  if (error || !connection) {
-    console.error("Could not find calendar connection for subscription:", subscriptionId);
+  if (error) {
+    console.error("Error looking up calendar connection for subscription:", subscriptionId, error);
+    return;
+  }
+
+  if (!connection) {
+    // Better error handling: log available connections for debugging
+    const { data: allConnections } = await supabaseAdmin
+      .from("calendar_connections")
+      .select("id, specialist_id, provider, webhook_subscription_id")
+      .eq("provider", "microsoft");
+    
+    console.warn("Could not find calendar connection for subscription:", subscriptionId, {
+      receivedSubscriptionId: subscriptionId,
+      availableConnections: allConnections?.map((c: any) => ({
+        id: c.id,
+        specialist_id: c.specialist_id,
+        subscription_id: c.webhook_subscription_id
+      })) || [],
+      totalConnections: allConnections?.length || 0
+    });
+    // This is non-fatal - calendar sync will work via regular sync, just not real-time
     return;
   }
 
