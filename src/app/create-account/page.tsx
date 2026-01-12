@@ -113,6 +113,10 @@ export default function CreateAccountPage() {
       setError('Please fill in all required fields.');
       return false;
     }
+    if (officeLocations.length === 0) {
+      setError('Please add at least one office location.');
+      return false;
+    }
     return true;
   };
 
@@ -806,22 +810,13 @@ export default function CreateAccountPage() {
             <p className="text-gray-600 mb-6">
               Your account has been submitted for approval. You will receive an email notification once your account has been reviewed and approved.
             </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => {
-                  setShowSuccessModal(false);
-                  router.push('/agent');
-                }}
-                className="flex-1 bg-green-700 hover:bg-green-800 text-white py-2 rounded-lg transition-colors"
-              >
-                Go to Login
-              </button>
+            <div className="flex justify-center">
               <button
                 onClick={() => {
                   setShowSuccessModal(false);
                   router.push('/');
                 }}
-                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 rounded-lg transition-colors"
+                className="px-8 bg-green-700 hover:bg-green-800 text-white py-2 rounded-lg transition-colors"
               >
                 Return Home
               </button>
