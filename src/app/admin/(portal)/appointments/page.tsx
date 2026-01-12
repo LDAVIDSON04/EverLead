@@ -251,8 +251,8 @@ export default function AdminAppointmentsPage() {
     <div className="p-8">
       <div className="mb-8 flex justify-between items-start">
         <div>
-          <h1 className="text-3xl mb-2 text-black">Appointments</h1>
-          <p className="text-neutral-600">View and manage appointment disputes</p>
+        <h1 className="text-3xl mb-2 text-black">Appointments</h1>
+        <p className="text-neutral-600">View and manage appointment disputes</p>
         </div>
         <div className="bg-emerald-50 border border-emerald-200 rounded-lg px-6 py-4 min-w-[200px]">
           <p className="text-sm text-emerald-700 font-medium mb-1">Appointments This Month</p>

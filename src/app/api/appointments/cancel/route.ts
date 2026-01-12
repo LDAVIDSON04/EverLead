@@ -4,6 +4,7 @@ import { z } from "zod";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { deleteExternalEventsForAgentAppointment } from "@/lib/calendarSyncAgent";
 import { sendAgentCancellationEmail, sendAgentRebookingEmail, sendConsumerCancellationEmail } from "@/lib/emails";
+import { sendConsumerCancellationSMS, sendAgentCancellationSMS } from "@/lib/sms";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -44,7 +45,9 @@ export async function POST(req: NextRequest) {
           first_name,
           last_name,
           full_name,
-          email
+          email,
+          phone,
+          province
         )
       `)
       .eq("id", appointmentId)
@@ -108,10 +111,14 @@ export async function POST(req: NextRequest) {
         
         const { data: agentProfile } = await supabaseAdmin
           .from("profiles")
-          .select("full_name")
+          .select("full_name, phone, metadata, agent_province")
           .eq("id", appointment.agent_id)
           .maybeSingle();
         const agentName = agentProfile?.full_name || null;
+        const agentPhone = agentProfile?.phone;
+        const agentMetadata = agentProfile?.metadata || {};
+        const notificationPrefs = agentMetadata.notification_preferences || {};
+        const cancellationSmsEnabled = notificationPrefs.appointmentCancelled?.sms === true;
 
         if (agentEmail) {
           if (action === "rebook") {
@@ -138,6 +145,22 @@ export async function POST(req: NextRequest) {
             });
           }
         }
+
+        // Send cancellation SMS to agent if enabled (non-blocking)
+        if (action !== "rebook" && agentPhone && cancellationSmsEnabled) {
+          try {
+            sendAgentCancellationSMS({
+              to: agentPhone,
+              consumerName: consumerName || 'Client',
+              requestedDate: appointment.requested_date,
+              province: agentProfile?.agent_province || undefined,
+            }).catch((err) => {
+              console.error('Error sending agent cancellation SMS (non-fatal):', err);
+            });
+          } catch (smsError: any) {
+            console.error('Error preparing agent cancellation SMS (non-fatal):', smsError);
+          }
+        }
       } catch (emailError: any) {
         console.error('Error preparing agent cancellation email (non-fatal):', emailError);
       }
@@ -157,6 +180,23 @@ export async function POST(req: NextRequest) {
         });
       } catch (emailError: any) {
         console.error('Error preparing consumer cancellation email (non-fatal):', emailError);
+      }
+    }
+
+    // Send cancellation SMS to customer (non-blocking)
+    const leadPhone = lead?.phone;
+    const leadProvince = lead?.province;
+    if (leadPhone) {
+      try {
+        sendConsumerCancellationSMS({
+          to: leadPhone,
+          requestedDate: appointment.requested_date,
+          province: leadProvince || undefined,
+        }).catch((err) => {
+          console.error('Error sending consumer cancellation SMS (non-fatal):', err);
+        });
+      } catch (smsError: any) {
+        console.error('Error preparing consumer cancellation SMS (non-fatal):', smsError);
       }
     }
 

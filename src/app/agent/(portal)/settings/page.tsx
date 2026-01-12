@@ -1858,8 +1858,8 @@ function NotificationsSection({ email, phone }: { email: string; phone: string }
   const [saveMessage, setSaveMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [agentEmail, setAgentEmail] = useState<string>("");
   const [notifications, setNotifications] = useState({
-    newAppointment: { email: true },
-    appointmentCancelled: { email: true },
+    newAppointment: { email: true, sms: false },
+    appointmentCancelled: { email: true, sms: false },
     paymentReceived: { email: true },
     appointmentReminder: { email: true },
   });
@@ -1951,11 +1951,13 @@ function NotificationsSection({ email, phone }: { email: string; phone: string }
     },
   ];
 
-  const toggleNotification = (type: string) => {
+  const toggleNotification = (type: string, channel: 'email' | 'sms') => {
+    const currentSettings = notifications[type as keyof typeof notifications] as { email?: boolean; sms?: boolean };
     setNotifications({
       ...notifications,
       [type]: {
-        email: !notifications[type as keyof typeof notifications].email,
+        ...currentSettings,
+        [channel]: !currentSettings[channel],
       },
     });
   };
@@ -1984,11 +1986,17 @@ function NotificationsSection({ email, phone }: { email: string; phone: string }
                     <span className="text-sm text-gray-600">Email</span>
                   </div>
                 </th>
+                <th className="text-center py-3 px-4">
+                  <div className="flex items-center justify-center gap-2">
+                    <Smartphone size={16} className="text-gray-600" />
+                    <span className="text-sm text-gray-600">SMS</span>
+                  </div>
+                </th>
               </tr>
             </thead>
             <tbody>
               {notificationTypes.map((type) => {
-                const settings = notifications[type.id as keyof typeof notifications];
+                const settings = notifications[type.id as keyof typeof notifications] as { email?: boolean; sms?: boolean };
                 return (
                   <tr key={type.id} className="border-b border-gray-100 last:border-0">
                     <td className="py-4 pr-4">
@@ -2000,8 +2008,16 @@ function NotificationsSection({ email, phone }: { email: string; phone: string }
                     <td className="py-4 px-4 text-center">
                       <div className="flex justify-center">
                         <Switch
-                          checked={settings.email}
-                          onCheckedChange={() => toggleNotification(type.id)}
+                          checked={settings.email ?? false}
+                          onCheckedChange={() => toggleNotification(type.id, 'email')}
+                        />
+                      </div>
+                    </td>
+                    <td className="py-4 px-4 text-center">
+                      <div className="flex justify-center">
+                        <Switch
+                          checked={settings.sms ?? false}
+                          onCheckedChange={() => toggleNotification(type.id, 'sms')}
                         />
                       </div>
                     </td>
@@ -2022,6 +2038,20 @@ function NotificationsSection({ email, phone }: { email: string; phone: string }
           <p className="text-xs text-gray-600">
             Email notifications are sent to: <strong>{agentEmail || email || "Not set"}</strong>
           </p>
+        </div>
+        <div className="bg-gray-50 rounded-lg p-4">
+          <div className="flex items-center gap-3 mb-2">
+            <Smartphone size={18} className="text-gray-600" />
+            <span className="font-medium text-sm">SMS Notifications</span>
+          </div>
+          <p className="text-xs text-gray-600">
+            SMS notifications are sent to: <strong>{phone || "Not set"}</strong>
+          </p>
+          {!phone && (
+            <p className="text-xs text-amber-600 mt-1">
+              Add your phone number in your profile settings to enable SMS notifications
+            </p>
+          )}
         </div>
       </div>
 

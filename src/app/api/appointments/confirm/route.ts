@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { sendAgentNewAppointmentEmail } from "@/lib/emails";
+import { sendAgentNewAppointmentSMS } from "@/lib/sms";
 import { checkBotId } from 'botid/server';
 
 export async function POST(req: NextRequest) {
@@ -153,15 +154,19 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Get agent email and name for notification
+    // Get agent email, name, phone, and notification preferences for notification
     const { data: agentAuth, error: agentAuthError } = await supabaseAdmin.auth.admin.getUserById(agentId);
     const agentEmail = agentAuth?.user?.email;
     const { data: agentProfile } = await supabaseAdmin
       .from("profiles")
-      .select("full_name")
+      .select("full_name, phone, metadata, agent_province")
       .eq("id", agentId)
       .maybeSingle();
     const agentName = agentProfile?.full_name || null;
+    const agentPhone = agentProfile?.phone;
+    const agentMetadata = agentProfile?.metadata || {};
+    const notificationPrefs = agentMetadata.notification_preferences || {};
+    const newAppointmentSmsEnabled = notificationPrefs.newAppointment?.sms === true;
 
     // Fire-and-forget agent email (don't block response)
     if (agentEmail && apptBeforeUpdate) {
@@ -181,6 +186,24 @@ export async function POST(req: NextRequest) {
         serviceType: leadData?.service_type || null,
       }).catch((err) => {
         console.error('Error sending agent appointment email (non-fatal):', err);
+      });
+    }
+
+    // Fire-and-forget agent SMS if enabled (don't block response)
+    if (agentPhone && newAppointmentSmsEnabled && apptBeforeUpdate) {
+      const consumerName = leadData?.full_name || 
+        (leadData?.first_name || leadData?.last_name
+          ? [leadData?.first_name, leadData?.last_name].filter(Boolean).join(' ')
+          : 'Client');
+
+      sendAgentNewAppointmentSMS({
+        to: agentPhone,
+        consumerName,
+        requestedDate: apptBeforeUpdate.requested_date,
+        requestedWindow: apptBeforeUpdate.requested_window,
+        province: leadData?.province || agentProfile?.agent_province || undefined,
+      }).catch((err) => {
+        console.error('Error sending agent appointment SMS (non-fatal):', err);
       });
     }
 
