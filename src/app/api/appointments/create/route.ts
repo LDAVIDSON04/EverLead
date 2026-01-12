@@ -139,6 +139,15 @@ export async function POST(req: NextRequest) {
 
   // Send consumer SMS (fire-and-forget, but log errors)
   if (lead.phone) {
+    console.log('📱 Attempting to send booking confirmation SMS:', {
+      to: lead.phone,
+      requestedDate,
+      requestedWindow,
+      province: lead.province || 'not set',
+      hasTwilioCredentials: !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_PHONE_NUMBER),
+      twilioPhoneNumber: process.env.TWILIO_PHONE_NUMBER || 'not set',
+    });
+
     const smsPromise = sendConsumerBookingSMS({
       to: lead.phone,
       requestedDate,
@@ -160,6 +169,7 @@ export async function POST(req: NextRequest) {
       console.error('❌ Failed to send consumer booking SMS (non-fatal - appointment still created):', {
         error: err?.message || err,
         to: lead.phone,
+        stack: err?.stack,
       });
       // Don't throw - SMS failure shouldn't break appointment creation
     }
@@ -167,6 +177,7 @@ export async function POST(req: NextRequest) {
     console.warn('⚠️ No phone number found for lead, skipping booking confirmation SMS:', {
       leadId: lead.id,
       hasPhone: !!lead.phone,
+      phoneField: lead.phone,
     });
   }
 
