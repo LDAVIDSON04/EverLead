@@ -1015,6 +1015,106 @@ export async function POST(req: NextRequest) {
       console.error("Error sending confirmation emails (non-fatal):", emailError);
       // Don't fail the booking if emails fail
     }
+
+    // Send SMS notifications (non-blocking)
+    try {
+      // Get lead data for SMS
+      const { data: leadDataForSMS } = await supabaseAdmin
+        .from("leads")
+        .select("phone, province, full_name, first_name, last_name")
+        .eq("id", leadId)
+        .single();
+
+      const leadPhone = leadDataForSMS?.phone;
+      const leadProvince = leadDataForSMS?.province;
+      const consumerName = leadDataForSMS?.full_name || 
+        (leadDataForSMS?.first_name && leadDataForSMS?.last_name 
+          ? `${leadDataForSMS.first_name} ${leadDataForSMS.last_name}` 
+          : "Client");
+
+      // Send SMS to consumer
+      if (leadPhone) {
+        console.log('📱 Attempting to send booking confirmation SMS to consumer:', {
+          to: leadPhone,
+          requestedDate,
+          requestedWindow,
+          province: leadProvince || 'not set',
+          hasTwilioCredentials: !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_PHONE_NUMBER),
+        });
+
+        const smsPromise = sendConsumerBookingSMS({
+          to: leadPhone,
+          agentName: agentName,
+          requestedDate,
+          requestedWindow,
+          province: leadProvince || undefined,
+          confirmedAt: appointment.confirmed_at || undefined,
+        });
+        
+        const smsTimeout = new Promise<void>((resolve) => {
+          setTimeout(() => {
+            console.log('⏱️ Consumer SMS send timeout (5s) - returning response, SMS may still be sending in background');
+            resolve();
+          }, 5000);
+        });
+        
+        try {
+          await Promise.race([smsPromise, smsTimeout]);
+        } catch (err: any) {
+          console.error('❌ Failed to send consumer booking SMS (non-fatal - appointment still created):', {
+            error: err?.message || err,
+            to: leadPhone,
+          });
+        }
+      } else {
+        console.warn('⚠️ No phone number found for lead, skipping booking confirmation SMS:', {
+          leadId,
+          hasPhone: !!leadPhone,
+        });
+      }
+
+      // Send SMS to agent (if enabled in preferences)
+      const { data: agentProfileForSMS } = await supabaseAdmin
+        .from("profiles")
+        .select("phone, metadata, agent_province")
+        .eq("id", agentId)
+        .maybeSingle();
+      
+      const agentPhone = agentProfileForSMS?.phone;
+      const agentMetadata = agentProfileForSMS?.metadata || {};
+      const notificationPrefs = agentMetadata.notification_preferences || {};
+      const newAppointmentSmsEnabled = notificationPrefs.newAppointment?.sms === true;
+
+      if (agentPhone && newAppointmentSmsEnabled) {
+        const agentSmsPromise = sendAgentNewAppointmentSMS({
+          to: agentPhone,
+          consumerName,
+          requestedDate,
+          requestedWindow,
+          province: leadProvince || agentProfileForSMS?.agent_province || undefined,
+          confirmedAt: appointment.confirmed_at || undefined,
+        });
+        
+        const agentSmsTimeout = new Promise<void>((resolve) => {
+          setTimeout(() => {
+            console.log('⏱️ Agent SMS send timeout (5s) - returning response, SMS may still be sending in background');
+            resolve();
+          }, 5000);
+        });
+        
+        try {
+          await Promise.race([agentSmsPromise, agentSmsTimeout]);
+        } catch (err: any) {
+          console.error('❌ Failed to send agent booking SMS (non-fatal - appointment still created):', {
+            error: err?.message || err,
+            to: agentPhone,
+          });
+        }
+      }
+    } catch (smsError: any) {
+      console.error("Error sending SMS notifications (non-fatal):", smsError);
+      // Don't fail the booking if SMS fails
+    }
     
     // Sync to Google Calendar and/or Microsoft Calendar if connected
     try {
