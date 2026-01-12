@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { DateTime } from "luxon";
+import { getAgentTimezone, CanadianTimezone } from "@/lib/timezone";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -104,6 +105,7 @@ export async function GET(
 
     // Fetch agent profile information
     let agentInfo = null;
+    let agentProfileMetadata = null;
     if (appointment.agent_id) {
       const { data: agentProfile } = await supabaseAdmin
         .from("profiles")
@@ -113,6 +115,7 @@ export async function GET(
 
       if (agentProfile) {
         const metadata = agentProfile.metadata || {};
+        agentProfileMetadata = metadata;
         agentInfo = {
           id: agentProfile.id,
           full_name: agentProfile.full_name,
@@ -126,24 +129,8 @@ export async function GET(
       }
     }
 
-    // Get agent's timezone for proper time conversion
-    let agentTimezone = "America/Vancouver"; // Default
-    if (agentInfo?.agent_province) {
-      const province = agentInfo.agent_province.toUpperCase();
-      if (province === "BC" || province === "BRITISH COLUMBIA") {
-        agentTimezone = "America/Vancouver";
-      } else if (province === "AB" || province === "ALBERTA") {
-        agentTimezone = "America/Edmonton";
-      } else if (province === "SK" || province === "SASKATCHEWAN") {
-        agentTimezone = "America/Regina";
-      } else if (province === "MB" || province === "MANITOBA") {
-        agentTimezone = "America/Winnipeg";
-      } else if (province === "ON" || province === "ONTARIO") {
-        agentTimezone = "America/Toronto";
-      } else if (province === "QC" || province === "QUEBEC") {
-        agentTimezone = "America/Montreal";
-      }
-    }
+    // Get agent's timezone using centralized utility
+    const agentTimezone = getAgentTimezone(agentProfileMetadata, agentInfo?.agent_province || null) as CanadianTimezone;
 
     // Format date and time using agent's timezone
     let formattedDate = '';
@@ -266,6 +253,7 @@ export async function GET(
       time_display: timeDisplay,
       exact_time: exactTime,
       agent: agentInfo,
+      agent_timezone: agentTimezone,
       lead: lead,
       lead_id: appointment.lead_id,
       office_location: officeLocation,

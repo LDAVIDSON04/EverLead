@@ -3,6 +3,8 @@
 import { X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { supabaseClient } from '@/lib/supabaseClient';
+import { DateTime } from 'luxon';
+import { formatTimeForDisplay, CanadianTimezone } from '@/lib/timezone';
 
 interface ClientInfoModalProps {
   isOpen: boolean;
@@ -55,6 +57,7 @@ interface AppointmentData {
   requested_date: string | null;
   requested_window: string | null;
   office_location: OfficeLocation | null;
+  agent_timezone?: string;
 }
 
 export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId, onEdit }: ClientInfoModalProps) {
@@ -133,9 +136,19 @@ export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId, onEdit
     return String(value);
   };
 
-  const formatDate = (dateString: string | null): string => {
+  const formatDate = (dateString: string | null, timezone?: string): string => {
     if (!dateString) return 'Not provided';
     try {
+      if (timezone) {
+        // Use agent's timezone for date formatting
+        const utcDate = DateTime.fromISO(dateString, { zone: 'utc' });
+        const localDate = utcDate.setZone(timezone);
+        return localDate.toLocaleString({
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        });
+      }
       return new Date(dateString).toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'long',
@@ -146,9 +159,13 @@ export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId, onEdit
     }
   };
 
-  const formatTime = (dateString: string | null): string => {
+  const formatTime = (dateString: string | null, timezone?: string): string => {
     if (!dateString) return 'Not provided';
     try {
+      if (timezone) {
+        // Use formatTimeForDisplay to get time with timezone label (e.g., "2:00 PM PST")
+        return formatTimeForDisplay(dateString, timezone as CanadianTimezone);
+      }
       return new Date(dateString).toLocaleTimeString('en-US', {
         hour: 'numeric',
         minute: '2-digit',
@@ -225,11 +242,11 @@ export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId, onEdit
                     <label className="text-sm font-medium text-gray-500">Date</label>
                     <p className="text-gray-900">
                       {appointmentData?.starts_at 
-                        ? formatDate(appointmentData.starts_at)
+                        ? formatDate(appointmentData.starts_at, appointmentData.agent_timezone)
                         : appointmentData?.confirmed_at
-                        ? formatDate(appointmentData.confirmed_at)
+                        ? formatDate(appointmentData.confirmed_at, appointmentData.agent_timezone)
                         : appointmentData?.requested_date 
-                        ? formatDate(appointmentData.requested_date)
+                        ? formatDate(appointmentData.requested_date, appointmentData.agent_timezone)
                         : 'Not provided'}
                     </p>
                   </div>
@@ -238,11 +255,12 @@ export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId, onEdit
                     <p className="text-gray-900">
                       {appointmentData?.starts_at && appointmentData?.ends_at
                         ? (() => {
-                            const startTime = formatTime(appointmentData.starts_at);
-                            const endTime = formatTime(appointmentData.ends_at);
-                            const start = new Date(appointmentData.starts_at);
-                            const end = new Date(appointmentData.ends_at);
-                            const durationMinutes = Math.round((end.getTime() - start.getTime()) / (1000 * 60));
+                            const agentTimezone = appointmentData.agent_timezone as CanadianTimezone | undefined;
+                            const startTime = formatTime(appointmentData.starts_at, agentTimezone);
+                            const endTime = formatTime(appointmentData.ends_at, agentTimezone);
+                            const start = DateTime.fromISO(appointmentData.starts_at, { zone: 'utc' });
+                            const end = DateTime.fromISO(appointmentData.ends_at, { zone: 'utc' });
+                            const durationMinutes = Math.round(end.diff(start, 'minutes').minutes);
                             const durationHours = Math.floor(durationMinutes / 60);
                             const durationMins = durationMinutes % 60;
                             const durationStr = durationHours > 0 
@@ -251,9 +269,9 @@ export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId, onEdit
                             return `${startTime} - ${endTime} (${durationStr})`;
                           })()
                         : appointmentData?.starts_at
-                        ? formatTime(appointmentData.starts_at)
+                        ? formatTime(appointmentData.starts_at, appointmentData.agent_timezone as CanadianTimezone | undefined)
                         : appointmentData?.confirmed_at
-                        ? formatTime(appointmentData.confirmed_at)
+                        ? formatTime(appointmentData.confirmed_at, appointmentData.agent_timezone as CanadianTimezone | undefined)
                         : 'Not provided'}
                     </p>
                   </div>

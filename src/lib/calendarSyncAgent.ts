@@ -3,6 +3,7 @@
 
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { DateTime } from "luxon";
+import { getAgentTimezone, CanadianTimezone } from "@/lib/timezone";
 
 type Appointment = {
   id: string;
@@ -163,32 +164,15 @@ export async function syncAgentAppointmentToGoogleCalendar(
     .eq("id", appointment.agent_id)
     .maybeSingle();
   
-  let agentTimezone = "America/Vancouver"; // Default fallback
-  if (agentProfile?.metadata?.timezone) {
-    agentTimezone = agentProfile.metadata.timezone;
-  } else if (agentProfile?.metadata?.availability?.timezone) {
-    agentTimezone = agentProfile.metadata.availability.timezone;
-  } else if (agentProfile?.agent_province) {
-    // Infer from province
-    const province = agentProfile.agent_province.toUpperCase();
-    if (province === "BC" || province === "BRITISH COLUMBIA") {
-      agentTimezone = "America/Vancouver";
-    } else if (province === "AB" || province === "ALBERTA") {
-      agentTimezone = "America/Edmonton";
-    } else if (province === "SK" || province === "SASKATCHEWAN") {
-      agentTimezone = "America/Regina";
-    } else if (province === "MB" || province === "MANITOBA") {
-      agentTimezone = "America/Winnipeg";
-    } else if (province === "ON" || province === "ONTARIO") {
-      agentTimezone = "America/Toronto";
-    } else if (province === "QC" || province === "QUEBEC") {
-      agentTimezone = "America/Montreal";
-    }
-  }
+  // Use centralized timezone utility
+  const agentTimezone = getAgentTimezone(agentProfile?.metadata, agentProfile?.agent_province || null) as CanadianTimezone;
 
   // Use confirmed_at (exact booking time) if available, otherwise infer from requested_window
   let startsAt: string;
   let endsAt: string;
+  
+  // Get family name from lead (need this for duration check)
+  const lead = Array.isArray(appointment.leads) ? appointment.leads[0] : appointment.leads;
   
   if (appointment.confirmed_at) {
     // Use the exact booking time from confirmed_at
@@ -196,10 +180,19 @@ export async function syncAgentAppointmentToGoogleCalendar(
     const confirmedDateUTC = DateTime.fromISO(appointment.confirmed_at, { zone: "utc" });
     const confirmedDateLocal = confirmedDateUTC.setZone(agentTimezone);
     
-    // Get appointment length from agent's settings (default to 60 minutes)
-    const appointmentLengthMinutes = agentProfile?.metadata?.availability?.appointmentLength 
+    // Get appointment length - check for agent-created events first (duration in additional_notes)
+    let appointmentLengthMinutes = agentProfile?.metadata?.availability?.appointmentLength 
       ? parseInt(agentProfile.metadata.availability.appointmentLength, 10) 
       : 60;
+    
+    // Check if this is an agent-created event (duration stored in lead's additional_notes)
+    if (lead?.additional_notes) {
+      const durationMatch = lead.additional_notes.match(/^EVENT_DURATION:(\d+)\|/);
+      if (durationMatch) {
+        appointmentLengthMinutes = parseInt(durationMatch[1], 10);
+      }
+    }
+    
     const confirmedEndLocal = confirmedDateLocal.plus({ minutes: appointmentLengthMinutes });
     
     // Format as ISO string without timezone offset (Google Calendar uses the timeZone field)
@@ -220,19 +213,26 @@ export async function syncAgentAppointmentToGoogleCalendar(
     const localDateTimeStr = `${dateStr}T${String(startHour).padStart(2, '0')}:00:00`;
     const localStart = DateTime.fromISO(localDateTimeStr, { zone: agentTimezone });
     
-    // Get appointment length from agent's settings (default to 60 minutes)
-    const appointmentLengthMinutes = agentProfile?.metadata?.availability?.appointmentLength 
+    // Get appointment length - check for agent-created events first (duration in additional_notes)
+    let appointmentLengthMinutes = agentProfile?.metadata?.availability?.appointmentLength 
       ? parseInt(agentProfile.metadata.availability.appointmentLength, 10) 
       : 60;
+    
+    // Check if this is an agent-created event (duration stored in lead's additional_notes)
+    if (lead?.additional_notes) {
+      const durationMatch = lead.additional_notes.match(/^EVENT_DURATION:(\d+)\|/);
+      if (durationMatch) {
+        appointmentLengthMinutes = parseInt(durationMatch[1], 10);
+      }
+    }
+    
     const localEnd = localStart.plus({ minutes: appointmentLengthMinutes });
     
     // Format as ISO string without timezone offset
     startsAt = localStart.toFormat("yyyy-MM-dd'T'HH:mm:ss");
     endsAt = localEnd.toFormat("yyyy-MM-dd'T'HH:mm:ss");
   }
-
-  // Get family name from lead
-  const lead = Array.isArray(appointment.leads) ? appointment.leads[0] : appointment.leads;
+  
   const familyName = lead?.full_name || 
     (lead?.first_name && lead?.last_name ? `${lead.first_name} ${lead.last_name}` : "Soradin client");
   
