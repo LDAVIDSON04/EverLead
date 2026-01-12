@@ -6,6 +6,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getLeadPriceFromUrgency } from "@/lib/leads/pricing";
 import { chargeAgentForAppointment } from "@/lib/chargeAgentForAppointment";
 import { sendPaymentDeclineEmail } from "@/lib/emails";
+import { sendConsumerBookingSMS, sendAgentNewAppointmentSMS } from "@/lib/sms";
 import { DateTime } from "luxon";
 
 export const dynamic = "force-dynamic";
