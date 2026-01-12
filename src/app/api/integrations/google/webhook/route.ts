@@ -151,7 +151,7 @@ async function handleSyncNotification(channelId: string | null, resourceUri: str
     
     console.warn("Could not find calendar connection for channel:", channelId, {
       receivedChannelId: channelId,
-      availableConnections: allConnections?.map(c => ({
+      availableConnections: allConnections?.map((c: any) => ({
         id: c.id,
         specialist_id: c.specialist_id,
         channel_id: c.webhook_channel_id
@@ -216,7 +216,7 @@ async function handleEventChange(channelId: string | null, resourceUri: string |
     
     console.warn("Could not find calendar connection for channel:", channelId, {
       receivedChannelId: channelId,
-      availableConnections: allConnections?.map(c => ({
+      availableConnections: allConnections?.map((c: any) => ({
         id: c.id,
         specialist_id: c.specialist_id,
         channel_id: c.webhook_channel_id
