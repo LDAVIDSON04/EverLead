@@ -489,12 +489,30 @@ function SearchResults() {
         const dayNum = date.getUTCDate();
         const fullDayName = date.toLocaleDateString('en-US', { weekday: 'long', timeZone: "UTC" });
         
+        // Get current time in agent's timezone for filtering past slots
+        const agentTimezone = day.timezone || 'America/Toronto';
+        const now = DateTime.now().setZone(agentTimezone);
+        const todayDateStr = now.toISODate(); // YYYY-MM-DD format
+        const isToday = day.date === todayDateStr;
+        
+        // Count slots - filter out past slots for today's date
+        let slotCount = day.slots.length;
+        if (isToday) {
+          // For today, count only future slots
+          slotCount = day.slots.filter(slot => {
+            const slotTime = DateTime.fromISO(slot.startsAt, { zone: 'utc' }).setZone(agentTimezone);
+            return slotTime > now;
+          }).length;
+        }
+        
         // Debug: Log specific dates
         if (day.date === "2026-01-01" || day.date === "2026-01-02") {
           console.log(`📅 [GENERATE AVAILABILITY] Mapping ${day.date}:`, {
             date: day.date,
             fullDayName,
             slotCount: day.slots.length,
+            filteredSlotCount: slotCount,
+            isToday,
             displayDate: `${dayName}\n${monthName} ${dayNum}`,
             agentId,
             searchLocation,
@@ -503,7 +521,7 @@ function SearchResults() {
         
         return {
           date: `${dayName}\n${monthName} ${dayNum}`,
-          spots: day.slots.length,
+          spots: slotCount,
         };
       });
       
