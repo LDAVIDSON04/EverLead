@@ -144,7 +144,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [locationDetecting, setLocationDetecting] = useState(false);
 
-  // Auto-detect and pre-fill location - Also available on user interaction as fallback
+  // Auto-detect and pre-fill location - Try GPS first (more accurate), fallback to IP
   const detectLocationOnFocus = async () => {
     // Only detect if location is empty (user hasn't entered anything)
     if (location.trim() !== "") {
@@ -158,20 +158,69 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
 
     setLocationDetecting(true);
     try {
-      console.log("🔍 [HOME] Auto-detecting location from IP on user interaction...");
+      // First, try browser GPS geolocation (more accurate, especially on mobile)
+      if (navigator.geolocation) {
+        console.log("🔍 [HOME] Trying GPS geolocation (more accurate)...");
+        
+        const gpsLocation = await new Promise<{ location: string } | null>((resolve) => {
+          navigator.geolocation.getCurrentPosition(
+            async (position) => {
+              try {
+                const res = await fetch("/api/geolocation/gps", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude,
+                  }),
+                });
+                const data = await res.json();
+                console.log("📍 [HOME] GPS geolocation API response:", data);
+                
+                if (data.location) {
+                  console.log("✅ [HOME] Location detected from GPS:", data.location);
+                  resolve({ location: data.location });
+                } else {
+                  resolve(null);
+                }
+              } catch (err) {
+                console.error("❌ [HOME] Error with GPS geolocation API:", err);
+                resolve(null);
+              }
+            },
+            (error) => {
+              // User denied permission or GPS unavailable - fallback to IP
+              console.log("⚠️ [HOME] GPS geolocation not available:", error.message);
+              resolve(null);
+            },
+            {
+              timeout: 5000,
+              maximumAge: 300000, // Cache for 5 minutes
+            }
+          );
+        });
+
+        if (gpsLocation?.location) {
+          setLocation(gpsLocation.location);
+          setLocationDetecting(false);
+          return;
+        }
+      }
+
+      // Fallback to IP-based geolocation
+      console.log("🔍 [HOME] Falling back to IP-based geolocation...");
       const res = await fetch("/api/geolocation");
       const data = await res.json();
-      console.log("📍 [HOME] Geolocation API response:", data);
+      console.log("📍 [HOME] IP geolocation API response:", data);
       
       if (data.location) {
-        console.log("✅ [HOME] Location auto-detected:", data.location);
-        // Pre-fill location field with detected city and province (e.g., "Vancouver, BC")
+        console.log("✅ [HOME] Location detected from IP:", data.location);
         setLocation(data.location);
       } else {
-        console.warn("⚠️ [HOME] Could not auto-detect location from IP");
+        console.warn("⚠️ [HOME] Could not detect location");
       }
     } catch (err) {
-      console.error("❌ [HOME] Error auto-detecting location:", err);
+      console.error("❌ [HOME] Error detecting location:", err);
     } finally {
       setLocationDetecting(false);
     }
