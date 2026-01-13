@@ -601,24 +601,42 @@ function SearchResults() {
             setSelectedDayForModal(firstDayWithSlots.date);
             
             // Format slots for the first day in the agent's timezone
-            const formattedSlots = firstDayWithSlots.slots.map(slot => {
-              const agentTimezone = firstDayWithSlots.timezone || 'America/Toronto';
-              const utcTime = DateTime.fromISO(slot.startsAt, { zone: 'utc' });
-              const agentLocalTime = utcTime.setZone(agentTimezone);
-              
-              const hours = agentLocalTime.hour;
-              const minutes = agentLocalTime.minute;
-              const ampm = hours >= 12 ? 'PM' : 'AM';
-              const displayHours = hours % 12 || 12;
-              const timeStr = `${displayHours}:${String(minutes).padStart(2, '0')} ${ampm}`;
-              
-              return {
-                time: timeStr,
-                startsAt: slot.startsAt,
-                endsAt: slot.endsAt,
-                available: true
-              };
-            });
+            const agentTimezone = firstDayWithSlots.timezone || 'America/Toronto';
+            
+            // Get current time in agent's timezone for filtering past slots
+            const now = DateTime.now().setZone(agentTimezone);
+            const todayDateStr = now.toISODate(); // YYYY-MM-DD format
+            const isToday = firstDayWithSlots.date === todayDateStr;
+            
+            const formattedSlots = firstDayWithSlots.slots
+              .map(slot => {
+                const utcTime = DateTime.fromISO(slot.startsAt, { zone: 'utc' });
+                const agentLocalTime = utcTime.setZone(agentTimezone);
+                
+                const hours = agentLocalTime.hour;
+                const minutes = agentLocalTime.minute;
+                const ampm = hours >= 12 ? 'PM' : 'AM';
+                const displayHours = hours % 12 || 12;
+                const timeStr = `${displayHours}:${String(minutes).padStart(2, '0')} ${ampm}`;
+                
+                return {
+                  time: timeStr,
+                  startsAt: slot.startsAt,
+                  endsAt: slot.endsAt,
+                  available: true,
+                  agentLocalTime // Keep for filtering
+                };
+              })
+              .filter(slot => {
+                // If it's today, filter out past time slots
+                if (isToday) {
+                  // Compare slot time with current time (both in agent's timezone)
+                  return slot.agentLocalTime > now;
+                }
+                // For future dates, keep all slots
+                return true;
+              })
+              .map(({ agentLocalTime, ...slot }) => slot); // Remove agentLocalTime from final output
             
             setDayTimeSlots(formattedSlots);
           } else {
@@ -2175,25 +2193,43 @@ function SearchResults() {
                       
                       // Format time slots for this day
                       // Format time slots for this day in the agent's timezone
-                      const formattedSlots = day.slots.map(slot => {
-                        // Parse the UTC ISO string and convert to agent's timezone
-                        const agentTimezone = day.timezone || 'America/Toronto'; // Default fallback
-                        const utcTime = DateTime.fromISO(slot.startsAt, { zone: 'utc' });
-                        const agentLocalTime = utcTime.setZone(agentTimezone);
-                        
-                        const hours = agentLocalTime.hour;
-                        const minutes = agentLocalTime.minute;
-                        const ampm = hours >= 12 ? 'PM' : 'AM';
-                        const displayHours = hours % 12 || 12;
-                        const timeStr = `${displayHours}:${String(minutes).padStart(2, '0')} ${ampm}`;
-                        
-                        return {
-                          time: timeStr,
-                          startsAt: slot.startsAt,
-                          endsAt: slot.endsAt,
-                          available: true
-                        };
-                      });
+                      const agentTimezone = day.timezone || 'America/Toronto'; // Default fallback
+                      
+                      // Get current time in agent's timezone for filtering past slots
+                      const now = DateTime.now().setZone(agentTimezone);
+                      const todayDateStr = now.toISODate(); // YYYY-MM-DD format
+                      const isToday = day.date === todayDateStr;
+                      
+                      const formattedSlots = day.slots
+                        .map(slot => {
+                          // Parse the UTC ISO string and convert to agent's timezone
+                          const utcTime = DateTime.fromISO(slot.startsAt, { zone: 'utc' });
+                          const agentLocalTime = utcTime.setZone(agentTimezone);
+                          
+                          const hours = agentLocalTime.hour;
+                          const minutes = agentLocalTime.minute;
+                          const ampm = hours >= 12 ? 'PM' : 'AM';
+                          const displayHours = hours % 12 || 12;
+                          const timeStr = `${displayHours}:${String(minutes).padStart(2, '0')} ${ampm}`;
+                          
+                          return {
+                            time: timeStr,
+                            startsAt: slot.startsAt,
+                            endsAt: slot.endsAt,
+                            available: true,
+                            agentLocalTime // Keep for filtering
+                          };
+                        })
+                        .filter(slot => {
+                          // If it's today, filter out past time slots
+                          if (isToday) {
+                            // Compare slot time with current time (both in agent's timezone)
+                            return slot.agentLocalTime > now;
+                          }
+                          // For future dates, keep all slots
+                          return true;
+                        })
+                        .map(({ agentLocalTime, ...slot }) => slot); // Remove agentLocalTime from final output
                       
                       // Skip if date parsing failed
                       if (!date || !dayName || !monthName) {
