@@ -345,7 +345,8 @@ export async function syncAgentAppointmentToMicrosoftCalendar(
         first_name,
         last_name,
         full_name,
-        email
+        email,
+        additional_notes
       )
     `
     )
