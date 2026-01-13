@@ -723,7 +723,7 @@ export async function POST(req: NextRequest) {
         hour12: true
       });
       
-      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://soradin.com';
+      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.soradin.com';
       const resendApiKey = process.env.RESEND_API_KEY;
       const resendFromEmail = process.env.RESEND_FROM_EMAIL || 'Soradin <notifications@soradin.com>';
       

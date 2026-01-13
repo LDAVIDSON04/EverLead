@@ -12,6 +12,19 @@
       "path": "/api/cron/send-review-followups",
       "schedule": "0 * * * *"
     }
+  ],
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "soradin.com"
+        }
+      ],
+      "destination": "https://www.soradin.com/:splat",
+      "permanent": true
+    }
   ]
 }
  
