@@ -617,7 +617,10 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                   Schedule consultations with trusted funeral specialists online
                 </p>
                 <button 
-                  onClick={navigateToSearchWithLocation}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    router.push("/search");
+                  }}
                   className="bg-[#0C6F3C] text-white px-5 py-2.5 rounded-xl hover:bg-[#0C6F3C]/90 transition-all shadow-sm text-sm"
                 >
                   See availability
