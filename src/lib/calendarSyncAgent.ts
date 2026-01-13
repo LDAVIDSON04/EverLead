@@ -53,7 +53,8 @@ export async function syncAgentAppointmentToGoogleCalendar(
         first_name,
         last_name,
         full_name,
-        email
+        email,
+        additional_notes
       )
     `
     )
