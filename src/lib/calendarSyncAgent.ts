@@ -553,6 +553,12 @@ export async function syncAgentAppointmentToMicrosoftCalendar(
     },
     isReminderOn: true,
     reminderMinutesBeforeStart: 15,
+    singleValueExtendedProperties: [
+      {
+        id: "String {66f5a359-4659-4830-9070-00047ec6ac6e} Name SoradinAppointmentId",
+        value: appointment.id,
+      },
+    ],
   };
   
   console.log("📅 Creating Microsoft Calendar event:", {

@@ -95,6 +95,7 @@ export async function fetchMicrosoftCalendarEvents(
   url.searchParams.set("startDateTime", timeMin);
   url.searchParams.set("endDateTime", timeMax);
   url.searchParams.set("$orderby", "start/dateTime");
+  url.searchParams.set("$select", "id,subject,start,end,isAllDay,isCancelled,showAs,location,singleValueExtendedProperties");
 
   const response = await fetch(url.toString(), {
     headers: {
