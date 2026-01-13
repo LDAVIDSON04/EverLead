@@ -29,7 +29,7 @@ export async function queueAgentEmails(
   leadData: { city: string; province: string; urgency_level: string; lead_price: number }
 ): Promise<void> {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://soradin.com';
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.soradin.com';
     const leadUrl = `${baseUrl}/agent/leads/available`;
     
     const city = leadData.city || 'your area';

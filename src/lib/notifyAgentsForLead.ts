@@ -311,7 +311,7 @@ export async function notifyAgentsForLead(lead: any, supabaseAdminClient: any = 
     console.log(`📬 [SEND] Preparing to send notifications to ${agentsToNotify.length} agent(s) for lead ${lead.id}`);
 
     // Send email notifications
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://soradin.com';
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.soradin.com';
     const leadUrl = `${baseUrl}/agent/leads/available`;
 
     const city = lead.city || 'your area';

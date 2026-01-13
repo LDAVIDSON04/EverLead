@@ -15,7 +15,7 @@ async function sendRequestInfoEmail(email: string, fullName: string | null, note
 
   try {
     const subject = "Additional Information Required for Your Soradin Agent Application";
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://soradin.com";
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.soradin.com";
     
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -113,7 +113,7 @@ async function sendApprovalEmail(email: string, fullName: string | null, approve
       ? "Your Soradin Agent Account Has Been Approved"
       : "Your Soradin Agent Account Application";
 
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://soradin.com";
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.soradin.com";
     
     const html = approved
       ? `

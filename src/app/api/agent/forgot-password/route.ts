@@ -213,7 +213,7 @@ export async function POST(req: NextRequest) {
 
     // Generate a password reset token
     // IMPORTANT: Make sure NEXT_PUBLIC_SITE_URL is set correctly in Vercel (not localhost!)
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://soradin.com";
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.soradin.com";
     
     if (siteUrl.includes('localhost')) {
       console.warn("🔐 [FORGOT-PASSWORD] WARNING: NEXT_PUBLIC_SITE_URL contains localhost! This will cause issues. Current value:", siteUrl);

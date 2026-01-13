@@ -114,7 +114,7 @@ export async function sendConsumerBookingEmail({
 
   const resendApiKey = process.env.RESEND_API_KEY;
   const resendFromEmail = process.env.RESEND_FROM_EMAIL || 'Soradin <notifications@soradin.com>';
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://soradin.com';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.soradin.com';
 
   if (!resendApiKey) {
     console.log('📧 sendConsumerBookingEmail: RESEND_API_KEY not set, skipping email');
@@ -359,7 +359,7 @@ export async function sendAgentNewAppointmentEmail({
 
   const resendApiKey = process.env.RESEND_API_KEY;
   const resendFromEmail = process.env.RESEND_FROM_EMAIL || 'Soradin <notifications@soradin.com>';
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://soradin.com';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.soradin.com';
 
   if (!resendApiKey) {
     console.log('📧 sendAgentNewAppointmentEmail: RESEND_API_KEY not set, skipping email');
@@ -620,7 +620,7 @@ export async function sendAgentCancellationEmail({
 
   const resendApiKey = process.env.RESEND_API_KEY;
   const resendFromEmail = process.env.RESEND_FROM_EMAIL || 'Soradin <notifications@soradin.com>';
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://soradin.com';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.soradin.com';
 
   if (!resendApiKey) {
     console.log('📧 sendAgentCancellationEmail: RESEND_API_KEY not set, skipping email');
@@ -809,7 +809,7 @@ export async function sendAgentRebookingEmail({
 
   const resendApiKey = process.env.RESEND_API_KEY;
   const resendFromEmail = process.env.RESEND_FROM_EMAIL || 'Soradin <notifications@soradin.com>';
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://soradin.com';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.soradin.com';
 
   if (!resendApiKey) {
     console.log('📧 sendAgentRebookingEmail: RESEND_API_KEY not set, skipping email');
@@ -1009,7 +1009,7 @@ export async function sendConsumerCancellationEmail({
 
   const resendApiKey = process.env.RESEND_API_KEY;
   const resendFromEmail = process.env.RESEND_FROM_EMAIL || 'Soradin <notifications@soradin.com>';
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://soradin.com';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.soradin.com';
 
   if (!resendApiKey) {
     console.log('📧 sendConsumerCancellationEmail: RESEND_API_KEY not set, skipping email');
@@ -1174,7 +1174,7 @@ export async function sendConsumerRescheduleEmail({
 
   const resendApiKey = process.env.RESEND_API_KEY;
   const resendFromEmail = process.env.RESEND_FROM_EMAIL || 'Soradin <notifications@soradin.com>';
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://soradin.com';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.soradin.com';
 
   if (!resendApiKey) {
     console.log('📧 sendConsumerRescheduleEmail: RESEND_API_KEY not set, skipping email');
@@ -1387,7 +1387,7 @@ export async function sendAgentRescheduleEmail({
 
   const resendApiKey = process.env.RESEND_API_KEY;
   const resendFromEmail = process.env.RESEND_FROM_EMAIL || 'Soradin <notifications@soradin.com>';
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://soradin.com';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.soradin.com';
 
   if (!resendApiKey) {
     console.log('📧 sendAgentRescheduleEmail: RESEND_API_KEY not set, skipping email');
@@ -1609,7 +1609,7 @@ export async function sendReviewFollowUpEmail({
 
   const resendApiKey = process.env.RESEND_API_KEY;
   const resendFromEmail = process.env.RESEND_FROM_EMAIL || 'Soradin <notifications@soradin.com>';
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://soradin.com';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.soradin.com';
 
   if (!resendApiKey) {
     console.log('📧 sendReviewFollowUpEmail: RESEND_API_KEY not set, skipping email');
@@ -1789,7 +1789,7 @@ export async function sendPaymentDeclineEmail({
 
   const resendApiKey = process.env.RESEND_API_KEY;
   const resendFromEmail = process.env.RESEND_FROM_EMAIL || 'Soradin <notifications@soradin.com>';
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://soradin.com';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.soradin.com';
 
   if (!resendApiKey) {
     console.log('📧 sendPaymentDeclineEmail: RESEND_API_KEY not set, skipping email');
@@ -1989,7 +1989,7 @@ export async function sendPaymentReceiptEmail({
 
   const resendApiKey = process.env.RESEND_API_KEY;
   const resendFromEmail = process.env.RESEND_FROM_EMAIL || 'Soradin <notifications@soradin.com>';
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://soradin.com';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.soradin.com';
 
   if (!resendApiKey) {
     console.log('📧 sendPaymentReceiptEmail: RESEND_API_KEY not set, skipping email');
@@ -2201,7 +2201,7 @@ export async function sendRefundEmail({
 
   const resendApiKey = process.env.RESEND_API_KEY;
   const resendFromEmail = process.env.RESEND_FROM_EMAIL || 'Soradin <notifications@soradin.com>';
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://soradin.com';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.soradin.com';
 
   if (!resendApiKey) {
     console.log('📧 sendRefundEmail: RESEND_API_KEY not set, skipping email');
