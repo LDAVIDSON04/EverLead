@@ -142,119 +142,6 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
   const [locationSuggestions, setLocationSuggestions] = useState<string[]>([]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [locationDetecting, setLocationDetecting] = useState(false);
-
-  // Auto-detect and pre-fill location - Try GPS first (more accurate), fallback to IP
-  const detectLocationOnFocus = async () => {
-    // Only detect if location is empty (user hasn't entered anything)
-    if (location.trim() !== "") {
-      return;
-    }
-
-    // Only detect once per session
-    if (locationDetecting) {
-      return;
-    }
-
-    setLocationDetecting(true);
-    try {
-      // First, try browser GPS geolocation (more accurate, especially on mobile)
-      if (navigator.geolocation) {
-        console.log("🔍 [HOME] Trying GPS geolocation (more accurate)...");
-        
-        const gpsLocation = await new Promise<{ location: string } | null>((resolve) => {
-          navigator.geolocation.getCurrentPosition(
-            async (position) => {
-              try {
-                const res = await fetch("/api/geolocation/gps", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    latitude: position.coords.latitude,
-                    longitude: position.coords.longitude,
-                  }),
-                });
-                const data = await res.json();
-                console.log("📍 [HOME] GPS geolocation API response:", data);
-                
-                if (data.location) {
-                  console.log("✅ [HOME] Location detected from GPS:", data.location);
-                  resolve({ location: data.location });
-                } else {
-                  resolve(null);
-                }
-              } catch (err) {
-                console.error("❌ [HOME] Error with GPS geolocation API:", err);
-                resolve(null);
-              }
-            },
-            (error) => {
-              // User denied permission or GPS unavailable - fallback to IP
-              console.log("⚠️ [HOME] GPS geolocation not available:", error.message);
-              resolve(null);
-            },
-            {
-              timeout: 5000,
-              maximumAge: 300000, // Cache for 5 minutes
-            }
-          );
-        });
-
-        if (gpsLocation?.location) {
-          setLocation(gpsLocation.location);
-          setLocationDetecting(false);
-          return;
-        }
-      }
-
-      // Fallback to IP-based geolocation
-      console.log("🔍 [HOME] Falling back to IP-based geolocation...");
-      const res = await fetch("/api/geolocation");
-      const data = await res.json();
-      console.log("📍 [HOME] IP geolocation API response:", data);
-      
-      if (data.location) {
-        console.log("✅ [HOME] Location detected from IP:", data.location);
-        setLocation(data.location);
-      } else {
-        console.warn("⚠️ [HOME] Could not detect location");
-      }
-    } catch (err) {
-      console.error("❌ [HOME] Error detecting location:", err);
-    } finally {
-      setLocationDetecting(false);
-    }
-  };
-
-  // Function to navigate to search page with detected location from IP
-  const navigateToSearchWithLocation = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    
-    // Always detect location from IP first, then navigate with it
-    // This ensures the family's location is known before showing agents
-    try {
-      console.log("🔍 [HOME] Detecting family location from IP...");
-      const res = await fetch("/api/geolocation");
-      const data = await res.json();
-      console.log("📍 [HOME] Geolocation API response:", data);
-      
-      if (data.location) {
-        console.log("✅ [HOME] Location detected from IP:", data.location);
-        // Navigate with location in URL - this will show agents in that city
-        const searchUrl = `/search?location=${encodeURIComponent(data.location)}`;
-        console.log("🚀 [HOME] Navigating to:", searchUrl);
-        router.push(searchUrl);
-      } else {
-        console.warn("⚠️ [HOME] Could not detect location from IP, data:", data);
-        // Navigate without location if detection fails
-        router.push("/search");
-      }
-    } catch (err) {
-      // Navigate without location if detection fails
-      console.error("❌ [HOME] Error detecting location:", err);
-      router.push("/search");
-    }
-  };
 
   const specialtySuggestions = [
     "Funeral Pre-Planning",
@@ -511,11 +398,6 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                       value={location}
                       onChange={handleLocationChange}
                       onFocus={() => {
-                        // Auto-detect location on first focus (user interaction)
-                        if (location.trim() === "") {
-                          detectLocationOnFocus();
-                        }
-                        
                         if (location.length > 0) {
                           const filtered = cities.filter(city => 
                             city.toLowerCase().includes(location.toLowerCase())
@@ -697,7 +579,10 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                   Discover what families are saying about specialists in your area
                 </p>
                 <button 
-                  onClick={navigateToSearchWithLocation}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    router.push("/search");
+                  }}
                   className="bg-[#0C6F3C] text-white px-5 py-2.5 rounded-xl hover:bg-[#0C6F3C]/90 transition-all shadow-sm text-sm"
                 >
                   See reviews
@@ -833,7 +718,10 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                 Soradin is designed to support thoughtful, ethical estate planning prioritizing clarity, consent, and family peace of mind.
               </p>
               <button 
-                onClick={navigateToSearchWithLocation}
+                onClick={(e) => {
+                  e.preventDefault();
+                  router.push("/search");
+                }}
                 className="bg-[#0C6F3C] text-white px-8 py-4 rounded-xl hover:bg-[#0C6F3C]/90 transition-all shadow-sm text-lg"
               >
                 Find care
