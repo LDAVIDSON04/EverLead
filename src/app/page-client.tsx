@@ -194,6 +194,36 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
     setLocationSuggestions([]);
   };
 
+  // Function to navigate to search page with detected location from IP
+  // (Only used for buttons - search bar remains blank for manual input)
+  const navigateToSearchWithLocation = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    
+    // Detect location from IP, then navigate with it
+    try {
+      console.log("🔍 [HOME] Detecting family location from IP for button click...");
+      const res = await fetch("/api/geolocation");
+      const data = await res.json();
+      console.log("📍 [HOME] Geolocation API response:", data);
+      
+      if (data.location) {
+        console.log("✅ [HOME] Location detected from IP:", data.location);
+        // Navigate with location in URL - this will show agents in that city
+        const searchUrl = `/search?location=${encodeURIComponent(data.location)}`;
+        console.log("🚀 [HOME] Navigating to:", searchUrl);
+        router.push(searchUrl);
+      } else {
+        console.warn("⚠️ [HOME] Could not detect location from IP, data:", data);
+        // Navigate without location if detection fails
+        router.push("/search");
+      }
+    } catch (err) {
+      // Navigate without location if detection fails
+      console.error("❌ [HOME] Error detecting location:", err);
+      router.push("/search");
+    }
+  };
+
   return (
     <main className="min-h-screen bg-[#FAF9F6]">
       {/* HEADER */}
@@ -579,10 +609,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                   Discover what families are saying about specialists in your area
                 </p>
                 <button 
-                  onClick={(e) => {
-                    e.preventDefault();
-                    router.push("/search");
-                  }}
+                  onClick={navigateToSearchWithLocation}
                   className="bg-[#0C6F3C] text-white px-5 py-2.5 rounded-xl hover:bg-[#0C6F3C]/90 transition-all shadow-sm text-sm"
                 >
                   See reviews
@@ -617,10 +644,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                   Schedule consultations with trusted funeral specialists online
                 </p>
                 <button 
-                  onClick={(e) => {
-                    e.preventDefault();
-                    router.push("/search");
-                  }}
+                  onClick={navigateToSearchWithLocation}
                   className="bg-[#0C6F3C] text-white px-5 py-2.5 rounded-xl hover:bg-[#0C6F3C]/90 transition-all shadow-sm text-sm"
                 >
                   See availability
@@ -721,10 +745,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                 Soradin is designed to support thoughtful, ethical estate planning prioritizing clarity, consent, and family peace of mind.
               </p>
               <button 
-                onClick={(e) => {
-                  e.preventDefault();
-                  router.push("/search");
-                }}
+                onClick={navigateToSearchWithLocation}
                 className="bg-[#0C6F3C] text-white px-8 py-4 rounded-xl hover:bg-[#0C6F3C]/90 transition-all shadow-sm text-lg"
               >
                 Find care
