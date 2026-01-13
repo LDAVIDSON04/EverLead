@@ -668,13 +668,15 @@ export async function GET(req: NextRequest) {
     // This prevents external events linked to Soradin appointments from showing as external
     const appointmentIds = new Set((appointments || []).map((apt: any) => apt.id));
     
-    // Create a map of appointment start times (ISO strings) to filter out duplicates
+    // Create a set of appointment start times (from confirmed_at) to filter out duplicates
     // Match external events to appointments by start time (within 1 minute tolerance)
+    // Use confirmed_at from appointments (UTC) and compare with starts_at from external events (UTC)
     const appointmentStartTimes = new Set((appointments || []).map((apt: any) => {
-      if (!apt.starts_at) return null;
-      // Normalize to minute precision for matching
-      const startDate = new Date(apt.starts_at);
+      if (!apt.confirmed_at) return null;
+      // Normalize to minute precision for matching (remove seconds and milliseconds)
+      const startDate = new Date(apt.confirmed_at);
       startDate.setSeconds(0, 0);
+      startDate.setMilliseconds(0);
       return startDate.toISOString();
     }).filter(Boolean));
     
@@ -706,6 +708,7 @@ export async function GET(req: NextRequest) {
         // This prevents Soradin-created events that synced to Microsoft Calendar from showing as external
         const evtStartDate = new Date(evt.starts_at);
         evtStartDate.setSeconds(0, 0);
+        evtStartDate.setMilliseconds(0);
         const evtStartTimeNormalized = evtStartDate.toISOString();
         if (appointmentStartTimes.has(evtStartTimeNormalized)) {
           console.log(`⏭️ Skipping external event that matches Soradin appointment start time:`, {
