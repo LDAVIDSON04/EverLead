@@ -464,20 +464,35 @@ export function BookingPanel({ agentId, initialLocation }: BookingPanelProps) {
             const dateNum = date.getUTCDate();
             const monthName = date.toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' });
             
+            // Get current time in agent's timezone for filtering past slots
+            const agentTimezone = day.timezone || 'America/Toronto';
+            const now = DateTime.now().setZone(agentTimezone);
+            const todayDateStr = now.toISODate(); // YYYY-MM-DD format
+            const isToday = day.date === todayDateStr;
+            
+            // Filter slots - exclude past slots for today's date
+            const validSlots = day.slots?.filter((slot: any) => {
+              if (isToday) {
+                const slotTime = DateTime.fromISO(slot.startsAt, { zone: 'utc' }).setZone(agentTimezone);
+                return slotTime > now;
+              }
+              return true; // For future dates, keep all slots
+            }) || [];
+            
             return {
               dayOfWeek,
               date: dateNum,
               month: monthName,
               fullDate: date,
-              appointmentCount: day.slots?.length || 0,
-              timeSlots: day.slots?.map((s: any) => {
+              appointmentCount: validSlots.length,
+              timeSlots: validSlots.map((s: any) => {
                 const d = new Date(s.startsAt);
                 const hours = d.getHours();
                 const minutes = d.getMinutes();
                 const ampm = hours >= 12 ? 'PM' : 'AM';
                 const displayHours = hours % 12 || 12;
                 return `${displayHours}:${String(minutes).padStart(2, '0')} ${ampm}`;
-              }) || [],
+              }),
               dateStr: day.date
             };
           });
@@ -919,9 +934,24 @@ export function BookingPanel({ agentId, initialLocation }: BookingPanelProps) {
                       }
                       
                       // Format time slots for this day in the agent's timezone
-                      const formattedSlots = day.slots.map((slot, slotIdx) => {
+                      const agentTimezone = day.timezone || 'America/Toronto'; // Default fallback
+                      
+                      // Get current time in agent's timezone for filtering past slots
+                      const now = DateTime.now().setZone(agentTimezone);
+                      const todayDateStr = now.toISODate(); // YYYY-MM-DD format
+                      const isToday = day.date === todayDateStr;
+                      
+                      // Filter out past time slots for today's date
+                      const filteredSlots = day.slots.filter(slot => {
+                        if (isToday) {
+                          const slotTime = DateTime.fromISO(slot.startsAt, { zone: 'utc' }).setZone(agentTimezone);
+                          return slotTime > now;
+                        }
+                        return true; // For future dates, keep all slots
+                      });
+                      
+                      const formattedSlots = filteredSlots.map((slot, slotIdx) => {
                         // Parse the UTC ISO string and convert to agent's timezone
-                        const agentTimezone = day.timezone || 'America/Toronto'; // Default fallback
                         const utcTime = DateTime.fromISO(slot.startsAt, { zone: 'utc' });
                         const agentLocalTime = utcTime.setZone(agentTimezone);
                         
