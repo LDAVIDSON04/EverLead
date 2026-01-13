@@ -15,14 +15,14 @@
   ],
   "redirects": [
     {
-      "source": "/(.*)",
+      "source": "/:path*",
       "has": [
         {
           "type": "host",
           "value": "soradin.com"
         }
       ],
-      "destination": "https://www.soradin.com/:splat",
+      "destination": "https://www.soradin.com/:path*",
       "permanent": true
     }
   ]
