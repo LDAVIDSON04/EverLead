@@ -77,35 +77,33 @@ export function BookingPanel({ agentId }: BookingPanelProps) {
       const availabilityData: AvailabilityDay[] = await res.json();
       const todayStr = startDate;
       
-      // Get current time in agent's timezone for filtering past slots
-      const agentTimezone = availabilityData[0]?.timezone || 'America/Toronto';
-      const now = DateTime.now().setZone(agentTimezone);
-      const todayDateStr = now.toISODate(); // YYYY-MM-DD format
-      
-      // Find the first day with available slots (filtering out past slots for today)
+      // Find the first day with available FUTURE slots
       for (const day of availabilityData) {
         if (!day.slots || day.slots.length === 0) continue;
         
-        // For today, filter out past slots
-        let hasAvailableSlots = false;
-        if (day.date === todayDateStr) {
-          const futureSlots = day.slots.filter(slot => {
+        // Get current time in agent's timezone for filtering past slots
+        const agentTimezone = day.timezone || 'America/Toronto';
+        const now = DateTime.now().setZone(agentTimezone);
+        const todayDateStr = now.toISODate(); // YYYY-MM-DD format
+        const isToday = day.date === todayDateStr;
+        
+        // Filter slots - exclude past slots for today's date
+        const validSlots = day.slots.filter(slot => {
+          if (isToday) {
             const slotTime = DateTime.fromISO(slot.startsAt, { zone: 'utc' }).setZone(agentTimezone);
             return slotTime > now;
-          });
-          hasAvailableSlots = futureSlots.length > 0;
-        } else {
-          // For future dates, all slots are available
-          hasAvailableSlots = true;
-        }
+          }
+          return true; // For future dates, keep all slots
+        });
         
-        if (hasAvailableSlots) {
+        // Only consider this day if it has future slots
+        if (validSlots.length > 0) {
           const dayDate = new Date(day.date + 'T00:00:00');
           const todayDate = new Date(todayStr + 'T00:00:00');
           const diffDays = Math.floor((dayDate.getTime() - todayDate.getTime()) / (1000 * 60 * 60 * 24));
           
           if (diffDays === 0) {
-            return 'Available today';
+            return 'Next available today';
           } else if (diffDays === 1) {
             return 'Next available tomorrow';
           } else if (diffDays === 2) {
