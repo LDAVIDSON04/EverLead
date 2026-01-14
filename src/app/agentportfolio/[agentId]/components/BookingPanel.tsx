@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, ChevronDown, Check, MapPin, X, Calendar, Clock } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { supabaseClient } from '@/lib/supabaseClient';
+import { DateTime } from 'luxon';
 import Image from 'next/image';
 
 interface DayAvailability {
@@ -26,6 +27,7 @@ interface OfficeLocation {
 
 interface AvailabilityDay {
   date: string;
+  timezone?: string; // Agent's timezone (e.g., "America/Toronto")
   slots: Array<{
     startsAt: string;
     endsAt: string;
@@ -252,7 +254,23 @@ export function BookingPanel({ agentId }: BookingPanelProps) {
             const dateStr = date.toISOString().split("T")[0];
             
             const dayData = availabilityData.find(d => d.date === dateStr);
-            const appointmentCount = dayData?.slots?.length || 0;
+            
+            // Get current time in agent's timezone for filtering past slots
+            const agentTimezone = dayData?.timezone || 'America/Toronto';
+            const now = DateTime.now().setZone(agentTimezone);
+            const todayDateStr = now.toISODate(); // YYYY-MM-DD format
+            const isToday = dateStr === todayDateStr;
+            
+            // Filter slots - exclude past slots for today's date
+            const validSlots = dayData?.slots?.filter((slot: any) => {
+              if (isToday) {
+                const slotTime = DateTime.fromISO(slot.startsAt, { zone: 'utc' }).setZone(agentTimezone);
+                return slotTime > now;
+              }
+              return true; // For future dates, keep all slots
+            }) || [];
+            
+            const appointmentCount = validSlots.length;
             
             const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'short' });
             const dateNum = date.getDate();
@@ -264,14 +282,14 @@ export function BookingPanel({ agentId }: BookingPanelProps) {
               month,
               fullDate: date,
               appointmentCount,
-              timeSlots: dayData?.slots?.map((s: any) => {
+              timeSlots: validSlots.map((s: any) => {
                 const d = new Date(s.startsAt);
                 const hours = d.getHours();
                 const minutes = d.getMinutes();
                 const ampm = hours >= 12 ? 'PM' : 'AM';
                 const displayHours = hours % 12 || 12;
                 return `${displayHours}:${String(minutes).padStart(2, '0')} ${ampm}`;
-              }) || [],
+              }),
               dateStr
             });
           }
@@ -710,7 +728,23 @@ export function BookingPanel({ agentId }: BookingPanelProps) {
                       const displayDate = `${dayName}, ${monthName} ${dayNum}`;
                       
                       // Format time slots for this day
-                      const formattedSlots: TimeSlot[] = day.slots.map(slot => {
+                      const agentTimezone = day.timezone || 'America/Toronto';
+                      
+                      // Get current time in agent's timezone for filtering past slots
+                      const now = DateTime.now().setZone(agentTimezone);
+                      const todayDateStr = now.toISODate(); // YYYY-MM-DD format
+                      const isToday = day.date === todayDateStr;
+                      
+                      // Filter out past time slots for today's date
+                      const filteredSlots = day.slots.filter(slot => {
+                        if (isToday) {
+                          const slotTime = DateTime.fromISO(slot.startsAt, { zone: 'utc' }).setZone(agentTimezone);
+                          return slotTime > now;
+                        }
+                        return true; // For future dates, keep all slots
+                      });
+                      
+                      const formattedSlots: TimeSlot[] = filteredSlots.map(slot => {
                         const startDate = new Date(slot.startsAt);
                         const hours = startDate.getHours();
                         const minutes = startDate.getMinutes();
