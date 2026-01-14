@@ -77,9 +77,29 @@ export function BookingPanel({ agentId }: BookingPanelProps) {
       const availabilityData: AvailabilityDay[] = await res.json();
       const todayStr = startDate;
       
-      // Find the first day with available slots
+      // Get current time in agent's timezone for filtering past slots
+      const agentTimezone = availabilityData[0]?.timezone || 'America/Toronto';
+      const now = DateTime.now().setZone(agentTimezone);
+      const todayDateStr = now.toISODate(); // YYYY-MM-DD format
+      
+      // Find the first day with available slots (filtering out past slots for today)
       for (const day of availabilityData) {
-        if (day.slots && day.slots.length > 0) {
+        if (!day.slots || day.slots.length === 0) continue;
+        
+        // For today, filter out past slots
+        let hasAvailableSlots = false;
+        if (day.date === todayDateStr) {
+          const futureSlots = day.slots.filter(slot => {
+            const slotTime = DateTime.fromISO(slot.startsAt, { zone: 'utc' }).setZone(agentTimezone);
+            return slotTime > now;
+          });
+          hasAvailableSlots = futureSlots.length > 0;
+        } else {
+          // For future dates, all slots are available
+          hasAvailableSlots = true;
+        }
+        
+        if (hasAvailableSlots) {
           const dayDate = new Date(day.date + 'T00:00:00');
           const todayDate = new Date(todayStr + 'T00:00:00');
           const diffDays = Math.floor((dayDate.getTime() - todayDate.getTime()) / (1000 * 60 * 60 * 24));

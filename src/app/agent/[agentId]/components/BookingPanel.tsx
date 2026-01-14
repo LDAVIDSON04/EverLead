@@ -363,9 +363,28 @@ export function BookingPanel({ agentId, initialLocation }: BookingPanelProps) {
                 firstAvailableDate: availabilityData.find(d => d.slots && d.slots.length > 0)?.date
               });
               
-              // Find first day with available slots (sorted by date)
+              // Get current time in agent's timezone for filtering past slots
+              const agentTimezone = availabilityData[0]?.timezone || 'America/Toronto';
+              const now = DateTime.now().setZone(agentTimezone);
+              const todayDateStr = now.toISODate(); // YYYY-MM-DD format
+              
+              // Find first day with available slots (filtering out past slots for today)
               const sortedDays = availabilityData
-                .filter(day => day.date && day.slots && day.slots.length > 0)
+                .filter(day => {
+                  if (!day.date || !day.slots || day.slots.length === 0) return false;
+                  
+                  // For today, filter out past slots
+                  if (day.date === todayDateStr) {
+                    const futureSlots = day.slots.filter(slot => {
+                      const slotTime = DateTime.fromISO(slot.startsAt, { zone: 'utc' }).setZone(agentTimezone);
+                      return slotTime > now;
+                    });
+                    return futureSlots.length > 0;
+                  }
+                  
+                  // For future dates, include all days with slots
+                  return true;
+                })
                 .sort((a, b) => a.date.localeCompare(b.date));
               
               const firstAvailableDay = sortedDays[0];
