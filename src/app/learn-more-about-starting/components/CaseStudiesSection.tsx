@@ -7,7 +7,7 @@ export function CaseStudiesSection() {
     {
       category: "Reach & Demand",
       title: "Reach the right patients, at the right time",
-      description: "Agents use Soradin to connect with patients actively seeking in-person care. By offering real-time availability and verified provider profiles, Soradin helps agents increase appointment requests without increasing administrative workload.",
+      description: "Agents use Soradin to connect with families actively seeking in-person care. By offering real-time availability and verified provider profiles, Soradin helps agents increase appointment requests without increasing administrative workload.",
       bgColor: "bg-[#FFE87C]",
       illustration: (
         <div className="relative w-full h-full flex items-center justify-center p-4">
@@ -54,7 +54,7 @@ export function CaseStudiesSection() {
     {
       category: "Accessibility & Continuity",
       title: "Make in-person care easier to access",
-      description: "Soradin helps organizations maintain near-term availability while improving access to in-person consultations. With verified specialists and structured scheduling, patients can confidently book the care they need.",
+      description: "Soradin helps organizations maintain near-term availability while improving access to in-person consultations. With verified specialists and structured scheduling, families can confidently book the care they need.",
       bgColor: "bg-[#FFE87C]",
       illustration: (
         <div className="relative w-full h-full flex items-center justify-center p-4">
