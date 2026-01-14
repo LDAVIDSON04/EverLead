@@ -375,7 +375,7 @@ export function BookingPanel({ agentId, initialLocation }: BookingPanelProps) {
                   
                   // For today, filter out past slots
                   if (day.date === todayDateStr) {
-                    const futureSlots = day.slots.filter(slot => {
+                    const futureSlots = day.slots.filter((slot: { startsAt: string; endsAt: string }) => {
                       const slotTime = DateTime.fromISO(slot.startsAt, { zone: 'utc' }).setZone(agentTimezone);
                       return slotTime > now;
                     });
