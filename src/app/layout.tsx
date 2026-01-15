@@ -117,9 +117,10 @@ export default function RootLayout({
         {/* Explicit canonical URL - ensure Google uses www version */}
         <link rel="canonical" href="https://www.soradin.com/" />
         {/* Favicon links for Google Search results - 48x48 is required for search snippets */}
-        <link rel="icon" type="image/png" sizes="48x48" href="https://www.soradin.com/favicon-48.png" />
-        <link rel="apple-touch-icon" sizes="180x180" href="https://www.soradin.com/Soradin.png" />
-        <link rel="shortcut icon" href="https://www.soradin.com/favicon-48.png" />
+        {/* Using relative URLs so favicon works on both www and non-www domains */}
+        <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/Soradin.png" />
+        <link rel="shortcut icon" href="/favicon-48.png" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
