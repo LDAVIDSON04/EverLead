@@ -46,7 +46,7 @@ export const metadata: Metadata = {
   title: "Soradin - Thoughtful funeral pre-planning, made simple",
   description: "Soradin helps families plan funeral wishes in advance and connect with trusted local professionals without pressure or urgency.",
   alternates: {
-    canonical: '/',
+    canonical: 'https://www.soradin.com/',
   },
   openGraph: {
     title: "Soradin - Thoughtful funeral pre-planning, made simple",
@@ -114,6 +114,8 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <BotIdClient protect={protectedRoutes} />
+        {/* Explicit canonical URL - ensure Google uses www version */}
+        <link rel="canonical" href="https://www.soradin.com/" />
         {/* Favicon links for Google Search results - 48x48 is required for search snippets */}
         <link rel="icon" type="image/png" sizes="48x48" href="https://www.soradin.com/favicon-48.png" />
         <link rel="apple-touch-icon" sizes="180x180" href="https://www.soradin.com/Soradin.png" />
