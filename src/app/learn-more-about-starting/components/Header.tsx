@@ -17,7 +17,7 @@ export function Header() {
             height={80}
             className="h-16 w-16 md:h-20 md:w-20 object-contain"
           />
-          <span className="text-sm md:text-2xl font-semibold text-[#1A1A1A] md:mt-0 -mt-1">Soradin</span>
+          <span className="text-sm md:text-2xl font-semibold text-[#1A1A1A] md:mt-0 -mt-1">Soradin For Agents</span>
         </Link>
         
         {/* Auth buttons */}
