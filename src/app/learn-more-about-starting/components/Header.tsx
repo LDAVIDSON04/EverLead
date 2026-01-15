@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 
 export function Header() {
   return (
-    <header className="w-full bg-[#FFF9F0]">
+    <header className="w-full bg-[#FFF9F0] sticky top-0 z-50 shadow-sm">
       <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
         {/* Logo - Mobile: text below, Desktop: text next to (original) */}
         <Link href="/" className="flex flex-col items-start md:flex-row md:items-center md:gap-3">
