@@ -13,10 +13,10 @@ export function HeroSection() {
           {/* Left content */}
           <div className="z-10 md:col-span-2 flex flex-col items-center text-center">
             <h1 className="text-4xl md:text-6xl text-black mb-4 md:mb-6 max-w-lg">
-              Patient growth you can count on
+              Client growth you can count on
             </h1>
             <p className="text-lg text-gray-700 mb-6 md:mb-8 max-w-md">
-              Reach more patients, simplify scheduling, and get a clear view into your performance data—all with one platform.
+              Reach more clients, simplify scheduling, and get a clear view into your performance data—all with one platform.
             </p>
             <Link href="/create-account" className="mb-0 md:mb-6">
               <Button className="bg-[#0D5C3D] hover:bg-[#0A4A30] text-white px-8 py-6">
