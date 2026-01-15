@@ -24,20 +24,6 @@
       ],
       "destination": "https://www.soradin.com/:path*",
       "permanent": true
-    },
-    {
-      "source": "/:path*",
-      "has": [
-        {
-          "type": "host",
-          "value": "www.soradin.com"
-        }
-      ],
-      "headers": {
-        "x-forwarded-proto": "https"
-      },
-      "destination": "https://www.soradin.com/:path*",
-      "permanent": false
     }
   ]
 }
