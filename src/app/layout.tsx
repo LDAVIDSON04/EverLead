@@ -44,13 +44,13 @@ const protectedRoutes = [
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.soradin.com'),
   title: "Soradin - Thoughtful funeral pre-planning, made simple",
-  description: "Soradin helps families plan funeral wishes in advance and connect with trusted local professionals without pressure or urgency.",
+  description: "Soradin removes friction by giving families a simple way to view an agent's availability and book a meeting directly online in just a few minutes.",
   alternates: {
     canonical: 'https://www.soradin.com/',
   },
   openGraph: {
     title: "Soradin - Thoughtful funeral pre-planning, made simple",
-    description: "Soradin helps families plan funeral wishes in advance and connect with trusted local professionals without pressure or urgency.",
+    description: "Soradin removes friction by giving families a simple way to view an agent's availability and book a meeting directly online in just a few minutes.",
     images: [
       {
         url: '/Soradin.png',
@@ -65,7 +65,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary',
     title: "Soradin - Thoughtful funeral pre-planning, made simple",
-    description: "Soradin helps families plan funeral wishes in advance and connect with trusted local professionals without pressure or urgency.",
+    description: "Soradin removes friction by giving families a simple way to view an agent's availability and book a meeting directly online in just a few minutes.",
     images: ['/Soradin.png'],
   },
 };
@@ -98,7 +98,7 @@ export default function RootLayout({
       "width": 1024,
       "height": 1024
     },
-    "description": "Soradin helps families plan funeral wishes in advance and connect with trusted local professionals without pressure or urgency.",
+    "description": "Soradin removes friction by giving families a simple way to view an agent's availability and book a meeting directly online in just a few minutes.",
     "email": "support@soradin.com",
     "sameAs": [
       "https://www.facebook.com/profile.php?id=61583953961107"
