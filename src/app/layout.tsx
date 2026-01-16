@@ -1,6 +1,7 @@
 // src/app/layout.tsx
 import "./globals.css";
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { BotIdClient } from 'botid/client';
@@ -113,7 +114,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        {/* Google tag (gtag.js) */}
+        {/* Google tag (gtag.js) - inline script in head for immediate detection */}
         <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17787677639"></script>
         <script
           dangerouslySetInnerHTML={{
@@ -139,6 +140,23 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen bg-slate-50 text-slate-900">
+        {/* Google tag (gtag.js) - also in body as fallback */}
+        <Script
+          strategy="afterInteractive"
+          src="https://www.googletagmanager.com/gtag/js?id=AW-17787677639"
+        />
+        <Script
+          id="google-analytics"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', 'AW-17787677639');
+            `,
+          }}
+        />
         {children}
         <Analytics />
         <SpeedInsights />
