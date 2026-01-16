@@ -80,20 +80,29 @@ export async function POST(req: NextRequest) {
       finalLeadId = leadId;
     } else {
       // Create a dummy lead for the review
+      // Include all required fields based on leads table schema
       const { data: newLead, error: leadCreateError } = await supabaseAdmin
         .from("leads")
         .insert({
           first_name: "Admin",
           last_name: "Review",
-          email: "admin@soradin.internal",
+          full_name: "Admin Review",
+          email: `admin-review-${Date.now()}@soradin.internal`,
+          phone: null,
           city: agent.agent_city || "Unknown",
-          province: agent.agent_province || "Unknown",
-          timeline_intent: "not_sure",
-          service_type: "funeral_pre_planning",
+          province: agent.agent_province || "BC",
+          service_type: "Pre-need Planning",
+          status: "new",
+          urgency_level: "cold",
+          lead_price: 0, // Required field - set to 0 for admin reviews
+          buy_now_price_cents: 0,
+          timeline_intent: "not_specified",
           planning_for: "self",
-          remains_disposition: "burial",
-          service_celebration: "traditional",
-          family_pre_arranged: "no",
+          remains_disposition: null,
+          service_celebration: null,
+          family_pre_arranged: null,
+          assigned_agent_id: null,
+          auction_enabled: false,
         })
         .select("id")
         .single();
