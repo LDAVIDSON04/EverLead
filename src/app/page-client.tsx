@@ -763,7 +763,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
           </h2>
 
           <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {["Calgary", "Edmonton", "Kelowna", "Penticton", "Salmon Arm"].map((city) => (
+            {["Kelowna", "Penticton", "Salmon Arm"].map((city) => (
               <Link
                 key={city}
                 href={`/search?location=${city}`}
@@ -849,21 +849,6 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                     <Link href="#" className="text-white/60 hover:text-white transition-colors">
                       Funeral pre-planning
                     </Link>
-                  </li>
-                  <li>
-                    <span className="text-white/60">
-                      Estate Lawyer <span className="text-white/40 text-sm">(coming soon)</span>
-                    </span>
-                  </li>
-                  <li>
-                    <span className="text-white/60">
-                      Insurance Agents <span className="text-white/40 text-sm">(coming soon)</span>
-                    </span>
-                  </li>
-                  <li>
-                    <span className="text-white/60">
-                      Financial Advisors <span className="text-white/40 text-sm">(coming soon)</span>
-                    </span>
                   </li>
                 </ul>
               </div>

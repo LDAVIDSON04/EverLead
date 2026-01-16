@@ -2619,21 +2619,6 @@ function SearchResults() {
                       Funeral pre-planning
                     </Link>
                   </li>
-                  <li>
-                    <span className="text-white/60">
-                      Estate Lawyer <span className="text-white/40 text-sm">(coming soon)</span>
-                    </span>
-                  </li>
-                  <li>
-                    <span className="text-white/60">
-                      Insurance Agents <span className="text-white/40 text-sm">(coming soon)</span>
-                    </span>
-                  </li>
-                  <li>
-                    <span className="text-white/60">
-                      Financial Advisors <span className="text-white/40 text-sm">(coming soon)</span>
-                    </span>
-                  </li>
                 </ul>
               </div>
 
