@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -10,6 +10,18 @@ function BookingSuccessContent() {
   const searchParams = useSearchParams();
   const appointmentId = searchParams.get("appointmentId");
   const email = searchParams.get("email");
+
+  // Google Ads conversion tracking
+  useEffect(() => {
+    // Fire conversion event when page loads
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'conversion', {
+        'send_to': 'AW-17787677639/HmFXCPu0tOYbEMfX6aFC',
+        'value': 1.0,
+        'currency': 'CAD'
+      });
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-white flex items-center justify-center px-4">
