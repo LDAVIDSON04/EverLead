@@ -864,6 +864,5 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
         </div>
       </footer>
     </main>
-    </>
   );
 }
