@@ -1,7 +1,6 @@
 // src/app/layout.tsx
 import "./globals.css";
 import type { Metadata } from "next";
-import Script from "next/script";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { BotIdClient } from 'botid/client';
@@ -114,8 +113,6 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        {/* Preload critical resources for instant LCP */}
-        <link rel="preload" href="/Soradin.png" as="image" type="image/png" />
         {/* Explicit canonical URL - ensure Google uses www version */}
         <link rel="canonical" href="https://www.soradin.com/" />
         {/* Favicon links for Google Search results - 48x48 is required for search snippets */}
@@ -127,31 +124,25 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
         />
+        {/* Google tag (gtag.js) - defer loading to not block render */}
+        <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17787677639"></script>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', 'AW-17787677639');
+            `,
+          }}
+        />
       </head>
       <body className="min-h-screen bg-slate-50 text-slate-900">
         {/* BotIdClient must be in body - client components cannot be in head */}
-        {/* Only load BotId on pages that actually need protection (deferred) */}
         <BotIdClient protect={protectedRoutes} />
-        
         {children}
-        
-        {/* Analytics - load after page is interactive */}
         <Analytics />
         <SpeedInsights />
-        
-        {/* Google tag (gtag.js) - Use Next.js Script with lazyOnload for maximum performance */}
-        <Script
-          src="https://www.googletagmanager.com/gtag/js?id=AW-17787677639"
-          strategy="lazyOnload"
-        />
-        <Script id="google-analytics" strategy="lazyOnload">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'AW-17787677639');
-          `}
-        </Script>
       </body>
     </html>
   );
