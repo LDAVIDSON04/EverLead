@@ -239,6 +239,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                 height={80}
                 className="h-16 w-16 md:h-20 md:w-20 object-contain"
                 priority
+                fetchPriority="high"
               />
               <span className="text-sm md:text-2xl font-semibold text-[#1A1A1A]">Soradin</span>
             </Link>
