@@ -481,7 +481,6 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                 </p>
               </div>
             </div>
-          </div>
           
           {/* Mobile Only: Pre-Need Planning Box */}
           <div className="md:hidden mt-4">
