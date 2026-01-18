@@ -1,7 +1,6 @@
 // src/app/layout.tsx
 import "./globals.css";
 import type { Metadata } from "next";
-import Script from "next/script";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { BotIdClient } from 'botid/client';
@@ -114,10 +113,19 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        {/* Preload critical resources for faster rendering */}
-        <link rel="preload" href="/Soradin.png" as="image" type="image/png" />
-        <link rel="preload" href="/favicon-48.png" as="image" type="image/png" />
-        
+        {/* Google tag (gtag.js) */}
+        <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17787677639"></script>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', 'AW-17787677639');
+            `,
+          }}
+        />
+        <BotIdClient protect={protectedRoutes} />
         {/* Explicit canonical URL - ensure Google uses www version */}
         <link rel="canonical" href="https://www.soradin.com/" />
         {/* Favicon links for Google Search results - 48x48 is required for search snippets */}
@@ -131,23 +139,6 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen bg-slate-50 text-slate-900">
-        {/* Google tag (gtag.js) - Load after page is interactive to prevent blocking */}
-        <Script
-          src="https://www.googletagmanager.com/gtag/js?id=AW-17787677639"
-          strategy="afterInteractive"
-        />
-        <Script id="google-analytics" strategy="afterInteractive">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'AW-17787677639');
-          `}
-        </Script>
-        
-        {/* BotId protection - Load after page is interactive */}
-        <BotIdClient protect={protectedRoutes} />
-        
         {children}
         <Analytics />
         <SpeedInsights />

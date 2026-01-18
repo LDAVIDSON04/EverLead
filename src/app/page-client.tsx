@@ -239,8 +239,6 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                 height={80}
                 className="h-16 w-16 md:h-20 md:w-20 object-contain"
                 priority
-                fetchPriority="high"
-                quality={85}
               />
               <span className="text-sm md:text-2xl font-semibold text-[#1A1A1A]">Soradin</span>
             </Link>
@@ -358,8 +356,6 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
             }}
             loading="lazy"
             fetchPriority="low"
-            quality={75}
-            sizes="350px"
           />
         </div>
 
@@ -673,7 +669,6 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                 className="w-full h-full object-cover rounded-lg"
                 loading="lazy"
                 fetchPriority="low"
-                quality={75}
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 900px"
               />
             </div>
