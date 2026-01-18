@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Search, MapPin, Star, Calendar, Check, ChevronDown, Heart, Facebook, Instagram, Menu, X, ChevronRight } from "lucide-react";
 import { useState, useEffect } from "react";
-import { createPortal } from "react-dom";
 
 interface HomePageClientProps {
   initialLocation: string;
@@ -225,97 +224,151 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
     }
   };
 
-  const [mounted, setMounted] = useState(false);
-  
-  useEffect(() => {
-    setMounted(true);
-    
-    // Mobile menu button
-    const menuButtonContainer = document.getElementById('mobile-menu-button');
-    if (menuButtonContainer) {
-      menuButtonContainer.innerHTML = '';
-    }
-  }, []);
-
   return (
-    <>
-      {/* Mobile Menu Overlay - Full Page Sheet */}
-      {mobileMenuOpen && (
-        <>
-          {/* Backdrop */}
-          <div 
-            className="md:hidden fixed inset-0 bg-black/50 z-40"
-            onClick={() => setMobileMenuOpen(false)}
-          />
-          {/* Menu Sheet - Cropped to content */}
-          <div className="md:hidden fixed top-0 left-0 right-0 bg-[#FAF9F6] z-50 rounded-b-3xl shadow-2xl">
-            <div className="flex flex-col">
-              {/* Header */}
-              <div className="px-4 py-5 bg-[#FAF9F6]">
-                <div className="flex items-center justify-between max-w-7xl mx-auto">
-                  <div className="flex items-center gap-3">
-                    <Image
-                      src="/Soradin.png"
-                      alt="Soradin Logo"
-                      width={80}
-                      height={80}
-                      className="h-12 w-12 object-contain"
-                    />
-                    <span className="text-lg font-semibold text-[#1A1A1A]">Soradin</span>
-                  </div>
-                  <button
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="p-2 text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors"
-                    aria-label="Close menu"
-                  >
-                    <X className="w-6 h-6" />
-                  </button>
-                </div>
-              </div>
-              {/* Menu Content */}
-              <div className="px-4 pb-8">
-                <div className="max-w-7xl mx-auto flex flex-col items-center">
-                  <h2 className="text-3xl font-bold text-[#1A1A1A] mb-8 text-center">
-                    Welcome to Soradin
-                  </h2>
-                  <div className="w-full max-w-sm flex flex-col gap-4">
-                    <Link 
-                      href="/learn-more-about-starting" 
-                      className="px-6 py-4 bg-[#0C6F3C] text-white rounded-xl hover:bg-[#0C6F3C]/90 transition-all shadow-sm text-center text-base font-medium"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      Create account
-                    </Link>
-                    <Link 
-                      href="/agent" 
-                      className="px-6 py-4 bg-white border-2 border-[#1A1A1A] text-[#1A1A1A] rounded-xl hover:bg-[#FAF9F6] transition-all text-center text-base font-medium"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      Log in
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </div>
+    <main className="min-h-screen bg-[#FAF9F6]">
+      {/* HEADER */}
+      <header className="bg-[#FAF9F6] py-5 px-4 relative z-30 overflow-visible">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          {/* Logo and Name - Mobile: text next to, Desktop: original layout (text next to) */}
+          <div className="flex items-center gap-3">
+            <Link href="/" className="flex items-center gap-3">
+              <Image
+                src="/Soradin.png"
+                alt="Soradin Logo"
+                width={80}
+                height={80}
+                className="h-16 w-16 md:h-20 md:w-20 object-contain"
+                priority
+                fetchPriority="high"
+              />
+              <span className="text-sm md:text-2xl font-semibold text-[#1A1A1A]">Soradin</span>
+            </Link>
           </div>
-        </>
-      )}
 
-      {/* Search Bar - Portal into server-rendered placeholder for instant LCP */}
-      {mounted && typeof document !== 'undefined' && (
-        <>
-          {createPortal(
+          {/* Right Side Navigation - Desktop: original layout, Mobile: Hamburger menu */}
+          <div className="flex items-center gap-6">
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center gap-6">
+              <Link href="/about" className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors">
+                About Us
+              </Link>
+              <Link href="/what-is-pre-need-funeral-planning" className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors">
+                What are pre arrangements?
+              </Link>
+              <Link href="/learn-more-about-starting" className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors">
+                List your Specialty
+              </Link>
+              <Link href="/agent" className="bg-[#0C6F3C] text-white px-6 py-2.5 rounded-xl hover:bg-[#0C6F3C]/90 transition-all shadow-sm">
+                Log in
+              </Link>
+            </div>
+            {/* Mobile: Hamburger menu */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="md:hidden p-2 text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors"
               aria-label="Toggle menu"
             >
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>,
-            document.getElementById('mobile-menu-button') || document.body
-          )}
-          
-          {createPortal(
+            </button>
+          </div>
+        </div>
+        
+        {/* Mobile Menu Overlay - Full Page Sheet */}
+        {mobileMenuOpen && (
+          <>
+            {/* Backdrop */}
+            <div 
+              className="md:hidden fixed inset-0 bg-black/50 z-40"
+              onClick={() => setMobileMenuOpen(false)}
+            />
+            {/* Menu Sheet - Cropped to content */}
+            <div className="md:hidden fixed top-0 left-0 right-0 bg-[#FAF9F6] z-50 rounded-b-3xl shadow-2xl">
+              <div className="flex flex-col">
+                {/* Header */}
+                <div className="px-4 py-5 bg-[#FAF9F6]">
+                  <div className="flex items-center justify-between max-w-7xl mx-auto">
+                    <div className="flex items-center gap-3">
+                      <Image
+                        src="/Soradin.png"
+                        alt="Soradin Logo"
+                        width={80}
+                        height={80}
+                        className="h-12 w-12 object-contain"
+                      />
+                      <span className="text-lg font-semibold text-[#1A1A1A]">Soradin</span>
+                    </div>
+                    <button
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="p-2 text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors"
+                      aria-label="Close menu"
+                    >
+                      <X className="w-6 h-6" />
+                    </button>
+                  </div>
+                </div>
+                {/* Menu Content */}
+                <div className="px-4 pb-8">
+                  <div className="max-w-7xl mx-auto flex flex-col items-center">
+                    <h2 className="text-3xl font-bold text-[#1A1A1A] mb-8 text-center">
+                      Welcome to Soradin
+                    </h2>
+                    <div className="w-full max-w-sm flex flex-col gap-4">
+                      <Link 
+                        href="/learn-more-about-starting" 
+                        className="px-6 py-4 bg-[#0C6F3C] text-white rounded-xl hover:bg-[#0C6F3C]/90 transition-all shadow-sm text-center text-base font-medium"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Create account
+                      </Link>
+                      <Link 
+                        href="/agent" 
+                        className="px-6 py-4 bg-white border-2 border-[#1A1A1A] text-[#1A1A1A] rounded-xl hover:bg-[#FAF9F6] transition-all text-center text-base font-medium"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Log in
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+      </header>
+
+      {/* HERO */}
+      <div className="relative bg-[#FAF9F6] pb-12 px-4 min-h-[calc(100vh-80px)] flex items-start md:pt-32 pt-0 md:pb-12 -mt-2 md:mt-0" style={{ overflow: 'visible' }}>
+        {/* Abstract background shapes - deferred to prevent blocking initial render */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ contentVisibility: 'auto' }}>
+          <div className="absolute top-20 right-10 w-96 h-96 bg-[#0C6F3C]/10 rounded-full blur-3xl" />
+        </div>
+
+        {/* Hero illustration - positioned absolutely on the right, above title */}
+        {/* Fixed aspect-ratio prevents CLS on desktop */}
+        <div className="absolute right-10 top-10 hidden lg:block" style={{ width: "350px", aspectRatio: "1/1" }}>
+          <Image
+            src="/hero-image.png"
+            alt="Book a specialist"
+            width={350}
+            height={350}
+            className="w-full h-full object-contain"
+            style={{
+              mixBlendMode: "multiply",
+            }}
+            loading="lazy"
+            fetchPriority="low"
+          />
+        </div>
+
+
+        <div className="max-w-7xl mx-auto relative z-20 w-full md:mt-0 mt-1 overflow-visible">
+          {/* Headline and Search Bar - Full Width */}
+          <div className="max-w-4xl">
+            <h1 className="text-6xl md:text-6xl text-2xl md:mb-8 mb-3 text-[#1A1A1A] font-semibold tracking-tight leading-none text-center md:text-left" style={{ paddingTop: '4px' }}>
+              Book local funeral planning professionals
+            </h1>
+
+            {/* Horizontal search bar */}
             <form onSubmit={handleSearch} className="bg-white rounded-2xl p-3 shadow-lg border border-[#1A1A1A]/5 relative z-30 md:mb-8 mb-4">
               <div className="flex flex-col lg:flex-row items-stretch gap-0">
                 {/* Search field */}
@@ -331,9 +384,11 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                       onChange={(e) => setSpecialty(e.target.value)}
                       onFocus={() => setShowSpecialtyDropdown(true)}
                       onBlur={() => {
+                        // Delay to allow clicking on dropdown
                         setTimeout(() => setShowSpecialtyDropdown(false), 200);
                       }}
                     />
+                    {/* Specialty Dropdown */}
                     {showSpecialtyDropdown && (
                       <div 
                         className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto"
@@ -383,9 +438,11 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                         }
                       }}
                       onBlur={() => {
+                        // Delay to allow clicking on dropdown
                         setTimeout(() => setShowLocationDropdown(false), 200);
                       }}
                     />
+                    {/* Modern popup below location box */}
                     {searchError && (
                       <div className="absolute top-full left-0 right-0 mt-2 animate-in fade-in slide-in-from-top-2 duration-200 z-50">
                         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg shadow-lg p-3 backdrop-blur-sm">
@@ -396,6 +453,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                         </div>
                       </div>
                     )}
+                    {/* Location Autocomplete Dropdown */}
                     {showLocationDropdown && locationSuggestions.length > 0 && (
                       <div 
                         className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto"
@@ -431,14 +489,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                   </button>
                 </div>
               </div>
-            </form>,
-            document.getElementById('search-bar-container') || document.body
-          )}
-        </>
-      )}
-      
-      {/* Rest of page content - Client rendered */}
-      <main className="min-h-screen bg-[#FAF9F6]">
+            </form>
 
             {/* Desktop Only: How it Works Section */}
             <div className="hidden md:flex items-center justify-center gap-8 mt-12 mb-8 max-w-4xl">
