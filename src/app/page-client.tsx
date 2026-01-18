@@ -659,10 +659,10 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
       <section className="py-24 px-4 bg-[#FAF9F6]">
         <div className="max-w-7xl mx-auto">
           <div className="grid md:grid-cols-[1.4fr_1fr] gap-12 items-center">
-            {/* Left side - Image - Remove priority (below fold, 6.7MB hurts mobile LCP) */}
+            {/* Left side - Image - Using PNG version (722K) instead of JPG (6.7MB) for better performance */}
             <div className="relative w-full" style={{ aspectRatio: "900/700" }}>
               <Image
-                src="/specialist-image.jpg"
+                src="/specialist-image.png"
                 alt="Professional funeral specialist"
                 width={900}
                 height={700}

@@ -113,19 +113,6 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        {/* Google tag (gtag.js) */}
-        <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17787677639"></script>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              window.dataLayer = window.dataLayer || [];
-              function gtag(){dataLayer.push(arguments);}
-              gtag('js', new Date());
-              gtag('config', 'AW-17787677639');
-            `,
-          }}
-        />
-        <BotIdClient protect={protectedRoutes} />
         {/* Explicit canonical URL - ensure Google uses www version */}
         <link rel="canonical" href="https://www.soradin.com/" />
         {/* Favicon links for Google Search results - 48x48 is required for search snippets */}
@@ -137,8 +124,22 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
         />
+        {/* Google tag (gtag.js) - defer loading to not block render */}
+        <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17787677639"></script>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', 'AW-17787677639');
+            `,
+          }}
+        />
       </head>
       <body className="min-h-screen bg-slate-50 text-slate-900">
+        {/* BotIdClient must be in body - client components cannot be in head */}
+        <BotIdClient protect={protectedRoutes} />
         {children}
         <Analytics />
         <SpeedInsights />
