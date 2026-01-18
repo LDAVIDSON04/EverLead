@@ -520,8 +520,6 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
               </div>
             </div>
           </div>
-        </div>
-      </div>
 
       {/* TWO BOXES SECTION */}
       <section className="py-24 px-4 bg-white">
