@@ -662,7 +662,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
             {/* Left side - Image */}
             <div className="flex justify-center">
               <Image
-                src="/Soradin.png"
+                src="/What is Pre need planning image.png"
                 alt="Pre arrangements"
                 width={400}
                 height={400}
@@ -674,7 +674,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
 
             {/* Right side - Content */}
             <div>
-              <h2 className="text-4xl md:text-5xl mb-6 text-[#1A1A1A] font-semibold tracking-tight">
+              <h2 className="text-4xl md:text-5xl mb-6 text-[#1A1A1A] font-semibold tracking-tight whitespace-nowrap">
                 What are pre arrangements?
               </h2>
               
