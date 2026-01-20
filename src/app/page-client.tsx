@@ -252,7 +252,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                 About Us
               </Link>
               <Link href="/learn-more-about-starting" className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors">
-                List your Specialty
+                For Professionals
               </Link>
               <Link href="/agent" className="bg-[#0C6F3C] text-white px-6 py-2.5 rounded-xl hover:bg-[#0C6F3C]/90 transition-all shadow-sm">
                 Log in
