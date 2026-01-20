@@ -251,9 +251,6 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
               <Link href="/about" className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors">
                 About Us
               </Link>
-              <Link href="/what-is-pre-need-funeral-planning" className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors">
-                What are pre arrangements?
-              </Link>
               <Link href="/learn-more-about-starting" className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors">
                 List your Specialty
               </Link>
@@ -660,13 +657,13 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
         <div className="max-w-6xl mx-auto">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             {/* Left side - Image */}
-            <div className="flex justify-center">
+            <div className="w-full h-full">
               <Image
                 src="/f75c771a2df6874e6f701c79ddc5f202a2bcc4f5.png"
                 alt="Pre arrangements"
-                width={400}
-                height={400}
-                className="w-full max-w-md h-auto object-contain"
+                width={600}
+                height={600}
+                className="w-full h-full object-cover rounded-lg"
                 loading="lazy"
                 fetchPriority="low"
               />
