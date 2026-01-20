@@ -811,7 +811,20 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
           </h2>
 
           <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {["Kelowna", "Penticton", "Salmon Arm"].map((city) => (
+            {[
+              "Vancouver",
+              "Surrey",
+              "Victoria",
+              "Prince George",
+              "Kelowna",
+              "Burnaby",
+              "Richmond",
+              "Abbotsford",
+              "Kamloops",
+              "Nanaimo",
+              "Penticton",
+              "Salmon Arm"
+            ].map((city) => (
               <Link
                 key={city}
                 href={`/search?location=${city}`}
