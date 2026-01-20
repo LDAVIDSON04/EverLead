@@ -653,7 +653,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
       </section>
 
       {/* WHAT ARE PRE ARRANGEMENTS SECTION - Desktop Only */}
-      <section className="hidden md:block py-24 px-4 bg-white">
+      <section className="hidden md:block py-24 px-4 bg-[#FAF9F6]">
         <div className="max-w-6xl mx-auto">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             {/* Left side - Image */}
@@ -704,7 +704,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
       </section>
 
       {/* FOR SPECIALISTS SECTION */}
-      <section className="py-24 px-4 bg-[#FAF9F6]">
+      <section className="py-24 px-4 bg-white">
         <div className="max-w-7xl mx-auto">
           <div className="grid md:grid-cols-[1.4fr_1fr] gap-12 items-center">
             {/* Left side - Image - Using PNG version (722K) instead of JPG (6.7MB) for better performance */}
