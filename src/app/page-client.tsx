@@ -655,6 +655,57 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
         </div>
       </section>
 
+      {/* WHAT ARE PRE ARRANGEMENTS SECTION - Desktop Only */}
+      <section className="hidden md:block py-24 px-4 bg-white">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            {/* Left side - Image */}
+            <div className="flex justify-center">
+              <Image
+                src="/Soradin.png"
+                alt="Pre arrangements"
+                width={400}
+                height={400}
+                className="w-full max-w-md h-auto object-contain"
+                loading="lazy"
+                fetchPriority="low"
+              />
+            </div>
+
+            {/* Right side - Content */}
+            <div>
+              <h2 className="text-4xl md:text-5xl mb-6 text-[#1A1A1A] font-semibold tracking-tight">
+                What are pre arrangements?
+              </h2>
+              
+              {/* Bullet points */}
+              <ul className="space-y-4 mb-8">
+                <li className="flex items-start gap-3">
+                  <div className="w-2 h-2 rounded-full bg-[#0C6F3C] mt-2 flex-shrink-0"></div>
+                  <p className="text-lg text-[#1A1A1A]/70">Plan ahead wisely</p>
+                </li>
+                <li className="flex items-start gap-3">
+                  <div className="w-2 h-2 rounded-full bg-[#0C6F3C] mt-2 flex-shrink-0"></div>
+                  <p className="text-lg text-[#1A1A1A]/70">Reduce family stress</p>
+                </li>
+                <li className="flex items-start gap-3">
+                  <div className="w-2 h-2 rounded-full bg-[#0C6F3C] mt-2 flex-shrink-0"></div>
+                  <p className="text-lg text-[#1A1A1A]/70">Secure your wishes</p>
+                </li>
+              </ul>
+
+              {/* Learn more button */}
+              <Link 
+                href="/what-is-pre-need-funeral-planning"
+                className="inline-block bg-[#0C6F3C] text-white px-8 py-3 rounded-xl hover:bg-[#0C6F3C]/90 transition-all shadow-sm text-base font-medium"
+              >
+                Learn more
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* FOR SPECIALISTS SECTION */}
       <section className="py-24 px-4 bg-[#FAF9F6]">
         <div className="max-w-7xl mx-auto">
