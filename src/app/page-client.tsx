@@ -247,14 +247,14 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
           {/* Right Side Navigation - Desktop: original layout, Mobile: Hamburger menu */}
           <div className="flex items-center gap-6">
             {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center gap-6">
-              <Link href="/about" className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors">
+            <div className="hidden md:flex items-center gap-10">
+              <Link href="/about" className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors text-lg font-medium">
                 About Us
               </Link>
-              <Link href="/help" className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors">
+              <Link href="/help" className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors text-lg font-medium">
                 Help
               </Link>
-              <Link href="/learn-more-about-starting" className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors">
+              <Link href="/learn-more-about-starting" className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors text-lg font-medium">
                 List Your Specialty With Soradin
               </Link>
               <Link href="/agent" className="bg-[#0C6F3C] text-white px-6 py-2.5 rounded-xl hover:bg-[#0C6F3C]/90 transition-all shadow-sm">
