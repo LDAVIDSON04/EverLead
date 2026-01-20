@@ -662,7 +662,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
             {/* Left side - Image */}
             <div className="flex justify-center">
               <Image
-                src="/What is Pre need planning image.png"
+                src="/f75c771a2df6874e6f701c79ddc5f202a2bcc4f5.png"
                 alt="Pre arrangements"
                 width={400}
                 height={400}
