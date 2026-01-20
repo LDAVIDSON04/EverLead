@@ -73,3 +73,19 @@ a:hover {
     left: -450px;
   }
 }
+
+/* Scrolling logo animation for trusted by section */
+@keyframes scroll-left {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.scroll-logos {
+  animation: scroll-left 30s linear infinite;
+  display: flex;
+  width: max-content;
+}

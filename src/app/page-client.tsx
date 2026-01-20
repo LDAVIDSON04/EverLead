@@ -574,6 +574,30 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
         </div>
       </div>
 
+      {/* TRUSTED BY SECTION - Black bar with rotating logos */}
+      <section className="hidden md:block bg-black py-12 overflow-hidden relative">
+        <p className="text-center text-white/60 text-sm font-medium mb-8 absolute top-4 left-1/2 -translate-x-1/2 w-full z-10">
+          Trusted by agents from top funeral homes
+        </p>
+        <div className="scroll-logos mt-8">
+          {/* Duplicate logos for seamless infinite loop */}
+          {[...Array(2)].map((_, setIndex) => (
+            <div key={setIndex} className="flex items-center gap-16 flex-shrink-0">
+              {[...Array(5)].map((_, i) => (
+                <Image 
+                  key={`${setIndex}-${i}`}
+                  src="/Soradin.png" 
+                  alt="Funeral Home" 
+                  width={120} 
+                  height={60} 
+                  className="h-10 w-auto object-contain flex-shrink-0 opacity-40 hover:opacity-60 transition-opacity" 
+                />
+              ))}
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* TWO BOXES SECTION */}
       <section className="py-24 px-4 bg-white">
         <div className="max-w-6xl mx-auto">
@@ -651,23 +675,6 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                 </button>
               </div>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* TRUSTED BY SECTION - Desktop Only */}
-      <section className="hidden md:block py-16 px-4 bg-white border-y border-[#1A1A1A]/5">
-        <div className="max-w-6xl mx-auto">
-          <p className="text-center text-[#1A1A1A]/60 text-sm font-medium mb-8">
-            Trusted by agents from top funeral homes
-          </p>
-          <div className="flex items-center justify-center gap-12 opacity-60 grayscale hover:opacity-100 hover:grayscale-0 transition-all">
-            {/* Placeholder logos - Replace with actual funeral home logos when available */}
-            <Image src="/Soradin.png" alt="Funeral Home" width={120} height={60} className="h-12 w-auto object-contain" />
-            <Image src="/Soradin.png" alt="Funeral Home" width={120} height={60} className="h-12 w-auto object-contain" />
-            <Image src="/Soradin.png" alt="Funeral Home" width={120} height={60} className="h-12 w-auto object-contain" />
-            <Image src="/Soradin.png" alt="Funeral Home" width={120} height={60} className="h-12 w-auto object-contain" />
-            <Image src="/Soradin.png" alt="Funeral Home" width={120} height={60} className="h-12 w-auto object-contain" />
           </div>
         </div>
       </section>
