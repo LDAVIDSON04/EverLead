@@ -784,22 +784,41 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
               </button>
             </div>
             {/* Right side - Logo Card Box (mobile second, desktop right) */}
-            <div className="relative w-full order-2 lg:order-2 flex items-center justify-center">
-              <div className="bg-white rounded-2xl shadow-lg border border-[#1A1A1A]/10 p-8 w-full max-w-md">
-                <div className="grid grid-cols-2 gap-6 items-center justify-center">
-                  {[1, 2, 3, 4, 5].map((index) => (
-                    <div key={index} className="flex items-center justify-center">
-                      <Image
-                        src="/Soradin.png"
-                        alt="Soradin logo"
-                        width={120}
-                        height={120}
-                        className="w-24 h-24 object-contain opacity-80"
-                        loading="lazy"
-                        fetchPriority="low"
-                      />
-                    </div>
-                  ))}
+            <div className="relative w-full order-2 lg:order-2 flex items-center justify-center h-full">
+              <div className="bg-white rounded-3xl shadow-xl border border-[#1A1A1A]/5 p-10 w-full max-w-lg h-full min-h-[400px] flex items-center justify-center backdrop-blur-sm bg-white/95">
+                <div className="flex flex-col gap-8 w-full">
+                  {/* Top row - 3 logos */}
+                  <div className="flex items-center justify-center gap-8">
+                    {[1, 2, 3].map((index) => (
+                      <div key={index} className="flex items-center justify-center">
+                        <Image
+                          src="/Soradin.png"
+                          alt="Soradin logo"
+                          width={100}
+                          height={100}
+                          className="w-20 h-20 object-contain opacity-75 hover:opacity-100 transition-opacity"
+                          loading="lazy"
+                          fetchPriority="low"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  {/* Bottom row - 2 logos */}
+                  <div className="flex items-center justify-center gap-8">
+                    {[4, 5].map((index) => (
+                      <div key={index} className="flex items-center justify-center">
+                        <Image
+                          src="/Soradin.png"
+                          alt="Soradin logo"
+                          width={100}
+                          height={100}
+                          className="w-20 h-20 object-contain opacity-75 hover:opacity-100 transition-opacity"
+                          loading="lazy"
+                          fetchPriority="low"
+                        />
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
