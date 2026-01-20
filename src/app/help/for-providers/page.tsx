@@ -1,17 +1,19 @@
 "use client";
 
-import { Metadata } from 'next';
 import Link from 'next/link';
-import { User, MapPin, Calendar, FileText, MessageSquare, Info } from 'lucide-react';
+import { Calendar, User, Settings, FileText, Shield, HelpCircle, Building2, CreditCard, MessageSquare } from 'lucide-react';
 
-export default function HelpPage() {
+export default function ProviderHelpPage() {
   const categories = [
-    { id: 1, title: 'My Account', icon: User, articles: 7 },
-    { id: 2, title: 'Finding a Provider', icon: MapPin, articles: 5 },
-    { id: 3, title: 'Appointments', icon: Calendar, articles: 18 },
-    { id: 4, title: 'Privacy', icon: FileText, articles: 5 },
-    { id: 5, title: 'Reviews', icon: MessageSquare, articles: 3 },
-    { id: 6, title: 'About Soradin', icon: Info, articles: 7 }
+    { id: 1, title: 'Getting Started', icon: HelpCircle, articles: 12 },
+    { id: 2, title: 'Managing Appointments', icon: Calendar, articles: 15 },
+    { id: 3, title: 'Profile & Bio', icon: User, articles: 8 },
+    { id: 4, title: 'Settings', icon: Settings, articles: 10 },
+    { id: 5, title: 'Billing & Payments', icon: CreditCard, articles: 7 },
+    { id: 6, title: 'Account Management', icon: Building2, articles: 6 },
+    { id: 7, title: 'Privacy & Security', icon: Shield, articles: 5 },
+    { id: 8, title: 'Reviews & Feedback', icon: MessageSquare, articles: 9 },
+    { id: 9, title: 'Policies & Terms', icon: FileText, articles: 4 }
   ];
 
   return (
@@ -38,11 +40,14 @@ export default function HelpPage() {
         <header className="relative z-10 py-4">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-8">
-              <span className="text-lg text-white font-medium">Help Center</span>
+              <span className="text-lg text-white font-medium">Provider Help Center</span>
             </div>
             <div className="flex items-center gap-6">
               <Link href="/" className="text-sm text-white hover:text-gray-200 transition-colors">
                 Soradin
+              </Link>
+              <Link href="/help" className="text-sm text-white hover:text-gray-200 transition-colors">
+                Family Help
               </Link>
               <Link href="mailto:support@soradin.com" className="text-sm text-white hover:text-gray-200 transition-colors">
                 Contact us
@@ -54,8 +59,11 @@ export default function HelpPage() {
         {/* Hero Content */}
         <div className="max-w-3xl mx-auto relative z-10 py-12">
           <h1 className="text-4xl md:text-5xl font-bold text-white text-center">
-            How can we help?
+            How can we help you?
           </h1>
+          <p className="text-white/90 text-center mt-4 text-lg">
+            Resources and guides for funeral professionals
+          </p>
         </div>
       </section>
 
@@ -83,15 +91,16 @@ export default function HelpPage() {
         </div>
       </section>
 
-      {/* Provider Section */}
+      {/* Additional Help Section */}
       <section className="bg-[#FAF9F6] py-16">
         <div className="max-w-7xl mx-auto px-6 text-center">
-          <h2 className="text-2xl text-gray-700 mb-6 font-medium">Are you a provider?</h2>
+          <h2 className="text-2xl text-gray-700 mb-4 font-medium">Need more assistance?</h2>
+          <p className="text-gray-600 mb-6">Our support team is here to help you succeed</p>
           <Link 
-            href="/help/for-providers"
+            href="mailto:support@soradin.com"
             className="inline-block px-8 py-3 bg-[#0C6F3C] text-white rounded-xl hover:bg-[#0C6F3C]/90 transition-colors shadow-sm"
           >
-            Provider Help
+            Contact Support
           </Link>
         </div>
       </section>
@@ -99,7 +108,7 @@ export default function HelpPage() {
       {/* Footer */}
       <footer className="bg-white py-12">
         <div className="max-w-7xl mx-auto px-6 text-center">
-          <p className="text-gray-400 text-sm">Help Center</p>
+          <p className="text-gray-400 text-sm">Provider Help Center</p>
         </div>
       </footer>
     </div>
