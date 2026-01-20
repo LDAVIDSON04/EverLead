@@ -251,8 +251,11 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
               <Link href="/about" className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors">
                 About Us
               </Link>
+              <Link href="/help" className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors">
+                Help
+              </Link>
               <Link href="/learn-more-about-starting" className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors">
-                For Professionals
+                List Your Specialty With Soradin
               </Link>
               <Link href="/agent" className="bg-[#0C6F3C] text-white px-6 py-2.5 rounded-xl hover:bg-[#0C6F3C]/90 transition-all shadow-sm">
                 Log in
