@@ -655,6 +655,23 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
         </div>
       </section>
 
+      {/* TRUSTED BY SECTION - Desktop Only */}
+      <section className="hidden md:block py-16 px-4 bg-white border-y border-[#1A1A1A]/5">
+        <div className="max-w-6xl mx-auto">
+          <p className="text-center text-[#1A1A1A]/60 text-sm font-medium mb-8">
+            Trusted by agents from top funeral homes
+          </p>
+          <div className="flex items-center justify-center gap-12 opacity-60 grayscale hover:opacity-100 hover:grayscale-0 transition-all">
+            {/* Placeholder logos - Replace with actual funeral home logos when available */}
+            <Image src="/Soradin.png" alt="Funeral Home" width={120} height={60} className="h-12 w-auto object-contain" />
+            <Image src="/Soradin.png" alt="Funeral Home" width={120} height={60} className="h-12 w-auto object-contain" />
+            <Image src="/Soradin.png" alt="Funeral Home" width={120} height={60} className="h-12 w-auto object-contain" />
+            <Image src="/Soradin.png" alt="Funeral Home" width={120} height={60} className="h-12 w-auto object-contain" />
+            <Image src="/Soradin.png" alt="Funeral Home" width={120} height={60} className="h-12 w-auto object-contain" />
+          </div>
+        </div>
+      </section>
+
       {/* FOR SPECIALISTS SECTION */}
       <section className="py-24 px-4 bg-[#FAF9F6]">
         <div className="max-w-7xl mx-auto">
