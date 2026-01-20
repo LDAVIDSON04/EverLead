@@ -574,27 +574,31 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
         </div>
       </div>
 
-      {/* TRUSTED BY SECTION - Black bar with rotating logos */}
-      <section className="hidden md:block bg-black py-12 overflow-hidden relative">
-        <p className="text-center text-white/60 text-sm font-medium mb-8 absolute top-4 left-1/2 -translate-x-1/2 w-full z-10">
-          Trusted by agents from top funeral homes
-        </p>
-        <div className="scroll-logos mt-8">
-          {/* Duplicate logos for seamless infinite loop */}
-          {[...Array(2)].map((_, setIndex) => (
-            <div key={setIndex} className="flex items-center gap-16 flex-shrink-0">
-              {[...Array(5)].map((_, i) => (
-                <Image 
-                  key={`${setIndex}-${i}`}
-                  src="/Soradin.png" 
-                  alt="Funeral Home" 
-                  width={120} 
-                  height={60} 
-                  className="h-10 w-auto object-contain flex-shrink-0 opacity-40 hover:opacity-60 transition-opacity" 
-                />
+      {/* TRUSTED BY SECTION - Title above black bar with rotating logos */}
+      <section className="hidden md:block py-12 px-4 bg-white">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-3xl md:text-4xl text-[#1A1A1A] font-semibold text-center mb-8">
+            Trusted by agents from top funeral homes
+          </h2>
+          <div className="bg-black py-8 overflow-hidden rounded-lg">
+            <div className="scroll-logos">
+              {/* Duplicate logos for seamless infinite loop */}
+              {[...Array(2)].map((_, setIndex) => (
+                <div key={setIndex} className="flex items-center gap-16 flex-shrink-0">
+                  {[...Array(5)].map((_, i) => (
+                    <Image 
+                      key={`${setIndex}-${i}`}
+                      src="/logo - white.png" 
+                      alt="Funeral Home" 
+                      width={120} 
+                      height={60} 
+                      className="h-12 w-auto object-contain flex-shrink-0 opacity-60 hover:opacity-80 transition-opacity" 
+                    />
+              ))}
+                </div>
               ))}
             </div>
-          ))}
+          </div>
         </div>
       </section>
 
