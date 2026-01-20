@@ -768,29 +768,13 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
       <section className="py-24 px-4 bg-[#FAF9F6]">
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
-            {/* Left side - Image (mobile first, desktop right) - Fixed aspect-ratio prevents CLS */}
-            <div className="relative w-full order-1 lg:order-2" style={{ aspectRatio: "800/600" }}>
-              <Image
-                src="/estate-planning-image.webp"
-                alt="Estate planning professionals"
-                width={800}
-                height={600}
-                className="w-full h-full object-contain rounded-xl"
-                style={{
-                  filter: "brightness(1.05) contrast(1.05)",
-                  mixBlendMode: "multiply",
-                }}
-                loading="lazy"
-                fetchPriority="low"
-              />
-            </div>
-            {/* Right side - Content (mobile second, desktop left) */}
-            <div className="order-2 lg:order-1 text-center">
+            {/* Left side - Content (mobile first, desktop left) */}
+            <div className="order-1 lg:order-1 text-center lg:text-left">
               <h2 className="text-5xl mb-6 text-[#1A1A1A] font-semibold tracking-tight leading-tight">
-                Built with professional standards in mind
+                Trusted by agents from top funeral homes
               </h2>
               <p className="text-xl text-[#1A1A1A]/70 leading-relaxed mb-8">
-                Soradin is designed to support thoughtful, ethical estate planning prioritizing clarity, consent, and family peace of mind.
+                Funeral professionals across British Columbia rely on Soradin to connect with families and grow their practice with confidence.
               </p>
               <button 
                 onClick={navigateToSearchWithLocation}
@@ -798,6 +782,26 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
               >
                 Find care
               </button>
+            </div>
+            {/* Right side - Logo Card Box (mobile second, desktop right) */}
+            <div className="relative w-full order-2 lg:order-2 flex items-center justify-center">
+              <div className="bg-white rounded-2xl shadow-lg border border-[#1A1A1A]/10 p-8 w-full max-w-md">
+                <div className="grid grid-cols-2 gap-6 items-center justify-center">
+                  {[1, 2, 3, 4, 5].map((index) => (
+                    <div key={index} className="flex items-center justify-center">
+                      <Image
+                        src="/Soradin.png"
+                        alt="Soradin logo"
+                        width={120}
+                        height={120}
+                        className="w-24 h-24 object-contain opacity-80"
+                        loading="lazy"
+                        fetchPriority="low"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>
