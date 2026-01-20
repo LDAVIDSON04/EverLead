@@ -783,42 +783,40 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                 Find care
               </button>
             </div>
-            {/* Right side - Logo Card Box (mobile second, desktop right) */}
+            {/* Right side - Logos (mobile second, desktop right) */}
             <div className="relative w-full order-2 lg:order-2 flex items-center justify-center h-full">
-              <div className="bg-white rounded-3xl shadow-xl border border-[#1A1A1A]/5 p-10 w-full max-w-lg h-full min-h-[400px] flex items-center justify-center backdrop-blur-sm bg-white/95">
-                <div className="flex flex-col gap-8 w-full">
-                  {/* Top row - 3 logos */}
-                  <div className="flex items-center justify-center gap-8">
-                    {[1, 2, 3].map((index) => (
-                      <div key={index} className="flex items-center justify-center">
-                        <Image
-                          src="/Soradin.png"
-                          alt="Soradin logo"
-                          width={100}
-                          height={100}
-                          className="w-20 h-20 object-contain opacity-75 hover:opacity-100 transition-opacity"
-                          loading="lazy"
-                          fetchPriority="low"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                  {/* Bottom row - 2 logos */}
-                  <div className="flex items-center justify-center gap-8">
-                    {[4, 5].map((index) => (
-                      <div key={index} className="flex items-center justify-center">
-                        <Image
-                          src="/Soradin.png"
-                          alt="Soradin logo"
-                          width={100}
-                          height={100}
-                          className="w-20 h-20 object-contain opacity-75 hover:opacity-100 transition-opacity"
-                          loading="lazy"
-                          fetchPriority="low"
-                        />
-                      </div>
-                    ))}
-                  </div>
+              <div className="flex flex-col gap-12 w-full items-center justify-center">
+                {/* Top row - 3 logos */}
+                <div className="flex items-center justify-center gap-10">
+                  {[1, 2, 3].map((index) => (
+                    <div key={index} className="flex items-center justify-center">
+                      <Image
+                        src="/Soradin.png"
+                        alt="Soradin logo"
+                        width={150}
+                        height={150}
+                        className="w-32 h-32 object-contain opacity-75 hover:opacity-100 transition-opacity"
+                        loading="lazy"
+                        fetchPriority="low"
+                      />
+                    </div>
+                  ))}
+                </div>
+                {/* Bottom row - 2 logos */}
+                <div className="flex items-center justify-center gap-10">
+                  {[4, 5].map((index) => (
+                    <div key={index} className="flex items-center justify-center">
+                      <Image
+                        src="/Soradin.png"
+                        alt="Soradin logo"
+                        width={150}
+                        height={150}
+                        className="w-32 h-32 object-contain opacity-75 hover:opacity-100 transition-opacity"
+                        loading="lazy"
+                        fetchPriority="low"
+                      />
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
