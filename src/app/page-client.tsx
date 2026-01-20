@@ -574,34 +574,6 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
         </div>
       </div>
 
-      {/* TRUSTED BY SECTION - Title above black bar with rotating logos */}
-      <section className="hidden md:block py-12 px-4 bg-white">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl md:text-4xl text-[#1A1A1A] font-semibold text-center mb-8">
-            Trusted by agents from top funeral homes
-          </h2>
-          <div className="bg-black py-8 overflow-hidden rounded-lg">
-            <div className="scroll-logos">
-              {/* Duplicate logos for seamless infinite loop */}
-              {[...Array(2)].map((_, setIndex) => (
-                <div key={setIndex} className="flex items-center gap-16 flex-shrink-0">
-                  {[...Array(5)].map((_, i) => (
-                    <Image 
-                      key={`${setIndex}-${i}`}
-                      src="/logo - white.png" 
-                      alt="Funeral Home" 
-                      width={120} 
-                      height={60} 
-                      className="h-12 w-auto object-contain flex-shrink-0 opacity-60 hover:opacity-80 transition-opacity" 
-                    />
-              ))}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* TWO BOXES SECTION */}
       <section className="py-24 px-4 bg-white">
         <div className="max-w-6xl mx-auto">
