@@ -2,8 +2,15 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 export default function WhatIsPreNeedFuneralPlanningPage() {
+  const router = useRouter();
+
+  const navigateToSearch = () => {
+    router.push('/search');
+  };
+
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
@@ -48,9 +55,15 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
               <p className="text-gray-700 text-lg leading-relaxed mb-8">
                 Pre-need funeral planning is the process of making decisions about your funeral and end-of-life arrangements in advance, while you are able to think clearly, ask questions, and make choices that reflect your values.
               </p>
-              <p className="text-gray-700 text-lg leading-relaxed">
+              <p className="text-gray-700 text-lg leading-relaxed mb-8">
                 Rather than leaving these decisions to loved ones during an emotionally difficult time, pre-need planning allows you to document your wishes, understand your options, and ensure everything is handled the way you intend.
               </p>
+              <button
+                onClick={navigateToSearch}
+                className="bg-[#0C6F3C] text-white px-8 py-4 rounded-xl hover:bg-[#0C6F3C]/90 transition-all shadow-sm text-lg font-medium"
+              >
+                Find care
+              </button>
             </div>
           </div>
         </div>
