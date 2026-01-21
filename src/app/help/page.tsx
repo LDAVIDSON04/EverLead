@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { User, MapPin, Calendar, FileText, MessageSquare, Info } from 'lucide-react';
+import { User, MapPin, Calendar, FileText, MessageSquare } from 'lucide-react';
 
 export default function HelpPage() {
   const categories = [
