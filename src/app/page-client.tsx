@@ -386,7 +386,8 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
               Book local{" "}
               <span 
                 key={fadeKey}
-                className="inline-block animate-[fadeIn_0.5s_ease-in-out]"
+                className="inline-block transition-opacity duration-500 ease-in-out"
+                style={{ animation: 'fadeIn 0.5s ease-in-out' }}
               >
                 {rotatingTexts[currentTextIndex]}
               </span>
