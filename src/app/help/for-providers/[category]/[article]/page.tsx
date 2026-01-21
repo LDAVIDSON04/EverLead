@@ -639,6 +639,56 @@ Keeping your billing address current ensures invoices and records are accurate. 
         { title: 'How do I view my billing history?', slug: 'how-do-i-view-billing-history' }
       ]
     }
+  },
+  'performance-and-reporting': {
+    'how-do-i-view-performance-metrics': {
+      title: 'How do I view my performance metrics?',
+      content: `Soradin provides a simple overview of your activity through your agent dashboard.
+
+You can view information such as upcoming appointments, completed appointments, and overall booking activity. These metrics are designed to give you a clear sense of how families are engaging with your profile over time.
+
+Performance metrics are meant to support reflection and improvement, not to pressure or rank professionals.`,
+      relatedArticles: [
+        { title: 'What reports are available?', slug: 'what-reports-are-available' },
+        { title: 'How do I view my appointment trends?', slug: 'how-do-i-view-my-appointment-trends' }
+      ]
+    },
+    'what-reports-are-available': {
+      title: 'What reports are available?',
+      content: `Soradin offers basic reports to help you understand your appointment activity.
+
+Available reports may include appointment summaries, booking history, and time based trends. These reports are designed to be easy to read and useful for record keeping.
+
+As Soradin evolves, additional reporting features may be introduced based on professional feedback.`,
+      relatedArticles: [
+        { title: 'How do I view my performance metrics?', slug: 'how-do-i-view-performance-metrics' },
+        { title: 'How do I export my data?', slug: 'how-do-i-export-my-data' }
+      ]
+    },
+    'how-do-i-export-my-data': {
+      title: 'How do I export my data?',
+      content: `You can export your appointment and activity data directly from your dashboard.
+
+Exported data may include appointment dates, times, and statuses. This allows you to keep personal records or integrate information into your own systems if needed.
+
+Data exports are provided in standard formats for ease of use.`,
+      relatedArticles: [
+        { title: 'What reports are available?', slug: 'what-reports-are-available' },
+        { title: 'How do I view my appointment trends?', slug: 'how-do-i-view-my-appointment-trends' }
+      ]
+    },
+    'how-do-i-view-my-appointment-trends': {
+      title: 'How do I view my appointment trends?',
+      content: `Appointment trends can be viewed through your dashboard over selected time periods.
+
+This helps you see patterns such as when families are more likely to book or how your availability is being used. Understanding trends can help you adjust your schedule or availability in a way that suits your workflow.
+
+Trends are presented clearly so you can quickly understand what is happening without needing technical expertise.`,
+      relatedArticles: [
+        { title: 'How do I view my performance metrics?', slug: 'how-do-i-view-performance-metrics' },
+        { title: 'What reports are available?', slug: 'what-reports-are-available' }
+      ]
+    }
   }
 };
 
