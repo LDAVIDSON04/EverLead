@@ -496,15 +496,6 @@ export default function ArticlePage() {
           </div>
         )}
 
-        {/* Feedback Section */}
-        <div className="border-t border-gray-200 pt-8">
-          <h3 className="text-lg font-semibold text-[#1A1A1A] mb-4">Did this answer your question?</h3>
-          <div className="flex items-center gap-4">
-            <button className="text-3xl hover:scale-110 transition-transform" aria-label="No">😞</button>
-            <button className="text-3xl hover:scale-110 transition-transform" aria-label="Somewhat">😐</button>
-            <button className="text-3xl hover:scale-110 transition-transform" aria-label="Yes">😊</button>
-          </div>
-        </div>
       </article>
     </div>
   );
