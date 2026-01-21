@@ -66,19 +66,6 @@ const categoryData: Record<string, {
       { id: '3', title: 'How are reviews verified?', slug: 'how-are-reviews-verified' }
     ]
   },
-  'about-soradin': {
-    title: 'About Soradin',
-    icon: Info,
-    articles: [
-      { id: '1', title: 'What is Soradin?', slug: 'what-is-soradin' },
-      { id: '2', title: 'How does Soradin work?', slug: 'how-does-soradin-work' },
-      { id: '3', title: 'Is Soradin free to use?', slug: 'is-soradin-free-to-use' },
-      { id: '4', title: 'Who can use Soradin?', slug: 'who-can-use-soradin' },
-      { id: '5', title: 'How do I contact Soradin support?', slug: 'how-do-i-contact-support' },
-      { id: '6', title: 'Where is Soradin available?', slug: 'where-is-soradin-available' },
-      { id: '7', title: 'How is Soradin different from other services?', slug: 'how-is-soradin-different' }
-    ]
-  }
 };
 
 export default function CategoryPage() {
