@@ -19,7 +19,7 @@ export default function ProviderHelpPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Header & Hero Section Combined */}
-      <section className="relative bg-gradient-to-br from-[#0C6F3C] to-[#0a5a2e] px-6 overflow-hidden pb-4">
+      <section className="relative bg-gradient-to-br from-[#0C6F3C] to-[#0a5a2e] px-6 overflow-hidden">
         {/* Pattern overlay */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute inset-0" style={{

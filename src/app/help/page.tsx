@@ -17,7 +17,7 @@ export default function HelpPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Header & Hero Section Combined */}
-      <section className="relative bg-gradient-to-br from-[#0C6F3C] to-[#0a5a2e] px-6 overflow-hidden pb-4">
+      <section className="relative bg-gradient-to-br from-[#0C6F3C] to-[#0a5a2e] px-6 overflow-hidden">
         {/* Pattern overlay */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute inset-0" style={{
@@ -35,18 +35,18 @@ export default function HelpPage() {
         </div>
 
         {/* Header */}
-        <header className="relative z-10 py-1">
+        <header className="relative z-10 pt-2 pb-1">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="flex flex-col gap-0.5">
-                <span className="text-lg text-white font-medium">Help Center</span>
-                <Link href="/" className="block">
+            <div className="flex items-center gap-3">
+              <div className="flex flex-col gap-0">
+                <span className="text-lg text-white font-medium leading-tight">Help Center</span>
+                <Link href="/" className="block -mt-1">
                   <Image
                     src="/Soradin.png"
                     alt="Soradin logo"
                     width={360}
                     height={360}
-                    className="h-36 w-auto brightness-0 invert"
+                    className="h-20 w-auto brightness-0 invert"
                   />
                 </Link>
               </div>
@@ -63,8 +63,8 @@ export default function HelpPage() {
         </header>
 
         {/* Hero Content */}
-        <div className="max-w-3xl mx-auto relative z-10 pb-1">
-          <h1 className="text-4xl md:text-5xl font-bold text-white text-center">
+        <div className="max-w-3xl mx-auto relative z-10 pb-2">
+          <h1 className="text-3xl md:text-4xl font-bold text-white text-center">
             How can we help?
           </h1>
         </div>
