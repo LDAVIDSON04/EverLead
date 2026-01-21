@@ -99,12 +99,8 @@ const categoryData: Record<string, {
       { id: '2', title: 'How do I update my payment method?', slug: 'how-do-i-update-payment-method' },
       { id: '3', title: 'How do I view my billing history?', slug: 'how-do-i-view-billing-history' },
       { id: '4', title: 'How do I download invoices?', slug: 'how-do-i-download-invoices' },
-      { id: '5', title: 'What are the subscription plans?', slug: 'what-are-subscription-plans' },
-      { id: '6', title: 'How do I change my subscription?', slug: 'how-do-i-change-subscription' },
-      { id: '7', title: 'How do I cancel my subscription?', slug: 'how-do-i-cancel-subscription' },
-      { id: '8', title: 'How do I update my billing address?', slug: 'how-do-i-update-billing-address' },
-      { id: '9', title: 'How do I manage my account credits?', slug: 'how-do-i-manage-credits' },
-      { id: '10', title: 'What payment methods are accepted?', slug: 'what-payment-methods-accepted' }
+      { id: '5', title: 'What payment methods are accepted?', slug: 'what-payment-methods-accepted' },
+      { id: '6', title: 'How do I update my billing address?', slug: 'how-do-i-update-billing-address' }
     ]
   },
   'performance-and-reporting': {

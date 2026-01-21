@@ -10,7 +10,7 @@ export default function ProviderHelpPage() {
     { id: 2, title: 'Managing Appointments', icon: CalendarCheck, articles: 11 },
     { id: 3, title: 'Agent Solutions', icon: Shield, articles: 15 },
     { id: 4, title: 'Settings', icon: Settings, articles: 14 },
-    { id: 5, title: 'Account and Billing', icon: DollarSign, articles: 10 },
+    { id: 5, title: 'Account and Billing', icon: DollarSign, articles: 6 },
     { id: 6, title: 'Performance and Reporting', icon: BarChart3, articles: 6 },
     { id: 7, title: 'About Soradin', icon: Info, articles: 6 }
   ];

@@ -569,6 +569,76 @@ Soradin support is available if you have questions before proceeding.`,
         { title: 'How do I manage my account security?', slug: 'how-do-i-manage-account-security' }
       ]
     }
+  },
+  'account-and-billing': {
+    'how-does-billing-work': {
+      title: 'How does billing work on Soradin?',
+      content: `Soradin uses a simple, performance based billing approach.
+
+Creating an account and being listed on Soradin is free. Agents are only billed when an appointment is completed or when optional paid features are enabled.
+
+Billing is designed to be transparent so you always understand when and why a charge occurs. There are no long term contracts or upfront listing fees.`,
+      relatedArticles: [
+        { title: 'How do I update my payment method?', slug: 'how-do-i-update-payment-method' },
+        { title: 'How do I view my billing history?', slug: 'how-do-i-view-billing-history' }
+      ]
+    },
+    'how-do-i-update-payment-method': {
+      title: 'How do I update my payment method?',
+      content: `You can update your payment method at any time through your account settings.
+
+Simply navigate to the billing section of your dashboard and enter new payment details. Updated payment information will be used for future charges.
+
+Soradin does not store full payment information directly and uses secure payment processing.`,
+      relatedArticles: [
+        { title: 'How does billing work on Soradin?', slug: 'how-does-billing-work' },
+        { title: 'What payment methods are accepted?', slug: 'what-payment-methods-accepted' }
+      ]
+    },
+    'how-do-i-view-billing-history': {
+      title: 'How do I view my billing history?',
+      content: `Your billing history is available in the billing section of your dashboard.
+
+This area shows past charges, dates, and descriptions so you can easily track activity over time. Billing history is provided for your records and transparency.`,
+      relatedArticles: [
+        { title: 'How does billing work on Soradin?', slug: 'how-does-billing-work' },
+        { title: 'How do I download invoices?', slug: 'how-do-i-download-invoices' }
+      ]
+    },
+    'how-do-i-download-invoices': {
+      title: 'How do I download invoices?',
+      content: `Invoices can be downloaded directly from your billing history.
+
+Each invoice includes the date, amount, and description of the charge. This makes it easy to keep records for accounting or internal reporting.
+
+Invoices are available for all completed transactions.`,
+      relatedArticles: [
+        { title: 'How do I view my billing history?', slug: 'how-do-i-view-billing-history' },
+        { title: 'How do I update my billing address?', slug: 'how-do-i-update-billing-address' }
+      ]
+    },
+    'what-payment-methods-accepted': {
+      title: 'What payment methods are accepted?',
+      content: `Soradin accepts major credit and debit cards.
+
+All payments are processed securely through a trusted payment provider. Accepted payment methods may expand over time as the platform grows.
+
+If you experience any issues with payment, Soradin support is available to help.`,
+      relatedArticles: [
+        { title: 'How do I update my payment method?', slug: 'how-do-i-update-payment-method' },
+        { title: 'How does billing work on Soradin?', slug: 'how-does-billing-work' }
+      ]
+    },
+    'how-do-i-update-billing-address': {
+      title: 'How do I update my billing address?',
+      content: `You can update your billing address through the billing section of your account settings.
+
+Keeping your billing address current ensures invoices and records are accurate. Changes take effect immediately once saved.`,
+      relatedArticles: [
+        { title: 'How do I download invoices?', slug: 'how-do-i-download-invoices' },
+        { title: 'How do I view my billing history?', slug: 'how-do-i-view-billing-history' }
+      ]
+    }
   }
 };
 
