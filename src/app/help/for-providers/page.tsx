@@ -1,6 +1,7 @@
 "use client";
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { Search, User, MapPin, Calendar, FileText, MessageSquare, Info, Globe, ChevronDown, UserCircle, CalendarCheck, Shield, Star, Building2, Settings, Play, TrendingUp, DollarSign, BarChart3 } from 'lucide-react';
 
 export default function ProviderHelpPage() {
@@ -38,8 +39,19 @@ export default function ProviderHelpPage() {
         {/* Header */}
         <header className="relative z-10 py-4">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
-            <div className="flex items-center gap-8">
-              <span className="text-lg text-white">Help Center</span>
+            <div className="flex items-center gap-4">
+              <div className="flex flex-col gap-2">
+                <span className="text-lg text-white">Help Center</span>
+                <Link href="/" className="block">
+                  <Image
+                    src="/Soradin.png"
+                    alt="Soradin logo"
+                    width={120}
+                    height={120}
+                    className="h-12 w-auto brightness-0 invert"
+                  />
+                </Link>
+              </div>
             </div>
             <div className="flex items-center gap-6">
               <Link href="/learn-more-about-starting" className="text-sm text-white hover:text-gray-200 transition-colors">
