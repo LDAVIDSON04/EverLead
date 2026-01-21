@@ -19,7 +19,7 @@ export default function ProviderHelpPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Header & Hero Section Combined */}
-      <section className="relative bg-gradient-to-br from-[#0C6F3C] to-[#0a5a2e] px-6 overflow-hidden">
+      <section className="relative bg-gradient-to-br from-[#0C6F3C] to-[#0a5a2e] px-6 overflow-hidden pb-4">
         {/* Pattern overlay */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute inset-0" style={{
@@ -37,10 +37,10 @@ export default function ProviderHelpPage() {
         </div>
 
         {/* Header */}
-        <header className="relative z-10 py-2">
+        <header className="relative z-10 py-1">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="flex flex-col gap-1">
+              <div className="flex flex-col gap-0.5">
                 <span className="text-lg text-white">Help Center</span>
                 <Link href="/" className="block">
                   <Image
@@ -65,7 +65,7 @@ export default function ProviderHelpPage() {
         </header>
 
         {/* Hero Content */}
-        <div className="max-w-3xl mx-auto relative z-10 pb-2">
+        <div className="max-w-3xl mx-auto relative z-10 pb-1">
           <h1 className="text-4xl font-bold text-white text-center">
             Agents, how can we help?
           </h1>
