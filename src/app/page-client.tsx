@@ -527,27 +527,27 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
             </form>
 
             {/* Mobile Only: How it Works Section */}
-            <div className="md:hidden mt-8 mb-8">
+            <div className="md:hidden mt-6 mb-6">
               {/* Top row: Two cards side by side */}
-              <div className="grid grid-cols-2 gap-4 mb-4">
+              <div className="grid grid-cols-2 gap-3 mb-3">
                 {/* Step 1 - Find Local Experts */}
                 <div className="flex flex-col items-center text-center">
-                  <div className="w-16 h-16 rounded-full bg-[#0C6F3C]/10 flex items-center justify-center mb-4">
-                    <Search className="w-8 h-8 text-[#0C6F3C]" />
+                  <div className="w-12 h-12 rounded-full bg-[#0C6F3C]/10 flex items-center justify-center mb-2">
+                    <Search className="w-6 h-6 text-[#0C6F3C]" />
                   </div>
-                  <h3 className="text-lg font-semibold text-[#1A1A1A] mb-2">Find Local Experts</h3>
-                  <p className="text-sm text-[#1A1A1A]/70 leading-relaxed">
+                  <h3 className="text-base font-semibold text-[#1A1A1A] mb-1">Find Local Experts</h3>
+                  <p className="text-xs text-[#1A1A1A]/70 leading-tight">
                     Browse verified professionals in your community.
                   </p>
                 </div>
 
                 {/* Step 2 - Compare at Your Pace */}
                 <div className="flex flex-col items-center text-center">
-                  <div className="w-16 h-16 rounded-full bg-[#0C6F3C]/10 flex items-center justify-center mb-4">
-                    <Calendar className="w-8 h-8 text-[#0C6F3C]" />
+                  <div className="w-12 h-12 rounded-full bg-[#0C6F3C]/10 flex items-center justify-center mb-2">
+                    <Calendar className="w-6 h-6 text-[#0C6F3C]" />
                   </div>
-                  <h3 className="text-lg font-semibold text-[#1A1A1A] mb-2">Compare at Your Pace</h3>
-                  <p className="text-sm text-[#1A1A1A]/70 leading-relaxed">
+                  <h3 className="text-base font-semibold text-[#1A1A1A] mb-1">Compare at Your Pace</h3>
+                  <p className="text-xs text-[#1A1A1A]/70 leading-tight">
                     Review profiles, specialties, and real availability.
                   </p>
                 </div>
@@ -556,11 +556,11 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
               {/* Bottom row: Book with Confidence centered */}
               <div className="flex justify-center">
                 <div className="flex flex-col items-center text-center max-w-[calc(50%-0.5rem)]">
-                  <div className="w-16 h-16 rounded-full bg-[#0C6F3C]/10 flex items-center justify-center mb-4">
-                    <Check className="w-8 h-8 text-[#0C6F3C]" />
+                  <div className="w-12 h-12 rounded-full bg-[#0C6F3C]/10 flex items-center justify-center mb-2">
+                    <Check className="w-6 h-6 text-[#0C6F3C]" />
                   </div>
-                  <h3 className="text-lg font-semibold text-[#1A1A1A] mb-2">Book with Confidence</h3>
-                  <p className="text-sm text-[#1A1A1A]/70 leading-relaxed">
+                  <h3 className="text-base font-semibold text-[#1A1A1A] mb-1">Book with Confidence</h3>
+                  <p className="text-xs text-[#1A1A1A]/70 leading-tight">
                     Schedule a free appointment on your terms.
                   </p>
                 </div>
