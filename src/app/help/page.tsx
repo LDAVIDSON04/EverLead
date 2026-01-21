@@ -35,12 +35,12 @@ export default function HelpPage() {
         </div>
 
         {/* Header */}
-        <header className="relative z-10 pt-2 pb-1">
+        <header className="relative z-10 pt-3 pb-2">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="flex flex-col gap-0">
+              <div className="flex flex-col gap-1">
                 <span className="text-lg text-white font-medium leading-tight">Help Center</span>
-                <Link href="/" className="block -mt-1">
+                <Link href="/" className="block">
                   <Image
                     src="/Soradin.png"
                     alt="Soradin logo"
@@ -63,7 +63,7 @@ export default function HelpPage() {
         </header>
 
         {/* Hero Content */}
-        <div className="max-w-3xl mx-auto relative z-10 pb-2">
+        <div className="max-w-3xl mx-auto relative z-10 pb-4">
           <h1 className="text-3xl md:text-4xl font-bold text-white text-center">
             How can we help?
           </h1>
