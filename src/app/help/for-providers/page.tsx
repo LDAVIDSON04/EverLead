@@ -37,18 +37,18 @@ export default function ProviderHelpPage() {
         </div>
 
         {/* Header */}
-        <header className="relative z-10 py-1">
+        <header className="relative z-10 pt-2 pb-1">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="flex flex-col gap-0.5">
-                <span className="text-lg text-white">Help Center</span>
-                <Link href="/" className="block">
+            <div className="flex items-center gap-3">
+              <div className="flex flex-col gap-0">
+                <span className="text-lg text-white leading-tight">Help Center</span>
+                <Link href="/" className="block -mt-1">
                   <Image
                     src="/Soradin.png"
                     alt="Soradin logo"
                     width={360}
                     height={360}
-                    className="h-36 w-auto brightness-0 invert"
+                    className="h-20 w-auto brightness-0 invert"
                   />
                 </Link>
               </div>
@@ -65,8 +65,8 @@ export default function ProviderHelpPage() {
         </header>
 
         {/* Hero Content */}
-        <div className="max-w-3xl mx-auto relative z-10 pb-1">
-          <h1 className="text-4xl font-bold text-white text-center">
+        <div className="max-w-3xl mx-auto relative z-10 pb-2">
+          <h1 className="text-3xl md:text-4xl font-bold text-white text-center">
             Agents, how can we help?
           </h1>
         </div>
