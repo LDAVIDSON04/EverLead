@@ -689,40 +689,50 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
       </section>
 
       {/* Mobile Only: Pre-Need Planning Box */}
-      <section className="md:hidden py-12 px-4 bg-[#FAF9F6]">
+      <section className="md:hidden py-24 px-4 bg-[#FAF9F6]">
         <div className="max-w-6xl mx-auto">
-          <div className="bg-[#FAF9F6] rounded-3xl p-6 border border-[#1A1A1A]/5 relative overflow-hidden group hover:shadow-xl hover:shadow-black/5 transition-all flex flex-col">
-            {/* Image inside the card, showing full torso */}
-            <div className="relative w-full flex items-center justify-center -mx-6 mb-2 overflow-hidden" style={{ height: '150px', minHeight: '150px', marginTop: '-72px', paddingTop: '0' }}>
+          <div className="grid grid-cols-1 gap-12 items-center">
+            {/* Image */}
+            <div className="w-full h-full">
               <Image
-                src="/What is Pre need planning image.png"
-                alt="Person asking about pre-need planning"
-                width={400}
-                height={400}
-                className="w-full h-full object-cover"
-                style={{
-                  filter: "brightness(1.1) contrast(1.05)",
-                  mixBlendMode: "multiply",
-                  objectPosition: 'top center',
-                }}
+                src="/f75c771a2df6874e6f701c79ddc5f202a2bcc4f5.png"
+                alt="Pre arrangements"
+                width={600}
+                height={600}
+                className="w-full h-full object-cover rounded-lg"
                 loading="lazy"
                 fetchPriority="low"
               />
             </div>
 
-            <div className="relative z-10 flex flex-col items-center text-center -mt-1">
-              <h3 className="text-xl font-semibold text-[#1A1A1A] mb-1">
+            {/* Content */}
+            <div>
+              <h2 className="text-4xl mb-6 text-[#1A1A1A] font-semibold tracking-tight">
                 What are pre arrangements?
-              </h3>
-              <p className="text-sm text-[#1A1A1A]/70 mb-3">
-                Learn more about pre needs and how they help you plan ahead
-              </p>
+              </h2>
+              
+              {/* Bullet points */}
+              <ul className="space-y-4 mb-8">
+                <li className="flex items-start gap-3">
+                  <div className="w-2 h-2 rounded-full bg-[#0C6F3C] mt-2 flex-shrink-0"></div>
+                  <p className="text-lg text-[#1A1A1A]/70">Learn what planning ahead actually means and what it does not</p>
+                </li>
+                <li className="flex items-start gap-3">
+                  <div className="w-2 h-2 rounded-full bg-[#0C6F3C] mt-2 flex-shrink-0"></div>
+                  <p className="text-lg text-[#1A1A1A]/70">See how pre arrangements can reduce uncertainty and cost</p>
+                </li>
+                <li className="flex items-start gap-3">
+                  <div className="w-2 h-2 rounded-full bg-[#0C6F3C] mt-2 flex-shrink-0"></div>
+                  <p className="text-lg text-[#1A1A1A]/70">Explore your options with guidance from trusted professionals</p>
+                </li>
+              </ul>
+
+              {/* Learn more button */}
               <Link 
                 href="/what-is-pre-need-funeral-planning"
-                className="text-[#0C6F3C] hover:text-[#0C6F3C]/80 transition-colors text-sm font-medium flex items-center justify-center gap-1"
+                className="inline-block bg-[#0C6F3C] text-white px-8 py-3 rounded-xl hover:bg-[#0C6F3C]/90 transition-all shadow-sm text-base font-medium"
               >
                 Learn more
-                <ChevronRight className="w-4 h-4" />
               </Link>
             </div>
           </div>
