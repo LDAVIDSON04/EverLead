@@ -41,21 +41,10 @@ const categoryData: Record<string, {
       { id: '1', title: 'How do I book an appointment?', slug: 'how-do-i-book-an-appointment' },
       { id: '2', title: 'How do I cancel or reschedule an appointment?', slug: 'how-do-i-cancel-or-reschedule' },
       { id: '3', title: 'What happens after I book an appointment?', slug: 'what-happens-after-booking' },
-      { id: '4', title: 'How do I view my upcoming appointments?', slug: 'how-do-i-view-upcoming-appointments' },
-      { id: '5', title: 'Do I need to confirm my appointment?', slug: 'do-i-need-to-confirm-appointment' },
-      { id: '6', title: 'What should I bring to my appointment?', slug: 'what-should-i-bring' },
-      { id: '7', title: 'How do I prepare for my appointment?', slug: 'how-do-i-prepare-for-appointment' },
       { id: '8', title: 'Can I book appointments for family members?', slug: 'can-i-book-for-family-members' },
-      { id: '9', title: 'What if I need to change my appointment time?', slug: 'what-if-i-need-to-change-time' },
-      { id: '10', title: 'How far in advance can I book?', slug: 'how-far-in-advance-can-i-book' },
       { id: '11', title: 'Are appointments free?', slug: 'are-appointments-free' },
-      { id: '12', title: 'What types of appointments are available?', slug: 'what-types-of-appointments' },
       { id: '13', title: 'How do I receive appointment reminders?', slug: 'how-do-i-receive-reminders' },
-      { id: '14', title: 'What if my provider cancels?', slug: 'what-if-provider-cancels' },
-      { id: '15', title: 'Can I book multiple appointments?', slug: 'can-i-book-multiple-appointments' },
-      { id: '16', title: 'How do I add an appointment to my calendar?', slug: 'how-do-i-add-to-calendar' },
-      { id: '17', title: 'What is the cancellation policy?', slug: 'what-is-cancellation-policy' },
-      { id: '18', title: 'How do I provide feedback after my appointment?', slug: 'how-do-i-provide-feedback' }
+      { id: '17', title: 'What is the cancellation policy?', slug: 'what-is-cancellation-policy' }
     ]
   },
   'privacy': {

@@ -195,18 +195,85 @@ Comparing providers is about finding someone you feel comfortable speaking with,
   'appointments': {
     'how-do-i-book-an-appointment': {
       title: 'How do I book an appointment?',
-      content: `Booking an appointment on Soradin is simple:
+      content: `Booking an appointment on Soradin is simple and free for families.
 
-1. Search for a funeral planning professional in your area
-2. Browse their profile, reviews, and availability
-3. Select a date and time that works for you
-4. Fill in your information
-5. Confirm your appointment
+Start by searching for a funeral planning professional based on your location and needs. Once you find a provider you feel comfortable with, you can view their availability and choose a time that works best for you.
 
-You'll receive a confirmation email and can view your appointment in your account.`,
+After selecting a time, you will be asked to enter a few basic details to confirm your booking. No phone calls or back and forth emails are required.
+
+Once booked, your appointment is reserved and your provider is notified automatically.`,
       relatedArticles: [
         { title: 'How do I cancel or reschedule an appointment?', slug: 'how-do-i-cancel-or-reschedule' },
+        { title: 'What happens after I book an appointment?', slug: 'what-happens-after-booking' },
+        { title: 'Are appointments free?', slug: 'are-appointments-free' }
+      ]
+    },
+    'how-do-i-cancel-or-reschedule': {
+      title: 'How do I cancel or reschedule an appointment?',
+      content: `If you need to cancel or reschedule, you can do so directly through your Soradin account.
+
+Simply log in, navigate to your appointment, and choose the option to cancel or reschedule. If rescheduling is available, you will be shown alternative times based on your provider's availability.
+
+Soradin encourages early notice when possible so providers can offer the time to another family.`,
+      relatedArticles: [
+        { title: 'How do I book an appointment?', slug: 'how-do-i-book-an-appointment' },
+        { title: 'What is the cancellation policy?', slug: 'what-is-cancellation-policy' }
+      ]
+    },
+    'what-happens-after-booking': {
+      title: 'What happens after I book an appointment?',
+      content: `After booking, you will receive a confirmation email with the details of your appointment.
+
+Your provider is notified at the same time and will prepare for your conversation. If your appointment is virtual, instructions on how to join will be included. If it is in person, the location will be clearly listed.
+
+You can review appointment details at any time by logging into your account.`,
+      relatedArticles: [
+        { title: 'How do I book an appointment?', slug: 'how-do-i-book-an-appointment' },
+        { title: 'How do I receive appointment reminders?', slug: 'how-do-i-receive-reminders' }
+      ]
+    },
+    'can-i-book-for-family-members': {
+      title: 'Can I book appointments for family members?',
+      content: `Yes. You can book an appointment on behalf of a family member.
+
+When booking, simply enter the name and contact information of the person who will be attending. You may also attend the appointment together if that feels helpful.
+
+Many families use Soradin to support parents, spouses, or loved ones who may prefer assistance with scheduling.`,
+      relatedArticles: [
+        { title: 'How do I book an appointment?', slug: 'how-do-i-book-an-appointment' }
+      ]
+    },
+    'are-appointments-free': {
+      title: 'Are appointments free?',
+      content: `Yes. Booking an appointment through Soradin is free for families.
+
+There is no cost to browse providers, read profiles, or schedule an initial conversation. Any future services or arrangements are discussed directly between you and the provider during your appointment.
+
+Soradin's goal is to remove barriers so families can access support without pressure.`,
+      relatedArticles: [
+        { title: 'How do I book an appointment?', slug: 'how-do-i-book-an-appointment' }
+      ]
+    },
+    'how-do-i-receive-reminders': {
+      title: 'How do I receive appointment reminders?',
+      content: `Soradin sends automatic reminders to help you stay informed.
+
+You may receive email reminders before your appointment, and in some cases calendar notifications if you choose to add the appointment to your personal calendar.
+
+These reminders are designed to reduce stress and ensure you never miss a scheduled conversation.`,
+      relatedArticles: [
         { title: 'What happens after I book an appointment?', slug: 'what-happens-after-booking' }
+      ]
+    },
+    'what-is-cancellation-policy': {
+      title: 'What is the cancellation policy?',
+      content: `Soradin understands that plans can change.
+
+Most providers ask for reasonable notice if you need to cancel or reschedule. Specific cancellation expectations may vary and are often listed on the provider's profile.
+
+If you are unsure, you can always reach out to the provider directly or contact Soradin support for guidance.`,
+      relatedArticles: [
+        { title: 'How do I cancel or reschedule an appointment?', slug: 'how-do-i-cancel-or-reschedule' }
       ]
     }
   }
