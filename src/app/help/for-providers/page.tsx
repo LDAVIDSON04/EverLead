@@ -7,7 +7,7 @@ import { Search, User, MapPin, Calendar, FileText, MessageSquare, Info, Globe, C
 export default function ProviderHelpPage() {
   const categories = [
     { id: 1, title: 'Getting Started', icon: Play, articles: 7 },
-    { id: 2, title: 'Managing Appointments', icon: CalendarCheck, articles: 17 },
+    { id: 2, title: 'Managing Appointments', icon: CalendarCheck, articles: 11 },
     { id: 3, title: 'Agent Solutions', icon: Shield, articles: 40 },
     { id: 4, title: 'Settings', icon: Settings, articles: 16 },
     { id: 5, title: 'Patient Reviews', icon: MessageSquare, articles: 4 },

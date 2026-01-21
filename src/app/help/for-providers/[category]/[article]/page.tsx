@@ -98,20 +98,137 @@ Once setup is complete, you can begin receiving bookings and managing appointmen
     }
   },
   'managing-appointments': {
-    'how-do-i-view-appointments': {
+    'how-do-i-view-my-appointments': {
       title: 'How do I view my appointments?',
-      content: `To view your appointments:
+      content: `You can view all upcoming appointments by logging into your Soradin agent dashboard.
 
-1. Log in to your agent dashboard
-2. Navigate to "Appointments" or "My Appointments"
-3. You'll see all upcoming, past, and canceled appointments
-4. Filter by date range, status, or patient name
-5. Click on any appointment to view full details
+Your appointments are displayed in a clear schedule view so you can quickly see dates, times, and appointment types. Clicking on an appointment will show additional details such as the family's name and meeting format.
 
-You can also view appointments in calendar view for a visual representation of your schedule.`,
+This view updates automatically as appointments are booked, changed, or cancelled.`,
       relatedArticles: [
-        { title: 'How do I manage my calendar?', slug: 'how-do-i-manage-calendar' },
-        { title: 'How do I confirm an appointment?', slug: 'how-do-i-confirm-appointment' }
+        { title: 'How do I manage my calendar?', slug: 'how-do-i-manage-my-calendar' },
+        { title: 'How do I view appointment history?', slug: 'how-do-i-view-appointment-history' }
+      ]
+    },
+    'how-do-i-manage-my-calendar': {
+      title: 'How do I manage my calendar?',
+      content: `Soradin provides a built in calendar that reflects your availability and scheduled appointments.
+
+You can manage your calendar by adjusting your availability, blocking time when needed, and syncing with external calendars. The calendar is designed to reduce double bookings and keep everything in one place.
+
+Changes you make are reflected immediately for families viewing your availability.`,
+      relatedArticles: [
+        { title: 'How do I view my appointments?', slug: 'how-do-i-view-my-appointments' },
+        { title: 'How do I sync with external calendars?', slug: 'how-do-i-sync-with-external-calendars' },
+        { title: 'Can I set recurring availability?', slug: 'can-i-set-recurring-availability' }
+      ]
+    },
+    'how-do-i-sync-with-external-calendars': {
+      title: 'How do I sync with external calendars?',
+      content: `Soradin allows you to connect your existing calendar, such as Google or Outlook, to keep your schedule accurate.
+
+Once connected, Soradin will automatically sync your availability and block times that are already booked elsewhere. This helps prevent conflicts and ensures families only see times that truly work for you.
+
+You can disconnect or reconnect calendars at any time from your dashboard.`,
+      relatedArticles: [
+        { title: 'How do I manage my calendar?', slug: 'how-do-i-manage-my-calendar' },
+        { title: 'What notifications will I receive?', slug: 'what-notifications-will-i-receive' }
+      ]
+    },
+    'what-notifications-will-i-receive': {
+      title: 'What notifications will I receive?',
+      content: `Soradin sends notifications to keep you informed and prepared.
+
+You will receive alerts when a new appointment is booked, when an appointment is updated, and when a cancellation occurs. Reminder notifications are also sent before scheduled appointments.
+
+Notification preferences can be adjusted within your account settings.`,
+      relatedArticles: [
+        { title: 'How do I manage appointment reminders?', slug: 'how-do-i-manage-appointment-reminders' },
+        { title: 'What happens when a patient cancels?', slug: 'what-happens-when-patient-cancels' }
+      ]
+    },
+    'can-i-set-recurring-availability': {
+      title: 'Can I set recurring availability?',
+      content: `Yes. Soradin allows you to set recurring availability for regular working hours.
+
+You can define days and times that repeat weekly, which helps keep your schedule consistent without needing frequent updates. You can still make one time changes whenever needed.
+
+Recurring availability saves time and helps families see a reliable schedule.`,
+      relatedArticles: [
+        { title: 'How do I manage my calendar?', slug: 'how-do-i-manage-my-calendar' },
+        { title: 'How do I sync with external calendars?', slug: 'how-do-i-sync-with-external-calendars' }
+      ]
+    },
+    'how-do-i-manage-multiple-locations': {
+      title: 'How do I manage multiple locations?',
+      content: `If you serve families in more than one location, Soradin allows you to list multiple service areas.
+
+You can indicate where in person appointments are available and whether virtual appointments are offered across regions. This helps families understand how and where meetings can take place.
+
+Location details can be updated as your practice evolves.`,
+      relatedArticles: [
+        { title: 'How do I manage my calendar?', slug: 'how-do-i-manage-my-calendar' },
+        { title: 'What information do I see about each appointment?', slug: 'what-information-about-each-appointment' }
+      ]
+    },
+    'what-happens-when-patient-cancels': {
+      title: 'What happens when a patient cancels?',
+      content: `When a family cancels an appointment, you will be notified automatically.
+
+The cancelled time slot becomes available again, allowing other families to book if you choose. Cancellation details can be viewed directly in your appointment history.
+
+Soradin encourages families to provide notice when possible to respect your time.`,
+      relatedArticles: [
+        { title: 'What notifications will I receive?', slug: 'what-notifications-will-i-receive' },
+        { title: 'How do I view appointment history?', slug: 'how-do-i-view-appointment-history' }
+      ]
+    },
+    'how-do-i-view-appointment-history': {
+      title: 'How do I view appointment history?',
+      content: `Your appointment history is available in your agent dashboard.
+
+This section shows past appointments along with relevant details such as dates, appointment type, and status. Reviewing appointment history can help with follow up, record keeping, and understanding booking patterns.
+
+History is stored securely and accessible only to you.`,
+      relatedArticles: [
+        { title: 'How do I view my appointments?', slug: 'how-do-i-view-my-appointments' },
+        { title: 'How do I export my appointment data?', slug: 'how-do-i-export-my-appointment-data' }
+      ]
+    },
+    'how-do-i-manage-appointment-reminders': {
+      title: 'How do I manage appointment reminders?',
+      content: `Soradin automatically handles appointment reminders for both you and the family.
+
+Reminders are sent before each scheduled appointment to reduce no shows and ensure everyone is prepared. You do not need to manually send reminders unless you choose to follow up personally.
+
+Reminder timing may be adjusted in your notification settings.`,
+      relatedArticles: [
+        { title: 'What notifications will I receive?', slug: 'what-notifications-will-i-receive' },
+        { title: 'How do I view my appointments?', slug: 'how-do-i-view-my-appointments' }
+      ]
+    },
+    'what-information-about-each-appointment': {
+      title: 'What information do I see about each appointment?',
+      content: `Each appointment includes essential details to help you prepare.
+
+This may include the family's name, contact information, appointment format, scheduled time, and any notes provided during booking. Only information relevant to the appointment is displayed.
+
+Soradin keeps appointment information clear and organized so you can focus on the conversation.`,
+      relatedArticles: [
+        { title: 'How do I view my appointments?', slug: 'how-do-i-view-my-appointments' },
+        { title: 'How do I manage multiple locations?', slug: 'how-do-i-manage-multiple-locations' }
+      ]
+    },
+    'how-do-i-export-my-appointment-data': {
+      title: 'How do I export my appointment data?',
+      content: `Soradin allows you to export appointment data for your records.
+
+From your dashboard, you can download appointment information in a file format suitable for reporting or internal tracking. Exported data may include dates, appointment types, and status.
+
+This feature supports record keeping while maintaining privacy standards.`,
+      relatedArticles: [
+        { title: 'How do I view appointment history?', slug: 'how-do-i-view-appointment-history' },
+        { title: 'How do I view my appointments?', slug: 'how-do-i-view-my-appointments' }
       ]
     }
   }
