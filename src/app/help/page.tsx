@@ -75,10 +75,11 @@ export default function HelpPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {categories.map((category) => {
             const Icon = category.icon;
+            const categorySlug = category.title.toLowerCase().replace(/\s+/g, '-').replace('&', 'and');
             return (
               <Link
                 key={category.id}
-                href="#"
+                href={`/help/${categorySlug}`}
                 className="group bg-white border border-gray-200 rounded-lg p-8 hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
               >
                 <div className="flex flex-col items-center text-center">
