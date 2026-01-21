@@ -14,61 +14,86 @@ const articleContent: Record<string, Record<string, {
   'getting-started': {
     'how-do-i-create-an-agent-account': {
       title: 'How do I create an agent account?',
-      content: `Creating an agent account on Soradin is simple and straightforward.
+      content: `To create an agent account on Soradin, start by visiting the "List your specialty" or "For Specialists" section of the website.
 
-1. Visit Soradin.com and click "List Your Specialty With Soradin" at the top
-2. Fill out the registration form with your practice information
-3. Verify your email address
-4. Complete your profile setup
-5. Upload your credentials and certifications
-6. Set up your availability
+You will be guided through a short onboarding process where you provide basic information about yourself, your role, and the services you offer. Once submitted, your account will be created and you will be able to begin setting up your profile and availability.
 
-Once your account is approved, you'll be able to start receiving appointment requests from families in your area.`,
+Soradin is designed to make onboarding simple, even if you are not familiar with online booking platforms.`,
       relatedArticles: [
-        { title: 'How do I complete my profile?', slug: 'how-do-i-complete-my-profile' },
-        { title: 'How do I get verified on Soradin?', slug: 'how-do-i-get-verified' },
-        { title: 'What information do I need to provide?', slug: 'what-information-do-i-need' }
+        { title: 'What information do I need to provide?', slug: 'what-information-do-i-need' },
+        { title: 'What are the account setup requirements?', slug: 'what-are-setup-requirements' }
       ]
     },
-    'how-do-i-complete-my-profile': {
-      title: 'How do I complete my profile?',
-      content: `A complete profile helps families learn more about you and your services. Here's how to complete it:
+    'how-do-i-set-up-availability': {
+      title: 'How do I set up my availability?',
+      content: `Availability can be set directly from your agent dashboard after signing in.
 
-1. Go to your account settings
-2. Navigate to "Profile" or "My Profile"
-3. Fill in all required fields:
-   - Professional bio
-   - Years of experience
-   - Specialties and services
-   - Education and certifications
-   - Office locations
-   - Practice information
-4. Upload a professional photo
-5. Add your practice logo if applicable
-6. Save your changes
+You can choose the days and times you are open for appointments and adjust them at any time. Soradin syncs with your existing calendar to prevent double bookings and ensure families only see times that truly work for you.
 
-A complete profile increases your visibility and helps families make informed decisions.`,
+You can offer in person appointments, virtual appointments, or both depending on your preferences.`,
       relatedArticles: [
         { title: 'How do I create an agent account?', slug: 'how-do-i-create-an-agent-account' },
         { title: 'How do I customize my profile?', slug: 'how-do-i-customize-profile' }
       ]
     },
-    'how-do-i-set-up-availability': {
-      title: 'How do I set up my availability?',
-      content: `Setting up your availability is essential for receiving appointment requests:
+    'what-information-do-i-need': {
+      title: 'What information do I need to provide?',
+      content: `To get started on Soradin, you will be asked to provide essential professional information so families can book with confidence.
 
-1. Go to your dashboard
-2. Click on "Schedule" or "Availability"
-3. Select your default working hours
-4. Set specific time slots you're available
-5. Block out times when you're unavailable
-6. Set recurring availability patterns
-7. Save your schedule
+This typically includes your name, role, area of expertise, service location, and professional background. You may also be asked to upload credentials or licensing information depending on your specialty.
 
-You can update your availability at any time, and families will see your real-time availability when booking appointments.`,
+Soradin only collects information necessary to support booking and trust between families and professionals.`,
       relatedArticles: [
-        { title: 'How do I manage my calendar?', slug: 'how-do-i-manage-calendar' },
-        { title: 'Can I set recurring availability?', slug: 'can-i-set-recurring-availability' }
+        { title: 'How do I create an agent account?', slug: 'how-do-i-create-an-agent-account' },
+        { title: 'How do I upload my credentials?', slug: 'how-do-i-upload-credentials' }
+      ]
+    },
+    'how-do-i-customize-profile': {
+      title: 'How do I customize my profile?',
+      content: `Your profile is designed to reflect how you work and what makes your services unique.
+
+You can customize your profile by adding a professional photo, a short introduction, your specialties, and details about how you support families. This helps families understand your approach before booking an appointment.
+
+Profiles can be updated at any time as your role, availability, or services evolve.`,
+      relatedArticles: [
+        { title: 'How do I set up my availability?', slug: 'how-do-i-set-up-availability' },
+        { title: 'How do I add my practice information?', slug: 'how-do-i-add-practice-info' }
+      ]
+    },
+    'how-do-i-add-practice-info': {
+      title: 'How do I add my practice information?',
+      content: `Practice information can be added within your agent dashboard.
+
+This includes your affiliated funeral home or practice name, service areas, appointment locations, and any relevant contact details. Accurate practice information helps families understand where and how appointments take place.
+
+Keeping this section up to date ensures smoother coordination and clearer expectations for everyone involved.`,
+      relatedArticles: [
+        { title: 'How do I customize my profile?', slug: 'how-do-i-customize-profile' },
+        { title: 'How do I upload my credentials?', slug: 'how-do-i-upload-credentials' }
+      ]
+    },
+    'how-do-i-upload-credentials': {
+      title: 'How do I upload my credentials?',
+      content: `Credentials can be uploaded securely through your agent dashboard.
+
+You may be asked to provide proof of licensing, certifications, or professional designation depending on your specialty. Uploaded documents are reviewed as part of Soradin's commitment to maintaining a trusted network of professionals.
+
+Your credentials are stored securely and are not shared publicly without your consent.`,
+      relatedArticles: [
+        { title: 'What information do I need to provide?', slug: 'what-information-do-i-need' },
+        { title: 'What are the account setup requirements?', slug: 'what-are-setup-requirements' }
+      ]
+    },
+    'what-are-setup-requirements': {
+      title: 'What are the account setup requirements?',
+      content: `Account setup requirements are designed to ensure quality, trust, and clarity across the platform.
+
+Agents must provide accurate professional information, agree to Soradin's terms, and complete the onboarding steps relevant to their specialty. Some roles may require credential review before being fully listed.
+
+Once setup is complete, you can begin receiving bookings and managing appointments through Soradin.`,
+      relatedArticles: [
+        { title: 'How do I create an agent account?', slug: 'how-do-i-create-an-agent-account' },
+        { title: 'How do I upload my credentials?', slug: 'how-do-i-upload-credentials' }
       ]
     }
   },

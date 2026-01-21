@@ -15,14 +15,12 @@ const categoryData: Record<string, {
     icon: Play,
     articles: [
       { id: '1', title: 'How do I create an agent account?', slug: 'how-do-i-create-an-agent-account' },
-      { id: '2', title: 'How do I complete my profile?', slug: 'how-do-i-complete-my-profile' },
-      { id: '3', title: 'How do I set up my availability?', slug: 'how-do-i-set-up-availability' },
-      { id: '4', title: 'How do I get verified on Soradin?', slug: 'how-do-i-get-verified' },
-      { id: '5', title: 'What information do I need to provide?', slug: 'what-information-do-i-need' },
-      { id: '6', title: 'How do I customize my profile?', slug: 'how-do-i-customize-profile' },
-      { id: '7', title: 'How do I add my practice information?', slug: 'how-do-i-add-practice-info' },
-      { id: '8', title: 'How do I upload my credentials?', slug: 'how-do-i-upload-credentials' },
-      { id: '9', title: 'What are the account setup requirements?', slug: 'what-are-setup-requirements' }
+      { id: '2', title: 'How do I set up my availability?', slug: 'how-do-i-set-up-availability' },
+      { id: '3', title: 'What information do I need to provide?', slug: 'what-information-do-i-need' },
+      { id: '4', title: 'How do I customize my profile?', slug: 'how-do-i-customize-profile' },
+      { id: '5', title: 'How do I add my practice information?', slug: 'how-do-i-add-practice-info' },
+      { id: '6', title: 'How do I upload my credentials?', slug: 'how-do-i-upload-credentials' },
+      { id: '7', title: 'What are the account setup requirements?', slug: 'what-are-setup-requirements' }
     ]
   },
   'managing-appointments': {
