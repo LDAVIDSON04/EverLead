@@ -386,8 +386,8 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
           {/* Headline and Search Bar - Full Width */}
           <div className="max-w-4xl">
             <h1 className="text-6xl md:text-6xl text-2xl md:mb-8 mb-3 text-[#1A1A1A] font-semibold tracking-tight leading-none text-center md:text-left" style={{ paddingTop: '4px' }}>
-              Book local{" "}
-              <span className="inline-block min-w-[400px] md:min-w-[500px] text-left">
+              <span className="block">Book local</span>
+              <span className="block min-h-[1.2em]">
                 <span
                   className={`inline-block transition-all duration-500 ease-in-out ${
                     isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'
