@@ -120,6 +120,78 @@ This information helps us verify your identity and ensure appointments are prope
       ]
     }
   },
+  'finding-a-provider': {
+    'how-do-i-search-for-a-provider': {
+      title: 'How do I search for a funeral planning professional?',
+      content: `Finding the right funeral planning professional should feel simple and pressure free.
+
+On Soradin, you can search for professionals by entering the type of support you are looking for, such as funeral pre planning, and then choosing your location. Soradin will show you verified professionals who serve your area and have availability to meet.
+
+Each professional listed on Soradin has been reviewed before being added to the platform. This allows you to focus on finding someone who feels like the right fit, rather than worrying about credibility.
+
+You are never required to book right away. Many families browse profiles, read about different approaches, and take their time before scheduling a conversation.`,
+      relatedArticles: [
+        { title: 'How do I filter providers by location?', slug: 'how-do-i-filter-by-location' },
+        { title: 'What information is shown in provider profiles?', slug: 'what-information-in-provider-profiles' }
+      ]
+    },
+    'how-do-i-filter-by-location': {
+      title: 'How do I filter providers by location?',
+      content: `Soradin allows you to search by city so you can find professionals who serve your community.
+
+When entering a location, you can choose your city or region. Some professionals may also offer virtual appointments, which can be helpful if you are looking for flexibility or live outside a major centre.
+
+If a professional works across multiple regions, their profile will clearly indicate this. You can always confirm location details directly with the provider before booking.
+
+Filtering by location helps ensure you are connecting with someone who understands local practices and can guide you appropriately.`,
+      relatedArticles: [
+        { title: 'How do I search for a funeral planning professional?', slug: 'how-do-i-search-for-a-provider' },
+        { title: 'What information is shown in provider profiles?', slug: 'what-information-in-provider-profiles' }
+      ]
+    },
+    'what-information-in-provider-profiles': {
+      title: 'What information is shown in provider profiles?',
+      content: `Each provider profile on Soradin is designed to help you make an informed and comfortable decision.
+
+Profiles may include professional background, areas of focus, years of experience, availability, and any additional information the provider chooses to share about their approach.
+
+You may also see details such as whether appointments are offered in person, by phone, or through video calls. This allows you to choose a meeting style that feels right for you.
+
+The goal of each profile is transparency, so you can understand who you are meeting before the conversation begins.`,
+      relatedArticles: [
+        { title: 'How do I read provider reviews?', slug: 'how-do-i-read-provider-reviews' },
+        { title: 'How do I compare different providers?', slug: 'how-do-i-compare-providers' }
+      ]
+    },
+    'how-do-i-read-provider-reviews': {
+      title: 'How do I read provider reviews?',
+      content: `Reviews on Soradin come from families who have completed appointments through the platform.
+
+These reviews focus on the experience of the conversation, such as clarity, professionalism, and overall comfort. They are not intended to pressure or promote a particular outcome.
+
+When reading reviews, look for comments that reflect values important to you, such as patience, clear explanations, or feeling supported.
+
+Reviews are one tool to help guide your decision, but you are always encouraged to trust your own instincts as well.`,
+      relatedArticles: [
+        { title: 'What information is shown in provider profiles?', slug: 'what-information-in-provider-profiles' },
+        { title: 'How do I compare different providers?', slug: 'how-do-i-compare-providers' }
+      ]
+    },
+    'how-do-i-compare-providers': {
+      title: 'How do I compare different providers?',
+      content: `Soradin makes it easy to compare professionals side by side at your own pace.
+
+You can review multiple profiles, check availability, read reviews, and note differences in experience or approach. There is no expectation to choose the first provider you see.
+
+Some families book an initial conversation to learn more, while others take time to narrow down options before scheduling. Both approaches are completely fine.
+
+Comparing providers is about finding someone you feel comfortable speaking with, not about making a final decision right away.`,
+      relatedArticles: [
+        { title: 'What information is shown in provider profiles?', slug: 'what-information-in-provider-profiles' },
+        { title: 'How do I read provider reviews?', slug: 'how-do-i-read-provider-reviews' }
+      ]
+    }
+  },
   'appointments': {
     'how-do-i-book-an-appointment': {
       title: 'How do I book an appointment?',
