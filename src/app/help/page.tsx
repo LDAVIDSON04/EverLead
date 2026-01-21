@@ -63,7 +63,7 @@ export default function HelpPage() {
         </header>
 
         {/* Hero Content */}
-        <div className="max-w-3xl mx-auto relative z-10 py-6 pb-8">
+        <div className="max-w-3xl mx-auto relative z-10 py-4 pb-6">
           <h1 className="text-4xl md:text-5xl font-bold text-white text-center">
             How can we help?
           </h1>
