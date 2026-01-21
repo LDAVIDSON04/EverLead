@@ -1,7 +1,7 @@
 "use client";
 
-import { Metadata } from 'next';
 import Link from 'next/link';
+import Image from 'next/image';
 import { User, MapPin, Calendar, FileText, MessageSquare, Info } from 'lucide-react';
 
 export default function HelpPage() {
