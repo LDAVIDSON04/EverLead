@@ -326,6 +326,44 @@ Your information is never shared with other providers, advertisers, or third par
         { title: 'How is my information protected?', slug: 'how-is-information-protected' }
       ]
     }
+  },
+  'reviews': {
+    'how-do-i-leave-a-review': {
+      title: 'How do I leave a review?',
+      content: `After your appointment, Soradin will invite you to share feedback about your experience.
+
+You can leave a review by following the link sent to your email after your appointment or by signing into your Soradin account and visiting your appointment history. Reviews focus on your overall experience, communication, and professionalism of the provider.
+
+Sharing a review helps other families feel more confident when choosing a professional and helps providers continue to improve the care they offer.`,
+      relatedArticles: [
+        { title: 'Can I edit or delete my review?', slug: 'can-i-edit-or-delete-review' },
+        { title: 'How are reviews verified?', slug: 'how-are-reviews-verified' }
+      ]
+    },
+    'can-i-edit-or-delete-review': {
+      title: 'Can I edit or delete my review?',
+      content: `Yes. You remain in control of the feedback you share.
+
+If you need to update or remove a review, you can do so by logging into your Soradin account and accessing your submitted reviews. This allows you to make changes if your perspective evolves or if you feel something needs clarification.
+
+Soradin believes reviews should reflect honest and thoughtful experiences, not permanent statements you cannot revisit.`,
+      relatedArticles: [
+        { title: 'How do I leave a review?', slug: 'how-do-i-leave-a-review' },
+        { title: 'How are reviews verified?', slug: 'how-are-reviews-verified' }
+      ]
+    },
+    'how-are-reviews-verified': {
+      title: 'How are reviews verified?',
+      content: `Soradin only allows reviews from families who have booked and completed an appointment through the platform.
+
+This means every review is tied to a real interaction with a provider, helping maintain trust and authenticity across the platform. Reviews are not accepted from anonymous users or individuals who have not used Soradin to schedule an appointment.
+
+This verification process helps ensure reviews are fair, relevant, and helpful to both families and professionals.`,
+      relatedArticles: [
+        { title: 'How do I leave a review?', slug: 'how-do-i-leave-a-review' },
+        { title: 'Can I edit or delete my review?', slug: 'can-i-edit-or-delete-review' }
+      ]
+    }
   }
 };
 
