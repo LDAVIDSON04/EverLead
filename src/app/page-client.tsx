@@ -527,38 +527,43 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
             </form>
 
             {/* Mobile Only: How it Works Section */}
-            <div className="md:hidden mt-8 mb-8 space-y-6">
-              {/* Step 1 */}
-              <div className="flex flex-col items-center text-center">
-                <div className="w-16 h-16 rounded-full bg-[#0C6F3C]/10 flex items-center justify-center mb-4">
-                  <Search className="w-8 h-8 text-[#0C6F3C]" />
+            <div className="md:hidden mt-8 mb-8">
+              {/* Top row: Two cards side by side */}
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                {/* Step 1 - Find Local Experts */}
+                <div className="flex flex-col items-center text-center">
+                  <div className="w-16 h-16 rounded-full bg-[#0C6F3C]/10 flex items-center justify-center mb-4">
+                    <Search className="w-8 h-8 text-[#0C6F3C]" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-[#1A1A1A] mb-2">Find Local Experts</h3>
+                  <p className="text-sm text-[#1A1A1A]/70 leading-relaxed">
+                    Browse verified professionals in your community.
+                  </p>
                 </div>
-                <h3 className="text-lg font-semibold text-[#1A1A1A] mb-2">Find Local Experts</h3>
-                <p className="text-sm text-[#1A1A1A]/70 leading-relaxed">
-                  Browse verified professionals in your community.
-                </p>
+
+                {/* Step 2 - Compare at Your Pace */}
+                <div className="flex flex-col items-center text-center">
+                  <div className="w-16 h-16 rounded-full bg-[#0C6F3C]/10 flex items-center justify-center mb-4">
+                    <Calendar className="w-8 h-8 text-[#0C6F3C]" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-[#1A1A1A] mb-2">Compare at Your Pace</h3>
+                  <p className="text-sm text-[#1A1A1A]/70 leading-relaxed">
+                    Review profiles, specialties, and real availability.
+                  </p>
+                </div>
               </div>
 
-              {/* Step 2 */}
-              <div className="flex flex-col items-center text-center">
-                <div className="w-16 h-16 rounded-full bg-[#0C6F3C]/10 flex items-center justify-center mb-4">
-                  <Calendar className="w-8 h-8 text-[#0C6F3C]" />
+              {/* Bottom row: Book with Confidence centered */}
+              <div className="flex justify-center">
+                <div className="flex flex-col items-center text-center max-w-[calc(50%-0.5rem)]">
+                  <div className="w-16 h-16 rounded-full bg-[#0C6F3C]/10 flex items-center justify-center mb-4">
+                    <Check className="w-8 h-8 text-[#0C6F3C]" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-[#1A1A1A] mb-2">Book with Confidence</h3>
+                  <p className="text-sm text-[#1A1A1A]/70 leading-relaxed">
+                    Schedule a free appointment on your terms.
+                  </p>
                 </div>
-                <h3 className="text-lg font-semibold text-[#1A1A1A] mb-2">Compare at Your Pace</h3>
-                <p className="text-sm text-[#1A1A1A]/70 leading-relaxed">
-                  Review profiles, specialties, and real availability.
-                </p>
-              </div>
-
-              {/* Step 3 */}
-              <div className="flex flex-col items-center text-center">
-                <div className="w-16 h-16 rounded-full bg-[#0C6F3C]/10 flex items-center justify-center mb-4">
-                  <Check className="w-8 h-8 text-[#0C6F3C]" />
-                </div>
-                <h3 className="text-lg font-semibold text-[#1A1A1A] mb-2">Book with Confidence</h3>
-                <p className="text-sm text-[#1A1A1A]/70 leading-relaxed">
-                  Schedule a free appointment on your terms.
-                </p>
               </div>
             </div>
 
