@@ -408,6 +408,167 @@ You can adjust settings to match how you work and how often you wish to receive 
         { title: 'How do I integrate with my existing systems?', slug: 'how-do-i-integrate-systems' }
       ]
     }
+  },
+  'settings': {
+    'how-do-i-update-profile-settings': {
+      title: 'How do I update my profile settings?',
+      content: `You can update your profile settings at any time from your Soradin dashboard.
+
+Profile settings include your public information such as your name, photo, bio, specialties, and visibility preferences. Keeping this information current helps families understand who you are before booking.
+
+Changes to your profile are reflected immediately across the platform.`,
+      relatedArticles: [
+        { title: 'How do I manage my bio?', slug: 'how-do-i-manage-bio' },
+        { title: 'How do I optimize my profile for visibility?', slug: 'how-do-i-optimize-profile' }
+      ]
+    },
+    'how-do-i-change-password': {
+      title: 'How do I change my password?',
+      content: `To change your password, sign in to your Soradin account and navigate to your account settings.
+
+From there, you can choose a new password and save your changes. For security reasons, Soradin may ask you to re authenticate before confirming the update.
+
+If you forget your password, you can reset it using the password recovery option on the sign in page.`,
+      relatedArticles: [
+        { title: 'How do I manage my account security?', slug: 'how-do-i-manage-account-security' },
+        { title: 'How do I update my contact information?', slug: 'how-do-i-update-contact-information' }
+      ]
+    },
+    'how-do-i-manage-notification-preferences': {
+      title: 'How do I manage my notification preferences?',
+      content: `Soradin allows you to control how and when you receive notifications.
+
+You can manage notification preferences in your account settings, including alerts for new appointments, cancellations, reminders, and updates. Adjusting these settings helps ensure you receive the information you need without unnecessary interruptions.`,
+      relatedArticles: [
+        { title: 'How do I manage my email preferences?', slug: 'how-do-i-manage-email-preferences' },
+        { title: 'What notifications will I receive?', slug: 'what-notifications-will-i-receive' }
+      ]
+    },
+    'how-do-i-update-contact-information': {
+      title: 'How do I update my contact information?',
+      content: `Your contact information can be updated through your account settings.
+
+This includes your email address and phone number. Keeping contact details accurate ensures you receive appointment notifications and important platform updates without delay.
+
+Changes take effect immediately once saved.`,
+      relatedArticles: [
+        { title: 'How do I change my password?', slug: 'how-do-i-change-password' },
+        { title: 'How do I manage my notification preferences?', slug: 'how-do-i-manage-notification-preferences' }
+      ]
+    },
+    'how-do-i-manage-account-security': {
+      title: 'How do I manage my account security?',
+      content: `Soradin takes account security seriously and provides tools to help protect your information.
+
+You can manage security settings such as password updates and session activity through your account dashboard. It is recommended to use a strong password and update it periodically.
+
+If you notice unusual activity, you should update your credentials and contact Soradin support.`,
+      relatedArticles: [
+        { title: 'How do I change my password?', slug: 'how-do-i-change-password' },
+        { title: 'How do I update my contact information?', slug: 'how-do-i-update-contact-information' }
+      ]
+    },
+    'how-do-i-manage-email-preferences': {
+      title: 'How do I manage my email preferences?',
+      content: `Email preferences allow you to control the types of messages you receive from Soradin.
+
+You can choose to receive appointment notifications, system updates, or educational content. Transactional emails related to bookings and account activity will still be sent to ensure platform reliability.
+
+Preferences can be updated at any time.`,
+      relatedArticles: [
+        { title: 'How do I manage my notification preferences?', slug: 'how-do-i-manage-notification-preferences' },
+        { title: 'What notifications will I receive?', slug: 'what-notifications-will-i-receive' }
+      ]
+    },
+    'how-do-i-update-practice-information': {
+      title: 'How do I update my practice information?',
+      content: `Practice information includes your affiliated organization, service locations, and appointment formats.
+
+You can update this information through your dashboard to reflect changes in your role or availability. Accurate practice information helps families understand where and how meetings take place.`,
+      relatedArticles: [
+        { title: 'How do I add office locations?', slug: 'how-do-i-add-office-locations' },
+        { title: 'How do I set my service areas?', slug: 'how-do-i-set-service-areas' }
+      ]
+    },
+    'how-do-i-manage-billing-information': {
+      title: 'How do I manage my billing information?',
+      content: `Billing information can be reviewed and updated within your account settings.
+
+Soradin does not charge for creating or maintaining a profile. Fees apply only for completed appointments or optional features. Billing history and payment details are available for your records.
+
+If you have questions about billing, Soradin support can assist.`,
+      relatedArticles: [
+        { title: 'How do I set my pricing?', slug: 'how-do-i-set-pricing' },
+        { title: 'How do I update my contact information?', slug: 'how-do-i-update-contact-information' }
+      ]
+    },
+    'how-do-i-set-my-timezone': {
+      title: 'How do I set my timezone?',
+      content: `Your timezone can be set in your account preferences.
+
+Setting the correct timezone ensures appointment times, reminders, and calendar syncing display accurately. This is especially important if you offer virtual appointments across regions.
+
+Timezone changes take effect immediately.`,
+      relatedArticles: [
+        { title: 'How do I manage my calendar preferences?', slug: 'how-do-i-manage-calendar-preferences' },
+        { title: 'How do I sync with external calendars?', slug: 'how-do-i-sync-with-external-calendars' }
+      ]
+    },
+    'how-do-i-manage-calendar-preferences': {
+      title: 'How do I manage my calendar preferences?',
+      content: `Calendar preferences allow you to control how appointments appear and sync with your schedule.
+
+You can adjust settings related to availability display, appointment formats, and calendar integrations. Managing these preferences helps prevent scheduling conflicts and keeps your calendar accurate.`,
+      relatedArticles: [
+        { title: 'How do I manage my calendar?', slug: 'how-do-i-manage-my-calendar' },
+        { title: 'How do I manage my integration settings?', slug: 'how-do-i-manage-integration-settings' }
+      ]
+    },
+    'how-do-i-configure-availability-settings': {
+      title: 'How do I configure my availability settings?',
+      content: `Availability settings determine when families can book appointments with you.
+
+You can define working hours, recurring availability, and one time adjustments through your dashboard. Availability can be updated at any time to reflect changes in your schedule.
+
+Soradin only shows families time slots you make available.`,
+      relatedArticles: [
+        { title: 'Can I set recurring availability?', slug: 'can-i-set-recurring-availability' },
+        { title: 'How do I manage my calendar?', slug: 'how-do-i-manage-my-calendar' }
+      ]
+    },
+    'how-do-i-manage-integration-settings': {
+      title: 'How do I manage my integration settings?',
+      content: `Integration settings allow you to connect Soradin with external tools such as your calendar.
+
+Once connected, Soradin will automatically sync availability and block times that are already booked elsewhere. You can manage or disconnect integrations at any time through your dashboard.`,
+      relatedArticles: [
+        { title: 'How do I sync with external calendars?', slug: 'how-do-i-sync-with-external-calendars' },
+        { title: 'How do I manage my calendar preferences?', slug: 'how-do-i-manage-calendar-preferences' }
+      ]
+    },
+    'how-do-i-update-service-settings': {
+      title: 'How do I update my service settings?',
+      content: `Service settings let you control the types of appointments you offer.
+
+This may include in person meetings, virtual appointments, or phone consultations. Updating service settings ensures families see accurate options when booking.
+
+You remain in control of how services are presented.`,
+      relatedArticles: [
+        { title: 'How do I manage my services?', slug: 'how-do-i-manage-services' },
+        { title: 'How do I add office locations?', slug: 'how-do-i-add-office-locations' }
+      ]
+    },
+    'how-do-i-delete-my-account': {
+      title: 'How do I delete my account?',
+      content: `If you choose to stop using Soradin, you can request account deletion through your account settings or by contacting support.
+
+Before deleting your account, ensure any upcoming appointments are addressed. Once an account is deleted, profile information and access will be removed in accordance with privacy guidelines.
+
+Soradin support is available if you have questions before proceeding.`,
+      relatedArticles: [
+        { title: 'How do I manage my account security?', slug: 'how-do-i-manage-account-security' }
+      ]
+    }
   }
 };
 

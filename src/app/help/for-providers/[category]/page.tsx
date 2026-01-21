@@ -67,20 +67,18 @@ const categoryData: Record<string, {
     articles: [
       { id: '1', title: 'How do I update my profile settings?', slug: 'how-do-i-update-profile-settings' },
       { id: '2', title: 'How do I change my password?', slug: 'how-do-i-change-password' },
-      { id: '3', title: 'How do I manage my notification preferences?', slug: 'how-do-i-manage-notifications' },
-      { id: '4', title: 'How do I update my contact information?', slug: 'how-do-i-update-contact-info' },
-      { id: '5', title: 'How do I manage my account security?', slug: 'how-do-i-manage-security' },
-      { id: '6', title: 'How do I set up two-factor authentication?', slug: 'how-do-i-set-up-2fa' },
-      { id: '7', title: 'How do I manage my email preferences?', slug: 'how-do-i-manage-email-preferences' },
-      { id: '8', title: 'How do I update my practice information?', slug: 'how-do-i-update-practice-info' },
-      { id: '9', title: 'How do I manage my billing information?', slug: 'how-do-i-manage-billing-info' },
-      { id: '10', title: 'How do I set my timezone?', slug: 'how-do-i-set-timezone' },
-      { id: '11', title: 'How do I manage my calendar preferences?', slug: 'how-do-i-manage-calendar-preferences' },
-      { id: '12', title: 'How do I configure my availability settings?', slug: 'how-do-i-configure-availability' },
-      { id: '13', title: 'How do I manage my integration settings?', slug: 'how-do-i-manage-integrations' },
-      { id: '14', title: 'How do I update my service settings?', slug: 'how-do-i-update-service-settings' },
-      { id: '15', title: 'How do I manage my team settings?', slug: 'how-do-i-manage-team-settings' },
-      { id: '16', title: 'How do I delete my account?', slug: 'how-do-i-delete-account' }
+      { id: '3', title: 'How do I manage my notification preferences?', slug: 'how-do-i-manage-notification-preferences' },
+      { id: '4', title: 'How do I update my contact information?', slug: 'how-do-i-update-contact-information' },
+      { id: '5', title: 'How do I manage my account security?', slug: 'how-do-i-manage-account-security' },
+      { id: '6', title: 'How do I manage my email preferences?', slug: 'how-do-i-manage-email-preferences' },
+      { id: '7', title: 'How do I update my practice information?', slug: 'how-do-i-update-practice-information' },
+      { id: '8', title: 'How do I manage my billing information?', slug: 'how-do-i-manage-billing-information' },
+      { id: '9', title: 'How do I set my timezone?', slug: 'how-do-i-set-my-timezone' },
+      { id: '10', title: 'How do I manage my calendar preferences?', slug: 'how-do-i-manage-calendar-preferences' },
+      { id: '11', title: 'How do I configure my availability settings?', slug: 'how-do-i-configure-availability-settings' },
+      { id: '12', title: 'How do I manage my integration settings?', slug: 'how-do-i-manage-integration-settings' },
+      { id: '13', title: 'How do I update my service settings?', slug: 'how-do-i-update-service-settings' },
+      { id: '14', title: 'How do I delete my account?', slug: 'how-do-i-delete-my-account' }
     ]
   },
   'patient-reviews': {
