@@ -8,7 +8,7 @@ export default function ProviderHelpPage() {
   const categories = [
     { id: 1, title: 'Getting Started', icon: Play, articles: 7 },
     { id: 2, title: 'Managing Appointments', icon: CalendarCheck, articles: 11 },
-    { id: 3, title: 'Agent Solutions', icon: Shield, articles: 40 },
+    { id: 3, title: 'Agent Solutions', icon: Shield, articles: 15 },
     { id: 4, title: 'Settings', icon: Settings, articles: 16 },
     { id: 5, title: 'Patient Reviews', icon: MessageSquare, articles: 4 },
     { id: 6, title: 'Account and Billing', icon: DollarSign, articles: 10 },

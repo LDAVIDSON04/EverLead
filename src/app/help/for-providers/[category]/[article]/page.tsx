@@ -231,6 +231,183 @@ This feature supports record keeping while maintaining privacy standards.`,
         { title: 'How do I view my appointments?', slug: 'how-do-i-view-my-appointments' }
       ]
     }
+  },
+  'agent-solutions': {
+    'what-features-available': {
+      title: 'What features are available to agents?',
+      content: `Soradin provides agents with tools designed to simplify scheduling, improve visibility, and support better conversations with families.
+
+Core features include a public professional profile, online appointment booking, calendar syncing, automated reminders, appointment history, and secure communication. Agents can manage availability, service areas, and practice information all in one place.
+
+Soradin is designed to support your existing workflow rather than replace it.`,
+      relatedArticles: [
+        { title: 'How do I track my performance?', slug: 'how-do-i-track-performance' },
+        { title: 'How do I optimize my profile for visibility?', slug: 'how-do-i-optimize-profile' }
+      ]
+    },
+    'how-do-i-track-performance': {
+      title: 'How do I track my performance?',
+      content: `Soradin allows you to view your appointment activity through your dashboard.
+
+You can see upcoming and past appointments, booking trends, and engagement over time. This helps you understand when families are booking, how often appointments occur, and where interest is coming from.
+
+Performance tracking is intended to provide insight, not pressure.`,
+      relatedArticles: [
+        { title: 'What features are available to agents?', slug: 'what-features-available' },
+        { title: 'How do I optimize my profile for visibility?', slug: 'how-do-i-optimize-profile' }
+      ]
+    },
+    'how-do-i-optimize-profile': {
+      title: 'How do I optimize my profile for visibility?',
+      content: `Your profile is one of the most important factors in helping families choose you.
+
+Profiles that are complete, clear, and up to date tend to receive more bookings. Adding a professional photo, a thoughtful introduction, and accurate availability helps families feel confident before booking.
+
+Keeping your profile current improves visibility across the platform.`,
+      relatedArticles: [
+        { title: 'How do I manage my bio?', slug: 'how-do-i-manage-bio' },
+        { title: 'How do I showcase my specialties?', slug: 'how-do-i-showcase-specialties' },
+        { title: 'How do I optimize for search results?', slug: 'how-do-i-optimize-search' }
+      ]
+    },
+    'how-do-i-manage-bio': {
+      title: 'How do I manage my bio?',
+      content: `Your bio allows you to explain your approach in your own words.
+
+You can update your bio at any time from your dashboard. Many professionals choose to describe their experience, philosophy, and how they support families through planning conversations.
+
+A clear and welcoming bio helps families understand who they will be speaking with.`,
+      relatedArticles: [
+        { title: 'How do I optimize my profile for visibility?', slug: 'how-do-i-optimize-profile' },
+        { title: 'How do I manage my professional information?', slug: 'how-do-i-manage-professional-info' }
+      ]
+    },
+    'how-do-i-showcase-specialties': {
+      title: 'How do I showcase my specialties?',
+      content: `Soradin allows you to list areas of focus such as funeral pre planning, cremation planning, or other services you offer.
+
+These specialties appear on your profile and help families understand whether your experience aligns with their needs. You can update specialties as your role or focus changes.
+
+Specialties help families make informed choices without feeling overwhelmed.`,
+      relatedArticles: [
+        { title: 'How do I optimize my profile for visibility?', slug: 'how-do-i-optimize-profile' },
+        { title: 'How do I manage my services?', slug: 'how-do-i-manage-services' }
+      ]
+    },
+    'how-do-i-add-office-locations': {
+      title: 'How do I add office locations?',
+      content: `If you offer in person appointments, you can add one or more office locations through your dashboard.
+
+Each location can include an address and appointment details so families know where meetings take place. You may also offer virtual appointments alongside in person options.
+
+Accurate location information helps set clear expectations.`,
+      relatedArticles: [
+        { title: 'How do I set my service areas?', slug: 'how-do-i-set-service-areas' },
+        { title: 'How do I manage my practice information?', slug: 'how-do-i-manage-practice' }
+      ]
+    },
+    'how-do-i-manage-practice': {
+      title: 'How do I manage my practice information?',
+      content: `Practice information includes your affiliated funeral home or organization, service regions, and contact details.
+
+This information can be edited at any time and helps families understand your professional context. Keeping practice information current ensures smoother communication and coordination.`,
+      relatedArticles: [
+        { title: 'How do I add office locations?', slug: 'how-do-i-add-office-locations' },
+        { title: 'How do I set my service areas?', slug: 'how-do-i-set-service-areas' }
+      ]
+    },
+    'how-do-i-set-service-areas': {
+      title: 'How do I set my service areas?',
+      content: `Service areas allow you to indicate where you are able to support families.
+
+You can list cities, regions, or broader areas if you provide virtual services. This helps Soradin match families with professionals who can work with them regardless of location.
+
+Service areas can be updated as your reach expands.`,
+      relatedArticles: [
+        { title: 'How do I add office locations?', slug: 'how-do-i-add-office-locations' },
+        { title: 'How do I manage my practice information?', slug: 'how-do-i-manage-practice' }
+      ]
+    },
+    'how-do-i-integrate-systems': {
+      title: 'How do I integrate with my existing systems?',
+      content: `Soradin is designed to work alongside your current tools.
+
+You can sync your calendar to prevent double bookings and keep availability accurate. Soradin does not replace your internal systems and does not require you to change how you manage your practice.
+
+Integration helps reduce manual work and scheduling conflicts.`,
+      relatedArticles: [
+        { title: 'What features are available to agents?', slug: 'what-features-available' },
+        { title: 'How do I manage my account settings?', slug: 'how-do-i-manage-account-settings' }
+      ]
+    },
+    'how-do-i-set-pricing': {
+      title: 'How do I set my pricing?',
+      content: `Pricing on Soradin is managed through the platform's billing structure.
+
+Agents are not charged to create a profile or be listed. Fees apply only when appointments are completed or when optional features are enabled.
+
+Pricing details are explained clearly during onboarding and can be reviewed at any time.`,
+      relatedArticles: [
+        { title: 'What features are available to agents?', slug: 'what-features-available' },
+        { title: 'How do I manage my account settings?', slug: 'how-do-i-manage-account-settings' }
+      ]
+    },
+    'how-do-i-manage-services': {
+      title: 'How do I manage my services?',
+      content: `You can manage the services you offer through your dashboard.
+
+This includes updating appointment types, meeting formats, and availability. Managing services ensures families see accurate options when booking.
+
+You remain in control of how and when appointments are offered.`,
+      relatedArticles: [
+        { title: 'How do I showcase my specialties?', slug: 'how-do-i-showcase-specialties' },
+        { title: 'How do I optimize my profile for visibility?', slug: 'how-do-i-optimize-profile' }
+      ]
+    },
+    'how-do-i-update-credentials': {
+      title: 'How do I update my credentials?',
+      content: `Credentials can be uploaded or updated securely through your agent dashboard.
+
+This may include licensing, certifications, or professional documentation depending on your role. Keeping credentials current helps maintain trust and platform integrity.
+
+Uploaded documents are reviewed as part of Soradin's verification process.`,
+      relatedArticles: [
+        { title: 'How do I manage my professional information?', slug: 'how-do-i-manage-professional-info' },
+        { title: 'What features are available to agents?', slug: 'what-features-available' }
+      ]
+    },
+    'how-do-i-manage-professional-info': {
+      title: 'How do I manage my professional information?',
+      content: `Professional information includes your name, role, background, and areas of expertise.
+
+You can update this information at any time to reflect changes in your career or practice. Accurate professional information helps families feel informed before booking.`,
+      relatedArticles: [
+        { title: 'How do I manage my bio?', slug: 'how-do-i-manage-bio' },
+        { title: 'How do I update my credentials?', slug: 'how-do-i-update-credentials' }
+      ]
+    },
+    'how-do-i-optimize-search': {
+      title: 'How do I optimize for search results?',
+      content: `Profiles that are complete, active, and regularly updated tend to perform better.
+
+Clear specialties, accurate service areas, and consistent availability improve how your profile appears in search results. Positive engagement and completed appointments also contribute to visibility.
+
+Optimization is designed to reward clarity and reliability.`,
+      relatedArticles: [
+        { title: 'How do I optimize my profile for visibility?', slug: 'how-do-i-optimize-profile' },
+        { title: 'How do I showcase my specialties?', slug: 'how-do-i-showcase-specialties' }
+      ]
+    },
+    'how-do-i-manage-account-settings': {
+      title: 'How do I manage my account settings?',
+      content: `Account settings allow you to control notifications, visibility, calendar connections, and basic preferences.
+
+You can adjust settings to match how you work and how often you wish to receive updates. Settings can be changed at any time.`,
+      relatedArticles: [
+        { title: 'What features are available to agents?', slug: 'what-features-available' },
+        { title: 'How do I integrate with my existing systems?', slug: 'how-do-i-integrate-systems' }
+      ]
+    }
   }
 };
 
