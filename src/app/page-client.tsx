@@ -923,7 +923,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
             Find funeral professionals near you
           </h2>
 
-          <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {[
               "Vancouver",
               "Surrey",
