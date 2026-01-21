@@ -6,12 +6,11 @@ import { User, MapPin, Calendar, FileText, MessageSquare, Info } from 'lucide-re
 
 export default function HelpPage() {
   const categories = [
-    { id: 1, title: 'My Account', icon: User, articles: 7 },
-    { id: 2, title: 'Finding a Provider', icon: MapPin, articles: 5 },
-    { id: 3, title: 'Appointments', icon: Calendar, articles: 18 },
-    { id: 4, title: 'Privacy', icon: FileText, articles: 5 },
-    { id: 5, title: 'Reviews', icon: MessageSquare, articles: 3 },
-    { id: 6, title: 'About Soradin', icon: Info, articles: 7 }
+    { id: 1, title: 'Finding a Provider', icon: MapPin, articles: 5 },
+    { id: 2, title: 'Appointments', icon: Calendar, articles: 18 },
+    { id: 3, title: 'Privacy', icon: FileText, articles: 5 },
+    { id: 4, title: 'Reviews', icon: MessageSquare, articles: 3 },
+    { id: 5, title: 'About Soradin', icon: Info, articles: 7 }
   ];
 
   return (
