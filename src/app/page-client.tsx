@@ -143,6 +143,25 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
   const [locationSuggestions, setLocationSuggestions] = useState<string[]>([]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Rotating text for hero title
+  const rotatingTexts = [
+    "funeral planning professionals",
+    "advanced planning directors",
+    "funeral pre planners",
+    "funeral directors"
+  ];
+  const [currentTextIndex, setCurrentTextIndex] = useState(0);
+  const [fadeKey, setFadeKey] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTextIndex((prevIndex) => (prevIndex + 1) % rotatingTexts.length);
+      setFadeKey((prev) => prev + 1);
+    }, 3000); // Change text every 3 seconds
+
+    return () => clearInterval(interval);
+  }, [rotatingTexts.length]);
+
   const specialtySuggestions = [
     "Funeral Pre-Planning",
     "End of life planning",
@@ -364,7 +383,14 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
           {/* Headline and Search Bar - Full Width */}
           <div className="max-w-4xl">
             <h1 className="text-6xl md:text-6xl text-2xl md:mb-8 mb-3 text-[#1A1A1A] font-semibold tracking-tight leading-none text-center md:text-left" style={{ paddingTop: '4px' }}>
-              Book local funeral planning professionals
+              Book local{" "}
+              <span 
+                key={fadeKey}
+                className="inline-block transition-opacity duration-500 ease-in-out"
+                style={{ animation: 'fadeIn 0.5s ease-in-out' }}
+              >
+                {rotatingTexts[currentTextIndex]}
+              </span>
             </h1>
 
             {/* Horizontal search bar */}
