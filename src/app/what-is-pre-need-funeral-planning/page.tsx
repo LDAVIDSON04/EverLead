@@ -27,13 +27,12 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
         <div className="max-w-6xl mx-auto px-6">
           <div className="grid md:grid-cols-2 gap-16 items-start">
             <div className="rounded-xl overflow-hidden shadow-lg">
-              <img 
-                src="/f75c771a2df6874e6f701c79ddc5f202a2bcc4f5.png" 
-                alt="What is pre-need funeral planning illustration"
+              <Image 
+                src="/What is Pre need planning image.png" 
+                alt="Professional consultation with funeral planning specialists"
+                width={600}
+                height={600}
                 className="w-full h-full object-contain md:object-cover min-h-[400px] md:min-h-[500px]"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                }}
               />
             </div>
             <div className="pt-20">
