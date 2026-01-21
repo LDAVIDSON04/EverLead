@@ -399,7 +399,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
             </h1>
 
             {/* Horizontal search bar - Fixed on mobile only */}
-            <form onSubmit={handleSearch} className="bg-white rounded-2xl p-3 shadow-lg border border-[#1A1A1A]/5 relative z-30 md:mb-8 mb-4 md:relative fixed md:static top-[calc(100vh-180px)] md:top-auto left-0 right-0 mx-4 md:mx-0 md:left-auto md:right-auto">
+            <form onSubmit={handleSearch} className="bg-white rounded-2xl p-3 shadow-lg border border-[#1A1A1A]/5 relative z-30 md:mb-8 mb-4 md:relative fixed md:static top-[200px] md:top-auto left-4 right-4 md:left-auto md:right-auto">
               <div className="flex flex-col lg:flex-row items-stretch gap-0">
                 {/* Search field */}
                 <div className="flex-1 relative border-b border-[#1A1A1A]/10 lg:border-b-0 lg:border-r lg:border-[#1A1A1A]/10">
