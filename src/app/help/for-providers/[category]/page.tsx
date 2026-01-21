@@ -107,12 +107,10 @@ const categoryData: Record<string, {
     title: 'Performance and Reporting',
     icon: BarChart3,
     articles: [
-      { id: '1', title: 'How do I view my performance metrics?', slug: 'how-do-i-view-metrics' },
-      { id: '2', title: 'What reports are available?', slug: 'what-reports-available' },
-      { id: '3', title: 'How do I export my data?', slug: 'how-do-i-export-data' },
-      { id: '4', title: 'How do I track my booking conversion?', slug: 'how-do-i-track-conversion' },
-      { id: '5', title: 'How do I analyze my patient demographics?', slug: 'how-do-i-analyze-demographics' },
-      { id: '6', title: 'How do I view my appointment trends?', slug: 'how-do-i-view-trends' }
+      { id: '1', title: 'How do I view my performance metrics?', slug: 'how-do-i-view-performance-metrics' },
+      { id: '2', title: 'What reports are available?', slug: 'what-reports-are-available' },
+      { id: '3', title: 'How do I export my data?', slug: 'how-do-i-export-my-data' },
+      { id: '4', title: 'How do I view my appointment trends?', slug: 'how-do-i-view-my-appointment-trends' }
     ]
   },
   'about-soradin': {
