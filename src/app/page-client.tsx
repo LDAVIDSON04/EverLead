@@ -713,7 +713,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
             {/* Left side - Image - Using PNG version (722K) instead of JPG (6.7MB) for better performance */}
             <div className="relative w-full" style={{ aspectRatio: "900/700" }}>
               <Image
-                src="/specialist-image.png"
+                src="/specialist-image.jpg"
                 alt="Professional funeral specialist"
                 width={900}
                 height={700}
