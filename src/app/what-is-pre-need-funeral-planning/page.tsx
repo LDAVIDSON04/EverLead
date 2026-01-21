@@ -28,7 +28,7 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
           <div className="grid md:grid-cols-2 gap-16 items-start">
             <div className="rounded-xl overflow-hidden shadow-lg">
               <Image 
-                src="/What is Pre need planning image.png" 
+                src="/Liam_Davidson_Can_you_make_them_look_like_business_people_fa0c6ee9-eee5-43bd-b48a-bbaadc8f2153 (1).jpg" 
                 alt="Professional consultation with funeral planning specialists"
                 width={600}
                 height={600}
