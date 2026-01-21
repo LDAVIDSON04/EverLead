@@ -8,7 +8,7 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
     <div className="min-h-screen bg-white">
       {/* Header */}
       <header className="bg-white py-5 px-4">
-        <div className="max-w-7xl mx-auto flex items-center">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3">
             <Image
               src="/Soradin.png"
@@ -18,6 +18,12 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
               className="h-20 w-20 object-contain"
             />
             <span className="text-2xl font-semibold text-[#1A1A1A]">Soradin</span>
+          </Link>
+          <Link 
+            href="/" 
+            className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors text-lg font-medium"
+          >
+            Home
           </Link>
         </div>
       </header>
