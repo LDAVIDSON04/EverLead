@@ -526,6 +526,42 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
               </div>
             </form>
 
+            {/* Mobile Only: How it Works Section */}
+            <div className="md:hidden mt-8 mb-8 space-y-6">
+              {/* Step 1 */}
+              <div className="flex flex-col items-center text-center">
+                <div className="w-16 h-16 rounded-full bg-[#0C6F3C]/10 flex items-center justify-center mb-4">
+                  <Search className="w-8 h-8 text-[#0C6F3C]" />
+                </div>
+                <h3 className="text-lg font-semibold text-[#1A1A1A] mb-2">Find Local Experts</h3>
+                <p className="text-sm text-[#1A1A1A]/70 leading-relaxed">
+                  Browse verified professionals in your community.
+                </p>
+              </div>
+
+              {/* Step 2 */}
+              <div className="flex flex-col items-center text-center">
+                <div className="w-16 h-16 rounded-full bg-[#0C6F3C]/10 flex items-center justify-center mb-4">
+                  <Calendar className="w-8 h-8 text-[#0C6F3C]" />
+                </div>
+                <h3 className="text-lg font-semibold text-[#1A1A1A] mb-2">Compare at Your Pace</h3>
+                <p className="text-sm text-[#1A1A1A]/70 leading-relaxed">
+                  Review profiles, specialties, and real availability.
+                </p>
+              </div>
+
+              {/* Step 3 */}
+              <div className="flex flex-col items-center text-center">
+                <div className="w-16 h-16 rounded-full bg-[#0C6F3C]/10 flex items-center justify-center mb-4">
+                  <Check className="w-8 h-8 text-[#0C6F3C]" />
+                </div>
+                <h3 className="text-lg font-semibold text-[#1A1A1A] mb-2">Book with Confidence</h3>
+                <p className="text-sm text-[#1A1A1A]/70 leading-relaxed">
+                  Schedule a free appointment on your terms.
+                </p>
+              </div>
+            </div>
+
             {/* Desktop Only: How it Works Section */}
             <div className="hidden md:flex items-center justify-center gap-8 mt-12 mb-8 max-w-4xl">
               {/* Step 1 */}
@@ -565,45 +601,6 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                 <p className="text-sm text-[#1A1A1A]/70 leading-relaxed">
                   Schedule a free appointment on your terms.
                 </p>
-              </div>
-            </div>
-          </div>
-          
-          {/* Mobile Only: Pre-Need Planning Box */}
-          <div className="md:hidden mt-4">
-            <div className="bg-[#FAF9F6] rounded-3xl p-6 border border-[#1A1A1A]/5 relative overflow-hidden group hover:shadow-xl hover:shadow-black/5 transition-all flex flex-col">
-              {/* Image inside the card, showing full torso */}
-              <div className="relative w-full flex items-center justify-center -mx-6 mb-2 overflow-hidden" style={{ height: '150px', minHeight: '150px', marginTop: '-72px', paddingTop: '0' }}>
-                <Image
-                  src="/What is Pre need planning image.png"
-                  alt="Person asking about pre-need planning"
-                  width={400}
-                  height={400}
-                  className="w-full h-full object-cover"
-                  style={{
-                    filter: "brightness(1.1) contrast(1.05)",
-                    mixBlendMode: "multiply",
-                    objectPosition: 'top center',
-                  }}
-                  loading="lazy"
-                  fetchPriority="low"
-                />
-              </div>
-
-              <div className="relative z-10 flex flex-col items-center text-center -mt-1">
-                <h3 className="text-xl font-semibold text-[#1A1A1A] mb-1">
-                  What are pre arrangements?
-                </h3>
-                <p className="text-sm text-[#1A1A1A]/70 mb-3">
-                  Learn more about pre needs and how they help you plan ahead
-                </p>
-                <Link 
-                  href="/what-is-pre-need-funeral-planning"
-                  className="text-[#0C6F3C] hover:text-[#0C6F3C]/80 transition-colors text-sm font-medium flex items-center justify-center gap-1"
-                >
-                  Learn more
-                  <ChevronRight className="w-4 h-4" />
-                </Link>
               </div>
             </div>
           </div>
@@ -686,6 +683,47 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                   See availability
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Mobile Only: Pre-Need Planning Box */}
+      <section className="md:hidden py-12 px-4 bg-[#FAF9F6]">
+        <div className="max-w-6xl mx-auto">
+          <div className="bg-[#FAF9F6] rounded-3xl p-6 border border-[#1A1A1A]/5 relative overflow-hidden group hover:shadow-xl hover:shadow-black/5 transition-all flex flex-col">
+            {/* Image inside the card, showing full torso */}
+            <div className="relative w-full flex items-center justify-center -mx-6 mb-2 overflow-hidden" style={{ height: '150px', minHeight: '150px', marginTop: '-72px', paddingTop: '0' }}>
+              <Image
+                src="/What is Pre need planning image.png"
+                alt="Person asking about pre-need planning"
+                width={400}
+                height={400}
+                className="w-full h-full object-cover"
+                style={{
+                  filter: "brightness(1.1) contrast(1.05)",
+                  mixBlendMode: "multiply",
+                  objectPosition: 'top center',
+                }}
+                loading="lazy"
+                fetchPriority="low"
+              />
+            </div>
+
+            <div className="relative z-10 flex flex-col items-center text-center -mt-1">
+              <h3 className="text-xl font-semibold text-[#1A1A1A] mb-1">
+                What are pre arrangements?
+              </h3>
+              <p className="text-sm text-[#1A1A1A]/70 mb-3">
+                Learn more about pre needs and how they help you plan ahead
+              </p>
+              <Link 
+                href="/what-is-pre-need-funeral-planning"
+                className="text-[#0C6F3C] hover:text-[#0C6F3C]/80 transition-colors text-sm font-medium flex items-center justify-center gap-1"
+              >
+                Learn more
+                <ChevronRight className="w-4 h-4" />
+              </Link>
             </div>
           </div>
         </div>
