@@ -151,12 +151,15 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
     "funeral directors"
   ];
   const [currentTextIndex, setCurrentTextIndex] = useState(0);
-  const [fadeKey, setFadeKey] = useState(0);
+  const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentTextIndex((prevIndex) => (prevIndex + 1) % rotatingTexts.length);
-      setFadeKey((prev) => prev + 1);
+      setIsVisible(false);
+      setTimeout(() => {
+        setCurrentTextIndex((prevIndex) => (prevIndex + 1) % rotatingTexts.length);
+        setIsVisible(true);
+      }, 250); // Half of transition duration for smooth crossfade
     }, 3000); // Change text every 3 seconds
 
     return () => clearInterval(interval);
@@ -384,12 +387,14 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
           <div className="max-w-4xl">
             <h1 className="text-6xl md:text-6xl text-2xl md:mb-8 mb-3 text-[#1A1A1A] font-semibold tracking-tight leading-none text-center md:text-left" style={{ paddingTop: '4px' }}>
               Book local{" "}
-              <span 
-                key={fadeKey}
-                className="inline-block transition-opacity duration-500 ease-in-out"
-                style={{ animation: 'fadeIn 0.5s ease-in-out' }}
-              >
-                {rotatingTexts[currentTextIndex]}
+              <span className="inline-block min-w-[400px] md:min-w-[500px] text-left">
+                <span
+                  className={`inline-block transition-all duration-500 ease-in-out ${
+                    isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'
+                  }`}
+                >
+                  {rotatingTexts[currentTextIndex]}
+                </span>
               </span>
             </h1>
 
