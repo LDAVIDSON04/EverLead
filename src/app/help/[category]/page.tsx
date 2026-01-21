@@ -54,8 +54,7 @@ const categoryData: Record<string, {
       { id: '1', title: 'How does Soradin handle my personal information?', slug: 'how-does-soradin-handle-information' },
       { id: '2', title: 'What data does Soradin collect?', slug: 'what-data-does-soradin-collect' },
       { id: '3', title: 'How is my information protected?', slug: 'how-is-information-protected' },
-      { id: '4', title: 'Can I opt out of data collection?', slug: 'can-i-opt-out-of-data-collection' },
-      { id: '5', title: 'Who has access to my information?', slug: 'who-has-access-to-information' }
+      { id: '4', title: 'Who has access to my information?', slug: 'who-has-access-to-information' }
     ]
   },
   'reviews': {

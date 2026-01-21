@@ -276,6 +276,56 @@ If you are unsure, you can always reach out to the provider directly or contact 
         { title: 'How do I cancel or reschedule an appointment?', slug: 'how-do-i-cancel-or-reschedule' }
       ]
     }
+  },
+  'privacy': {
+    'how-does-soradin-handle-information': {
+      title: 'How does Soradin handle my personal information?',
+      content: `Soradin takes your privacy seriously and only uses your information to support your experience on the platform.
+
+Your personal information is used to help you find providers, book appointments, and communicate clearly with the professionals you choose to work with. Soradin does not sell your personal data or use it for unrelated purposes.
+
+Information is handled responsibly and in line with applicable privacy laws to ensure families feel safe using the platform during sensitive planning decisions.`,
+      relatedArticles: [
+        { title: 'What data does Soradin collect?', slug: 'what-data-does-soradin-collect' },
+        { title: 'How is my information protected?', slug: 'how-is-information-protected' }
+      ]
+    },
+    'what-data-does-soradin-collect': {
+      title: 'What data does Soradin collect?',
+      content: `Soradin collects only the information necessary to provide its services.
+
+This may include your name, contact information, appointment details, and basic usage data such as how you interact with the platform. If you choose to book an appointment, limited information is shared with the provider you select so they can prepare for your conversation.
+
+Soradin does not collect unnecessary personal details and avoids requesting information that is not relevant to booking or support.`,
+      relatedArticles: [
+        { title: 'How does Soradin handle my personal information?', slug: 'how-does-soradin-handle-information' },
+        { title: 'Who has access to my information?', slug: 'who-has-access-to-information' }
+      ]
+    },
+    'how-is-information-protected': {
+      title: 'How is my information protected?',
+      content: `Soradin uses industry standard security practices to protect your information.
+
+This includes secure servers, encrypted connections, and controlled access to sensitive data. Only authorized systems and personnel can access information required to operate the platform.
+
+While no online system can guarantee absolute security, Soradin is designed with safeguards to minimize risk and protect your privacy.`,
+      relatedArticles: [
+        { title: 'How does Soradin handle my personal information?', slug: 'how-does-soradin-handle-information' },
+        { title: 'Who has access to my information?', slug: 'who-has-access-to-information' }
+      ]
+    },
+    'who-has-access-to-information': {
+      title: 'Who has access to my information?',
+      content: `Access to your information is limited and purposeful.
+
+The provider you book with will only see the details needed to conduct your appointment, such as your name, contact information, and appointment time. Soradin staff may access limited data when necessary to provide support or resolve technical issues.
+
+Your information is never shared with other providers, advertisers, or third parties without a valid reason related to the service you requested.`,
+      relatedArticles: [
+        { title: 'What data does Soradin collect?', slug: 'what-data-does-soradin-collect' },
+        { title: 'How is my information protected?', slug: 'how-is-information-protected' }
+      ]
+    }
   }
 };
 
