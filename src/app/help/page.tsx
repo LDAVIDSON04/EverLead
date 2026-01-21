@@ -37,8 +37,19 @@ export default function HelpPage() {
         {/* Header */}
         <header className="relative z-10 py-4">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
-            <div className="flex items-center gap-8">
-              <span className="text-lg text-white font-medium">Help Center</span>
+            <div className="flex items-center gap-4">
+              <div className="flex flex-col gap-2">
+                <span className="text-lg text-white font-medium">Help Center</span>
+                <Link href="/" className="block">
+                  <Image
+                    src="/Soradin.png"
+                    alt="Soradin logo"
+                    width={360}
+                    height={360}
+                    className="h-36 w-auto brightness-0 invert"
+                  />
+                </Link>
+              </div>
             </div>
             <div className="flex items-center gap-6">
               <Link href="/" className="text-sm text-white hover:text-gray-200 transition-colors">
@@ -52,7 +63,7 @@ export default function HelpPage() {
         </header>
 
         {/* Hero Content */}
-        <div className="max-w-3xl mx-auto relative z-10 py-12">
+        <div className="max-w-3xl mx-auto relative z-10 py-6 pb-8">
           <h1 className="text-4xl md:text-5xl font-bold text-white text-center">
             How can we help?
           </h1>

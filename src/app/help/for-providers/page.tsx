@@ -46,9 +46,9 @@ export default function ProviderHelpPage() {
                   <Image
                     src="/Soradin.png"
                     alt="Soradin logo"
-                    width={120}
-                    height={120}
-                    className="h-12 w-auto brightness-0 invert"
+                    width={360}
+                    height={360}
+                    className="h-36 w-auto brightness-0 invert"
                   />
                 </Link>
               </div>
@@ -65,7 +65,7 @@ export default function ProviderHelpPage() {
         </header>
 
         {/* Hero Content */}
-        <div className="max-w-3xl mx-auto relative z-10 py-12 pb-16">
+        <div className="max-w-3xl mx-auto relative z-10 py-6 pb-8">
           <h1 className="text-4xl font-bold text-white text-center">
             Agents, how can we help?
           </h1>
