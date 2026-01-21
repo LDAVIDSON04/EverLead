@@ -9,8 +9,7 @@ export default function HelpPage() {
     { id: 1, title: 'Finding a Provider', icon: MapPin, articles: 5 },
     { id: 2, title: 'Appointments', icon: Calendar, articles: 7 },
     { id: 3, title: 'Privacy', icon: FileText, articles: 4 },
-    { id: 4, title: 'Reviews', icon: MessageSquare, articles: 3 },
-    { id: 5, title: 'About Soradin', icon: Info, articles: 7 }
+    { id: 4, title: 'Reviews', icon: MessageSquare, articles: 3 }
   ];
 
   return (
