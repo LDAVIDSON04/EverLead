@@ -1970,12 +1970,17 @@ function SearchResults() {
                               }}
                               disabled={!hasSpots}
                               className={`
-                                px-3 py-2 rounded-lg border text-center text-sm transition-colors
+                                relative px-3 py-2 rounded-lg border text-center text-sm transition-colors
                                 ${hasSpots 
                                   ? 'bg-green-800 text-white border-green-800 hover:bg-green-900 cursor-pointer' 
                                   : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'}
                               `}
                             >
+                              {hasSpots && mode === 'video' && (
+                                <span className="absolute top-1 right-1 text-white" aria-hidden>
+                                  <Video className="w-3.5 h-3.5" strokeWidth={2.5} />
+                                </span>
+                              )}
                               <div className="whitespace-pre-line leading-tight">{slot.date}</div>
                               <div className="text-xs mt-1 whitespace-pre-line">
                                 <span className="md:hidden">{hasSpots ? slot.spots + '\nappts' : 'No\nappts'}</span>
