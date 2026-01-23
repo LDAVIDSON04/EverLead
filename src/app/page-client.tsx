@@ -143,7 +143,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
   const [locationSuggestions, setLocationSuggestions] = useState<string[]>([]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Rotating text for hero title
+  // Rotating text for hero title - deferred for mobile performance
   const rotatingTexts = [
     "funeral planning professionals",
     "advanced planning directors",
@@ -153,16 +153,32 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
   const [currentTextIndex, setCurrentTextIndex] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
 
+  // Defer rotating text animation until after initial render to improve FCP/LCP
   useEffect(() => {
-    const interval = setInterval(() => {
-      setIsVisible(false);
-      setTimeout(() => {
-        setCurrentTextIndex((prevIndex) => (prevIndex + 1) % rotatingTexts.length);
-        setIsVisible(true);
-      }, 250); // Half of transition duration for smooth crossfade
-    }, 3000); // Change text every 3 seconds
+    // Use requestIdleCallback if available, otherwise setTimeout
+    const scheduleAnimation = (callback: () => void) => {
+      if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+        (window as any).requestIdleCallback(callback, { timeout: 500 });
+      } else {
+        setTimeout(callback, 500);
+      }
+    };
 
-    return () => clearInterval(interval);
+    let interval: NodeJS.Timeout | null = null;
+    
+    scheduleAnimation(() => {
+      interval = setInterval(() => {
+        setIsVisible(false);
+        setTimeout(() => {
+          setCurrentTextIndex((prevIndex) => (prevIndex + 1) % rotatingTexts.length);
+          setIsVisible(true);
+        }, 250);
+      }, 3000);
+    });
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
   }, [rotatingTexts.length]);
 
   const specialtySuggestions = [
@@ -385,10 +401,10 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
         <div className="max-w-7xl mx-auto relative z-20 w-full md:mt-0 mt-1 overflow-visible">
           {/* Headline and Search Bar - Full Width */}
           <div className="max-w-4xl">
-            <h1 className="text-6xl md:text-6xl text-2xl md:mb-8 mb-3 text-[#1A1A1A] font-semibold tracking-tight leading-none text-center md:text-left" style={{ paddingTop: '4px' }}>
-              {/* Mobile: Static text */}
+            <h1 className="text-6xl md:text-6xl text-2xl md:mb-8 mb-3 text-[#1A1A1A] font-semibold tracking-tight leading-none text-center md:text-left" style={{ paddingTop: '4px', contentVisibility: 'auto' }}>
+              {/* Mobile: Static text - no animation for better performance */}
               <span className="md:hidden">Book local funeral planning professionals</span>
-              {/* Desktop: Rotating text */}
+              {/* Desktop: Rotating text - deferred animation */}
               <span className="hidden md:block">
                 <span className="block">Book local</span>
                 <span className="block min-h-[1.2em]">
@@ -624,19 +640,20 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
             <div className="bg-[#FAF9F6] rounded-3xl p-6 border border-[#1A1A1A]/5 relative overflow-visible group hover:shadow-xl hover:shadow-black/5 transition-all flex flex-col">
               {/* Image overlapping the top */}
               <div className="absolute -top-48 left-1/2 -translate-x-1/2 w-96 h-96 flex items-center justify-center" style={{ aspectRatio: "1/1" }}>
-                <Image
-                  src="/review-image.png"
-                  alt="Person holding review card"
-                  width={384}
-                  height={384}
-                  className="w-full h-full object-contain"
-                  style={{
-                    filter: "brightness(1.1) contrast(1.05)",
-                    mixBlendMode: "multiply",
-                  }}
-                  loading="lazy"
-                  fetchPriority="low"
-                />
+              <Image
+                src="/review-image.png"
+                alt="Person holding review card"
+                width={384}
+                height={384}
+                className="w-full h-full object-contain"
+                style={{
+                  filter: "brightness(1.1) contrast(1.05)",
+                  mixBlendMode: "multiply",
+                }}
+                loading="lazy"
+                fetchPriority="low"
+                sizes="(max-width: 768px) 100vw, 384px"
+              />
               </div>
 
               <div className="relative z-10 flex flex-col items-center text-center mt-20">
@@ -671,6 +688,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                   }}
                   loading="lazy"
                   fetchPriority="low"
+                  sizes="(max-width: 768px) 100vw, 384px"
                 />
               </div>
 
@@ -890,6 +908,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                         className="w-32 h-32 object-contain opacity-75 hover:opacity-100 transition-opacity"
                         loading="lazy"
                         fetchPriority="low"
+                        sizes="128px"
                       />
                     </div>
                   ))}
@@ -906,6 +925,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                         className="w-32 h-32 object-contain opacity-75 hover:opacity-100 transition-opacity"
                         loading="lazy"
                         fetchPriority="low"
+                        sizes="128px"
                       />
                     </div>
                   ))}
