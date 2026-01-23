@@ -29,35 +29,6 @@ img {
   height: auto;
 }
 
-/* CLS optimizations */
-/* Reserve space for Next.js Image components */
-.next-image-wrapper {
-  position: relative;
-  display: block;
-  overflow: hidden;
-}
-
-/* Prevent layout shift from font loading */
-@supports (font-display: swap) {
-  * {
-    font-display: swap;
-  }
-}
-
-/* Optimize animations to prevent layout shifts */
-[class*="transition"] {
-  will-change: transform, opacity;
-  backface-visibility: hidden;
-  perspective: 1000px;
-}
-
-/* Ensure dropdowns don't cause layout shifts */
-[class*="dropdown"],
-[class*="autocomplete"] {
-  position: absolute;
-  z-index: 50;
-}
-
 a {
   @apply text-brand-600;
 }

@@ -277,7 +277,6 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                 height={80}
                 className="h-16 w-16 md:h-20 md:w-20 object-contain"
                 priority
-                style={{ aspectRatio: "1/1" }}
               />
               <span className="text-sm md:text-2xl font-semibold text-[#1A1A1A]">Soradin</span>
             </Link>
@@ -332,7 +331,6 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                         width={80}
                         height={80}
                         className="h-12 w-12 object-contain"
-                        style={{ aspectRatio: "1/1" }}
                       />
                       <span className="text-lg font-semibold text-[#1A1A1A]">Soradin</span>
                     </div>
@@ -384,7 +382,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
 
         {/* Hero illustration - positioned absolutely on the right, above title */}
         {/* Fixed aspect-ratio prevents CLS on desktop */}
-        <div className="absolute right-10 top-10 hidden lg:block" style={{ width: "350px", height: "350px", aspectRatio: "1/1" }}>
+        <div className="absolute right-10 top-10 hidden lg:block" style={{ width: "350px", aspectRatio: "1/1" }}>
           <Image
             src="/hero-image.png"
             alt="Book a specialist"
@@ -396,7 +394,6 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
             }}
             loading="lazy"
             fetchPriority="low"
-            sizes="350px"
           />
         </div>
 
@@ -410,12 +407,11 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
               {/* Desktop: Rotating text - deferred animation */}
               <span className="hidden md:block">
                 <span className="block">Book local</span>
-                <span className="block h-[1.2em] relative" style={{ minHeight: '1.2em' }}>
+                <span className="block min-h-[1.2em]">
                   <span
-                    className={`absolute inset-0 inline-block transition-opacity duration-500 ease-in-out will-change-[opacity,transform] ${
+                    className={`inline-block transition-all duration-500 ease-in-out ${
                       isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'
                     }`}
-                    style={{ transform: isVisible ? 'translateY(0)' : 'translateY(-8px)' }}
                   >
                     {rotatingTexts[currentTextIndex]}
                   </span>
@@ -448,7 +444,6 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                       <div 
                         className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto"
                         onMouseDown={(e) => e.preventDefault()}
-                        style={{ willChange: 'transform' }}
                       >
                         <div className="p-2">
                           <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide px-3 py-2">
@@ -514,7 +509,6 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                       <div 
                         className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto"
                         onMouseDown={(e) => e.preventDefault()}
-                        style={{ willChange: 'transform' }}
                       >
                         <div className="p-2">
                           {locationSuggestions.map((city, index) => (
@@ -644,8 +638,6 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
           <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
             {/* Left Box - Read Reviews */}
             <div className="bg-[#FAF9F6] rounded-3xl p-6 border border-[#1A1A1A]/5 relative overflow-visible group hover:shadow-xl hover:shadow-black/5 transition-all flex flex-col">
-              {/* Reserved space for image to prevent CLS */}
-              <div className="w-full h-48 flex-shrink-0" aria-hidden="true" />
               {/* Image overlapping the top */}
               <div className="absolute -top-48 left-1/2 -translate-x-1/2 w-96 h-96 flex items-center justify-center" style={{ aspectRatio: "1/1" }}>
               <Image
@@ -664,7 +656,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
               />
               </div>
 
-              <div className="relative z-10 flex flex-col items-center text-center">
+              <div className="relative z-10 flex flex-col items-center text-center mt-20">
                 <h3 className="text-xl mb-2 text-[#1A1A1A] font-semibold">
                   Read reviews from families
                 </h3>
@@ -682,8 +674,6 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
 
             {/* Right Box - Book Appointment */}
             <div className="bg-[#FAF9F6] rounded-3xl p-6 border border-[#1A1A1A]/5 relative overflow-visible group hover:shadow-xl hover:shadow-black/5 transition-all flex flex-col">
-              {/* Reserved space for image to prevent CLS */}
-              <div className="w-full h-48 flex-shrink-0" aria-hidden="true" />
               {/* Image overlapping the top */}
               <div className="absolute -top-48 left-1/2 -translate-x-1/2 w-96 h-96 flex items-center justify-center" style={{ aspectRatio: "1/1" }}>
                 <Image
@@ -702,7 +692,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                 />
               </div>
 
-              <div className="relative z-10 flex flex-col items-center text-center">
+              <div className="relative z-10 flex flex-col items-center text-center mt-20">
                 <h3 className="text-xl mb-2 text-[#1A1A1A] font-semibold">
                   Book an appointment today
                 </h3>
@@ -726,7 +716,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-1 gap-12 items-center">
             {/* Image */}
-            <div className="w-full" style={{ aspectRatio: "1/1" }}>
+            <div className="w-full h-full">
               <Image
                 src="/f75c771a2df6874e6f701c79ddc5f202a2bcc4f5.png"
                 alt="Pre arrangements"
@@ -735,7 +725,6 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                 className="w-full h-full object-cover rounded-lg"
                 loading="lazy"
                 fetchPriority="low"
-                sizes="(max-width: 768px) 100vw, 600px"
               />
             </div>
 
@@ -778,7 +767,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
         <div className="max-w-6xl mx-auto">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             {/* Left side - Image */}
-            <div className="w-full" style={{ aspectRatio: "1/1" }}>
+            <div className="w-full h-full">
               <Image
                 src="/f75c771a2df6874e6f701c79ddc5f202a2bcc4f5.png"
                 alt="Pre arrangements"
@@ -787,7 +776,6 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                 className="w-full h-full object-cover rounded-lg"
                 loading="lazy"
                 fetchPriority="low"
-                sizes="(max-width: 768px) 100vw, 600px"
               />
             </div>
 
@@ -830,7 +818,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
         <div className="max-w-7xl mx-auto">
           <div className="grid md:grid-cols-[1.4fr_1fr] gap-12 items-center">
             {/* Left side - Image - Using PNG version (722K) instead of JPG (6.7MB) for better performance */}
-            <div className="relative w-full" style={{ aspectRatio: "900/700", minHeight: "400px" }}>
+            <div className="relative w-full" style={{ aspectRatio: "900/700" }}>
               <Image
                 src="/specialist-image.jpg"
                 alt="Professional funeral specialist"
@@ -921,7 +909,6 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                         loading="lazy"
                         fetchPriority="low"
                         sizes="128px"
-                        style={{ aspectRatio: "1/1" }}
                       />
                     </div>
                   ))}
@@ -939,7 +926,6 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                         loading="lazy"
                         fetchPriority="low"
                         sizes="128px"
-                        style={{ aspectRatio: "1/1" }}
                       />
                     </div>
                   ))}
@@ -1084,7 +1070,6 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                     width={40}
                     height={40}
                     className="h-10 w-10 object-contain"
-                    style={{ aspectRatio: "1/1" }}
                   />
                   <span className="text-2xl font-medium">Soradin</span>
                 </div>
