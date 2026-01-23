@@ -21,6 +21,7 @@ function BookingStep2Content() {
   const searchedCity = searchParams.get("city") || ""; // City from search (e.g., Penticton)
   const officeLocationName = searchParams.get("officeLocation") || ""; // Office location name
   const rescheduleAppointmentId = searchParams.get("rescheduleAppointmentId") || null; // ID of appointment being rescheduled
+  const mode = searchParams.get("mode") || "in-person"; // "in-person" | "video"
 
   const [agentInfo, setAgentInfo] = useState<{
     full_name: string | null;
@@ -493,6 +494,7 @@ function BookingStep2Content() {
                 legalFirstName: formData.legalFirstName,
                 legalLastName: formData.legalLastName,
                 dateOfBirth: formData.dateOfBirth,
+                mode,
                 ...(searchedCity ? { searchedCity } : {}),
                 ...(officeLocationName ? { officeLocation: officeLocationName } : {}),
                 ...(officeLocationId ? { officeLocationId } : {}),

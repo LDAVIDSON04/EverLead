@@ -31,6 +31,7 @@ function BookingStep3Content() {
   const officeLocationName = searchParams.get("officeLocation") || "";
   const officeLocationId = searchParams.get("officeLocationId") || "";
   const rescheduleAppointmentId = searchParams.get("rescheduleAppointmentId") || null;
+  const mode = searchParams.get("mode") || "in-person"; // "in-person" | "video"
 
   const [formData, setFormData] = useState({
     phone: "",
@@ -238,6 +239,7 @@ function BookingStep3Content() {
           serviceType: selectedService,
           notes: `Date of Birth: ${dateOfBirth}`,
           officeLocationId: officeLocationId || null,
+          appointmentType: mode, // "in-person" | "video"
           ...(rescheduleAppointmentId ? { rescheduleAppointmentId } : {}),
         }),
       });

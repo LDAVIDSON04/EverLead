@@ -1048,9 +1048,11 @@ function SearchResults() {
         endsAt: timeSlot.endsAt,
         date: dayDate,
       });
-      // Include the searched city so booking uses the correct location
       if (searchLocation) {
         params.set("city", searchLocation);
+      }
+      if (mode) {
+        params.set("mode", mode);
       }
       const url = `/book/step2?agentId=${agentId}&${params.toString()}`;
       console.log("Navigating to:", url);
@@ -1233,9 +1235,11 @@ function SearchResults() {
                               endsAt: timeSlot.endsAt,
                               date: day.date,
                             });
-                            // Include the searched city so booking uses the correct location
                             if (searchLocation) {
                               params.set("city", searchLocation);
+                            }
+                            if (mode) {
+                              params.set("mode", mode);
                             }
                             return `/book/step2?agentId=${agentId}&${params.toString()}`;
                           })();
@@ -2276,6 +2280,9 @@ function SearchResults() {
                                 if (searchLocation) {
                                   params.set("city", searchLocation);
                                 }
+                                if (mode) {
+                                  params.set("mode", mode);
+                                }
                                 const bookingUrl = `${window.location.origin}/book/step2?agentId=${selectedAgentIdForModal}&${params.toString()}`;
                                 const timeSlotId = `time-slot-${dayIdx}-${idx}-${timeSlot.startsAt}`;
                                 
@@ -2296,6 +2303,9 @@ function SearchResults() {
                                       });
                                       if (searchLocation) {
                                         params.set("city", searchLocation);
+                                      }
+                                      if (mode) {
+                                        params.set("mode", mode);
                                       }
                                       const url = `${window.location.origin}/book/step2?agentId=${selectedAgentIdForModal}&${params.toString()}`;
                                       
