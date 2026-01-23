@@ -178,7 +178,7 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
       <section className="bg-[#faf8f3] py-20">
         <div className="max-w-6xl mx-auto px-6">
           <div className="grid md:grid-cols-2 gap-16 items-start">
-            <div className="rounded-xl overflow-hidden shadow-lg order-2 md:order-1">
+            <div className="rounded-xl overflow-hidden shadow-lg order-1 md:order-1">
               <img 
                 src="/a448f0358969818d57da3a45b0fef57728b21630.png" 
                 alt="Professional documentation"
@@ -188,7 +188,7 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
                 }}
               />
             </div>
-            <div className="order-1 md:order-2">
+            <div className="order-2 md:order-2">
               <h2 className="text-4xl md:text-5xl font-semibold text-gray-900 mb-8 leading-tight">
                 What Pre-Need Planning Is Not
               </h2>
@@ -273,7 +273,7 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
       <section className="bg-[#faf8f3] py-20">
         <div className="max-w-6xl mx-auto px-6">
           <div className="grid md:grid-cols-2 gap-16 items-start">
-            <div>
+            <div className="order-2 md:order-1">
               <h2 className="text-4xl md:text-5xl font-semibold text-gray-900 mb-8 leading-tight">
                 What Happens During a Pre-Need Consultation?
               </h2>
@@ -317,7 +317,7 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
                 Find care
               </button>
             </div>
-            <div className="rounded-xl overflow-hidden shadow-lg">
+            <div className="rounded-xl overflow-hidden shadow-lg order-1 md:order-2">
               <img 
                 src="/consultation-image.jpg" 
                 alt="Professional consultation space"
