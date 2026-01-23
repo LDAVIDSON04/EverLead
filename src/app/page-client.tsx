@@ -770,11 +770,10 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
         </div>
       </section>
 
-      {/* TRUSTED PARTNERS */}
-      <section className="py-24 px-4 bg-[#FAF9F6]">
+      {/* TRUSTED PARTNERS - HIDDEN */}
+      {/* <section className="py-24 px-4 bg-[#FAF9F6]">
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
-            {/* Left side - Content (mobile first, desktop left) */}
             <div className="order-1 lg:order-1 text-center lg:text-left">
               <h2 className="text-5xl mb-6 text-[#1A1A1A] font-semibold tracking-tight leading-tight">
                 Trusted by agents from top funeral homes
@@ -789,10 +788,8 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                 Find care
               </button>
             </div>
-            {/* Right side - Logos (mobile second, desktop right) */}
             <div className="relative w-full order-2 lg:order-2 flex items-center justify-center h-full">
               <div className="flex flex-col gap-12 w-full items-center justify-center">
-                {/* Top row - 3 logos */}
                 <div className="flex items-center justify-center gap-10">
                   {[1, 2, 3].map((index) => (
                     <div key={index} className="flex items-center justify-center">
@@ -810,7 +807,6 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                     </div>
                   ))}
                 </div>
-                {/* Bottom row - 2 logos */}
                 <div className="flex items-center justify-center gap-10">
                   {[4, 5].map((index) => (
                     <div key={index} className="flex items-center justify-center">
@@ -832,7 +828,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
             </div>
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* CITIES LIST */}
       <section className="py-24 px-4 bg-[#D9C7A3]/20">
@@ -843,18 +839,8 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
 
           <div className="grid grid-cols-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {[
-              "Vancouver",
-              "Surrey",
-              "Victoria",
-              "Prince George",
-              "Kelowna",
-              "Burnaby",
-              "Richmond",
-              "Abbotsford",
-              "Kamloops",
-              "Nanaimo",
               "Penticton",
-              "Salmon Arm"
+              "Kelowna"
             ].map((city) => (
               <Link
                 key={city}
