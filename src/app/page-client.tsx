@@ -548,7 +548,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
               />
               </div>
 
-              <div className="relative z-10 flex flex-col items-center text-center">
+              <div className="relative z-10 flex flex-col items-center text-center mt-40">
                 <h3 className="text-xl mb-2 text-[#1A1A1A] font-semibold">
                   Read reviews from families
                 </h3>
@@ -586,7 +586,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                 />
               </div>
 
-              <div className="relative z-10 flex flex-col items-center text-center">
+              <div className="relative z-10 flex flex-col items-center text-center mt-40">
                 <h3 className="text-xl mb-2 text-[#1A1A1A] font-semibold">
                   Book an appointment today
                 </h3>
