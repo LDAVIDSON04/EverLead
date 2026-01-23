@@ -383,9 +383,6 @@ export async function POST(req: NextRequest) {
       price_cents: priceCents, // Set price when booking
       confirmed_at: confirmedAtISO, // Store exact booking time - MUST match slot startsAt for conflict detection
       office_location_id: officeLocationId || null, // Store the office location where appointment was booked
-      metadata: {
-        appointment_type: appointmentType || "in-person", // Store appointment type
-      },
     };
     
     const { data: appointment, error: appointmentError } = await supabaseAdmin
@@ -429,38 +426,6 @@ export async function POST(req: NextRequest) {
     }
     
     console.log("Appointment created successfully:", appointment.id);
-
-    // If video appointment, generate and store video room name
-    let updatedAppointment = appointment;
-    if (appointmentType === "video") {
-      const videoRoomName = `appointment-${appointment.id}`;
-      try {
-        // Update appointment metadata with video room name
-        const currentMetadata = (appointment.metadata as any) || {};
-        const { data: updated, error: updateError } = await supabaseAdmin
-          .from("appointments")
-          .update({
-            metadata: {
-              ...currentMetadata,
-              appointment_type: "video",
-              video_room_name: videoRoomName,
-            },
-          })
-          .eq("id", appointment.id)
-          .select()
-          .single();
-        
-        if (updateError) {
-          console.error("Error storing video room name:", updateError);
-        } else if (updated) {
-          updatedAppointment = updated;
-          console.log("✅ Video room name stored:", videoRoomName);
-        }
-      } catch (updateError) {
-        console.error("Error storing video room name:", updateError);
-        // Don't fail the booking if metadata update fails
-      }
-    }
 
     // Charge agent's saved payment method immediately when appointment is booked
     // Note: Payment failures are handled internally - family always sees success
@@ -763,11 +728,10 @@ export async function POST(req: NextRequest) {
       const resendApiKey = process.env.RESEND_API_KEY;
       const resendFromEmail = process.env.RESEND_FROM_EMAIL || 'Soradin <notifications@soradin.com>';
       
-      // Get video room info if this is a video appointment
-      const appointmentMetadata = (updatedAppointment.metadata as any) || {};
-      const isVideoAppointment = appointmentMetadata.appointment_type === "video";
-      const videoRoomName = appointmentMetadata.video_room_name;
-      const customerVideoLink = isVideoAppointment && videoRoomName 
+      // Video call links: derive from request (appointments table has no metadata column)
+      const isVideoAppointment = appointmentType === "video";
+      const videoRoomName = isVideoAppointment ? `appointment-${appointment.id}` : null;
+      const customerVideoLink = isVideoAppointment && videoRoomName
         ? `${baseUrl}/video/${videoRoomName}?identity=${encodeURIComponent(`${firstName} ${lastName}`.trim())}`
         : null;
       const agentVideoLink = isVideoAppointment && videoRoomName
@@ -885,7 +849,7 @@ export async function POST(req: NextRequest) {
                                     </p>
                                     `}
                                     <p style="color: #374151; font-size: 16px; margin: 0; line-height: 1.5;">
-                                      If you need to reschedule or cancel, please click this link: <a href="${baseUrl}/book/cancel?appointmentId=${updatedAppointment.id}" style="color: #1a4d2e; text-decoration: underline;">Cancel Or Reschedule Appointment</a>
+                                      If you need to reschedule or cancel, please click this link: <a href="${baseUrl}/book/cancel?appointmentId=${appointment.id}" style="color: #1a4d2e; text-decoration: underline;">Cancel Or Reschedule Appointment</a>
                                     </p>
                                   </td>
                                 </tr>
@@ -1217,7 +1181,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(
       {
-        appointment: updatedAppointment,
+        appointment,
         message: "Appointment booked successfully",
       },
       { status: 201 }
