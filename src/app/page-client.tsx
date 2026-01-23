@@ -162,7 +162,8 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
         (window as any).requestIdleCallback(callback, { timeout: 3000 });
       } else {
         // Longer delay on mobile to ensure FCP/LCP complete first
-        setTimeout(callback, typeof window !== 'undefined' && window.innerWidth < 768 ? 3000 : 2000);
+        const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+        setTimeout(callback, isMobile ? 3000 : 2000);
       }
     };
 
