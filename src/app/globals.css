@@ -21,12 +21,27 @@ body {
     sans-serif;
   /* Prevent layout shift from font loading */
   font-display: swap;
+  /* Optimize rendering */
+  text-rendering: optimizeSpeed;
 }
 
 /* Prevent layout shift from images loading */
 img {
   max-width: 100%;
   height: auto;
+}
+
+/* CLS optimizations */
+img[loading="lazy"] {
+  content-visibility: auto;
+}
+
+/* Prevent layout shifts from dynamic content */
+[class*="dropdown"],
+[class*="autocomplete"] {
+  position: absolute;
+  z-index: 50;
+  will-change: transform;
 }
 
 a {

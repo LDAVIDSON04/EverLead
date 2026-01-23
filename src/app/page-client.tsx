@@ -155,12 +155,12 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
 
   // Defer rotating text animation until after initial render to improve FCP/LCP
   useEffect(() => {
-    // Use requestIdleCallback if available, otherwise setTimeout
+    // Use requestIdleCallback if available, otherwise setTimeout with longer delay
     const scheduleAnimation = (callback: () => void) => {
       if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
-        (window as any).requestIdleCallback(callback, { timeout: 500 });
+        (window as any).requestIdleCallback(callback, { timeout: 2000 });
       } else {
-        setTimeout(callback, 500);
+        setTimeout(callback, 2000);
       }
     };
 
@@ -382,7 +382,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
 
         {/* Hero illustration - positioned absolutely on the right, above title */}
         {/* Fixed aspect-ratio prevents CLS on desktop */}
-        <div className="absolute right-10 top-10 hidden lg:block" style={{ width: "350px", aspectRatio: "1/1" }}>
+        <div className="absolute right-10 top-10 hidden lg:block" style={{ width: "350px", height: "350px" }}>
           <Image
             src="/hero-image.png"
             alt="Book a specialist"
@@ -392,8 +392,9 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
             style={{
               mixBlendMode: "multiply",
             }}
-            loading="lazy"
-            fetchPriority="low"
+            loading="eager"
+            fetchPriority="high"
+            sizes="350px"
           />
         </div>
 
@@ -401,7 +402,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
         <div className="max-w-7xl mx-auto relative z-20 w-full md:mt-0 mt-1 overflow-visible">
           {/* Headline and Search Bar - Full Width */}
           <div className="max-w-4xl">
-            <h1 className="text-6xl md:text-6xl text-2xl md:mb-8 mb-3 text-[#1A1A1A] font-semibold tracking-tight leading-none text-center md:text-left" style={{ paddingTop: '4px', contentVisibility: 'auto' }}>
+            <h1 className="text-6xl md:text-6xl text-2xl md:mb-8 mb-3 text-[#1A1A1A] font-semibold tracking-tight leading-none text-center md:text-left" style={{ paddingTop: '4px' }}>
               {/* Mobile: Static text - no animation for better performance */}
               <span className="md:hidden">Book local funeral planning professionals</span>
               {/* Desktop: Rotating text - deferred animation */}
@@ -409,13 +410,13 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                 <span className="block">Book local</span>
                 <span className="block relative" style={{ minHeight: '1.2em', height: '1.2em' }}>
                   <span
-                    className={`absolute inset-0 transition-opacity duration-500 ease-in-out ${
+                    className={`absolute left-0 top-0 transition-opacity duration-500 ease-in-out ${
                       isVisible ? 'opacity-100' : 'opacity-0'
                     }`}
                   >
                     {rotatingTexts[currentTextIndex]}
                   </span>
-                  <span className="invisible">{rotatingTexts[0]}</span>
+                  <span className="invisible">{rotatingTexts.reduce((a, b) => a.length > b.length ? a : b)}</span>
                 </span>
               </span>
             </h1>
@@ -638,9 +639,9 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
 
           <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
             {/* Left Box - Read Reviews */}
-            <div className="bg-[#FAF9F6] rounded-3xl p-6 border border-[#1A1A1A]/5 relative overflow-visible group hover:shadow-xl hover:shadow-black/5 transition-all flex flex-col" style={{ paddingTop: '12rem' }}>
+            <div className="bg-[#FAF9F6] rounded-3xl p-6 border border-[#1A1A1A]/5 relative overflow-visible group hover:shadow-xl hover:shadow-black/5 transition-all flex flex-col" style={{ paddingTop: '12rem', minHeight: '400px' }}>
               {/* Image overlapping the top */}
-              <div className="absolute -top-48 left-1/2 -translate-x-1/2 w-96 h-96 flex items-center justify-center" style={{ aspectRatio: "1/1" }}>
+              <div className="absolute -top-48 left-1/2 -translate-x-1/2 w-96 h-96 flex items-center justify-center" style={{ width: '384px', height: '384px' }}>
               <Image
                 src="/review-image.png"
                 alt="Person holding review card"
@@ -674,9 +675,9 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
             </div>
 
             {/* Right Box - Book Appointment */}
-            <div className="bg-[#FAF9F6] rounded-3xl p-6 border border-[#1A1A1A]/5 relative overflow-visible group hover:shadow-xl hover:shadow-black/5 transition-all flex flex-col" style={{ paddingTop: '12rem' }}>
+            <div className="bg-[#FAF9F6] rounded-3xl p-6 border border-[#1A1A1A]/5 relative overflow-visible group hover:shadow-xl hover:shadow-black/5 transition-all flex flex-col" style={{ paddingTop: '12rem', minHeight: '400px' }}>
               {/* Image overlapping the top */}
-              <div className="absolute -top-48 left-1/2 -translate-x-1/2 w-96 h-96 flex items-center justify-center" style={{ aspectRatio: "1/1" }}>
+              <div className="absolute -top-48 left-1/2 -translate-x-1/2 w-96 h-96 flex items-center justify-center" style={{ width: '384px', height: '384px' }}>
                 <Image
                   src="/booking-image.png"
                   alt="Person holding book now sign"
@@ -820,7 +821,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
         <div className="max-w-7xl mx-auto">
           <div className="grid md:grid-cols-[1.4fr_1fr] gap-12 items-center">
             {/* Left side - Image - Using PNG version (722K) instead of JPG (6.7MB) for better performance */}
-            <div className="relative w-full" style={{ aspectRatio: "900/700" }}>
+            <div className="relative w-full" style={{ aspectRatio: "900/700", minHeight: "400px" }}>
               <Image
                 src="/specialist-image.jpg"
                 alt="Professional funeral specialist"

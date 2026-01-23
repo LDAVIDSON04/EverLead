@@ -139,6 +139,9 @@ export default function RootLayout({
             `,
           }}
         />
+        {/* Preconnect to external domains for faster loading */}
+        <link rel="preconnect" href="https://www.googletagmanager.com" />
+        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
       </head>
       <body className="min-h-screen bg-slate-50 text-slate-900">
         {/* BotIdClient must be in body - client components cannot be in head */}
