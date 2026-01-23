@@ -19,15 +19,13 @@ export function CTASection() {
             </Link>
           </div>
 
-          {/* Right content - scattered profile cards image */}
+          {/* Right content - calendar scheduling interface image */}
           <div className="relative w-full h-full min-h-[700px] hidden md:flex items-center justify-center overflow-visible -mr-6">
             <img 
-              src="/1287f77558fc6a47c506a92275bdcb435d5dc5d5.png" 
-              alt="Professional team profile cards" 
-              className="w-full h-full max-w-none object-cover scale-150"
+              src="/calendar-scheduling.png" 
+              alt="Scheduling platform calendar interface" 
+              className="w-full h-full max-w-none object-contain"
               style={{ 
-                mixBlendMode: 'multiply',
-                filter: 'contrast(1.15) brightness(1.1)',
                 objectFit: 'contain'
               }}
               onError={(e) => {
@@ -35,7 +33,7 @@ export function CTASection() {
                 e.currentTarget.style.display = 'none';
                 const parent = e.currentTarget.parentElement;
                 if (parent) {
-                  parent.innerHTML = '<div class="w-full h-full bg-white border-4 border-black rounded-2xl flex items-center justify-center p-8"><div class="text-center"><div class="text-6xl mb-4">👥</div><p class="text-gray-600">Professional Team</p></div></div>';
+                  parent.innerHTML = '<div class="w-full h-full bg-white border-4 border-black rounded-2xl flex items-center justify-center p-8"><div class="text-center"><div class="text-6xl mb-4">📅</div><p class="text-gray-600">Calendar Interface</p></div></div>';
                 }
               }}
             />
