@@ -857,7 +857,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
       </section>
 
       {/* TRUSTED PARTNERS */}
-      <section className="py-24 px-4 bg-[#FAF9F6]">
+      <section className="hidden py-24 px-4 bg-[#FAF9F6]">
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             {/* Left side - Content (mobile first, desktop left) */}
@@ -920,7 +920,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
       <section className="py-24 px-4 bg-[#D9C7A3]/20">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-4xl mb-12 text-[#1A1A1A] font-medium tracking-tight">
-            Find funeral professionals near you
+            Penticton Kelowna
           </h2>
 
           <div className="grid grid-cols-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
