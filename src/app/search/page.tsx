@@ -1978,7 +1978,7 @@ function SearchResults() {
                             >
                               {hasSpots && mode === 'video' && (
                                 <span className="absolute top-1 right-1 text-white" aria-hidden>
-                                  <Video className="w-3.5 h-3.5" strokeWidth={2.5} />
+                                  <Video className="w-5 h-5" strokeWidth={2.5} />
                                 </span>
                               )}
                               <div className="whitespace-pre-line leading-tight">{slot.date}</div>
@@ -2312,8 +2312,13 @@ function SearchResults() {
                                       // IMMEDIATE navigation
                                       window.location.href = url;
                                     }}
-                                    className="w-full px-4 py-3 rounded-lg text-sm font-medium transition-all bg-green-100 text-black hover:bg-green-600 hover:text-white border-2 border-green-300 hover:border-green-600 shadow-sm hover:shadow-md"
+                                    className="group relative w-full px-4 py-3 rounded-lg text-sm font-medium transition-all bg-green-100 text-black hover:bg-green-600 hover:text-white border-2 border-green-300 hover:border-green-600 shadow-sm hover:shadow-md"
                                   >
+                                    {mode === 'video' && (
+                                      <span className="absolute top-1.5 right-1.5 text-green-800 group-hover:text-white transition-colors" aria-hidden>
+                                        <Video className="w-5 h-5" strokeWidth={2.5} />
+                                      </span>
+                                    )}
                                     {timeSlot.time}
                                   </button>
                                 );
