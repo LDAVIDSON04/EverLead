@@ -269,8 +269,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
         </div>
 
         {/* Hero illustration - positioned absolutely on the right, above title */}
-        {/* Hidden on mobile to improve LCP - mobile LCP is typically the hero text */}
-        <div className="absolute right-10 top-10 hidden lg:block" style={{ width: "350px", height: "350px", contentVisibility: 'auto' }}>
+        <div className="absolute right-10 top-10 hidden lg:block" style={{ width: "350px", height: "350px" }}>
           <Image
             src="/hero-image.png"
             alt="Book a specialist"
@@ -279,9 +278,10 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
             className="w-full h-full object-contain"
             style={{
               mixBlendMode: "multiply",
+              background: "transparent",
             }}
-            loading="lazy"
-            fetchPriority="low"
+            loading="eager"
+            fetchPriority="high"
             sizes="350px"
           />
         </div>
@@ -527,7 +527,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
 
           <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
             {/* Left Box - Read Reviews */}
-            <div className="bg-[#FAF9F6] rounded-3xl p-6 border border-[#1A1A1A]/5 relative overflow-visible group hover:shadow-xl hover:shadow-black/5 transition-all flex flex-col" style={{ paddingTop: '12rem', minHeight: '400px' }}>
+            <div className="bg-[#FAF9F6] rounded-3xl p-6 border border-[#1A1A1A]/5 relative overflow-visible group hover:shadow-xl hover:shadow-black/5 transition-all flex flex-col">
               {/* Image overlapping the top */}
               <div className="absolute -top-48 left-1/2 -translate-x-1/2 w-96 h-96 flex items-center justify-center" style={{ width: '384px', height: '384px' }}>
               <Image
@@ -546,7 +546,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
               />
               </div>
 
-              <div className="relative z-10 flex flex-col items-center text-center">
+              <div className="relative z-10 flex flex-col items-center text-center mt-48">
                 <h3 className="text-xl mb-2 text-[#1A1A1A] font-semibold">
                   Read reviews from families
                 </h3>
@@ -563,7 +563,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
             </div>
 
             {/* Right Box - Book Appointment */}
-            <div className="bg-[#FAF9F6] rounded-3xl p-6 border border-[#1A1A1A]/5 relative overflow-visible group hover:shadow-xl hover:shadow-black/5 transition-all flex flex-col" style={{ paddingTop: '12rem', minHeight: '400px' }}>
+            <div className="bg-[#FAF9F6] rounded-3xl p-6 border border-[#1A1A1A]/5 relative overflow-visible group hover:shadow-xl hover:shadow-black/5 transition-all flex flex-col">
               {/* Image overlapping the top */}
               <div className="absolute -top-48 left-1/2 -translate-x-1/2 w-96 h-96 flex items-center justify-center" style={{ width: '384px', height: '384px' }}>
                 <Image
@@ -582,7 +582,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                 />
               </div>
 
-              <div className="relative z-10 flex flex-col items-center text-center">
+              <div className="relative z-10 flex flex-col items-center text-center mt-48">
                 <h3 className="text-xl mb-2 text-[#1A1A1A] font-semibold">
                   Book an appointment today
                 </h3>
