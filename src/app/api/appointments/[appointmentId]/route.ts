@@ -58,6 +58,7 @@ export async function GET(
         confirmed_at,
         lead_id,
         office_location_id,
+        notes,
         leads (
           id,
           first_name,
@@ -257,6 +258,7 @@ export async function GET(
       lead: lead,
       lead_id: appointment.lead_id,
       office_location: officeLocation,
+      notes: appointment.notes || null,
     });
   } catch (error: any) {
     console.error("Error fetching appointment:", error);

@@ -58,6 +58,10 @@ interface AppointmentData {
   requested_window: string | null;
   office_location: OfficeLocation | null;
   agent_timezone?: string;
+  notes?: string | null;
+  agent?: {
+    full_name: string | null;
+  } | null;
 }
 
 export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId, onEdit }: ClientInfoModalProps) {
@@ -337,50 +341,85 @@ export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId, onEdit
                 </div>
               </div>
 
-              {/* Meeting Location */}
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Meeting Location</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {officeLocation ? (
-                    <>
-                      {officeLocation.name && (
-                        <div>
-                          <label className="text-sm font-medium text-gray-500">Office Name</label>
-                          <p className="text-gray-900">{officeLocation.name}</p>
-                        </div>
-                      )}
-                      {officeLocation.city && (
-                        <div>
-                          <label className="text-sm font-medium text-gray-500">City</label>
-                          <p className="text-gray-900">{officeLocation.city}</p>
-                        </div>
-                      )}
-                      {officeLocation.street_address && (
-                        <div className="md:col-span-2">
-                          <label className="text-sm font-medium text-gray-500">Street Address</label>
-                          <p className="text-gray-900">{officeLocation.street_address}</p>
-                        </div>
-                      )}
-                      {officeLocation.province && (
-                        <div>
-                          <label className="text-sm font-medium text-gray-500">Province</label>
-                          <p className="text-gray-900">{officeLocation.province}</p>
-                        </div>
-                      )}
-                      {officeLocation.postal_code && (
-                        <div>
-                          <label className="text-sm font-medium text-gray-500">Postal Code</label>
-                          <p className="text-gray-900">{officeLocation.postal_code}</p>
-                        </div>
-                      )}
-                    </>
-                  ) : (
+              {/* Meeting Location or Join Meeting (for video calls) */}
+              {(() => {
+                // Check if this is a video appointment
+                const isVideoAppointment = appointmentData?.notes?.includes("appointment_type:video") || false;
+                const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://www.soradin.com';
+                const agentName = appointmentData?.agent?.full_name || 'Agent';
+                
+                if (isVideoAppointment && appointmentData?.id) {
+                  // Video appointment: Show "Join meeting" with link
+                  const videoLink = `${baseUrl}/video/join/appointment-${appointmentData.id}?identity=${encodeURIComponent(agentName)}`;
+                  
+                  return (
                     <div>
-                      <p className="text-gray-500">Not specified</p>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Join Meeting</h3>
+                      <div>
+                        <a
+                          href={videoLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-800 transition-colors"
+                        >
+                          <span>Join Video Call</span>
+                          <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                          </svg>
+                        </a>
+                        <p className="text-sm text-gray-500 mt-2">{videoLink}</p>
+                      </div>
                     </div>
-                  )}
-                </div>
-              </div>
+                  );
+                } else {
+                  // In-person appointment: Show meeting location
+                  return (
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Meeting Location</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {officeLocation ? (
+                          <>
+                            {officeLocation.name && (
+                              <div>
+                                <label className="text-sm font-medium text-gray-500">Office Name</label>
+                                <p className="text-gray-900">{officeLocation.name}</p>
+                              </div>
+                            )}
+                            {officeLocation.city && (
+                              <div>
+                                <label className="text-sm font-medium text-gray-500">City</label>
+                                <p className="text-gray-900">{officeLocation.city}</p>
+                              </div>
+                            )}
+                            {officeLocation.street_address && (
+                              <div className="md:col-span-2">
+                                <label className="text-sm font-medium text-gray-500">Street Address</label>
+                                <p className="text-gray-900">{officeLocation.street_address}</p>
+                              </div>
+                            )}
+                            {officeLocation.province && (
+                              <div>
+                                <label className="text-sm font-medium text-gray-500">Province</label>
+                                <p className="text-gray-900">{officeLocation.province}</p>
+                              </div>
+                            )}
+                            {officeLocation.postal_code && (
+                              <div>
+                                <label className="text-sm font-medium text-gray-500">Postal Code</label>
+                                <p className="text-gray-900">{officeLocation.postal_code}</p>
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <div>
+                            <p className="text-gray-500">Not specified</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                }
+              })()}
 
               {/* Address Information */}
               <div>
