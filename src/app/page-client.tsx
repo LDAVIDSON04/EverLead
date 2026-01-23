@@ -529,7 +529,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
             {/* Left Box - Read Reviews */}
             <div className="bg-[#FAF9F6] rounded-3xl p-6 border border-[#1A1A1A]/5 relative overflow-visible group hover:shadow-xl hover:shadow-black/5 transition-all flex flex-col">
               {/* Reserved space for image to prevent CLS */}
-              <div className="w-full h-48 flex-shrink-0" aria-hidden="true" />
+              <div className="w-full h-32 flex-shrink-0" aria-hidden="true" />
               {/* Image overlapping the top */}
               <div className="absolute -top-48 left-1/2 -translate-x-1/2 w-96 h-96 flex items-center justify-center" style={{ aspectRatio: "1/1" }}>
               <Image
@@ -567,7 +567,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
             {/* Right Box - Book Appointment */}
             <div className="bg-[#FAF9F6] rounded-3xl p-6 border border-[#1A1A1A]/5 relative overflow-visible group hover:shadow-xl hover:shadow-black/5 transition-all flex flex-col">
               {/* Reserved space for image to prevent CLS */}
-              <div className="w-full h-48 flex-shrink-0" aria-hidden="true" />
+              <div className="w-full h-32 flex-shrink-0" aria-hidden="true" />
               {/* Image overlapping the top */}
               <div className="absolute -top-48 left-1/2 -translate-x-1/2 w-96 h-96 flex items-center justify-center" style={{ aspectRatio: "1/1" }}>
                 <Image
