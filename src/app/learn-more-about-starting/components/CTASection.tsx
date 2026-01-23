@@ -20,14 +20,13 @@ export function CTASection() {
           </div>
 
           {/* Right content - scheduling platform hero image (desktop only) */}
-          <div className="relative w-full h-full min-h-[500px] hidden md:flex items-center justify-center overflow-visible -mr-6">
+          <div className="relative w-full h-full min-h-[500px] hidden md:flex items-center justify-start overflow-visible -mr-12 pr-0">
             <img 
               src="/scheduling-platform-hero.png" 
               alt="Join the leading scheduling platform" 
-              className="w-full h-[500px] object-contain"
+              className="w-[120%] h-[500px] object-contain"
               style={{ 
-                objectFit: 'contain',
-                width: '100%'
+                objectFit: 'contain'
               }}
               onError={(e) => {
                 // Fallback to placeholder if image doesn't exist
