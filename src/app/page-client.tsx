@@ -1015,9 +1015,9 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                 </ul>
               </div>
 
-              {/* Column 4 - Help */}
+              {/* Column 4 - Questions */}
               <div>
-                <h4 className="mb-6 text-lg font-medium">Help</h4>
+                <h4 className="mb-6 text-lg font-medium">Questions</h4>
                 <ul className="space-y-3">
                   <li>
                     <Link href="/help" className="text-white/60 hover:text-white transition-colors">
