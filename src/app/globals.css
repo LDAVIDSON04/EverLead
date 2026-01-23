@@ -23,6 +23,9 @@ body {
   font-display: swap;
   /* Optimize rendering */
   text-rendering: optimizeSpeed;
+  /* Improve paint performance */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Prevent layout shift from images loading */

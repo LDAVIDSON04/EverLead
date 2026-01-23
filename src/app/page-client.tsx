@@ -277,6 +277,8 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                 height={80}
                 className="h-16 w-16 md:h-20 md:w-20 object-contain"
                 priority
+                fetchPriority="high"
+                sizes="(max-width: 768px) 64px, 80px"
               />
               <span className="text-sm md:text-2xl font-semibold text-[#1A1A1A]">Soradin</span>
             </Link>
@@ -376,8 +378,8 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
       {/* HERO */}
       <div className="relative bg-[#FAF9F6] pb-12 px-4 min-h-[calc(100vh-80px)] flex items-start md:pt-32 pt-0 md:pb-12 -mt-2 md:mt-0" style={{ overflow: 'visible' }}>
         {/* Abstract background shapes - deferred to prevent blocking initial render */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ contentVisibility: 'auto' }}>
-          <div className="absolute top-20 right-10 w-96 h-96 bg-[#0C6F3C]/10 rounded-full blur-3xl" />
+        <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ contentVisibility: 'auto', willChange: 'transform' }}>
+          <div className="absolute top-20 right-10 w-96 h-96 bg-[#0C6F3C]/10 rounded-full blur-3xl" style={{ willChange: 'transform' }} />
         </div>
 
         {/* Hero illustration - positioned absolutely on the right, above title */}
