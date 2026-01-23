@@ -126,40 +126,17 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
         />
-        {/* Google tag (gtag.js) - load after page is interactive to improve FCP/LCP */}
+        {/* Google tag (gtag.js) - required for conversion tracking */}
+        <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17787677639"></script>
         <script
           dangerouslySetInnerHTML={{
             __html: `
-              (function() {
-                function loadGTag() {
-                  if (document.getElementById('gtag-script')) return;
-                  
-                  var script = document.createElement('script');
-                  script.id = 'gtag-script';
-                  script.async = true;
-                  script.src = 'https://www.googletagmanager.com/gtag/js?id=AW-17787677639';
-                  document.head.appendChild(script);
-                  
-                  var inlineScript = document.createElement('script');
-                  inlineScript.textContent = \`
-                    window.dataLayer = window.dataLayer || [];
-                    function gtag(){dataLayer.push(arguments);}
-                    gtag('js', new Date());
-                    gtag('config', 'AW-17787677639', {
-                      'send_page_view': false
-                    });
-                  \`;
-                  document.head.appendChild(inlineScript);
-                }
-                
-                if (document.readyState === 'complete') {
-                  setTimeout(loadGTag, 2000);
-                } else {
-                  window.addEventListener('load', function() {
-                    setTimeout(loadGTag, 2000);
-                  });
-                }
-              })();
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', 'AW-17787677639', {
+                'send_page_view': false
+              });
             `,
           }}
         />

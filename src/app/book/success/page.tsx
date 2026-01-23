@@ -5,22 +5,33 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { CheckCircle } from "lucide-react";
+import Script from "next/script";
 
 function BookingSuccessContent() {
   const searchParams = useSearchParams();
   const appointmentId = searchParams.get("appointmentId");
   const email = searchParams.get("email");
 
-  // Google Ads conversion tracking
+  // Google Ads conversion tracking - fire immediately when gtag is available
   useEffect(() => {
-    // Fire conversion event when page loads
-    if (typeof window !== 'undefined' && (window as any).gtag) {
-      (window as any).gtag('event', 'conversion', {
-        'send_to': 'AW-17787677639/HmFXCPu0tOYbEMfX6aFC',
-        'value': 1.0,
-        'currency': 'CAD'
-      });
-    }
+    // Fire conversion event as soon as gtag is available
+    const fireConversion = () => {
+      if (typeof window !== 'undefined' && (window as any).gtag) {
+        (window as any).gtag('event', 'conversion', {
+          'send_to': 'AW-17787677639/HmFXCPu0tOYbEMfX6aFC',
+          'value': 1.0,
+          'currency': 'CAD'
+        });
+      }
+    };
+
+    // Try immediately
+    fireConversion();
+    
+    // Also try after a short delay in case gtag loads after this component
+    const timeout = setTimeout(fireConversion, 100);
+    
+    return () => clearTimeout(timeout);
   }, []);
 
   return (
@@ -67,12 +78,30 @@ function BookingSuccessContent() {
 
 export default function BookingSuccessPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <p className="text-gray-600">Loading...</p>
-      </div>
-    }>
-      <BookingSuccessContent />
-    </Suspense>
+    <>
+      {/* Google Ads conversion event snippet - fires immediately when page loads */}
+      <Script
+        id="google-ads-conversion"
+        strategy="afterInteractive"
+        dangerouslySetInnerHTML={{
+          __html: `
+            if (typeof window !== 'undefined' && window.gtag) {
+              gtag('event', 'conversion', {
+                'send_to': 'AW-17787677639/HmFXCPu0tOYbEMfX6aFC',
+                'value': 1.0,
+                'currency': 'CAD'
+              });
+            }
+          `,
+        }}
+      />
+      <Suspense fallback={
+        <div className="min-h-screen bg-white flex items-center justify-center">
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      }>
+        <BookingSuccessContent />
+      </Suspense>
+    </>
   );
 }
