@@ -383,7 +383,6 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
         </div>
 
         {/* Hero illustration - positioned absolutely on the right, above title */}
-        {/* Fixed aspect-ratio prevents CLS on desktop */}
         <div className="absolute right-10 top-10 hidden lg:block" style={{ width: "350px", height: "350px" }}>
           <Image
             src="/hero-image.png"
@@ -399,7 +398,6 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
             sizes="350px"
           />
         </div>
-
 
         <div className="max-w-7xl mx-auto relative z-20 w-full md:mt-0 mt-1 overflow-visible">
           {/* Headline and Search Bar - Full Width */}
