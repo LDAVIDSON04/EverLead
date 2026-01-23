@@ -19,8 +19,8 @@ export function VideoRoom({ roomName, identity }: VideoRoomProps) {
   const [isConnecting, setIsConnecting] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const localVideoRef = useRef<HTMLDivElement>(null);
-  const remoteVideoRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const localVideoRef = useRef<HTMLVideoElement>(null);
+  const remoteVideoRefs = useRef<Map<string, HTMLVideoElement>>(new Map());
 
   useEffect(() => {
     let mounted = true;
@@ -124,24 +124,25 @@ export function VideoRoom({ roomName, identity }: VideoRoomProps) {
     };
   }, [roomName, identity]);
 
-  // Attach local video track
+  // Attach local video track to <video> element
   useEffect(() => {
-    if (localVideoTrack && localVideoRef.current) {
-      localVideoTrack.attach(localVideoRef.current);
+    const el = localVideoRef.current;
+    if (localVideoTrack && el) {
+      localVideoTrack.attach(el);
       return () => {
         localVideoTrack.detach();
       };
     }
   }, [localVideoTrack]);
 
-  // Attach remote participant tracks
+  // Attach remote participant tracks to <video> elements
   useEffect(() => {
     participants.forEach((participant) => {
       participant.videoTracks.forEach((publication) => {
         if (publication.track && publication.isSubscribed) {
-          const videoDiv = remoteVideoRefs.current.get(participant.sid);
-          if (videoDiv) {
-            publication.track.attach(videoDiv);
+          const videoEl = remoteVideoRefs.current.get(participant.sid);
+          if (videoEl) {
+            publication.track.attach(videoEl);
           }
         }
       });
@@ -170,15 +171,17 @@ export function VideoRoom({ roomName, identity }: VideoRoomProps) {
     });
 
     participant.on("trackUnsubscribed", (track) => {
-      track.detach();
+      if ("detach" in track && typeof track.detach === "function") {
+        track.detach();
+      }
     });
   }
 
   function trackSubscribed(track: any, participant: RemoteParticipant) {
     if (track.kind === "video") {
-      const videoDiv = remoteVideoRefs.current.get(participant.sid);
-      if (videoDiv) {
-        track.attach(videoDiv);
+      const videoEl = remoteVideoRefs.current.get(participant.sid);
+      if (videoEl) {
+        track.attach(videoEl);
       }
     } else if (track.kind === "audio") {
       track.attach();
@@ -280,8 +283,8 @@ export function VideoRoom({ roomName, identity }: VideoRoomProps) {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Local video */}
-          <div className="bg-black rounded-lg overflow-hidden aspect-video">
-            <div ref={localVideoRef} className="w-full h-full" />
+          <div className="bg-black rounded-lg overflow-hidden aspect-video relative">
+            <video ref={localVideoRef} className="w-full h-full object-cover" playsInline muted autoPlay />
             {!isVideoEnabled && (
               <div className="absolute inset-0 flex items-center justify-center bg-gray-800">
                 <p className="text-gray-400">Camera off</p>
@@ -298,13 +301,15 @@ export function VideoRoom({ roomName, identity }: VideoRoomProps) {
               key={participant.sid}
               className="bg-black rounded-lg overflow-hidden aspect-video relative"
             >
-              <div
+              <video
                 ref={(el) => {
                   if (el) {
                     remoteVideoRefs.current.set(participant.sid, el);
                   }
                 }}
-                className="w-full h-full"
+                className="w-full h-full object-cover"
+                playsInline
+                autoPlay
               />
               <div className="absolute bottom-2 left-2 bg-black/50 px-2 py-1 rounded text-sm">
                 {participant.identity}
