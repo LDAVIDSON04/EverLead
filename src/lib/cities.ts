@@ -121,3 +121,13 @@ export const cities = [
   // Nunavut
   "Iqaluit, NU",
 ];
+
+// Map city name (lowercase) -> province abbreviation for video-mode search
+export const cityToProvince: Record<string, string> = {};
+cities.forEach((c) => {
+  const idx = c.lastIndexOf(", ");
+  if (idx === -1) return;
+  const city = c.slice(0, idx).trim();
+  const prov = c.slice(idx + 2).trim();
+  if (city && prov) cityToProvince[city.toLowerCase()] = prov;
+});

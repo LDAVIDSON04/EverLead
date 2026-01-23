@@ -81,7 +81,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
     const params = new URLSearchParams();
     if (specialty) params.set("q", specialty);
     params.set("location", location);
-    router.push(`/search?${params.toString()}`);
+    router.push(`/search/choose?${params.toString()}`);
   };
 
   const handleSpecialtyChange = (value: string) => {
@@ -135,15 +135,12 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
       const data = await res.json();
       
       if (data.location) {
-        // Navigate with location in URL - this will show agents in that city
-        const searchUrl = `/search?location=${encodeURIComponent(data.location)}`;
+        const searchUrl = `/search/choose?location=${encodeURIComponent(data.location)}`;
         router.push(searchUrl);
       } else {
-        // Navigate without location if detection fails
         router.push("/search");
       }
     } catch (err) {
-      // Navigate without location if detection fails
       router.push("/search");
     }
   };
@@ -844,7 +841,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
             ].map((city) => (
               <Link
                 key={city}
-                href={`/search?location=${city}`}
+                href={`/search/choose?location=${encodeURIComponent(city)}`}
                 className="bg-transparent border-b-2 border-[#1A1A1A]/20 hover:border-[#0C6F3C] py-4 text-left transition-all group flex items-center justify-between"
               >
                 <span className="text-[#1A1A1A] text-lg group-hover:text-[#0C6F3C] transition-colors">

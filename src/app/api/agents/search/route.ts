@@ -4,6 +4,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { stripe } from "@/lib/stripe";
+import { cityToProvince } from "@/lib/cities";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -37,11 +38,13 @@ export async function GET(req: NextRequest) {
     const location = searchParams.get("location") || "";
     const service = searchParams.get("service") || "";
     const query = searchParams.get("q") || "";
-    
+    const mode = searchParams.get("mode") || "in-person"; // "in-person" | "video"
+
     console.log("🔍 [AGENT SEARCH API] Request received:", {
       location,
       service,
       query,
+      mode,
       allParams: Object.fromEntries(searchParams.entries())
     });
 
@@ -278,20 +281,11 @@ export async function GET(req: NextRequest) {
 
     if (location) {
       const locationLower = location.toLowerCase().trim();
-      // Handle different location input formats:
-      // 1. "City, Province" (e.g., "Toronto, ON") -> extract city
-      // 2. Just "Province" (e.g., "BC", "ON", "Ontario") -> match by province
-      // 3. Postal code (e.g., "V1Y 5Y6", "K1A 0B1") -> geocode to city/province
-      // 4. Just "City" (e.g., "Toronto") -> match by city
-      
       const locationParts = locationLower.split(',').map(s => s.trim());
       const searchCity = locationParts[0];
       const searchProvince = locationParts.length > 1 ? locationParts[1] : null;
-      
-      // Check if input looks like a postal code (Canadian format: A1A 1A1 or A1A1A1)
       const isPostalCode = /^[a-z]\d[a-z]\s?\d[a-z]\d$/i.test(locationLower.replace(/\s+/g, ''));
-      
-      // List of Canadian provinces and their abbreviations
+
       const provinceMap: Record<string, string[]> = {
         'alberta': ['ab', 'alberta'],
         'british columbia': ['bc', 'british columbia'],
@@ -307,33 +301,65 @@ export async function GET(req: NextRequest) {
         'saskatchewan': ['sk', 'saskatchewan'],
         'yukon': ['yt', 'yukon', 'yukon territory']
       };
-      
-      // Determine if input is a province (either as abbreviation or full name)
-      let isProvinceSearch = false;
-      let matchedProvince: string | null = null;
-      
-      if (!searchCity.includes(' ') && searchCity.length <= 5) {
-        // Likely a province abbreviation (e.g., "BC", "ON")
+
+      const normalizeProvince = (provinceStr: string): string | null => {
+        if (!provinceStr) return null;
+        const normalized = provinceStr.toLowerCase().trim();
         for (const [provinceName, abbreviations] of Object.entries(provinceMap)) {
-          if (abbreviations.some(abbr => abbr.toLowerCase() === searchCity.toLowerCase())) {
-            isProvinceSearch = true;
-            matchedProvince = provinceName;
-            break;
+          if (abbreviations.some(abbr => abbr.toLowerCase() === normalized) ||
+              provinceName.toLowerCase() === normalized) {
+            return provinceName;
           }
+        }
+        return normalized;
+      };
+
+      // VIDEO MODE: filter by province only (all agents in province)
+      if (mode === 'video') {
+        let matchedProvince: string | null = null;
+        if (searchProvince) {
+          matchedProvince = normalizeProvince(searchProvince);
+        } else {
+          const provAbbr = cityToProvince[searchCity];
+          if (provAbbr) matchedProvince = normalizeProvince(provAbbr);
+        }
+        if (matchedProvince) {
+          filtered = filtered.filter((agent) => {
+            const agentProv = normalizeProvince(agent.agent_province || '');
+            const officeProvinces = ((agent as any).officeLocations || []).map((loc: any) =>
+              normalizeProvince(loc.province || '')
+            );
+            return agentProv === matchedProvince || officeProvinces.includes(matchedProvince!);
+          });
+          console.log(`✅ [AGENT SEARCH] Video mode: ${filtered.length} agents in province "${matchedProvince}"`);
+        } else {
+          console.warn(`⚠️ [AGENT SEARCH] Video mode: could not derive province from "${location}"`);
         }
       } else {
-        // Check if it's a full province name
-        for (const [provinceName, abbreviations] of Object.entries(provinceMap)) {
-          if (provinceName.toLowerCase() === searchCity.toLowerCase() || 
-              abbreviations.some(abbr => abbr.toLowerCase() === searchCity.toLowerCase())) {
-            isProvinceSearch = true;
-            matchedProvince = provinceName;
-            break;
+        // IN-PERSON MODE: filter by city (agents with office in that city)
+        let isProvinceSearch = false;
+        let matchedProvince: string | null = null;
+
+        if (!searchCity.includes(' ') && searchCity.length <= 5) {
+          for (const [provinceName, abbreviations] of Object.entries(provinceMap)) {
+            if (abbreviations.some(abbr => abbr.toLowerCase() === searchCity.toLowerCase())) {
+              isProvinceSearch = true;
+              matchedProvince = provinceName;
+              break;
+            }
+          }
+        } else {
+          for (const [provinceName, abbreviations] of Object.entries(provinceMap)) {
+            if (provinceName.toLowerCase() === searchCity.toLowerCase() ||
+                abbreviations.some(abbr => abbr.toLowerCase() === searchCity.toLowerCase())) {
+              isProvinceSearch = true;
+              matchedProvince = provinceName;
+              break;
+            }
           }
         }
-      }
-      
-      filtered = filtered.filter((agent) => {
+
+        filtered = filtered.filter((agent) => {
         // Normalize function to extract city name from "City, Province" format
         // Also handles province abbreviations without comma (e.g., "Vaughn On" -> "vaughn")
         const normalizeCity = (cityStr: string): string => {
@@ -472,16 +498,17 @@ export async function GET(req: NextRequest) {
         
         if (hasLocationInList || matchesOfficeCity) {
           console.log(`[AGENT SEARCH] Agent ${agent.id} matches location "${location}" (searchCity: "${searchCity}")`);
-        return true;
+          return true;
         }
         
         return false;
       });
-      
-      console.log(`✅ [AGENT SEARCH] After location filter "${location}": ${filtered.length} agents matched`);
-      
+      }
+
+      console.log(`✅ [AGENT SEARCH] After location filter "${location}" (mode=${mode}): ${filtered.length} agents matched`);
+
       if (filtered.length === 0) {
-        console.warn(`⚠️ [AGENT SEARCH] No agents found for location "${location}". Available locations in system:`, 
+        console.warn(`⚠️ [AGENT SEARCH] No agents found for location "${location}". Available locations in system:`,
           agentsWithAvailability.map(a => ({
             id: a.id,
             name: a.full_name,

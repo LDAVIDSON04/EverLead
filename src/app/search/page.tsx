@@ -147,7 +147,8 @@ function SearchResults() {
   const query = searchParams.get("q") || "";
   const location = searchParams.get("location") || "";
   const service = searchParams.get("service") || "";
-  
+  const mode = searchParams.get("mode") || "in-person";
+
   // Decode URL-encoded location for display
   const decodedLocation = location ? decodeURIComponent(location.replace(/\+/g, ' ')) : "";
   
@@ -187,14 +188,14 @@ function SearchResults() {
     setInputLocation(city);
     setShowLocationDropdown(false);
     setLocationSuggestions([]);
-    // Immediately search with selected location
     setSearchLocation(city);
     const params = new URLSearchParams();
     if (inputQuery) params.set("q", inputQuery);
     params.set("location", city);
     if (inputService) params.set("service", inputService);
+    params.set("mode", mode);
     router.push(`/search?${params.toString()}`);
-  }, [inputQuery, inputService, router]);
+  }, [inputQuery, inputService, mode, router]);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [selectedAppointmentIndex, setSelectedAppointmentIndex] = useState<number>(0);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -246,14 +247,11 @@ function SearchResults() {
   useEffect(() => {
     setSearchQuery(query);
     setInputQuery(query);
-    // Always sync location from URL params - this ensures it shows in the search bar and on agent cards
     if (location) {
       const decoded = decodeURIComponent(location.replace(/\+/g, ' '));
-      console.log("📍 Syncing location from URL:", decoded);
       setSearchLocation(decoded);
       setInputLocation(decoded);
     } else {
-      // Clear location if it's removed from URL
       setSearchLocation("");
       setInputLocation("");
     }
@@ -270,14 +268,11 @@ function SearchResults() {
       try {
         // Build query params for agent search
         const params = new URLSearchParams();
-        if (searchLocation) {
-          params.set("location", searchLocation);
-          console.log("🔍 [SEARCH] Loading agents for location:", searchLocation);
-        }
+        if (searchLocation) params.set("location", searchLocation);
         if (searchService) params.set("service", searchService);
         if (searchQuery) params.set("q", searchQuery);
+        params.set("mode", mode);
 
-        console.log("🔍 [SEARCH] Fetching agents with params:", params.toString());
         const res = await fetch(`/api/agents/search?${params.toString()}`);
         
         if (!res.ok) {
@@ -427,20 +422,19 @@ function SearchResults() {
     }
 
     loadAgents();
-  }, [searchQuery, searchLocation, searchService]);
+  }, [searchQuery, searchLocation, searchService, mode]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    // Update actual search values from input values (this triggers the useEffect to reload agents)
     setSearchQuery(inputQuery);
     setSearchLocation(inputLocation);
     setSearchService(inputService);
-    
-    // Update URL with new search params
+
     const params = new URLSearchParams();
     if (inputQuery) params.set("q", inputQuery);
     if (inputLocation) params.set("location", inputLocation);
     if (inputService) params.set("service", inputService);
+    params.set("mode", mode);
     router.push(`/search?${params.toString()}`);
   };
 
@@ -1502,7 +1496,6 @@ function SearchResults() {
                 }
               }}
               onBlur={() => {
-                // Delay to allow clicking on dropdown
                 setTimeout(() => {
                   setShowLocationDropdown(false);
                   setSearchLocation(inputLocation);
@@ -1510,6 +1503,7 @@ function SearchResults() {
                   if (inputQuery) params.set("q", inputQuery);
                   if (inputLocation) params.set("location", inputLocation);
                   if (inputService) params.set("service", inputService);
+                  params.set("mode", mode);
                   router.push(`/search?${params.toString()}`);
                 }, 200);
               }}
@@ -1522,6 +1516,7 @@ function SearchResults() {
                   if (inputQuery) params.set("q", inputQuery);
                   if (inputLocation) params.set("location", inputLocation);
                   if (inputService) params.set("service", inputService);
+                  params.set("mode", mode);
                   router.push(`/search?${params.toString()}`);
                 }
               }}

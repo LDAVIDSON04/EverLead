@@ -16,7 +16,7 @@ export default function AboutPage() {
       const data = await res.json();
       
       if (data.location) {
-        const searchUrl = `/search?location=${encodeURIComponent(data.location)}`;
+        const searchUrl = `/search/choose?location=${encodeURIComponent(data.location)}`;
         router.push(searchUrl);
       } else {
         router.push("/search");
