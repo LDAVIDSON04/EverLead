@@ -24,9 +24,10 @@ export function CTASection() {
             <img 
               src="/scheduling-platform-hero.png" 
               alt="Join the leading scheduling platform" 
-              className="w-full h-auto max-w-md object-contain"
+              className="w-full h-[500px] object-contain"
               style={{ 
-                objectFit: 'contain'
+                objectFit: 'contain',
+                width: '100%'
               }}
               onError={(e) => {
                 // Fallback to placeholder if image doesn't exist
