@@ -710,11 +710,11 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
       </section>
 
       {/* FOR SPECIALISTS SECTION */}
-      <section className="py-24 px-4 bg-white">
+      <section className="py-12 md:py-24 px-4 bg-white">
         <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-[1.4fr_1fr] gap-12 items-center">
+          <div className="grid md:grid-cols-[1.4fr_1fr] gap-8 md:gap-12 items-center">
             {/* Left side - Image - Using PNG version (722K) instead of JPG (6.7MB) for better performance */}
-            <div className="relative w-full" style={{ aspectRatio: "900/700", minHeight: "400px" }}>
+            <div className="relative w-full md:min-h-[400px]" style={{ aspectRatio: "900/700", minHeight: "300px" }}>
               <Image
                 src="/specialist-image.jpg"
                 alt="Professional funeral specialist"
@@ -729,29 +729,29 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
 
             {/* Right side - Content */}
             <div>
-              <h2 className="text-5xl mb-6 text-[#1A1A1A] font-semibold tracking-tight">
+              <h2 className="text-3xl md:text-5xl mb-4 md:mb-6 text-[#1A1A1A] font-semibold tracking-tight">
                 Soradin for Specialists
               </h2>
 
-              <p className="text-2xl text-[#1A1A1A]/80 mb-8 leading-relaxed">
+              <p className="text-lg md:text-2xl text-[#1A1A1A]/80 mb-6 md:mb-8 leading-relaxed">
                 Are you interested in filling out your calendar?
               </p>
 
-              <div className="space-y-5 mb-10">
-                <div className="flex items-start gap-4">
-                  <div className="w-6 h-6 rounded-full bg-[#0C6F3C] flex items-center justify-center flex-shrink-0 mt-1">
-                    <Check className="w-4 h-4 text-white" />
+              <div className="space-y-4 md:space-y-5 mb-6 md:mb-10">
+                <div className="flex items-start gap-3 md:gap-4">
+                  <div className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-[#0C6F3C] flex items-center justify-center flex-shrink-0 mt-1">
+                    <Check className="w-3 h-3 md:w-4 md:h-4 text-white" />
                   </div>
-                  <p className="text-xl text-[#1A1A1A]/70">
+                  <p className="text-base md:text-xl text-[#1A1A1A]/70">
                     Reach thousands of families with Soradin
                   </p>
                 </div>
 
-                <div className="flex items-start gap-4">
-                  <div className="w-6 h-6 rounded-full bg-[#0C6F3C] flex items-center justify-center flex-shrink-0 mt-1">
-                    <Check className="w-4 h-4 text-white" />
+                <div className="flex items-start gap-3 md:gap-4">
+                  <div className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-[#0C6F3C] flex items-center justify-center flex-shrink-0 mt-1">
+                    <Check className="w-3 h-3 md:w-4 md:h-4 text-white" />
                   </div>
-                  <p className="text-xl text-[#1A1A1A]/70">
+                  <p className="text-base md:text-xl text-[#1A1A1A]/70">
                     Make it easy for families to book with you
                   </p>
                 </div>
@@ -760,7 +760,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
               <div>
                 <Link 
                   href="/learn-more-about-starting"
-                  className="inline-block bg-[#0C6F3C] text-white px-8 py-4 rounded-2xl hover:bg-[#0C6F3C]/90 transition-all text-lg shadow-sm"
+                  className="inline-block bg-[#0C6F3C] text-white px-6 py-3 md:px-8 md:py-4 rounded-2xl hover:bg-[#0C6F3C]/90 transition-all text-base md:text-lg shadow-sm w-full md:w-auto text-center"
                 >
                   Learn more about starting with us
                 </Link>
