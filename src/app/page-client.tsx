@@ -269,12 +269,12 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
         </div>
 
         {/* Hero illustration - positioned absolutely on the right, above title */}
-        <div className="absolute right-10 top-10 hidden lg:block" style={{ width: "350px", height: "350px" }}>
+        <div className="absolute right-10 top-10 hidden lg:block" style={{ width: "500px", height: "500px" }}>
           <Image
             src="/hero-image.png"
             alt="Book a specialist"
-            width={350}
-            height={350}
+            width={500}
+            height={500}
             className="w-full h-full object-contain"
             style={{
               mixBlendMode: "multiply",
@@ -282,7 +282,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
             }}
             loading="eager"
             fetchPriority="high"
-            sizes="350px"
+            sizes="500px"
           />
         </div>
 
