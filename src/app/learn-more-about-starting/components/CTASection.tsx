@@ -19,11 +19,11 @@ export function CTASection() {
             </Link>
           </div>
 
-          {/* Right content - calendar scheduling interface image */}
+          {/* Right content - scheduling platform hero image (desktop only) */}
           <div className="relative w-full h-full min-h-[700px] hidden md:flex items-center justify-center overflow-visible -mr-6">
             <img 
-              src="/calendar-scheduling.png" 
-              alt="Scheduling platform calendar interface" 
+              src="/scheduling-platform-hero.png" 
+              alt="Join the leading scheduling platform" 
               className="w-full h-full max-w-none object-contain"
               style={{ 
                 objectFit: 'contain'
@@ -33,7 +33,7 @@ export function CTASection() {
                 e.currentTarget.style.display = 'none';
                 const parent = e.currentTarget.parentElement;
                 if (parent) {
-                  parent.innerHTML = '<div class="w-full h-full bg-white border-4 border-black rounded-2xl flex items-center justify-center p-8"><div class="text-center"><div class="text-6xl mb-4">📅</div><p class="text-gray-600">Calendar Interface</p></div></div>';
+                  parent.innerHTML = '<div class="w-full h-full bg-white border-4 border-black rounded-2xl flex items-center justify-center p-8"><div class="text-center"><div class="text-6xl mb-4">👥</div><p class="text-gray-600">Scheduling Platform</p></div></div>';
                 }
               }}
             />
