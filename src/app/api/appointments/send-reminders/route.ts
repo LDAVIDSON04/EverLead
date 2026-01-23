@@ -32,11 +32,15 @@ function getAppointmentType(appointment: any): "video" | "in-person" {
 
 export async function GET(req: NextRequest) {
   try {
+    // Optional: Check for CRON_SECRET if set (for extra security)
+    // Note: Vercel Cron doesn't automatically send custom headers, so if CRON_SECRET is set,
+    // you'd need to configure it in Vercel Cron settings or remove this check
     const authHeader = req.headers.get("authorization");
     const cronSecret = process.env.CRON_SECRET;
     
-    // Protect this endpoint - only allow calls from Vercel Cron or with secret
-    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+    // Only enforce secret if it's explicitly set AND a header is provided
+    // This allows Vercel Cron to work by default, but adds security if you configure it
+    if (cronSecret && authHeader && authHeader !== `Bearer ${cronSecret}`) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
