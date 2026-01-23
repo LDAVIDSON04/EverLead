@@ -42,6 +42,7 @@ export default function AgentDashboardPage() {
   const [userName, setUserName] = useState<string>("");
   const [userFirstName, setUserFirstName] = useState<string>("");
   const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [currentWeekAppointmentsCount, setCurrentWeekAppointmentsCount] = useState<number>(0);
 
   useEffect(() => {
     let mounted = true;
@@ -158,8 +159,14 @@ export default function AgentDashboardPage() {
           }
         }
 
+        // Calculate current week (Monday to Sunday)
+        const { DateTime } = await import('luxon');
+        const now = DateTime.now().setZone(agentTimezone);
+        const startOfWeek = now.startOf('week'); // Monday
+        const endOfWeek = now.endOf('week'); // Sunday
+        
         // Fetch recent appointments and weekly appointments in parallel
-        const [appointmentsRes, weeklyAppointmentsResult] = await Promise.all([
+        const [appointmentsRes, weeklyAppointmentsResult, currentWeekAppointmentsResult] = await Promise.all([
           fetch("/api/appointments/mine", {
             headers: { Authorization: `Bearer ${session.access_token}` },
           }),
@@ -168,6 +175,13 @@ export default function AgentDashboardPage() {
             .select("requested_date, created_at")
             .eq("agent_id", agentId)
             .gte("created_at", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
+          // Fetch appointments scheduled for current week
+          supabaseClient
+            .from("appointments")
+            .select("starts_at", { count: 'exact', head: false })
+            .eq("agent_id", agentId)
+            .gte("starts_at", startOfWeek.toISO())
+            .lte("starts_at", endOfWeek.toISO()),
         ]);
         
         if (!appointmentsRes.ok) {
@@ -176,9 +190,14 @@ export default function AgentDashboardPage() {
         
         const appointmentsFromAPI = await appointmentsRes.json();
         
+        // Calculate current week appointments count
+        const { count: currentWeekCount } = currentWeekAppointmentsResult;
+        if (currentWeekCount !== null) {
+          setCurrentWeekAppointmentsCount(currentWeekCount);
+        }
+        
         // Format appointments for dashboard display and calendar widget (reuse same data)
         if (appointmentsFromAPI && Array.isArray(appointmentsFromAPI)) {
-          const { DateTime } = await import('luxon');
           
           // appointmentsFromAPI already has starts_at, ends_at, family_name, and location from the API
           const formattedAppointments: Appointment[] = appointmentsFromAPI
@@ -374,7 +393,7 @@ export default function AgentDashboardPage() {
                     <Calendar size={20} className="text-green-800" />
                   </div>
                   <div className="text-xs text-gray-500 mb-1">Appointments</div>
-                  <div className="text-2xl text-gray-900">{stats.myAppointments}</div>
+                  <div className="text-2xl text-gray-900">{currentWeekAppointmentsCount}</div>
                 </div>
               </div>
             </div>
