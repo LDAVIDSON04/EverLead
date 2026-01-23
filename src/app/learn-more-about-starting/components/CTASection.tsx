@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 
 export function CTASection() {
   return (
@@ -21,21 +22,15 @@ export function CTASection() {
 
           {/* Right content - scheduling platform hero image (desktop only) */}
           <div className="relative w-full h-full min-h-[500px] hidden md:flex items-center justify-start overflow-visible -mr-12 pr-0">
-            <img 
+            <Image 
               src="/scheduling-platform-hero.png" 
               alt="Join the leading scheduling platform" 
+              width={800}
+              height={500}
               className="w-full h-[500px] object-cover rounded-2xl"
-              style={{ 
-                objectFit: 'cover'
-              }}
-              onError={(e) => {
-                // Fallback to placeholder if image doesn't exist
-                e.currentTarget.style.display = 'none';
-                const parent = e.currentTarget.parentElement;
-                if (parent) {
-                  parent.innerHTML = '<div class="w-full h-full bg-white border-4 border-black rounded-2xl flex items-center justify-center p-8"><div class="text-center"><div class="text-6xl mb-4">👥</div><p class="text-gray-600">Scheduling Platform</p></div></div>';
-                }
-              }}
+              loading="lazy"
+              fetchPriority="low"
+              sizes="(max-width: 768px) 0px, 50vw"
             />
           </div>
         </div>
