@@ -407,14 +407,15 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
               {/* Desktop: Rotating text - deferred animation */}
               <span className="hidden md:block">
                 <span className="block">Book local</span>
-                <span className="block min-h-[1.2em]">
+                <span className="block relative" style={{ minHeight: '1.2em', height: '1.2em' }}>
                   <span
-                    className={`inline-block transition-all duration-500 ease-in-out ${
-                      isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'
+                    className={`absolute inset-0 transition-opacity duration-500 ease-in-out ${
+                      isVisible ? 'opacity-100' : 'opacity-0'
                     }`}
                   >
                     {rotatingTexts[currentTextIndex]}
                   </span>
+                  <span className="invisible">{rotatingTexts[0]}</span>
                 </span>
               </span>
             </h1>
@@ -637,7 +638,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
 
           <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
             {/* Left Box - Read Reviews */}
-            <div className="bg-[#FAF9F6] rounded-3xl p-6 border border-[#1A1A1A]/5 relative overflow-visible group hover:shadow-xl hover:shadow-black/5 transition-all flex flex-col">
+            <div className="bg-[#FAF9F6] rounded-3xl p-6 border border-[#1A1A1A]/5 relative overflow-visible group hover:shadow-xl hover:shadow-black/5 transition-all flex flex-col" style={{ paddingTop: '12rem' }}>
               {/* Image overlapping the top */}
               <div className="absolute -top-48 left-1/2 -translate-x-1/2 w-96 h-96 flex items-center justify-center" style={{ aspectRatio: "1/1" }}>
               <Image
@@ -656,7 +657,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
               />
               </div>
 
-              <div className="relative z-10 flex flex-col items-center text-center mt-20">
+              <div className="relative z-10 flex flex-col items-center text-center">
                 <h3 className="text-xl mb-2 text-[#1A1A1A] font-semibold">
                   Read reviews from families
                 </h3>
@@ -673,7 +674,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
             </div>
 
             {/* Right Box - Book Appointment */}
-            <div className="bg-[#FAF9F6] rounded-3xl p-6 border border-[#1A1A1A]/5 relative overflow-visible group hover:shadow-xl hover:shadow-black/5 transition-all flex flex-col">
+            <div className="bg-[#FAF9F6] rounded-3xl p-6 border border-[#1A1A1A]/5 relative overflow-visible group hover:shadow-xl hover:shadow-black/5 transition-all flex flex-col" style={{ paddingTop: '12rem' }}>
               {/* Image overlapping the top */}
               <div className="absolute -top-48 left-1/2 -translate-x-1/2 w-96 h-96 flex items-center justify-center" style={{ aspectRatio: "1/1" }}>
                 <Image
@@ -692,7 +693,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                 />
               </div>
 
-              <div className="relative z-10 flex flex-col items-center text-center mt-20">
+              <div className="relative z-10 flex flex-col items-center text-center">
                 <h3 className="text-xl mb-2 text-[#1A1A1A] font-semibold">
                   Book an appointment today
                 </h3>
@@ -767,7 +768,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
         <div className="max-w-6xl mx-auto">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             {/* Left side - Image */}
-            <div className="w-full h-full">
+            <div className="w-full" style={{ aspectRatio: "1/1" }}>
               <Image
                 src="/f75c771a2df6874e6f701c79ddc5f202a2bcc4f5.png"
                 alt="Pre arrangements"
@@ -776,6 +777,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                 className="w-full h-full object-cover rounded-lg"
                 loading="lazy"
                 fetchPriority="low"
+                sizes="(max-width: 768px) 100vw, 600px"
               />
             </div>
 
