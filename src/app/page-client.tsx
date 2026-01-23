@@ -857,7 +857,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
       </section>
 
       {/* TRUSTED PARTNERS */}
-      <section className="hidden py-24 px-4 bg-[#FAF9F6]">
+      <section className="py-24 px-4 bg-[#FAF9F6]">
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             {/* Left side - Content (mobile first, desktop left) */}
