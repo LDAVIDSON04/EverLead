@@ -529,9 +529,9 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
             {/* Left Box - Read Reviews */}
             <div className="bg-[#FAF9F6] rounded-3xl p-6 border border-[#1A1A1A]/5 relative overflow-visible group hover:shadow-xl hover:shadow-black/5 transition-all flex flex-col">
               {/* Reserved space for image to prevent CLS */}
-              <div className="w-full h-24 flex-shrink-0" aria-hidden="true" />
+              <div className="w-full h-48 flex-shrink-0" aria-hidden="true" />
               {/* Image overlapping the top */}
-              <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-96 h-96 flex items-center justify-center" style={{ aspectRatio: "1/1" }}>
+              <div className="absolute -top-48 left-1/2 -translate-x-1/2 w-96 h-96 flex items-center justify-center" style={{ aspectRatio: "1/1" }}>
               <Image
                 src="/review-image.png"
                 alt="Person holding review card"
@@ -548,7 +548,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
               />
               </div>
 
-              <div className="relative z-10 flex flex-col items-center text-center mt-40">
+              <div className="relative z-10 flex flex-col items-center text-center">
                 <h3 className="text-xl mb-2 text-[#1A1A1A] font-semibold">
                   Read reviews from families
                 </h3>
@@ -567,9 +567,9 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
             {/* Right Box - Book Appointment */}
             <div className="bg-[#FAF9F6] rounded-3xl p-6 border border-[#1A1A1A]/5 relative overflow-visible group hover:shadow-xl hover:shadow-black/5 transition-all flex flex-col">
               {/* Reserved space for image to prevent CLS */}
-              <div className="w-full h-24 flex-shrink-0" aria-hidden="true" />
+              <div className="w-full h-48 flex-shrink-0" aria-hidden="true" />
               {/* Image overlapping the top */}
-              <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-96 h-96 flex items-center justify-center" style={{ aspectRatio: "1/1" }}>
+              <div className="absolute -top-48 left-1/2 -translate-x-1/2 w-96 h-96 flex items-center justify-center" style={{ aspectRatio: "1/1" }}>
                 <Image
                   src="/booking-image.png"
                   alt="Person holding book now sign"
@@ -586,7 +586,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                 />
               </div>
 
-              <div className="relative z-10 flex flex-col items-center text-center mt-40">
+              <div className="relative z-10 flex flex-col items-center text-center">
                 <h3 className="text-xl mb-2 text-[#1A1A1A] font-semibold">
                   Book an appointment today
                 </h3>
