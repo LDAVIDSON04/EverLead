@@ -154,13 +154,15 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
   const [isVisible, setIsVisible] = useState(true);
 
   // Defer rotating text animation until after initial render to improve FCP/LCP
+  // Use longer delay on mobile to prioritize critical rendering
   useEffect(() => {
     // Use requestIdleCallback if available, otherwise setTimeout with longer delay
     const scheduleAnimation = (callback: () => void) => {
       if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
-        (window as any).requestIdleCallback(callback, { timeout: 2000 });
+        (window as any).requestIdleCallback(callback, { timeout: 3000 });
       } else {
-        setTimeout(callback, 2000);
+        // Longer delay on mobile to ensure FCP/LCP complete first
+        setTimeout(callback, typeof window !== 'undefined' && window.innerWidth < 768 ? 3000 : 2000);
       }
     };
 
@@ -718,7 +720,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-1 gap-12 items-center">
             {/* Image */}
-            <div className="w-full h-full">
+            <div className="w-full" style={{ aspectRatio: "1/1" }}>
               <Image
                 src="/f75c771a2df6874e6f701c79ddc5f202a2bcc4f5.png"
                 alt="Pre arrangements"
@@ -727,6 +729,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                 className="w-full h-full object-cover rounded-lg"
                 loading="lazy"
                 fetchPriority="low"
+                sizes="(max-width: 768px) 100vw, 600px"
               />
             </div>
 
@@ -912,6 +915,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                         loading="lazy"
                         fetchPriority="low"
                         sizes="128px"
+                        style={{ aspectRatio: "1/1" }}
                       />
                     </div>
                   ))}
@@ -929,6 +933,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                         loading="lazy"
                         fetchPriority="low"
                         sizes="128px"
+                        style={{ aspectRatio: "1/1" }}
                       />
                     </div>
                   ))}
