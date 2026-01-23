@@ -127,12 +127,15 @@ export default function RootLayout({
         {/* Google tag (gtag.js) - defer loading to not block render */}
         <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17787677639"></script>
         <script
+          defer
           dangerouslySetInnerHTML={{
             __html: `
               window.dataLayer = window.dataLayer || [];
               function gtag(){dataLayer.push(arguments);}
               gtag('js', new Date());
-              gtag('config', 'AW-17787677639');
+              gtag('config', 'AW-17787677639', {
+                'send_page_view': false
+              });
             `,
           }}
         />
