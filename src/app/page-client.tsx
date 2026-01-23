@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search, MapPin, Calendar, Check, ChevronRight, Menu, X, ChevronDown, Facebook, Instagram } from "lucide-react";
+import { Search, MapPin, Star, Calendar, Check, ChevronDown, Heart, Facebook, Instagram, Menu, X, ChevronRight } from "lucide-react";
 import { useState, useEffect } from "react";
 
 interface HomePageClientProps {
@@ -376,7 +376,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
       {/* HERO */}
       <div className="relative bg-[#FAF9F6] pb-12 px-4 min-h-[calc(100vh-80px)] flex items-start md:pt-32 pt-0 md:pb-12 -mt-2 md:mt-0" style={{ overflow: 'visible' }}>
         {/* Abstract background shapes - deferred to prevent blocking initial render */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ contentVisibility: 'auto', contain: 'layout style paint' }}>
+        <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ contentVisibility: 'auto' }}>
           <div className="absolute top-20 right-10 w-96 h-96 bg-[#0C6F3C]/10 rounded-full blur-3xl" />
         </div>
 
@@ -402,7 +402,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
         <div className="max-w-7xl mx-auto relative z-20 w-full md:mt-0 mt-1 overflow-visible">
           {/* Headline and Search Bar - Full Width */}
           <div className="max-w-4xl">
-            <h1 className="text-6xl md:text-6xl text-2xl md:mb-8 mb-3 text-[#1A1A1A] font-semibold tracking-tight leading-none text-center md:text-left" style={{ paddingTop: '4px', contain: 'layout' }}>
+            <h1 className="text-6xl md:text-6xl text-2xl md:mb-8 mb-3 text-[#1A1A1A] font-semibold tracking-tight leading-none text-center md:text-left" style={{ paddingTop: '4px' }}>
               {/* Mobile: Static text - no animation for better performance */}
               <span className="md:hidden">Book local funeral planning professionals</span>
               {/* Desktop: Rotating text - deferred animation */}
@@ -422,7 +422,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
             </h1>
 
             {/* Horizontal search bar */}
-            <form onSubmit={handleSearch} className="bg-white rounded-2xl p-3 shadow-lg border border-[#1A1A1A]/5 relative z-30 md:mb-8 mb-4" style={{ contain: 'layout' }}>
+            <form onSubmit={handleSearch} className="bg-white rounded-2xl p-3 shadow-lg border border-[#1A1A1A]/5 relative z-30 md:mb-8 mb-4">
               <div className="flex flex-col lg:flex-row items-stretch gap-0">
                 {/* Search field */}
                 <div className="flex-1 relative border-b border-[#1A1A1A]/10 lg:border-b-0 lg:border-r lg:border-[#1A1A1A]/10">

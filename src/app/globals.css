@@ -23,8 +23,6 @@ body {
   font-display: swap;
   /* Optimize rendering */
   text-rendering: optimizeSpeed;
-  /* Improve paint performance */
-  contain: layout style;
 }
 
 /* Prevent layout shift from images loading */
@@ -44,12 +42,6 @@ img[loading="lazy"] {
   position: absolute;
   z-index: 50;
   will-change: transform;
-  contain: layout style paint;
-}
-
-/* Optimize critical rendering path */
-h1, h2, h3 {
-  contain: layout;
 }
 
 a {
