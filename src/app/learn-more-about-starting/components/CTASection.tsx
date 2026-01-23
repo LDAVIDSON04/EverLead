@@ -20,11 +20,11 @@ export function CTASection() {
           </div>
 
           {/* Right content - scheduling platform hero image (desktop only) */}
-          <div className="relative w-full h-full min-h-[700px] hidden md:flex items-center justify-center overflow-visible -mr-6">
+          <div className="relative w-full h-full min-h-[500px] hidden md:flex items-center justify-center overflow-visible -mr-6">
             <img 
               src="/scheduling-platform-hero.png" 
               alt="Join the leading scheduling platform" 
-              className="w-full h-full max-w-none object-contain"
+              className="w-full h-auto max-w-md object-contain"
               style={{ 
                 objectFit: 'contain'
               }}
