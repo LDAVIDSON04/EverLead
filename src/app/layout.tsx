@@ -1,9 +1,8 @@
 // src/app/layout.tsx
 import "./globals.css";
 import type { Metadata } from "next";
-import { Analytics } from "@vercel/analytics/react";
-import { SpeedInsights } from "@vercel/speed-insights/next";
 import { BotIdClient } from 'botid/client';
+import DeferredAnalytics from './components/DeferredAnalytics';
 
 // Protected routes that need bot protection
 const protectedRoutes = [
@@ -127,18 +126,40 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
         />
-        {/* Google tag (gtag.js) - defer loading to not block render */}
-        <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17787677639"></script>
+        {/* Google tag (gtag.js) - load after page is interactive to improve FCP/LCP */}
         <script
-          defer
           dangerouslySetInnerHTML={{
             __html: `
-              window.dataLayer = window.dataLayer || [];
-              function gtag(){dataLayer.push(arguments);}
-              gtag('js', new Date());
-              gtag('config', 'AW-17787677639', {
-                'send_page_view': false
-              });
+              (function() {
+                function loadGTag() {
+                  if (document.getElementById('gtag-script')) return;
+                  
+                  var script = document.createElement('script');
+                  script.id = 'gtag-script';
+                  script.async = true;
+                  script.src = 'https://www.googletagmanager.com/gtag/js?id=AW-17787677639';
+                  document.head.appendChild(script);
+                  
+                  var inlineScript = document.createElement('script');
+                  inlineScript.textContent = \`
+                    window.dataLayer = window.dataLayer || [];
+                    function gtag(){dataLayer.push(arguments);}
+                    gtag('js', new Date());
+                    gtag('config', 'AW-17787677639', {
+                      'send_page_view': false
+                    });
+                  \`;
+                  document.head.appendChild(inlineScript);
+                }
+                
+                if (document.readyState === 'complete') {
+                  setTimeout(loadGTag, 2000);
+                } else {
+                  window.addEventListener('load', function() {
+                    setTimeout(loadGTag, 2000);
+                  });
+                }
+              })();
             `,
           }}
         />
@@ -147,8 +168,8 @@ export default function RootLayout({
         {/* BotIdClient must be in body - client components cannot be in head */}
         <BotIdClient protect={protectedRoutes} />
         {children}
-        <Analytics />
-        <SpeedInsights />
+        {/* Defer Analytics and SpeedInsights to improve FCP/LCP */}
+        <DeferredAnalytics />
       </body>
     </html>
   );

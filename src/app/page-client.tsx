@@ -4,135 +4,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Search, MapPin, Star, Calendar, Check, ChevronDown, Heart, Facebook, Instagram, Menu, X, ChevronRight } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 interface HomePageClientProps {
   initialLocation: string;
 }
-
-// Move cities array outside component to avoid recreation on every render
-const cities = [
-  // Alberta
-  "Calgary, AB",
-  "Edmonton, AB",
-  "Red Deer, AB",
-  "Lethbridge, AB",
-  "Medicine Hat, AB",
-  "Grande Prairie, AB",
-  "Fort McMurray, AB",
-  "Airdrie, AB",
-  "St. Albert, AB",
-  "Leduc, AB",
-  "Spruce Grove, AB",
-  "Cochrane, AB",
-  "Okotoks, AB",
-  "Canmore, AB",
-  "Banff, AB",
-  // British Columbia
-  "Vancouver, BC",
-  "Victoria, BC",
-  "Kelowna, BC",
-  "Surrey, BC",
-  "Burnaby, BC",
-  "Richmond, BC",
-  "Langley, BC",
-  "Abbotsford, BC",
-  "Coquitlam, BC",
-  "Saanich, BC",
-  "Delta, BC",
-  "Kamloops, BC",
-  "Nanaimo, BC",
-  "Prince George, BC",
-  "Chilliwack, BC",
-  "Maple Ridge, BC",
-  "New Westminster, BC",
-  "Port Coquitlam, BC",
-  "North Vancouver, BC",
-  "West Vancouver, BC",
-  "Penticton, BC",
-  "Vernon, BC",
-  "Salmon Arm, BC",
-  "Courtenay, BC",
-  "Campbell River, BC",
-  "Duncan, BC",
-  "Port Alberni, BC",
-  // Saskatchewan
-  "Saskatoon, SK",
-  "Regina, SK",
-  "Prince Albert, SK",
-  "Moose Jaw, SK",
-  "Swift Current, SK",
-  "Yorkton, SK",
-  "North Battleford, SK",
-  // Manitoba
-  "Winnipeg, MB",
-  "Brandon, MB",
-  "Steinbach, MB",
-  "Thompson, MB",
-  "Portage la Prairie, MB",
-  // Ontario
-  "Toronto, ON",
-  "Ottawa, ON",
-  "Mississauga, ON",
-  "Brampton, ON",
-  "Hamilton, ON",
-  "London, ON",
-  "Markham, ON",
-  "Vaughan, ON",
-  "Kitchener, ON",
-  "Windsor, ON",
-  "Richmond Hill, ON",
-  "Oakville, ON",
-  "Burlington, ON",
-  "Oshawa, ON",
-  "St. Catharines, ON",
-  "Cambridge, ON",
-  "Guelph, ON",
-  "Barrie, ON",
-  "Kingston, ON",
-  "Thunder Bay, ON",
-  "Sudbury, ON",
-  "Sault Ste. Marie, ON",
-  "North Bay, ON",
-  "Timmins, ON",
-  // Quebec
-  "Montreal, QC",
-  "Quebec City, QC",
-  "Laval, QC",
-  "Gatineau, QC",
-  "Longueuil, QC",
-  "Sherbrooke, QC",
-  "Saguenay, QC",
-  "Lévis, QC",
-  "Trois-Rivières, QC",
-  "Terrebonne, QC",
-  // New Brunswick
-  "Saint John, NB",
-  "Moncton, NB",
-  "Fredericton, NB",
-  "Dieppe, NB",
-  "Miramichi, NB",
-  // Nova Scotia
-  "Halifax, NS",
-  "Dartmouth, NS",
-  "Sydney, NS",
-  "Truro, NS",
-  "New Glasgow, NS",
-  // Prince Edward Island
-  "Charlottetown, PE",
-  "Summerside, PE",
-  // Newfoundland and Labrador
-  "St. John's, NL",
-  "Mount Pearl, NL",
-  "Corner Brook, NL",
-  "Conception Bay South, NL",
-  // Yukon
-  "Whitehorse, YT",
-  // Northwest Territories
-  "Yellowknife, NT",
-  // Nunavut
-  "Iqaluit, NU",
-];
 
 export default function HomePageClient({ initialLocation }: HomePageClientProps) {
   const router = useRouter();
@@ -142,6 +18,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
   const [locationSuggestions, setLocationSuggestions] = useState<string[]>([]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const citiesRef = useRef<string[] | null>(null);
 
   // Rotating text for hero title - deferred for mobile performance
   const rotatingTexts = [
@@ -212,12 +89,24 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
     setShowSpecialtyDropdown(false);
   };
 
-  const handleLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Lazy load cities array only when needed
+  const getCities = async (): Promise<string[]> => {
+    if (citiesRef.current) {
+      return citiesRef.current;
+    }
+    // Dynamically import cities to reduce initial bundle size
+    const { cities } = await import('@/lib/cities');
+    citiesRef.current = cities;
+    return cities;
+  };
+
+  const handleLocationChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setLocation(value);
     setSearchError(null); // Clear error when user types
     
     if (value.length > 0) {
+      const cities = await getCities();
       const filtered = cities.filter(city => 
         city.toLowerCase().includes(value.toLowerCase())
       );
@@ -242,25 +131,19 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
     
     // Detect location from IP, then navigate with it
     try {
-      console.log("🔍 [HOME] Detecting family location from IP for button click...");
       const res = await fetch("/api/geolocation");
       const data = await res.json();
-      console.log("📍 [HOME] Geolocation API response:", data);
       
       if (data.location) {
-        console.log("✅ [HOME] Location detected from IP:", data.location);
         // Navigate with location in URL - this will show agents in that city
         const searchUrl = `/search?location=${encodeURIComponent(data.location)}`;
-        console.log("🚀 [HOME] Navigating to:", searchUrl);
         router.push(searchUrl);
       } else {
-        console.warn("⚠️ [HOME] Could not detect location from IP, data:", data);
         // Navigate without location if detection fails
         router.push("/search");
       }
     } catch (err) {
       // Navigate without location if detection fails
-      console.error("❌ [HOME] Error detecting location:", err);
       router.push("/search");
     }
   };
@@ -381,12 +264,13 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
       {/* HERO */}
       <div className="relative bg-[#FAF9F6] pb-12 px-4 min-h-[calc(100vh-80px)] flex items-start md:pt-32 pt-0 md:pb-12 -mt-2 md:mt-0" style={{ overflow: 'visible' }}>
         {/* Abstract background shapes - deferred to prevent blocking initial render */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ contentVisibility: 'auto', willChange: 'transform' }}>
-          <div className="absolute top-20 right-10 w-96 h-96 bg-[#0C6F3C]/10 rounded-full blur-3xl" style={{ willChange: 'transform' }} />
+        <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ contentVisibility: 'auto', contain: 'layout style paint' }}>
+          <div className="absolute top-20 right-10 w-96 h-96 bg-[#0C6F3C]/10 rounded-full blur-3xl" style={{ willChange: 'auto' }} />
         </div>
 
         {/* Hero illustration - positioned absolutely on the right, above title */}
-        <div className="absolute right-10 top-10 hidden lg:block" style={{ width: "350px", height: "350px" }}>
+        {/* Hidden on mobile to improve LCP - mobile LCP is typically the hero text */}
+        <div className="absolute right-10 top-10 hidden lg:block" style={{ width: "350px", height: "350px", contentVisibility: 'auto' }}>
           <Image
             src="/hero-image.png"
             alt="Book a specialist"
@@ -396,8 +280,8 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
             style={{
               mixBlendMode: "multiply",
             }}
-            loading="eager"
-            fetchPriority="high"
+            loading="lazy"
+            fetchPriority="low"
             sizes="350px"
           />
         </div>
@@ -484,8 +368,9 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                       className="w-full pl-12 pr-4 py-3 bg-transparent border-none focus:outline-none text-[#1A1A1A] placeholder:text-[#1A1A1A]/40 relative z-10"
                       value={location}
                       onChange={handleLocationChange}
-                      onFocus={() => {
+                      onFocus={async () => {
                         if (location.length > 0) {
+                          const cities = await getCities();
                           const filtered = cities.filter(city => 
                             city.toLowerCase().includes(location.toLowerCase())
                           );
