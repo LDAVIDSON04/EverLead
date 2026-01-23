@@ -339,10 +339,12 @@ export async function POST(req: NextRequest) {
     const exactHour = slotStartLocal.hour;
     
     // Store exact hour in notes for availability API to use
+    // Also store appointment type for reminder system
     const appointmentNotes = (notes && typeof notes === 'string') ? notes.trim() : '';
+    const appointmentTypeNote = appointmentType === "video" ? "appointment_type:video" : "appointment_type:in-person";
     const notesWithHour = appointmentNotes 
-      ? `${appointmentNotes} | booked_hour:${exactHour}`
-      : `booked_hour:${exactHour}`;
+      ? `${appointmentNotes} | booked_hour:${exactHour} | ${appointmentTypeNote}`
+      : `booked_hour:${exactHour} | ${appointmentTypeNote}`;
 
     // Create the appointment (requestedDate already defined above)
     console.log("Creating appointment with data:", {
@@ -732,10 +734,10 @@ export async function POST(req: NextRequest) {
       const isVideoAppointment = appointmentType === "video";
       const videoRoomName = isVideoAppointment ? `appointment-${appointment.id}` : null;
       const customerVideoLink = isVideoAppointment && videoRoomName
-        ? `${baseUrl}/video/${videoRoomName}?identity=${encodeURIComponent(`${firstName} ${lastName}`.trim())}`
+        ? `${baseUrl}/video/join/${videoRoomName}?identity=${encodeURIComponent(`${firstName} ${lastName}`.trim())}`
         : null;
       const agentVideoLink = isVideoAppointment && videoRoomName
-        ? `${baseUrl}/video/${videoRoomName}?identity=${encodeURIComponent(agentName)}`
+        ? `${baseUrl}/video/join/${videoRoomName}?identity=${encodeURIComponent(agentName)}`
         : null;
       
       // Send email to family
@@ -1085,6 +1087,8 @@ export async function POST(req: NextRequest) {
 
       // Send SMS to consumer
       if (leadPhone) {
+        const smsBaseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.soradin.com';
+        
         console.log('📱 Attempting to send booking confirmation SMS to consumer:', {
           to: leadPhone,
           requestedDate,
@@ -1093,6 +1097,11 @@ export async function POST(req: NextRequest) {
           hasTwilioCredentials: !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_PHONE_NUMBER),
         });
 
+        // Build video link if this is a video appointment (use join page for rich preview)
+        const videoLink = appointmentType === "video" 
+          ? `${smsBaseUrl}/video/join/appointment-${appointment.id}?identity=${encodeURIComponent(`${firstName} ${lastName}`.trim())}`
+          : undefined;
+
         const smsPromise = sendConsumerBookingSMS({
           to: leadPhone,
           agentName: agentNameForSMS,
@@ -1100,6 +1109,8 @@ export async function POST(req: NextRequest) {
           requestedWindow,
           province: leadProvince || undefined,
           confirmedAt: appointment.confirmed_at || undefined,
+          appointmentType: appointmentType || "in-person",
+          videoLink,
         });
         
         const smsTimeout = new Promise<void>((resolve) => {
@@ -1126,6 +1137,13 @@ export async function POST(req: NextRequest) {
 
       // Send SMS to agent (if enabled in preferences)
       if (agentPhone && newAppointmentSmsEnabled) {
+        const agentSmsBaseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.soradin.com';
+        
+        // Build agent video link if this is a video appointment (use join page for rich preview)
+        const agentVideoLink = appointmentType === "video"
+          ? `${agentSmsBaseUrl}/video/join/appointment-${appointment.id}?identity=${encodeURIComponent(agentNameForSMS)}`
+          : undefined;
+
         const agentSmsPromise = sendAgentNewAppointmentSMS({
           to: agentPhone,
           consumerName,
@@ -1133,6 +1151,8 @@ export async function POST(req: NextRequest) {
           requestedWindow,
           province: leadProvince || agentProfileForSMS?.agent_province || undefined,
           confirmedAt: appointment.confirmed_at || undefined,
+          appointmentType: appointmentType || "in-person",
+          videoLink: agentVideoLink,
         });
         
         const agentSmsTimeout = new Promise<void>((resolve) => {

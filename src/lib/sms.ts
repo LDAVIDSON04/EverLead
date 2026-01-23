@@ -139,6 +139,8 @@ export async function sendConsumerBookingSMS({
   requestedWindow,
   province,
   confirmedAt,
+  appointmentType,
+  videoLink,
 }: {
   to: string;
   agentName?: string;
@@ -146,6 +148,8 @@ export async function sendConsumerBookingSMS({
   requestedWindow: string;
   province?: string;
   confirmedAt?: string;
+  appointmentType?: "in-person" | "video";
+  videoLink?: string;
 }): Promise<void> {
   if (!to) {
     console.warn('📱 sendConsumerBookingSMS: No phone number provided');
@@ -164,7 +168,14 @@ export async function sendConsumerBookingSMS({
 
   // Agent name is optional (appointments may be created before agent is assigned)
   const agentPart = agentName ? ` with ${agentName}` : '';
-  const message = `Soradin: Your appointment${agentPart} is confirmed for ${formattedDate} at ${timeDisplay}. Please arrive 10 minutes early. Reply STOP to opt out.`;
+  
+  // Different message for video vs in-person
+  let message: string;
+  if (appointmentType === "video" && videoLink) {
+    message = `Soradin: Your video call appointment${agentPart} is confirmed for ${formattedDate} at ${timeDisplay}. Join your call: ${videoLink} Reply STOP to opt out.`;
+  } else {
+    message = `Soradin: Your appointment${agentPart} is confirmed for ${formattedDate} at ${timeDisplay}. Please arrive 10 minutes early. Reply STOP to opt out.`;
+  }
 
   await sendSMS(to, message);
 }
@@ -204,6 +215,8 @@ export async function sendAgentNewAppointmentSMS({
   requestedWindow,
   province,
   confirmedAt,
+  appointmentType,
+  videoLink,
 }: {
   to: string;
   consumerName: string;
@@ -211,6 +224,8 @@ export async function sendAgentNewAppointmentSMS({
   requestedWindow: string;
   province?: string;
   confirmedAt?: string;
+  appointmentType?: "in-person" | "video";
+  videoLink?: string;
 }): Promise<void> {
   if (!to) {
     console.warn('📱 sendAgentNewAppointmentSMS: No phone number provided');
@@ -227,7 +242,13 @@ export async function sendAgentNewAppointmentSMS({
     timeDisplay = formatTimeWindowForSMS(requestedWindow);
   }
 
-  const message = `Soradin: New appointment booked with ${consumerName} on ${formattedDate} at ${timeDisplay}. Check your agent portal for details.`;
+  // Different message for video vs in-person
+  let message: string;
+  if (appointmentType === "video" && videoLink) {
+    message = `Soradin: New video call booked with ${consumerName} on ${formattedDate} at ${timeDisplay}. Join: ${videoLink} Check portal for details.`;
+  } else {
+    message = `Soradin: New appointment booked with ${consumerName} on ${formattedDate} at ${timeDisplay}. Check your agent portal for details.`;
+  }
 
   await sendSMS(to, message);
 }
@@ -254,6 +275,128 @@ export async function sendAgentCancellationSMS({
   const formattedDate = formatDateForSMS(requestedDate);
   
   const message = `Soradin: Appointment with ${consumerName} on ${formattedDate} has been cancelled. Check your agent portal for details.`;
+
+  await sendSMS(to, message);
+}
+
+/**
+ * Send reminder SMS to consumer for video call (10 minutes before)
+ */
+export async function sendConsumerVideoReminderSMS({
+  to,
+  agentName,
+  requestedDate,
+  province,
+  confirmedAt,
+  videoLink,
+}: {
+  to: string;
+  agentName?: string;
+  requestedDate: string;
+  province?: string;
+  confirmedAt: string;
+  videoLink: string;
+}): Promise<void> {
+  if (!to) {
+    console.warn('📱 sendConsumerVideoReminderSMS: No phone number provided');
+    return;
+  }
+
+  const formattedDate = formatDateForSMS(requestedDate);
+  const timeDisplay = formatTimeForSMS(confirmedAt, province || 'BC');
+  
+  const agentPart = agentName ? ` with ${agentName}` : '';
+  const message = `Soradin: Your video call${agentPart} starts in 10 minutes (${formattedDate} at ${timeDisplay}). Join now: ${videoLink} Reply STOP to opt out.`;
+
+  await sendSMS(to, message);
+}
+
+/**
+ * Send reminder SMS to consumer for in-person appointment (1 hour before)
+ */
+export async function sendConsumerInPersonReminderSMS({
+  to,
+  agentName,
+  requestedDate,
+  province,
+  confirmedAt,
+}: {
+  to: string;
+  agentName?: string;
+  requestedDate: string;
+  province?: string;
+  confirmedAt: string;
+}): Promise<void> {
+  if (!to) {
+    console.warn('📱 sendConsumerInPersonReminderSMS: No phone number provided');
+    return;
+  }
+
+  const formattedDate = formatDateForSMS(requestedDate);
+  const timeDisplay = formatTimeForSMS(confirmedAt, province || 'BC');
+  
+  const agentPart = agentName ? ` with ${agentName}` : '';
+  const message = `Soradin: Reminder: Your appointment${agentPart} is in 1 hour (${formattedDate} at ${timeDisplay}). Please arrive 10 minutes early. Reply STOP to opt out.`;
+
+  await sendSMS(to, message);
+}
+
+/**
+ * Send reminder SMS to agent for video call (10 minutes before)
+ */
+export async function sendAgentVideoReminderSMS({
+  to,
+  consumerName,
+  requestedDate,
+  province,
+  confirmedAt,
+  videoLink,
+}: {
+  to: string;
+  consumerName: string;
+  requestedDate: string;
+  province?: string;
+  confirmedAt: string;
+  videoLink: string;
+}): Promise<void> {
+  if (!to) {
+    console.warn('📱 sendAgentVideoReminderSMS: No phone number provided');
+    return;
+  }
+
+  const formattedDate = formatDateForSMS(requestedDate);
+  const timeDisplay = formatTimeForSMS(confirmedAt, province || 'BC');
+  
+  const message = `Soradin: Video call with ${consumerName} starts in 10 minutes (${formattedDate} at ${timeDisplay}). Join: ${videoLink}`;
+
+  await sendSMS(to, message);
+}
+
+/**
+ * Send reminder SMS to agent for in-person appointment (1 hour before)
+ */
+export async function sendAgentInPersonReminderSMS({
+  to,
+  consumerName,
+  requestedDate,
+  province,
+  confirmedAt,
+}: {
+  to: string;
+  consumerName: string;
+  requestedDate: string;
+  province?: string;
+  confirmedAt: string;
+}): Promise<void> {
+  if (!to) {
+    console.warn('📱 sendAgentInPersonReminderSMS: No phone number provided');
+    return;
+  }
+
+  const formattedDate = formatDateForSMS(requestedDate);
+  const timeDisplay = formatTimeForSMS(confirmedAt, province || 'BC');
+  
+  const message = `Soradin: Reminder: Appointment with ${consumerName} in 1 hour (${formattedDate} at ${timeDisplay}). Check portal for details.`;
 
   await sendSMS(to, message);
 }

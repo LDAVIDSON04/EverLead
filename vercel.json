@@ -11,6 +11,10 @@
     {
       "path": "/api/cron/send-review-followups",
       "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/appointments/send-reminders",
+      "schedule": "*/1 * * * *"
     }
   ],
   "redirects": [
@@ -27,4 +31,3 @@
     }
   ]
 }
- 
