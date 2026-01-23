@@ -67,7 +67,7 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
       <section className="bg-[#faf8f3] py-20">
         <div className="max-w-6xl mx-auto px-6">
           <div className="grid md:grid-cols-2 gap-16 items-start">
-            <div>
+            <div className="order-2 md:order-1">
               <h2 className="text-4xl md:text-5xl font-semibold text-gray-900 mb-8 leading-tight">
                 Why People Choose Pre-Need Planning
               </h2>
@@ -109,7 +109,7 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
                 Find care
               </button>
             </div>
-            <div className="rounded-xl overflow-hidden shadow-lg">
+            <div className="rounded-xl overflow-hidden shadow-lg order-1 md:order-2">
               <img 
                 src="/bf599b03f4b83eb7d458ba52eb11f1573e5ac36d.png" 
                 alt="Planning workspace"
@@ -335,7 +335,7 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
       <section className="bg-white py-20">
         <div className="max-w-6xl mx-auto px-6">
           <div className="grid md:grid-cols-2 gap-16 items-start">
-            <div className="rounded-xl overflow-hidden shadow-lg order-2 md:order-1">
+            <div className="rounded-xl overflow-hidden shadow-lg order-1 md:order-1">
               <img 
                 src="/3342a4b29bf643b580d630c78e1f13747daaed1c.png" 
                 alt="Calm interior setting"
@@ -345,7 +345,7 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
                 }}
               />
             </div>
-            <div className="order-1 md:order-2">
+            <div className="order-2 md:order-2">
               <h2 className="text-4xl md:text-5xl font-semibold text-gray-900 mb-8 leading-tight">
                 How Soradin Helps
               </h2>
