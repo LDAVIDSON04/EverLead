@@ -341,14 +341,14 @@ export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId, onEdit
               </div>
 
               {/* Meeting Location or Join Meeting (for video calls) */}
-              {(() => {
+              {appointmentData ? (() => {
                 // Video vs in-person: use office_location_id only (bookings set it null for video).
                 // API may return office_location from fallback; we ignore that for this check.
-                const isVideoAppointment = !appointmentData?.office_location_id;
+                const isVideoAppointment = !appointmentData.office_location_id;
                 const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://www.soradin.com';
-                const agentName = appointmentData?.agent?.full_name || 'Agent';
+                const agentName = appointmentData.agent?.full_name || 'Agent';
                 
-                if (isVideoAppointment && appointmentData?.id) {
+                if (isVideoAppointment && appointmentData.id) {
                   // Video appointment: Show "Meeting link" with join URL (Agent | X so unique in room)
                   const videoLink = `${baseUrl}/video/join/appointment-${appointmentData.id}?identity=${encodeURIComponent(`Agent | ${agentName}`)}`;
                   
@@ -371,7 +371,7 @@ export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId, onEdit
                     </div>
                   );
                 } else {
-                  // In-person appointment: Show meeting location + "This was a video call — fix"
+                  // In-person appointment: Show meeting location
                   return (
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900 mb-4">Meeting Location</h3>
@@ -418,7 +418,16 @@ export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId, onEdit
                     </div>
                   );
                 }
-              })()}
+              })() : appointmentId ? (
+                // Loading state: appointmentId exists but appointmentData not loaded yet
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Meeting Information</h3>
+                  <div className="flex items-center gap-2 text-gray-500">
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-400 border-t-transparent" />
+                    <span className="text-sm">Loading...</span>
+                  </div>
+                </div>
+              ) : null}
 
               {/* Address Information */}
               <div>
