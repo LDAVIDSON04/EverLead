@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Search, MapPin, Star, Calendar, Check, ChevronDown, Heart, Facebook, Instagram, Menu, X, ChevronRight } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
+import { cities } from "@/lib/cities";
 
 interface HomePageClientProps {
   initialLocation: string;
@@ -767,8 +768,8 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
         </div>
       </section>
 
-      {/* TRUSTED PARTNERS - HIDDEN */}
-      {/* <section className="py-24 px-4 bg-[#FAF9F6]">
+      {/* TRUSTED PARTNERS */}
+      <section className="py-24 px-4 bg-[#FAF9F6]">
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div className="order-1 lg:order-1 text-center lg:text-left">
@@ -825,7 +826,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
             </div>
           </div>
         </div>
-      </section> */}
+      </section>
 
       {/* CITIES LIST */}
       <section className="py-24 px-4 bg-[#D9C7A3]/20">
@@ -835,10 +836,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
           </h2>
 
           <div className="grid grid-cols-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {[
-              "Penticton",
-              "Kelowna"
-            ].map((city) => (
+            {cities.map((city) => (
               <Link
                 key={city}
                 href={`/search/choose?location=${encodeURIComponent(city)}`}
