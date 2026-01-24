@@ -57,8 +57,8 @@ interface AppointmentData {
   requested_date: string | null;
   requested_window: string | null;
   office_location: OfficeLocation | null;
+  office_location_id?: string | null;
   agent_timezone?: string;
-  notes?: string | null;
   agent?: {
     full_name: string | null;
   } | null;
@@ -344,7 +344,10 @@ export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId, onEdit
               {/* Meeting Location or Join Meeting (for video calls) */}
               {(() => {
                 // Check if this is a video appointment
-                const isVideoAppointment = appointmentData?.notes?.includes("appointment_type:video") || false;
+                // Since appointments table doesn't have notes column, we use office_location_id as heuristic:
+                // - If office_location_id is null, it's likely a video appointment
+                // - If office_location_id has a value, it's an in-person appointment
+                const isVideoAppointment = !appointmentData?.office_location_id && !officeLocation;
                 const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://www.soradin.com';
                 const agentName = appointmentData?.agent?.full_name || 'Agent';
                 
