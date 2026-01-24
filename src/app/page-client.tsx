@@ -5,6 +5,22 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Search, MapPin, Star, Calendar, Check, ChevronDown, Heart, Facebook, Instagram, Menu, X, ChevronRight } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
+// Major BC cities for the "Find funeral professionals near you" section (12 cities max)
+const majorBCCities = [
+  "Vancouver, BC",
+  "Victoria, BC",
+  "Kelowna, BC",
+  "Surrey, BC",
+  "Burnaby, BC",
+  "Richmond, BC",
+  "Abbotsford, BC",
+  "Kamloops, BC",
+  "Nanaimo, BC",
+  "Prince George, BC",
+  "Chilliwack, BC",
+  "Penticton, BC",
+];
+
 import { cities } from "@/lib/cities";
 
 interface HomePageClientProps {
@@ -836,7 +852,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
           </h2>
 
           <div className="grid grid-cols-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {cities.map((city) => (
+            {majorBCCities.map((city) => (
               <Link
                 key={city}
                 href={`/search/choose?location=${encodeURIComponent(city)}`}
