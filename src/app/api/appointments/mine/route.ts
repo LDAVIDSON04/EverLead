@@ -587,6 +587,7 @@ export async function GET(req: NextRequest) {
         status: apt.status,
         family_name: familyName,
         location: location || "N/A",
+        office_location_id: apt.office_location_id || null, // Include to detect video calls
       };
       
       // Debug logging for location assignment

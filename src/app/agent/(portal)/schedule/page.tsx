@@ -956,6 +956,9 @@ export default function SchedulePage() {
 
   // Render appointment box (shared across views)
   const renderAppointmentBox = (apt: any, color: string, showLocation: boolean = true) => {
+    // Check if this is a video call (office_location_id is null and not an external event)
+    const isVideoCall = !apt.is_external && apt.office_location_id === null && apt.lead_id;
+    
     const cleanLocation = apt.location && 
       apt.location !== "N/A" && 
       apt.location !== "External Calendar" &&
@@ -980,11 +983,20 @@ export default function SchedulePage() {
           <div className="text-[9px] md:text-xs font-medium text-gray-700 leading-tight line-clamp-1 break-words">
             {apt.family_name || 'Appointment'}
           </div>
-          {showLocation && cleanLocation && cleanLocation.length > 0 && (
-            <div className="flex items-center gap-0.5 mt-auto">
-              <MapPin className="w-2 h-2 md:w-2.5 md:h-2.5 text-gray-600 flex-shrink-0" />
-              <span className="text-[8px] md:text-[10px] text-gray-600 truncate leading-tight">{cleanLocation}</span>
-            </div>
+          {showLocation && (
+            <>
+              {isVideoCall ? (
+                <div className="flex items-center gap-0.5 mt-auto">
+                  <MapPin className="w-2 h-2 md:w-2.5 md:h-2.5 text-gray-600 flex-shrink-0" />
+                  <span className="text-[8px] md:text-[10px] text-gray-600 truncate leading-tight">Video Call</span>
+                </div>
+              ) : cleanLocation && cleanLocation.length > 0 ? (
+                <div className="flex items-center gap-0.5 mt-auto">
+                  <MapPin className="w-2 h-2 md:w-2.5 md:h-2.5 text-gray-600 flex-shrink-0" />
+                  <span className="text-[8px] md:text-[10px] text-gray-600 truncate leading-tight">{cleanLocation}</span>
+                </div>
+              ) : null}
+            </>
           )}
         </div>
       </div>
