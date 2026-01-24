@@ -53,7 +53,7 @@ function SearchChooseContent() {
       </div>
 
       <div className="max-w-3xl mx-auto px-6 sm:px-8 py-12 sm:py-16">
-        <div className="text-center mb-20 sm:mb-28">
+        <div className="text-center mb-6 sm:mb-8">
           <h1 className="text-4xl sm:text-5xl lg:text-5xl font-bold text-gray-900 mb-4 sm:mb-5 tracking-tight">
             How would you like to meet?
           </h1>
