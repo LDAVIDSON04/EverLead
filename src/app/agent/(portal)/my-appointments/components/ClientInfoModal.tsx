@@ -343,21 +343,19 @@ export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId, onEdit
 
               {/* Meeting Location or Join Meeting (for video calls) */}
               {(() => {
-                // Check if this is a video appointment
-                // Since appointments table doesn't have notes column, we use office_location_id as heuristic:
-                // - If office_location_id is null, it's likely a video appointment
-                // - If office_location_id has a value, it's an in-person appointment
-                const isVideoAppointment = !appointmentData?.office_location_id && !officeLocation;
+                // Video vs in-person: use office_location_id only (bookings set it null for video).
+                // API may return office_location from fallback; we ignore that for this check.
+                const isVideoAppointment = !appointmentData?.office_location_id;
                 const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://www.soradin.com';
                 const agentName = appointmentData?.agent?.full_name || 'Agent';
                 
                 if (isVideoAppointment && appointmentData?.id) {
-                  // Video appointment: Show "Join meeting" with link (Agent | X so unique in room)
+                  // Video appointment: Show "Meeting link" with join URL (Agent | X so unique in room)
                   const videoLink = `${baseUrl}/video/join/appointment-${appointmentData.id}?identity=${encodeURIComponent(`Agent | ${agentName}`)}`;
                   
                   return (
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Join Meeting</h3>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Meeting link</h3>
                       <div>
                         <a
                           href={videoLink}
@@ -370,7 +368,7 @@ export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId, onEdit
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                           </svg>
                         </a>
-                        <p className="text-sm text-gray-500 mt-2">{videoLink}</p>
+                        <p className="text-sm text-gray-600 mt-3 break-all">{videoLink}</p>
                       </div>
                     </div>
                   );
