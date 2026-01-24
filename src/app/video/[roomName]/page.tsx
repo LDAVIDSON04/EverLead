@@ -1,14 +1,13 @@
 "use client";
 
 import { useParams, useSearchParams } from "next/navigation";
-import { VideoRoom } from "@/components/VideoRoom";
+import { DailyVideoRoom } from "@/components/DailyVideoRoom";
 
 export default function VideoRoomPage() {
   const params = useParams();
   const searchParams = useSearchParams();
   const roomName = params?.roomName as string;
-  const identity = searchParams?.get("identity") || null;
-  const identityOrUnique = identity ?? (typeof window !== "undefined" ? `Guest-${Date.now()}-${Math.random().toString(36).slice(2, 9)}` : "Guest");
+  const identity = searchParams?.get("identity") || undefined;
 
   if (!roomName) {
     return (
@@ -21,5 +20,5 @@ export default function VideoRoomPage() {
     );
   }
 
-  return <VideoRoom roomName={roomName} identity={identityOrUnique} />;
+  return <DailyVideoRoom roomName={roomName} identity={identity} />;
 }
