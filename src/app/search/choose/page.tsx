@@ -55,10 +55,10 @@ function SearchChooseContent() {
       <div className="max-w-3xl mx-auto px-6 sm:px-8 py-12 sm:py-16">
         <div className="text-center mb-10 sm:mb-12">
           <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3 sm:mb-4 tracking-tight">
-            What type of care are you looking for?
+            How would you like to meet?
           </h1>
           <p className="text-base sm:text-lg text-gray-600 max-w-xl mx-auto">
-            Choose how you'd like to connect with a specialist
+            Choose the option that fits your schedule. Both are free and come with no obligation.
           </p>
         </div>
 
