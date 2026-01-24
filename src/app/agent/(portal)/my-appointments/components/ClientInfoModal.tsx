@@ -51,6 +51,7 @@ interface OfficeLocation {
 
 interface AppointmentData {
   id: string;
+  agent_id?: string | null;
   starts_at: string | null;
   ends_at: string | null;
   confirmed_at: string | null;
@@ -70,6 +71,8 @@ export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId, onEdit
   const [appointmentData, setAppointmentData] = useState<AppointmentData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [markVideoLoading, setMarkVideoLoading] = useState(false);
+  const [markVideoError, setMarkVideoError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen && leadId) {
@@ -80,7 +83,9 @@ export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId, onEdit
     } else {
       setLeadData(null);
       setOfficeLocation(null);
+      setAppointmentData(null);
       setError(null);
+      setMarkVideoError(null);
     }
   }, [isOpen, leadId, appointmentId]);
 
@@ -124,12 +129,38 @@ export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId, onEdit
 
       const data = await response.json();
       setAppointmentData(data);
-      if (data.office_location) {
-        setOfficeLocation(data.office_location);
-      }
+      setOfficeLocation(data.office_location ?? null);
     } catch (err) {
       console.error('Error loading appointment data:', err);
       // Don't show error to user, just log it
+    }
+  }
+
+  async function handleMarkAsVideo() {
+    if (!appointmentId) return;
+    setMarkVideoLoading(true);
+    setMarkVideoError(null);
+    try {
+      const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+      if (userError || !user) {
+        setMarkVideoError('You must be logged in to update appointments.');
+        return;
+      }
+      const res = await fetch('/api/appointments/mark-video', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ appointmentId, agentId: user.id }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setMarkVideoError(json.error || 'Failed to mark as video call.');
+        return;
+      }
+      await loadAppointmentData();
+    } catch (err) {
+      setMarkVideoError(err instanceof Error ? err.message : 'Something went wrong.');
+    } finally {
+      setMarkVideoLoading(false);
     }
   }
 
@@ -373,7 +404,7 @@ export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId, onEdit
                     </div>
                   );
                 } else {
-                  // In-person appointment: Show meeting location
+                  // In-person appointment: Show meeting location + "This was a video call — fix"
                   return (
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900 mb-4">Meeting Location</h3>
@@ -415,6 +446,29 @@ export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId, onEdit
                           <div>
                             <p className="text-gray-500">Not specified</p>
                           </div>
+                        )}
+                      </div>
+                      <div className="mt-4 pt-4 border-t border-gray-100">
+                        <p className="text-sm text-gray-500 mb-2">
+                          This appointment was booked as in-person. If it was actually a video call, you can fix it:
+                        </p>
+                        <button
+                          type="button"
+                          onClick={handleMarkAsVideo}
+                          disabled={markVideoLoading}
+                          className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-green-700 bg-green-50 rounded-lg hover:bg-green-100 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+                        >
+                          {markVideoLoading ? (
+                            <>
+                              <span className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-green-600 border-t-transparent" />
+                              Updating…
+                            </>
+                          ) : (
+                            'This was a video call — fix'
+                          )}
+                        </button>
+                        {markVideoError && (
+                          <p className="text-sm text-red-600 mt-2">{markVideoError}</p>
                         )}
                       </div>
                     </div>

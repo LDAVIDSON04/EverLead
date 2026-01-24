@@ -376,6 +376,10 @@ export async function POST(req: NextRequest) {
     const pricePerAppointment = 0.50;
     const priceCents = Math.round(pricePerAppointment * 100);
     
+    // CRITICAL: For video appointments, office_location_id must be null
+    // This ensures the ClientInfoModal correctly shows "Meeting link" instead of "Meeting Location"
+    const finalOfficeLocationId = appointmentType === "video" ? null : (officeLocationId || null);
+    
     const appointmentData: any = {
       lead_id: leadId,
       agent_id: agentId,
@@ -384,7 +388,7 @@ export async function POST(req: NextRequest) {
       status: "confirmed", // Mark as confirmed immediately after booking
       price_cents: priceCents, // Set price when booking
       confirmed_at: confirmedAtISO, // Store exact booking time - MUST match slot startsAt for conflict detection
-      office_location_id: officeLocationId || null, // Store the office location where appointment was booked
+      office_location_id: finalOfficeLocationId, // Store the office location where appointment was booked (null for video)
     };
     
     const { data: appointment, error: appointmentError } = await supabaseAdmin
