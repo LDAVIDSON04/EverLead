@@ -20,7 +20,7 @@ function SearchChooseContent() {
 
   if (!location.trim()) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[#FAF9F6] flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#0C6F3C] border-t-transparent" />
       </div>
     );
@@ -39,7 +39,7 @@ function SearchChooseContent() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
+    <div className="min-h-screen bg-[#FAF9F6]">
       {/* Logo in top left */}
       <div className="absolute top-6 left-6 sm:top-8 sm:left-8 lg:top-10 lg:left-10 z-10">
         <Image
@@ -53,11 +53,11 @@ function SearchChooseContent() {
       </div>
 
       <div className="max-w-3xl mx-auto px-6 sm:px-8 py-12 sm:py-16">
-        <div className="text-center mb-10 sm:mb-12">
-          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3 sm:mb-4 tracking-tight">
+        <div className="text-center mb-20 sm:mb-28">
+          <h1 className="text-4xl sm:text-5xl lg:text-5xl font-bold text-gray-900 mb-4 sm:mb-5 tracking-tight">
             How would you like to meet?
           </h1>
-          <p className="text-base sm:text-lg text-gray-600 max-w-xl mx-auto">
+          <p className="text-lg sm:text-xl text-gray-600 max-w-xl mx-auto">
             Choose the option that fits your schedule. Both are free and come with no obligation.
           </p>
         </div>
