@@ -1,12 +1,34 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { connect, Room, LocalVideoTrack, LocalAudioTrack, RemoteParticipant } from "twilio-video";
+import { useState, useEffect, useRef, useCallback } from "react";
+import {
+  connect,
+  createLocalTracks,
+  Room,
+  LocalVideoTrack,
+  LocalAudioTrack,
+  RemoteParticipant,
+} from "twilio-video";
 import { Mic, MicOff, Video, VideoOff, PhoneOff } from "lucide-react";
 
 interface VideoRoomProps {
   roomName: string;
   identity: string;
+}
+
+// Mobile-friendly constraints; many phones struggle with 720p
+const MOBILE_VIDEO = { width: 640 };
+const DESKTOP_VIDEO = { width: 1280, height: 720 };
+
+function friendlyError(err: unknown): string {
+  const msg = err instanceof Error ? err.message : String(err);
+  if (/not allowed|denied|permission/i.test(msg) || msg.includes("NotAllowedError"))
+    return "Camera and microphone access was denied. Please allow access in your browser settings and try again.";
+  if (/not found|NotFoundError/i.test(msg))
+    return "No camera or microphone found. Please check your device and try again.";
+  if (/failed to get access token|token/i.test(msg))
+    return "Unable to connect. Please check your connection and try again.";
+  return msg || "Failed to join the call. Please try again.";
 }
 
 export function VideoRoom({ roomName, identity }: VideoRoomProps) {
@@ -23,122 +45,207 @@ export function VideoRoom({ roomName, identity }: VideoRoomProps) {
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRefs = useRef<Map<string, HTMLVideoElement>>(new Map());
   const mountedRef = useRef(true);
+  const roomRef = useRef<Room | null>(null);
+  const localVideoTrackRef = useRef<LocalVideoTrack | null>(null);
+  const localAudioTrackRef = useRef<LocalAudioTrack | null>(null);
 
-  // Check if we're on mobile - mobile browsers require user gesture for permissions
-  const isMobile = typeof window !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  const isMobile =
+    typeof window !== "undefined" &&
+    /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-  async function joinRoom() {
-    if (hasJoined) return; // Prevent double-joining
-    
+  const cleanup = useCallback(() => {
+    const r = roomRef.current;
+    const v = localVideoTrackRef.current;
+    const a = localAudioTrackRef.current;
+    if (r) {
+      r.disconnect();
+      roomRef.current = null;
+    }
+    if (v) {
+      v.stop();
+      localVideoTrackRef.current = null;
+    }
+    if (a) {
+      a.stop();
+      localAudioTrackRef.current = null;
+    }
+  }, []);
+
+  const joinWithTracks = useCallback(
+    async (tracks: (LocalVideoTrack | LocalAudioTrack)[]) => {
+      const videoTrack = tracks.find((t) => t.kind === "video") as LocalVideoTrack | undefined;
+      const audioTrack = tracks.find((t) => t.kind === "audio") as LocalAudioTrack | undefined;
+
+      const res = await fetch("/api/twilio/video-token", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ roomName, identity }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to get access token");
+      }
+      const { token } = await res.json();
+
+      const r = await connect(token, {
+        name: roomName,
+        tracks,
+      });
+
+      if (!mountedRef.current) {
+        r.disconnect();
+        tracks.forEach((t) => t.stop());
+        return;
+      }
+
+      roomRef.current = r;
+      if (videoTrack) localVideoTrackRef.current = videoTrack;
+      if (audioTrack) localAudioTrackRef.current = audioTrack;
+
+      setRoom(r);
+      setHasJoined(true);
+      setIsConnecting(false);
+      if (videoTrack) setLocalVideoTrack(videoTrack);
+      if (audioTrack) setLocalAudioTrack(audioTrack);
+
+      r.participants.forEach((p) => participantConnected(p));
+      r.on("participantConnected", participantConnected);
+      r.on("participantDisconnected", (p) => {
+        setParticipants((prev) => prev.filter((x) => x.sid !== p.sid));
+        remoteVideoRefs.current.delete(p.sid);
+      });
+      r.on("disconnected", () => {
+        if (mountedRef.current) {
+          setRoom(null);
+          setParticipants([]);
+          setLocalVideoTrack(null);
+          setLocalAudioTrack(null);
+          localVideoTrackRef.current = null;
+          localAudioTrackRef.current = null;
+          roomRef.current = null;
+        }
+      });
+    },
+    [roomName, identity]
+  );
+
+  function participantConnected(participant: RemoteParticipant) {
+    setParticipants((prev) => [...prev, participant]);
+    participant.tracks.forEach((pub) => {
+      if (pub.track) trackSubscribed(pub.track, participant);
+    });
+    participant.on("trackSubscribed", (track) => trackSubscribed(track, participant));
+    participant.on("trackUnsubscribed", (track) => {
+      if ("detach" in track && typeof (track as any).detach === "function")
+        (track as any).detach();
+    });
+  }
+
+  function trackSubscribed(track: any, participant: RemoteParticipant) {
+    if (track.kind === "video") {
+      const el = remoteVideoRefs.current.get(participant.sid);
+      if (el) track.attach(el);
+    } else if (track.kind === "audio") {
+      track.attach();
+    }
+  }
+
+  const joinRoom = useCallback(async () => {
+    if (hasJoined) return;
     setIsConnecting(true);
     setError(null);
     mountedRef.current = true;
 
     try {
-      // Get access token from our API
-      const response = await fetch("/api/twilio/video-token", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          roomName,
-          identity,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to get access token");
-      }
-
-      const { token } = await response.json();
-
-      // Connect to the room - this will request camera/mic permissions
-      const room = await connect(token, {
-        name: roomName,
-        audio: true,
-        video: { width: 1280, height: 720 },
-      });
-
-      if (!mountedRef.current) {
-        room.disconnect();
-        return;
-      }
-
-      setRoom(room);
-      setHasJoined(true);
-      setIsConnecting(false);
-
-      // Get local video track
-      const localVideo = Array.from(room.localParticipant.videoTracks.values())[0]?.track;
-      const localAudio = Array.from(room.localParticipant.audioTracks.values())[0]?.track;
-
-      if (localVideo) {
-        setLocalVideoTrack(localVideo);
-      }
-      if (localAudio) {
-        setLocalAudioTrack(localAudio);
-      }
-
-      // Handle existing participants
-      room.participants.forEach((participant) => {
-        participantConnected(participant);
-      });
-
-      // Handle new participants joining
-      room.on("participantConnected", participantConnected);
-
-      // Handle participants leaving
-      room.on("participantDisconnected", (participant) => {
-        setParticipants((prev) => prev.filter((p) => p.sid !== participant.sid));
-        remoteVideoRefs.current.delete(participant.sid);
-      });
-
-      // Handle disconnection
-      room.on("disconnected", () => {
-        if (mountedRef.current) {
-          setRoom(null);
-          setParticipants([]);
-          if (localVideoTrack) {
-            localVideoTrack.stop();
-          }
-          if (localAudioTrack) {
-            localAudioTrack.stop();
-          }
+      if (isMobile) {
+        // Request camera/mic in user gesture, then connect with those tracks
+        const raw = await createLocalTracks({
+          audio: true,
+          video: MOBILE_VIDEO,
+        });
+        const tracks = raw.filter(
+          (t): t is LocalVideoTrack | LocalAudioTrack =>
+            t.kind === "video" || t.kind === "audio"
+        );
+        if (!mountedRef.current) {
+          tracks.forEach((t) => t.stop());
+          return;
         }
-      });
-    } catch (err: any) {
+        await joinWithTracks(tracks);
+      } else {
+        const res = await fetch("/api/twilio/video-token", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ roomName, identity }),
+        });
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.error || "Failed to get access token");
+        }
+        const { token } = await res.json();
+
+        const r = await connect(token, {
+          name: roomName,
+          audio: true,
+          video: DESKTOP_VIDEO,
+        });
+
+        if (!mountedRef.current) {
+          r.disconnect();
+          return;
+        }
+
+        roomRef.current = r;
+        const lv = Array.from(r.localParticipant.videoTracks.values())[0]?.track;
+        const la = Array.from(r.localParticipant.audioTracks.values())[0]?.track;
+        if (lv) localVideoTrackRef.current = lv;
+        if (la) localAudioTrackRef.current = la;
+
+        setRoom(r);
+        setHasJoined(true);
+        setIsConnecting(false);
+        if (lv) setLocalVideoTrack(lv);
+        if (la) setLocalAudioTrack(la);
+
+        r.participants.forEach((p) => participantConnected(p));
+        r.on("participantConnected", participantConnected);
+        r.on("participantDisconnected", (p) => {
+          setParticipants((prev) => prev.filter((x) => x.sid !== p.sid));
+          remoteVideoRefs.current.delete(p.sid);
+        });
+        r.on("disconnected", () => {
+          if (mountedRef.current) {
+            setRoom(null);
+            setParticipants([]);
+            setLocalVideoTrack(null);
+            setLocalAudioTrack(null);
+            localVideoTrackRef.current = null;
+            localAudioTrackRef.current = null;
+            roomRef.current = null;
+          }
+        });
+      }
+    } catch (err: unknown) {
       console.error("Error joining room:", err);
       if (mountedRef.current) {
-        setError(err.message || "Failed to join room");
+        setError(friendlyError(err));
         setIsConnecting(false);
         setHasJoined(false);
       }
     }
-  }
+  }, [roomName, identity, isMobile, hasJoined, joinWithTracks]);
 
-  // Auto-join on desktop, but wait for user click on mobile
+  // Desktop: auto-join once on mount. Mobile: wait for button click.
   useEffect(() => {
-    if (!isMobile && !hasJoined) {
-      joinRoom();
-    }
+    mountedRef.current = true;
+    if (!isMobile && !hasJoined) joinRoom();
 
     return () => {
       mountedRef.current = false;
-      if (room) {
-        room.disconnect();
-      }
-      if (localVideoTrack) {
-        localVideoTrack.stop();
-      }
-      if (localAudioTrack) {
-        localAudioTrack.stop();
-      }
+      cleanup();
     };
-  }, [roomName, identity, isMobile, hasJoined]);
+  }, []);
 
-  // Attach local video track to <video> element
   useEffect(() => {
     const el = localVideoRef.current;
     if (localVideoTrack && el) {
@@ -149,108 +256,84 @@ export function VideoRoom({ roomName, identity }: VideoRoomProps) {
     }
   }, [localVideoTrack]);
 
-  // Attach remote participant tracks to <video> elements
   useEffect(() => {
-    participants.forEach((participant) => {
-      participant.videoTracks.forEach((publication) => {
-        if (publication.track && publication.isSubscribed) {
-          const videoEl = remoteVideoRefs.current.get(participant.sid);
-          if (videoEl) {
-            publication.track.attach(videoEl);
-          }
+    participants.forEach((p) => {
+      p.videoTracks.forEach((pub) => {
+        if (pub.track && pub.isSubscribed) {
+          const el = remoteVideoRefs.current.get(p.sid);
+          if (el) pub.track!.attach(el);
         }
       });
-
-      participant.audioTracks.forEach((publication) => {
-        if (publication.track && publication.isSubscribed) {
-          publication.track.attach();
-        }
+      p.audioTracks.forEach((pub) => {
+        if (pub.track && pub.isSubscribed) pub.track!.attach();
       });
     });
   }, [participants]);
 
-  function participantConnected(participant: RemoteParticipant) {
-    setParticipants((prev) => [...prev, participant]);
-
-    // Handle tracks that are already published
-    participant.tracks.forEach((publication) => {
-      if (publication.track) {
-        trackSubscribed(publication.track, participant);
-      }
-    });
-
-    // Handle tracks published later
-    participant.on("trackSubscribed", (track) => {
-      trackSubscribed(track, participant);
-    });
-
-    participant.on("trackUnsubscribed", (track) => {
-      if ("detach" in track && typeof track.detach === "function") {
-        track.detach();
-      }
-    });
-  }
-
-  function trackSubscribed(track: any, participant: RemoteParticipant) {
-    if (track.kind === "video") {
-      const videoEl = remoteVideoRefs.current.get(participant.sid);
-      if (videoEl) {
-        track.attach(videoEl);
-      }
-    } else if (track.kind === "audio") {
-      track.attach();
-    }
-  }
-
   function toggleVideo() {
     if (localVideoTrack) {
-      if (isVideoEnabled) {
-        localVideoTrack.disable();
-      } else {
-        localVideoTrack.enable();
-      }
+      if (isVideoEnabled) localVideoTrack.disable();
+      else localVideoTrack.enable();
       setIsVideoEnabled(!isVideoEnabled);
     }
   }
 
   function toggleAudio() {
     if (localAudioTrack) {
-      if (isAudioEnabled) {
-        localAudioTrack.disable();
-      } else {
-        localAudioTrack.enable();
-      }
+      if (isAudioEnabled) localAudioTrack.disable();
+      else localAudioTrack.enable();
       setIsAudioEnabled(!isAudioEnabled);
     }
   }
 
   function leaveRoom() {
-    if (room) {
-      room.disconnect();
-    }
-    if (localVideoTrack) {
-      localVideoTrack.stop();
-    }
-    if (localAudioTrack) {
-      localAudioTrack.stop();
-    }
+    cleanup();
+    setRoom(null);
+    setLocalVideoTrack(null);
+    setLocalAudioTrack(null);
+    setHasJoined(false);
     window.location.href = "/";
   }
 
-  // Show join button on mobile (requires user gesture for permissions)
+  // 1. Error first – never show Join when we have an error
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white px-4">
+        <div className="text-center max-w-md">
+          <h1 className="text-xl font-semibold mb-3">Couldn’t join the call</h1>
+          <p className="text-red-300 mb-6">{error}</p>
+          <button
+            onClick={() => {
+              setError(null);
+              if (isMobile) {
+                /* will show Join button */
+              } else {
+                joinRoom();
+              }
+            }}
+            className="px-5 py-2.5 bg-emerald-600 rounded-lg hover:bg-emerald-700 font-medium"
+          >
+            Try again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // 2. Mobile join screen (only when no error)
   if (isMobile && !hasJoined && !isConnecting) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
-        <div className="text-center p-4">
-          <h1 className="text-2xl font-semibold mb-4">Join Video Call</h1>
-          <p className="text-gray-300 mb-6">
-            Click the button below to join the video call. You'll be asked to allow camera and microphone access.
+      <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white px-4">
+        <div className="text-center max-w-sm">
+          <h1 className="text-xl font-semibold mb-3">Join video call</h1>
+          <p className="text-gray-400 mb-6 text-sm">
+            Tap below to join. You’ll be asked to allow camera and microphone access.
           </p>
           <button
             onClick={joinRoom}
-            className="px-6 py-3 bg-green-600 rounded-lg hover:bg-green-700 transition-colors text-lg font-semibold"
+            className="w-full py-3.5 bg-emerald-600 rounded-xl hover:bg-emerald-700 font-semibold text-base"
           >
-            Join Call
+            Join call
           </button>
         </div>
       </div>
@@ -261,33 +344,8 @@ export function VideoRoom({ roomName, identity }: VideoRoomProps) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-          <p>Connecting to room...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
-        <div className="text-center p-4">
-          <h1 className="text-2xl font-semibold mb-4">Error</h1>
-          <p className="text-red-400 mb-4">{error}</p>
-          <button
-            onClick={() => {
-              setError(null);
-              setHasJoined(false);
-              if (isMobile) {
-                // On mobile, show join button again
-              } else {
-                joinRoom();
-              }
-            }}
-            className="px-4 py-2 bg-blue-600 rounded hover:bg-blue-700"
-          >
-            Retry
-          </button>
+          <div className="animate-spin rounded-full h-10 w-10 border-2 border-white border-t-transparent mx-auto mb-4" />
+          <p className="text-gray-400">Connecting…</p>
         </div>
       </div>
     );
@@ -296,27 +354,34 @@ export function VideoRoom({ roomName, identity }: VideoRoomProps) {
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <div className="container mx-auto p-4">
-        <div className="mb-4 flex items-center justify-between">
-          <h1 className="text-xl font-semibold">Room: {roomName}</h1>
+        <div className="mb-4 flex items-center justify-between flex-wrap gap-2">
+          <h1 className="text-lg font-semibold truncate">Room: {roomName}</h1>
           <div className="flex gap-2">
             <button
               onClick={toggleVideo}
-              className={`p-3 rounded-full ${isVideoEnabled ? "bg-gray-700" : "bg-red-600"} hover:bg-gray-600 transition-colors`}
+              className={`p-2.5 rounded-full transition-colors ${
+                isVideoEnabled ? "bg-gray-700 hover:bg-gray-600" : "bg-red-600 hover:bg-red-700"
+              }`}
               title={isVideoEnabled ? "Turn off camera" : "Turn on camera"}
+              aria-label={isVideoEnabled ? "Turn off camera" : "Turn on camera"}
             >
               {isVideoEnabled ? <Video className="w-5 h-5" /> : <VideoOff className="w-5 h-5" />}
             </button>
             <button
               onClick={toggleAudio}
-              className={`p-3 rounded-full ${isAudioEnabled ? "bg-gray-700" : "bg-red-600"} hover:bg-gray-600 transition-colors`}
-              title={isAudioEnabled ? "Mute microphone" : "Unmute microphone"}
+              className={`p-2.5 rounded-full transition-colors ${
+                isAudioEnabled ? "bg-gray-700 hover:bg-gray-600" : "bg-red-600 hover:bg-red-700"
+              }`}
+              title={isAudioEnabled ? "Mute" : "Unmute"}
+              aria-label={isAudioEnabled ? "Mute" : "Unmute"}
             >
               {isAudioEnabled ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
             </button>
             <button
               onClick={leaveRoom}
-              className="p-3 rounded-full bg-red-600 hover:bg-red-700 transition-colors"
-              title="Leave room"
+              className="p-2.5 rounded-full bg-red-600 hover:bg-red-700 transition-colors"
+              title="Leave"
+              aria-label="Leave call"
             >
               <PhoneOff className="w-5 h-5" />
             </button>
@@ -324,44 +389,43 @@ export function VideoRoom({ roomName, identity }: VideoRoomProps) {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Local video */}
-          <div className="bg-black rounded-lg overflow-hidden aspect-video relative">
-            <video ref={localVideoRef} className="w-full h-full object-cover" playsInline muted autoPlay />
+          <div className="bg-black rounded-xl overflow-hidden aspect-video relative">
+            <video
+              ref={localVideoRef}
+              className="w-full h-full object-cover"
+              playsInline
+              muted
+              autoPlay
+            />
             {!isVideoEnabled && (
               <div className="absolute inset-0 flex items-center justify-center bg-gray-800">
-                <p className="text-gray-400">Camera off</p>
+                <p className="text-gray-400 text-sm">Camera off</p>
               </div>
             )}
-            <div className="absolute bottom-2 left-2 bg-black/50 px-2 py-1 rounded text-sm">
+            <div className="absolute bottom-2 left-2 bg-black/60 px-2 py-1 rounded text-sm">
               {identity} (You)
             </div>
           </div>
 
-          {/* Remote participants */}
-          {participants.map((participant) => (
-            <div
-              key={participant.sid}
-              className="bg-black rounded-lg overflow-hidden aspect-video relative"
-            >
+          {participants.map((p) => (
+            <div key={p.sid} className="bg-black rounded-xl overflow-hidden aspect-video relative">
               <video
                 ref={(el) => {
-                  if (el) {
-                    remoteVideoRefs.current.set(participant.sid, el);
-                  }
+                  if (el) remoteVideoRefs.current.set(p.sid, el);
                 }}
                 className="w-full h-full object-cover"
                 playsInline
                 autoPlay
               />
-              <div className="absolute bottom-2 left-2 bg-black/50 px-2 py-1 rounded text-sm">
-                {participant.identity}
+              <div className="absolute bottom-2 left-2 bg-black/60 px-2 py-1 rounded text-sm">
+                {p.identity}
               </div>
             </div>
           ))}
 
           {participants.length === 0 && (
-            <div className="bg-black rounded-lg overflow-hidden aspect-video flex items-center justify-center">
-              <p className="text-gray-400">Waiting for others to join...</p>
+            <div className="bg-black/40 rounded-xl aspect-video flex items-center justify-center border border-gray-700">
+              <p className="text-gray-500 text-sm">Waiting for others to join…</p>
             </div>
           )}
         </div>
