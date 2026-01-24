@@ -8,6 +8,7 @@ export default function VideoRoomPage() {
   const searchParams = useSearchParams();
   const roomName = params?.roomName as string;
   const identity = searchParams?.get("identity") || undefined;
+  const role = (searchParams?.get("role") as "host" | "guest") || undefined;
 
   if (!roomName) {
     return (
@@ -20,5 +21,5 @@ export default function VideoRoomPage() {
     );
   }
 
-  return <DailyVideoRoom roomName={roomName} identity={identity} />;
+  return <DailyVideoRoom roomName={roomName} identity={identity} role={role} />;
 }

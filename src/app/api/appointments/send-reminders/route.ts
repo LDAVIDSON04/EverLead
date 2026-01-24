@@ -144,8 +144,8 @@ export async function GET(req: NextRequest) {
         if (isVideoReminderTime && appointmentType === "video") {
           const consumerIdentity = `Customer | ${consumerName}`;
           const agentIdentity = `Agent | ${agentName}`;
-          const videoLink = `${baseUrl}/video/join/appointment-${appointment.id}?identity=${encodeURIComponent(consumerIdentity)}`;
-          const agentVideoLink = `${baseUrl}/video/join/appointment-${appointment.id}?identity=${encodeURIComponent(agentIdentity)}`;
+          const videoLink = `${baseUrl}/video/join/appointment-${appointment.id}?identity=${encodeURIComponent(consumerIdentity)}&role=guest`;
+          const agentVideoLink = `${baseUrl}/video/join/appointment-${appointment.id}?identity=${encodeURIComponent(agentIdentity)}&role=host`;
 
           // Send to consumer
           if (lead.phone) {

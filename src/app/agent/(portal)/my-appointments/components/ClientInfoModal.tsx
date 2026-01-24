@@ -349,8 +349,8 @@ export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId, onEdit
                 const agentName = appointmentData.agent?.full_name || 'Agent';
                 
                 if (isVideoAppointment && appointmentData.id) {
-                  // Video appointment: Show "Meeting link" with join URL (Agent | X so unique in room)
-                  const videoLink = `${baseUrl}/video/join/appointment-${appointmentData.id}?identity=${encodeURIComponent(`Agent | ${agentName}`)}`;
+                  // Video appointment: Show "Meeting link" with join URL (Agent | X so unique in room, role=host for owner permissions)
+                  const videoLink = `${baseUrl}/video/join/appointment-${appointmentData.id}?identity=${encodeURIComponent(`Agent | ${agentName}`)}&role=host`;
                   
                   return (
                     <div>

@@ -6,9 +6,11 @@ interface DailyVideoRoomProps {
   roomName: string;
   /** Display name for the participant (optional; Daily may support via URL params) */
   identity?: string;
+  /** Role: "host" (agent) or "guest" (customer). Determines if user gets owner token. */
+  role?: "host" | "guest";
 }
 
-export function DailyVideoRoom({ roomName, identity }: DailyVideoRoomProps) {
+export function DailyVideoRoom({ roomName, identity, role }: DailyVideoRoomProps) {
   const [roomUrl, setRoomUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -18,7 +20,17 @@ export function DailyVideoRoom({ roomName, identity }: DailyVideoRoomProps) {
 
     async function fetchRoom() {
       try {
-        const res = await fetch(`/api/daily/room?name=${encodeURIComponent(roomName)}`);
+        // Build API URL with role and identity params
+        const params = new URLSearchParams();
+        params.set("name", roomName);
+        if (role) {
+          params.set("role", role);
+        }
+        if (identity) {
+          params.set("userName", identity);
+        }
+
+        const res = await fetch(`/api/daily/room?${params.toString()}`);
         const data = await res.json();
 
         if (!mounted) return;
@@ -29,17 +41,8 @@ export function DailyVideoRoom({ roomName, identity }: DailyVideoRoomProps) {
           return;
         }
 
-        let url = data.url as string;
-        if (identity && url) {
-          try {
-            const u = new URL(url);
-            u.searchParams.set("userName", identity);
-            url = u.toString();
-          } catch {
-            // keep original url
-          }
-        }
-
+        // The API returns a URL that already includes the token if role is specified
+        const url = data.url as string;
         setRoomUrl(url || null);
         if (!url) setError("No room URL returned");
       } catch (e) {
@@ -55,7 +58,7 @@ export function DailyVideoRoom({ roomName, identity }: DailyVideoRoomProps) {
     return () => {
       mounted = false;
     };
-  }, [roomName, identity]);
+  }, [roomName, identity, role]);
 
   if (loading) {
     return (
