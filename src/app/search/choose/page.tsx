@@ -2,7 +2,7 @@
 
 import { useSearchParams, useRouter } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
-import { Video, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import Image from "next/image";
 
 function SearchChooseContent() {
@@ -112,8 +112,14 @@ function SearchChooseContent() {
             <div className="absolute inset-0 bg-gradient-to-br from-[#0C6F3C]/0 to-[#0C6F3C]/0 group-hover:from-[#0C6F3C]/5 group-hover:to-transparent transition-all duration-300 pointer-events-none" />
             
             <div className="relative flex items-start gap-5 sm:gap-6">
-              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-[#0C6F3C]/10 to-[#0C6F3C]/5 flex items-center justify-center flex-shrink-0 group-hover:from-[#0C6F3C]/20 group-hover:to-[#0C6F3C]/10 transition-all duration-300 group-hover:scale-110 shadow-sm">
-                <Video className="w-7 h-7 sm:w-8 sm:h-8 text-[#0C6F3C]" strokeWidth={2.5} />
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-[#0C6F3C]/10 to-[#0C6F3C]/5 flex items-center justify-center flex-shrink-0 group-hover:from-[#0C6F3C]/20 group-hover:to-[#0C6F3C]/10 transition-all duration-300 group-hover:scale-110 shadow-sm overflow-hidden">
+                <Image
+                  src="/video-call-icon.png"
+                  alt="Video call"
+                  width={64}
+                  height={64}
+                  className="w-full h-full object-cover"
+                />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between gap-4 mb-2">
