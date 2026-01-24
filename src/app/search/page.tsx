@@ -1632,7 +1632,7 @@ function SearchResults() {
               return (
                 <div key={`${appointment.id}-${searchLocation}`} className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
                   {/* Desktop: Side-by-side layout - Provider info left, Day blocks right */}
-                  <div className="hidden md:flex gap-1 items-start">
+                  <div className="hidden md:flex gap-0 items-start">
                     {/* Left Section: Provider Info */}
                     <div className="flex-shrink-0 w-[38%] min-w-0">
                       {/* Top row: Profile pic with name/title/company to the right */}
