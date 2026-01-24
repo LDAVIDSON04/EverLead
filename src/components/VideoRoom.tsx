@@ -73,6 +73,7 @@ export function VideoRoom({ roomName, identity }: VideoRoomProps) {
   const [isConnecting, setIsConnecting] = useState(false);
   const [hasJoined, setHasJoined] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [permissionState, setPermissionState] = useState<"unknown" | "prompt" | "granted" | "denied">("unknown");
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRefs = useRef<Map<string, HTMLVideoElement>>(new Map());
@@ -330,6 +331,42 @@ export function VideoRoom({ roomName, identity }: VideoRoomProps) {
     }
   }, [roomName, identity, isMobile, hasJoined, joinWithTracks]);
 
+  // Check permission state on mobile (if supported)
+  useEffect(() => {
+    if (!isMobile || typeof navigator === "undefined") return;
+
+    // Try to check permissions (not fully supported on iOS Safari, but worth trying)
+    const checkPermissions = async () => {
+      try {
+        if ("permissions" in navigator && "query" in navigator.permissions) {
+          const [camera, microphone] = await Promise.all([
+            navigator.permissions.query({ name: "camera" as PermissionName }).catch(() => null),
+            navigator.permissions.query({ name: "microphone" as PermissionName }).catch(() => null),
+          ]);
+
+          if (camera && microphone) {
+            const cameraState = camera.state;
+            const micState = microphone.state;
+            // If either is denied, we know permissions were previously denied
+            if (cameraState === "denied" || micState === "denied") {
+              setPermissionState("denied");
+            } else if (cameraState === "granted" && micState === "granted") {
+              setPermissionState("granted");
+            } else {
+              setPermissionState("prompt");
+            }
+          }
+        }
+      } catch (err) {
+        // Permission query not supported (common on iOS Safari)
+        // We'll find out when we try to request
+        setPermissionState("unknown");
+      }
+    };
+
+    checkPermissions();
+  }, [isMobile]);
+
   // Desktop: auto-join once on mount. Mobile: wait for button click.
   useEffect(() => {
     mountedRef.current = true;
@@ -497,9 +534,43 @@ export function VideoRoom({ roomName, identity }: VideoRoomProps) {
       <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white px-4">
         <div className="text-center max-w-sm">
           <h1 className="text-xl font-semibold mb-3">Join video call</h1>
-          <p className="text-gray-400 mb-6 text-sm">
-            Tap below to join. You'll be asked to allow camera and microphone access.
-          </p>
+          
+          {permissionState === "denied" ? (
+            <>
+              <div className="bg-yellow-900/30 border border-yellow-700 rounded-lg p-4 mb-4 text-left text-sm">
+                <p className="font-semibold text-yellow-300 mb-2">⚠️ Camera & microphone access needed</p>
+                <p className="text-yellow-200/80 mb-3">
+                  You previously denied camera/microphone access. Safari won't show a pop-up again - you need to enable it in Settings first.
+                </p>
+                <div className="bg-gray-800 rounded-lg p-3 mb-3 text-xs">
+                  <p className="font-semibold mb-1 text-white">Enable in Settings:</p>
+                  <p className="text-gray-300">
+                    Settings → Safari → Camera → Allow<br />
+                    Settings → Safari → Microphone → Allow
+                  </p>
+                </div>
+                <button
+                  onClick={joinRoom}
+                  className="w-full mt-2 px-4 py-2 bg-yellow-700 rounded-lg hover:bg-yellow-600 font-medium text-sm"
+                >
+                  Try after enabling in Settings
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="text-gray-400 mb-4 text-sm">
+                Tap "Join call" below. You'll see a <strong className="text-white">pop-up from Safari</strong> asking to allow camera and microphone access.
+              </p>
+              <div className="bg-emerald-900/20 border border-emerald-700 rounded-lg p-3 mb-4 text-left text-xs">
+                <p className="text-emerald-300 font-semibold mb-1">📱 What to expect:</p>
+                <p className="text-gray-300">
+                  Safari will show a pop-up asking "soradin.com" wants to use your camera and microphone. Tap <strong className="text-white">"Allow"</strong> to join the call.
+                </p>
+              </div>
+            </>
+          )}
+          
           <button
             onClick={joinRoom}
             className="w-full py-3.5 bg-emerald-600 rounded-xl hover:bg-emerald-700 font-semibold text-base"
