@@ -825,8 +825,14 @@ export async function POST(req: NextRequest) {
                                     <table cellpadding="0" cellspacing="0" style="border-left: 4px solid #1a4d2e; padding-left: 16px;">
                                       <tr>
                                         <td style="padding-top: 8px; padding-bottom: 8px;">
-                                          <p style="color: #666666; font-size: 14px; margin: 0 0 4px 0;">Location</p>
+                                          <p style="color: #666666; font-size: 14px; margin: 0 0 4px 0;">${isVideoAppointment ? 'Join Call' : 'Location'}</p>
+                                          ${isVideoAppointment && customerVideoLink ? `
+                                          <p style="color: #000000; font-size: 16px; margin: 0; font-weight: normal;">
+                                            <a href="${customerVideoLink}" style="text-decoration: none; font-weight: 600; background-color: #1a4d2e; color: #ffffff; padding: 10px 20px; border-radius: 6px; display: inline-block;">Join Video Call</a>
+                                          </p>
+                                          ` : `
                                           <p style="color: #000000; font-size: 16px; margin: 0; font-weight: normal;">${locationAddress}</p>
+                                          `}
                                         </td>
                                       </tr>
                                     </table>
@@ -848,9 +854,9 @@ export async function POST(req: NextRequest) {
                               <table width="100%" cellpadding="0" cellspacing="0" style="margin-top: 24px;">
                                 <tr>
                                   <td style="padding: 16px; background-color: #f3f4f6; border: 1px solid #e5e7eb;">
-                                    ${isVideoAppointment && customerVideoLink ? `
+                                    ${isVideoAppointment ? `
                                     <p style="color: #374151; font-size: 16px; margin: 0 0 12px 0; line-height: 1.5;">
-                                      <strong>This is a video call appointment.</strong> Join your video call at the scheduled time: <a href="${customerVideoLink}" style="color: #1a4d2e; text-decoration: underline; font-weight: 600;">Join Video Call</a>
+                                      This is a video call appointment. Please join at the scheduled time.
                                     </p>
                                     ` : `
                                     <p style="color: #374151; font-size: 16px; margin: 0 0 12px 0; line-height: 1.5;">
@@ -968,14 +974,20 @@ export async function POST(req: NextRequest) {
                                     </table>
                                   </td>
                                 </tr>
-                                ${locationAddress ? `
+                                ${(locationAddress || (isVideoAppointment && agentVideoLink)) ? `
                                 <tr>
                                   <td width="50%" style="padding-right: 12px; padding-bottom: 16px;">
                                     <table cellpadding="0" cellspacing="0" style="border-left: 4px solid #1a4d2e; padding-left: 16px;">
                                       <tr>
                                         <td style="padding-top: 8px; padding-bottom: 8px;">
-                                          <p style="color: #666666; font-size: 14px; margin: 0 0 4px 0;">Location</p>
+                                          <p style="color: #666666; font-size: 14px; margin: 0 0 4px 0;">${isVideoAppointment ? 'Join Call' : 'Location'}</p>
+                                          ${isVideoAppointment && agentVideoLink ? `
+                                          <p style="color: #000000; font-size: 16px; margin: 0; font-weight: normal;">
+                                            <a href="${agentVideoLink}" style="text-decoration: none; font-weight: 600; background-color: #1a4d2e; color: #ffffff; padding: 10px 20px; border-radius: 6px; display: inline-block;">Join Video Call</a>
+                                          </p>
+                                          ` : `
                                           <p style="color: #000000; font-size: 16px; margin: 0; font-weight: normal;">${locationAddress}</p>
+                                          `}
                                         </td>
                                       </tr>
                                     </table>
@@ -1008,22 +1020,6 @@ export async function POST(req: NextRequest) {
                                   ` : '<td width="50%" style="padding-left: 12px; padding-bottom: 16px;"></td>'}
                                 </tr>
                               </table>
-                              
-                              ${isVideoAppointment && agentVideoLink ? `
-                              <!-- Video Call Link Box -->
-                              <table width="100%" cellpadding="0" cellspacing="0" style="margin-top: 24px;">
-                                <tr>
-                                  <td style="padding: 16px; background-color: #e0f2fe; border: 1px solid #0ea5e9; border-radius: 8px;">
-                                    <p style="color: #0c4a6e; font-size: 16px; margin: 0 0 8px 0; font-weight: 600; line-height: 1.5;">
-                                      📹 This is a video call appointment
-                                    </p>
-                                    <p style="color: #0c4a6e; font-size: 16px; margin: 0; line-height: 1.5;">
-                                      Join the video call at the scheduled time: <a href="${agentVideoLink}" style="color: #1a4d2e; text-decoration: underline; font-weight: 600;">Join Video Call</a>
-                                    </p>
-                                  </td>
-                                </tr>
-                              </table>
-                              ` : ''}
                             </td>
                           </tr>
                           
