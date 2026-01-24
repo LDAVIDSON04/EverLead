@@ -27,12 +27,25 @@ function friendlyError(err: unknown, isInAppBrowser: boolean): string {
   // Log the raw error for debugging
   console.log("friendlyError input:", { msg, errName, isInAppBrowser });
   
+  // Special case for iOS Safari permission denied
+  if (msg === "PERMISSION_DENIED_SAFARI") {
+    return "PERMISSION_DENIED_SAFARI"; // Special flag for Safari permission instructions
+  }
+  
   // Check for permission errors - show in-app browser message if we're in one
   if (/not allowed|denied|permission|NotAllowedError|getUserMedia|PermissionDeniedError/i.test(msg) || 
       errName === "NotAllowedError" || errName === "PermissionDeniedError") {
     // Only show in-app browser message if we're actually in one AND got permission denied
     if (isInAppBrowser) {
       return "IN_APP_BROWSER"; // Special flag to show in-app browser message
+    }
+    // Check if it's iOS Safari
+    const isIOSSafari = typeof window !== "undefined" && 
+      /iPhone|iPad|iPod/i.test(navigator.userAgent) && 
+      /Safari\/[0-9]/.test(navigator.userAgent);
+    
+    if (isIOSSafari) {
+      return "PERMISSION_DENIED_SAFARI"; // Show Safari-specific instructions
     }
     return "Camera and microphone access was denied. Please allow access in your browser settings and try again.";
   }
@@ -73,10 +86,13 @@ export function VideoRoom({ roomName, identity }: VideoRoomProps) {
     /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
   // Detect in-app browsers (Gmail, Facebook, etc.) that often block camera/mic
+  // Exclude Safari - it's a real browser that supports video calls
   const isInAppBrowser = typeof window !== "undefined" && (
-    /Gmail|FBAN|FBAV|Twitter|LinkedIn|Instagram|Line|Kakao|WeChat|wv|WebView/i.test(navigator.userAgent) ||
-    // Also check if we're in a WebView on iOS (standalone is iOS-specific)
-    ((window.navigator as any).standalone === false && /iPhone|iPad|iPod/i.test(navigator.userAgent))
+    // Check for known in-app browser patterns, but exclude Safari
+    (/Gmail|FBAN|FBAV|Twitter|LinkedIn|Instagram|Line|Kakao|WeChat/i.test(navigator.userAgent) && 
+     !/Safari\/[0-9]/.test(navigator.userAgent)) ||
+    // Check for WebView but not Safari's WebView
+    (/wv|WebView/i.test(navigator.userAgent) && !/Safari\/[0-9]/.test(navigator.userAgent))
   );
 
   const cleanup = useCallback(() => {
@@ -185,10 +201,21 @@ export function VideoRoom({ roomName, identity }: VideoRoomProps) {
     try {
       if (isMobile) {
         // Request camera/mic in user gesture, then connect with those tracks
-        const raw = await createLocalTracks({
-          audio: true,
-          video: MOBILE_VIDEO,
-        });
+        // On iOS Safari, this must be called directly from the click handler
+        let raw;
+        try {
+          raw = await createLocalTracks({
+            audio: true,
+            video: MOBILE_VIDEO,
+          });
+        } catch (permErr: any) {
+          // If permission denied, provide helpful iOS Safari instructions
+          if (permErr?.name === "NotAllowedError" || /permission|denied|not allowed/i.test(permErr?.message || "")) {
+            throw new Error("PERMISSION_DENIED_SAFARI");
+          }
+          throw permErr;
+        }
+        
         const tracks = raw.filter(
           (t): t is LocalVideoTrack | LocalAudioTrack =>
             t.kind === "video" || t.kind === "audio"
@@ -367,13 +394,33 @@ export function VideoRoom({ roomName, identity }: VideoRoomProps) {
   if (error) {
     // Only show in-app browser instructions if we got a permission error AND we're in an in-app browser
     const showInAppBrowserMessage = error === "IN_APP_BROWSER";
+    const showSafariPermissionMessage = error === "PERMISSION_DENIED_SAFARI";
     
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white px-4">
         <div className="text-center max-w-md">
           <h1 className="text-xl font-semibold mb-3">Couldn’t join the call</h1>
           
-          {showInAppBrowserMessage ? (
+          {showSafariPermissionMessage ? (
+            <>
+              <p className="text-red-300 mb-4">
+                Camera and microphone access was denied. You need to enable permissions in Safari settings.
+              </p>
+              <div className="bg-gray-800 rounded-lg p-4 mb-6 text-left text-sm">
+                <p className="font-semibold mb-2">How to enable camera & microphone in Safari:</p>
+                <ol className="space-y-2 text-gray-300 list-decimal list-inside">
+                  <li>Open <strong>Settings</strong> on your iPhone</li>
+                  <li>Scroll down and tap <strong>Safari</strong></li>
+                  <li>Tap <strong>Camera</strong> → Select <strong>"Allow"</strong></li>
+                  <li>Tap <strong>Microphone</strong> → Select <strong>"Allow"</strong></li>
+                  <li>Come back and try joining the call again</li>
+                </ol>
+              </div>
+              <p className="text-gray-400 text-sm mb-6">
+                Safari needs permission to access your camera and microphone for video calls.
+              </p>
+            </>
+          ) : showInAppBrowserMessage ? (
             <>
               <p className="text-red-300 mb-4">
                 Video calls don't work in email or social media apps. You need to open this link in your phone's browser.
@@ -437,7 +484,7 @@ export function VideoRoom({ roomName, identity }: VideoRoomProps) {
             }}
             className="px-5 py-2.5 bg-emerald-600 rounded-lg hover:bg-emerald-700 font-medium"
           >
-            {showInAppBrowserMessage ? "Got it" : "Try again"}
+            {showInAppBrowserMessage || showSafariPermissionMessage ? "Got it" : "Try again"}
           </button>
         </div>
       </div>
