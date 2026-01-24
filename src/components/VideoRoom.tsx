@@ -16,102 +16,116 @@ export function VideoRoom({ roomName, identity }: VideoRoomProps) {
   const [localAudioTrack, setLocalAudioTrack] = useState<LocalAudioTrack | null>(null);
   const [isVideoEnabled, setIsVideoEnabled] = useState(true);
   const [isAudioEnabled, setIsAudioEnabled] = useState(true);
-  const [isConnecting, setIsConnecting] = useState(true);
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [hasJoined, setHasJoined] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRefs = useRef<Map<string, HTMLVideoElement>>(new Map());
+  const mountedRef = useRef(true);
 
-  useEffect(() => {
-    let mounted = true;
+  // Check if we're on mobile - mobile browsers require user gesture for permissions
+  const isMobile = typeof window !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-    async function joinRoom() {
-      try {
-        // Get access token from our API
-        const response = await fetch("/api/twilio/video-token", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            roomName,
-            identity,
-          }),
-        });
+  async function joinRoom() {
+    if (hasJoined) return; // Prevent double-joining
+    
+    setIsConnecting(true);
+    setError(null);
+    mountedRef.current = true;
 
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || "Failed to get access token");
-        }
+    try {
+      // Get access token from our API
+      const response = await fetch("/api/twilio/video-token", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          roomName,
+          identity,
+        }),
+      });
 
-        const { token } = await response.json();
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to get access token");
+      }
 
-        // Connect to the room
-        const room = await connect(token, {
-          name: roomName,
-          audio: true,
-          video: { width: 1280, height: 720 },
-        });
+      const { token } = await response.json();
 
-        if (!mounted) {
-          room.disconnect();
-          return;
-        }
+      // Connect to the room - this will request camera/mic permissions
+      const room = await connect(token, {
+        name: roomName,
+        audio: true,
+        video: { width: 1280, height: 720 },
+      });
 
-        setRoom(room);
-        setIsConnecting(false);
+      if (!mountedRef.current) {
+        room.disconnect();
+        return;
+      }
 
-        // Get local video track
-        const localVideo = Array.from(room.localParticipant.videoTracks.values())[0]?.track;
-        const localAudio = Array.from(room.localParticipant.audioTracks.values())[0]?.track;
+      setRoom(room);
+      setHasJoined(true);
+      setIsConnecting(false);
 
-        if (localVideo) {
-          setLocalVideoTrack(localVideo);
-        }
-        if (localAudio) {
-          setLocalAudioTrack(localAudio);
-        }
+      // Get local video track
+      const localVideo = Array.from(room.localParticipant.videoTracks.values())[0]?.track;
+      const localAudio = Array.from(room.localParticipant.audioTracks.values())[0]?.track;
 
-        // Handle existing participants
-        room.participants.forEach((participant) => {
-          participantConnected(participant);
-        });
+      if (localVideo) {
+        setLocalVideoTrack(localVideo);
+      }
+      if (localAudio) {
+        setLocalAudioTrack(localAudio);
+      }
 
-        // Handle new participants joining
-        room.on("participantConnected", participantConnected);
+      // Handle existing participants
+      room.participants.forEach((participant) => {
+        participantConnected(participant);
+      });
 
-        // Handle participants leaving
-        room.on("participantDisconnected", (participant) => {
-          setParticipants((prev) => prev.filter((p) => p.sid !== participant.sid));
-          remoteVideoRefs.current.delete(participant.sid);
-        });
+      // Handle new participants joining
+      room.on("participantConnected", participantConnected);
 
-        // Handle disconnection
-        room.on("disconnected", () => {
-          if (mounted) {
-            setRoom(null);
-            setParticipants([]);
-            if (localVideoTrack) {
-              localVideoTrack.stop();
-            }
-            if (localAudioTrack) {
-              localAudioTrack.stop();
-            }
+      // Handle participants leaving
+      room.on("participantDisconnected", (participant) => {
+        setParticipants((prev) => prev.filter((p) => p.sid !== participant.sid));
+        remoteVideoRefs.current.delete(participant.sid);
+      });
+
+      // Handle disconnection
+      room.on("disconnected", () => {
+        if (mountedRef.current) {
+          setRoom(null);
+          setParticipants([]);
+          if (localVideoTrack) {
+            localVideoTrack.stop();
           }
-        });
-      } catch (err: any) {
-        console.error("Error joining room:", err);
-        if (mounted) {
-          setError(err.message || "Failed to join room");
-          setIsConnecting(false);
+          if (localAudioTrack) {
+            localAudioTrack.stop();
+          }
         }
+      });
+    } catch (err: any) {
+      console.error("Error joining room:", err);
+      if (mountedRef.current) {
+        setError(err.message || "Failed to join room");
+        setIsConnecting(false);
+        setHasJoined(false);
       }
     }
+  }
 
-    joinRoom();
+  // Auto-join on desktop, but wait for user click on mobile
+  useEffect(() => {
+    if (!isMobile && !hasJoined) {
+      joinRoom();
+    }
 
     return () => {
-      mounted = false;
+      mountedRef.current = false;
       if (room) {
         room.disconnect();
       }
@@ -122,7 +136,7 @@ export function VideoRoom({ roomName, identity }: VideoRoomProps) {
         localAudioTrack.stop();
       }
     };
-  }, [roomName, identity]);
+  }, [roomName, identity, isMobile, hasJoined]);
 
   // Attach local video track to <video> element
   useEffect(() => {
@@ -223,6 +237,26 @@ export function VideoRoom({ roomName, identity }: VideoRoomProps) {
     window.location.href = "/";
   }
 
+  // Show join button on mobile (requires user gesture for permissions)
+  if (isMobile && !hasJoined && !isConnecting) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
+        <div className="text-center p-4">
+          <h1 className="text-2xl font-semibold mb-4">Join Video Call</h1>
+          <p className="text-gray-300 mb-6">
+            Click the button below to join the video call. You'll be asked to allow camera and microphone access.
+          </p>
+          <button
+            onClick={joinRoom}
+            className="px-6 py-3 bg-green-600 rounded-lg hover:bg-green-700 transition-colors text-lg font-semibold"
+          >
+            Join Call
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (isConnecting) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
@@ -237,11 +271,19 @@ export function VideoRoom({ roomName, identity }: VideoRoomProps) {
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
-        <div className="text-center">
+        <div className="text-center p-4">
           <h1 className="text-2xl font-semibold mb-4">Error</h1>
           <p className="text-red-400 mb-4">{error}</p>
           <button
-            onClick={() => window.location.reload()}
+            onClick={() => {
+              setError(null);
+              setHasJoined(false);
+              if (isMobile) {
+                // On mobile, show join button again
+              } else {
+                joinRoom();
+              }
+            }}
             className="px-4 py-2 bg-blue-600 rounded hover:bg-blue-700"
           >
             Retry
