@@ -255,15 +255,41 @@ export function VideoRoom({ roomName, identity }: VideoRoomProps) {
       console.error("Error joining room:", err);
       
       // Log detailed error info for debugging
-      if (err instanceof Error) {
-        console.error("Error details:", {
-          name: err.name,
-          message: err.message,
-          stack: err.stack,
-          isMobile,
-          isInAppBrowser,
-          userAgent: typeof window !== "undefined" ? navigator.userAgent : "N/A",
+      const errorDetails = err instanceof Error ? {
+        name: err.name,
+        message: err.message,
+        stack: err.stack,
+      } : { message: String(err) };
+      
+      console.error("Error details:", {
+        ...errorDetails,
+        isMobile,
+        isInAppBrowser,
+        userAgent: typeof window !== "undefined" ? navigator.userAgent : "N/A",
+      });
+      
+      // Send error to server for logging in Vercel
+      try {
+        await fetch("/api/debug/log-error", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            error: errorDetails,
+            context: {
+              roomName,
+              identity,
+              isMobile,
+              isInAppBrowser,
+              step: "joinRoom",
+            },
+            userAgent: typeof window !== "undefined" ? navigator.userAgent : "N/A",
+            url: typeof window !== "undefined" ? window.location.href : "N/A",
+          }),
+        }).catch((logErr) => {
+          console.error("Failed to log error to server:", logErr);
         });
+      } catch (logErr) {
+        // Ignore logging errors
       }
       
       if (mountedRef.current) {
