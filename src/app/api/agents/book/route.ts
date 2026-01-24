@@ -730,14 +730,16 @@ export async function POST(req: NextRequest) {
       const resendApiKey = process.env.RESEND_API_KEY;
       const resendFromEmail = process.env.RESEND_FROM_EMAIL || 'Soradin <notifications@soradin.com>';
       
-      // Video call links: derive from request (appointments table has no metadata column)
+      // Video call links: use unique identities (Customer | X, Agent | Y) so both can be in room
       const isVideoAppointment = appointmentType === "video";
       const videoRoomName = isVideoAppointment ? `appointment-${appointment.id}` : null;
+      const customerIdentity = `Customer | ${`${firstName} ${lastName}`.trim() || "Guest"}`;
+      const agentIdentity = `Agent | ${agentName}`;
       const customerVideoLink = isVideoAppointment && videoRoomName
-        ? `${baseUrl}/video/join/${videoRoomName}?identity=${encodeURIComponent(`${firstName} ${lastName}`.trim())}`
+        ? `${baseUrl}/video/join/${videoRoomName}?identity=${encodeURIComponent(customerIdentity)}`
         : null;
       const agentVideoLink = isVideoAppointment && videoRoomName
-        ? `${baseUrl}/video/join/${videoRoomName}?identity=${encodeURIComponent(agentName)}`
+        ? `${baseUrl}/video/join/${videoRoomName}?identity=${encodeURIComponent(agentIdentity)}`
         : null;
       
       // Send email to family
@@ -1085,6 +1087,9 @@ export async function POST(req: NextRequest) {
           ? `${leadDataForSMS.first_name} ${leadDataForSMS.last_name}` 
           : "Client");
 
+      const customerIdentitySms = `Customer | ${consumerName}`;
+      const agentIdentitySms = `Agent | ${agentNameForSMS}`;
+
       // Send SMS to consumer
       if (leadPhone) {
         const smsBaseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.soradin.com';
@@ -1099,7 +1104,7 @@ export async function POST(req: NextRequest) {
 
         // Build video link if this is a video appointment (use join page for rich preview)
         const videoLink = appointmentType === "video" 
-          ? `${smsBaseUrl}/video/join/appointment-${appointment.id}?identity=${encodeURIComponent(`${firstName} ${lastName}`.trim())}`
+          ? `${smsBaseUrl}/video/join/appointment-${appointment.id}?identity=${encodeURIComponent(customerIdentitySms)}`
           : undefined;
 
         const smsPromise = sendConsumerBookingSMS({
@@ -1140,8 +1145,8 @@ export async function POST(req: NextRequest) {
         const agentSmsBaseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.soradin.com';
         
         // Build agent video link if this is a video appointment (use join page for rich preview)
-        const agentVideoLink = appointmentType === "video"
-          ? `${agentSmsBaseUrl}/video/join/appointment-${appointment.id}?identity=${encodeURIComponent(agentNameForSMS)}`
+        const agentVideoLinkSms = appointmentType === "video"
+          ? `${agentSmsBaseUrl}/video/join/appointment-${appointment.id}?identity=${encodeURIComponent(agentIdentitySms)}`
           : undefined;
 
         const agentSmsPromise = sendAgentNewAppointmentSMS({
@@ -1152,7 +1157,7 @@ export async function POST(req: NextRequest) {
           province: leadProvince || agentProfileForSMS?.agent_province || undefined,
           confirmedAt: appointment.confirmed_at || undefined,
           appointmentType: appointmentType || "in-person",
-          videoLink: agentVideoLink,
+          videoLink: agentVideoLinkSms,
         });
         
         const agentSmsTimeout = new Promise<void>((resolve) => {

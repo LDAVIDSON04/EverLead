@@ -74,6 +74,7 @@ export function VideoRoom({ roomName, identity }: VideoRoomProps) {
   const [hasJoined, setHasJoined] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [permissionState, setPermissionState] = useState<"unknown" | "prompt" | "granted" | "denied">("unknown");
+  const [remoteTracksVersion, setRemoteTracksVersion] = useState(0);
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRefs = useRef<Map<string, HTMLVideoElement>>(new Map());
@@ -173,14 +174,21 @@ export function VideoRoom({ roomName, identity }: VideoRoomProps) {
   );
 
   function participantConnected(participant: RemoteParticipant) {
-    setParticipants((prev) => [...prev, participant]);
+    setParticipants((prev) => {
+      if (prev.some((p) => p.sid === participant.sid)) return prev;
+      return [...prev, participant];
+    });
     participant.tracks.forEach((pub) => {
       if (pub.track) trackSubscribed(pub.track, participant);
     });
-    participant.on("trackSubscribed", (track) => trackSubscribed(track, participant));
+    participant.on("trackSubscribed", (track) => {
+      trackSubscribed(track, participant);
+      setRemoteTracksVersion((v) => v + 1);
+    });
     participant.on("trackUnsubscribed", (track) => {
       if ("detach" in track && typeof (track as any).detach === "function")
         (track as any).detach();
+      setRemoteTracksVersion((v) => v + 1);
     });
   }
 
@@ -400,7 +408,7 @@ export function VideoRoom({ roomName, identity }: VideoRoomProps) {
         if (pub.track && pub.isSubscribed) pub.track!.attach();
       });
     });
-  }, [participants]);
+  }, [participants, remoteTracksVersion]);
 
   function toggleVideo() {
     if (localVideoTrack) {

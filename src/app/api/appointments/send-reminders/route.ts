@@ -142,8 +142,10 @@ export async function GET(req: NextRequest) {
 
         // Send reminders based on type
         if (isVideoReminderTime && appointmentType === "video") {
-          const videoLink = `${baseUrl}/video/join/appointment-${appointment.id}?identity=${encodeURIComponent(consumerName)}`;
-          const agentVideoLink = `${baseUrl}/video/join/appointment-${appointment.id}?identity=${encodeURIComponent(agentName)}`;
+          const consumerIdentity = `Customer | ${consumerName}`;
+          const agentIdentity = `Agent | ${agentName}`;
+          const videoLink = `${baseUrl}/video/join/appointment-${appointment.id}?identity=${encodeURIComponent(consumerIdentity)}`;
+          const agentVideoLink = `${baseUrl}/video/join/appointment-${appointment.id}?identity=${encodeURIComponent(agentIdentity)}`;
 
           // Send to consumer
           if (lead.phone) {
