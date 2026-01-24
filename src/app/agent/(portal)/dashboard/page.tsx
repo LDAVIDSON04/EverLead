@@ -166,7 +166,7 @@ export default function AgentDashboardPage() {
         const currentWeekEnd = now.endOf('week'); // Sunday of this week
         
         // Fetch recent appointments and weekly appointments in parallel
-        const [appointmentsRes, weeklyAppointmentsResult, allAppointmentsForWeekResult] = await Promise.all([
+        const [appointmentsRes, weeklyAppointmentsResult] = await Promise.all([
           fetch("/api/appointments/mine", {
             headers: { Authorization: `Bearer ${session.access_token}` },
           }),
@@ -175,12 +175,6 @@ export default function AgentDashboardPage() {
             .select("requested_date, created_at")
             .eq("agent_id", agentId)
             .gte("created_at", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
-          // Fetch all appointments with confirmed_at for current-week count (filter in JS by timezone)
-          supabaseClient
-            .from("appointments")
-            .select("confirmed_at, starts_at")
-            .eq("agent_id", agentId)
-            .not("confirmed_at", "is", null),
         ]);
         
         if (!appointmentsRes.ok) {
@@ -189,14 +183,14 @@ export default function AgentDashboardPage() {
         
         const appointmentsFromAPI = await appointmentsRes.json();
         
-        // Calculate current week appointments count - filter by date in agent's timezone
-        const { data: allAppointmentsForWeek } = allAppointmentsForWeekResult;
+        // Calculate current week appointments count from mine API data (same source as "My appointments")
+        // Exclude external events; filter by starts_at in agent's timezone, Mon–Sun
         let currentWeekCount = 0;
-        if (allAppointmentsForWeek && Array.isArray(allAppointmentsForWeek)) {
-          currentWeekCount = allAppointmentsForWeek.filter((apt: any) => {
-            const dateField = apt.confirmed_at || apt.starts_at;
-            if (!dateField) return false;
-            const aptDate = DateTime.fromISO(dateField, { zone: "utc" }).setZone(agentTimezone);
+        if (appointmentsFromAPI && Array.isArray(appointmentsFromAPI)) {
+          const soradinOnly = appointmentsFromAPI.filter((apt: any) => !apt.is_external);
+          currentWeekCount = soradinOnly.filter((apt: any) => {
+            if (!apt.starts_at) return false;
+            const aptDate = DateTime.fromISO(apt.starts_at, { zone: "utc" }).setZone(agentTimezone);
             return aptDate >= currentWeekStart && aptDate <= currentWeekEnd;
           }).length;
         }
