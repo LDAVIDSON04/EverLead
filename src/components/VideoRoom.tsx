@@ -22,7 +22,9 @@ const DESKTOP_VIDEO = { width: 1280, height: 720 };
 
 function friendlyError(err: unknown, isInAppBrowser: boolean): string {
   const msg = err instanceof Error ? err.message : String(err);
-  if (/not allowed|denied|permission/i.test(msg) || msg.includes("NotAllowedError")) {
+  // Check for permission errors - show in-app browser message if we're in one
+  if (/not allowed|denied|permission|NotAllowedError|getUserMedia/i.test(msg)) {
+    // Only show in-app browser message if we're actually in one AND got permission denied
     if (isInAppBrowser) {
       return "IN_APP_BROWSER"; // Special flag to show in-app browser message
     }
@@ -308,7 +310,8 @@ export function VideoRoom({ roomName, identity }: VideoRoomProps) {
 
   // 1. Error first – never show Join when we have an error
   if (error) {
-    const showInAppBrowserMessage = error === "IN_APP_BROWSER" || isInAppBrowser;
+    // Only show in-app browser instructions if we got a permission error AND we're in an in-app browser
+    const showInAppBrowserMessage = error === "IN_APP_BROWSER";
     
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white px-4">
@@ -333,9 +336,29 @@ export function VideoRoom({ roomName, identity }: VideoRoomProps) {
                   </li>
                 </ul>
               </div>
-              <p className="text-gray-400 text-sm mb-6">
+              <p className="text-gray-400 text-sm mb-4">
                 Or copy the link and paste it into Safari (iPhone) or Chrome (Android).
               </p>
+              <button
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(window.location.href);
+                    alert("Link copied! Paste it into Safari (iPhone) or Chrome (Android).");
+                  } catch (err) {
+                    // Fallback for older browsers
+                    const textarea = document.createElement("textarea");
+                    textarea.value = window.location.href;
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand("copy");
+                    document.body.removeChild(textarea);
+                    alert("Link copied! Paste it into Safari (iPhone) or Chrome (Android).");
+                  }
+                }}
+                className="w-full px-4 py-2.5 bg-gray-700 rounded-lg hover:bg-gray-600 font-medium mb-3"
+              >
+                📋 Copy link
+              </button>
             </>
           ) : (
             <p className="text-red-300 mb-6">{error}</p>
@@ -365,16 +388,6 @@ export function VideoRoom({ roomName, identity }: VideoRoomProps) {
       <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white px-4">
         <div className="text-center max-w-sm">
           <h1 className="text-xl font-semibold mb-3">Join video call</h1>
-          
-          {isInAppBrowser && (
-            <div className="bg-yellow-900/30 border border-yellow-700 rounded-lg p-3 mb-4 text-left text-sm">
-              <p className="font-semibold text-yellow-300 mb-1">⚠️ In-app browser detected</p>
-              <p className="text-yellow-200/80">
-                Video calls work best in Safari (iPhone) or Chrome (Android). If you're in an email app, tap "Open in browser" first.
-              </p>
-            </div>
-          )}
-          
           <p className="text-gray-400 mb-6 text-sm">
             Tap below to join. You'll be asked to allow camera and microphone access.
           </p>
