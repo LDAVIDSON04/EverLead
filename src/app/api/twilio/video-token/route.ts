@@ -15,7 +15,19 @@ export async function POST(req: NextRequest) {
     }
 
     // Check if Twilio credentials are configured
-    if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_API_KEY_SID || !process.env.TWILIO_API_KEY_SECRET) {
+    const hasAccountSid = !!process.env.TWILIO_ACCOUNT_SID;
+    const hasApiKeySid = !!process.env.TWILIO_API_KEY_SID;
+    const hasApiKeySecret = !!process.env.TWILIO_API_KEY_SECRET;
+    
+    if (!hasAccountSid || !hasApiKeySid || !hasApiKeySecret) {
+      console.error("Twilio credentials check failed:", {
+        hasAccountSid,
+        hasApiKeySid,
+        hasApiKeySecret,
+        accountSidLength: process.env.TWILIO_ACCOUNT_SID?.length || 0,
+        apiKeySidLength: process.env.TWILIO_API_KEY_SID?.length || 0,
+        apiKeySecretLength: process.env.TWILIO_API_KEY_SECRET?.length || 0,
+      });
       return NextResponse.json(
         { error: "Twilio credentials not configured. Please set TWILIO_ACCOUNT_SID, TWILIO_API_KEY_SID, and TWILIO_API_KEY_SECRET in your environment variables." },
         { status: 500 }
