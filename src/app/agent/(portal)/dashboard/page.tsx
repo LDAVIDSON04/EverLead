@@ -159,14 +159,14 @@ export default function AgentDashboardPage() {
           }
         }
 
-        // Calculate current week (Monday to Sunday)
+        // Calculate last week (Monday to Sunday of previous week)
         const { DateTime } = await import('luxon');
         const now = DateTime.now().setZone(agentTimezone);
-        const startOfWeek = now.startOf('week'); // Monday
-        const endOfWeek = now.endOf('week'); // Sunday
+        const lastWeekStart = now.minus({ weeks: 1 }).startOf('week'); // Monday of last week
+        const lastWeekEnd = now.minus({ weeks: 1 }).endOf('week'); // Sunday of last week
         
         // Fetch recent appointments and weekly appointments in parallel
-        const [appointmentsRes, weeklyAppointmentsResult, currentWeekAppointmentsResult] = await Promise.all([
+        const [appointmentsRes, weeklyAppointmentsResult, lastWeekAppointmentsResult] = await Promise.all([
           fetch("/api/appointments/mine", {
             headers: { Authorization: `Bearer ${session.access_token}` },
           }),
@@ -175,13 +175,13 @@ export default function AgentDashboardPage() {
             .select("requested_date, created_at")
             .eq("agent_id", agentId)
             .gte("created_at", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
-          // Fetch appointments scheduled for current week
+          // Fetch appointments scheduled for last week (using confirmed_at or starts_at)
+          // We need to get all appointments and filter by timezone in JavaScript
           supabaseClient
             .from("appointments")
-            .select("starts_at", { count: 'exact', head: false })
+            .select("confirmed_at, starts_at")
             .eq("agent_id", agentId)
-            .gte("starts_at", startOfWeek.toISO())
-            .lte("starts_at", endOfWeek.toISO()),
+            .not("confirmed_at", "is", null),
         ]);
         
         if (!appointmentsRes.ok) {
@@ -190,11 +190,19 @@ export default function AgentDashboardPage() {
         
         const appointmentsFromAPI = await appointmentsRes.json();
         
-        // Calculate current week appointments count
-        const { count: currentWeekCount } = currentWeekAppointmentsResult;
-        if (currentWeekCount !== null) {
-          setCurrentWeekAppointmentsCount(currentWeekCount);
+        // Calculate last week appointments count - filter by date in agent's timezone
+        const { data: lastWeekAppointments } = lastWeekAppointmentsResult;
+        let lastWeekCount = 0;
+        if (lastWeekAppointments && Array.isArray(lastWeekAppointments)) {
+          lastWeekCount = lastWeekAppointments.filter((apt: any) => {
+            const dateField = apt.confirmed_at || apt.starts_at;
+            if (!dateField) return false;
+            const aptDate = DateTime.fromISO(dateField, { zone: "utc" }).setZone(agentTimezone);
+            // Check if appointment date falls within last week (Monday to Sunday)
+            return aptDate >= lastWeekStart && aptDate <= lastWeekEnd;
+          }).length;
         }
+        setCurrentWeekAppointmentsCount(lastWeekCount);
         
         // Format appointments for dashboard display and calendar widget (reuse same data)
         if (appointmentsFromAPI && Array.isArray(appointmentsFromAPI)) {
