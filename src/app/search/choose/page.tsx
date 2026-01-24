@@ -45,9 +45,9 @@ function SearchChooseContent() {
         <Image
           src="/Soradin.png"
           alt="Soradin"
-          width={240}
-          height={80}
-          className="h-16 sm:h-20 lg:h-24 w-auto"
+          width={300}
+          height={100}
+          className="h-20 sm:h-28 lg:h-32 w-auto"
           priority
         />
       </div>
