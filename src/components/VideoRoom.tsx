@@ -20,10 +20,14 @@ interface VideoRoomProps {
 const MOBILE_VIDEO = { width: 640 };
 const DESKTOP_VIDEO = { width: 1280, height: 720 };
 
-function friendlyError(err: unknown): string {
+function friendlyError(err: unknown, isInAppBrowser: boolean): string {
   const msg = err instanceof Error ? err.message : String(err);
-  if (/not allowed|denied|permission/i.test(msg) || msg.includes("NotAllowedError"))
+  if (/not allowed|denied|permission/i.test(msg) || msg.includes("NotAllowedError")) {
+    if (isInAppBrowser) {
+      return "IN_APP_BROWSER"; // Special flag to show in-app browser message
+    }
     return "Camera and microphone access was denied. Please allow access in your browser settings and try again.";
+  }
   if (/not found|NotFoundError/i.test(msg))
     return "No camera or microphone found. Please check your device and try again.";
   if (/failed to get access token|token/i.test(msg))
@@ -52,6 +56,13 @@ export function VideoRoom({ roomName, identity }: VideoRoomProps) {
   const isMobile =
     typeof window !== "undefined" &&
     /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+  // Detect in-app browsers (Gmail, Facebook, etc.) that often block camera/mic
+  const isInAppBrowser = typeof window !== "undefined" && (
+    /Gmail|FBAN|FBAV|Twitter|LinkedIn|Instagram|Line|Kakao|WeChat|wv|WebView/i.test(navigator.userAgent) ||
+    // Also check if we're in a WebView on iOS (standalone is iOS-specific)
+    ((window.navigator as any).standalone === false && /iPhone|iPad|iPod/i.test(navigator.userAgent))
+  );
 
   const cleanup = useCallback(() => {
     const r = roomRef.current;
@@ -228,7 +239,7 @@ export function VideoRoom({ roomName, identity }: VideoRoomProps) {
     } catch (err: unknown) {
       console.error("Error joining room:", err);
       if (mountedRef.current) {
-        setError(friendlyError(err));
+        setError(friendlyError(err, isInAppBrowser));
         setIsConnecting(false);
         setHasJoined(false);
       }
@@ -297,11 +308,39 @@ export function VideoRoom({ roomName, identity }: VideoRoomProps) {
 
   // 1. Error first – never show Join when we have an error
   if (error) {
+    const showInAppBrowserMessage = error === "IN_APP_BROWSER" || isInAppBrowser;
+    
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white px-4">
         <div className="text-center max-w-md">
           <h1 className="text-xl font-semibold mb-3">Couldn’t join the call</h1>
-          <p className="text-red-300 mb-6">{error}</p>
+          
+          {showInAppBrowserMessage ? (
+            <>
+              <p className="text-red-300 mb-4">
+                Video calls don't work in email or social media apps. You need to open this link in your phone's browser.
+              </p>
+              <div className="bg-gray-800 rounded-lg p-4 mb-6 text-left text-sm">
+                <p className="font-semibold mb-2">How to open in your browser:</p>
+                <ul className="space-y-2 text-gray-300">
+                  <li className="flex items-start gap-2">
+                    <span className="text-emerald-400">•</span>
+                    <span><strong>iPhone:</strong> Tap the link, then tap "Open in Safari" at the bottom</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-emerald-400">•</span>
+                    <span><strong>Android:</strong> Tap the three dots (⋮) → "Open in browser" or "Open in Chrome"</span>
+                  </li>
+                </ul>
+              </div>
+              <p className="text-gray-400 text-sm mb-6">
+                Or copy the link and paste it into Safari (iPhone) or Chrome (Android).
+              </p>
+            </>
+          ) : (
+            <p className="text-red-300 mb-6">{error}</p>
+          )}
+          
           <button
             onClick={() => {
               setError(null);
@@ -313,7 +352,7 @@ export function VideoRoom({ roomName, identity }: VideoRoomProps) {
             }}
             className="px-5 py-2.5 bg-emerald-600 rounded-lg hover:bg-emerald-700 font-medium"
           >
-            Try again
+            {showInAppBrowserMessage ? "Got it" : "Try again"}
           </button>
         </div>
       </div>
@@ -326,8 +365,18 @@ export function VideoRoom({ roomName, identity }: VideoRoomProps) {
       <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white px-4">
         <div className="text-center max-w-sm">
           <h1 className="text-xl font-semibold mb-3">Join video call</h1>
+          
+          {isInAppBrowser && (
+            <div className="bg-yellow-900/30 border border-yellow-700 rounded-lg p-3 mb-4 text-left text-sm">
+              <p className="font-semibold text-yellow-300 mb-1">⚠️ In-app browser detected</p>
+              <p className="text-yellow-200/80">
+                Video calls work best in Safari (iPhone) or Chrome (Android). If you're in an email app, tap "Open in browser" first.
+              </p>
+            </div>
+          )}
+          
           <p className="text-gray-400 mb-6 text-sm">
-            Tap below to join. You’ll be asked to allow camera and microphone access.
+            Tap below to join. You'll be asked to allow camera and microphone access.
           </p>
           <button
             onClick={joinRoom}
