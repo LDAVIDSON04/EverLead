@@ -121,7 +121,7 @@ function SearchChooseContent() {
                   />
                 </div>
                 <p className="text-gray-600 leading-relaxed text-sm sm:text-base">
-                  Connect with a specialist from anywhere in your province
+                  Secure, private, and from the comfort of your home. No downloads required.
                 </p>
               </div>
             </div>
