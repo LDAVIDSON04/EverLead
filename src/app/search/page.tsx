@@ -1634,7 +1634,7 @@ function SearchResults() {
                   {/* Desktop: Side-by-side layout - Provider info left, Day blocks right */}
                   <div className="hidden md:flex gap-0 items-start">
                     {/* Left Section: Provider Info */}
-                    <div className="flex-shrink-0 w-[38%] min-w-0">
+                    <div className="flex-shrink-0 w-[32%] min-w-0 pr-2">
                       {/* Top row: Profile pic with name/title/company to the right */}
                       <div className="flex gap-4 mb-2">
                         {/* Agent Avatar */}
