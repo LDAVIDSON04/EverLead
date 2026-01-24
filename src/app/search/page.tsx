@@ -1631,165 +1631,213 @@ function SearchResults() {
               
               return (
                 <div key={`${appointment.id}-${searchLocation}`} className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
-                  {/* Desktop: Standard flex layout */}
-                  <div className="hidden md:flex gap-4 md:gap-6">
-                    {/* Agent Avatar */}
-                    <div className="flex-shrink-0">
-                      {agent?.profile_picture_url ? (
-                        <img
-                          src={agent.profile_picture_url}
-                          alt={agentName}
-                          className="w-16 h-16 rounded-full object-cover"
-                          width={64}
-                          height={64}
-                          loading="lazy"
-                        />
-                      ) : (
-                      <div className={`w-16 h-16 ${avatarColors[index % avatarColors.length]} rounded-full flex items-center justify-center`}>
-                          <span className="text-white text-2xl">{agentName[0]?.toUpperCase() || 'A'}</span>
-                      </div>
-                      )}
-                    </div>
-
+                  {/* Desktop: Side-by-side layout - Provider info left, Day blocks right */}
+                  <div className="hidden md:flex gap-6 items-start">
+                    {/* Left Section: Provider Info */}
                     <div className="flex-1 min-w-0">
-                      {/* Desktop: Name, title, etc */}
-                      <div className="mb-2">
-                        <h3 className="text-xl text-gray-900 font-semibold">{agentName}</h3>
-                        <p className="text-gray-600 mt-1">
-                          {agent?.job_title || appointment.service_type || 'Pre-need Planning Specialist'}
-                        </p>
-                        {agent?.funeral_home && (
-                          <p className="text-gray-500 text-sm mt-1">{agent.funeral_home}</p>
-                        )}
-                      </div>
-
-                      {/* Desktop: Location - Show searched location (the city the family is searching from) */}
-                      <div className="hidden md:flex items-start gap-2 mb-2">
-                        <MapPin className="w-4 h-4 text-gray-500 mt-1 flex-shrink-0" />
-                        <span className="text-gray-600 text-sm">
-                          {searchLocation ? decodeURIComponent(searchLocation.replace(/\+/g, ' ')) : location ? decodeURIComponent(location.replace(/\+/g, ' ')) : 'Location not specified'}
-                        </span>
-                      </div>
-
-                      {/* Desktop: Office/Company Address - Show matching office location or fallback */}
-                      {displayAddress && (
-                        <div className="hidden md:flex items-start gap-2 mb-3">
-                          <MapPin className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
-                          <span className="text-gray-500 text-xs">
-                            {displayAddress}
-                          </span>
+                      <div className="flex gap-4">
+                        {/* Agent Avatar */}
+                        <div className="flex-shrink-0">
+                          {agent?.profile_picture_url ? (
+                            <img
+                              src={agent.profile_picture_url}
+                              alt={agentName}
+                              className="w-16 h-16 rounded-full object-cover"
+                              width={64}
+                              height={64}
+                              loading="lazy"
+                            />
+                          ) : (
+                          <div className={`w-16 h-16 ${avatarColors[index % avatarColors.length]} rounded-full flex items-center justify-center`}>
+                              <span className="text-white text-2xl">{agentName[0]?.toUpperCase() || 'A'}</span>
+                          </div>
+                          )}
                         </div>
-                      )}
 
-                      {/* Desktop: Rating */}
-                      {agent && agent.rating && agent.rating > 0 && agent.reviewCount && agent.reviewCount > 0 && (
-                        <div className="hidden md:flex items-center gap-1 mb-3">
-                          <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                          <span className="text-gray-900">{agent.rating.toFixed(1)}</span>
-                          <span className="text-gray-500">· {agent.reviewCount} {agent.reviewCount === 1 ? 'review' : 'reviews'}</span>
-                        </div>
-                      )}
-                      {/* Desktop: Learn more about button */}
-                      {agent?.id && (
-                        <div className="hidden md:block mb-4">
-                          <button
-                            type="button"
-                            onClick={async (e) => {
-                              console.log("Portfolio button clicked for agent:", agent.id);
-                              e.preventDefault();
-                              e.stopPropagation();
-                              
-                              console.log("Setting modal to show");
-                              setShowPortfolioModal(true);
-                              setPortfolioLoading(true);
-                              setPortfolioAgentData(null);
-                              setPortfolioReviews([]);
-                              setShowAllReviews(false);
-                              
-                              try {
-                                console.log("Fetching agent data for:", agent.id);
-                                const { data, error } = await supabaseClient
-                                  .from("profiles")
-                                  .select("id, full_name, first_name, last_name, profile_picture_url, job_title, funeral_home, agent_city, agent_province, email, phone, metadata, ai_generated_bio, bio_approval_status, approval_status")
-                                  .eq("id", agent.id)
-                                  .eq("role", "agent")
-                                  .maybeSingle();
-                                
-                                if (error) {
-                                  console.error("Error loading agent:", error);
-                                } else if (data) {
-                                  console.log("Agent data loaded:", data);
-                                  const metadata = data.metadata || {};
-                                  const specialty = (metadata as any)?.specialty || null;
-                                  const licenseNumber = (metadata as any)?.license_number || null;
-                                  const location = data.agent_city && data.agent_province
-                                    ? `${data.agent_city}, ${data.agent_province}`
-                                    : data.agent_city || data.agent_province || 'Location not specified';
+                        <div className="flex-1 min-w-0">
+                          {/* Desktop: Name, title, etc */}
+                          <div className="mb-2">
+                            <h3 className="text-xl text-gray-900 font-semibold">{agentName}</h3>
+                            <p className="text-gray-600 mt-1">
+                              {agent?.job_title || appointment.service_type || 'Pre-need Planning Specialist'}
+                            </p>
+                            {agent?.funeral_home && (
+                              <p className="text-gray-500 text-sm mt-1">{agent.funeral_home}</p>
+                            )}
+                          </div>
+
+                          {/* Desktop: Location - Show searched location (the city the family is searching from) */}
+                          <div className="flex items-start gap-2 mb-2">
+                            <MapPin className="w-4 h-4 text-gray-500 mt-1 flex-shrink-0" />
+                            <span className="text-gray-600 text-sm">
+                              {searchLocation ? decodeURIComponent(searchLocation.replace(/\+/g, ' ')) : location ? decodeURIComponent(location.replace(/\+/g, ' ')) : 'Location not specified'}
+                            </span>
+                          </div>
+
+                          {/* Desktop: Office/Company Address - Show matching office location or fallback */}
+                          {displayAddress && (
+                            <div className="flex items-start gap-2 mb-3">
+                              <MapPin className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                              <span className="text-gray-500 text-xs">
+                                {displayAddress}
+                              </span>
+                            </div>
+                          )}
+
+                          {/* Desktop: Rating */}
+                          {agent && agent.rating && agent.rating > 0 && agent.reviewCount && agent.reviewCount > 0 && (
+                            <div className="flex items-center gap-1 mb-3">
+                              <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                              <span className="text-gray-900">{agent.rating.toFixed(1)}</span>
+                              <span className="text-gray-500">· {agent.reviewCount} {agent.reviewCount === 1 ? 'review' : 'reviews'}</span>
+                            </div>
+                          )}
+                          {/* Desktop: Learn more about button */}
+                          {agent?.id && (
+                            <div className="block mb-4">
+                              <button
+                                type="button"
+                                onClick={async (e) => {
+                                  console.log("Portfolio button clicked for agent:", agent.id);
+                                  e.preventDefault();
+                                  e.stopPropagation();
                                   
-                                  // Single unified approval - check only approval_status
-                                  if (data.approval_status !== "approved") {
-                                    setPortfolioAgentData(null);
-                                    return;
-                                  }
+                                  console.log("Setting modal to show");
+                                  setShowPortfolioModal(true);
+                                  setPortfolioLoading(true);
+                                  setPortfolioAgentData(null);
+                                  setPortfolioReviews([]);
+                                  setShowAllReviews(false);
                                   
-                                  // Use AI-generated bio if it exists (bios are auto-approved on creation)
-                                  const hasApprovedBio = !!data.ai_generated_bio;
-                                  const fallbackSummary = `${data.full_name || 'This agent'} brings years of compassionate expertise in end-of-life planning and grief support. ${specialty || 'They help'} families navigate difficult decisions with dignity and care.`;
-                                  const fallbackFullBio = `${data.full_name || 'This agent'}'s journey into end-of-life care is driven by a commitment to helping families during life's most challenging moments.\n\n${specialty || 'Their expertise'} allows them to address both the emotional and practical aspects of end-of-life planning.\n\nThey are known for their patient, non-judgmental approach and their ability to facilitate difficult family conversations.`;
-                                  
-                                  // Fetch review stats
-                                  let rating = 0;
-                                  let reviewCount = 0;
                                   try {
-                                    const reviewResponse = await fetch(`/api/reviews/agent/${agent.id}`);
-                                    if (reviewResponse.ok) {
-                                      const reviewData = await reviewResponse.json();
-                                      rating = reviewData.averageRating || 0;
-                                      reviewCount = reviewData.totalReviews || 0;
-                                      // Set the reviews for display
-                                      setPortfolioReviews(reviewData.reviews || []);
-                                    } else {
-                                      setPortfolioReviews([]);
+                                    console.log("Fetching agent data for:", agent.id);
+                                    const { data, error } = await supabaseClient
+                                      .from("profiles")
+                                      .select("id, full_name, first_name, last_name, profile_picture_url, job_title, funeral_home, agent_city, agent_province, email, phone, metadata, ai_generated_bio, bio_approval_status, approval_status")
+                                      .eq("id", agent.id)
+                                      .eq("role", "agent")
+                                      .maybeSingle();
+                                    
+                                    if (error) {
+                                      console.error("Error loading agent:", error);
+                                    } else if (data) {
+                                      console.log("Agent data loaded:", data);
+                                      const metadata = data.metadata || {};
+                                      const specialty = (metadata as any)?.specialty || null;
+                                      const licenseNumber = (metadata as any)?.license_number || null;
+                                      const location = data.agent_city && data.agent_province
+                                        ? `${data.agent_city}, ${data.agent_province}`
+                                        : data.agent_city || data.agent_province || 'Location not specified';
+                                      
+                                      // Single unified approval - check only approval_status
+                                      if (data.approval_status !== "approved") {
+                                        setPortfolioAgentData(null);
+                                        return;
+                                      }
+                                      
+                                      // Use AI-generated bio if it exists (bios are auto-approved on creation)
+                                      const hasApprovedBio = !!data.ai_generated_bio;
+                                      const fallbackSummary = `${data.full_name || 'This agent'} brings years of compassionate expertise in end-of-life planning and grief support. ${specialty || 'They help'} families navigate difficult decisions with dignity and care.`;
+                                      const fallbackFullBio = `${data.full_name || 'This agent'}'s journey into end-of-life care is driven by a commitment to helping families during life's most challenging moments.\n\n${specialty || 'Their expertise'} allows them to address both the emotional and practical aspects of end-of-life planning.\n\nThey are known for their patient, non-judgmental approach and their ability to facilitate difficult family conversations.`;
+                                      
+                                      // Fetch review stats
+                                      let rating = 0;
+                                      let reviewCount = 0;
+                                      try {
+                                        const reviewResponse = await fetch(`/api/reviews/agent/${agent.id}`);
+                                        if (reviewResponse.ok) {
+                                          const reviewData = await reviewResponse.json();
+                                          rating = reviewData.averageRating || 0;
+                                          reviewCount = reviewData.totalReviews || 0;
+                                          // Set the reviews for display
+                                          setPortfolioReviews(reviewData.reviews || []);
+                                        } else {
+                                          setPortfolioReviews([]);
+                                        }
+                                      } catch (err) {
+                                        console.error("Error fetching review stats:", err);
+                                        setPortfolioReviews([]);
+                                      }
+                                      
+                                      setPortfolioAgentData({
+                                        ...data,
+                                        business_address: (metadata as any)?.business_address || null,
+                                        business_street: (metadata as any)?.business_street || null,
+                                        business_city: (metadata as any)?.business_city || null,
+                                        business_province: (metadata as any)?.business_province || null,
+                                        business_zip: (metadata as any)?.business_zip || null,
+                                        specialty: specialty,
+                                        license_number: licenseNumber,
+                                        credentials: licenseNumber ? `LFD, ${licenseNumber}` : 'LFD',
+                                        rating: rating,
+                                        reviewCount: reviewCount,
+                                        verified: true,
+                                        location: location,
+                                        summary: hasApprovedBio ? data.ai_generated_bio.split('\n\n')[0] || data.ai_generated_bio : fallbackSummary,
+                                        fullBio: hasApprovedBio ? data.ai_generated_bio : fallbackFullBio,
+                                        aiGeneratedBio: hasApprovedBio ? data.ai_generated_bio : null,
+                                      });
                                     }
                                   } catch (err) {
-                                    console.error("Error fetching review stats:", err);
-                                    setPortfolioReviews([]);
+                                    console.error("Error:", err);
+                                  } finally {
+                                    setPortfolioLoading(false);
                                   }
-                                  
-                                  setPortfolioAgentData({
-                                    ...data,
-                                    business_address: (metadata as any)?.business_address || null,
-                                    business_street: (metadata as any)?.business_street || null,
-                                    business_city: (metadata as any)?.business_city || null,
-                                    business_province: (metadata as any)?.business_province || null,
-                                    business_zip: (metadata as any)?.business_zip || null,
-                                    specialty: specialty,
-                                    license_number: licenseNumber,
-                                    credentials: licenseNumber ? `LFD, ${licenseNumber}` : 'LFD',
-                                    rating: rating,
-                                    reviewCount: reviewCount,
-                                    verified: true,
-                                    location: location,
-                                    summary: hasApprovedBio ? data.ai_generated_bio.split('\n\n')[0] || data.ai_generated_bio : fallbackSummary,
-                                    fullBio: hasApprovedBio ? data.ai_generated_bio : fallbackFullBio,
-                                    aiGeneratedBio: hasApprovedBio ? data.ai_generated_bio : null,
-                                  });
-                                }
-                              } catch (err) {
-                                console.error("Error:", err);
-                              } finally {
-                                setPortfolioLoading(false);
-                              }
-                            }}
-                            onMouseDown={(e) => {
-                              e.stopPropagation();
-                            }}
-                            className="ml-3 text-gray-900 hover:text-gray-700 underline decoration-black hover:decoration-gray-700 text-sm font-medium transition-colors cursor-pointer bg-transparent border-none p-0 relative z-10"
-                          >
-                            Learn more about {agentName}
-                          </button>
+                                }}
+                                onMouseDown={(e) => {
+                                  e.stopPropagation();
+                                }}
+                                className="ml-3 text-gray-900 hover:text-gray-700 underline decoration-black hover:decoration-gray-700 text-sm font-medium transition-colors cursor-pointer bg-transparent border-none p-0 relative z-10"
+                              >
+                                Learn more about {agentName}
+                              </button>
+                            </div>
+                          )}
                         </div>
-                      )}
+                      </div>
+                    </div>
+
+                    {/* Right Section: Day Blocks Grid */}
+                    <div className="flex-shrink-0 w-[45%]">
+                      <div className="grid grid-cols-4 gap-2">
+                        {availability.map((slot, slotIndex) => {
+                          const hasSpots = slot.spots > 0;
+                          return (
+                            <button
+                              key={slotIndex}
+                              type="button"
+                              onClick={(e) => {
+                                if (hasSpots && appointment.agent?.id) {
+                                  handleDayClick(e, appointment, slot, index);
+                                }
+                              }}
+                              disabled={!hasSpots}
+                              className={`
+                                relative px-3 py-2 rounded-lg border text-center text-sm transition-colors
+                                ${hasSpots 
+                                  ? 'bg-green-800 text-white border-green-800 hover:bg-green-900 cursor-pointer' 
+                                  : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'}
+                              `}
+                            >
+                              {hasSpots && mode === 'video' && (
+                                <span className="absolute top-1 right-1 text-white" aria-hidden>
+                                  <Video className="w-5 h-5" strokeWidth={2.5} />
+                                </span>
+                              )}
+                              <div className="whitespace-pre-line leading-tight">{slot.date}</div>
+                              <div className="text-xs mt-1 whitespace-pre-line">
+                                <span className="hidden md:inline">{hasSpots ? slot.spots + '\nappointments' : 'No\nappointments'}</span>
+                              </div>
+                            </button>
+                          );
+                        })}
+                        <button 
+                          onClick={() => handleMoreButtonClick(appointment, index)}
+                          className="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:border-green-800 hover:bg-green-50 text-sm flex items-center justify-center"
+                        >
+                          More
+                        </button>
+                      </div>
                     </div>
                   </div>
 
@@ -1959,7 +2007,8 @@ function SearchResults() {
                       </div>
                     </div>
 
-                  <div className="mt-4 md:mt-0">
+                  {/* Mobile: Day blocks below provider info (unchanged) */}
+                  <div className="mt-4 md:hidden">
                       <div className="grid grid-cols-4 gap-2">
                         {availability.map((slot, slotIndex) => {
                           const hasSpots = slot.spots > 0;
@@ -1987,8 +2036,7 @@ function SearchResults() {
                               )}
                               <div className="whitespace-pre-line leading-tight">{slot.date}</div>
                               <div className="text-xs mt-1 whitespace-pre-line">
-                                <span className="md:hidden">{hasSpots ? slot.spots + '\nappts' : 'No\nappts'}</span>
-                                <span className="hidden md:inline">{hasSpots ? slot.spots + '\nappointments' : 'No\nappointments'}</span>
+                                <span>{hasSpots ? slot.spots + '\nappts' : 'No\nappts'}</span>
                               </div>
                             </button>
                           );
