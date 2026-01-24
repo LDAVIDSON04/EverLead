@@ -1632,9 +1632,9 @@ function SearchResults() {
               return (
                 <div key={`${appointment.id}-${searchLocation}`} className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
                   {/* Desktop: Side-by-side layout - Provider info left, Day blocks right */}
-                  <div className="hidden md:flex gap-6 items-start">
+                  <div className="hidden md:flex gap-3 items-start">
                     {/* Left Section: Provider Info */}
-                    <div className="flex-1 min-w-0">
+                    <div className="flex-shrink-0 w-[40%] min-w-0">
                       <div className="flex gap-4">
                         {/* Agent Avatar */}
                         <div className="flex-shrink-0">
@@ -1798,8 +1798,8 @@ function SearchResults() {
                     </div>
 
                     {/* Right Section: Day Blocks Grid */}
-                    <div className="flex-shrink-0 w-[45%]">
-                      <div className="grid grid-cols-4 gap-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="grid grid-cols-4 gap-2 w-full">
                         {availability.map((slot, slotIndex) => {
                           const hasSpots = slot.spots > 0;
                           return (
