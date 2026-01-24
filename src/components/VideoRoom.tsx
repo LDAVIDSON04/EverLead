@@ -22,18 +22,31 @@ const DESKTOP_VIDEO = { width: 1280, height: 720 };
 
 function friendlyError(err: unknown, isInAppBrowser: boolean): string {
   const msg = err instanceof Error ? err.message : String(err);
+  const errName = err instanceof Error ? err.name : "";
+  
+  // Log the raw error for debugging
+  console.log("friendlyError input:", { msg, errName, isInAppBrowser });
+  
   // Check for permission errors - show in-app browser message if we're in one
-  if (/not allowed|denied|permission|NotAllowedError|getUserMedia/i.test(msg)) {
+  if (/not allowed|denied|permission|NotAllowedError|getUserMedia|PermissionDeniedError/i.test(msg) || 
+      errName === "NotAllowedError" || errName === "PermissionDeniedError") {
     // Only show in-app browser message if we're actually in one AND got permission denied
     if (isInAppBrowser) {
       return "IN_APP_BROWSER"; // Special flag to show in-app browser message
     }
     return "Camera and microphone access was denied. Please allow access in your browser settings and try again.";
   }
-  if (/not found|NotFoundError/i.test(msg))
+  if (/not found|NotFoundError|NotFound/i.test(msg) || errName === "NotFoundError")
     return "No camera or microphone found. Please check your device and try again.";
-  if (/failed to get access token|token/i.test(msg))
+  if (/failed to get access token|token|401|403|500/i.test(msg))
     return "Unable to connect. Please check your connection and try again.";
+  
+  // For Safari-specific errors, provide more context
+  if (typeof window !== "undefined" && /Safari|webkit/i.test(navigator.userAgent) && /constraint|overconstrained/i.test(msg)) {
+    return "Your device may not support the requested video settings. Please try again or use a different device.";
+  }
+  
+  // Return the actual error message so we can see what's wrong
   return msg || "Failed to join the call. Please try again.";
 }
 
@@ -240,8 +253,24 @@ export function VideoRoom({ roomName, identity }: VideoRoomProps) {
       }
     } catch (err: unknown) {
       console.error("Error joining room:", err);
+      
+      // Log detailed error info for debugging
+      if (err instanceof Error) {
+        console.error("Error details:", {
+          name: err.name,
+          message: err.message,
+          stack: err.stack,
+          isMobile,
+          isInAppBrowser,
+          userAgent: typeof window !== "undefined" ? navigator.userAgent : "N/A",
+        });
+      }
+      
       if (mountedRef.current) {
-        setError(friendlyError(err, isInAppBrowser));
+        // Show the actual error message for debugging, but also try to make it user-friendly
+        const errorMsg = friendlyError(err, isInAppBrowser);
+        console.error("Setting error message:", errorMsg);
+        setError(errorMsg);
         setIsConnecting(false);
         setHasJoined(false);
       }
@@ -361,7 +390,14 @@ export function VideoRoom({ roomName, identity }: VideoRoomProps) {
               </button>
             </>
           ) : (
-            <p className="text-red-300 mb-6">{error}</p>
+            <>
+              <p className="text-red-300 mb-4">{error}</p>
+              {process.env.NODE_ENV === "development" && (
+                <p className="text-gray-500 text-xs mb-6 font-mono">
+                  Debug: Check browser console for details
+                </p>
+              )}
+            </>
           )}
           
           <button
