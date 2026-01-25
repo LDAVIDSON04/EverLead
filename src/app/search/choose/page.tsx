@@ -41,7 +41,7 @@ function SearchChooseContent() {
   return (
     <div className="min-h-screen bg-[#FAF9F6]">
       {/* Mobile only: logo in flow, top left above title */}
-      <div className="sm:hidden pt-6 pl-6 pb-2">
+      <div className="sm:hidden pt-3 pl-6 pb-1">
         <Image
           src="/Soradin.png"
           alt="Soradin"
@@ -63,7 +63,7 @@ function SearchChooseContent() {
         />
       </div>
 
-      <div className="max-w-4xl mx-auto px-6 sm:px-8 pt-4 sm:pt-12 pb-12 sm:pb-16 sm:py-16">
+      <div className="max-w-4xl mx-auto px-6 sm:px-8 pt-1 sm:pt-12 pb-12 sm:pb-16 sm:py-16">
         <div className="text-center mb-6 sm:mb-8">
           <h1 className="text-4xl sm:text-5xl lg:text-5xl font-bold text-gray-900 mb-4 sm:mb-5 tracking-tight">
             How would you like to meet?
