@@ -340,6 +340,27 @@ export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId, onEdit
                 </div>
               </div>
 
+              {/* Meeting time (for appointments) */}
+              {appointmentData?.starts_at && (
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Meeting time</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">Date</label>
+                      <p className="text-gray-900">
+                        {formatDate(appointmentData.starts_at, appointmentData.agent_timezone)}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">Time</label>
+                      <p className="text-gray-900">
+                        {formatTime(appointmentData.starts_at, appointmentData.agent_timezone as CanadianTimezone | undefined)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Meeting Location or Join Meeting (for video calls) */}
               {appointmentData ? (() => {
                 // Video vs in-person: use office_location_id only (bookings set it null for video).

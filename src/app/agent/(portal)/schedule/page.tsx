@@ -1239,19 +1239,24 @@ export default function SchedulePage() {
                                     {apt.family_name || 'Appointment'}
                                   </div>
                                   
-                                  {/* Location with pin - filter out provider names - shows for both past and future */}
+                                  {/* Location or Video Call - shows for both past and future */}
                                   {(() => {
-                                    // Filter out provider names and invalid locations
+                                    const isVideoCall = !apt.is_external && apt.office_location_id === null && apt.lead_id;
                                     const validLocation = apt.location && 
                                       apt.location !== "N/A" && 
                                       apt.location !== "External Calendar" &&
                                       !apt.location.match(/^(Google Calendar|Microsoft Calendar|ICS Calendar)$/i);
-                                    
-                                    // Clean the location string (remove provider names if they're part of the string)
                                     const cleanLocation = validLocation 
                                       ? apt.location.replace(/Google Calendar|Microsoft Calendar|ICS Calendar/gi, '').trim()
                                       : null;
-                                    
+                                    if (isVideoCall) {
+                                      return (
+                                        <div className="flex items-center gap-0.5 mt-auto">
+                                          <MapPin className="w-2 h-2 md:w-2.5 md:h-2.5 text-gray-600 flex-shrink-0" />
+                                          <span className="text-[8px] md:text-[10px] text-gray-600 truncate leading-tight">Video Call</span>
+                                        </div>
+                                      );
+                                    }
                                     return cleanLocation && cleanLocation.length > 0 ? (
                                       <div className="flex items-center gap-0.5 mt-auto">
                                         <MapPin className="w-2 h-2 md:w-2.5 md:h-2.5 text-gray-600 flex-shrink-0" />
@@ -1365,6 +1370,7 @@ export default function SchedulePage() {
                                 {apt.family_name || 'Appointment'}
                               </div>
                               {(() => {
+                                const isVideoCall = !apt.is_external && apt.office_location_id === null && apt.lead_id;
                                 const validLocation = apt.location && 
                                   apt.location !== "N/A" && 
                                   apt.location !== "External Calendar" &&
@@ -1372,6 +1378,14 @@ export default function SchedulePage() {
                                 const cleanLocation = validLocation 
                                   ? apt.location.replace(/Google Calendar|Microsoft Calendar|ICS Calendar/gi, '').trim()
                                   : null;
+                                if (isVideoCall) {
+                                  return (
+                                    <div className="flex items-center gap-0.5 mt-auto">
+                                      <MapPin className="w-2 h-2 md:w-2.5 md:h-2.5 text-gray-600 flex-shrink-0" />
+                                      <span className="text-[8px] md:text-[10px] text-gray-600 truncate leading-tight">Video Call</span>
+                                    </div>
+                                  );
+                                }
                                 return cleanLocation && cleanLocation.length > 0 ? (
                                   <div className="flex items-center gap-0.5 mt-auto">
                                     <MapPin className="w-2 h-2 md:w-2.5 md:h-2.5 text-gray-600 flex-shrink-0" />
@@ -1433,6 +1447,9 @@ export default function SchedulePage() {
                         const ampm = hour >= 12 ? 'PM' : 'AM';
                         const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
                         const timeStr = `${displayHour}${apt.minute > 0 ? `:${String(apt.minute).padStart(2, '0')}` : ''} ${ampm}`;
+                        const isVideoCall = !apt.is_external && apt.office_location_id === null && apt.lead_id;
+                        const validLoc = apt.location && apt.location !== "N/A" && apt.location !== "External Calendar" && !apt.location.match(/^(Google Calendar|Microsoft Calendar|ICS Calendar)$/i);
+                        const subLabel = isVideoCall ? 'Video Call' : (validLoc ? apt.location.replace(/Google Calendar|Microsoft Calendar|ICS Calendar/gi, '').trim() : null);
 
                         return (
                           <div
@@ -1447,10 +1464,11 @@ export default function SchedulePage() {
                               }
                             }}
                             className={`${color} rounded px-1.5 py-0.5 text-[10px] cursor-pointer hover:opacity-80 transition-opacity border border-gray-300 truncate`}
-                            title={`${timeStr} - ${apt.family_name || 'Appointment'}`}
+                            title={subLabel ? `${timeStr} - ${apt.family_name || 'Appointment'} (${subLabel})` : `${timeStr} - ${apt.family_name || 'Appointment'}`}
                           >
                             <span className="font-medium">{timeStr}</span>
                             <span className="ml-1">{apt.family_name || 'Appointment'}</span>
+                            {subLabel && <span className="block text-[9px] text-gray-600 truncate">{subLabel}</span>}
                           </div>
                         );
                       })}
