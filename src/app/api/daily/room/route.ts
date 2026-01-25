@@ -12,11 +12,11 @@ export async function GET(req: NextRequest) {
     const userName = req.nextUrl.searchParams.get("userName");
     const userId = req.nextUrl.searchParams.get("userId");
 
-    // Agent fallback: for appointment rooms, "Agent | ..." identity is always the host (fixes missing role in URL)
+    // Appointment rooms: role is determined only by identity, never by client (prevents customer from passing role=host)
     const isAppointmentRoom = typeof name === "string" && name.startsWith("appointment-");
     const isAgentIdentity = typeof userName === "string" && userName.startsWith("Agent | ");
-    if (isAppointmentRoom && isAgentIdentity && role !== "guest") {
-      role = "host";
+    if (isAppointmentRoom) {
+      role = isAgentIdentity ? "host" : "guest";
     }
 
     // For appointment rooms: compute token expiry = 90 min after scheduled start (privacy: link not valid forever)
