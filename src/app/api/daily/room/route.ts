@@ -1,7 +1,9 @@
 // API route for Daily.co room: get-or-create room by name, return room URL with optional token
 import { NextRequest, NextResponse } from "next/server";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 const DAILY_API_BASE = "https://api.daily.co/v1";
+const MEETING_EXPIRY_MINUTES_AFTER_START = 90;
 
 export async function GET(req: NextRequest) {
   try {
@@ -17,10 +19,41 @@ export async function GET(req: NextRequest) {
       role = "host";
     }
 
+    // For appointment rooms: compute token expiry = 90 min after scheduled start (privacy: link not valid forever)
+    let tokenExpiryUnix: number | null = null;
+    if (isAppointmentRoom && name) {
+      const appointmentId = name.replace(/^appointment-/, "").trim();
+      if (appointmentId && supabaseAdmin) {
+        const { data: apt } = await supabaseAdmin
+          .from("appointments")
+          .select("starts_at, confirmed_at")
+          .eq("id", appointmentId)
+          .maybeSingle();
+        const startIso = apt?.starts_at || apt?.confirmed_at;
+        if (startIso) {
+          const startMs = new Date(startIso).getTime();
+          tokenExpiryUnix = Math.floor((startMs + MEETING_EXPIRY_MINUTES_AFTER_START * 60 * 1000) / 1000);
+        } else {
+          tokenExpiryUnix = Math.floor(Date.now() / 1000) + 2 * 60 * 60;
+        }
+      } else if (appointmentId) {
+        // Can't fetch appointment (e.g. no DB): still expire in 2h so link never lasts forever
+        tokenExpiryUnix = Math.floor(Date.now() / 1000) + 2 * 60 * 60;
+      }
+    }
+
     if (!name || typeof name !== "string") {
       return NextResponse.json(
         { error: "Missing required query: name" },
         { status: 400 }
+      );
+    }
+
+    // Refuse to issue token if this appointment's meeting window has expired
+    if (tokenExpiryUnix !== null && tokenExpiryUnix < Math.floor(Date.now() / 1000)) {
+      return NextResponse.json(
+        { error: "This meeting link has expired." },
+        { status: 403 }
       );
     }
 
@@ -92,6 +125,10 @@ export async function GET(req: NextRequest) {
         };
         if (userName) properties.user_name = userName;
         if (userId) properties.user_id = userId;
+        if (tokenExpiryUnix !== null) {
+          properties.exp = tokenExpiryUnix;
+          properties.eject_at_token_exp = true;
+        }
 
         const tokenRes = await fetch(`${DAILY_API_BASE}/meeting-tokens`, {
           method: "POST",
@@ -125,6 +162,10 @@ export async function GET(req: NextRequest) {
         };
         if (userName) properties.user_name = userName;
         if (userId) properties.user_id = userId;
+        if (tokenExpiryUnix !== null) {
+          properties.exp = tokenExpiryUnix;
+          properties.eject_at_token_exp = true;
+        }
 
         const tokenRes = await fetch(`${DAILY_API_BASE}/meeting-tokens`, {
           method: "POST",
@@ -172,6 +213,10 @@ export async function GET(req: NextRequest) {
       };
       if (userName) properties.user_name = userName;
       if (userId) properties.user_id = userId;
+      if (tokenExpiryUnix !== null) {
+        properties.exp = tokenExpiryUnix;
+        properties.eject_at_token_exp = true;
+      }
 
       const tokenRes = await fetch(`${DAILY_API_BASE}/meeting-tokens`, {
         method: "POST",
@@ -194,6 +239,10 @@ export async function GET(req: NextRequest) {
       };
       if (userName) properties.user_name = userName;
       if (userId) properties.user_id = userId;
+      if (tokenExpiryUnix !== null) {
+        properties.exp = tokenExpiryUnix;
+        properties.eject_at_token_exp = true;
+      }
 
       const tokenRes = await fetch(`${DAILY_API_BASE}/meeting-tokens`, {
         method: "POST",
