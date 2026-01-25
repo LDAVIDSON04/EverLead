@@ -7,7 +7,7 @@ import { notFound } from "next/navigation";
 
 interface PageProps {
   params: Promise<{ roomName: string }>;
-  searchParams: Promise<{ identity?: string }>;
+  searchParams: Promise<{ identity?: string; role?: string }>;
 }
 
 export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
@@ -46,13 +46,17 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
 
 export default async function VideoJoinPage({ params, searchParams }: PageProps) {
   const { roomName } = await params;
-  const { identity } = await searchParams;
+  const { identity, role } = await searchParams;
   
   if (!roomName) {
     notFound();
   }
   
-  // Redirect to the actual video room
-  const videoUrl = `/video/${roomName}${identity ? `?identity=${encodeURIComponent(identity)}` : ""}`;
+  // Redirect to the actual video room, forwarding identity and role so agent joins as host
+  const query = new URLSearchParams();
+  if (identity) query.set("identity", identity);
+  if (role) query.set("role", role);
+  const qs = query.toString();
+  const videoUrl = `/video/${roomName}${qs ? `?${qs}` : ""}`;
   redirect(videoUrl);
 }
