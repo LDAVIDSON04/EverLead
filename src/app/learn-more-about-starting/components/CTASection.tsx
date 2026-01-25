@@ -11,8 +11,8 @@ export function CTASection() {
             Join the leading scheduling platform
           </h2>
           <Link href="/create-account">
-            <button className="bg-white hover:bg-gray-50 text-black border-4 border-black px-8 py-3 rounded-lg transition-colors shadow-lg">
-              Learn more
+            <button className="bg-white hover:bg-gray-50 text-black border-4 border-black px-8 py-3 rounded-lg shadow-lg transition-all duration-300 ease-out hover:scale-105 hover:shadow-xl hover:-translate-y-0.5">
+              Create account
             </button>
           </Link>
         </div>
