@@ -1,137 +1,145 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
+import { Instagram, Facebook } from "lucide-react";
 
 export function Footer() {
   return (
-    <footer className="bg-[#2A2A2A] text-white py-12">
-        <div className="max-w-7xl mx-auto px-6">
-        <div className="grid md:grid-cols-5 gap-8 mb-12">
-          {/* Column 1 - Soradin */}
-          <div>
-            <h3 className="text-white mb-4">Soradin</h3>
-            <ul className="space-y-2">
-              <li><Link href="/" className="text-gray-400 hover:text-[#0D5C3D] transition-colors text-sm">Home</Link></li>
-              <li><a href="#" className="text-gray-400 hover:text-[#0D5C3D] transition-colors text-sm">About Us</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-[#0D5C3D] transition-colors text-sm">Press</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-[#0D5C3D] transition-colors text-sm">Careers</a></li>
-              <li><a href="mailto:support@soradin.com" className="text-gray-400 hover:text-[#0D5C3D] transition-colors text-sm">Contact us</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-[#0D5C3D] transition-colors text-sm">Help</a></li>
-            </ul>
-          </div>
+    <footer className="bg-[#1A1A1A] text-white">
+      <div className="py-16 px-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid md:grid-cols-5 gap-12 mb-12">
+            {/* Column 1 - Soradin */}
+            <div>
+              <h4 className="mb-6 text-lg font-medium">Soradin</h4>
+              <ul className="space-y-3">
+                <li>
+                  <Link href="/" className="text-white/60 hover:text-white transition-colors">
+                    Home
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/about" className="text-white/60 hover:text-white transition-colors">
+                    About us
+                  </Link>
+                </li>
+                <li>
+                  <Link href="mailto:support@soradin.com" className="text-white/60 hover:text-white transition-colors">
+                    Contact us
+                  </Link>
+                </li>
+              </ul>
+            </div>
 
-          {/* Column 2 - Discover */}
-          <div>
-            <h3 className="text-white mb-4">Discover</h3>
-            <ul className="space-y-2">
-              <li><a href="#" className="text-gray-400 hover:text-[#0D5C3D] transition-colors text-sm">The Patient Growth Stories for providers</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-[#0D5C3D] transition-colors text-sm">Practice Resources for providers</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-[#0D5C3D] transition-colors text-sm">Community standards</a></li>
-              <li><a href="/privacy" className="text-gray-400 hover:text-[#0D5C3D] transition-colors text-sm">Data and privacy</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-[#0D5C3D] transition-colors text-sm">Verified reviews</a></li>
-              <li>
-                <a href="#" className="text-gray-400 hover:text-[#0D5C3D] transition-colors text-sm inline-flex items-center gap-2">
-                  Tech Blog
-                  <span className="bg-[#FFE87C] text-black text-xs px-2 py-0.5 rounded">New</span>
-                </a>
-              </li>
-            </ul>
-          </div>
+            {/* Column 2 - Discover */}
+            <div>
+              <h4 className="mb-6 text-lg font-medium">Discover</h4>
+              <ul className="space-y-3">
+                <li>
+                  <Link href="/learn-more-about-starting" className="text-white/60 hover:text-white transition-colors">
+                    Resources for specialists
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/privacy" className="text-white/60 hover:text-white transition-colors">
+                    Data and privacy
+                  </Link>
+                </li>
+                <li>
+                  <Link href="#" className="text-white/60 hover:text-white transition-colors">
+                    Verified reviews
+                  </Link>
+                </li>
+              </ul>
+            </div>
 
-          {/* Column 3 - For providers */}
-          <div>
-            <h3 className="text-white mb-4 text-sm">Are you a top doctor or health service?</h3>
-            <ul className="space-y-2">
-              <li>
-                <a href="#" className="text-gray-400 hover:text-[#0D5C3D] transition-colors text-sm inline-flex items-center gap-2">
-                  Try So, your AI Phone Assistant
-                  <span className="bg-[#FFE87C] text-black text-xs px-2 py-0.5 rounded font-semibold">NEW</span>
-                </a>
-              </li>
-              <li><Link href="/learn-more-about-starting" className="text-gray-400 hover:text-[#0D5C3D] transition-colors text-sm">List your practice on Soradin</Link></li>
-              <li><a href="#" className="text-gray-400 hover:text-[#0D5C3D] transition-colors text-sm">Become an EHR partner</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-[#0D5C3D] transition-colors text-sm">Learn about Soradin Enterprise Solutions</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-[#0D5C3D] transition-colors text-sm">Access Soradin for Developers</a></li>
-            </ul>
-          </div>
+            {/* Column 3 - For Specialists */}
+            <div>
+              <h4 className="mb-6 text-lg font-medium">For Specialists</h4>
+              <ul className="space-y-3">
+                <li>
+                  <Link href="/learn-more-about-starting" className="text-white/60 hover:text-white transition-colors">
+                    List your practice
+                  </Link>
+                </li>
+              </ul>
+            </div>
 
-          {/* Column 4 - Directories */}
-          <div>
-            <h3 className="text-white mb-4">Directories</h3>
-            <ul className="space-y-2">
-              <li><a href="#" className="text-gray-400 hover:text-[#0D5C3D] transition-colors text-sm">Insurance Carriers</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-[#0D5C3D] transition-colors text-sm">Top Specialties</a></li>
-            </ul>
-          </div>
+            {/* Column 4 - Have questions? */}
+            <div>
+              <h4 className="mb-6 text-lg font-medium">Have questions?</h4>
+              <ul className="space-y-3">
+                <li>
+                  <Link href="/help" className="text-white/60 hover:text-white transition-colors">
+                    Help
+                  </Link>
+                </li>
+              </ul>
+            </div>
 
-          {/* Column 5 - Get the app */}
-          <div>
-            <h3 className="text-white mb-4">Get the Soradin app</h3>
-            <div className="space-y-3">
-              <a 
-                href="#" 
-                className="block w-full bg-black hover:bg-gray-900 text-white px-4 py-2 rounded transition-colors text-sm"
-              >
-                <div className="flex items-center gap-2">
-                  <span className="text-xl">🍎</span>
-                  <div className="text-left">
-                    <div className="text-xs text-gray-400">Download on the</div>
-                    <div className="text-sm font-semibold">App Store</div>
-                  </div>
-                </div>
-              </a>
-              <a 
-                href="#" 
-                className="block w-full bg-black hover:bg-gray-900 text-white px-4 py-2 rounded transition-colors text-sm"
-              >
-                <div className="flex items-center gap-2">
-                  <span className="text-xl">▶️</span>
-                  <div className="text-left">
-                    <div className="text-xs text-gray-400">GET IT ON</div>
-                    <div className="text-sm font-semibold">Google Play</div>
-                  </div>
-                </div>
-              </a>
+            {/* Column 5 - Are you a specialist */}
+            <div>
+              <h4 className="mb-6 text-lg font-medium">Are you a funeral specialist?</h4>
+              <ul className="space-y-3">
+                <li>
+                  <Link href="/learn-more-about-starting" className="text-white/60 hover:text-white transition-colors">
+                    List your availability on Soradin
+                  </Link>
+                </li>
+              </ul>
             </div>
           </div>
-        </div>
 
-        {/* Disclaimer */}
-        <div className="mb-8">
-          <p className="text-gray-400 text-xs leading-relaxed max-w-5xl">
-            The content provided here and elsewhere on the Soradin site or mobile app is provided for general informational purposes only. It is not intended as, and Soradin does not provide, medical advice, diagnosis or treatment. Always contact your healthcare provider directly with any questions you may have regarding your health or specific medical advice.
-          </p>
-        </div>
+          {/* Bottom section */}
+          <div className="border-t border-white/10 pt-10">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-6 mb-6">
+              <div className="flex items-center gap-3">
+                <Image
+                  src="/logo - white.png"
+                  alt="Soradin Logo"
+                  width={40}
+                  height={40}
+                  className="h-10 w-10 object-contain"
+                />
+                <span className="text-2xl font-medium">Soradin</span>
+              </div>
 
-        {/* Bottom section */}
-        <div className="border-t border-gray-700 pt-6 flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="flex items-center gap-6 text-sm">
-            <span className="text-gray-400">© {new Date().getFullYear()} Soradin, Inc.</span>
-            <Link href="/terms" className="text-gray-400 hover:text-[#0D5C3D] transition-colors">Terms</Link>
-            <Link href="/privacy" className="text-gray-400 hover:text-[#0D5C3D] transition-colors">Privacy</Link>
-            <a href="#" className="text-gray-400 hover:text-[#0D5C3D] transition-colors">Consumer Health</a>
-            <a href="#" className="text-gray-400 hover:text-[#0D5C3D] transition-colors inline-flex items-center gap-1">
-              <span className="text-lg">🔒</span>
-              Your privacy choices
-            </a>
-          </div>
-          <div className="flex gap-4">
-            <a href="#" className="text-gray-400 hover:text-[#0D5C3D] transition-colors">
-              <span className="text-xl">𝕏</span>
-            </a>
-            <a href="#" className="text-gray-400 hover:text-[#0D5C3D] transition-colors">
-              <span className="text-xl">📷</span>
-            </a>
-            <a href="#" className="text-gray-400 hover:text-[#0D5C3D] transition-colors">
-              <span className="text-xl">f</span>
-            </a>
-            <a href="#" className="text-gray-400 hover:text-[#0D5C3D] transition-colors">
-              <span className="text-xl">in</span>
-            </a>
+              <div className="flex gap-5">
+                <Link
+                  href="#"
+                  className="text-white/50 hover:text-white transition-colors"
+                  aria-label="Instagram"
+                >
+                  <Instagram className="w-5 h-5" />
+                </Link>
+                <Link
+                  href="https://www.facebook.com/profile.php?id=61583953961107"
+                  className="text-white/50 hover:text-white transition-colors"
+                  aria-label="Facebook"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Facebook className="w-5 h-5" />
+                </Link>
+              </div>
+            </div>
+
+            <div className="text-sm text-white/40 text-center md:text-left">
+              <p>
+                © {new Date().getFullYear()} Soradin, Inc.{" "}
+                <Link href="/terms" className="hover:text-white/60 transition-colors underline">
+                  Terms
+                </Link>
+                {" · "}
+                <Link href="/privacy" className="hover:text-white/60 transition-colors underline">
+                  Privacy
+                </Link>
+              </p>
+            </div>
           </div>
         </div>
       </div>
     </footer>
   );
 }
-
