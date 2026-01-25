@@ -34,7 +34,7 @@ export function SolutionsSection() {
           {solutions.map((solution, index) => (
             <div
               key={index}
-              className={`${solution.bgColor} p-6 rounded-2xl border border-gray-200 hover:border-[#0D5C3D] transition-all hover:shadow-lg group`}
+              className={`${solution.bgColor} p-6 rounded-2xl border border-gray-200 transition-all duration-300 ease-out hover:border-[#0D5C3D] hover:shadow-xl hover:shadow-black/10 hover:scale-[1.03] hover:-translate-y-1 group cursor-pointer`}
             >
               {solution.image ? (
                 <div className="mb-6 rounded-xl overflow-hidden">
