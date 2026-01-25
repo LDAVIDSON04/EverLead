@@ -40,8 +40,19 @@ function SearchChooseContent() {
 
   return (
     <div className="min-h-screen bg-[#FAF9F6]">
-      {/* Logo in top left */}
-      <div className="absolute top-6 left-6 sm:top-8 sm:left-8 lg:top-10 lg:left-10 z-10">
+      {/* Mobile only: logo in flow, top left above title */}
+      <div className="sm:hidden pt-6 pl-6 pb-2">
+        <Image
+          src="/Soradin.png"
+          alt="Soradin"
+          width={300}
+          height={100}
+          className="h-16 w-auto"
+          priority
+        />
+      </div>
+      {/* Desktop: logo absolute */}
+      <div className="absolute top-6 left-6 sm:top-8 sm:left-8 lg:top-10 lg:left-10 z-10 hidden sm:block">
         <Image
           src="/Soradin.png"
           alt="Soradin"
@@ -52,7 +63,7 @@ function SearchChooseContent() {
         />
       </div>
 
-      <div className="max-w-4xl mx-auto px-6 sm:px-8 py-12 sm:py-16">
+      <div className="max-w-4xl mx-auto px-6 sm:px-8 pt-4 sm:pt-12 pb-12 sm:pb-16 sm:py-16">
         <div className="text-center mb-6 sm:mb-8">
           <h1 className="text-4xl sm:text-5xl lg:text-5xl font-bold text-gray-900 mb-4 sm:mb-5 tracking-tight">
             How would you like to meet?
