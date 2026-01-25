@@ -38,27 +38,21 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Create meeting token with appropriate permissions
-    const tokenPayload: any = {
+    // Create meeting token with appropriate permissions (Daily API expects body.properties)
+    const properties: Record<string, unknown> = {
       room_name: safeName,
       is_owner: isOwner === true, // true for agents (hosts), false for customers (guests)
       enable_screenshare: true,
       start_video_off: false,
       start_audio_off: false,
     };
-
-    // Add user identification if provided
-    if (userName) {
-      tokenPayload.user_name = userName;
-    }
-    if (userId) {
-      tokenPayload.user_id = userId;
-    }
+    if (userName) properties.user_name = userName;
+    if (userId) properties.user_id = userId;
 
     const tokenRes = await fetch(`${DAILY_API_BASE}/meeting-tokens`, {
       method: "POST",
       headers,
-      body: JSON.stringify(tokenPayload),
+      body: JSON.stringify({ properties }),
     });
 
     if (!tokenRes.ok) {

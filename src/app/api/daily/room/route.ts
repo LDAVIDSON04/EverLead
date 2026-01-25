@@ -83,20 +83,20 @@ export async function GET(req: NextRequest) {
       
       // If role is "guest", generate a meeting token for them (they'll be in waiting room)
       if (role === "guest") {
-        const tokenPayload: any = {
+        const properties: Record<string, unknown> = {
           room_name: safeName,
           is_owner: false, // Guest, not owner
           enable_screenshare: true,
           start_video_off: false,
           start_audio_off: false,
         };
-        if (userName) tokenPayload.user_name = userName;
-        if (userId) tokenPayload.user_id = userId;
+        if (userName) properties.user_name = userName;
+        if (userId) properties.user_id = userId;
 
         const tokenRes = await fetch(`${DAILY_API_BASE}/meeting-tokens`, {
           method: "POST",
           headers,
-          body: JSON.stringify(tokenPayload),
+          body: JSON.stringify({ properties }),
         });
 
         if (!tokenRes.ok) {
@@ -116,20 +116,20 @@ export async function GET(req: NextRequest) {
 
       // For hosts (agents), generate owner token
       if (role === "host") {
-        const tokenPayload: any = {
+        const properties: Record<string, unknown> = {
           room_name: safeName,
           is_owner: true, // Host/owner can admit people from waiting room
           enable_screenshare: true,
           start_video_off: false,
           start_audio_off: false,
         };
-        if (userName) tokenPayload.user_name = userName;
-        if (userId) tokenPayload.user_id = userId;
+        if (userName) properties.user_name = userName;
+        if (userId) properties.user_id = userId;
 
         const tokenRes = await fetch(`${DAILY_API_BASE}/meeting-tokens`, {
           method: "POST",
           headers,
-          body: JSON.stringify(tokenPayload),
+          body: JSON.stringify({ properties }),
         });
 
         if (!tokenRes.ok) {
@@ -163,20 +163,20 @@ export async function GET(req: NextRequest) {
 
     // If room exists and role is specified, generate appropriate token
     if (role === "guest") {
-      const tokenPayload: any = {
+      const properties: Record<string, unknown> = {
         room_name: safeName,
         is_owner: false,
         enable_screenshare: true,
         start_video_off: false,
         start_audio_off: false,
       };
-      if (userName) tokenPayload.user_name = userName;
-      if (userId) tokenPayload.user_id = userId;
+      if (userName) properties.user_name = userName;
+      if (userId) properties.user_id = userId;
 
       const tokenRes = await fetch(`${DAILY_API_BASE}/meeting-tokens`, {
         method: "POST",
         headers,
-        body: JSON.stringify(tokenPayload),
+        body: JSON.stringify({ properties }),
       });
 
       if (tokenRes.ok) {
@@ -185,20 +185,20 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ url: urlWithToken, name: room.name, token: tokenData.token });
       }
     } else if (role === "host") {
-      const tokenPayload: any = {
+      const properties: Record<string, unknown> = {
         room_name: safeName,
         is_owner: true,
         enable_screenshare: true,
         start_video_off: false,
         start_audio_off: false,
       };
-      if (userName) tokenPayload.user_name = userName;
-      if (userId) tokenPayload.user_id = userId;
+      if (userName) properties.user_name = userName;
+      if (userId) properties.user_id = userId;
 
       const tokenRes = await fetch(`${DAILY_API_BASE}/meeting-tokens`, {
         method: "POST",
         headers,
-        body: JSON.stringify(tokenPayload),
+        body: JSON.stringify({ properties }),
       });
 
       if (tokenRes.ok) {
