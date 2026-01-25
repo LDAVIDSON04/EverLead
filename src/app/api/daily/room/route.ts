@@ -6,9 +6,16 @@ const DAILY_API_BASE = "https://api.daily.co/v1";
 export async function GET(req: NextRequest) {
   try {
     const name = req.nextUrl.searchParams.get("name");
-    const role = req.nextUrl.searchParams.get("role"); // "host" (agent) or "guest" (customer)
+    let role = req.nextUrl.searchParams.get("role"); // "host" (agent) or "guest" (customer)
     const userName = req.nextUrl.searchParams.get("userName");
     const userId = req.nextUrl.searchParams.get("userId");
+
+    // Agent fallback: for appointment rooms, "Agent | ..." identity is always the host (fixes missing role in URL)
+    const isAppointmentRoom = typeof name === "string" && name.startsWith("appointment-");
+    const isAgentIdentity = typeof userName === "string" && userName.startsWith("Agent | ");
+    if (isAppointmentRoom && isAgentIdentity && role !== "guest") {
+      role = "host";
+    }
 
     if (!name || typeof name !== "string") {
       return NextResponse.json(
