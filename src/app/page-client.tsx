@@ -788,7 +788,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
       <section className="py-24 px-4 bg-[#FAF9F6]">
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
-            <div className="order-1 lg:order-1 text-center lg:text-left">
+            <div className="order-2 lg:order-1 text-center lg:text-left">
               <h2 className="text-5xl mb-6 text-[#1A1A1A] font-semibold tracking-tight leading-tight">
                 Trusted by agents from top funeral homes
               </h2>
@@ -802,7 +802,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                 Find care
               </button>
             </div>
-            <div className="relative w-full order-2 lg:order-2 flex items-center justify-center h-full">
+            <div className="relative w-full order-1 lg:order-2 flex items-center justify-center h-full">
               <div className="flex flex-col gap-12 w-full items-center justify-center">
                 <div className="flex items-center justify-center gap-10">
                   {[1, 2, 3].map((index) => (
