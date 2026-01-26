@@ -15,7 +15,7 @@ export default function HelpPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Header & Hero Section Combined */}
-      <section className="relative bg-gradient-to-br from-[#0C6F3C] to-[#0a5a2e] px-6 overflow-hidden">
+      <section className="relative bg-gradient-to-br from-[#0C6F3C] to-[#0a5a2e] px-6 overflow-hidden flex flex-col md:min-h-[280px]">
         {/* Pattern overlay */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute inset-0" style={{
@@ -60,8 +60,8 @@ export default function HelpPage() {
           </div>
         </header>
 
-        {/* Hero Content */}
-        <div className="max-w-3xl mx-auto relative z-10 pb-4">
+        {/* Hero Content - vertically centered in green block on desktop */}
+        <div className="max-w-3xl mx-auto relative z-10 pb-6 md:pb-0 md:flex-1 md:flex md:items-center md:justify-center">
           <h1 className="text-3xl md:text-4xl font-bold text-white text-center">
             How can we help?
           </h1>
