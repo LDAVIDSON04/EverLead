@@ -41,7 +41,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
   const rotatingTexts = [
     "funeral pre planners",
     "estate lawyers",
-    "life insurance",
+    "life insurance agents",
   ];
   const [currentTextIndex, setCurrentTextIndex] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
@@ -305,7 +305,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
             <h1 className="text-6xl md:text-6xl text-2xl md:mb-8 mb-3 text-[#1A1A1A] font-semibold tracking-tight leading-none text-center md:text-left" style={{ paddingTop: '4px' }}>
               {/* Mobile: Static text - no animation for better performance */}
               <span className="md:hidden">Book local {rotatingTexts[0]}</span>
-              {/* Desktop: "Book local" (fixed) + rotating (funeral pre planners | estate lawyers | life insurance) */}
+              {/* Desktop: "Book local" (fixed) + rotating (funeral pre planners | estate lawyers | life insurance agents) */}
               <span className="hidden md:block">
                 <span className="block">Book local</span>
                 <span className="block relative" style={{ minHeight: '1.2em', height: '1.2em' }}>
