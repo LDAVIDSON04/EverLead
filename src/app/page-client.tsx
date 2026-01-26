@@ -533,7 +533,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
       </div>
 
       {/* TWO BOXES SECTION */}
-      <section className="py-24 px-4 bg-white">
+      <section className="py-24 px-4 bg-[#0C6F3C]/12">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-5xl mb-16 text-[#1A1A1A] font-semibold tracking-tight text-center">
             Let&apos;s connect you with the right person
