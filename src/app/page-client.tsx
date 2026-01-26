@@ -304,8 +304,8 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
           <div className="max-w-4xl">
             <h1 className="text-6xl md:text-6xl text-2xl md:mb-8 mb-3 text-[#1A1A1A] font-semibold tracking-tight leading-none text-center md:text-left" style={{ paddingTop: '4px' }}>
               {/* Mobile: Static text - no animation for better performance */}
-              <span className="md:hidden">Book local meetings from the comfort of your home.</span>
-              {/* Desktop: "Book local" (fixed) + rotating (funeral pre planners | estate lawyers | life insurance) + "meetings from the comfort of your home." (fixed) */}
+              <span className="md:hidden">Book local {rotatingTexts[0]}</span>
+              {/* Desktop: "Book local" (fixed) + rotating (funeral pre planners | estate lawyers | life insurance) */}
               <span className="hidden md:block">
                 <span className="block">Book local</span>
                 <span className="block relative" style={{ minHeight: '1.2em', height: '1.2em' }}>
@@ -318,7 +318,6 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                   </span>
                   <span className="invisible">{rotatingTexts.reduce((a, b) => a.length > b.length ? a : b)}</span>
                 </span>
-                <span className="block">meetings from the comfort of your home.</span>
               </span>
             </h1>
 
