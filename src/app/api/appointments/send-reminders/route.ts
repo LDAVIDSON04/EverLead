@@ -56,7 +56,7 @@ export async function GET(req: NextRequest) {
     const inPersonReminderWindowStart = now.plus({ hours: 1, minutes: 5 }).toISO();
     const inPersonReminderWindowEnd = now.plus({ hours: 1, minutes: -5 }).toISO();
 
-    // Get all confirmed appointments in the reminder windows
+    // Get all confirmed appointments in the reminder windows (include reminder_sent_at to avoid duplicates)
     const { data: appointments, error: appointmentsError } = await supabaseAdmin
       .from("appointments")
       .select(`
@@ -66,7 +66,9 @@ export async function GET(req: NextRequest) {
         requested_date,
         confirmed_at,
         status,
-        office_location_id
+        office_location_id,
+        reminder_1h_sent_at,
+        reminder_10m_sent_at
       `)
       .eq("status", "confirmed")
       .gte("confirmed_at", videoReminderWindowEnd) // Start of earliest window (in-person)
@@ -101,9 +103,9 @@ export async function GET(req: NextRequest) {
         const minutesUntil = appointmentTime.diff(now, "minutes").minutes;
         const appointmentType = getAppointmentType(appointment);
 
-        // Note: We can't check if reminder was already sent since appointments table doesn't have notes column
-        // This means reminders might be sent multiple times. In production, you'd want to add a reminder_sent_at column
-        // For now, we'll rely on the time window check to prevent duplicates (only send once per window)
+        // Check if we already sent this reminder (prevents duplicate texts when cron runs every minute)
+        const alreadySent1h = appointment.reminder_1h_sent_at != null;
+        const alreadySent10m = appointment.reminder_10m_sent_at != null;
 
         // Check if this appointment is in the right window for its type
         const isVideoReminderTime = appointmentType === "video" && minutesUntil >= 9 && minutesUntil <= 11;
@@ -112,6 +114,8 @@ export async function GET(req: NextRequest) {
         if (!isVideoReminderTime && !isInPersonReminderTime) {
           continue; // Not time for this appointment's reminder yet
         }
+        if (isVideoReminderTime && alreadySent10m) continue; // Already sent video reminder
+        if (isInPersonReminderTime && alreadySent1h) continue; // Already sent in-person reminder
 
         // Fetch lead and agent data
         const [leadResult, agentResult] = await Promise.all([
@@ -176,6 +180,10 @@ export async function GET(req: NextRequest) {
           }
 
           videoRemindersSent++;
+          await supabaseAdmin
+            .from("appointments")
+            .update({ reminder_10m_sent_at: now.toISO() })
+            .eq("id", appointment.id);
         } else if (isInPersonReminderTime && appointmentType === "in-person") {
           // Send to consumer
           if (lead.phone) {
@@ -204,12 +212,11 @@ export async function GET(req: NextRequest) {
           }
 
           inPersonRemindersSent++;
+          await supabaseAdmin
+            .from("appointments")
+            .update({ reminder_1h_sent_at: now.toISO() })
+            .eq("id", appointment.id);
         }
-
-        // Note: Can't mark reminder as sent since appointments table doesn't have notes column
-        // In production, you'd want to add a reminder_sent_at timestamp column to track this
-        // For now, we rely on the time window check (9-11 min for video, 55-65 min for in-person)
-        // which naturally prevents duplicates since the window is only 2-10 minutes wide
 
       } catch (error: any) {
         console.error(`Error processing reminder for appointment ${appointment.id}:`, error);
