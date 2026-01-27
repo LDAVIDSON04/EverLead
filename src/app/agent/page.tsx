@@ -164,7 +164,12 @@ export default function AgentLandingPage() {
 
         if (signInError || !data.user) {
           console.error(signInError);
-          setError(signInError?.message || "Invalid login credentials.");
+          const msg = signInError?.message ?? "Invalid login credentials.";
+          if (msg.toLowerCase().includes("email not confirmed")) {
+            setError("Please confirm your email before logging in. Check your inbox for the confirmation link.");
+          } else {
+            setError(msg);
+          }
           setSubmitting(false);
           return;
         }
@@ -177,7 +182,15 @@ export default function AgentLandingPage() {
 
         if (profileError || !profile) {
           console.error(profileError);
-          setError("Failed to load profile.");
+          setError(
+            "Failed to load profile. Admins: ensure your account has a profile row with role 'admin' in the database."
+          );
+          setSubmitting(false);
+          return;
+        }
+
+        if (profile.role !== "agent" && profile.role !== "admin") {
+          setError("Your account role is not set up for login. Contact support.");
           setSubmitting(false);
           return;
         }
@@ -691,6 +704,9 @@ export default function AgentLandingPage() {
               <div className="pt-8">
                 {mode === "login" && !showForgotPassword && (
                   <div className="space-y-2">
+                    <p className="text-zinc-600 text-center text-sm">
+                      Admin? Use this form too — you&apos;ll be redirected to the admin portal.
+                    </p>
                     <p className="text-zinc-700 text-center">
                       Don't have an account?{' '}
                       <Link
