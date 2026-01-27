@@ -35,6 +35,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
   const [locationSuggestions, setLocationSuggestions] = useState<string[]>([]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [specialtiesModalOpen, setSpecialtiesModalOpen] = useState(false);
   const citiesRef = useRef<string[] | null>(null);
 
   // Rotating text for hero title - deferred for mobile performance
@@ -188,7 +189,11 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
           <div className="flex items-center gap-6">
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center gap-10">
-              <button type="button" className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors text-lg font-medium bg-transparent border-none cursor-pointer">
+              <button 
+                type="button" 
+                onClick={() => setSpecialtiesModalOpen(true)}
+                className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors text-lg font-medium bg-transparent border-none cursor-pointer"
+              >
                 Specialties
               </button>
               <Link href="/help" className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors text-lg font-medium">
@@ -1001,6 +1006,81 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
           </div>
         </div>
       </footer>
+
+      {/* Specialties Modal */}
+      {specialtiesModalOpen && (
+        <>
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 bg-black/50 z-50"
+            onClick={() => setSpecialtiesModalOpen(false)}
+          />
+          {/* Modal */}
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto relative">
+              {/* Header */}
+              <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-2xl">
+                <h2 className="text-2xl font-semibold text-[#1A1A1A]">Browse top specialties</h2>
+                <button
+                  onClick={() => setSpecialtiesModalOpen(false)}
+                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                  aria-label="Close modal"
+                >
+                  <X className="w-5 h-5 text-[#1A1A1A]" />
+                </button>
+              </div>
+              
+              {/* Content */}
+              <div className="px-6 py-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <Link 
+                    href="/search/choose?q=Funeral Pre Planner" 
+                    onClick={() => setSpecialtiesModalOpen(false)}
+                    className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors underline text-base"
+                  >
+                    Funeral Pre Planner
+                  </Link>
+                  <Link 
+                    href="/search/choose?q=Advanced Planning Director" 
+                    onClick={() => setSpecialtiesModalOpen(false)}
+                    className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors underline text-base"
+                  >
+                    Advanced Planning Director
+                  </Link>
+                  <Link 
+                    href="/search/choose?q=Estate Lawyer" 
+                    onClick={() => setSpecialtiesModalOpen(false)}
+                    className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors underline text-base"
+                  >
+                    Estate Lawyer
+                  </Link>
+                  <Link 
+                    href="/search/choose?q=Will Lawyer" 
+                    onClick={() => setSpecialtiesModalOpen(false)}
+                    className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors underline text-base"
+                  >
+                    Will Lawyer
+                  </Link>
+                  <Link 
+                    href="/search/choose?q=Life Insurance Broker" 
+                    onClick={() => setSpecialtiesModalOpen(false)}
+                    className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors underline text-base"
+                  >
+                    Life Insurance Broker
+                  </Link>
+                  <Link 
+                    href="/search/choose?q=Financial Advisors" 
+                    onClick={() => setSpecialtiesModalOpen(false)}
+                    className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors underline text-base"
+                  >
+                    Financial Advisors
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </main>
   );
 }
