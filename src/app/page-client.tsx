@@ -180,7 +180,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                 fetchPriority="high"
                 sizes="(max-width: 768px) 64px, 80px"
               />
-              <span className="text-sm md:text-2xl font-semibold text-[#1A1A1A]">Soradin. Estate Planning, Simplified.</span>
+              <span className="text-sm md:text-2xl font-semibold text-[#1A1A1A]">Soradin - Estate Planning, Simplified</span>
             </Link>
           </div>
 
@@ -234,7 +234,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                         height={80}
                         className="h-12 w-12 object-contain"
                       />
-                      <span className="text-base font-semibold text-[#1A1A1A]">Soradin. Estate Planning, Simplified.</span>
+                      <span className="text-base font-semibold text-[#1A1A1A]">Soradin - Estate Planning, Simplified</span>
                     </div>
                     <button
                       onClick={() => setMobileMenuOpen(false)}
