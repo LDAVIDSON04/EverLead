@@ -219,10 +219,21 @@ export default function AgentLandingPage() {
           console.error("Profile fetch failed:", profileError);
           console.error("User ID:", data.user.id);
           console.error("User email:", data.user.email);
-          setError(
-            `Failed to load profile. ${profileError?.message || 'Unknown error'}. ` +
-            `Admins: ensure your account has a profile row with role 'admin' where id matches your user ID.`
-          );
+          
+          let errorMsg = `Failed to load profile. `;
+          if (profileError?.message) {
+            errorMsg += profileError.message;
+          } else if (typeof profileError === 'object' && 'error' in profileError) {
+            errorMsg += (profileError as any).error || 'Profile not found';
+          } else {
+            errorMsg += 'Profile not found in database.';
+          }
+          
+          errorMsg += `\n\nYour User ID: ${data.user.id}\nYour Email: ${data.user.email}\n\n`;
+          errorMsg += `To fix: Run this SQL in Supabase SQL Editor:\n`;
+          errorMsg += `INSERT INTO profiles (id, role, full_name, email) VALUES ('${data.user.id}', 'admin', 'Admin User', '${data.user.email}') ON CONFLICT (id) DO UPDATE SET role = 'admin';`;
+          
+          setError(errorMsg);
           setSubmitting(false);
           return;
         }

@@ -31,26 +31,38 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Server configuration error" }, { status: 500 });
     }
 
-    const { data: profile, error: profileError } = await supabaseAdmin
+    // First, check if ANY profile exists for this user ID
+    const { data: allProfiles, error: checkError } = await supabaseAdmin
       .from("profiles")
-      .select("role, approval_status, full_name, email")
-      .eq("id", user.id)
-      .maybeSingle();
+      .select("id, role, approval_status, full_name, email")
+      .eq("id", user.id);
 
-    if (profileError) {
-      console.error("Error fetching profile:", profileError);
+    if (checkError) {
+      console.error("Error checking profiles:", checkError);
       return NextResponse.json(
-        { error: "Failed to fetch profile", details: profileError.message },
+        { error: "Database error", details: checkError.message, userId: user.id },
         { status: 500 }
       );
     }
 
-    if (!profile) {
+    console.log(`[PROFILE API] User ${user.id} (${user.email}): Found ${allProfiles?.length || 0} profile(s)`);
+
+    if (!allProfiles || allProfiles.length === 0) {
+      // Check if user exists in auth but no profile - this is the issue
       return NextResponse.json(
-        { error: "Profile not found", userId: user.id },
+        { 
+          error: "Profile not found", 
+          userId: user.id,
+          userEmail: user.email,
+          message: `No profile row found for user ID ${user.id}. Please create a profile with role 'admin' in the profiles table.`
+        },
         { status: 404 }
       );
     }
+
+    const profile = allProfiles[0];
+    
+    console.log(`[PROFILE API] Profile found: role=${profile.role}, approval_status=${profile.approval_status}`);
 
     return NextResponse.json({ profile });
   } catch (error) {
