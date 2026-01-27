@@ -48,16 +48,43 @@ export async function GET(request: NextRequest) {
     console.log(`[PROFILE API] User ${user.id} (${user.email}): Found ${allProfiles?.length || 0} profile(s)`);
 
     if (!allProfiles || allProfiles.length === 0) {
-      // Check if user exists in auth but no profile - this is the issue
-      return NextResponse.json(
-        { 
-          error: "Profile not found", 
-          userId: user.id,
-          userEmail: user.email,
-          message: `No profile row found for user ID ${user.id}. Please create a profile with role 'admin' in the profiles table.`
-        },
-        { status: 404 }
-      );
+      // Auto-create profile if missing - check if user email suggests admin
+      const isAdminEmail = user.email?.toLowerCase().includes('admin') || 
+                          user.email?.toLowerCase().includes('soradin.com');
+      
+      const defaultRole = isAdminEmail ? 'admin' : 'agent';
+      const defaultApprovalStatus = isAdminEmail ? 'approved' : 'pending';
+      
+      console.log(`[PROFILE API] Auto-creating profile for user ${user.id} with role ${defaultRole}`);
+      
+      const { data: newProfile, error: createError } = await supabaseAdmin
+        .from("profiles")
+        .insert({
+          id: user.id,
+          role: defaultRole,
+          full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+          email: user.email || '',
+          approval_status: defaultApprovalStatus,
+        })
+        .select("role, approval_status, full_name, email")
+        .single();
+
+      if (createError || !newProfile) {
+        console.error("Error auto-creating profile:", createError);
+        return NextResponse.json(
+          { 
+            error: "Profile not found and could not be created", 
+            userId: user.id,
+            userEmail: user.email,
+            createError: createError?.message,
+            message: `No profile found. Tried to auto-create but failed. Please run: INSERT INTO profiles (id, role, full_name, email, approval_status) VALUES ('${user.id}', 'admin', 'Admin User', '${user.email}', 'approved') ON CONFLICT (id) DO UPDATE SET role = 'admin';`
+          },
+          { status: 404 }
+        );
+      }
+
+      console.log(`[PROFILE API] Successfully auto-created profile with role ${newProfile.role}`);
+      return NextResponse.json({ profile: newProfile });
     }
 
     const profile = allProfiles[0];
