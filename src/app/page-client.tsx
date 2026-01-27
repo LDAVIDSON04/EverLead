@@ -167,9 +167,9 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
       {/* HEADER */}
       <header className="bg-[#FAF9F6] py-5 px-4 relative z-30 overflow-visible">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          {/* Logo and Name - Mobile: text next to, Desktop: original layout (text next to) */}
+          {/* Logo and Name - not clickable, same font as nav */}
           <div className="flex items-center gap-3">
-            <Link href="/" className="flex items-center gap-3">
+            <div className="flex items-center gap-3 cursor-default">
               <Image
                 src="/Soradin.png"
                 alt="Soradin Logo"
@@ -180,11 +180,8 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                 fetchPriority="high"
                 sizes="(max-width: 768px) 64px, 80px"
               />
-              <span className="text-[#1A1A1A]">
-                <span className="text-sm md:text-2xl font-semibold">Soradin</span>
-                <span className="text-sm md:text-lg font-medium ml-0.5"> - Estate Planning, Simplified</span>
-              </span>
-            </Link>
+              <span className="text-sm md:text-lg font-medium text-[#1A1A1A]">Soradin - Estate Planning, Simplified</span>
+            </div>
           </div>
 
           {/* Right Side Navigation - Desktop: original layout, Mobile: Hamburger menu */}
@@ -229,7 +226,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                 {/* Header */}
                 <div className="px-4 py-5 bg-[#FAF9F6]">
                   <div className="flex items-center justify-between max-w-7xl mx-auto">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 cursor-default">
                       <Image
                         src="/Soradin.png"
                         alt="Soradin Logo"
@@ -237,10 +234,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                         height={80}
                         className="h-12 w-12 object-contain"
                       />
-                      <span className="text-[#1A1A1A]">
-                        <span className="text-base font-semibold">Soradin</span>
-                        <span className="text-base font-medium ml-0.5"> - Estate Planning, Simplified</span>
-                      </span>
+                      <span className="text-base font-medium text-[#1A1A1A]">Soradin - Estate Planning, Simplified</span>
                     </div>
                     <button
                       onClick={() => setMobileMenuOpen(false)}
