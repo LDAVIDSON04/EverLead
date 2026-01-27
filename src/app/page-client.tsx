@@ -1007,85 +1007,89 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
         </div>
       </footer>
 
-      {/* Specialties Modal */}
+      {/* Specialties Modal - Zocdoc-style */}
       {specialtiesModalOpen && (
         <>
-          {/* Backdrop */}
           <div 
-            className="fixed inset-0 bg-black/50 z-50 backdrop-blur-sm"
+            className="fixed inset-0 bg-black/40 z-50"
             onClick={() => setSpecialtiesModalOpen(false)}
           />
-          {/* Modal */}
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8">
-            <div className="bg-white rounded-3xl shadow-2xl max-w-5xl w-full max-h-[85vh] overflow-y-auto relative">
-              {/* Header */}
-              <div className="sticky top-0 bg-white border-b border-gray-100 px-8 py-6 flex items-center justify-between rounded-t-3xl z-10">
-                <h2 className="text-3xl md:text-4xl font-semibold text-[#1A1A1A]">Browse top specialties</h2>
+          <div className="fixed inset-0 z-50 flex justify-center pt-20 md:pt-24 px-4 md:px-8 pointer-events-none">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[75vh] overflow-y-auto pointer-events-auto">
+              {/* Tabs + Close */}
+              <div className="flex items-start justify-between gap-4 border-b border-gray-200 px-6 pt-5 pb-0">
+                <div className="flex gap-8">
+                  <button
+                    type="button"
+                    className="pb-4 text-base font-medium text-[#1A1A1A] border-b-2 border-[#1A1A1A] -mb-px"
+                  >
+                    Specialties
+                  </button>
+                  <button
+                    type="button"
+                    className="pb-4 text-base font-medium text-gray-400 border-b-2 border-transparent -mb-px cursor-default"
+                  >
+                    Procedures
+                  </button>
+                </div>
                 <button
                   onClick={() => setSpecialtiesModalOpen(false)}
-                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                  className="p-2 bg-gray-200 hover:bg-gray-300 rounded-full transition-colors shrink-0"
                   aria-label="Close modal"
                 >
-                  <X className="w-6 h-6 text-[#1A1A1A]" />
+                  <X className="w-5 h-5 text-[#1A1A1A]" />
                 </button>
               </div>
-              
-              {/* Content */}
-              <div className="px-8 py-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+              {/* Title */}
+              <div className="px-6 pt-6">
+                <h2 className="text-xl font-semibold text-[#1A1A1A]">Browse top specialties</h2>
+              </div>
+
+              {/* 3-column grid of links */}
+              <div className="px-6 py-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-3">
                   <Link 
                     href="/search/choose?q=Funeral Pre Planner" 
                     onClick={() => setSpecialtiesModalOpen(false)}
-                    className="group bg-[#FAF9F6] hover:bg-[#0C6F3C] border border-[#1A1A1A]/10 hover:border-[#0C6F3C] rounded-xl p-6 transition-all duration-300 hover:shadow-lg hover:scale-[1.02]"
+                    className="text-blue-600 hover:text-blue-800 underline text-[15px] py-1"
                   >
-                    <span className="text-lg font-medium text-[#1A1A1A] group-hover:text-white transition-colors">
-                      Funeral Pre Planner
-                    </span>
+                    Funeral Pre Planner
                   </Link>
                   <Link 
                     href="/search/choose?q=Advanced Planning Director" 
                     onClick={() => setSpecialtiesModalOpen(false)}
-                    className="group bg-[#FAF9F6] hover:bg-[#0C6F3C] border border-[#1A1A1A]/10 hover:border-[#0C6F3C] rounded-xl p-6 transition-all duration-300 hover:shadow-lg hover:scale-[1.02]"
+                    className="text-blue-600 hover:text-blue-800 underline text-[15px] py-1"
                   >
-                    <span className="text-lg font-medium text-[#1A1A1A] group-hover:text-white transition-colors">
-                      Advanced Planning Director
-                    </span>
+                    Advanced Planning Director
                   </Link>
                   <Link 
                     href="/search/choose?q=Estate Lawyer" 
                     onClick={() => setSpecialtiesModalOpen(false)}
-                    className="group bg-[#FAF9F6] hover:bg-[#0C6F3C] border border-[#1A1A1A]/10 hover:border-[#0C6F3C] rounded-xl p-6 transition-all duration-300 hover:shadow-lg hover:scale-[1.02]"
+                    className="text-blue-600 hover:text-blue-800 underline text-[15px] py-1"
                   >
-                    <span className="text-lg font-medium text-[#1A1A1A] group-hover:text-white transition-colors">
-                      Estate Lawyer
-                    </span>
+                    Estate Lawyer
                   </Link>
                   <Link 
                     href="/search/choose?q=Will Lawyer" 
                     onClick={() => setSpecialtiesModalOpen(false)}
-                    className="group bg-[#FAF9F6] hover:bg-[#0C6F3C] border border-[#1A1A1A]/10 hover:border-[#0C6F3C] rounded-xl p-6 transition-all duration-300 hover:shadow-lg hover:scale-[1.02]"
+                    className="text-blue-600 hover:text-blue-800 underline text-[15px] py-1"
                   >
-                    <span className="text-lg font-medium text-[#1A1A1A] group-hover:text-white transition-colors">
-                      Will Lawyer
-                    </span>
+                    Will Lawyer
                   </Link>
                   <Link 
                     href="/search/choose?q=Life Insurance Broker" 
                     onClick={() => setSpecialtiesModalOpen(false)}
-                    className="group bg-[#FAF9F6] hover:bg-[#0C6F3C] border border-[#1A1A1A]/10 hover:border-[#0C6F3C] rounded-xl p-6 transition-all duration-300 hover:shadow-lg hover:scale-[1.02]"
+                    className="text-blue-600 hover:text-blue-800 underline text-[15px] py-1"
                   >
-                    <span className="text-lg font-medium text-[#1A1A1A] group-hover:text-white transition-colors">
-                      Life Insurance Broker
-                    </span>
+                    Life Insurance Broker
                   </Link>
                   <Link 
                     href="/search/choose?q=Financial Advisors" 
                     onClick={() => setSpecialtiesModalOpen(false)}
-                    className="group bg-[#FAF9F6] hover:bg-[#0C6F3C] border border-[#1A1A1A]/10 hover:border-[#0C6F3C] rounded-xl p-6 transition-all duration-300 hover:shadow-lg hover:scale-[1.02]"
+                    className="text-blue-600 hover:text-blue-800 underline text-[15px] py-1"
                   >
-                    <span className="text-lg font-medium text-[#1A1A1A] group-hover:text-white transition-colors">
-                      Financial Advisors
-                    </span>
+                    Financial Advisors
                   </Link>
                 </div>
               </div>
