@@ -35,7 +35,6 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
   const [locationSuggestions, setLocationSuggestions] = useState<string[]>([]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [specialtiesModalOpen, setSpecialtiesModalOpen] = useState(false);
   const citiesRef = useRef<string[] | null>(null);
 
   // Rotating text for hero title - deferred for mobile performance
@@ -189,13 +188,9 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
           <div className="flex items-center gap-6">
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center gap-10">
-              <button 
-                type="button" 
-                onClick={() => setSpecialtiesModalOpen(true)}
-                className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors text-lg font-medium bg-transparent border-none cursor-pointer"
-              >
-                Specialties
-              </button>
+              <Link href="/about" className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors text-lg font-medium">
+                About Us
+              </Link>
               <Link href="/help" className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors text-lg font-medium">
                 Help
               </Link>
@@ -1006,97 +1001,6 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
           </div>
         </div>
       </footer>
-
-      {/* Specialties Modal - Zocdoc-style */}
-      {specialtiesModalOpen && (
-        <>
-          <div 
-            className="fixed inset-0 bg-black/40 z-50"
-            onClick={() => setSpecialtiesModalOpen(false)}
-          />
-          <div className="fixed inset-0 z-50 flex justify-center pt-20 md:pt-24 px-4 md:px-8 pointer-events-none">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[75vh] overflow-y-auto pointer-events-auto">
-              {/* Tabs + Close */}
-              <div className="flex items-start justify-between gap-4 border-b border-gray-200 px-6 pt-5 pb-0">
-                <div className="flex gap-8">
-                  <button
-                    type="button"
-                    className="pb-4 text-base font-medium text-[#1A1A1A] border-b-2 border-[#1A1A1A] -mb-px"
-                  >
-                    Specialties
-                  </button>
-                  <button
-                    type="button"
-                    className="pb-4 text-base font-medium text-gray-400 border-b-2 border-transparent -mb-px cursor-default"
-                  >
-                    Procedures
-                  </button>
-                </div>
-                <button
-                  onClick={() => setSpecialtiesModalOpen(false)}
-                  className="p-2 bg-gray-200 hover:bg-gray-300 rounded-full transition-colors shrink-0"
-                  aria-label="Close modal"
-                >
-                  <X className="w-5 h-5 text-[#1A1A1A]" />
-                </button>
-              </div>
-
-              {/* Title */}
-              <div className="px-6 pt-6">
-                <h2 className="text-xl font-semibold text-[#1A1A1A]">Browse top specialties</h2>
-              </div>
-
-              {/* 3-column grid of links */}
-              <div className="px-6 py-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-3">
-                  <Link 
-                    href="/search/choose?q=Funeral Pre Planner" 
-                    onClick={() => setSpecialtiesModalOpen(false)}
-                    className="text-blue-600 hover:text-blue-800 underline text-[15px] py-1"
-                  >
-                    Funeral Pre Planner
-                  </Link>
-                  <Link 
-                    href="/search/choose?q=Advanced Planning Director" 
-                    onClick={() => setSpecialtiesModalOpen(false)}
-                    className="text-blue-600 hover:text-blue-800 underline text-[15px] py-1"
-                  >
-                    Advanced Planning Director
-                  </Link>
-                  <Link 
-                    href="/search/choose?q=Estate Lawyer" 
-                    onClick={() => setSpecialtiesModalOpen(false)}
-                    className="text-blue-600 hover:text-blue-800 underline text-[15px] py-1"
-                  >
-                    Estate Lawyer
-                  </Link>
-                  <Link 
-                    href="/search/choose?q=Will Lawyer" 
-                    onClick={() => setSpecialtiesModalOpen(false)}
-                    className="text-blue-600 hover:text-blue-800 underline text-[15px] py-1"
-                  >
-                    Will Lawyer
-                  </Link>
-                  <Link 
-                    href="/search/choose?q=Life Insurance Broker" 
-                    onClick={() => setSpecialtiesModalOpen(false)}
-                    className="text-blue-600 hover:text-blue-800 underline text-[15px] py-1"
-                  >
-                    Life Insurance Broker
-                  </Link>
-                  <Link 
-                    href="/search/choose?q=Financial Advisors" 
-                    onClick={() => setSpecialtiesModalOpen(false)}
-                    className="text-blue-600 hover:text-blue-800 underline text-[15px] py-1"
-                  >
-                    Financial Advisors
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
-        </>
-      )}
     </main>
   );
 }

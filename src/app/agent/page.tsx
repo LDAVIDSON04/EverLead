@@ -174,16 +174,54 @@ export default function AgentLandingPage() {
           return;
         }
 
-        const { data: profile, error: profileError } = await supabaseClient
-          .from("profiles")
-          .select("role, approval_status")
-          .eq("id", data.user.id)
-          .maybeSingle();
+        // Fetch profile - use API route that bypasses RLS to avoid circular dependency issues
+        let profile: { role: string; approval_status?: string } | null = null;
+        let profileError: any = null;
+
+        try {
+          // First try direct query (works for most users)
+          const { data: profileData, error: profileErr } = await supabaseClient
+            .from("profiles")
+            .select("role, approval_status")
+            .eq("id", data.user.id)
+            .maybeSingle();
+
+          if (!profileErr && profileData) {
+            profile = profileData;
+          } else {
+            // If direct query fails (e.g., RLS issue), use API route that bypasses RLS
+            console.log("Direct profile query failed, using API fallback:", profileErr);
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session?.access_token) {
+              const apiResponse = await fetch("/api/auth/profile", {
+                headers: {
+                  Authorization: `Bearer ${session.access_token}`,
+                },
+              });
+
+              if (apiResponse.ok) {
+                const apiData = await apiResponse.json();
+                profile = apiData.profile;
+              } else {
+                const apiError = await apiResponse.json();
+                profileError = new Error(apiError.error || "Failed to fetch profile");
+              }
+            } else {
+              profileError = profileErr || new Error("No session token available");
+            }
+          }
+        } catch (err) {
+          console.error("Error fetching profile:", err);
+          profileError = err;
+        }
 
         if (profileError || !profile) {
-          console.error(profileError);
+          console.error("Profile fetch failed:", profileError);
+          console.error("User ID:", data.user.id);
+          console.error("User email:", data.user.email);
           setError(
-            "Failed to load profile. Admins: ensure your account has a profile row with role 'admin' in the database."
+            `Failed to load profile. ${profileError?.message || 'Unknown error'}. ` +
+            `Admins: ensure your account has a profile row with role 'admin' where id matches your user ID.`
           );
           setSubmitting(false);
           return;
