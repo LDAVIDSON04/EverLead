@@ -753,9 +753,6 @@ export default function AgentLandingPage() {
               <div className="pt-8">
                 {mode === "login" && !showForgotPassword && (
                   <div className="space-y-2">
-                    <p className="text-zinc-600 text-center text-sm">
-                      Admin? Use this form too — you&apos;ll be redirected to the admin portal.
-                    </p>
                     <p className="text-zinc-700 text-center">
                       Don't have an account?{' '}
                       <Link
