@@ -304,26 +304,22 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
           {/* Headline and Search Bar - Full Width */}
           <div className="max-w-4xl">
             <h1 className="text-6xl md:text-6xl text-2xl md:mb-8 mb-3 text-[#1A1A1A] font-semibold tracking-tight leading-none text-center md:text-left" style={{ paddingTop: '4px' }}>
-              {/* Mobile: Static text - no animation for better performance */}
-              <span className="md:hidden">Book Local {rotatingTexts[0]}</span>
-              {/* Desktop: "Book Local" (fixed) + rotating (Funeral Pre Planners | Estate Lawyers | Life Insurance Brokers) */}
-              <span className="hidden md:block">
-                <span className="block">Book Local</span>
-                <span className="block relative" style={{ minHeight: '1.2em', height: '1.2em' }}>
-                  <span
-                    className={`absolute left-0 top-0 transition-opacity duration-500 ease-in-out ${
-                      isVisible ? 'opacity-100' : 'opacity-0'
-                    }`}
-                  >
-                    {rotatingTexts[currentTextIndex]}
-                  </span>
-                  <span className="invisible">{rotatingTexts.reduce((a, b) => a.length > b.length ? a : b)}</span>
+              {/* "Book Local" fixed + rotating (same on mobile and desktop so search bar doesn't move) */}
+              <span className="block">Book Local</span>
+              <span className="block relative" style={{ minHeight: '1.2em', height: '1.2em' }}>
+                <span
+                  className={`absolute left-0 top-0 transition-opacity duration-500 ease-in-out text-center md:text-left w-full md:w-auto ${
+                    isVisible ? 'opacity-100' : 'opacity-0'
+                  }`}
+                >
+                  {rotatingTexts[currentTextIndex]}
                 </span>
+                <span className="invisible block text-center md:text-left">{rotatingTexts.reduce((a, b) => a.length > b.length ? a : b)}</span>
               </span>
             </h1>
 
-            {/* Horizontal search bar */}
-            <form onSubmit={handleSearch} className="bg-white rounded-2xl p-3 shadow-lg border border-[#1A1A1A]/5 relative z-30 md:mb-8 mb-4">
+            {/* Horizontal search bar - sticky on mobile so it doesn't move when scrolling */}
+            <form onSubmit={handleSearch} className="bg-white rounded-2xl p-3 shadow-lg border border-[#1A1A1A]/5 relative z-30 md:mb-8 mb-4 flex-shrink-0 md:relative sticky md:static top-20 md:top-auto">
               <div className="flex flex-col lg:flex-row items-stretch gap-0">
                 {/* Search field */}
                 <div className="flex-1 relative border-b border-[#1A1A1A]/10 lg:border-b-0 lg:border-r lg:border-[#1A1A1A]/10">
