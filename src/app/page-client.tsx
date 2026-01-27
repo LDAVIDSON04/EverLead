@@ -42,6 +42,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
     "Funeral Pre Planners",
     "Estate Lawyers",
     "Life Insurance Brokers",
+    "Financial Planners",
   ];
   const [currentTextIndex, setCurrentTextIndex] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
@@ -81,6 +82,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
     "Funeral Pre Planner",
     "Estate Lawyer",
     "Life Insurance Broker",
+    "Financial Planner",
   ];
 
   const [searchError, setSearchError] = useState<string | null>(null);
