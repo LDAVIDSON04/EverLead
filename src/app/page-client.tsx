@@ -39,9 +39,9 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
 
   // Rotating text for hero title - deferred for mobile performance
   const rotatingTexts = [
-    "Funeral Pre Planner",
-    "Estate Lawyer",
-    "Life Insurance Broker",
+    "Funeral Pre Planners",
+    "Estate Lawyers",
+    "Life Insurance Brokers",
   ];
   const [currentTextIndex, setCurrentTextIndex] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
@@ -305,10 +305,10 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
           <div className="max-w-4xl">
             <h1 className="text-6xl md:text-6xl text-2xl md:mb-8 mb-3 text-[#1A1A1A] font-semibold tracking-tight leading-none text-center md:text-left" style={{ paddingTop: '4px' }}>
               {/* Mobile: Static text - no animation for better performance */}
-              <span className="md:hidden">Book {rotatingTexts[0]}</span>
-              {/* Desktop: "Book" (fixed) + rotating (Funeral Pre Planner | Estate Lawyer | Life Insurance Broker) */}
+              <span className="md:hidden">Book Local {rotatingTexts[0]}</span>
+              {/* Desktop: "Book Local" (fixed) + rotating (Funeral Pre Planners | Estate Lawyers | Life Insurance Brokers) */}
               <span className="hidden md:block">
-                <span className="block">Book</span>
+                <span className="block">Book Local</span>
                 <span className="block relative" style={{ minHeight: '1.2em', height: '1.2em' }}>
                   <span
                     className={`absolute left-0 top-0 transition-opacity duration-500 ease-in-out ${
