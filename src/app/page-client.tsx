@@ -29,7 +29,7 @@ interface HomePageClientProps {
 
 export default function HomePageClient({ initialLocation }: HomePageClientProps) {
   const router = useRouter();
-  const [specialty, setSpecialty] = useState("Funeral Pre-Planning");
+  const [specialty, setSpecialty] = useState("");
   const [location, setLocation] = useState(initialLocation);
   const [showSpecialtyDropdown, setShowSpecialtyDropdown] = useState(false);
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
@@ -39,9 +39,9 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
 
   // Rotating text for hero title - deferred for mobile performance
   const rotatingTexts = [
-    "funeral pre planners",
-    "estate lawyers",
-    "life insurance agents",
+    "Funeral Pre Planner",
+    "Estate Lawyer",
+    "Life Insurance Broker",
   ];
   const [currentTextIndex, setCurrentTextIndex] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
@@ -78,8 +78,9 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
   }, [rotatingTexts.length]);
 
   const specialtySuggestions = [
-    "Funeral Pre-Planning",
-    "End of life planning",
+    "Funeral Pre Planner",
+    "Estate Lawyer",
+    "Life Insurance Broker",
   ];
 
   const [searchError, setSearchError] = useState<string | null>(null);
@@ -187,9 +188,9 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
           <div className="flex items-center gap-6">
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center gap-10">
-              <Link href="/about" className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors text-lg font-medium">
-                About Us
-              </Link>
+              <button type="button" className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors text-lg font-medium bg-transparent border-none cursor-pointer">
+                Specialties
+              </button>
               <Link href="/help" className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors text-lg font-medium">
                 Help
               </Link>
@@ -304,10 +305,10 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
           <div className="max-w-4xl">
             <h1 className="text-6xl md:text-6xl text-2xl md:mb-8 mb-3 text-[#1A1A1A] font-semibold tracking-tight leading-none text-center md:text-left" style={{ paddingTop: '4px' }}>
               {/* Mobile: Static text - no animation for better performance */}
-              <span className="md:hidden">Book local {rotatingTexts[0]}</span>
-              {/* Desktop: "Book local" (fixed) + rotating (funeral pre planners | estate lawyers | life insurance agents) */}
+              <span className="md:hidden">Book {rotatingTexts[0]}</span>
+              {/* Desktop: "Book" (fixed) + rotating (Funeral Pre Planner | Estate Lawyer | Life Insurance Broker) */}
               <span className="hidden md:block">
-                <span className="block">Book local</span>
+                <span className="block">Book</span>
                 <span className="block relative" style={{ minHeight: '1.2em', height: '1.2em' }}>
                   <span
                     className={`absolute left-0 top-0 transition-opacity duration-500 ease-in-out ${
@@ -377,7 +378,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                     <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#1A1A1A]/40 z-10" />
                     <input
                       type="text"
-                      placeholder="Enter city here"
+                      placeholder="Location"
                       className="w-full pl-12 pr-4 py-3 bg-transparent border-none focus:outline-none text-[#1A1A1A] placeholder:text-[#1A1A1A]/40 relative z-10"
                       value={location}
                       onChange={handleLocationChange}
