@@ -1012,68 +1012,80 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
         <>
           {/* Backdrop */}
           <div 
-            className="fixed inset-0 bg-black/50 z-50"
+            className="fixed inset-0 bg-black/50 z-50 backdrop-blur-sm"
             onClick={() => setSpecialtiesModalOpen(false)}
           />
           {/* Modal */}
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto relative">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8">
+            <div className="bg-white rounded-3xl shadow-2xl max-w-5xl w-full max-h-[85vh] overflow-y-auto relative">
               {/* Header */}
-              <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-2xl">
-                <h2 className="text-2xl font-semibold text-[#1A1A1A]">Browse top specialties</h2>
+              <div className="sticky top-0 bg-white border-b border-gray-100 px-8 py-6 flex items-center justify-between rounded-t-3xl z-10">
+                <h2 className="text-3xl md:text-4xl font-semibold text-[#1A1A1A]">Browse top specialties</h2>
                 <button
                   onClick={() => setSpecialtiesModalOpen(false)}
                   className="p-2 hover:bg-gray-100 rounded-full transition-colors"
                   aria-label="Close modal"
                 >
-                  <X className="w-5 h-5 text-[#1A1A1A]" />
+                  <X className="w-6 h-6 text-[#1A1A1A]" />
                 </button>
               </div>
               
               {/* Content */}
-              <div className="px-6 py-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="px-8 py-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   <Link 
                     href="/search/choose?q=Funeral Pre Planner" 
                     onClick={() => setSpecialtiesModalOpen(false)}
-                    className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors underline text-base"
+                    className="group bg-[#FAF9F6] hover:bg-[#0C6F3C] border border-[#1A1A1A]/10 hover:border-[#0C6F3C] rounded-xl p-6 transition-all duration-300 hover:shadow-lg hover:scale-[1.02]"
                   >
-                    Funeral Pre Planner
+                    <span className="text-lg font-medium text-[#1A1A1A] group-hover:text-white transition-colors">
+                      Funeral Pre Planner
+                    </span>
                   </Link>
                   <Link 
                     href="/search/choose?q=Advanced Planning Director" 
                     onClick={() => setSpecialtiesModalOpen(false)}
-                    className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors underline text-base"
+                    className="group bg-[#FAF9F6] hover:bg-[#0C6F3C] border border-[#1A1A1A]/10 hover:border-[#0C6F3C] rounded-xl p-6 transition-all duration-300 hover:shadow-lg hover:scale-[1.02]"
                   >
-                    Advanced Planning Director
+                    <span className="text-lg font-medium text-[#1A1A1A] group-hover:text-white transition-colors">
+                      Advanced Planning Director
+                    </span>
                   </Link>
                   <Link 
                     href="/search/choose?q=Estate Lawyer" 
                     onClick={() => setSpecialtiesModalOpen(false)}
-                    className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors underline text-base"
+                    className="group bg-[#FAF9F6] hover:bg-[#0C6F3C] border border-[#1A1A1A]/10 hover:border-[#0C6F3C] rounded-xl p-6 transition-all duration-300 hover:shadow-lg hover:scale-[1.02]"
                   >
-                    Estate Lawyer
+                    <span className="text-lg font-medium text-[#1A1A1A] group-hover:text-white transition-colors">
+                      Estate Lawyer
+                    </span>
                   </Link>
                   <Link 
                     href="/search/choose?q=Will Lawyer" 
                     onClick={() => setSpecialtiesModalOpen(false)}
-                    className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors underline text-base"
+                    className="group bg-[#FAF9F6] hover:bg-[#0C6F3C] border border-[#1A1A1A]/10 hover:border-[#0C6F3C] rounded-xl p-6 transition-all duration-300 hover:shadow-lg hover:scale-[1.02]"
                   >
-                    Will Lawyer
+                    <span className="text-lg font-medium text-[#1A1A1A] group-hover:text-white transition-colors">
+                      Will Lawyer
+                    </span>
                   </Link>
                   <Link 
                     href="/search/choose?q=Life Insurance Broker" 
                     onClick={() => setSpecialtiesModalOpen(false)}
-                    className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors underline text-base"
+                    className="group bg-[#FAF9F6] hover:bg-[#0C6F3C] border border-[#1A1A1A]/10 hover:border-[#0C6F3C] rounded-xl p-6 transition-all duration-300 hover:shadow-lg hover:scale-[1.02]"
                   >
-                    Life Insurance Broker
+                    <span className="text-lg font-medium text-[#1A1A1A] group-hover:text-white transition-colors">
+                      Life Insurance Broker
+                    </span>
                   </Link>
                   <Link 
                     href="/search/choose?q=Financial Advisors" 
                     onClick={() => setSpecialtiesModalOpen(false)}
-                    className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors underline text-base"
+                    className="group bg-[#FAF9F6] hover:bg-[#0C6F3C] border border-[#1A1A1A]/10 hover:border-[#0C6F3C] rounded-xl p-6 transition-all duration-300 hover:shadow-lg hover:scale-[1.02]"
                   >
-                    Financial Advisors
+                    <span className="text-lg font-medium text-[#1A1A1A] group-hover:text-white transition-colors">
+                      Financial Advisors
+                    </span>
                   </Link>
                 </div>
               </div>
