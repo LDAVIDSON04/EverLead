@@ -537,8 +537,46 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
             Let&apos;s connect you with the right person
           </h2>
 
-          <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
-            {/* Left Box - Read Reviews */}
+          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            {/* First Card - Browse your options */}
+            <div className="bg-[#FAF9F6] rounded-3xl p-6 border border-[#1A1A1A]/5 relative overflow-visible group flex flex-col transition-all duration-300 ease-out hover:scale-[1.03] hover:shadow-2xl hover:shadow-black/10 hover:-translate-y-1">
+              {/* Reserved space for image to prevent CLS */}
+              <div className="w-full h-20 flex-shrink-0" aria-hidden="true" />
+              {/* Image overlapping the top */}
+              <div className="absolute -top-48 left-1/2 -translate-x-1/2 w-96 h-96 flex items-center justify-center" style={{ aspectRatio: "1/1" }}>
+              <Image
+                src="/hero-image.png"
+                alt="Browse specialists"
+                width={384}
+                height={384}
+                className="w-full h-full object-contain"
+                style={{
+                  filter: "brightness(1.1) contrast(1.05)",
+                  mixBlendMode: "multiply",
+                }}
+                loading="lazy"
+                fetchPriority="low"
+                sizes="(max-width: 768px) 100vw, 384px"
+              />
+              </div>
+
+              <div className="relative z-10 flex flex-col items-center text-center">
+                <h3 className="text-xl mb-2 text-[#1A1A1A] font-semibold">
+                  Browse your options
+                </h3>
+                <p className="text-[#1A1A1A]/60 text-sm leading-relaxed mb-4">
+                  Compare up to 4 specialists on Soradin and book with the ones that fit you best
+                </p>
+                <button 
+                  onClick={navigateToSearchWithLocation}
+                  className="bg-[#1A1A1A] text-white px-5 py-2.5 rounded-xl hover:bg-[#1A1A1A]/90 transition-all shadow-sm text-sm"
+                >
+                  Browse specialists
+                </button>
+              </div>
+            </div>
+
+            {/* Second Card - Read Reviews */}
             <div className="bg-[#FAF9F6] rounded-3xl p-6 border border-[#1A1A1A]/5 relative overflow-visible group flex flex-col transition-all duration-300 ease-out hover:scale-[1.03] hover:shadow-2xl hover:shadow-black/10 hover:-translate-y-1">
               {/* Reserved space for image to prevent CLS */}
               <div className="w-full h-20 flex-shrink-0" aria-hidden="true" />
@@ -576,7 +614,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
               </div>
             </div>
 
-            {/* Right Box - Book Appointment */}
+            {/* Third Card - Book Appointment */}
             <div className="bg-[#FAF9F6] rounded-3xl p-6 border border-[#1A1A1A]/5 relative overflow-visible group flex flex-col transition-all duration-300 ease-out hover:scale-[1.03] hover:shadow-2xl hover:shadow-black/10 hover:-translate-y-1">
               {/* Reserved space for image to prevent CLS */}
               <div className="w-full h-20 flex-shrink-0" aria-hidden="true" />
