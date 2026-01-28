@@ -733,41 +733,27 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
               </button>
             </div>
             <div className="relative w-full order-1 lg:order-2 flex items-center justify-center h-full">
-              <div className="flex flex-col gap-12 w-full items-center justify-center">
-                <div className="flex items-center justify-center gap-10">
-                  {[1, 2, 3].map((index) => (
-                    <div key={index} className="flex items-center justify-center">
-                      <Image
-                        src="/logo - white.png"
-                        alt="Soradin logo"
-                        width={150}
-                        height={150}
-                        className="w-32 h-32 object-contain opacity-90 hover:opacity-100 transition-opacity"
-                        loading="lazy"
-                        fetchPriority="low"
-                        sizes="128px"
-                        style={{ aspectRatio: "1/1" }}
-                      />
-                    </div>
-                  ))}
-                </div>
-                <div className="flex items-center justify-center gap-10">
-                  {[4, 5].map((index) => (
-                    <div key={index} className="flex items-center justify-center">
-                      <Image
-                        src="/logo - white.png"
-                        alt="Soradin logo"
-                        width={150}
-                        height={150}
-                        className="w-32 h-32 object-contain opacity-90 hover:opacity-100 transition-opacity"
-                        loading="lazy"
-                        fetchPriority="low"
-                        sizes="128px"
-                        style={{ aspectRatio: "1/1" }}
-                      />
-                    </div>
-                  ))}
-                </div>
+              <div className="flex items-center justify-center gap-8 md:gap-12">
+                <Image
+                  src="/trusted-agent-1.png"
+                  alt="Funeral professional"
+                  width={200}
+                  height={200}
+                  className="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover border-4 border-white/30 shadow-lg"
+                  loading="lazy"
+                  fetchPriority="low"
+                  sizes="(max-width: 768px) 128px, 160px"
+                />
+                <Image
+                  src="/trusted-agent-2.png"
+                  alt="Funeral professional"
+                  width={200}
+                  height={200}
+                  className="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover border-4 border-white/30 shadow-lg"
+                  loading="lazy"
+                  fetchPriority="low"
+                  sizes="(max-width: 768px) 128px, 160px"
+                />
               </div>
             </div>
           </div>
