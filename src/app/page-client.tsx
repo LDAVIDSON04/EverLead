@@ -630,7 +630,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
               From wills and funeral planning to life insurance and financial advice, we connect you with trusted specialists to help you and your family prepare with clarity and confidence.
             </p>
             <Link
-              href="/search"
+              href="/what-is-pre-need-funeral-planning"
               className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/90 transition-all shrink-0 text-sm font-medium"
               aria-label="Learn more about Planning ahead"
             >
