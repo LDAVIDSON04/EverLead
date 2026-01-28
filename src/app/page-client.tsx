@@ -541,21 +541,21 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
             {/* First Card - Browse your options */}
             <div className="bg-[#FAF9F6] rounded-3xl p-6 border border-[#1A1A1A]/5 relative overflow-visible group flex flex-col transition-all duration-300 ease-out hover:scale-[1.03] hover:shadow-2xl hover:shadow-black/10 hover:-translate-y-1">
               {/* Reserved space for image to prevent CLS */}
-              <div className="w-full h-16 flex-shrink-0" aria-hidden="true" />
+              <div className="w-full h-12 flex-shrink-0" aria-hidden="true" />
               {/* Image overlapping the top - bg stripped by scripts/remove-browse-card-bg.mjs */}
-              <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-72 h-72 flex items-center justify-center" style={{ aspectRatio: "1/1" }}>
+              <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-56 h-56 flex items-center justify-center" style={{ aspectRatio: "1/1" }}>
                 <Image
                   src="/browse-card-image.png"
                   alt="Start planning today with Soradin"
-                  width={288}
-                  height={288}
+                  width={224}
+                  height={224}
                   className="w-full h-full object-contain"
                   style={{
                     filter: "brightness(1.1) contrast(1.05)",
                   }}
                   loading="lazy"
                   fetchPriority="low"
-                  sizes="(max-width: 768px) 100vw, 288px"
+                  sizes="(max-width: 768px) 100vw, 224px"
                 />
               </div>
 
@@ -578,14 +578,14 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
             {/* Second Card - Read Reviews */}
             <div className="bg-[#FAF9F6] rounded-3xl p-6 border border-[#1A1A1A]/5 relative overflow-visible group flex flex-col transition-all duration-300 ease-out hover:scale-[1.03] hover:shadow-2xl hover:shadow-black/10 hover:-translate-y-1">
               {/* Reserved space for image to prevent CLS */}
-              <div className="w-full h-16 flex-shrink-0" aria-hidden="true" />
+              <div className="w-full h-12 flex-shrink-0" aria-hidden="true" />
               {/* Image overlapping the top */}
-              <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-72 h-72 flex items-center justify-center" style={{ aspectRatio: "1/1" }}>
+              <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-56 h-56 flex items-center justify-center" style={{ aspectRatio: "1/1" }}>
               <Image
                 src="/review-image.png"
                 alt="Person holding review card"
-                width={288}
-                height={288}
+                width={224}
+                height={224}
                 className="w-full h-full object-contain"
                 style={{
                   filter: "brightness(1.1) contrast(1.05)",
@@ -593,7 +593,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                 }}
                 loading="lazy"
                 fetchPriority="low"
-                sizes="(max-width: 768px) 100vw, 288px"
+                sizes="(max-width: 768px) 100vw, 224px"
               />
               </div>
 
@@ -616,14 +616,14 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
             {/* Third Card - Book Appointment */}
             <div className="bg-[#FAF9F6] rounded-3xl p-6 border border-[#1A1A1A]/5 relative overflow-visible group flex flex-col transition-all duration-300 ease-out hover:scale-[1.03] hover:shadow-2xl hover:shadow-black/10 hover:-translate-y-1">
               {/* Reserved space for image to prevent CLS */}
-              <div className="w-full h-16 flex-shrink-0" aria-hidden="true" />
+              <div className="w-full h-12 flex-shrink-0" aria-hidden="true" />
               {/* Image overlapping the top */}
-              <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-72 h-72 flex items-center justify-center" style={{ aspectRatio: "1/1" }}>
+              <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-56 h-56 flex items-center justify-center" style={{ aspectRatio: "1/1" }}>
                 <Image
                   src="/booking-image.png"
                   alt="Person holding book now sign"
-                  width={288}
-                  height={288}
+                  width={224}
+                  height={224}
                   className="w-full h-full object-contain"
                   style={{
                     filter: "brightness(1.1) contrast(1.05)",
@@ -631,7 +631,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                   }}
                   loading="lazy"
                   fetchPriority="low"
-                  sizes="(max-width: 768px) 100vw, 288px"
+                  sizes="(max-width: 768px) 100vw, 224px"
                 />
               </div>
 
