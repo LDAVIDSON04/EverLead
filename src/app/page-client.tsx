@@ -740,7 +740,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                     alt="Funeral professional"
                     width={200}
                     height={200}
-                    className="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover border-4 border-white/30 shadow-lg"
+                    className="w-24 h-24 md:w-32 md:h-32 rounded-full object-cover border-4 border-white/30 shadow-lg"
                     loading="lazy"
                     fetchPriority="low"
                     sizes="(max-width: 768px) 128px, 160px"
@@ -750,7 +750,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                     alt="Funeral professional"
                     width={200}
                     height={200}
-                    className="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover border-4 border-white/30 shadow-lg"
+                    className="w-24 h-24 md:w-32 md:h-32 rounded-full object-cover border-4 border-white/30 shadow-lg"
                     loading="lazy"
                     fetchPriority="low"
                     sizes="(max-width: 768px) 128px, 160px"
@@ -760,7 +760,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                     alt="Funeral professional"
                     width={200}
                     height={200}
-                    className="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover border-4 border-white/30 shadow-lg"
+                    className="w-24 h-24 md:w-32 md:h-32 rounded-full object-cover border-4 border-white/30 shadow-lg"
                     loading="lazy"
                     fetchPriority="low"
                     sizes="(max-width: 768px) 128px, 160px"
@@ -772,7 +772,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                     alt="Funeral professional"
                     width={200}
                     height={200}
-                    className="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover border-4 border-white/30 shadow-lg"
+                    className="w-24 h-24 md:w-32 md:h-32 rounded-full object-cover border-4 border-white/30 shadow-lg"
                     loading="lazy"
                     fetchPriority="low"
                     sizes="(max-width: 768px) 128px, 160px"
@@ -782,7 +782,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                     alt="Funeral professional"
                     width={200}
                     height={200}
-                    className="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover border-4 border-white/30 shadow-lg"
+                    className="w-24 h-24 md:w-32 md:h-32 rounded-full object-cover border-4 border-white/30 shadow-lg"
                     loading="lazy"
                     fetchPriority="low"
                     sizes="(max-width: 768px) 128px, 160px"
