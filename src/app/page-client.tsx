@@ -688,6 +688,15 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
               />
             ))}
           </div>
+          <div className="text-center mt-10 md:mt-14">
+            <Link
+              href="/about"
+              className="inline-flex items-center gap-2 text-white font-medium text-base sm:text-lg hover:text-white/80 transition-colors"
+            >
+              Learn more
+              <ChevronRight className="w-5 h-5" />
+            </Link>
+          </div>
         </div>
       </section>
 
