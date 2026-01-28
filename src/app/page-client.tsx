@@ -691,7 +691,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
           <div className="text-center mt-10 md:mt-14">
             <Link
               href="/about"
-              className="inline-flex items-center gap-2 text-white font-medium text-base sm:text-lg hover:text-white/80 transition-colors"
+              className="inline-flex items-center gap-2 bg-white text-[#1A1A1A] font-medium text-base sm:text-lg px-6 py-3 rounded-xl hover:bg-white/90 transition-all shadow-sm"
             >
               Learn more
               <ChevronRight className="w-5 h-5" />
