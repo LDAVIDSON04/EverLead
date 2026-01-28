@@ -624,7 +624,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
             {/* Image */}
             <div className="w-full" style={{ aspectRatio: "1/1" }}>
               <Image
-                src="/f75c771a2df6874e6f701c79ddc5f202a2bcc4f5.png"
+                src="/pre-arrangements-image.png"
                 alt="Pre arrangements"
                 width={600}
                 height={600}
@@ -676,7 +676,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
             {/* Left side - Image */}
             <div className="w-full" style={{ aspectRatio: "1/1" }}>
               <Image
-                src="/f75c771a2df6874e6f701c79ddc5f202a2bcc4f5.png"
+                src="/pre-arrangements-image.png"
                 alt="Pre arrangements"
                 width={600}
                 height={600}
