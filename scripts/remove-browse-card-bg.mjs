@@ -14,8 +14,8 @@ const inputPath = join(root, 'public', 'browse-card-image.png');
 const outputPath = inputPath;
 
 // Lightness threshold: pixels with R,G,B all above this become transparent.
-// 230 = remove white and light grey checkerboard; keep cartoon colors.
-const LIGHT_THRESHOLD = 230;
+// 200 = remove white AND light grey checkerboard; keep cartoon colors.
+const LIGHT_THRESHOLD = 200;
 // Also remove pixels that are already very transparent (alpha < 20).
 const ALPHA_THRESHOLD = 20;
 
@@ -36,7 +36,7 @@ async function main() {
 
     // Make pixel transparent if it's background: very light and low saturation
     const isLight = r >= LIGHT_THRESHOLD && g >= LIGHT_THRESHOLD && b >= LIGHT_THRESHOLD;
-    const isLowSaturation = Math.max(r, g, b) - Math.min(r, g, b) < 25;
+    const isLowSaturation = Math.max(r, g, b) - Math.min(r, g, b) < 35;
     const isAlreadyFaded = a < ALPHA_THRESHOLD;
 
     if ((isLight && isLowSaturation) || isAlreadyFaded) {
