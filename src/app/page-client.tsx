@@ -666,6 +666,14 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
       {/* HOVER CARDS – planning types (Figma Hover Cards design) */}
       <section className="min-h-screen bg-black flex items-center justify-center py-12 md:py-16 px-4 sm:px-6 md:px-12">
         <div className="max-w-[1600px] w-full">
+          <div className="text-center mb-10 md:mb-14">
+            <h2 className="text-white text-3xl sm:text-4xl md:text-5xl font-semibold tracking-tight mb-3 md:mb-4">
+              The Four Pillars of End of Life Planning
+            </h2>
+            <p className="text-white/90 text-base sm:text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
+              A simple framework that helps families plan with clarity, confidence, and peace of mind
+            </p>
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
             {HOVER_CARDS.map((card, index) => (
               <PlanningCard
