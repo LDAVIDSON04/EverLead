@@ -116,7 +116,7 @@ function PlanningCard({
 }: PlanningCardProps) {
   return (
     <div
-      className="rounded-2xl px-4 sm:px-5 py-4 sm:py-5 transition-all duration-500 shadow-[0_8px_30px_rgba(0,0,0,0.08)] min-h-[280px] sm:min-h-[320px] flex flex-col relative overflow-hidden w-full"
+      className="rounded-2xl px-4 sm:px-5 py-4 sm:py-5 transition-all duration-500 shadow-[0_8px_30px_rgba(0,0,0,0.08)] min-h-[400px] flex flex-col relative overflow-hidden w-full max-w-[280px]"
       style={{ backgroundColor: color }}
     >
       <svg className="absolute inset-0 w-full h-full opacity-[0.04]" xmlns="http://www.w3.org/2000/svg" aria-hidden>
@@ -177,9 +177,9 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
   const [locationSuggestions, setLocationSuggestions] = useState<string[]>([]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const citiesRef = useRef<string[] | null>(null);
-  const pillarsSectionRef = useRef<HTMLElement | null>(null);
   const pillarStepPrevRef = useRef(0);
   const [pillarStep, setPillarStep] = useState(0);
+  const [pillarProgress, setPillarProgress] = useState(0);
   const pillarDirection = pillarStep > pillarStepPrevRef.current ? "next" : pillarStep < pillarStepPrevRef.current ? "prev" : "next";
   pillarStepPrevRef.current = pillarStep;
 
@@ -224,26 +224,22 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
     };
   }, [rotatingTexts.length]);
 
-  // Four Pillars: scroll-driven step (0–3) over 400vh section
+  // Four Pillars: 3s timer per step; line between bubbles acts as progress
   useEffect(() => {
-    const section = pillarsSectionRef.current;
-    if (!section) return;
-    const onScroll = () => {
-      const rect = section.getBoundingClientRect();
-      const sectionH = section.offsetHeight;
-      const vh = window.innerHeight;
-      const scrollable = Math.max(0, sectionH - vh);
-      if (scrollable <= 0) {
-        setPillarStep(0);
-        return;
-      }
-      const progress = Math.max(0, Math.min(1, -rect.top / scrollable));
-      const step = Math.min(3, Math.floor(progress * 4));
-      setPillarStep(step);
-    };
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    const ms = 50;
+    const duration = 3000;
+    const inc = ms / duration;
+    const t = setInterval(() => {
+      setPillarProgress((p) => {
+        const next = p + inc;
+        if (next >= 1) {
+          setPillarStep((s) => (s + 1) % 4);
+          return 0;
+        }
+        return next;
+      });
+    }, ms);
+    return () => clearInterval(t);
   }, []);
 
   const specialtySuggestions = [
@@ -698,63 +694,71 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
     </div>
   </div>
 
-      {/* Four Pillars – scroll-through: 1–4 list + card content left, image right */}
-      <section
-        ref={pillarsSectionRef}
-        className="relative bg-white"
-        style={{ height: "400vh" }}
-      >
-        <div className="sticky top-0 left-0 right-0 h-screen flex items-center justify-center px-4 sm:px-6 md:px-12 py-12 md:py-16">
-          <div className="max-w-[1400px] w-full">
-            {/* Title centered on full page, above two-column layout */}
-            <div className="text-center mb-8 md:mb-10">
-              <h2 className="text-[#1A1A1A] text-2xl sm:text-3xl md:text-4xl font-semibold tracking-tight mb-2 md:mb-3">
-                The Four Pillars of End of Life Planning
-              </h2>
-              <p className="text-[#1A1A1A]/70 text-base sm:text-lg max-w-xl mx-auto">
-                A simple framework that helps families plan with clarity, confidence, and peace of mind
-              </p>
-            </div>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-              {/* Left: 1–4 list, Learn more */}
-              <div className="flex flex-col">
-                <ul className="relative space-y-5 mb-8 md:mb-10">
-                  {/* Vertical line through center of each number bubble */}
-                  <div
-                    className="absolute top-0 bottom-0 left-5 w-px -translate-x-1/2 bg-[#1A1A1A]/20 pointer-events-none"
-                    aria-hidden
-                  />
+      {/* Four Pillars – timer-driven (3s per step), line progress between bubbles */}
+      <section className="relative bg-white pt-4 pb-10 md:pt-6 md:pb-14">
+        <div className="max-w-[1100px] mx-auto w-full px-4 sm:px-6 md:px-8">
+          {/* Title centered, further up */}
+          <div className="text-center mb-6 md:mb-8">
+            <h2 className="text-[#1A1A1A] text-2xl sm:text-3xl md:text-4xl font-semibold tracking-tight mb-2 md:mb-3">
+              The Four Pillars of End of Life Planning
+            </h2>
+            <p className="text-[#1A1A1A]/70 text-base sm:text-lg max-w-xl mx-auto">
+              A simple framework that helps families plan with clarity, confidence, and peace of mind
+            </p>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-6 lg:gap-8 items-center justify-items-center">
+              {/* Left: 1–4 list (central, closer to card), line segments = 3s timer */}
+              <div className="flex flex-col w-full max-w-md mx-auto lg:mx-0 lg:max-w-none">
+                <div className="flex flex-col gap-y-1">
                   {PILLAR_STEPS.map((item, i) => (
-                    <li key={i} className="list-none flex items-center gap-4 relative">
-                      <span
-                        className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-colors z-10 ${
-                          i === pillarStep
-                            ? "bg-[#1A1A1A] text-white"
-                            : "bg-[#1A1A1A]/10 text-[#1A1A1A]/60"
-                        }`}
-                      >
-                        {i + 1}
-                      </span>
-                      <span
-                        className={`text-base sm:text-lg font-medium transition-colors ${
-                          i === pillarStep ? "text-[#1A1A1A]" : "text-[#1A1A1A]/60"
-                        }`}
-                      >
-                        {item.label}
-                      </span>
-                    </li>
+                    <div key={i}>
+                      <div className="flex items-center gap-4">
+                        <div className="flex flex-col items-center flex-shrink-0">
+                          <span
+                            className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-colors border-2 ${
+                              i === pillarStep
+                                ? "bg-[#1A1A1A] text-white border-[#1A1A1A]"
+                                : "bg-white text-[#1A1A1A]/60 border-[#1A1A1A]/25"
+                            }`}
+                          >
+                            {i + 1}
+                          </span>
+                          {i < PILLAR_STEPS.length - 1 && (
+                            <div
+                              className="w-0.5 flex-shrink-0 mt-1.5 bg-[#1A1A1A]/20 relative overflow-hidden rounded-full"
+                              style={{ height: "28px" }}
+                              aria-hidden
+                            >
+                              <div
+                                className="absolute inset-x-0 bottom-0 bg-[#1A1A1A] rounded-full transition-all duration-150"
+                                style={{
+                                  height: i === pillarStep ? `${Math.min(100, pillarProgress * 100)}%` : i < pillarStep ? "100%" : "0%",
+                                }}
+                              />
+                            </div>
+                          )}
+                        </div>
+                        <span
+                          className={`text-base sm:text-lg font-medium transition-colors ${
+                            i === pillarStep ? "text-[#1A1A1A]" : "text-[#1A1A1A]/60"
+                          }`}
+                        >
+                          {item.label}
+                        </span>
+                      </div>
+                    </div>
                   ))}
-                </ul>
+                </div>
                 <Link
                   href="/about"
-                  className="inline-flex items-center gap-2 w-fit bg-[#1A1A1A] text-white font-medium text-base px-6 py-3 rounded-xl hover:bg-[#1A1A1A]/90 transition-all"
+                  className="inline-flex items-center gap-2 w-fit mt-6 bg-[#1A1A1A] text-white font-medium text-base px-6 py-3 rounded-xl hover:bg-[#1A1A1A]/90 transition-all"
                 >
                   Learn more
                   <ChevronRight className="w-5 h-5" />
                 </Link>
               </div>
-              {/* Right: active pillar card (desktop + mobile), swipe transition, smaller */}
-              <div className="w-full max-w-md mx-auto lg:max-w-sm lg:mx-0 overflow-hidden">
+              {/* Right: card – vertical, smaller */}
+              <div className="w-full max-w-[280px] mx-auto lg:mx-0 overflow-hidden">
               {(() => {
                 const card = HOVER_CARDS[PILLAR_STEPS[pillarStep].cardIndex];
                 const slideClass = pillarDirection === "next"
@@ -774,7 +778,6 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                   </div>
                 );
               })()}
-            </div>
             </div>
           </div>
         </div>
