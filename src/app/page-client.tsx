@@ -617,17 +617,20 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
         </div>
       </section>
 
-      {/* Pre-arrangements full-bleed image */}
-      <section className="relative w-full min-h-[100vh] overflow-hidden">
-        <Image
-          src="/pre-arrangements-image.png"
-          alt="Pre arrangements"
-          fill
-          className="object-cover object-center"
-          loading="lazy"
-          fetchPriority="low"
-          sizes="100vw"
-        />
+      {/* Pre-arrangements image – right half only */}
+      <section className="grid grid-cols-1 md:grid-cols-2 min-h-[100vh]">
+        <div className="hidden md:block bg-[#FAF9F6]" />
+        <div className="relative w-full min-h-[50vh] md:min-h-[100vh]">
+          <Image
+            src="/pre-arrangements-image.png"
+            alt="Pre arrangements"
+            fill
+            className="object-cover object-center"
+            loading="lazy"
+            fetchPriority="low"
+            sizes="(max-width: 768px) 100vw, 50vw"
+          />
+        </div>
       </section>
 
       {/* FOR SPECIALISTS SECTION */}
