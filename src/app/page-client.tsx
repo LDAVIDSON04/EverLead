@@ -539,7 +539,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
 
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {/* First Card - Browse your options */}
-            <div className="bg-[#FAF9F6] rounded-3xl p-6 border border-[#1A1A1A]/5 relative overflow-visible group flex flex-col transition-all duration-300 ease-out hover:scale-[1.03] hover:shadow-2xl hover:shadow-black/10 hover:-translate-y-1">
+            <div className="bg-[#FAF9F6] rounded-3xl p-6 border-2 border-[#1A1A1A] relative overflow-visible group flex flex-col transition-all duration-300 ease-out hover:scale-[1.03] hover:shadow-2xl hover:shadow-black/10 hover:-translate-y-1">
               {/* Reserved space for image to prevent CLS */}
               <div className="w-full h-12 flex-shrink-0" aria-hidden="true" />
               {/* Image overlapping the top - bg stripped by scripts/remove-browse-card-bg.mjs */}
@@ -576,7 +576,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
             </div>
 
             {/* Second Card - Read Reviews */}
-            <div className="bg-[#FAF9F6] rounded-3xl p-6 border border-[#1A1A1A]/5 relative overflow-visible group flex flex-col transition-all duration-300 ease-out hover:scale-[1.03] hover:shadow-2xl hover:shadow-black/10 hover:-translate-y-1">
+            <div className="bg-[#FAF9F6] rounded-3xl p-6 border-2 border-[#1A1A1A] relative overflow-visible group flex flex-col transition-all duration-300 ease-out hover:scale-[1.03] hover:shadow-2xl hover:shadow-black/10 hover:-translate-y-1">
               {/* Reserved space for image to prevent CLS */}
               <div className="w-full h-12 flex-shrink-0" aria-hidden="true" />
               {/* Image overlapping the top - scaled to match Browse card figure size */}
@@ -616,7 +616,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
             </div>
 
             {/* Third Card - Book Appointment */}
-            <div className="bg-[#FAF9F6] rounded-3xl p-6 border border-[#1A1A1A]/5 relative overflow-visible group flex flex-col transition-all duration-300 ease-out hover:scale-[1.03] hover:shadow-2xl hover:shadow-black/10 hover:-translate-y-1">
+            <div className="bg-[#FAF9F6] rounded-3xl p-6 border-2 border-[#1A1A1A] relative overflow-visible group flex flex-col transition-all duration-300 ease-out hover:scale-[1.03] hover:shadow-2xl hover:shadow-black/10 hover:-translate-y-1">
               {/* Reserved space for image to prevent CLS */}
               <div className="w-full h-12 flex-shrink-0" aria-hidden="true" />
               {/* Image overlapping the top - scaled to match Browse card figure size */}
