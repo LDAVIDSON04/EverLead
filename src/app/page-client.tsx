@@ -714,20 +714,20 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
         </div>
       </section>
 
-      {/* TRUSTED PARTNERS */}
-      <section className="py-24 px-4 bg-[#FAF9F6]">
+      {/* TRUSTED PARTNERS - dark green like empathy.com */}
+      <section className="py-24 px-4 bg-[#234a3d]">
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div className="order-2 lg:order-1 text-center lg:text-left">
-              <h2 className="text-5xl mb-6 text-[#1A1A1A] font-semibold tracking-tight leading-tight">
+              <h2 className="text-5xl mb-6 text-white font-semibold tracking-tight leading-tight">
                 Trusted by agents from top funeral homes
               </h2>
-              <p className="text-xl text-[#1A1A1A]/70 leading-relaxed mb-8">
+              <p className="text-xl text-white/85 leading-relaxed mb-8">
                 Funeral professionals across British Columbia rely on Soradin to connect with families and grow their practice with confidence.
               </p>
               <button 
                 onClick={navigateToSearchWithLocation}
-                className="bg-[#1A1A1A] text-white px-8 py-4 rounded-xl hover:bg-[#1A1A1A]/90 transition-all shadow-sm text-lg"
+                className="bg-white text-[#234a3d] px-8 py-4 rounded-xl hover:bg-white/90 transition-all shadow-sm text-lg font-medium"
               >
                 Find care
               </button>
@@ -738,11 +738,11 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                   {[1, 2, 3].map((index) => (
                     <div key={index} className="flex items-center justify-center">
                       <Image
-                        src="/Soradin.png"
+                        src="/logo - white.png"
                         alt="Soradin logo"
                         width={150}
                         height={150}
-                        className="w-32 h-32 object-contain opacity-75 hover:opacity-100 transition-opacity"
+                        className="w-32 h-32 object-contain opacity-90 hover:opacity-100 transition-opacity"
                         loading="lazy"
                         fetchPriority="low"
                         sizes="128px"
@@ -755,11 +755,11 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                   {[4, 5].map((index) => (
                     <div key={index} className="flex items-center justify-center">
                       <Image
-                        src="/Soradin.png"
+                        src="/logo - white.png"
                         alt="Soradin logo"
                         width={150}
                         height={150}
-                        className="w-32 h-32 object-contain opacity-75 hover:opacity-100 transition-opacity"
+                        className="w-32 h-32 object-contain opacity-90 hover:opacity-100 transition-opacity"
                         loading="lazy"
                         fetchPriority="low"
                         sizes="128px"
@@ -774,10 +774,10 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
         </div>
       </section>
 
-      {/* CITIES LIST */}
-      <section className="py-24 px-4 bg-[#D9C7A3]/20">
+      {/* CITIES LIST - dark green like empathy.com */}
+      <section className="py-24 px-4 bg-[#234a3d]">
         <div className="max-w-7xl mx-auto">
-          <h2 className="text-4xl mb-12 text-[#1A1A1A] font-medium tracking-tight">
+          <h2 className="text-4xl mb-12 text-white font-medium tracking-tight">
             Find funeral professionals near you
           </h2>
 
@@ -786,12 +786,12 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
               <Link
                 key={city}
                 href={`/search/choose?location=${encodeURIComponent(city)}`}
-                className="bg-transparent border-b-2 border-[#1A1A1A]/20 hover:border-[#1A1A1A] py-4 text-left transition-all group flex items-center justify-between"
+                className="bg-transparent border-b-2 border-white/30 hover:border-white py-4 text-left transition-all group flex items-center justify-between"
               >
-                <span className="text-[#1A1A1A] text-lg group-hover:text-[#1A1A1A] transition-colors">
+                <span className="text-white text-lg group-hover:text-white transition-colors">
                   {city}
                 </span>
-                <ChevronDown className="w-5 h-5 text-[#1A1A1A]/40 group-hover:text-[#1A1A1A] transition-colors" />
+                <ChevronDown className="w-5 h-5 text-white/60 group-hover:text-white transition-colors" />
               </Link>
             ))}
           </div>
