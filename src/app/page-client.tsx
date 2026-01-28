@@ -579,8 +579,8 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
             <div className="bg-[#FAF9F6] rounded-3xl p-6 border border-[#1A1A1A]/5 relative overflow-visible group flex flex-col transition-all duration-300 ease-out hover:scale-[1.03] hover:shadow-2xl hover:shadow-black/10 hover:-translate-y-1">
               {/* Reserved space for image to prevent CLS */}
               <div className="w-full h-12 flex-shrink-0" aria-hidden="true" />
-              {/* Image overlapping the top */}
-              <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-56 h-56 flex items-center justify-center" style={{ aspectRatio: "1/1" }}>
+              {/* Image overlapping the top - scaled to match Browse card figure size */}
+              <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-56 h-56 flex items-center justify-center overflow-hidden" style={{ aspectRatio: "1/1" }}>
               <Image
                 src="/review-image.png"
                 alt="Person holding review card"
@@ -590,6 +590,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                 style={{
                   filter: "brightness(1.1) contrast(1.05)",
                   mixBlendMode: "multiply",
+                  transform: "scale(1.25)",
                 }}
                 loading="lazy"
                 fetchPriority="low"
@@ -617,8 +618,8 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
             <div className="bg-[#FAF9F6] rounded-3xl p-6 border border-[#1A1A1A]/5 relative overflow-visible group flex flex-col transition-all duration-300 ease-out hover:scale-[1.03] hover:shadow-2xl hover:shadow-black/10 hover:-translate-y-1">
               {/* Reserved space for image to prevent CLS */}
               <div className="w-full h-12 flex-shrink-0" aria-hidden="true" />
-              {/* Image overlapping the top */}
-              <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-56 h-56 flex items-center justify-center" style={{ aspectRatio: "1/1" }}>
+              {/* Image overlapping the top - scaled to match Browse card figure size */}
+              <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-56 h-56 flex items-center justify-center overflow-hidden" style={{ aspectRatio: "1/1" }}>
                 <Image
                   src="/booking-image.png"
                   alt="Person holding book now sign"
@@ -628,6 +629,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                   style={{
                     filter: "brightness(1.1) contrast(1.05)",
                     mixBlendMode: "multiply",
+                    transform: "scale(1.25)",
                   }}
                   loading="lazy"
                   fetchPriority="low"
