@@ -165,9 +165,9 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
   };
 
   return (
-    <main className="min-h-screen bg-[#FAF9F6]">
+    <main className="min-h-screen bg-white">
       {/* HEADER */}
-      <header className="bg-[#FAF9F6] py-5 px-4 relative z-30 overflow-visible">
+      <header className="bg-white py-5 px-4 relative z-30 overflow-visible">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           {/* Logo and Name - not clickable, same font as nav */}
           <div className="flex items-center gap-3">
@@ -223,10 +223,10 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
               onClick={() => setMobileMenuOpen(false)}
             />
             {/* Menu Sheet - Cropped to content */}
-            <div className="md:hidden fixed top-0 left-0 right-0 bg-[#FAF9F6] z-50 rounded-b-3xl shadow-2xl">
+            <div className="md:hidden fixed top-0 left-0 right-0 bg-white z-50 rounded-b-3xl shadow-2xl">
               <div className="flex flex-col">
                 {/* Header */}
-                <div className="px-4 py-5 bg-[#FAF9F6]">
+                <div className="px-4 py-5 bg-white">
                   <div className="flex items-center justify-between max-w-7xl mx-auto">
                     <div className="flex items-center gap-3 cursor-default">
                       <Image
@@ -263,7 +263,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                       </Link>
                       <Link 
                         href="/agent" 
-                        className="px-6 py-4 bg-white border-2 border-[#1A1A1A] text-[#1A1A1A] rounded-xl hover:bg-[#FAF9F6] transition-all text-center text-base font-medium"
+                        className="px-6 py-4 bg-white border-2 border-[#1A1A1A] text-[#1A1A1A] rounded-xl hover:bg-white transition-all text-center text-base font-medium"
                         onClick={() => setMobileMenuOpen(false)}
                       >
                         Log in
@@ -278,7 +278,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
       </header>
 
       {/* HERO */}
-      <div className="relative bg-[#FAF9F6] pb-12 px-4 min-h-[calc(100vh-80px)] flex items-start md:pt-32 pt-0 md:pb-12 -mt-2 md:mt-0" style={{ overflow: 'visible' }}>
+      <div className="relative bg-white pb-12 px-4 min-h-[calc(100vh-80px)] flex items-start md:pt-32 pt-0 md:pb-12 -mt-2 md:mt-0" style={{ overflow: 'visible' }}>
         {/* Abstract background shapes - deferred to prevent blocking initial render */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ contentVisibility: 'auto', contain: 'layout style paint' }}>
           <div className="absolute top-20 right-10 w-96 h-96 bg-[#1A1A1A]/10 rounded-full blur-3xl" style={{ willChange: 'auto' }} />
@@ -539,7 +539,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
 
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {/* First Card - Browse your options */}
-            <div className="bg-[#FAF9F6] rounded-3xl p-6 border border-[#1A1A1A]/5 relative overflow-visible group flex flex-col transition-all duration-300 ease-out hover:scale-[1.03] hover:shadow-2xl hover:shadow-black/10 hover:-translate-y-1">
+            <div className="bg-white rounded-3xl p-6 border border-[#1A1A1A]/5 relative overflow-visible group flex flex-col transition-all duration-300 ease-out hover:scale-[1.03] hover:shadow-2xl hover:shadow-black/10 hover:-translate-y-1">
               {/* Reserved space for image to prevent CLS */}
               <div className="w-full h-12 flex-shrink-0" aria-hidden="true" />
               {/* Image overlapping the top - bg stripped by scripts/remove-browse-card-bg.mjs */}
@@ -576,7 +576,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
             </div>
 
             {/* Second Card - Read Reviews */}
-            <div className="bg-[#FAF9F6] rounded-3xl p-6 border border-[#1A1A1A]/5 relative overflow-visible group flex flex-col transition-all duration-300 ease-out hover:scale-[1.03] hover:shadow-2xl hover:shadow-black/10 hover:-translate-y-1">
+            <div className="bg-white rounded-3xl p-6 border border-[#1A1A1A]/5 relative overflow-visible group flex flex-col transition-all duration-300 ease-out hover:scale-[1.03] hover:shadow-2xl hover:shadow-black/10 hover:-translate-y-1">
               {/* Reserved space for image to prevent CLS */}
               <div className="w-full h-12 flex-shrink-0" aria-hidden="true" />
               {/* Image overlapping the top - scaled to match Browse card figure size */}
@@ -616,7 +616,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
             </div>
 
             {/* Third Card - Book Appointment */}
-            <div className="bg-[#FAF9F6] rounded-3xl p-6 border border-[#1A1A1A]/5 relative overflow-visible group flex flex-col transition-all duration-300 ease-out hover:scale-[1.03] hover:shadow-2xl hover:shadow-black/10 hover:-translate-y-1">
+            <div className="bg-white rounded-3xl p-6 border border-[#1A1A1A]/5 relative overflow-visible group flex flex-col transition-all duration-300 ease-out hover:scale-[1.03] hover:shadow-2xl hover:shadow-black/10 hover:-translate-y-1">
               {/* Reserved space for image to prevent CLS */}
               <div className="w-full h-12 flex-shrink-0" aria-hidden="true" />
               {/* Image overlapping the top - scaled to match Browse card figure size */}
@@ -659,7 +659,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
       </section>
 
       {/* Pre-arrangements – card left, image right (Empathy-style) */}
-      <section className="bg-[#FAF9F6] py-16 md:py-24 px-4 md:px-6">
+      <section className="bg-white py-16 md:py-24 px-4 md:px-6">
         <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 min-h-[min(80vh,640px)] md:min-h-[560px] gap-0 overflow-hidden rounded-2xl shadow-lg md:shadow-xl">
           {/* Left: card */}
           <div className="flex flex-col justify-center p-8 md:p-12 lg:p-16 bg-white rounded-t-2xl md:rounded-l-2xl md:rounded-tr-none order-2 md:order-1">
