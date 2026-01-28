@@ -103,7 +103,7 @@ export function CaseStudiesSection() {
                   {study.description}
                 </p>
                 <Link href="/create-account">
-                  <button className="text-[#0D5C3D] hover:underline group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
+                  <button className="text-[#1A1A1A] hover:underline group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
                     Learn more →
                   </button>
                 </Link>

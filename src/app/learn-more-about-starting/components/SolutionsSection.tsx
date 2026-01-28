@@ -34,7 +34,7 @@ export function SolutionsSection() {
           {solutions.map((solution, index) => (
             <div
               key={index}
-              className={`${solution.bgColor} p-6 rounded-2xl border border-gray-200 transition-all duration-300 ease-out hover:border-[#0D5C3D] hover:shadow-xl hover:shadow-black/10 hover:scale-[1.03] hover:-translate-y-1 group cursor-pointer`}
+              className={`${solution.bgColor} p-6 rounded-2xl border border-gray-200 transition-all duration-300 ease-out hover:border-[#1A1A1A] hover:shadow-xl hover:shadow-black/10 hover:scale-[1.03] hover:-translate-y-1 group cursor-pointer`}
             >
               {solution.image ? (
                 <div className="mb-6 rounded-xl overflow-hidden">
@@ -50,7 +50,7 @@ export function SolutionsSection() {
                 {solution.description}
               </p>
               <Link href="/create-account">
-                <button className="text-[#0D5C3D] text-sm hover:underline group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
+                <button className="text-[#1A1A1A] text-sm hover:underline group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
                   Learn more →
                 </button>
               </Link>

@@ -33,7 +33,7 @@ export function IntegrationSection() {
               Soradin connects directly with your existing Google and Microsoft calendars — syncing availability in real time so appointments flow seamlessly without changing how you work.
             </p>
             <Link href="/create-account">
-              <button className="bg-[#0D5C3D] hover:bg-[#0A4A30] text-white px-8 py-3 rounded-lg transition-colors">
+              <button className="bg-[#1A1A1A] hover:bg-[#1A1A1A]/90 text-white px-8 py-3 rounded-lg transition-colors">
                 Learn more
               </button>
             </Link>

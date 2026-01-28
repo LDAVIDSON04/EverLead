@@ -39,7 +39,7 @@ export function TrustHighlights({ agentId }: TrustHighlightsProps) {
   }, [agentId]);
 
   const getIcon = (icon: string) => {
-    const iconProps = { className: "w-8 h-8", style: { color: '#2d7a4a' } };
+    const iconProps = { className: "w-8 h-8", style: { color: '#1A1A1A' } };
     switch (icon) {
       case 'shield': 
         return (
@@ -47,13 +47,13 @@ export function TrustHighlights({ agentId }: TrustHighlightsProps) {
             <Shield {...iconProps} />
             <Check 
               className="w-5 h-5 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" 
-              style={{ color: '#2d7a4a', strokeWidth: 3 }}
+              style={{ color: '#1A1A1A', strokeWidth: 3 }}
             />
           </div>
         );
       case 'award': return <Award {...iconProps} />;
       case 'file': return <FileCheck {...iconProps} />;
-      case 'star': return <Star {...iconProps} fill="#2d7a4a" />;
+      case 'star': return <Star {...iconProps} fill="#1A1A1A" />;
       case 'clock': return <Clock {...iconProps} />;
       default: return <Check {...iconProps} />;
     }
@@ -65,7 +65,7 @@ export function TrustHighlights({ agentId }: TrustHighlightsProps) {
         <div className="space-y-6">
           <div className="flex items-start gap-4">
             <div className="flex-shrink-0">
-              <Star className="w-8 h-8" style={{ color: '#2d7a4a' }} fill="#2d7a4a" />
+              <Star className="w-8 h-8" style={{ color: '#1A1A1A' }} fill="#1A1A1A" />
             </div>
             <div>
               <h3 className="font-semibold text-gray-900 mb-1">Highly recommended</h3>

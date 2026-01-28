@@ -55,7 +55,7 @@ export function FeaturesSection() {
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {features.map((feature, index) => (
             <div key={index} className="group">
-              <div className="w-16 h-16 bg-[#0D5C3D] rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <div className="w-16 h-16 bg-[#1A1A1A] rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                 <span className="text-3xl">{feature.icon}</span>
               </div>
               <h3 className="text-black mb-2">{feature.title}</h3>

@@ -161,7 +161,7 @@ function AgentProfileContent() {
 
       {/* Reschedule Banner */}
       {isReschedule && (
-        <div className="bg-[#0D5C3D] text-white">
+        <div className="bg-[#1A1A1A] text-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div className="flex items-center gap-3">
               <Calendar className="w-5 h-5" />

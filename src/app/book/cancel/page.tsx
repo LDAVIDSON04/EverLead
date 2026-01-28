@@ -510,7 +510,7 @@ function CancelAppointmentContent() {
                   className="rounded-full object-cover"
                 />
               ) : (
-                <div className="w-20 h-20 rounded-full bg-[#0D5C3D] flex items-center justify-center text-white text-2xl font-semibold">
+                <div className="w-20 h-20 rounded-full bg-[#1A1A1A] flex items-center justify-center text-white text-2xl font-semibold">
                   {(appointmentData.agent.full_name || "A")[0].toUpperCase()}
                 </div>
               )}
@@ -582,7 +582,7 @@ function CancelAppointmentContent() {
             <div className="space-y-3">
               <button
                 onClick={() => setShowRescheduleModal(true)}
-                className="w-full bg-[#0D5C3D] text-white px-6 py-3 rounded hover:bg-[#0A4A30] transition-colors font-medium"
+                className="w-full bg-[#1A1A1A] text-white px-6 py-3 rounded hover:bg-[#1A1A1A]/90 transition-colors font-medium"
               >
                 Reschedule Appointment
               </button>

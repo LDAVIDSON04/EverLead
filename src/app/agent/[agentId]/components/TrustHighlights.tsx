@@ -39,12 +39,12 @@ export function TrustHighlights({ rating = 0, reviewCount = 0 }: TrustHighlights
   ];
 
   const getIcon = (icon: string) => {
-    const iconProps = { className: "w-8 h-8", style: { color: '#2d7a4a' } };
+    const iconProps = { className: "w-8 h-8", style: { color: '#1A1A1A' } };
     switch (icon) {
       case 'shield': 
         return (
           <div className="relative w-8 h-8 flex items-center justify-center">
-            <Shield {...iconProps} fill="#2d7a4a" />
+            <Shield {...iconProps} fill="#1A1A1A" />
             <Check 
               className="absolute w-4 h-4 z-10" 
               style={{ color: '#ffffff', strokeWidth: 3.5 }}
@@ -54,7 +54,7 @@ export function TrustHighlights({ rating = 0, reviewCount = 0 }: TrustHighlights
         );
       case 'award': return <Award {...iconProps} />;
       case 'file': return <FileCheck {...iconProps} />;
-      case 'star': return <Star {...iconProps} fill="#2d7a4a" />;
+      case 'star': return <Star {...iconProps} fill="#1A1A1A" />;
       case 'clock': return <Clock {...iconProps} />;
       default: return <Check {...iconProps} />;
     }

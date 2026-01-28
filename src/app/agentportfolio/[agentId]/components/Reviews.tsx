@@ -133,7 +133,7 @@ export function Reviews({ agentId, reviewCount }: ReviewsProps) {
         <div className="mt-6">
           <button
             onClick={() => setShowAll(!showAll)}
-            className="text-[#0D5C3D] hover:text-[#0A4A30] font-medium text-sm transition-colors"
+            className="text-[#1A1A1A] hover:text-[#1A1A1A]/90 font-medium text-sm transition-colors"
           >
             {showAll ? 'Show Less' : `See More Reviews (${reviews.length - 3} more)`}
           </button>

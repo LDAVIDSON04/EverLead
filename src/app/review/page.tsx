@@ -250,7 +250,7 @@ function ReviewContent() {
               <button
                 type="submit"
                 disabled={submitting || !rating}
-                className="flex-1 bg-[#0D5C3D] text-white px-6 py-3 rounded hover:bg-[#0A4A30] transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 bg-[#1A1A1A] text-white px-6 py-3 rounded hover:bg-[#1A1A1A]/90 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {submitting ? "Submitting..." : "Submit Review"}
               </button>

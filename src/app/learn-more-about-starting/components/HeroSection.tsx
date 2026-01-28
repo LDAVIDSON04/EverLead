@@ -19,7 +19,7 @@ export function HeroSection() {
               Reach more clients, simplify scheduling, and get a clear view into your performance data, all with one platform.
             </p>
             <Link href="/create-account" className="mb-0 md:mb-6">
-              <Button className="bg-[#0D5C3D] hover:bg-[#0A4A30] text-white px-8 py-6">
+              <Button className="bg-[#1A1A1A] hover:bg-[#1A1A1A]/90 text-white px-8 py-6">
                 Get started
               </Button>
             </Link>

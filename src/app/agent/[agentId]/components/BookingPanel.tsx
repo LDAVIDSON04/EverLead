@@ -727,8 +727,8 @@ export function BookingPanel({ agentId, initialLocation }: BookingPanelProps) {
                     day.appointmentCount === 0
                       ? 'bg-gray-50 border-gray-200 cursor-not-allowed'
                       : selectedDayIndex === index
-                      ? 'bg-[#2d7a4a] border-[#2d7a4a] shadow-md'
-                      : 'bg-[#2d7a4a] border-gray-200 hover:border-gray-300 hover:shadow-sm'
+                      ? 'bg-[#1A1A1A] border-[#1A1A1A] shadow-md'
+                      : 'bg-[#1A1A1A] border-gray-200 hover:border-gray-300 hover:shadow-sm'
                   }`}
                   style={{ aspectRatio: '3 / 1' }}
                 >
@@ -769,8 +769,8 @@ export function BookingPanel({ agentId, initialLocation }: BookingPanelProps) {
                       day.appointmentCount === 0
                         ? 'bg-gray-50 border-gray-200 cursor-not-allowed'
                         : selectedDayIndex === actualIndex
-                        ? 'bg-[#2d7a4a] border-[#2d7a4a] shadow-md'
-                        : 'bg-[#2d7a4a] border-gray-200 hover:border-gray-300 hover:shadow-sm'
+                        ? 'bg-[#1A1A1A] border-[#1A1A1A] shadow-md'
+                        : 'bg-[#1A1A1A] border-gray-200 hover:border-gray-300 hover:shadow-sm'
                     }`}
                     style={{ aspectRatio: '3 / 1' }}
                   >
