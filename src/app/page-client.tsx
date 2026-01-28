@@ -775,6 +775,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                 );
               })()}
             </div>
+            </div>
           </div>
         </div>
       </section>
