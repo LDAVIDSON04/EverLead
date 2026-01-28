@@ -87,74 +87,13 @@ const HOVER_CARDS = [
   },
 ] as const;
 
-interface PlanningCardProps {
-  patternId: string;
-  color: string;
-  textColor: string;
-  title: string;
-  costs: readonly string[];
-  whyHeading: string;
-  whyPoints: readonly string[];
-}
-
-function PlanningCard({
-  patternId,
-  color,
-  textColor,
-  title,
-  costs = [],
-  whyHeading,
-  whyPoints = [],
-}: PlanningCardProps) {
-  return (
-    <div
-      className="rounded-[2rem] px-6 sm:px-8 py-6 sm:py-8 transition-all duration-500 hover:scale-[1.02] hover:shadow-[0_20px_50px_rgba(0,0,0,0.15)] shadow-[0_8px_30px_rgba(0,0,0,0.08)] min-h-[420px] sm:h-[480px] flex flex-col relative overflow-hidden"
-      style={{ backgroundColor: color }}
-    >
-      <svg className="absolute inset-0 w-full h-full opacity-[0.04]" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-        <defs>
-          <pattern id={patternId} x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
-            <line x1="0" y1="40" x2="40" y2="0" stroke="black" strokeWidth="1.5" />
-            <line x1="-10" y1="10" x2="10" y2="-10" stroke="black" strokeWidth="1.5" />
-            <line x1="30" y1="50" x2="50" y2="30" stroke="black" strokeWidth="1.5" />
-          </pattern>
-        </defs>
-        <rect x="0" y="0" width="100%" height="100%" fill={`url(#${patternId})`} />
-      </svg>
-      <div className="absolute inset-0 bg-gradient-to-br from-black/5 via-transparent to-black/5 pointer-events-none" />
-      <div className="absolute top-0 right-0 w-64 h-64 bg-black/5 rounded-full blur-[100px]" />
-      <div className="flex flex-col h-full relative z-10" style={{ color: textColor }}>
-        <h2 className="mb-5 sm:mb-7 leading-tight tracking-tight font-extrabold text-lg sm:text-[22px]" style={{ color: textColor }}>
-          {title}
-        </h2>
-        <div className="mb-4 sm:mb-6 flex-shrink-0">
-          <p className="mb-2 sm:mb-2.5 text-[10px] sm:text-[11px] uppercase tracking-wider font-bold" style={{ color: textColor, opacity: 0.6 }}>
-            Typical cost in BC
-          </p>
-          <div className="space-y-1.5 sm:space-y-2">
-            {costs.map((cost, i) => (
-              <p key={i} className="text-xs sm:text-[13px] leading-snug font-semibold" style={{ color: textColor, opacity: 0.9 }}>
-                {cost}
-              </p>
-            ))}
-          </div>
-        </div>
-        <div className="mb-4 sm:mb-6 flex-shrink-0">
-          <p className="mb-2 sm:mb-3 text-[10px] sm:text-[11px] uppercase tracking-wider font-bold" style={{ color: textColor, opacity: 0.6 }}>
-            {whyHeading}
-          </p>
-          <div className="space-y-2 sm:space-y-2.5">
-            {whyPoints.map((point, i) => (
-              <p key={i} className="text-xs sm:text-[13px] leading-snug font-semibold" style={{ color: textColor, opacity: 0.9 }}>
-                • {point}
-              </p>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
+/** Steps for Four Pillars scroll-through. label = list item; cardIndex = HOVER_CARDS index. */
+const PILLAR_STEPS = [
+  { label: "Planning Your Will", cardIndex: 1 },
+  { label: "Funeral Pre Planning", cardIndex: 0 },
+  { label: "Financial Advising", cardIndex: 3 },
+  { label: "Life Insurance", cardIndex: 2 },
+] as const;
 
 interface HomePageClientProps {
   initialLocation: string;
@@ -169,6 +108,8 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
   const [locationSuggestions, setLocationSuggestions] = useState<string[]>([]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const citiesRef = useRef<string[] | null>(null);
+  const pillarsSectionRef = useRef<HTMLElement | null>(null);
+  const [pillarStep, setPillarStep] = useState(0);
 
   // Rotating text for hero title - deferred for mobile performance
   const rotatingTexts = [
@@ -210,6 +151,28 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
       if (interval) clearInterval(interval);
     };
   }, [rotatingTexts.length]);
+
+  // Four Pillars: scroll-driven step (0–3) over 400vh section
+  useEffect(() => {
+    const section = pillarsSectionRef.current;
+    if (!section) return;
+    const onScroll = () => {
+      const rect = section.getBoundingClientRect();
+      const sectionH = section.offsetHeight;
+      const vh = window.innerHeight;
+      const scrollable = Math.max(0, sectionH - vh);
+      if (scrollable <= 0) {
+        setPillarStep(0);
+        return;
+      }
+      const progress = Math.max(0, Math.min(1, -rect.top / scrollable));
+      const step = Math.min(3, Math.floor(progress * 4));
+      setPillarStep(step);
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   const specialtySuggestions = [
     "Funeral Pre Planner",
@@ -663,39 +626,133 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
     </div>
   </div>
 
-      {/* HOVER CARDS – planning types (Figma Hover Cards design) */}
-      <section className="min-h-screen bg-[#0a1929] flex items-center justify-center py-12 md:py-16 px-4 sm:px-6 md:px-12">
-        <div className="max-w-[1600px] w-full">
-          <div className="text-center mb-10 md:mb-14">
-            <h2 className="text-white text-3xl sm:text-4xl md:text-5xl font-semibold tracking-tight mb-3 md:mb-4">
-              The Four Pillars of End of Life Planning
-            </h2>
-            <p className="text-white/90 text-base sm:text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
-              A simple framework that helps families plan with clarity, confidence, and peace of mind
-            </p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
-            {HOVER_CARDS.map((card, index) => (
-              <PlanningCard
-                key={index}
-                patternId={`hover-card-pattern-${index}`}
-                color={card.color}
-                textColor={card.textColor}
-                title={card.title}
-                costs={card.costs}
-                whyHeading={card.whyHeading}
-                whyPoints={card.whyPoints}
-              />
-            ))}
-          </div>
-          <div className="text-center mt-10 md:mt-14">
-            <Link
-              href="/about"
-              className="inline-flex items-center gap-2 bg-white text-[#1A1A1A] font-medium text-base sm:text-lg px-6 py-3 rounded-xl hover:bg-white/90 transition-all shadow-sm"
-            >
-              Learn more
-              <ChevronRight className="w-5 h-5" />
-            </Link>
+      {/* Four Pillars – scroll-through: 1–4 list + card content left, image right */}
+      <section
+        ref={pillarsSectionRef}
+        className="relative bg-white"
+        style={{ height: "400vh" }}
+      >
+        <div className="sticky top-0 left-0 right-0 h-screen flex items-center justify-center px-4 sm:px-6 md:px-12 py-12 md:py-16">
+          <div className="max-w-[1400px] w-full grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+            {/* Left: title, subtitle, 1–4 list, active card content, Learn more */}
+            <div className="flex flex-col">
+              <h2 className="text-[#1A1A1A] text-2xl sm:text-3xl md:text-4xl font-semibold tracking-tight mb-2 md:mb-3">
+                The Four Pillars of End of Life Planning
+              </h2>
+              <p className="text-[#1A1A1A]/70 text-base sm:text-lg mb-8 md:mb-10 max-w-xl">
+                A simple framework that helps families plan with clarity, confidence, and peace of mind
+              </p>
+              <ul className="space-y-4 md:space-y-5 mb-8 md:mb-10">
+                {PILLAR_STEPS.map((item, i) => (
+                  <li key={i} className="flex items-center gap-4">
+                    <span
+                      className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${
+                        i === pillarStep
+                          ? "bg-[#1A1A1A] text-white"
+                          : "bg-[#1A1A1A]/10 text-[#1A1A1A]/60"
+                      }`}
+                    >
+                      {i + 1}
+                    </span>
+                    <span
+                      className={`h-px flex-1 max-w-[80px] ${
+                        i === pillarStep ? "bg-[#1A1A1A]" : "bg-[#1A1A1A]/20"
+                      }`}
+                    />
+                    <span
+                      className={`text-base sm:text-lg font-medium transition-colors ${
+                        i === pillarStep ? "text-[#1A1A1A]" : "text-[#1A1A1A]/60"
+                      }`}
+                    >
+                      {item.label}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              {/* Active card content */}
+              {(() => {
+                const card = HOVER_CARDS[PILLAR_STEPS[pillarStep].cardIndex];
+                return (
+                  <div className="border border-[#1A1A1A]/10 rounded-2xl p-5 md:p-6 bg-[#FAF9F6]/50 mb-6 md:mb-8">
+                    <p className="text-[10px] sm:text-[11px] uppercase tracking-wider font-bold text-[#1A1A1A]/60 mb-2">
+                      Typical cost in BC
+                    </p>
+                    <div className="space-y-1.5 mb-4">
+                      {card.costs.map((cost, j) => (
+                        <p key={j} className="text-sm sm:text-base text-[#1A1A1A] font-medium">
+                          {cost}
+                        </p>
+                      ))}
+                    </div>
+                    <p className="text-[10px] sm:text-[11px] uppercase tracking-wider font-bold text-[#1A1A1A]/60 mb-2">
+                      {card.whyHeading}
+                    </p>
+                    <div className="space-y-1.5">
+                      {card.whyPoints.map((point, j) => (
+                        <p key={j} className="text-sm sm:text-base text-[#1A1A1A] font-medium">
+                          • {point}
+                        </p>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
+              <Link
+                href="/about"
+                className="inline-flex items-center gap-2 w-fit bg-[#1A1A1A] text-white font-medium text-base px-6 py-3 rounded-xl hover:bg-[#1A1A1A]/90 transition-all"
+              >
+                Learn more
+                <ChevronRight className="w-5 h-5" />
+              </Link>
+            </div>
+            {/* Right: image placeholder per step (desktop) */}
+            <div className="hidden lg:block relative aspect-[4/3] max-h-[60vh] rounded-2xl overflow-hidden bg-[#E5E7EB]">
+              {[0, 1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="absolute inset-0 flex items-center justify-center transition-opacity duration-300"
+                  style={{
+                    opacity: i === pillarStep ? 1 : 0,
+                    background:
+                      i === 0
+                        ? "linear-gradient(135deg, #dbeafe 0%, #e0e7ff 100%)"
+                        : i === 1
+                          ? "linear-gradient(135deg, #d1fae5 0%, #d9f99d 100%)"
+                          : i === 2
+                            ? "linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)"
+                            : "linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%)",
+                  }}
+                >
+                  <span className="text-[#1A1A1A]/40 text-sm font-medium">
+                    Image placeholder {i + 1}
+                  </span>
+                </div>
+              ))}
+            </div>
+            {/* Mobile: stacked placeholder below left column */}
+            <div className="lg:hidden relative aspect-[16/10] rounded-2xl overflow-hidden bg-[#E5E7EB]">
+              {[0, 1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="absolute inset-0 flex items-center justify-center transition-opacity duration-300"
+                  style={{
+                    opacity: i === pillarStep ? 1 : 0,
+                    background:
+                      i === 0
+                        ? "linear-gradient(135deg, #dbeafe 0%, #e0e7ff 100%)"
+                        : i === 1
+                          ? "linear-gradient(135deg, #d1fae5 0%, #d9f99d 100%)"
+                          : i === 2
+                            ? "linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)"
+                            : "linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%)",
+                  }}
+                >
+                  <span className="text-[#1A1A1A]/40 text-sm font-medium">
+                    Image placeholder {i + 1}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
