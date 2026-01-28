@@ -542,8 +542,8 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
             <div className="bg-[#FAF9F6] rounded-3xl p-6 border border-[#1A1A1A]/5 relative overflow-visible group flex flex-col transition-all duration-300 ease-out hover:scale-[1.03] hover:shadow-2xl hover:shadow-black/10 hover:-translate-y-1">
               {/* Reserved space for image to prevent CLS */}
               <div className="w-full h-20 flex-shrink-0" aria-hidden="true" />
-              {/* Image overlapping the top - transparent PNG, no wrapper bg or blend */}
-              <div className="absolute -top-48 left-1/2 -translate-x-1/2 w-96 h-96 flex items-center justify-center" style={{ aspectRatio: "1/1" }}>
+              {/* Image overlapping the top - card bg behind so only cartoon shows, no checkerboard */}
+              <div className="absolute -top-48 left-1/2 -translate-x-1/2 w-96 h-96 flex items-center justify-center bg-[#FAF9F6]" style={{ aspectRatio: "1/1" }}>
                 <Image
                   src="/browse-card-image.png"
                   alt="Start planning today with Soradin"
@@ -552,6 +552,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                   className="w-full h-full object-contain"
                   style={{
                     filter: "brightness(1.05) contrast(1.05)",
+                    mixBlendMode: "multiply",
                   }}
                   loading="lazy"
                   fetchPriority="low"
