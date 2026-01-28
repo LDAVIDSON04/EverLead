@@ -617,19 +617,38 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
         </div>
       </section>
 
-      {/* Pre-arrangements image – right half only */}
-      <section className="grid grid-cols-1 md:grid-cols-2 min-h-[100vh]">
-        <div className="hidden md:block bg-[#FAF9F6]" />
-        <div className="relative w-full min-h-[50vh] md:min-h-[100vh]">
-          <Image
-            src="/pre-arrangements-image.png"
-            alt="Pre arrangements"
-            fill
-            className="object-cover object-center"
-            loading="lazy"
-            fetchPriority="low"
-            sizes="(max-width: 768px) 100vw, 50vw"
-          />
+      {/* Pre-arrangements – card left, image right (Empathy-style) */}
+      <section className="bg-[#FAF9F6] py-16 md:py-24 px-4 md:px-6">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 min-h-[min(80vh,640px)] md:min-h-[560px] gap-0 overflow-hidden rounded-2xl shadow-lg md:shadow-xl">
+          {/* Left: card */}
+          <div className="flex flex-col justify-center p-8 md:p-12 lg:p-16 bg-white rounded-t-2xl md:rounded-l-2xl md:rounded-tr-none order-2 md:order-1">
+            <p className="text-sm font-medium text-[#1A1A1A]/60 uppercase tracking-wider mb-2">Planning ahead</p>
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-semibold text-[#1A1A1A] tracking-tight mb-4 md:mb-6">
+              Estate Planning
+            </h2>
+            <p className="text-base md:text-lg text-[#1A1A1A]/70 leading-relaxed mb-6 md:mb-8 max-w-lg">
+              From wills and funeral planning to life insurance and financial advice, we connect you with trusted specialists to help you and your family prepare with clarity and confidence.
+            </p>
+            <Link
+              href="/search"
+              className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/90 transition-all shrink-0"
+              aria-label="Learn more"
+            >
+              <ChevronRight className="w-6 h-6" />
+            </Link>
+          </div>
+          {/* Right: image with rounded edges */}
+          <div className="relative w-full min-h-[50vh] md:min-h-full rounded-b-2xl md:rounded-r-2xl md:rounded-bl-none overflow-hidden order-1 md:order-2">
+            <Image
+              src="/pre-arrangements-image.png"
+              alt="Estate planning"
+              fill
+              className="object-cover object-center"
+              loading="lazy"
+              fetchPriority="low"
+              sizes="(max-width: 768px) 100vw, 50vw"
+            />
+          </div>
         </div>
       </section>
 
