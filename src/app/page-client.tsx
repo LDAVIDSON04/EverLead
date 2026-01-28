@@ -116,7 +116,7 @@ function PlanningCard({
 }: PlanningCardProps) {
   return (
     <div
-      className="rounded-[2rem] px-5 sm:px-6 py-5 sm:py-6 transition-all duration-500 shadow-[0_8px_30px_rgba(0,0,0,0.08)] flex flex-col relative overflow-hidden w-full aspect-[9/19]"
+      className="rounded-[2rem] px-6 sm:px-8 py-6 sm:py-8 transition-all duration-500 shadow-[0_8px_30px_rgba(0,0,0,0.08)] min-h-[360px] sm:min-h-[400px] flex flex-col relative overflow-hidden w-full"
       style={{ backgroundColor: color }}
     >
       <svg className="absolute inset-0 w-full h-full opacity-[0.04]" xmlns="http://www.w3.org/2000/svg" aria-hidden>
@@ -752,8 +752,8 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                 <ChevronRight className="w-5 h-5" />
               </Link>
             </div>
-            {/* Right: active pillar card (desktop + mobile), iPhone-like tall shape */}
-            <div className="w-full max-w-[300px] sm:max-w-[320px] mx-auto lg:max-w-[320px] lg:mx-0">
+            {/* Right: active pillar card (desktop + mobile) */}
+            <div className="w-full max-w-xl mx-auto lg:max-w-none lg:mx-0">
               {(() => {
                 const card = HOVER_CARDS[PILLAR_STEPS[pillarStep].cardIndex];
                 return (
