@@ -590,12 +590,13 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                 style={{
                   filter: "brightness(1.1) contrast(1.05)",
                   mixBlendMode: "multiply",
-                  transform: "scale(1.25)",
+                  transform: "scale(1.35)",
                 }}
                 loading="lazy"
                 fetchPriority="low"
                 sizes="(max-width: 768px) 100vw, 224px"
               />
+              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 w-28 h-px bg-[#1A1A1A]/25" aria-hidden="true" />
               </div>
 
               <div className="relative z-10 flex flex-col items-center text-center">
@@ -629,12 +630,13 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                   style={{
                     filter: "brightness(1.1) contrast(1.05)",
                     mixBlendMode: "multiply",
-                    transform: "scale(1.25)",
+                    transform: "scale(1.35)",
                   }}
                   loading="lazy"
                   fetchPriority="low"
                   sizes="(max-width: 768px) 100vw, 224px"
                 />
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 w-28 h-px bg-[#1A1A1A]/25" aria-hidden="true" />
               </div>
 
               <div className="relative z-10 flex flex-col items-center text-center">
