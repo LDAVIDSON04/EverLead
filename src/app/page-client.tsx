@@ -631,10 +631,11 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
             </p>
             <Link
               href="/search"
-              className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/90 transition-all shrink-0"
-              aria-label="Learn more"
+              className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/90 transition-all shrink-0 text-sm font-medium"
+              aria-label="Learn more about Planning ahead"
             >
-              <ChevronRight className="w-6 h-6" />
+              <span>Learn more about Planning ahead</span>
+              <ChevronRight className="w-5 h-5 shrink-0" />
             </Link>
           </div>
           {/* Right: image with rounded edges */}
