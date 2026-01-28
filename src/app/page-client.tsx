@@ -644,7 +644,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                   Book an appointment today
                 </h3>
                 <p className="text-[#1A1A1A]/60 text-sm leading-relaxed mb-4">
-                  Schedule consultations with trusted funeral specialists online
+                  Book appointments with trusted specialists and put your plan in place today
                 </p>
                 <button 
                   onClick={navigateToSearchWithLocation}
