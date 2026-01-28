@@ -564,7 +564,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                   Browse your options
                 </h3>
                 <p className="text-[#1A1A1A]/60 text-sm leading-relaxed mb-4">
-                  Compare up to 4 specialists on Soradin and book with the ones that fit you best
+                  Browse and compare end of life specialists from the comfort of your home.
                 </p>
                 <button 
                   onClick={navigateToSearchWithLocation}
