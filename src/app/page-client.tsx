@@ -711,30 +711,36 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
               <p className="text-[#1A1A1A]/70 text-base sm:text-lg mb-8 md:mb-10 max-w-xl">
                 A simple framework that helps families plan with clarity, confidence, and peace of mind
               </p>
-              <ul className="space-y-4 md:space-y-5 mb-8 md:mb-10">
+              <ul className="space-y-0 mb-8 md:mb-10">
                 {PILLAR_STEPS.map((item, i) => (
-                  <li key={i} className="flex items-center gap-4">
-                    <span
-                      className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${
-                        i === pillarStep
-                          ? "bg-[#1A1A1A] text-white"
-                          : "bg-[#1A1A1A]/10 text-[#1A1A1A]/60"
-                      }`}
-                    >
-                      {i + 1}
-                    </span>
-                    <span
-                      className={`h-px flex-1 max-w-[80px] ${
-                        i === pillarStep ? "bg-[#1A1A1A]" : "bg-[#1A1A1A]/20"
-                      }`}
-                    />
-                    <span
-                      className={`text-base sm:text-lg font-medium transition-colors ${
-                        i === pillarStep ? "text-[#1A1A1A]" : "text-[#1A1A1A]/60"
-                      }`}
-                    >
-                      {item.label}
-                    </span>
+                  <li key={i} className="list-none">
+                    <div className="flex items-center gap-4">
+                      <span
+                        className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${
+                          i === pillarStep
+                            ? "bg-[#1A1A1A] text-white"
+                            : "bg-[#1A1A1A]/10 text-[#1A1A1A]/60"
+                        }`}
+                      >
+                        {i + 1}
+                      </span>
+                      <span
+                        className={`text-base sm:text-lg font-medium transition-colors ${
+                          i === pillarStep ? "text-[#1A1A1A]" : "text-[#1A1A1A]/60"
+                        }`}
+                      >
+                        {item.label}
+                      </span>
+                    </div>
+                    {i < PILLAR_STEPS.length - 1 && (
+                      <div
+                        className={`w-px flex-shrink-0 ml-5 transition-colors ${
+                          i === pillarStep ? "bg-[#1A1A1A]" : "bg-[#1A1A1A]/20"
+                        }`}
+                        style={{ height: "2rem", marginTop: "1.25rem", marginBottom: "1.25rem" }}
+                        aria-hidden
+                      />
+                    )}
                   </li>
                 ))}
               </ul>
