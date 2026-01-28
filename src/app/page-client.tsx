@@ -23,6 +23,139 @@ const majorBCCities = [
 
 import { cities } from "@/lib/cities";
 
+/** Hover card data for the planning-types section (from Figma Hover Cards design) */
+const HOVER_CARDS = [
+  {
+    color: "#FFFFFF",
+    textColor: "#000000",
+    title: "Funeral Pre Planning",
+    costs: [
+      "Cremation usually ranges from $1,200 to $3,000",
+      "Burial often ranges from $5,000 to over $15,000",
+    ],
+    whyHeading: "Why families plan ahead",
+    whyPoints: [
+      "Lock in today's prices and protect against future inflation",
+      "Spare loved ones from making emotional decisions during grief",
+      "Clearly document cremation or burial wishes to avoid confusion or disputes",
+    ],
+  },
+  {
+    color: "#FFFFFF",
+    textColor: "#000000",
+    title: "Estate Lawyer",
+    costs: [
+      "Simple wills generally range from $350 to over $1,000",
+      "Complex estate plans can cost up to $7,000 or more",
+    ],
+    whyHeading: "Why legal planning matters",
+    whyPoints: [
+      "Ensure assets are distributed according to your wishes",
+      "Prevent costly legal disputes and delays for your family",
+      "Appoint trusted decision makers for children, finances, and healthcare",
+    ],
+  },
+  {
+    color: "#FFFFFF",
+    textColor: "#000000",
+    title: "Life Insurance Broker",
+    costs: [
+      "Monthly premiums often range from $20 to $80 or more for healthy individuals",
+    ],
+    whyHeading: "Why funding matters",
+    whyPoints: [
+      "Cover funeral and final expenses without financial stress",
+      "Provide immediate tax free funds to loved ones",
+      "Protect assets from being sold to cover debts or taxes",
+    ],
+  },
+  {
+    color: "#FFFFFF",
+    textColor: "#000000",
+    title: "Financial Advisor",
+    costs: [
+      "Comprehensive estate and end of life planning often ranges from $2,500 to $7,500 or more",
+      "Ongoing management typically costs around 1 percent of assets annually",
+      "Hourly consulting ranges from $150 to $500 per hour",
+    ],
+    whyHeading: "Why coordination matters",
+    whyPoints: [
+      "Reduce taxes and preserve more wealth for beneficiaries",
+      "Align finances, legal documents, and long term planning",
+      "Create clarity and guidance for families during complex transitions",
+    ],
+  },
+] as const;
+
+interface PlanningCardProps {
+  patternId: string;
+  color: string;
+  textColor: string;
+  title: string;
+  costs: readonly string[];
+  whyHeading: string;
+  whyPoints: readonly string[];
+}
+
+function PlanningCard({
+  patternId,
+  color,
+  textColor,
+  title,
+  costs = [],
+  whyHeading,
+  whyPoints = [],
+}: PlanningCardProps) {
+  return (
+    <div
+      className="rounded-[2rem] px-6 sm:px-8 py-6 sm:py-8 transition-all duration-500 hover:scale-[1.02] hover:shadow-[0_20px_50px_rgba(0,0,0,0.15)] shadow-[0_8px_30px_rgba(0,0,0,0.08)] min-h-[420px] sm:h-[480px] flex flex-col relative overflow-hidden"
+      style={{ backgroundColor: color }}
+    >
+      <svg className="absolute inset-0 w-full h-full opacity-[0.04]" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+        <defs>
+          <pattern id={patternId} x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+            <line x1="0" y1="40" x2="40" y2="0" stroke="black" strokeWidth="1.5" />
+            <line x1="-10" y1="10" x2="10" y2="-10" stroke="black" strokeWidth="1.5" />
+            <line x1="30" y1="50" x2="50" y2="30" stroke="black" strokeWidth="1.5" />
+          </pattern>
+        </defs>
+        <rect x="0" y="0" width="100%" height="100%" fill={`url(#${patternId})`} />
+      </svg>
+      <div className="absolute inset-0 bg-gradient-to-br from-black/5 via-transparent to-black/5 pointer-events-none" />
+      <div className="absolute top-0 right-0 w-64 h-64 bg-black/5 rounded-full blur-[100px]" />
+      <div className="flex flex-col h-full relative z-10" style={{ color: textColor }}>
+        <h2 className="mb-5 sm:mb-7 leading-tight tracking-tight font-extrabold text-lg sm:text-[22px]" style={{ color: textColor }}>
+          {title}
+        </h2>
+        <div className="mb-4 sm:mb-6 flex-shrink-0">
+          <p className="mb-2 sm:mb-2.5 text-[10px] sm:text-[11px] uppercase tracking-wider font-bold" style={{ color: textColor, opacity: 0.6 }}>
+            Typical cost in BC
+          </p>
+          <div className="space-y-1.5 sm:space-y-2">
+            {costs.map((cost, i) => (
+              <p key={i} className="text-xs sm:text-[13px] leading-snug font-semibold" style={{ color: textColor, opacity: 0.9 }}>
+                {cost}
+              </p>
+            ))}
+          </div>
+        </div>
+        <div className="mb-4 sm:mb-6 flex-shrink-0">
+          <p className="mb-2 sm:mb-3 text-[10px] sm:text-[11px] uppercase tracking-wider font-bold" style={{ color: textColor, opacity: 0.6 }}>
+            {whyHeading}
+          </p>
+          <div className="space-y-2 sm:space-y-2.5">
+            {whyPoints.map((point, i) => (
+              <p key={i} className="text-xs sm:text-[13px] leading-snug font-semibold" style={{ color: textColor, opacity: 0.9 }}>
+                • {point}
+              </p>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 interface HomePageClientProps {
   initialLocation: string;
 }
@@ -529,6 +662,26 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
       </div>
     </div>
   </div>
+
+      {/* HOVER CARDS – planning types (Figma Hover Cards design) */}
+      <section className="min-h-screen bg-black flex items-center justify-center py-12 md:py-16 px-4 sm:px-6 md:px-12">
+        <div className="max-w-[1600px] w-full">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+            {HOVER_CARDS.map((card, index) => (
+              <PlanningCard
+                key={index}
+                patternId={`hover-card-pattern-${index}`}
+                color={card.color}
+                textColor={card.textColor}
+                title={card.title}
+                costs={card.costs}
+                whyHeading={card.whyHeading}
+                whyPoints={card.whyPoints}
+              />
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* TWO BOXES SECTION */}
       <section className="py-24 px-4 bg-white">
