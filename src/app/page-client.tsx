@@ -760,8 +760,8 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                   <div key={pillarStep} className="animate-in fade-in duration-300">
                     <PlanningCard
                       patternId={`pillar-card-${PILLAR_STEPS[pillarStep].cardIndex}`}
-                      color={card.color}
-                      textColor={card.textColor}
+                      color="#0C6F3C"
+                      textColor="#FFFFFF"
                       title={card.title}
                       costs={card.costs}
                       whyHeading={card.whyHeading}
