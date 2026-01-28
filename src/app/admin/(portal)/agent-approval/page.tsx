@@ -230,7 +230,7 @@ export default function AgentApprovalPage() {
       case 'pending':
         return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       case 'approved':
-        return 'bg-navy-100 text-navy-800 border-navy-200';
+        return 'bg-neutral-100 text-neutral-800 border-neutral-200';
       case 'rejected':
       case 'declined':
         return 'bg-red-100 text-red-800 border-red-200';
@@ -298,7 +298,7 @@ export default function AgentApprovalPage() {
       {success && (
         <div className={`mb-6 rounded-lg border px-4 py-3 text-sm flex items-center justify-between ${
           success.type === 'approve' 
-            ? 'border-navy-200 bg-navy-50 text-navy-700'
+            ? 'border-neutral-200 bg-neutral-50 text-neutral-700'
             : success.type === 'decline'
             ? 'border-red-200 bg-red-50 text-red-700'
             : 'border-orange-200 bg-orange-50 text-orange-700'
@@ -330,7 +330,7 @@ export default function AgentApprovalPage() {
         </div>
         <div className="bg-white border border-neutral-200 rounded-lg p-4">
           <p className="text-sm text-neutral-600 mb-1">Approved Today</p>
-          <p className="text-3xl text-navy-700">0</p>
+          <p className="text-3xl text-neutral-700">0</p>
         </div>
         <div className="bg-white border border-neutral-200 rounded-lg p-4">
           <p className="text-sm text-neutral-600 mb-1">Avg. Review Time</p>
@@ -364,7 +364,7 @@ export default function AgentApprovalPage() {
                       {specialist.tags.length > 0 && (
                         <div className="flex gap-1 mt-1">
                           {specialist.tags.map(tag => (
-                            <span key={tag} className="px-2 py-0.5 bg-navy-100 text-navy-700 text-xs rounded">
+                            <span key={tag} className="px-2 py-0.5 bg-neutral-100 text-neutral-700 text-xs rounded">
                               {tag}
                             </span>
                           ))}
@@ -380,7 +380,7 @@ export default function AgentApprovalPage() {
                         <div key={idx} className="flex items-center gap-2 text-sm">
                           {doc.uploaded ? (
                             <>
-                              <Check className="w-4 h-4 text-navy-700" />
+                              <Check className="w-4 h-4 text-neutral-700" />
                               <span className="text-neutral-700">{doc.name}</span>
                               {doc.name === 'Profile Bio' && specialist.bio ? (
                                 <button 
@@ -407,7 +407,7 @@ export default function AgentApprovalPage() {
                                       if (e.target === modal) modal.remove();
                                     });
                                   }}
-                                  className="text-navy-700 hover:text-navy-800"
+                                  className="text-neutral-700 hover:text-neutral-800"
                                   title="View Profile Bio"
                                 >
                                   <Eye className="w-3 h-3" />
@@ -457,7 +457,7 @@ export default function AgentApprovalPage() {
                                                 ${docInfo.issuer ? `<p class="text-sm text-gray-600"><strong>Issuer:</strong> ${docIssuer}</p>` : ''}
                                                 ${docInfo.expiry ? `<p class="text-sm text-gray-600"><strong>Expiry:</strong> ${docExpiry}</p>` : ''}
                                                 <div class="flex gap-3 pt-4 border-t">
-                                                  <a href="${docUrl}" target="_blank" rel="noopener noreferrer" class="px-4 py-2 bg-navy-700 text-white rounded hover:bg-navy-800 text-sm inline-flex items-center gap-2">
+                                                  <a href="${docUrl}" target="_blank" rel="noopener noreferrer" class="px-4 py-2 bg-neutral-700 text-white rounded hover:bg-neutral-800 text-sm inline-flex items-center gap-2">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                                                     View Document
                                                   </a>
@@ -509,7 +509,7 @@ export default function AgentApprovalPage() {
                                         if (e.target === modal) modal.remove();
                                       });
                                     }}
-                                    className="text-navy-700 hover:text-navy-800"
+                                    className="text-neutral-700 hover:text-neutral-800"
                                     title="View Document"
                                   >
                                     <Eye className="w-3 h-3" />
@@ -543,7 +543,7 @@ export default function AgentApprovalPage() {
                                         alert('Document file not available for download');
                                       }
                                     }}
-                                    className="text-navy-700 hover:text-navy-800"
+                                    className="text-neutral-700 hover:text-neutral-800"
                                     title="Download Document"
                                   >
                                     <Download className="w-3 h-3" />
@@ -602,23 +602,23 @@ export default function AgentApprovalPage() {
       </div>
 
       {/* Approval Rules */}
-      <div className="mt-8 bg-navy-50 border border-navy-200 rounded-lg p-6">
+      <div className="mt-8 bg-neutral-50 border border-neutral-200 rounded-lg p-6">
         <h3 className="text-lg mb-3 text-black">Approval Rules</h3>
         <ul className="space-y-2 text-sm text-neutral-700">
           <li className="flex items-start gap-2">
-            <Check className="w-4 h-4 text-navy-700 mt-0.5" />
+            <Check className="w-4 h-4 text-neutral-700 mt-0.5" />
             <span>All required documents must be uploaded and valid</span>
           </li>
           <li className="flex items-start gap-2">
-            <Check className="w-4 h-4 text-navy-700 mt-0.5" />
+            <Check className="w-4 h-4 text-neutral-700 mt-0.5" />
             <span>Email domain should match company domain (optional verification)</span>
           </li>
           <li className="flex items-start gap-2">
-            <Check className="w-4 h-4 text-navy-700 mt-0.5" />
+            <Check className="w-4 h-4 text-neutral-700 mt-0.5" />
             <span>Region and specialty must match Soradin coverage areas</span>
           </li>
           <li className="flex items-start gap-2">
-            <Check className="w-4 h-4 text-navy-700 mt-0.5" />
+            <Check className="w-4 h-4 text-neutral-700 mt-0.5" />
             <span>License verification through state board (manual check)</span>
           </li>
         </ul>
@@ -786,7 +786,7 @@ export default function AgentApprovalPage() {
                 <button
                   onClick={() => handleApprove(selectedAgent.id)}
                   disabled={processing === selectedAgent.id}
-                  className="flex-1 px-4 py-2 bg-navy-700 text-white rounded-md hover:bg-navy-800 text-sm flex items-center justify-center gap-2 disabled:opacity-50"
+                  className="flex-1 px-4 py-2 bg-neutral-700 text-white rounded-md hover:bg-neutral-800 text-sm flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   <Check className="w-4 h-4" />
                   Approve
@@ -828,7 +828,7 @@ export default function AgentApprovalPage() {
                 value={requestInfoText}
                 onChange={(e) => setRequestInfoText(e.target.value)}
                 placeholder="Please specify what additional information or documents are needed for approval..."
-                className="w-full h-32 px-3 py-2 border border-neutral-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-navy-700"
+                className="w-full h-32 px-3 py-2 border border-neutral-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-neutral-700"
               />
             </div>
             <div className="p-6 border-t border-neutral-200 flex gap-3 justify-end">
@@ -844,7 +844,7 @@ export default function AgentApprovalPage() {
               <button
                 onClick={submitRequestInfo}
                 disabled={!requestInfoText.trim() || processing === selectedAgent.id}
-                className="px-4 py-2 bg-navy-700 text-white rounded-md hover:bg-navy-800 text-sm disabled:opacity-50"
+                className="px-4 py-2 bg-neutral-700 text-white rounded-md hover:bg-neutral-800 text-sm disabled:opacity-50"
               >
                 {processing === selectedAgent.id ? 'Sending...' : 'Send Request'}
               </button>

@@ -167,7 +167,7 @@ function AgentProfileContent() {
               <Calendar className="w-5 h-5" />
               <div>
                 <p className="font-semibold">Rescheduling Your Appointment</p>
-                <p className="text-sm text-navy-100">Select a new date and time below. Your previous appointment has been cancelled.</p>
+                <p className="text-sm text-neutral-100">Select a new date and time below. Your previous appointment has been cancelled.</p>
               </div>
             </div>
           </div>

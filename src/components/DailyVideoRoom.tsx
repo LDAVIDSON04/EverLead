@@ -79,7 +79,7 @@ export function DailyVideoRoom({ roomName, identity, role }: DailyVideoRoomProps
           <p className="text-red-300 mb-6">{error || "Missing room URL"}</p>
           <a
             href="/"
-            className="inline-block px-5 py-2.5 bg-navy-600 rounded-lg hover:bg-navy-700 font-medium"
+            className="inline-block px-5 py-2.5 bg-neutral-600 rounded-lg hover:bg-neutral-700 font-medium"
           >
             Back to home
           </a>

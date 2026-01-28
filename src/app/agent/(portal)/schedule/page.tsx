@@ -175,7 +175,7 @@ export default function SchedulePage() {
       'bg-cyan-200',      // Monday - cyan
       'bg-orange-200',    // Tuesday - orange
       'bg-amber-200',     // Wednesday - amber
-      'bg-navy-200',   // Thursday - emerald/green
+      'bg-neutral-200',   // Thursday - emerald/green
       'bg-purple-200',    // Friday - purple
       'bg-pink-200',      // Saturday - pink
     ];
@@ -1087,7 +1087,7 @@ export default function SchedulePage() {
           </button>
           <button 
             onClick={() => setShowAddAvailabilityModal(true)}
-            className="px-3 py-1.5 md:px-6 md:py-2 text-xs md:text-sm bg-navy-700 text-white rounded-lg hover:bg-navy-800 transition-colors"
+            className="px-3 py-1.5 md:px-6 md:py-2 text-xs md:text-sm bg-neutral-700 text-white rounded-lg hover:bg-neutral-800 transition-colors"
           >
             Edit availability
           </button>
@@ -1505,7 +1505,7 @@ export default function SchedulePage() {
             <div className="space-y-3">
               <button
                 onClick={() => handleConnectCalendar("google")}
-                className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white border-2 border-gray-300 rounded-lg text-gray-700 hover:border-navy-800 hover:bg-navy-50 transition-colors font-medium"
+                className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white border-2 border-gray-300 rounded-lg text-gray-700 hover:border-neutral-800 hover:bg-neutral-50 transition-colors font-medium"
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -1517,7 +1517,7 @@ export default function SchedulePage() {
               </button>
               <button
                 onClick={() => handleConnectCalendar("microsoft")}
-                className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white border-2 border-gray-300 rounded-lg text-gray-700 hover:border-navy-800 hover:bg-navy-50 transition-colors font-medium"
+                className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white border-2 border-gray-300 rounded-lg text-gray-700 hover:border-neutral-800 hover:bg-neutral-50 transition-colors font-medium"
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
                   <path fill="#F25022" d="M1 1h10v10H1z"/>
@@ -1549,8 +1549,8 @@ export default function SchedulePage() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg w-full max-w-md shadow-xl">
             <div className="p-6">
-              <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-navy-100 rounded-full">
-                <svg className="w-8 h-8 text-navy-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-neutral-100 rounded-full">
+                <svg className="w-8 h-8 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
@@ -1565,7 +1565,7 @@ export default function SchedulePage() {
                   setShowSyncSuccessModal(false);
                   setSyncProvider(null);
                 }}
-                className="w-full px-4 py-2 bg-navy-700 text-white rounded-lg hover:bg-navy-800 transition-colors"
+                className="w-full px-4 py-2 bg-neutral-700 text-white rounded-lg hover:bg-neutral-800 transition-colors"
               >
                 Got it
               </button>
@@ -1583,7 +1583,7 @@ export default function SchedulePage() {
             // Show modern toast notification instead of alert
             if (typeof window !== 'undefined') {
               const toastDiv = document.createElement('div');
-              toastDiv.className = 'fixed top-4 right-4 z-50 flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg border-2 bg-navy-600 border-navy-700 text-white min-w-[300px] max-w-md transform transition-all duration-300 translate-x-0 opacity-100';
+              toastDiv.className = 'fixed top-4 right-4 z-50 flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg border-2 bg-neutral-600 border-neutral-700 text-white min-w-[300px] max-w-md transform transition-all duration-300 translate-x-0 opacity-100';
               toastDiv.innerHTML = `
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0">
                   <path d="M20 6L9 17l-5-5"/>
@@ -1700,7 +1700,7 @@ export default function SchedulePage() {
               </div>
               <div>
                 <div className="text-sm text-gray-500 mb-1">Status</div>
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-navy-100 text-navy-800">
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-neutral-100 text-neutral-800">
                   External
                 </span>
               </div>
@@ -1708,7 +1708,7 @@ export default function SchedulePage() {
             <div className="mt-6 pt-4 border-t border-gray-200">
               <button
                 onClick={() => setViewingExternalAppointment(null)}
-                className="w-full px-4 py-2 bg-navy-800 text-white rounded-lg hover:bg-navy-900 transition-colors"
+                className="w-full px-4 py-2 bg-neutral-800 text-white rounded-lg hover:bg-neutral-900 transition-colors"
               >
                 Close
               </button>

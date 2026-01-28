@@ -161,7 +161,7 @@ export default function AdminPaymentsPage() {
     payments.reduce((sum, p) => sum + (p.status === "refunded" ? p.amount_cents : 0), 0) / 100;
 
   const statusClass = (status: string) => {
-    if (status === "completed") return "bg-navy-100 text-navy-700";
+    if (status === "completed") return "bg-neutral-100 text-neutral-700";
     if (status === "pending") return "bg-yellow-100 text-yellow-700";
     if (status === "failed") return "bg-red-100 text-red-700";
     if (status === "refunded") return "bg-neutral-100 text-neutral-700";
@@ -248,7 +248,7 @@ export default function AdminPaymentsPage() {
                   <td className="px-6 py-4 text-sm text-black">
                     ${(txn.amount_cents / 100).toFixed(2)}
                   </td>
-                  <td className="px-6 py-4 text-sm text-navy-700">
+                  <td className="px-6 py-4 text-sm text-neutral-700">
                     ${((txn.fee_cents ?? 0) / 100).toFixed(2)}
                   </td>
                   <td className="px-6 py-4">

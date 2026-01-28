@@ -117,7 +117,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                     href={item.href}
                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                       isActive 
-                        ? 'bg-navy-700 text-white' 
+                        ? 'bg-neutral-700 text-white' 
                         : 'text-neutral-300 hover:bg-neutral-900 hover:text-white'
                     }`}
                   >
@@ -126,8 +126,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                     {item.badge && item.href === '/admin/agent-approval' && pendingAgentCount > 0 && (
                       <span className={`px-2 py-0.5 text-xs rounded-full ${
                         isActive 
-                          ? 'bg-navy-900 text-navy-100' 
-                          : 'bg-navy-700 text-white'
+                          ? 'bg-neutral-900 text-neutral-100' 
+                          : 'bg-neutral-700 text-white'
                       }`}>
                         {pendingAgentCount}
                       </span>
@@ -142,7 +142,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         {/* User Info + Logout */}
         <div className="p-4 border-t border-neutral-800 space-y-3">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-navy-700 flex items-center justify-center text-sm text-white">
+            <div className="w-8 h-8 rounded-full bg-neutral-700 flex items-center justify-center text-sm text-white">
               {userName ? userName.charAt(0).toUpperCase() : <User className="w-4 h-4" />}
             </div>
             <div className="flex-1">

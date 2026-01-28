@@ -17,7 +17,7 @@ export default function ProviderHelpPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Header & Hero Section Combined */}
-      <section className="relative bg-gradient-to-br from-[#1e3a5f] to-[#0f172a] px-6 overflow-hidden">
+      <section className="relative bg-gradient-to-br from-[#1A1A1A] to-[#0a0a0a] px-6 overflow-hidden">
         {/* Pattern overlay */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute inset-0" style={{
@@ -28,10 +28,10 @@ export default function ProviderHelpPage() {
         
         {/* Decorative circles */}
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-0 left-0 w-96 h-96 bg-[#0f172a] rounded-full opacity-30 blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
-          <div className="absolute top-1/2 left-1/4 w-72 h-72 bg-[#1e3a5f] rounded-full opacity-20 blur-3xl"></div>
-          <div className="absolute bottom-0 right-0 w-96 h-96 bg-[#0f172a] rounded-full opacity-30 blur-3xl translate-x-1/3 translate-y-1/3"></div>
-          <div className="absolute top-1/3 right-1/3 w-64 h-64 bg-[#1e3a5f] rounded-full opacity-20 blur-2xl"></div>
+          <div className="absolute top-0 left-0 w-96 h-96 bg-[#0a0a0a] rounded-full opacity-30 blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
+          <div className="absolute top-1/2 left-1/4 w-72 h-72 bg-[#1A1A1A] rounded-full opacity-20 blur-3xl"></div>
+          <div className="absolute bottom-0 right-0 w-96 h-96 bg-[#0a0a0a] rounded-full opacity-30 blur-3xl translate-x-1/3 translate-y-1/3"></div>
+          <div className="absolute top-1/3 right-1/3 w-64 h-64 bg-[#1A1A1A] rounded-full opacity-20 blur-2xl"></div>
         </div>
 
         {/* Header */}
@@ -83,8 +83,8 @@ export default function ProviderHelpPage() {
                 className="group bg-white border border-gray-200 rounded-lg p-8 hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
               >
                 <div className="flex flex-col items-center text-center">
-                  <div className="w-16 h-16 mb-4 bg-[#1e3a5f]/10 rounded-full flex items-center justify-center group-hover:bg-[#1e3a5f] transition-colors">
-                    <Icon className="w-8 h-8 text-[#1e3a5f] group-hover:text-white transition-colors" />
+                  <div className="w-16 h-16 mb-4 bg-[#1A1A1A]/10 rounded-full flex items-center justify-center group-hover:bg-[#1A1A1A] transition-colors">
+                    <Icon className="w-8 h-8 text-[#1A1A1A] group-hover:text-white transition-colors" />
                   </div>
                   <h3 className="text-lg mb-2 text-black font-medium">{category.title}</h3>
                   <p className="text-sm text-gray-500">{category.articles} articles</p>

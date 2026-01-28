@@ -163,7 +163,7 @@ export default function AgentLeadCard({ lead, firstFreeAvailable = false, onClai
                 type="button"
                 onClick={firstFreeAvailable ? handleClaimFree : handleBuyNow}
                 disabled={buying || claiming}
-                className="inline-flex items-center justify-center rounded-full bg-navy-500 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-navy-600 transition-all disabled:cursor-not-allowed disabled:opacity-70"
+                className="inline-flex items-center justify-center rounded-full bg-neutral-500 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-neutral-600 transition-all disabled:cursor-not-allowed disabled:opacity-70"
               >
                 {claiming 
                   ? 'Claiming free lead…' 

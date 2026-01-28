@@ -90,7 +90,7 @@ export default function CalendarSyncPage() {
           <div className="flex items-center gap-2">
             {googleConnected ? (
               <>
-                <Badge className="bg-navy-100 text-navy-800">Connected</Badge>
+                <Badge className="bg-neutral-100 text-neutral-800">Connected</Badge>
                 <button
                   onClick={async () => {
                     try {
@@ -135,7 +135,7 @@ export default function CalendarSyncPage() {
                     alert("Failed to connect. Please try again.");
                   }
                 }}
-                className="px-4 py-2 bg-navy-800 text-white rounded-lg hover:bg-navy-900"
+                className="px-4 py-2 bg-neutral-800 text-white rounded-lg hover:bg-neutral-900"
               >
                 Connect Google Calendar
               </button>
@@ -156,7 +156,7 @@ export default function CalendarSyncPage() {
           <div className="flex items-center gap-2">
             {microsoftConnected ? (
               <>
-                <Badge className="bg-navy-100 text-navy-800">Connected</Badge>
+                <Badge className="bg-neutral-100 text-neutral-800">Connected</Badge>
                 <button
                   onClick={async () => {
                     try {
@@ -201,7 +201,7 @@ export default function CalendarSyncPage() {
                     alert("Failed to connect. Please try again.");
                   }
                 }}
-                className="px-4 py-2 bg-navy-800 text-white rounded-lg hover:bg-navy-900"
+                className="px-4 py-2 bg-neutral-800 text-white rounded-lg hover:bg-neutral-900"
               >
                 Connect Microsoft Calendar
               </button>

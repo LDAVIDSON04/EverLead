@@ -247,13 +247,13 @@ export default function AdminSpecialistsPage() {
             placeholder="Search by name or company..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-700"
+            className="w-full pl-10 pr-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-700"
           />
         </div>
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value as any)}
-          className="px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-700"
+          className="px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-700"
         >
           <option value="all">All Approved Agents</option>
           <option value="active">Active</option>
@@ -302,8 +302,8 @@ export default function AdminSpecialistsPage() {
                   <td className="px-6 py-4">
                     {specialist.calendar_google && (
                       <div className="flex items-center gap-2">
-                        <Calendar className="w-4 h-4 text-navy-700" />
-                        <span className="text-sm text-navy-700">Google</span>
+                        <Calendar className="w-4 h-4 text-neutral-700" />
+                        <span className="text-sm text-neutral-700">Google</span>
                       </div>
                     )}
                     {specialist.calendar_microsoft && (
@@ -320,7 +320,7 @@ export default function AdminSpecialistsPage() {
                     <span
                       className={`inline-flex px-3 py-1 rounded-full text-xs ${
                         specialist.status === "approved"
-                          ? "bg-navy-100 text-navy-700"
+                          ? "bg-neutral-100 text-neutral-700"
                           : "bg-red-100 text-red-700"
                       }`}
                     >
@@ -487,7 +487,7 @@ export default function AdminSpecialistsPage() {
                     <span
                       className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${
                         selectedSpecialist.status === "approved"
-                          ? "bg-navy-100 text-navy-700"
+                          ? "bg-neutral-100 text-neutral-700"
                           : selectedSpecialist.status === "needs-info"
                           ? "bg-orange-100 text-orange-700"
                           : "bg-red-100 text-red-700"
@@ -507,10 +507,10 @@ export default function AdminSpecialistsPage() {
                 </h3>
                 <div className="flex gap-4">
                   {selectedSpecialist.calendar_google ? (
-                    <div className="flex items-center gap-2 px-4 py-2 bg-navy-50 rounded-lg">
-                      <Calendar className="w-4 h-4 text-navy-700" />
-                      <span className="text-sm text-navy-700 font-medium">Google Calendar</span>
-                      <span className="text-xs text-navy-600">Connected</span>
+                    <div className="flex items-center gap-2 px-4 py-2 bg-neutral-50 rounded-lg">
+                      <Calendar className="w-4 h-4 text-neutral-700" />
+                      <span className="text-sm text-neutral-700 font-medium">Google Calendar</span>
+                      <span className="text-xs text-neutral-600">Connected</span>
                     </div>
                   ) : (
                     <div className="flex items-center gap-2 px-4 py-2 bg-neutral-100 rounded-lg">

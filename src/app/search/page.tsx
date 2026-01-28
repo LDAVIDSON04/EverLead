@@ -1075,9 +1075,9 @@ function SearchResults() {
   ];
 
   const avatarColors = [
-    'bg-navy-700',
-    'bg-navy-800',
-    'bg-navy-900',
+    'bg-neutral-700',
+    'bg-neutral-800',
+    'bg-neutral-900',
   ];
 
   return (
@@ -1162,7 +1162,7 @@ function SearchResults() {
                   
                   {selectedAppointment.agent?.rating && selectedAppointment.agent.rating > 0 && selectedAppointment.agent?.reviewCount && selectedAppointment.agent.reviewCount > 0 && (
                     <div className="flex items-center gap-1">
-                      <Star className="w-4 h-4 fill-navy-600 text-navy-600" />
+                      <Star className="w-4 h-4 fill-neutral-600 text-neutral-600" />
                       <span className="text-sm text-black">{selectedAppointment.agent.rating.toFixed(1)}</span>
                       <span className="text-sm text-gray-500">· {selectedAppointment.agent.reviewCount} {selectedAppointment.agent.reviewCount === 1 ? 'review' : 'reviews'}</span>
                     </div>
@@ -1278,8 +1278,8 @@ function SearchResults() {
                                 }}
                                 className={`px-4 py-2 rounded-md text-sm transition-colors ${
                                   isSelected
-                                    ? 'bg-navy-600 text-white'
-                                    : 'bg-navy-100 text-black hover:bg-navy-200'
+                                    ? 'bg-neutral-600 text-white'
+                                    : 'bg-neutral-100 text-black hover:bg-neutral-200'
                                 }`}
                                 style={{
                                   border: 'none',
@@ -1357,18 +1357,18 @@ function SearchResults() {
                   placeholder="Service or specialist"
                   value={inputQuery}
                   onChange={(e) => setInputQuery(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-800"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-800"
                 />
                 <input
                   type="text"
                   placeholder="Service type"
                   value={inputService}
                   onChange={(e) => setInputService(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-800"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-800"
                 />
                 <button 
                   type="submit"
-                  className="w-full bg-navy-800 text-white px-6 py-2 rounded-lg hover:bg-navy-900 transition-colors flex items-center justify-center gap-2"
+                  className="w-full bg-neutral-800 text-white px-6 py-2 rounded-lg hover:bg-neutral-900 transition-colors flex items-center justify-center gap-2"
                   onClick={() => setShowMobileMenu(false)}
                 >
                   <Search className="w-5 h-5" />
@@ -1400,7 +1400,7 @@ function SearchResults() {
                   placeholder="Service or specialist"
                   value={inputQuery}
                   onChange={(e) => setInputQuery(e.target.value)}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-800"
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-800"
                 />
                 <div className="relative flex-1 min-w-[200px]">
                   <input
@@ -1420,7 +1420,7 @@ function SearchResults() {
                     onBlur={() => {
                       setTimeout(() => setShowLocationDropdown(false), 200);
                     }}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-800"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-800"
                   />
                   {/* Location Autocomplete Dropdown */}
                   {showLocationDropdown && locationSuggestions.length > 0 && (
@@ -1448,7 +1448,7 @@ function SearchResults() {
                 </div>
                 <button 
                   type="submit"
-                  className="bg-navy-800 text-white px-6 py-2 rounded-lg hover:bg-navy-900 transition-colors flex items-center gap-2"
+                  className="bg-neutral-800 text-white px-6 py-2 rounded-lg hover:bg-neutral-900 transition-colors flex items-center gap-2"
                 >
                   <Search className="w-5 h-5" />
                 </button>
@@ -1524,7 +1524,7 @@ function SearchResults() {
                   router.push(`/search?${params.toString()}`);
                 }
               }}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-800 text-sm"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-800 text-sm"
             />
             {/* Location Autocomplete Dropdown */}
             {showLocationDropdown && locationSuggestions.length > 0 && (
@@ -1570,7 +1570,7 @@ function SearchResults() {
             <div className="flex gap-3 justify-center">
               <Link
                 href="/"
-                className="inline-block bg-navy-800 hover:bg-navy-900 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
+                className="inline-block bg-neutral-800 hover:bg-neutral-900 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
               >
                 Return to Homepage
               </Link>
@@ -1820,7 +1820,7 @@ function SearchResults() {
                               className={`
                                 relative px-3 py-2 rounded-lg border text-center text-sm transition-colors
                                 ${hasSpots 
-                                  ? 'bg-navy-800 text-white border-navy-800 hover:bg-navy-900 cursor-pointer' 
+                                  ? 'bg-neutral-800 text-white border-neutral-800 hover:bg-neutral-900 cursor-pointer' 
                                   : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'}
                               `}
                             >
@@ -1838,7 +1838,7 @@ function SearchResults() {
                         })}
                         <button 
                           onClick={() => handleMoreButtonClick(appointment, index)}
-                          className="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:border-navy-800 hover:bg-navy-50 text-sm flex items-center justify-center"
+                          className="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:border-neutral-800 hover:bg-neutral-50 text-sm flex items-center justify-center"
                         >
                           More
                         </button>
@@ -2030,7 +2030,7 @@ function SearchResults() {
                               className={`
                                 relative px-3 py-2 rounded-lg border text-center text-sm transition-colors
                                 ${hasSpots 
-                                  ? 'bg-navy-800 text-white border-navy-800 hover:bg-navy-900 cursor-pointer' 
+                                  ? 'bg-neutral-800 text-white border-neutral-800 hover:bg-neutral-900 cursor-pointer' 
                                   : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'}
                               `}
                             >
@@ -2048,7 +2048,7 @@ function SearchResults() {
                         })}
                         <button 
                           onClick={() => handleMoreButtonClick(appointment, index)}
-                          className="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:border-navy-800 hover:bg-navy-50 text-sm flex items-center justify-center"
+                          className="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:border-neutral-800 hover:bg-neutral-50 text-sm flex items-center justify-center"
                         >
                           More
                         </button>
@@ -2076,7 +2076,7 @@ function SearchResults() {
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header with Agent Info */}
-            <div className="bg-gradient-to-r from-navy-50 to-white p-6 border-b border-gray-200 sticky top-0 z-10">
+            <div className="bg-gradient-to-r from-neutral-50 to-white p-6 border-b border-gray-200 sticky top-0 z-10">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-2xl font-bold text-black">Book an appointment</h2>
                 <button
@@ -2097,12 +2097,12 @@ function SearchResults() {
                         alt={selectedAgentInfo.full_name || "Agent"}
                         width={80}
                         height={80}
-                        className="rounded-full object-cover border-2 border-navy-600"
+                        className="rounded-full object-cover border-2 border-neutral-600"
                         unoptimized
                       />
                     ) : (
-                      <div className="w-20 h-20 bg-navy-100 rounded-full flex items-center justify-center border-2 border-navy-600">
-                        <span className="text-navy-700 text-2xl font-semibold">
+                      <div className="w-20 h-20 bg-neutral-100 rounded-full flex items-center justify-center border-2 border-neutral-600">
+                        <span className="text-neutral-700 text-2xl font-semibold">
                           {(selectedAgentInfo.full_name || "A")[0].toUpperCase()}
                         </span>
                       </div>
@@ -2166,13 +2166,13 @@ function SearchResults() {
             {/* Content */}
             <div className="p-6">
               <div className="flex items-center gap-2 mb-4">
-                <Calendar className="w-5 h-5 text-navy-600" />
+                <Calendar className="w-5 h-5 text-neutral-600" />
                 <h3 className="text-lg font-semibold text-black">Select a date and time</h3>
               </div>
 
               {loadingTimeSlots ? (
                 <div className="text-center py-12">
-                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-navy-600 mb-4"></div>
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-neutral-600 mb-4"></div>
                   <p className="text-gray-600">Loading available times...</p>
                 </div>
               ) : allAvailabilityDays.length === 0 ? (
@@ -2375,10 +2375,10 @@ function SearchResults() {
                                       // IMMEDIATE navigation
                                       window.location.href = url;
                                     }}
-                                    className="group relative w-full px-4 py-3 rounded-lg text-sm font-medium transition-all bg-navy-100 text-black hover:bg-navy-600 hover:text-white border-2 border-navy-300 hover:border-navy-600 shadow-sm hover:shadow-md"
+                                    className="group relative w-full px-4 py-3 rounded-lg text-sm font-medium transition-all bg-neutral-100 text-black hover:bg-neutral-600 hover:text-white border-2 border-neutral-300 hover:border-neutral-600 shadow-sm hover:shadow-md"
                                   >
                                     {mode === 'video' && (
-                                      <span className="absolute top-1.5 right-1.5 text-navy-800 group-hover:text-white transition-colors" aria-hidden>
+                                      <span className="absolute top-1.5 right-1.5 text-neutral-800 group-hover:text-white transition-colors" aria-hidden>
                                         <Video className="w-5 h-5" strokeWidth={2.5} />
                                       </span>
                                     )}
@@ -2580,7 +2580,7 @@ function SearchResults() {
                             {hasMoreReviews && (
                               <button
                                 onClick={() => setShowAllReviews(!showAllReviews)}
-                                className="mt-4 text-[#1e3a5f] hover:text-[#1e3a5f]/80 transition-colors font-medium text-sm"
+                                className="mt-4 text-[#1A1A1A] hover:text-[#1A1A1A]/80 transition-colors font-medium text-sm"
                               >
                                 {showAllReviews ? 'Show fewer reviews' : `See more reviews (${sortedReviews.length - 3} more)`}
                               </button>

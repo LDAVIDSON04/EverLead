@@ -157,7 +157,7 @@ export function CreateEventModal({
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
           <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-navy-700"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-neutral-700"></div>
           </div>
         </div>
       </div>
@@ -211,7 +211,7 @@ export function CreateEventModal({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Event title"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1e3a5f] focus:border-[#1e3a5f] outline-none"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1A1A] focus:border-[#1A1A1A] outline-none"
               autoFocus
             />
           </div>
@@ -229,7 +229,7 @@ export function CreateEventModal({
                   type="date"
                   value={date.toISOString().split("T")[0]}
                   onChange={(e) => setDate(new Date(e.target.value))}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1e3a5f] focus:border-[#1e3a5f] outline-none"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1A1A] focus:border-[#1A1A1A] outline-none"
                 />
                 <p className="mt-1 text-sm text-gray-500">{formattedDate}</p>
               </div>
@@ -241,7 +241,7 @@ export function CreateEventModal({
                   <select
                     value={startHour}
                     onChange={(e) => setStartHour(Number(e.target.value))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1e3a5f] focus:border-[#1e3a5f] outline-none"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1A1A] focus:border-[#1A1A1A] outline-none"
                   >
                     {hourOptions.map((h) => (
                       <option key={h} value={h}>
@@ -261,7 +261,7 @@ export function CreateEventModal({
                   <select
                     value={startMinute}
                     onChange={(e) => setStartMinute(Number(e.target.value))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1e3a5f] focus:border-[#1e3a5f] outline-none"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1A1A] focus:border-[#1A1A1A] outline-none"
                   >
                     {minuteOptions.map((m) => (
                       <option key={m} value={m}>
@@ -275,7 +275,7 @@ export function CreateEventModal({
                   <select
                     value={duration}
                     onChange={(e) => setDuration(Number(e.target.value))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1e3a5f] focus:border-[#1e3a5f] outline-none"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1A1A] focus:border-[#1A1A1A] outline-none"
                   >
                     {durationOptions.map((d) => (
                       <option key={d} value={d}>
@@ -299,7 +299,7 @@ export function CreateEventModal({
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               placeholder="Location (optional)"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1e3a5f] focus:border-[#1e3a5f] outline-none"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1A1A] focus:border-[#1A1A1A] outline-none"
             />
           </div>
 
@@ -314,7 +314,7 @@ export function CreateEventModal({
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Description (optional)"
               rows={4}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1e3a5f] focus:border-[#1e3a5f] outline-none resize-none"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1A1A] focus:border-[#1A1A1A] outline-none resize-none"
             />
           </div>
 
@@ -338,7 +338,7 @@ export function CreateEventModal({
           <button
             onClick={handleSave}
             disabled={saving || !title.trim()}
-            className="px-6 py-2 bg-[#1e3a5f] text-white rounded-lg hover:bg-[#1e3a5f]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+            className="px-6 py-2 bg-[#1A1A1A] text-white rounded-lg hover:bg-[#1A1A1A]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
           >
             {saving ? (editingEvent ? "Updating..." : "Saving...") : (editingEvent ? "Update" : "Save")}
           </button>

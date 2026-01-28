@@ -224,7 +224,7 @@ function SelectTimeContent() {
                           key={timeIdx}
                           type="button"
                           onClick={() => handleTimeSlotClick(day, timeSlot)}
-                          className="px-4 py-2 rounded-md text-sm transition-colors bg-navy-100 text-black hover:bg-navy-200 border border-navy-300"
+                          className="px-4 py-2 rounded-md text-sm transition-colors bg-neutral-100 text-black hover:bg-neutral-200 border border-neutral-300"
                         >
                           {timeSlot.time}
                         </button>
@@ -242,7 +242,7 @@ function SelectTimeContent() {
           <div className="mt-8 text-center">
             <button
               onClick={() => setShowMoreWeeks(true)}
-              className="px-6 py-2 bg-navy-600 text-white rounded-md hover:bg-navy-700 transition-colors"
+              className="px-6 py-2 bg-neutral-600 text-white rounded-md hover:bg-neutral-700 transition-colors"
             >
               Show more
             </button>

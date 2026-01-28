@@ -426,7 +426,7 @@ export default function BookAgentPage() {
                 className="w-16 h-16 rounded-full object-cover"
               />
             ) : (
-              <div className="w-16 h-16 bg-navy-800 rounded-full flex items-center justify-center flex-shrink-0">
+              <div className="w-16 h-16 bg-neutral-800 rounded-full flex items-center justify-center flex-shrink-0">
                 <span className="text-white text-2xl">
                   {agentInfo?.first_name?.[0]?.toUpperCase() || agentInfo?.full_name?.[0]?.toUpperCase() || "A"}
                 </span>
@@ -451,7 +451,7 @@ export default function BookAgentPage() {
                 </div>
               )}
               <div className="flex items-center gap-1">
-                <Star className="w-4 h-4 fill-navy-600 text-navy-600" />
+                <Star className="w-4 h-4 fill-neutral-600 text-neutral-600" />
                 <span className="text-sm text-black">4.9</span>
                 <span className="text-sm text-gray-500">· 88 reviews</span>
               </div>
@@ -512,9 +512,9 @@ export default function BookAgentPage() {
                     disabled={!hasSlots}
                     className={`p-3 rounded-lg border text-center transition-colors ${
                       isSelected
-                        ? "bg-navy-800 text-white border-navy-800"
+                        ? "bg-neutral-800 text-white border-neutral-800"
                         : hasSlots
-                        ? "bg-navy-50 text-gray-900 border-navy-200 hover:bg-navy-100"
+                        ? "bg-neutral-50 text-gray-900 border-neutral-200 hover:bg-neutral-100"
                         : "bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed"
                     }`}
                   >
@@ -549,8 +549,8 @@ export default function BookAgentPage() {
                         onClick={() => setSelectedSlot(slot)}
                         className={`p-3 rounded-lg border text-center transition-colors ${
                           isSelected
-                            ? "bg-navy-800 text-white border-navy-800"
-                            : "bg-white text-gray-900 border-gray-300 hover:bg-navy-50 hover:border-navy-800"
+                            ? "bg-neutral-800 text-white border-neutral-800"
+                            : "bg-white text-gray-900 border-gray-300 hover:bg-neutral-50 hover:border-neutral-800"
                         }`}
                       >
                         <div className="text-sm font-medium">
@@ -568,7 +568,7 @@ export default function BookAgentPage() {
               <div className="mt-6 pt-6 border-t border-gray-200">
                 <button
                   onClick={handleOpenBookingForm}
-                  className="w-full bg-navy-800 text-white py-3 px-6 rounded-lg font-semibold hover:bg-navy-900 transition-colors"
+                  className="w-full bg-neutral-800 text-white py-3 px-6 rounded-lg font-semibold hover:bg-neutral-900 transition-colors"
                 >
                   Book Appointment
                 </button>
@@ -620,7 +620,7 @@ export default function BookAgentPage() {
                       id="firstName"
                       value={formData.firstName}
                       onChange={(e) => handleFormChange("firstName", e.target.value)}
-                      className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-800 ${
+                      className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-800 ${
                         formErrors.firstName ? "border-red-500" : "border-gray-300"
                       }`}
                       placeholder="John"
@@ -641,7 +641,7 @@ export default function BookAgentPage() {
                       id="lastName"
                       value={formData.lastName}
                       onChange={(e) => handleFormChange("lastName", e.target.value)}
-                      className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-800 ${
+                      className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-800 ${
                         formErrors.lastName ? "border-red-500" : "border-gray-300"
                       }`}
                       placeholder="Doe"
@@ -662,7 +662,7 @@ export default function BookAgentPage() {
                       id="email"
                       value={formData.email}
                       onChange={(e) => handleFormChange("email", e.target.value)}
-                      className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-800 ${
+                      className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-800 ${
                         formErrors.email ? "border-red-500" : "border-gray-300"
                       }`}
                       placeholder="john.doe@example.com"
@@ -683,7 +683,7 @@ export default function BookAgentPage() {
                       id="phone"
                       value={formData.phone}
                       onChange={(e) => handleFormChange("phone", e.target.value)}
-                      className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-800 ${
+                      className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-800 ${
                         formErrors.phone ? "border-red-500" : "border-gray-300"
                       }`}
                       placeholder="(555) 123-4567"
@@ -705,7 +705,7 @@ export default function BookAgentPage() {
                         id="city"
                         value={formData.city}
                         onChange={(e) => handleFormChange("city", e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-800"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-800"
                         placeholder="Toronto"
                         disabled={isBooking}
                       />
@@ -719,7 +719,7 @@ export default function BookAgentPage() {
                         id="province"
                         value={formData.province}
                         onChange={(e) => handleFormChange("province", e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-800"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-800"
                         placeholder="ON"
                         disabled={isBooking}
                       />
@@ -736,7 +736,7 @@ export default function BookAgentPage() {
                       value={formData.notes}
                       onChange={(e) => handleFormChange("notes", e.target.value)}
                       rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-800"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-800"
                       placeholder="Any additional information you'd like to share..."
                       disabled={isBooking}
                     />
@@ -763,7 +763,7 @@ export default function BookAgentPage() {
                 <button
                   onClick={handleBook}
                   disabled={isBooking}
-                  className="px-6 py-2 bg-navy-800 text-white rounded-lg font-semibold hover:bg-navy-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="px-6 py-2 bg-neutral-800 text-white rounded-lg font-semibold hover:bg-neutral-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {isBooking ? "Booking..." : "Confirm Booking"}
                 </button>
@@ -795,7 +795,7 @@ export default function BookAgentPage() {
                   setSuccessMessage(null);
                   router.push("/search");
                 }}
-                className="w-full bg-navy-800 text-white py-2 px-4 rounded-lg hover:bg-navy-900"
+                className="w-full bg-neutral-800 text-white py-2 px-4 rounded-lg hover:bg-neutral-900"
               >
                 Close
               </button>

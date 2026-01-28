@@ -232,7 +232,7 @@ export function StatementModal({ open, onClose, data, loading }: StatementModalP
               <button
                 type="button"
                 onClick={handleDownload}
-                className="flex items-center gap-2 px-4 py-2 bg-navy-800 text-white rounded-lg hover:bg-navy-900 transition-colors text-sm"
+                className="flex items-center gap-2 px-4 py-2 bg-neutral-800 text-white rounded-lg hover:bg-neutral-900 transition-colors text-sm"
               >
                 <Download size={16} />
                 Download PDF

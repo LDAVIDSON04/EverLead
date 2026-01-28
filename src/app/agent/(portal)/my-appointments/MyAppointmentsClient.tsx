@@ -168,7 +168,7 @@ export default function MyAppointmentsClient({
               <span
                 className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${
                   appt.status === 'completed'
-                    ? 'bg-navy-100 text-navy-900'
+                    ? 'bg-neutral-100 text-neutral-900'
                     : 'bg-red-100 text-red-900'
                 }`}
               >
@@ -249,7 +249,7 @@ export default function MyAppointmentsClient({
               <button
                 onClick={() => updateStatus(appt.id, 'completed')}
                 disabled={loadingId === appt.id}
-                className="rounded-lg bg-navy-800 px-4 py-2 text-sm font-medium text-white hover:bg-navy-900 disabled:cursor-not-allowed disabled:opacity-60 transition-colors"
+                className="rounded-lg bg-neutral-800 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-900 disabled:cursor-not-allowed disabled:opacity-60 transition-colors"
               >
                 {loadingId === appt.id ? 'Saving…' : 'Mark as Completed'}
               </button>

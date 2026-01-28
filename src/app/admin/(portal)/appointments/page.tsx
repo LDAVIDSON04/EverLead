@@ -152,7 +152,7 @@ export default function AdminAppointmentsPage() {
     switch (status) {
       case "confirmed":
       case "booked":
-        return "bg-navy-100 text-navy-700 border-navy-200";
+        return "bg-neutral-100 text-neutral-700 border-neutral-200";
       case "pending":
         return "bg-yellow-100 text-yellow-700 border-yellow-200";
       case "cancelled":
@@ -165,7 +165,7 @@ export default function AdminAppointmentsPage() {
   };
 
   const getPaymentColor = (hasAmount: boolean) => {
-    return hasAmount ? "text-navy-700" : "text-neutral-600";
+    return hasAmount ? "text-neutral-700" : "text-neutral-600";
   };
 
   const filtered = appointments.filter((apt) => {
@@ -254,9 +254,9 @@ export default function AdminAppointmentsPage() {
         <h1 className="text-3xl mb-2 text-black">Appointments</h1>
         <p className="text-neutral-600">View and manage appointment disputes</p>
         </div>
-        <div className="bg-navy-50 border border-navy-200 rounded-lg px-6 py-4 min-w-[200px]">
-          <p className="text-sm text-navy-700 font-medium mb-1">Appointments This Month</p>
-          <p className="text-3xl font-bold text-navy-900">{appointmentsThisMonth}</p>
+        <div className="bg-neutral-50 border border-neutral-200 rounded-lg px-6 py-4 min-w-[200px]">
+          <p className="text-sm text-neutral-700 font-medium mb-1">Appointments This Month</p>
+          <p className="text-3xl font-bold text-neutral-900">{appointmentsThisMonth}</p>
         </div>
       </div>
 
@@ -275,19 +275,19 @@ export default function AdminAppointmentsPage() {
             placeholder="Search by agent name..."
             value={agentSearch}
             onChange={(e) => setAgentSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-700"
+            className="w-full pl-10 pr-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-700"
           />
         </div>
         <input
           type="date"
           value={dateFilter}
           onChange={(e) => setDateFilter(e.target.value)}
-          className="px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-700"
+          className="px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-700"
         />
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-700"
+          className="px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-700"
         >
           <option value="all">All Status</option>
           <option value="pending">Pending</option>
@@ -299,7 +299,7 @@ export default function AdminAppointmentsPage() {
         <select
           value={paymentFilter}
           onChange={(e) => setPaymentFilter(e.target.value)}
-          className="px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-700"
+          className="px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-700"
         >
           <option value="all">All Payment Status</option>
           <option value="paid">Paid</option>

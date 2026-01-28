@@ -53,7 +53,7 @@ export function FileUploadModal({ isOpen, onClose, onUpload, appointments }: Fil
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
           <div>
             <label className="block mb-2 text-sm font-medium text-gray-900">File</label>
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-navy-800 transition-colors cursor-pointer">
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-neutral-800 transition-colors cursor-pointer">
               <input
                 type="file"
                 onChange={handleFileChange}
@@ -85,7 +85,7 @@ export function FileUploadModal({ isOpen, onClose, onUpload, appointments }: Fil
               id="appointment"
               value={appointment}
               onChange={(e) => setAppointment(e.target.value)}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-800 focus:border-transparent"
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-800 focus:border-transparent"
               required
             >
               <option value="">Select an appointment</option>
@@ -106,7 +106,7 @@ export function FileUploadModal({ isOpen, onClose, onUpload, appointments }: Fil
               value={note}
               onChange={(e) => setNote(e.target.value)}
               placeholder="e.g., Signed intake form"
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-800 focus:border-transparent resize-none"
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-800 focus:border-transparent resize-none"
               rows={3}
             />
           </div>
@@ -125,7 +125,7 @@ export function FileUploadModal({ isOpen, onClose, onUpload, appointments }: Fil
             </button>
             <button
               type="submit"
-              className="flex-1 px-6 py-2.5 bg-navy-800 text-white rounded-lg hover:bg-navy-900 transition-colors"
+              className="flex-1 px-6 py-2.5 bg-neutral-800 text-white rounded-lg hover:bg-neutral-900 transition-colors"
             >
               Upload File
             </button>

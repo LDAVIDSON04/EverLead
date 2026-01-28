@@ -20,7 +20,7 @@ import {
 function Input({ className = "", ...props }: React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
-      className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-800 focus:border-transparent ${className}`}
+      className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-800 focus:border-transparent ${className}`}
       {...props}
     />
   );
@@ -37,7 +37,7 @@ function Label({ className = "", children, ...props }: React.LabelHTMLAttributes
 function Textarea({ className = "", ...props }: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
   return (
     <textarea
-      className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-800 focus:border-transparent ${className}`}
+      className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-800 focus:border-transparent ${className}`}
       {...props}
     />
   );
@@ -47,7 +47,7 @@ function Progress({ value, className = "" }: { value: number; className?: string
   return (
     <div className={`w-full bg-gray-200 rounded-full h-2 ${className}`}>
       <div
-        className="bg-navy-800 h-2 rounded-full transition-all"
+        className="bg-neutral-800 h-2 rounded-full transition-all"
         style={{ width: `${value}%` }}
       />
     </div>
@@ -74,7 +74,7 @@ function Switch({ checked, onCheckedChange, disabled }: { checked: boolean; onCh
       disabled={disabled}
       onClick={() => !disabled && onCheckedChange(!checked)}
       className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-        checked ? "bg-navy-800" : "bg-gray-300"
+        checked ? "bg-neutral-800" : "bg-gray-300"
       } ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
     >
       <span
@@ -91,7 +91,7 @@ function Select({ value, onValueChange, children, ...props }: { value: string; o
     <select
       value={value}
       onChange={(e) => onValueChange(e.target.value)}
-      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-800 focus:border-transparent"
+      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-800 focus:border-transparent"
       {...props}
     >
       {children}
@@ -271,7 +271,7 @@ export default function SettingsPage() {
               onClick={() => setActiveTab("profile")}
               className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                 activeTab === "profile"
-                  ? "border-navy-800 text-navy-800"
+                  ? "border-neutral-800 text-neutral-800"
                   : "border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300"
               }`}
             >
@@ -281,7 +281,7 @@ export default function SettingsPage() {
               onClick={() => setActiveTab("bio")}
               className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                 activeTab === "bio"
-                  ? "border-navy-800 text-navy-800"
+                  ? "border-neutral-800 text-neutral-800"
                   : "border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300"
               }`}
             >
@@ -291,7 +291,7 @@ export default function SettingsPage() {
               onClick={() => setActiveTab("notifications")}
               className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                 activeTab === "notifications"
-                  ? "border-navy-800 text-navy-800"
+                  ? "border-neutral-800 text-neutral-800"
                   : "border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300"
               }`}
             >
@@ -301,7 +301,7 @@ export default function SettingsPage() {
               onClick={() => setActiveTab("security")}
               className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                 activeTab === "security"
-                  ? "border-navy-800 text-navy-800"
+                  ? "border-neutral-800 text-neutral-800"
                   : "border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300"
               }`}
             >
@@ -736,7 +736,7 @@ function ProfileSection({
 
       {saveMessage && (
         <div className={`mb-4 p-3 rounded-lg ${
-          saveMessage.type === "success" ? "bg-navy-50 text-navy-800" : "bg-red-50 text-red-800"
+          saveMessage.type === "success" ? "bg-neutral-50 text-neutral-800" : "bg-red-50 text-red-800"
         }`}>
           {saveMessage.text}
         </div>
@@ -746,7 +746,7 @@ function ProfileSection({
         <button
           onClick={handleSave}
           disabled={saving}
-          className="px-6 py-2 bg-navy-800 text-white rounded-lg hover:bg-navy-900 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-6 py-2 bg-neutral-800 text-white rounded-lg hover:bg-neutral-900 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {saving ? "Saving..." : "Save Changes"}
         </button>
@@ -914,7 +914,7 @@ function OfficeLocationsSection() {
         {!showAddForm && (
           <button
             onClick={() => setShowAddForm(true)}
-            className="px-3 py-1.5 text-sm bg-navy-800 text-white rounded-lg hover:bg-navy-900 flex items-center gap-2"
+            className="px-3 py-1.5 text-sm bg-neutral-800 text-white rounded-lg hover:bg-neutral-900 flex items-center gap-2"
           >
             <Plus size={14} />
             Add Location
@@ -924,7 +924,7 @@ function OfficeLocationsSection() {
 
       {saveMessage && (
         <div className={`mb-4 p-3 rounded-lg ${
-          saveMessage.type === "success" ? "bg-navy-50 text-navy-800" : "bg-red-50 text-red-800"
+          saveMessage.type === "success" ? "bg-neutral-50 text-neutral-800" : "bg-red-50 text-red-800"
         }`}>
           {saveMessage.text}
         </div>
@@ -993,7 +993,7 @@ function OfficeLocationsSection() {
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="px-4 py-2 bg-navy-800 text-white rounded-lg hover:bg-navy-900 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 bg-neutral-800 text-white rounded-lg hover:bg-neutral-900 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {saving ? "Saving..." : editingId ? "Update" : "Add Location"}
               </button>
@@ -1257,7 +1257,7 @@ function CalendarAvailabilitySection() {
             <div className="flex items-center gap-2">
               {googleConnected ? (
                 <>
-                  <Badge className="bg-navy-100 text-navy-800">Connected</Badge>
+                  <Badge className="bg-neutral-100 text-neutral-800">Connected</Badge>
                   <button
                     onClick={async () => {
                       try {
@@ -1302,7 +1302,7 @@ function CalendarAvailabilitySection() {
                       alert("Failed to connect. Please try again.");
                     }
                   }}
-                  className="px-4 py-2 bg-navy-800 text-white rounded-lg hover:bg-navy-900"
+                  className="px-4 py-2 bg-neutral-800 text-white rounded-lg hover:bg-neutral-900"
                 >
                   Connect
                 </button>
@@ -1323,7 +1323,7 @@ function CalendarAvailabilitySection() {
             <div className="flex items-center gap-2">
               {microsoftConnected ? (
                 <>
-                  <Badge className="bg-navy-100 text-navy-800">Connected</Badge>
+                  <Badge className="bg-neutral-100 text-neutral-800">Connected</Badge>
                   <button
                     onClick={async () => {
                       try {
@@ -1368,7 +1368,7 @@ function CalendarAvailabilitySection() {
                       alert("Failed to connect. Please try again.");
                     }
                   }}
-                  className="px-4 py-2 bg-navy-800 text-white rounded-lg hover:bg-navy-900"
+                  className="px-4 py-2 bg-neutral-800 text-white rounded-lg hover:bg-neutral-900"
                 >
                   Connect
                 </button>
@@ -1391,7 +1391,7 @@ function CalendarAvailabilitySection() {
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="font-semibold flex items-center gap-2">
-              <MapPin size={18} className="text-navy-800" />
+              <MapPin size={18} className="text-neutral-800" />
               Availability Rules by Location
             </h3>
             <p className="text-sm text-gray-600 mt-1">Set different availability for each city you serve</p>
@@ -1406,7 +1406,7 @@ function CalendarAvailabilitySection() {
                 onClick={() => setSelectedLocation(location)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   selectedLocation === location
-                    ? "bg-navy-800 text-white"
+                    ? "bg-neutral-800 text-white"
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
               >
@@ -1436,7 +1436,7 @@ function CalendarAvailabilitySection() {
                 />
                 <button
                   onClick={addLocation}
-                  className="px-3 py-2 bg-navy-800 text-white rounded-lg hover:bg-navy-900 text-sm"
+                  className="px-3 py-2 bg-neutral-800 text-white rounded-lg hover:bg-neutral-900 text-sm"
                 >
                   Add
                 </button>
@@ -1479,7 +1479,7 @@ function CalendarAvailabilitySection() {
                           },
                         });
                       }}
-                      className="w-4 h-4 accent-navy-800"
+                      className="w-4 h-4 accent-neutral-800"
                     />
                     <div className="w-24 capitalize">{day}</div>
                     {dayData.enabled ? (
@@ -1538,7 +1538,7 @@ function CalendarAvailabilitySection() {
 
       {saveMessage && (
         <div className={`mb-4 p-3 rounded-lg ${
-          saveMessage.type === "success" ? "bg-navy-50 text-navy-800" : "bg-red-50 text-red-800"
+          saveMessage.type === "success" ? "bg-neutral-50 text-neutral-800" : "bg-red-50 text-red-800"
         }`}>
           {saveMessage.text}
         </div>
@@ -1548,7 +1548,7 @@ function CalendarAvailabilitySection() {
         <button
           onClick={handleSaveAvailability}
           disabled={saving}
-          className="px-6 py-2 bg-navy-800 text-white rounded-lg hover:bg-navy-900 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-6 py-2 bg-neutral-800 text-white rounded-lg hover:bg-neutral-900 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {saving ? "Saving..." : "Save Availability"}
         </button>
@@ -1684,7 +1684,7 @@ function PayoutsSection() {
                 }
               }}
               disabled={addingPaymentMethod}
-              className="px-4 py-2 bg-navy-800 text-white rounded-lg hover:bg-navy-900 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 bg-neutral-800 text-white rounded-lg hover:bg-neutral-900 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {addingPaymentMethod ? "Loading..." : "Add Payment Method"}
             </button>
@@ -1811,9 +1811,9 @@ function PayoutsSection() {
             <div className="text-2xl font-semibold">${pricePerAppointment.toFixed(2)}</div>
           </div>
 
-          <div className="bg-navy-50 rounded-lg p-4 border border-navy-200">
+          <div className="bg-neutral-50 rounded-lg p-4 border border-neutral-200">
             <div className="text-sm text-gray-600 mb-1">Estimated Charge</div>
-            <div className="text-2xl font-semibold text-navy-800">${currentMonthTotal}</div>
+            <div className="text-2xl font-semibold text-neutral-800">${currentMonthTotal}</div>
             <div className="text-xs text-gray-500 mt-1">Charged immediately when appointments are booked</div>
           </div>
         </div>
@@ -1839,7 +1839,7 @@ function PayoutsSection() {
                     <td className="px-4 py-3 text-sm">{payment.appointments}</td>
                     <td className="px-4 py-3 text-sm font-medium">{payment.amount}</td>
                     <td className="px-4 py-3 text-sm">
-                      <Badge className="bg-navy-100 text-navy-800">{payment.status}</Badge>
+                      <Badge className="bg-neutral-100 text-neutral-800">{payment.status}</Badge>
                     </td>
                   </tr>
                 ))}
@@ -2057,7 +2057,7 @@ function NotificationsSection({ email, phone }: { email: string; phone: string }
 
       {saveMessage && (
         <div className={`mb-4 p-3 rounded-lg ${
-          saveMessage.type === "success" ? "bg-navy-50 text-navy-800" : "bg-red-50 text-red-800"
+          saveMessage.type === "success" ? "bg-neutral-50 text-neutral-800" : "bg-red-50 text-red-800"
         }`}>
           {saveMessage.text}
         </div>
@@ -2067,7 +2067,7 @@ function NotificationsSection({ email, phone }: { email: string; phone: string }
         <button
           onClick={handleSaveNotifications}
           disabled={saving}
-          className="px-6 py-2 bg-navy-800 text-white rounded-lg hover:bg-navy-900 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-6 py-2 bg-neutral-800 text-white rounded-lg hover:bg-neutral-900 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {saving ? "Saving..." : "Save Preferences"}
         </button>
@@ -2190,7 +2190,7 @@ function SecuritySection() {
 
           {passwordMessage && (
             <div className={`mb-4 p-3 rounded-lg ${
-              passwordMessage.type === "success" ? "bg-navy-50 text-navy-800" : "bg-red-50 text-red-800"
+              passwordMessage.type === "success" ? "bg-neutral-50 text-neutral-800" : "bg-red-50 text-red-800"
             }`}>
               {passwordMessage.text}
             </div>
@@ -2199,7 +2199,7 @@ function SecuritySection() {
           <button
             onClick={handleUpdatePassword}
             disabled={saving}
-            className="px-4 py-2 bg-navy-800 text-white rounded-lg hover:bg-navy-900 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 bg-neutral-800 text-white rounded-lg hover:bg-neutral-900 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {saving ? "Updating..." : "Update Password"}
           </button>
@@ -2446,7 +2446,7 @@ function ProfileBioSection() {
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <div className="flex items-center justify-center py-8">
           <div className="text-center">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-navy-800 mb-4"></div>
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-neutral-800 mb-4"></div>
             <p className="text-sm text-gray-600">Loading bio information...</p>
           </div>
         </div>
@@ -2463,7 +2463,7 @@ function ProfileBioSection() {
 
       {saveMessage && (
         <div className={`mb-6 p-4 rounded-lg ${
-          saveMessage.type === "success" ? "bg-navy-50 text-navy-800 border border-navy-200" : "bg-red-50 text-red-800 border border-red-200"
+          saveMessage.type === "success" ? "bg-neutral-50 text-neutral-800 border border-neutral-200" : "bg-red-50 text-red-800 border border-red-200"
         }`}>
           {saveMessage.text}
         </div>
@@ -2552,7 +2552,7 @@ function ProfileBioSection() {
         <button
           onClick={handleGenerateBio}
           disabled={generating || !bioData.years_of_experience || !bioData.practice_philosophy_help || !bioData.practice_philosophy_appreciate}
-          className="px-6 py-2 bg-navy-800 text-white rounded-lg hover:bg-navy-900 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          className="px-6 py-2 bg-neutral-800 text-white rounded-lg hover:bg-neutral-900 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
         >
           {generating ? (
             <>

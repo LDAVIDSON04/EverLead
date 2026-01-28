@@ -383,7 +383,7 @@ export default function ArticlePage() {
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Article not found</h1>
-          <Link href={`/help/${categorySlug}`} className="text-[#1e3a5f] hover:underline">
+          <Link href={`/help/${categorySlug}`} className="text-[#1A1A1A] hover:underline">
             Return to {categoryTitle}
           </Link>
         </div>
@@ -394,7 +394,7 @@ export default function ArticlePage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Header & Hero Section Combined */}
-      <section className="relative bg-gradient-to-br from-[#1e3a5f] to-[#0f172a] px-6 overflow-hidden">
+      <section className="relative bg-gradient-to-br from-[#1A1A1A] to-[#0a0a0a] px-6 overflow-hidden">
         {/* Pattern overlay */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute inset-0" style={{
@@ -405,10 +405,10 @@ export default function ArticlePage() {
         
         {/* Decorative circles */}
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-0 left-0 w-96 h-96 bg-[#0f172a] rounded-full opacity-30 blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
-          <div className="absolute top-1/2 left-1/4 w-72 h-72 bg-[#1e3a5f] rounded-full opacity-20 blur-3xl"></div>
-          <div className="absolute bottom-0 right-0 w-96 h-96 bg-[#0f172a] rounded-full opacity-30 blur-3xl translate-x-1/3 translate-y-1/3"></div>
-          <div className="absolute top-1/3 right-1/3 w-64 h-64 bg-[#1e3a5f] rounded-full opacity-20 blur-2xl"></div>
+          <div className="absolute top-0 left-0 w-96 h-96 bg-[#0a0a0a] rounded-full opacity-30 blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
+          <div className="absolute top-1/2 left-1/4 w-72 h-72 bg-[#1A1A1A] rounded-full opacity-20 blur-3xl"></div>
+          <div className="absolute bottom-0 right-0 w-96 h-96 bg-[#0a0a0a] rounded-full opacity-30 blur-3xl translate-x-1/3 translate-y-1/3"></div>
+          <div className="absolute top-1/3 right-1/3 w-64 h-64 bg-[#1A1A1A] rounded-full opacity-20 blur-2xl"></div>
         </div>
 
         {/* Header */}
@@ -444,9 +444,9 @@ export default function ArticlePage() {
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-6 py-3">
           <div className="flex items-center gap-2 text-sm text-gray-600">
-            <Link href="/help" className="hover:text-[#1e3a5f] transition-colors">All Collections</Link>
+            <Link href="/help" className="hover:text-[#1A1A1A] transition-colors">All Collections</Link>
             <ChevronRight className="w-4 h-4" />
-            <Link href={`/help/${categorySlug}`} className="hover:text-[#1e3a5f] transition-colors">{categoryTitle}</Link>
+            <Link href={`/help/${categorySlug}`} className="hover:text-[#1A1A1A] transition-colors">{categoryTitle}</Link>
             <ChevronRight className="w-4 h-4" />
             <span className="text-gray-900">{article.title}</span>
           </div>
@@ -469,7 +469,7 @@ export default function ArticlePage() {
           <h2 className="text-xl font-semibold text-[#1A1A1A] mb-3">Have more questions?</h2>
           <p className="text-gray-700 leading-relaxed">
             Learn how to make changes to your Soradin account, how to update your information, or what to do if your account is locked. 
-            <Link href={`/help/${categorySlug}`} className="text-[#1e3a5f] hover:underline ml-1">
+            <Link href={`/help/${categorySlug}`} className="text-[#1A1A1A] hover:underline ml-1">
               Browse more articles in {categoryTitle}
             </Link>
           </p>
@@ -484,12 +484,12 @@ export default function ArticlePage() {
                 <Link
                   key={index}
                   href={`/help/${categorySlug}/${related.slug}`}
-                  className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-[#1e3a5f] hover:bg-[#1e3a5f]/5 transition-all group"
+                  className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-[#1A1A1A] hover:bg-[#1A1A1A]/5 transition-all group"
                 >
-                  <span className="text-lg text-[#1A1A1A] group-hover:text-[#1e3a5f] transition-colors">
+                  <span className="text-lg text-[#1A1A1A] group-hover:text-[#1A1A1A] transition-colors">
                     {related.title}
                   </span>
-                  <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-[#1e3a5f] transition-colors" />
+                  <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-[#1A1A1A] transition-colors" />
                 </Link>
               ))}
             </div>

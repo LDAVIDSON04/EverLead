@@ -158,9 +158,9 @@ export default function BecomeSpecialistPage() {
         <div className="max-w-4xl mx-auto px-4">
           <div className="bg-white rounded-lg shadow-md p-8 text-center">
             <div className="mb-6">
-              <div className="w-16 h-16 bg-navy-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-neutral-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg
-                  className="w-8 h-8 text-navy-600"
+                  className="w-8 h-8 text-neutral-600"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -182,7 +182,7 @@ export default function BecomeSpecialistPage() {
             </div>
             <Link
               href="/agent/dashboard"
-              className="inline-block bg-navy-700 hover:bg-navy-800 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
+              className="inline-block bg-neutral-700 hover:bg-neutral-800 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
             >
               Go to Dashboard
             </Link>
@@ -333,7 +333,7 @@ export default function BecomeSpecialistPage() {
           )}
 
           {successMessage && (
-            <div className="mb-6 p-4 bg-navy-50 border border-navy-200 rounded-lg text-navy-700 text-sm">
+            <div className="mb-6 p-4 bg-neutral-50 border border-neutral-200 rounded-lg text-neutral-700 text-sm">
               {successMessage}
             </div>
           )}
@@ -349,7 +349,7 @@ export default function BecomeSpecialistPage() {
                 value={formData.display_name}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-700"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-700"
                 placeholder="Your professional name"
               />
             </div>
@@ -361,7 +361,7 @@ export default function BecomeSpecialistPage() {
                 value={formData.bio}
                 onChange={handleChange}
                 rows={4}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-700"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-700"
                 placeholder="Tell us about yourself and your experience..."
               />
             </div>
@@ -374,7 +374,7 @@ export default function BecomeSpecialistPage() {
                   name="location_city"
                   value={formData.location_city}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-700"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-700"
                   placeholder="Calgary"
                 />
               </div>
@@ -387,7 +387,7 @@ export default function BecomeSpecialistPage() {
                   name="location_region"
                   value={formData.location_region}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-700"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-700"
                   placeholder="AB"
                 />
               </div>
@@ -399,7 +399,7 @@ export default function BecomeSpecialistPage() {
                 name="timezone"
                 value={formData.timezone}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-700"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-700"
               >
                 <option value="America/Edmonton">Mountain Time (Edmonton)</option>
                 <option value="America/Vancouver">Pacific Time (Vancouver)</option>
@@ -416,7 +416,7 @@ export default function BecomeSpecialistPage() {
                 value={formData.certification_details}
                 onChange={handleChange}
                 rows={4}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-700"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-700"
                 placeholder="Tell us about your certification, license, or credentials..."
               />
             </div>
@@ -424,7 +424,7 @@ export default function BecomeSpecialistPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full bg-navy-700 hover:bg-navy-800 text-white font-semibold py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-neutral-700 hover:bg-neutral-800 text-white font-semibold py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {submitting ? "Submitting..." : "Submit for Approval"}
             </button>

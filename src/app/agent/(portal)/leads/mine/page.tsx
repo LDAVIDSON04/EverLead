@@ -115,7 +115,7 @@ export default function MyLeadsPage() {
     if (s === "new") return { bg: "bg-blue-100", text: "text-blue-700" };
     if (s === "contacted") return { bg: "bg-slate-100", text: "text-slate-700" };
     if (s.includes("follow")) return { bg: "bg-amber-100", text: "text-amber-700" };
-    if (s.includes("won")) return { bg: "bg-navy-100", text: "text-navy-700" };
+    if (s.includes("won")) return { bg: "bg-neutral-100", text: "text-neutral-700" };
     if (s.includes("lost")) return { bg: "bg-rose-100", text: "text-rose-700" };
     return { bg: "bg-slate-100", text: "text-slate-700" };
   }
@@ -243,7 +243,7 @@ export default function MyLeadsPage() {
                 <div className="mt-6 flex justify-center">
                   <button
                     onClick={loadMoreLeads}
-                    className="px-6 py-2 bg-[#1e3a5f] text-white rounded-lg hover:bg-[#1e3a5f]/90 transition-colors"
+                    className="px-6 py-2 bg-[#1A1A1A] text-white rounded-lg hover:bg-[#1A1A1A]/90 transition-colors"
                   >
                     Load More ({totalLeads - filteredMyLeads.length} remaining)
                   </button>

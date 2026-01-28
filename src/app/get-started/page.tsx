@@ -440,19 +440,19 @@ export default function GetStartedPage() {
                 <div className="mt-6 pt-4 border-t border-slate-200">
                   <div className="space-y-1.5 text-xs text-[#5a5a5a]">
                     <p className="flex items-center gap-2">
-                      <span className="text-navy-600">✓</span>
+                      <span className="text-neutral-600">✓</span>
                       <span>No obligation</span>
                     </p>
                     <p className="flex items-center gap-2">
-                      <span className="text-navy-600">✓</span>
+                      <span className="text-neutral-600">✓</span>
                       <span>Takes under 60 seconds</span>
                     </p>
                     <p className="flex items-center gap-2">
-                      <span className="text-navy-600">✓</span>
+                      <span className="text-neutral-600">✓</span>
                       <span>Your information is never sold</span>
                     </p>
                     <p className="flex items-center gap-2">
-                      <span className="text-navy-600">✓</span>
+                      <span className="text-neutral-600">✓</span>
                       <span>You&apos;ll speak with a real local specialist</span>
                     </p>
                   </div>

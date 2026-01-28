@@ -13,7 +13,7 @@ interface AddAvailabilityModalProps {
 function Input({ className = "", ...props }: React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
-      className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-800 focus:border-transparent ${className}`}
+      className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-800 focus:border-transparent ${className}`}
       {...props}
     />
   );
@@ -329,7 +329,7 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
           {saveMessage && (
             <div className={`mb-4 p-3 rounded-lg ${
               saveMessage.type === "success" 
-                ? "bg-navy-50 border border-navy-200 text-navy-800" 
+                ? "bg-neutral-50 border border-neutral-200 text-neutral-800" 
                 : "bg-red-50 border border-red-200 text-red-800"
             }`}>
               <p className="text-sm font-medium">{saveMessage.text}</p>
@@ -359,7 +359,7 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
                   <select
                     value={selectedLocation}
                     onChange={(e) => setSelectedLocation(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-800 focus:border-transparent appearance-none bg-white"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-800 focus:border-transparent appearance-none bg-white"
                   >
                     {locations.map((loc) => (
                       <option key={loc} value={loc}>
@@ -389,7 +389,7 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
                                 [day]: { ...dayData, enabled: e.target.checked },
                               });
                             }}
-                            className="w-4 h-4 accent-navy-800"
+                            className="w-4 h-4 accent-neutral-800"
                           />
                           <div className="w-24 capitalize">{day}</div>
                           {dayData.enabled ? (
@@ -453,7 +453,7 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
                   <select
                     value={appointmentLength}
                     onChange={(e) => setAppointmentLength(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-800 focus:border-transparent mt-1"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-800 focus:border-transparent mt-1"
                   >
                     <option value="15">15 minutes</option>
                     <option value="30">30 minutes</option>
@@ -479,7 +479,7 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
             </button>
             <button
               onClick={handleSave}
-              className="px-4 py-2 bg-navy-800 text-white rounded-lg hover:bg-navy-900 transition-colors text-sm font-medium"
+              className="px-4 py-2 bg-neutral-800 text-white rounded-lg hover:bg-neutral-900 transition-colors text-sm font-medium"
               disabled={saving}
             >
               {saving ? "Saving..." : "Save"}

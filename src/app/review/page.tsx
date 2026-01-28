@@ -144,7 +144,7 @@ function ReviewContent() {
                   className="w-16 h-16 rounded-full object-cover flex-shrink-0"
                 />
               ) : (
-                <div className="w-16 h-16 rounded-full bg-navy-800 flex items-center justify-center flex-shrink-0">
+                <div className="w-16 h-16 rounded-full bg-neutral-800 flex items-center justify-center flex-shrink-0">
                   <span className="text-white text-2xl font-semibold">
                     {appointmentData.agentName[0]?.toUpperCase() || 'A'}
                   </span>
@@ -177,8 +177,8 @@ function ReviewContent() {
 
         {status === "success" ? (
           <div className="text-center py-8">
-            <div className="w-16 h-16 bg-navy-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-navy-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-16 h-16 bg-neutral-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
@@ -231,7 +231,7 @@ function ReviewContent() {
                 value={reviewText}
                 onChange={(e) => setReviewText(e.target.value)}
                 rows={6}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-navy-500 focus:border-navy-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:border-neutral-500"
                 placeholder="Share your experience with this specialist..."
                 maxLength={1000}
               />

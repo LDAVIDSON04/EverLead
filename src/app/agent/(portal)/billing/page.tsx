@@ -256,7 +256,7 @@ export default function BillingPage() {
                   }
                 }}
                 disabled={addingPaymentMethod}
-                className="px-4 py-2 bg-navy-800 text-white rounded-lg hover:bg-navy-900 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 bg-neutral-800 text-white rounded-lg hover:bg-neutral-900 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {addingPaymentMethod ? "Loading..." : "Add Payment Method"}
               </button>
@@ -335,7 +335,7 @@ export default function BillingPage() {
           <h3 className="font-semibold mb-4">Monthly Statements</h3>
           <button
             onClick={() => setMonthSelectorOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-navy-800 text-white rounded-lg hover:bg-navy-900 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-neutral-800 text-white rounded-lg hover:bg-neutral-900 transition-colors"
           >
             <FileText size={18} />
             View your statements
@@ -362,7 +362,7 @@ export default function BillingPage() {
                       <td className="px-2 md:px-4 py-2 md:py-3 text-[10px] md:text-sm">{payment.appointments}</td>
                       <td className="px-2 md:px-4 py-2 md:py-3 text-[10px] md:text-sm font-medium">{payment.amount}</td>
                       <td className="px-2 md:px-4 py-2 md:py-3 text-[10px] md:text-sm">
-                        <Badge className="bg-navy-100 text-navy-800 text-[9px] md:text-xs">{payment.status}</Badge>
+                        <Badge className="bg-neutral-100 text-neutral-800 text-[9px] md:text-xs">{payment.status}</Badge>
                       </td>
                     </tr>
                   ))}

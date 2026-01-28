@@ -25,7 +25,7 @@ export default function TermsPage() {
           
           <Link 
             href="/"
-            className="px-4 py-2 text-[#1A1A1A] hover:text-[#1e3a5f] transition-colors font-medium"
+            className="px-4 py-2 text-[#1A1A1A] hover:text-[#1A1A1A] transition-colors font-medium"
           >
             Home
           </Link>
