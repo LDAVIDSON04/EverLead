@@ -617,108 +617,17 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
         </div>
       </section>
 
-      {/* Mobile Only: Pre-Need Planning Box */}
-      <section className="md:hidden py-24 px-4 bg-[#FAF9F6]">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-1 gap-12 items-center">
-            {/* Image */}
-            <div className="w-full" style={{ aspectRatio: "1/1" }}>
-              <Image
-                src="/pre-arrangements-image.png"
-                alt="Pre arrangements"
-                width={600}
-                height={600}
-                className="w-full h-full object-cover rounded-lg"
-                loading="lazy"
-                fetchPriority="low"
-                sizes="(max-width: 768px) 100vw, 600px"
-              />
-            </div>
-
-            {/* Content */}
-            <div>
-              <h2 className="text-4xl mb-6 text-[#1A1A1A] font-semibold tracking-tight">
-                What are pre arrangements?
-              </h2>
-              
-              {/* Bullet points */}
-              <ul className="space-y-4 mb-8">
-                <li className="flex items-start gap-3">
-                  <div className="w-2 h-2 rounded-full bg-[#0C6F3C] mt-2 flex-shrink-0"></div>
-                  <p className="text-lg text-[#1A1A1A]/70">Learn what planning ahead actually means and what it does not</p>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div className="w-2 h-2 rounded-full bg-[#0C6F3C] mt-2 flex-shrink-0"></div>
-                  <p className="text-lg text-[#1A1A1A]/70">See how pre arrangements can reduce uncertainty and cost</p>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div className="w-2 h-2 rounded-full bg-[#0C6F3C] mt-2 flex-shrink-0"></div>
-                  <p className="text-lg text-[#1A1A1A]/70">Explore your options with guidance from trusted professionals</p>
-                </li>
-              </ul>
-
-              {/* Learn more button */}
-              <Link 
-                href="/what-is-pre-need-funeral-planning"
-                className="inline-block bg-[#0C6F3C] text-white px-8 py-3 rounded-xl hover:bg-[#0C6F3C]/90 transition-all shadow-sm text-base font-medium"
-              >
-                Learn more
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* WHAT ARE PRE ARRANGEMENTS SECTION - Desktop Only */}
-      <section className="hidden md:block py-24 px-4 bg-[#FAF9F6]">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            {/* Left side - Image */}
-            <div className="w-full" style={{ aspectRatio: "1/1" }}>
-              <Image
-                src="/pre-arrangements-image.png"
-                alt="Pre arrangements"
-                width={600}
-                height={600}
-                className="w-full h-full object-cover rounded-lg"
-                loading="lazy"
-                fetchPriority="low"
-                sizes="(max-width: 768px) 100vw, 600px"
-              />
-            </div>
-
-            {/* Right side - Content */}
-            <div>
-              <h2 className="text-4xl md:text-5xl mb-6 text-[#1A1A1A] font-semibold tracking-tight whitespace-nowrap">
-                What are pre arrangements?
-              </h2>
-              
-              {/* Bullet points */}
-              <ul className="space-y-4 mb-8">
-                <li className="flex items-start gap-3">
-                  <div className="w-2 h-2 rounded-full bg-[#0C6F3C] mt-2 flex-shrink-0"></div>
-                  <p className="text-lg text-[#1A1A1A]/70">Learn what planning ahead actually means and what it does not</p>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div className="w-2 h-2 rounded-full bg-[#0C6F3C] mt-2 flex-shrink-0"></div>
-                  <p className="text-lg text-[#1A1A1A]/70">See how pre arrangements can reduce uncertainty and cost</p>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div className="w-2 h-2 rounded-full bg-[#0C6F3C] mt-2 flex-shrink-0"></div>
-                  <p className="text-lg text-[#1A1A1A]/70">Explore your options with guidance from trusted professionals</p>
-                </li>
-              </ul>
-
-              {/* Learn more button */}
-              <Link 
-                href="/what-is-pre-need-funeral-planning"
-                className="inline-block bg-[#0C6F3C] text-white px-8 py-3 rounded-xl hover:bg-[#0C6F3C]/90 transition-all shadow-sm text-base font-medium"
-              >
-                Learn more
-              </Link>
-            </div>
-          </div>
-        </div>
+      {/* Pre-arrangements full-bleed image */}
+      <section className="relative w-full min-h-[100vh] overflow-hidden">
+        <Image
+          src="/pre-arrangements-image.png"
+          alt="Pre arrangements"
+          fill
+          className="object-cover object-center"
+          loading="lazy"
+          fetchPriority="low"
+          sizes="100vw"
+        />
       </section>
 
       {/* FOR SPECIALISTS SECTION */}
