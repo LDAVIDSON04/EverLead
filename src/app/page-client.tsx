@@ -530,6 +530,22 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
         </div>
       </div>
 
+      {/* PLANNING TYPES INFOGRAPHIC */}
+      <section className="min-h-[75vh] flex items-center justify-center py-12 md:py-16 px-4 bg-[#FAF9F6]">
+        <div className="w-full max-w-6xl flex items-center justify-center">
+          <Image
+            src="/planning-types-infographic.png"
+            alt="Funeral Pre Planning, Estate and Will Planning, Life Insurance Planning, and Financial Advisor – typical costs and why it matters"
+            width={1200}
+            height={800}
+            className="w-full max-w-5xl h-auto object-contain"
+            loading="lazy"
+            sizes="(max-width: 768px) 100vw, 1024px"
+            priority={false}
+          />
+        </div>
+      </section>
+
       {/* TWO BOXES SECTION */}
       <section className="py-24 px-4 bg-white">
         <div className="max-w-6xl mx-auto">
