@@ -178,7 +178,10 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const citiesRef = useRef<string[] | null>(null);
   const pillarsSectionRef = useRef<HTMLElement | null>(null);
+  const pillarStepPrevRef = useRef(0);
   const [pillarStep, setPillarStep] = useState(0);
+  const pillarDirection = pillarStep > pillarStepPrevRef.current ? "next" : pillarStep < pillarStepPrevRef.current ? "prev" : "next";
+  pillarStepPrevRef.current = pillarStep;
 
   // Rotating text for hero title - deferred for mobile performance
   const rotatingTexts = [
@@ -703,14 +706,16 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
       >
         <div className="sticky top-0 left-0 right-0 h-screen flex items-center justify-center px-4 sm:px-6 md:px-12 py-12 md:py-16">
           <div className="max-w-[1400px] w-full grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-            {/* Left: title, subtitle, 1–4 list, active card content, Learn more */}
+            {/* Left: title, subtitle, 1–4 list, Learn more */}
             <div className="flex flex-col">
-              <h2 className="text-[#1A1A1A] text-2xl sm:text-3xl md:text-4xl font-semibold tracking-tight mb-2 md:mb-3">
-                The Four Pillars of End of Life Planning
-              </h2>
-              <p className="text-[#1A1A1A]/70 text-base sm:text-lg mb-8 md:mb-10 max-w-xl">
-                A simple framework that helps families plan with clarity, confidence, and peace of mind
-              </p>
+              <div className="text-center mb-8 md:mb-10">
+                <h2 className="text-[#1A1A1A] text-2xl sm:text-3xl md:text-4xl font-semibold tracking-tight mb-2 md:mb-3">
+                  The Four Pillars of End of Life Planning
+                </h2>
+                <p className="text-[#1A1A1A]/70 text-base sm:text-lg max-w-xl mx-auto">
+                  A simple framework that helps families plan with clarity, confidence, and peace of mind
+                </p>
+              </div>
               <ul className="space-y-0 mb-8 md:mb-10">
                 {PILLAR_STEPS.map((item, i) => (
                   <li key={i} className="list-none">
@@ -752,12 +757,15 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                 <ChevronRight className="w-5 h-5" />
               </Link>
             </div>
-            {/* Right: active pillar card (desktop + mobile) */}
-            <div className="w-full max-w-xl mx-auto lg:max-w-none lg:mx-0">
+            {/* Right: active pillar card (desktop + mobile), swipe transition */}
+            <div className="w-full max-w-xl mx-auto lg:max-w-none lg:mx-0 overflow-hidden">
               {(() => {
                 const card = HOVER_CARDS[PILLAR_STEPS[pillarStep].cardIndex];
+                const slideClass = pillarDirection === "next"
+                  ? "pillar-card-enter-next"
+                  : "pillar-card-enter-prev";
                 return (
-                  <div key={pillarStep} className="animate-in fade-in duration-300">
+                  <div key={pillarStep} className={slideClass}>
                     <PlanningCard
                       patternId={`pillar-card-${PILLAR_STEPS[pillarStep].cardIndex}`}
                       color="#0C6F3C"

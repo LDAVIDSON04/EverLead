@@ -116,3 +116,34 @@ a:hover {
   display: flex;
   width: max-content;
 }
+
+/* Four Pillars card swipe transitions */
+@keyframes pillar-slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(1.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pillar-slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-1.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.pillar-card-enter-next {
+  animation: pillar-slide-in-right 0.35s ease-out forwards;
+}
+
+.pillar-card-enter-prev {
+  animation: pillar-slide-in-left 0.35s ease-out forwards;
+}
