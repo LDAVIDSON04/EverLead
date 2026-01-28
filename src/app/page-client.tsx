@@ -116,7 +116,7 @@ function PlanningCard({
 }: PlanningCardProps) {
   return (
     <div
-      className="rounded-[2rem] px-6 sm:px-8 py-6 sm:py-8 transition-all duration-500 shadow-[0_8px_30px_rgba(0,0,0,0.08)] min-h-[360px] sm:min-h-[400px] flex flex-col relative overflow-hidden w-full"
+      className="rounded-2xl px-4 sm:px-5 py-4 sm:py-5 transition-all duration-500 shadow-[0_8px_30px_rgba(0,0,0,0.08)] min-h-[280px] sm:min-h-[320px] flex flex-col relative overflow-hidden w-full"
       style={{ backgroundColor: color }}
     >
       <svg className="absolute inset-0 w-full h-full opacity-[0.04]" xmlns="http://www.w3.org/2000/svg" aria-hidden>
@@ -132,28 +132,28 @@ function PlanningCard({
       <div className="absolute inset-0 bg-gradient-to-br from-black/5 via-transparent to-black/5 pointer-events-none" />
       <div className="absolute top-0 right-0 w-64 h-64 bg-black/5 rounded-full blur-[100px]" />
       <div className="flex flex-col h-full relative z-10" style={{ color: textColor }}>
-        <h2 className="mb-5 sm:mb-7 leading-tight tracking-tight font-extrabold text-lg sm:text-[22px]" style={{ color: textColor }}>
+        <h2 className="mb-3 sm:mb-4 leading-tight tracking-tight font-extrabold text-base sm:text-lg" style={{ color: textColor }}>
           {title}
         </h2>
-        <div className="mb-4 sm:mb-6 flex-shrink-0">
-          <p className="mb-2 sm:mb-2.5 text-[10px] sm:text-[11px] uppercase tracking-wider font-bold" style={{ color: textColor, opacity: 0.6 }}>
+        <div className="mb-3 sm:mb-4 flex-shrink-0">
+          <p className="mb-1.5 text-[10px] sm:text-[11px] uppercase tracking-wider font-bold" style={{ color: textColor, opacity: 0.6 }}>
             Typical cost in BC
           </p>
-          <div className="space-y-1.5 sm:space-y-2">
+          <div className="space-y-1 sm:space-y-1.5">
             {costs.map((cost, i) => (
-              <p key={i} className="text-xs sm:text-[13px] leading-snug font-semibold" style={{ color: textColor, opacity: 0.9 }}>
+              <p key={i} className="text-[11px] sm:text-xs leading-snug font-semibold" style={{ color: textColor, opacity: 0.9 }}>
                 {cost}
               </p>
             ))}
           </div>
         </div>
-        <div className="mb-4 sm:mb-6 flex-shrink-0">
-          <p className="mb-2 sm:mb-3 text-[10px] sm:text-[11px] uppercase tracking-wider font-bold" style={{ color: textColor, opacity: 0.6 }}>
+        <div className="mb-0 flex-shrink-0">
+          <p className="mb-1.5 text-[10px] sm:text-[11px] uppercase tracking-wider font-bold" style={{ color: textColor, opacity: 0.6 }}>
             {whyHeading}
           </p>
-          <div className="space-y-2 sm:space-y-2.5">
+          <div className="space-y-1 sm:space-y-1.5">
             {whyPoints.map((point, i) => (
-              <p key={i} className="text-xs sm:text-[13px] leading-snug font-semibold" style={{ color: textColor, opacity: 0.9 }}>
+              <p key={i} className="text-[11px] sm:text-xs leading-snug font-semibold" style={{ color: textColor, opacity: 0.9 }}>
                 • {point}
               </p>
             ))}
@@ -705,23 +705,29 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
         style={{ height: "400vh" }}
       >
         <div className="sticky top-0 left-0 right-0 h-screen flex items-center justify-center px-4 sm:px-6 md:px-12 py-12 md:py-16">
-          <div className="max-w-[1400px] w-full grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-            {/* Left: title, subtitle, 1–4 list, Learn more */}
-            <div className="flex flex-col">
-              <div className="text-center mb-8 md:mb-10">
-                <h2 className="text-[#1A1A1A] text-2xl sm:text-3xl md:text-4xl font-semibold tracking-tight mb-2 md:mb-3">
-                  The Four Pillars of End of Life Planning
-                </h2>
-                <p className="text-[#1A1A1A]/70 text-base sm:text-lg max-w-xl mx-auto">
-                  A simple framework that helps families plan with clarity, confidence, and peace of mind
-                </p>
-              </div>
-              <ul className="space-y-0 mb-8 md:mb-10">
-                {PILLAR_STEPS.map((item, i) => (
-                  <li key={i} className="list-none">
-                    <div className="flex items-center gap-4">
+          <div className="max-w-[1400px] w-full">
+            {/* Title centered on full page, above two-column layout */}
+            <div className="text-center mb-8 md:mb-10">
+              <h2 className="text-[#1A1A1A] text-2xl sm:text-3xl md:text-4xl font-semibold tracking-tight mb-2 md:mb-3">
+                The Four Pillars of End of Life Planning
+              </h2>
+              <p className="text-[#1A1A1A]/70 text-base sm:text-lg max-w-xl mx-auto">
+                A simple framework that helps families plan with clarity, confidence, and peace of mind
+              </p>
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+              {/* Left: 1–4 list, Learn more */}
+              <div className="flex flex-col">
+                <ul className="relative space-y-5 mb-8 md:mb-10">
+                  {/* Vertical line through center of each number bubble */}
+                  <div
+                    className="absolute top-0 bottom-0 left-5 w-px -translate-x-1/2 bg-[#1A1A1A]/20 pointer-events-none"
+                    aria-hidden
+                  />
+                  {PILLAR_STEPS.map((item, i) => (
+                    <li key={i} className="list-none flex items-center gap-4 relative">
                       <span
-                        className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${
+                        className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-colors z-10 ${
                           i === pillarStep
                             ? "bg-[#1A1A1A] text-white"
                             : "bg-[#1A1A1A]/10 text-[#1A1A1A]/60"
@@ -736,29 +742,19 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                       >
                         {item.label}
                       </span>
-                    </div>
-                    {i < PILLAR_STEPS.length - 1 && (
-                      <div
-                        className={`w-px flex-shrink-0 ml-5 transition-colors ${
-                          i === pillarStep ? "bg-[#1A1A1A]" : "bg-[#1A1A1A]/20"
-                        }`}
-                        style={{ height: "2rem", marginTop: "1.25rem", marginBottom: "1.25rem" }}
-                        aria-hidden
-                      />
-                    )}
-                  </li>
-                ))}
-              </ul>
-              <Link
-                href="/about"
-                className="inline-flex items-center gap-2 w-fit bg-[#1A1A1A] text-white font-medium text-base px-6 py-3 rounded-xl hover:bg-[#1A1A1A]/90 transition-all"
-              >
-                Learn more
-                <ChevronRight className="w-5 h-5" />
-              </Link>
-            </div>
-            {/* Right: active pillar card (desktop + mobile), swipe transition */}
-            <div className="w-full max-w-xl mx-auto lg:max-w-none lg:mx-0 overflow-hidden">
+                    </li>
+                  ))}
+                </ul>
+                <Link
+                  href="/about"
+                  className="inline-flex items-center gap-2 w-fit bg-[#1A1A1A] text-white font-medium text-base px-6 py-3 rounded-xl hover:bg-[#1A1A1A]/90 transition-all"
+                >
+                  Learn more
+                  <ChevronRight className="w-5 h-5" />
+                </Link>
+              </div>
+              {/* Right: active pillar card (desktop + mobile), swipe transition, smaller */}
+              <div className="w-full max-w-md mx-auto lg:max-w-sm lg:mx-0 overflow-hidden">
               {(() => {
                 const card = HOVER_CARDS[PILLAR_STEPS[pillarStep].cardIndex];
                 const slideClass = pillarDirection === "next"
