@@ -123,7 +123,7 @@ function AlertDialogAction({ children, className = "", ...props }: { children: R
 
   return (
     <button
-      className={`px-4 py-2 bg-green-800 text-white rounded-lg hover:bg-green-900 ${className}`}
+      className={`px-4 py-2 bg-navy-800 text-white rounded-lg hover:bg-navy-900 ${className}`}
       onClick={(e) => {
         if (props.onClick) props.onClick(e);
         context.setOpen(false);

@@ -31,7 +31,7 @@ export function Toast({ message, type = "success", duration = 4000, onClose }: T
   };
 
   const colors = {
-    success: "bg-green-600 border-green-700",
+    success: "bg-navy-600 border-navy-700",
     error: "bg-red-600 border-red-700",
     info: "bg-blue-600 border-blue-700",
   };
@@ -86,7 +86,7 @@ export function showToast(message: string, type: ToastType = "success", duration
   };
 
   const colors = {
-    success: "bg-green-600 border-green-700",
+    success: "bg-navy-600 border-navy-700",
     error: "bg-red-600 border-red-700",
     info: "bg-blue-600 border-blue-700",
   };

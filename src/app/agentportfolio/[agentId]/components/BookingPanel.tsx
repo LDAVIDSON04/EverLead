@@ -644,7 +644,7 @@ export function BookingPanel({ agentId }: BookingPanelProps) {
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header with Agent Info */}
-            <div className="bg-gradient-to-r from-green-50 to-white p-6 border-b border-gray-200 sticky top-0 z-10">
+            <div className="bg-gradient-to-r from-navy-50 to-white p-6 border-b border-gray-200 sticky top-0 z-10">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-2xl font-bold text-black">Book an appointment</h2>
                 <button
@@ -665,12 +665,12 @@ export function BookingPanel({ agentId }: BookingPanelProps) {
                         alt={agentInfo.full_name || "Agent"}
                         width={80}
                         height={80}
-                        className="rounded-full object-cover border-2 border-green-600"
+                        className="rounded-full object-cover border-2 border-navy-600"
                         unoptimized
                       />
                     ) : (
-                      <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center border-2 border-green-600">
-                        <span className="text-green-700 text-2xl font-semibold">
+                      <div className="w-20 h-20 bg-navy-100 rounded-full flex items-center justify-center border-2 border-navy-600">
+                        <span className="text-navy-700 text-2xl font-semibold">
                           {(agentInfo.full_name || "A")[0].toUpperCase()}
                         </span>
                       </div>
@@ -712,13 +712,13 @@ export function BookingPanel({ agentId }: BookingPanelProps) {
             {/* Content */}
             <div className="p-6">
               <div className="flex items-center gap-2 mb-4">
-                <Calendar className="w-5 h-5 text-green-600" />
+                <Calendar className="w-5 h-5 text-navy-600" />
                 <h3 className="text-lg font-semibold text-black">Select a date and time</h3>
               </div>
 
               {loadingTimeSlots ? (
                 <div className="text-center py-12">
-                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mb-4"></div>
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-navy-600 mb-4"></div>
                   <p className="text-gray-600">Loading available times...</p>
                 </div>
               ) : allAvailabilityDays.length === 0 ? (
@@ -815,7 +815,7 @@ export function BookingPanel({ agentId }: BookingPanelProps) {
                                     // Navigate to booking page
                                     window.location.href = bookingUrl;
                                   }}
-                                  className="px-4 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors text-sm"
+                                  className="px-4 py-3 bg-navy-600 hover:bg-navy-700 text-white font-semibold rounded-lg transition-colors text-sm"
                                 >
                                   {timeSlot.time}
                                 </button>

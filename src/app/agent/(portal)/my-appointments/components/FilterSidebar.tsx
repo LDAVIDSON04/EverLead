@@ -24,7 +24,7 @@ export function FilterSidebar({ activeFilter, onFilterChange }: FilterSidebarPro
                 onClick={() => onFilterChange(filter.id)}
                 className={`flex items-center gap-2 px-4 py-3 whitespace-nowrap transition-colors border-b-2 ${
                   activeFilter === filter.id
-                    ? 'border-green-800 text-green-800'
+                    ? 'border-navy-800 text-navy-800'
                     : 'border-transparent text-gray-600 hover:text-gray-900'
                 }`}
               >

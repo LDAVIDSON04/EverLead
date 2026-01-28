@@ -342,7 +342,7 @@ export default function AgentLandingPage() {
           
           <div className="grid grid-cols-1 lg:grid-cols-2">
             {/* Left Side - Illustration */}
-            <div className="hidden lg:flex items-center justify-center p-12 bg-gradient-to-br from-emerald-50 to-green-50">
+            <div className="hidden lg:flex items-center justify-center p-12 bg-gradient-to-br from-navy-50 to-navy-50">
               <div className="w-full h-full min-h-[600px] flex items-center justify-center">
                 <Image
                   src="/login-illustration.png"
@@ -382,7 +382,7 @@ export default function AgentLandingPage() {
                           setForgotPasswordSent(false);
                           setForgotPasswordEmail("");
                         }}
-                        className="bg-emerald-700 hover:bg-emerald-800 text-white px-14 py-3 rounded-lg transition-all shadow-md hover:shadow-lg"
+                        className="bg-navy-700 hover:bg-navy-800 text-white px-14 py-3 rounded-lg transition-all shadow-md hover:shadow-lg"
                       >
                         Back to login
                       </button>
@@ -401,7 +401,7 @@ export default function AgentLandingPage() {
                           type="email"
                           value={forgotPasswordEmail}
                           onChange={(e) => setForgotPasswordEmail(e.target.value)}
-                          className="w-full pl-8 pr-4 py-3 bg-transparent border-b-2 border-zinc-300 text-black focus:outline-none focus:border-emerald-700 transition-colors placeholder:text-zinc-400"
+                          className="w-full pl-8 pr-4 py-3 bg-transparent border-b-2 border-zinc-300 text-black focus:outline-none focus:border-navy-700 transition-colors placeholder:text-zinc-400"
                           placeholder="Email"
                           required
                         />
@@ -415,7 +415,7 @@ export default function AgentLandingPage() {
                         <button
                           type="submit"
                           disabled={submitting}
-                          className="bg-emerald-700 hover:bg-emerald-800 text-white px-14 py-3 rounded-lg transition-all shadow-md hover:shadow-lg disabled:opacity-70 disabled:cursor-not-allowed"
+                          className="bg-navy-700 hover:bg-navy-800 text-white px-14 py-3 rounded-lg transition-all shadow-md hover:shadow-lg disabled:opacity-70 disabled:cursor-not-allowed"
                         >
                           {submitting ? "Sending..." : "Send reset link"}
                         </button>
@@ -446,7 +446,7 @@ export default function AgentLandingPage() {
                           type="text"
                           value={fullName}
                           onChange={(e) => setFullName(e.target.value)}
-                          className="w-full pl-8 pr-4 py-3 bg-transparent border-b-2 border-zinc-300 text-black focus:outline-none focus:border-emerald-700 transition-colors placeholder:text-zinc-400"
+                          className="w-full pl-8 pr-4 py-3 bg-transparent border-b-2 border-zinc-300 text-black focus:outline-none focus:border-navy-700 transition-colors placeholder:text-zinc-400"
                           placeholder="Full name"
                           required
                         />
@@ -460,7 +460,7 @@ export default function AgentLandingPage() {
                           type="tel"
                           value={phone}
                           onChange={(e) => setPhone(e.target.value)}
-                          className="w-full pl-8 pr-4 py-3 bg-transparent border-b-2 border-zinc-300 text-black focus:outline-none focus:border-emerald-700 transition-colors placeholder:text-zinc-400"
+                          className="w-full pl-8 pr-4 py-3 bg-transparent border-b-2 border-zinc-300 text-black focus:outline-none focus:border-navy-700 transition-colors placeholder:text-zinc-400"
                           placeholder="Phone number"
                           required
                         />
@@ -474,7 +474,7 @@ export default function AgentLandingPage() {
                           type="text"
                           value={funeralHome}
                           onChange={(e) => setFuneralHome(e.target.value)}
-                          className="w-full pl-8 pr-4 py-3 bg-transparent border-b-2 border-zinc-300 text-black focus:outline-none focus:border-emerald-700 transition-colors placeholder:text-zinc-400"
+                          className="w-full pl-8 pr-4 py-3 bg-transparent border-b-2 border-zinc-300 text-black focus:outline-none focus:border-navy-700 transition-colors placeholder:text-zinc-400"
                           placeholder="Funeral home or agency"
                           required
                         />
@@ -490,7 +490,7 @@ export default function AgentLandingPage() {
                               value="yes"
                               checked={licensedInProvince === "yes"}
                               onChange={(e) => setLicensedInProvince(e.target.value as "yes" | "no")}
-                              className="w-4 h-4 text-emerald-700"
+                              className="w-4 h-4 text-navy-700"
                               required
                             />
                             <span className="text-sm text-zinc-700">Yes</span>
@@ -502,7 +502,7 @@ export default function AgentLandingPage() {
                               value="no"
                               checked={licensedInProvince === "no"}
                               onChange={(e) => setLicensedInProvince(e.target.value as "yes" | "no")}
-                              className="w-4 h-4 text-emerald-700"
+                              className="w-4 h-4 text-navy-700"
                               required
                             />
                             <span className="text-sm text-zinc-700">No</span>
@@ -520,7 +520,7 @@ export default function AgentLandingPage() {
                               value="yes"
                               checked={licensedFuneralDirector === "yes"}
                               onChange={(e) => setLicensedFuneralDirector(e.target.value as "yes" | "no")}
-                              className="w-4 h-4 text-emerald-700"
+                              className="w-4 h-4 text-navy-700"
                               required
                             />
                             <span className="text-sm text-zinc-700">Yes</span>
@@ -532,7 +532,7 @@ export default function AgentLandingPage() {
                               value="no"
                               checked={licensedFuneralDirector === "no"}
                               onChange={(e) => setLicensedFuneralDirector(e.target.value as "yes" | "no")}
-                              className="w-4 h-4 text-emerald-700"
+                              className="w-4 h-4 text-navy-700"
                               required
                             />
                             <span className="text-sm text-zinc-700">No</span>
@@ -551,12 +551,12 @@ export default function AgentLandingPage() {
                             value={newCity}
                             onChange={(e) => setNewCity(e.target.value)}
                             placeholder="City name"
-                            className="flex-1 px-3 py-2 border-b-2 border-zinc-300 bg-transparent text-black focus:outline-none focus:border-emerald-700 placeholder:text-zinc-400"
+                            className="flex-1 px-3 py-2 border-b-2 border-zinc-300 bg-transparent text-black focus:outline-none focus:border-navy-700 placeholder:text-zinc-400"
                           />
                           <select
                             value={newProvince}
                             onChange={(e) => setNewProvince(e.target.value)}
-                            className="w-24 px-3 py-2 border-b-2 border-zinc-300 bg-transparent text-black focus:outline-none focus:border-emerald-700"
+                            className="w-24 px-3 py-2 border-b-2 border-zinc-300 bg-transparent text-black focus:outline-none focus:border-navy-700"
                           >
                             <option value="BC">BC</option>
                             <option value="AB">AB</option>
@@ -589,7 +589,7 @@ export default function AgentLandingPage() {
                                 }
                               }
                             }}
-                            className="bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-2 rounded-lg transition-all"
+                            className="bg-navy-700 hover:bg-navy-800 text-white px-4 py-2 rounded-lg transition-all"
                           >
                             Add
                           </button>
@@ -628,7 +628,7 @@ export default function AgentLandingPage() {
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full pl-8 pr-4 py-3 bg-transparent border-b-2 border-zinc-300 text-black focus:outline-none focus:border-emerald-700 transition-colors placeholder:text-zinc-400"
+                      className="w-full pl-8 pr-4 py-3 bg-transparent border-b-2 border-zinc-300 text-black focus:outline-none focus:border-navy-700 transition-colors placeholder:text-zinc-400"
                       placeholder="Email"
                       required
                     />
@@ -643,7 +643,7 @@ export default function AgentLandingPage() {
                       type={showPassword ? 'text' : 'password'}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full pl-8 pr-12 py-3 bg-transparent border-b-2 border-zinc-300 text-black focus:outline-none focus:border-emerald-700 transition-colors placeholder:text-zinc-400"
+                      className="w-full pl-8 pr-12 py-3 bg-transparent border-b-2 border-zinc-300 text-black focus:outline-none focus:border-navy-700 transition-colors placeholder:text-zinc-400"
                       placeholder="Password"
                       required
                       minLength={6}
@@ -669,7 +669,7 @@ export default function AgentLandingPage() {
                         type={showConfirmPassword ? 'text' : 'password'}
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
-                        className="w-full pl-8 pr-12 py-3 bg-transparent border-b-2 border-zinc-300 text-black focus:outline-none focus:border-emerald-700 transition-colors placeholder:text-zinc-400"
+                        className="w-full pl-8 pr-12 py-3 bg-transparent border-b-2 border-zinc-300 text-black focus:outline-none focus:border-navy-700 transition-colors placeholder:text-zinc-400"
                         placeholder="Confirm password"
                         required
                         minLength={6}
@@ -704,7 +704,7 @@ export default function AgentLandingPage() {
                         <div 
                           className={`absolute inset-0 w-5 h-5 border-2 rounded flex items-center justify-center transition-colors ${
                             rememberMe 
-                              ? 'bg-emerald-700 border-emerald-700' 
+                              ? 'bg-navy-700 border-navy-700' 
                               : 'bg-white border-zinc-400'
                           }`}
                           style={{ pointerEvents: 'none' }}
@@ -736,7 +736,7 @@ export default function AgentLandingPage() {
                       type="submit"
                       disabled={submitting}
                       onClick={(e) => e.stopPropagation()}
-                      className="bg-emerald-700 hover:bg-emerald-800 text-white px-14 py-3 rounded-lg transition-all shadow-md hover:shadow-lg disabled:opacity-70 disabled:cursor-not-allowed relative z-20"
+                      className="bg-navy-700 hover:bg-navy-800 text-white px-14 py-3 rounded-lg transition-all shadow-md hover:shadow-lg disabled:opacity-70 disabled:cursor-not-allowed relative z-20"
                       style={{ pointerEvents: 'auto', zIndex: 20 }}
                     >
                       {submitting
@@ -757,7 +757,7 @@ export default function AgentLandingPage() {
                       Don't have an account?{' '}
                       <Link
                         href="/create-account"
-                        className="text-emerald-700 hover:text-emerald-800 transition-colors underline"
+                        className="text-navy-700 hover:text-navy-800 transition-colors underline"
                       >
                         create account now
                       </Link>
@@ -769,7 +769,7 @@ export default function AgentLandingPage() {
                           setShowForgotPassword(true);
                           setError(null);
                         }}
-                        className="text-emerald-700 hover:text-emerald-800 transition-colors underline"
+                        className="text-navy-700 hover:text-navy-800 transition-colors underline"
                       >
                         Forgot password?
                       </button>
@@ -785,7 +785,7 @@ export default function AgentLandingPage() {
                         setMode("login");
                         setError(null);
                       }}
-                      className="text-emerald-700 hover:text-emerald-800 transition-colors underline"
+                      className="text-navy-700 hover:text-navy-800 transition-colors underline"
                     >
                       Log in
                     </button>
@@ -801,8 +801,8 @@ export default function AgentLandingPage() {
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
             <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
               <div className="text-center">
-                <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
-                  <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-navy-100 mb-4">
+                  <svg className="h-6 w-6 text-navy-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
@@ -819,7 +819,7 @@ export default function AgentLandingPage() {
                     setShowSuccessModal(false);
                     setMode("login");
                   }}
-                  className="w-full bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-2 rounded-lg transition-all shadow-md"
+                  className="w-full bg-navy-700 hover:bg-navy-800 text-white px-4 py-2 rounded-lg transition-all shadow-md"
                 >
                   Close
                 </button>

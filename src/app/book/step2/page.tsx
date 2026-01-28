@@ -281,7 +281,7 @@ function BookingStep2Content() {
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
           <p className="text-gray-600 mb-4">Invalid booking information</p>
-          <Link href="/search" className="text-green-800 hover:underline">
+          <Link href="/search" className="text-navy-800 hover:underline">
             Return to search
           </Link>
         </div>
@@ -327,7 +327,7 @@ function BookingStep2Content() {
                 className="w-16 h-16 rounded-full object-cover flex-shrink-0"
               />
             ) : (
-              <div className="w-16 h-16 bg-green-800 rounded-full flex items-center justify-center flex-shrink-0">
+              <div className="w-16 h-16 bg-navy-800 rounded-full flex items-center justify-center flex-shrink-0">
                 <span className="text-white text-2xl">
                   {agentInfo.first_name?.[0]?.toUpperCase() || agentInfo.full_name?.[0]?.toUpperCase() || "A"}
                 </span>
@@ -382,7 +382,7 @@ function BookingStep2Content() {
                 required
                 value={formData.email}
                 onChange={(e) => handleInputChange("email", e.target.value)}
-                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800 ${
+                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-800 ${
                   formErrors.email ? "border-red-500" : "border-gray-300"
                 }`}
                 placeholder="your.email@example.com"
@@ -408,7 +408,7 @@ function BookingStep2Content() {
                   required
                   value={formData.legalFirstName}
                   onChange={(e) => handleInputChange("legalFirstName", e.target.value)}
-                  className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800 ${
+                  className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-800 ${
                     formErrors.legalFirstName ? "border-red-500" : "border-gray-300"
                   }`}
                   placeholder="John"
@@ -431,7 +431,7 @@ function BookingStep2Content() {
                   required
                   value={formData.legalLastName}
                   onChange={(e) => handleInputChange("legalLastName", e.target.value)}
-                  className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800 ${
+                  className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-800 ${
                     formErrors.legalLastName ? "border-red-500" : "border-gray-300"
                   }`}
                   placeholder="Doe"
@@ -456,7 +456,7 @@ function BookingStep2Content() {
                   required
                   value={formData.dateOfBirth}
                   onChange={(e) => handleInputChange("dateOfBirth", e.target.value)}
-                  className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800 ${
+                  className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-800 ${
                     formErrors.dateOfBirth ? "border-red-500" : "border-gray-300"
                   }`}
                   placeholder="mm/dd/yyyy"
@@ -503,7 +503,7 @@ function BookingStep2Content() {
               
               router.push(`/book/step3?${params.toString()}`);
             }}
-            className="w-full bg-green-800 text-white py-4 px-6 rounded-lg font-semibold text-lg hover:bg-green-900 transition-colors"
+            className="w-full bg-navy-800 text-white py-4 px-6 rounded-lg font-semibold text-lg hover:bg-navy-900 transition-colors"
           >
             Continue
           </button>

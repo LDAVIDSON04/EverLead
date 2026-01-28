@@ -7,7 +7,7 @@ import { MapPin, Plus, ChevronLeft, ChevronRight, Calendar, Clock } from "lucide
 function Input({ className = "", ...props }: React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
-      className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800 focus:border-transparent ${className}`}
+      className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-800 focus:border-transparent ${className}`}
       {...props}
     />
   );
@@ -26,7 +26,7 @@ function Select({ value, onValueChange, children, ...props }: { value: string; o
     <select
       value={value}
       onChange={(e) => onValueChange(e.target.value)}
-      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800 focus:border-transparent"
+      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-800 focus:border-transparent"
       {...props}
     >
       {children}
@@ -148,7 +148,7 @@ function DailyAvailabilityModal({
           <button
             onClick={handleSave}
             disabled={saving}
-            className="px-4 py-2 bg-green-800 text-white rounded-lg hover:bg-green-900 disabled:opacity-50"
+            className="px-4 py-2 bg-navy-800 text-white rounded-lg hover:bg-navy-900 disabled:opacity-50"
           >
             {saving ? "Saving..." : existingAvailability ? "Save" : "Add"}
           </button>
@@ -492,7 +492,7 @@ export default function AvailabilityPage() {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="font-semibold flex items-center gap-2">
-                <MapPin size={18} className="text-green-800" />
+                <MapPin size={18} className="text-navy-800" />
                 Availability Rules by Location
               </h3>
               <p className="text-sm text-gray-600 mt-1">Set different availability for each city you serve</p>
@@ -514,7 +514,7 @@ export default function AvailabilityPage() {
                   onClick={() => handleLocationChange(location)}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                     selectedLocation === location
-                      ? "bg-green-800 text-white"
+                      ? "bg-navy-800 text-white"
                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   }`}
                 >
@@ -544,7 +544,7 @@ export default function AvailabilityPage() {
                   />
                   <button
                     onClick={addLocation}
-                    className="px-3 py-2 bg-green-800 text-white rounded-lg hover:bg-green-900 text-sm"
+                    className="px-3 py-2 bg-navy-800 text-white rounded-lg hover:bg-navy-900 text-sm"
                   >
                     Add
                   </button>
@@ -571,7 +571,7 @@ export default function AvailabilityPage() {
                 onClick={() => handleTypeToggle("daily")}
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                   availabilityType === "daily"
-                    ? "bg-green-800 text-white"
+                    ? "bg-navy-800 text-white"
                     : "text-gray-700 hover:bg-gray-100"
                 }`}
               >
@@ -581,7 +581,7 @@ export default function AvailabilityPage() {
                 onClick={() => handleTypeToggle("recurring")}
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                   availabilityType === "recurring"
-                    ? "bg-green-800 text-white"
+                    ? "bg-navy-800 text-white"
                     : "text-gray-700 hover:bg-gray-100"
                 }`}
               >
@@ -621,7 +621,7 @@ export default function AvailabilityPage() {
                             },
                           });
                         }}
-                        className="w-4 h-4 accent-green-800"
+                        className="w-4 h-4 accent-navy-800"
                       />
                       <div className="w-24 capitalize">{day}</div>
                       {dayData.enabled ? (
@@ -723,8 +723,8 @@ export default function AvailabilityPage() {
                       cursor-pointer
                       hover:scale-[1.02] hover:shadow-lg
                       ${existing
-                        ? "border-green-500 bg-gradient-to-br from-green-50 to-emerald-50 shadow-md"
-                        : "border-gray-200 bg-white hover:border-green-300 hover:bg-green-50/30 shadow-sm"
+                        ? "border-navy-500 bg-gradient-to-br from-navy-50 to-navy-50 shadow-md"
+                        : "border-gray-200 bg-white hover:border-navy-300 hover:bg-navy-50/30 shadow-sm"
                       }
                       ${isToday 
                         ? "ring-2 ring-blue-500 ring-offset-2 border-blue-400" 
@@ -736,14 +736,14 @@ export default function AvailabilityPage() {
                     <div className="flex flex-col items-start mb-3">
                       <div className={`
                         text-xs font-semibold uppercase tracking-wider mb-1
-                        ${existing ? "text-green-700" : "text-gray-500"}
+                        ${existing ? "text-navy-700" : "text-gray-500"}
                         ${isToday ? "text-blue-600" : ""}
                       `}>
                         {dayName}
                       </div>
                       <div className={`
                         text-2xl font-bold
-                        ${isToday ? "text-blue-600" : existing ? "text-green-900" : "text-gray-900"}
+                        ${isToday ? "text-blue-600" : existing ? "text-navy-900" : "text-gray-900"}
                       `}>
                         {dayNum}
                       </div>
@@ -755,8 +755,8 @@ export default function AvailabilityPage() {
                       {existing ? (
                         <div className="space-y-1.5">
                           <div className="flex items-center gap-1.5">
-                            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                            <span className="text-xs font-semibold text-green-700">Available</span>
+                            <div className="w-2 h-2 rounded-full bg-navy-500 animate-pulse"></div>
+                            <span className="text-xs font-semibold text-navy-700">Available</span>
                           </div>
                           <div className="flex items-center gap-1.5 text-xs text-gray-700">
                             <Clock className="w-3 h-3 text-gray-500" />
@@ -775,7 +775,7 @@ export default function AvailabilityPage() {
 
                     {/* Hover overlay effect */}
                     {!existing && (
-                      <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-green-500/0 to-green-500/0 group-hover:from-green-500/5 group-hover:to-emerald-500/5 transition-all duration-200 pointer-events-none"></div>
+                      <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-navy-500/0 to-navy-500/0 group-hover:from-navy-500/5 group-hover:to-navy-500/5 transition-all duration-200 pointer-events-none"></div>
                     )}
                   </button>
                 );
@@ -798,7 +798,7 @@ export default function AvailabilityPage() {
 
         {saveMessage && (
           <div className={`mb-4 p-3 rounded-lg ${
-            saveMessage.type === "success" ? "bg-green-50 text-green-800" : "bg-red-50 text-red-800"
+            saveMessage.type === "success" ? "bg-navy-50 text-navy-800" : "bg-red-50 text-red-800"
           }`}>
             {saveMessage.text}
           </div>
@@ -808,7 +808,7 @@ export default function AvailabilityPage() {
           <button
             onClick={handleSaveAvailability}
             disabled={saving}
-            className="px-6 py-2 bg-green-800 text-white rounded-lg hover:bg-green-900 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-6 py-2 bg-navy-800 text-white rounded-lg hover:bg-navy-900 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {saving ? "Saving..." : "Save Availability"}
           </button>

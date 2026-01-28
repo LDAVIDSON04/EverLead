@@ -269,22 +269,22 @@ export default function CreateAccountPage() {
         {/* Progress Indicator */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-2">
-            <div className={`flex items-center gap-2 ${currentStep >= 1 ? 'text-green-700' : 'text-gray-400'}`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${currentStep >= 1 ? 'bg-green-700 text-white' : 'bg-gray-200'}`}>
+            <div className={`flex items-center gap-2 ${currentStep >= 1 ? 'text-navy-700' : 'text-gray-400'}`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${currentStep >= 1 ? 'bg-navy-700 text-white' : 'bg-gray-200'}`}>
                 {currentStep > 1 ? <Check className="w-5 h-5" /> : '1'}
               </div>
               <span className="font-medium">Basic Info</span>
             </div>
-            <div className={`flex-1 h-1 mx-4 ${currentStep >= 2 ? 'bg-green-700' : 'bg-gray-200'}`} />
-            <div className={`flex items-center gap-2 ${currentStep >= 2 ? 'text-green-700' : 'text-gray-400'}`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${currentStep >= 2 ? 'bg-green-700 text-white' : 'bg-gray-200'}`}>
+            <div className={`flex-1 h-1 mx-4 ${currentStep >= 2 ? 'bg-navy-700' : 'bg-gray-200'}`} />
+            <div className={`flex items-center gap-2 ${currentStep >= 2 ? 'text-navy-700' : 'text-gray-400'}`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${currentStep >= 2 ? 'bg-navy-700 text-white' : 'bg-gray-200'}`}>
                 {currentStep > 2 ? <Check className="w-5 h-5" /> : '2'}
               </div>
               <span className="font-medium">Business Info</span>
             </div>
-            <div className={`flex-1 h-1 mx-4 ${currentStep >= 3 ? 'bg-green-700' : 'bg-gray-200'}`} />
-            <div className={`flex items-center gap-2 ${currentStep >= 3 ? 'text-green-700' : 'text-gray-400'}`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${currentStep >= 3 ? 'bg-green-700 text-white' : 'bg-gray-200'}`}>
+            <div className={`flex-1 h-1 mx-4 ${currentStep >= 3 ? 'bg-navy-700' : 'bg-gray-200'}`} />
+            <div className={`flex items-center gap-2 ${currentStep >= 3 ? 'text-navy-700' : 'text-gray-400'}`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${currentStep >= 3 ? 'bg-navy-700 text-white' : 'bg-gray-200'}`}>
                 3
               </div>
               <span className="font-medium">Profile Bio</span>
@@ -313,7 +313,7 @@ export default function CreateAccountPage() {
                   value={basicInfo.fullName}
                   onChange={(e) => setBasicInfo({ ...basicInfo, fullName: e.target.value })}
                   placeholder="Full Name *"
-                  className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-700 outline-none transition-colors"
+                  className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:border-navy-700 outline-none transition-colors"
                   required
                 />
               </div>
@@ -338,7 +338,7 @@ export default function CreateAccountPage() {
                     }
                   }}
                   placeholder="Email *"
-                  className={`w-full pl-10 pr-4 py-3 border-2 rounded-lg focus:border-green-700 outline-none transition-colors ${
+                  className={`w-full pl-10 pr-4 py-3 border-2 rounded-lg focus:border-navy-700 outline-none transition-colors ${
                     basicInfo.email && !isValidEmail(basicInfo.email) 
                       ? 'border-red-300' 
                       : 'border-gray-300'
@@ -357,7 +357,7 @@ export default function CreateAccountPage() {
                     setBasicInfo({ ...basicInfo, phone: formatted });
                   }}
                   placeholder="Phone *"
-                  className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-700 outline-none transition-colors"
+                  className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:border-navy-700 outline-none transition-colors"
                   required
                   maxLength={14} // (XXX) XXX-XXXX = 14 characters
                 />
@@ -371,7 +371,7 @@ export default function CreateAccountPage() {
                     value={basicInfo.password}
                     onChange={(e) => setBasicInfo({ ...basicInfo, password: e.target.value })}
                     placeholder="Password *"
-                    className="w-full pl-10 pr-12 py-3 border-2 border-gray-300 rounded-lg focus:border-green-700 outline-none transition-colors"
+                    className="w-full pl-10 pr-12 py-3 border-2 border-gray-300 rounded-lg focus:border-navy-700 outline-none transition-colors"
                   required
                 />
                   <button
@@ -389,7 +389,7 @@ export default function CreateAccountPage() {
                     value={basicInfo.confirmPassword}
                     onChange={(e) => setBasicInfo({ ...basicInfo, confirmPassword: e.target.value })}
                     placeholder="Confirm Password *"
-                    className="w-full pl-10 pr-12 py-3 border-2 border-gray-300 rounded-lg focus:border-green-700 outline-none transition-colors"
+                    className="w-full pl-10 pr-12 py-3 border-2 border-gray-300 rounded-lg focus:border-navy-700 outline-none transition-colors"
                     required
                   />
                   <button
@@ -409,7 +409,7 @@ export default function CreateAccountPage() {
                   value={basicInfo.street}
                   onChange={(e) => setBasicInfo({ ...basicInfo, street: e.target.value })}
                   placeholder="Home Address *"
-                  className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-700 outline-none transition-colors"
+                  className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:border-navy-700 outline-none transition-colors"
                   required
                 />
               </div>
@@ -420,13 +420,13 @@ export default function CreateAccountPage() {
                   value={basicInfo.city}
                   onChange={(e) => setBasicInfo({ ...basicInfo, city: e.target.value })}
                     placeholder="City *"
-                  className="px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-700 outline-none transition-colors"
+                  className="px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-navy-700 outline-none transition-colors"
                     required
                   />
                   <select
                   value={basicInfo.province}
                   onChange={(e) => setBasicInfo({ ...basicInfo, province: e.target.value })}
-                  className="px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-700 outline-none transition-colors"
+                  className="px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-navy-700 outline-none transition-colors"
                     required
                   >
                     {provinces.map(prov => (
@@ -438,7 +438,7 @@ export default function CreateAccountPage() {
                   value={basicInfo.postalCode}
                   onChange={(e) => setBasicInfo({ ...basicInfo, postalCode: e.target.value })}
                   placeholder="Postal Code *"
-                  className="px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-700 outline-none transition-colors"
+                  className="px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-navy-700 outline-none transition-colors"
                   required
                 />
               </div>
@@ -457,7 +457,7 @@ export default function CreateAccountPage() {
                   value={businessInfo.businessName}
                   onChange={(e) => setBusinessInfo({ ...businessInfo, businessName: e.target.value })}
                   placeholder="e.g., Smith Funeral Home"
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-700 outline-none transition-colors"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-navy-700 outline-none transition-colors"
                   required
             />
           </div>
@@ -469,7 +469,7 @@ export default function CreateAccountPage() {
                   value={businessInfo.professionalTitle}
                   onChange={(e) => setBusinessInfo({ ...businessInfo, professionalTitle: e.target.value })}
                   placeholder="e.g., Funeral Director, Pre-need Specialist"
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-700 outline-none transition-colors"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-navy-700 outline-none transition-colors"
                   required
             />
           </div>
@@ -484,7 +484,7 @@ export default function CreateAccountPage() {
                       value="yes"
                       checked={businessInfo.trustageEnrollerNumber === 'yes'}
                       onChange={(e) => setBusinessInfo({ ...businessInfo, trustageEnrollerNumber: e.target.value as 'yes' | 'no' })}
-                      className="w-4 h-4 text-green-800 border-gray-300 focus:ring-green-800"
+                      className="w-4 h-4 text-navy-800 border-gray-300 focus:ring-navy-800"
                     />
                     <span className="text-sm text-gray-700">Yes</span>
                   </label>
@@ -495,7 +495,7 @@ export default function CreateAccountPage() {
                       value="no"
                       checked={businessInfo.trustageEnrollerNumber === 'no'}
                       onChange={(e) => setBusinessInfo({ ...businessInfo, trustageEnrollerNumber: e.target.value as 'yes' | 'no' })}
-                      className="w-4 h-4 text-green-800 border-gray-300 focus:ring-green-800"
+                      className="w-4 h-4 text-navy-800 border-gray-300 focus:ring-navy-800"
                     />
                     <span className="text-sm text-gray-700">No</span>
                   </label>
@@ -512,7 +512,7 @@ export default function CreateAccountPage() {
                       value="yes"
                       checked={businessInfo.llqpLicense === 'yes'}
                       onChange={(e) => setBusinessInfo({ ...businessInfo, llqpLicense: e.target.value as 'yes' | 'no' })}
-                      className="w-4 h-4 text-green-800 border-gray-300 focus:ring-green-800"
+                      className="w-4 h-4 text-navy-800 border-gray-300 focus:ring-navy-800"
                     />
                     <span className="text-sm text-gray-700">Yes</span>
                   </label>
@@ -523,7 +523,7 @@ export default function CreateAccountPage() {
                       value="no"
                       checked={businessInfo.llqpLicense === 'no'}
                       onChange={(e) => setBusinessInfo({ ...businessInfo, llqpLicense: e.target.value as 'yes' | 'no' })}
-                      className="w-4 h-4 text-green-800 border-gray-300 focus:ring-green-800"
+                      className="w-4 h-4 text-navy-800 border-gray-300 focus:ring-navy-800"
                     />
                     <span className="text-sm text-gray-700">No</span>
                   </label>
@@ -540,7 +540,7 @@ export default function CreateAccountPage() {
                       value="yes"
                       checked={businessInfo.llqpQuebec === 'yes'}
                       onChange={(e) => setBusinessInfo({ ...businessInfo, llqpQuebec: e.target.value as 'yes' | 'no' | 'non-applicable' })}
-                      className="w-4 h-4 text-green-800 border-gray-300 focus:ring-green-800"
+                      className="w-4 h-4 text-navy-800 border-gray-300 focus:ring-navy-800"
                     />
                     <span className="text-sm text-gray-700">Yes</span>
                   </label>
@@ -551,7 +551,7 @@ export default function CreateAccountPage() {
                       value="no"
                       checked={businessInfo.llqpQuebec === 'no'}
                       onChange={(e) => setBusinessInfo({ ...businessInfo, llqpQuebec: e.target.value as 'yes' | 'no' | 'non-applicable' })}
-                      className="w-4 h-4 text-green-800 border-gray-300 focus:ring-green-800"
+                      className="w-4 h-4 text-navy-800 border-gray-300 focus:ring-navy-800"
                     />
                     <span className="text-sm text-gray-700">No</span>
                   </label>
@@ -562,7 +562,7 @@ export default function CreateAccountPage() {
                       value="non-applicable"
                       checked={businessInfo.llqpQuebec === 'non-applicable'}
                       onChange={(e) => setBusinessInfo({ ...businessInfo, llqpQuebec: e.target.value as 'yes' | 'no' | 'non-applicable' })}
-                      className="w-4 h-4 text-green-800 border-gray-300 focus:ring-green-800"
+                      className="w-4 h-4 text-navy-800 border-gray-300 focus:ring-navy-800"
                     />
                     <span className="text-sm text-gray-700">Non Applicable</span>
                   </label>
@@ -577,7 +577,7 @@ export default function CreateAccountPage() {
                 <button
                   type="button"
                     onClick={() => setShowAddLocation(!showAddLocation)}
-                  className="flex items-center gap-2 px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-800 transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 bg-navy-700 text-white rounded-lg hover:bg-navy-800 transition-colors"
                 >
                   <Plus className="w-4 h-4" />
                     Add Location
@@ -593,14 +593,14 @@ export default function CreateAccountPage() {
                         value={newLocation.name}
                         onChange={(e) => setNewLocation({ ...newLocation, name: e.target.value })}
                         placeholder="Location Name *"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-green-700 outline-none"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-navy-700 outline-none"
                       />
                       <input
                         type="text"
                         value={newLocation.street_address}
                         onChange={(e) => setNewLocation({ ...newLocation, street_address: e.target.value })}
                         placeholder="Street Address"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-green-700 outline-none"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-navy-700 outline-none"
                       />
                       <div className="grid grid-cols-3 gap-3">
                         <input
@@ -608,12 +608,12 @@ export default function CreateAccountPage() {
                           value={newLocation.city}
                           onChange={(e) => setNewLocation({ ...newLocation, city: e.target.value })}
                           placeholder="City *"
-                          className="px-4 py-2 border border-gray-300 rounded-lg focus:border-green-700 outline-none"
+                          className="px-4 py-2 border border-gray-300 rounded-lg focus:border-navy-700 outline-none"
                         />
                         <select
                           value={newLocation.province}
                           onChange={(e) => setNewLocation({ ...newLocation, province: e.target.value })}
-                          className="px-4 py-2 border border-gray-300 rounded-lg focus:border-green-700 outline-none"
+                          className="px-4 py-2 border border-gray-300 rounded-lg focus:border-navy-700 outline-none"
                         >
                           {provinces.map(prov => (
                             <option key={prov} value={prov}>{prov}</option>
@@ -624,14 +624,14 @@ export default function CreateAccountPage() {
                           value={newLocation.postal_code}
                           onChange={(e) => setNewLocation({ ...newLocation, postal_code: e.target.value })}
                           placeholder="Postal Code"
-                          className="px-4 py-2 border border-gray-300 rounded-lg focus:border-green-700 outline-none"
+                          className="px-4 py-2 border border-gray-300 rounded-lg focus:border-navy-700 outline-none"
                         />
                       </div>
                       <div className="flex gap-2">
                     <button
                       type="button"
                           onClick={addOfficeLocation}
-                          className="px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-800"
+                          className="px-4 py-2 bg-navy-700 text-white rounded-lg hover:bg-navy-800"
                         >
                           Add
                         </button>
@@ -688,7 +688,7 @@ export default function CreateAccountPage() {
                 <select
                   value={bioData.years_of_experience}
                   onChange={(e) => setBioData({ ...bioData, years_of_experience: e.target.value })}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-700 outline-none transition-colors"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-navy-700 outline-none transition-colors"
                   required
                 >
                   <option value="">Select...</option>
@@ -714,7 +714,7 @@ export default function CreateAccountPage() {
                   placeholder="Describe your approach to helping families..."
                   rows={3}
                   maxLength={200}
-                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-700 outline-none transition-colors resize-none"
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-navy-700 outline-none transition-colors resize-none"
                   required
                     />
                 <p className="text-xs text-gray-500 mt-1">{bioData.practice_philosophy_help.length}/200 characters</p>
@@ -734,7 +734,7 @@ export default function CreateAccountPage() {
                   placeholder="What families value about working with you..."
                   rows={3}
                   maxLength={200}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-700 outline-none transition-colors resize-none"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-navy-700 outline-none transition-colors resize-none"
                   required
                 />
                 <p className="text-xs text-gray-500 mt-1">{bioData.practice_philosophy_appreciate.length}/200 characters</p>
@@ -751,7 +751,7 @@ export default function CreateAccountPage() {
                   type="checkbox"
                   checked={acknowledgmentChecked}
                   onChange={(e) => setAcknowledgmentChecked(e.target.checked)}
-                  className="mt-1 w-5 h-5 text-green-800 border-gray-300 rounded focus:ring-green-800"
+                  className="mt-1 w-5 h-5 text-navy-800 border-gray-300 rounded focus:ring-navy-800"
                   required
                 />
                 <span className="text-sm text-gray-700">
@@ -776,7 +776,7 @@ export default function CreateAccountPage() {
             {currentStep < 3 ? (
               <button
                 type="submit"
-                className="flex items-center gap-2 px-6 py-3 bg-green-700 text-white rounded-lg hover:bg-green-800 transition-colors"
+                className="flex items-center gap-2 px-6 py-3 bg-navy-700 text-white rounded-lg hover:bg-navy-800 transition-colors"
               >
                 Next
                 <ChevronRight className="w-5 h-5" />
@@ -785,7 +785,7 @@ export default function CreateAccountPage() {
           <button
             type="submit"
             disabled={submitting}
-                className="px-8 py-3 bg-green-700 text-white rounded-lg hover:bg-green-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-semibold"
+                className="px-8 py-3 bg-navy-700 text-white rounded-lg hover:bg-navy-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-semibold"
           >
             {submitting ? 'Submitting...' : 'Submit for Approval'}
           </button>
@@ -795,7 +795,7 @@ export default function CreateAccountPage() {
           {/* Login Link */}
           <p className="text-center text-gray-600 text-sm mt-6">
             Already have an account?{' '}
-            <Link href="/agent" className="text-green-700 hover:underline">
+            <Link href="/agent" className="text-navy-700 hover:underline">
               log in
             </Link>
           </p>
@@ -816,7 +816,7 @@ export default function CreateAccountPage() {
                   setShowSuccessModal(false);
                   router.push('/');
                 }}
-                className="px-8 bg-green-700 hover:bg-green-800 text-white py-2 rounded-lg transition-colors"
+                className="px-8 bg-navy-700 hover:bg-navy-800 text-white py-2 rounded-lg transition-colors"
               >
                 Return Home
               </button>

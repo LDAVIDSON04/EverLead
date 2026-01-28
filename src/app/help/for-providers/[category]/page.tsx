@@ -137,7 +137,7 @@ export default function ProviderCategoryPage() {
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Category not found</h1>
-          <Link href="/help/for-providers" className="text-[#0C6F3C] hover:underline">
+          <Link href="/help/for-providers" className="text-[#1e3a5f] hover:underline">
             Return to Provider Help Center
           </Link>
         </div>
@@ -150,7 +150,7 @@ export default function ProviderCategoryPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Header & Hero Section Combined */}
-      <section className="relative bg-gradient-to-br from-[#0C6F3C] to-[#0a5a2e] px-6 overflow-hidden">
+      <section className="relative bg-gradient-to-br from-[#1e3a5f] to-[#0f172a] px-6 overflow-hidden">
         {/* Pattern overlay */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute inset-0" style={{
@@ -161,10 +161,10 @@ export default function ProviderCategoryPage() {
         
         {/* Decorative circles */}
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-0 left-0 w-96 h-96 bg-[#0a5a2e] rounded-full opacity-30 blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
-          <div className="absolute top-1/2 left-1/4 w-72 h-72 bg-[#0C6F3C] rounded-full opacity-20 blur-3xl"></div>
-          <div className="absolute bottom-0 right-0 w-96 h-96 bg-[#0a5a2e] rounded-full opacity-30 blur-3xl translate-x-1/3 translate-y-1/3"></div>
-          <div className="absolute top-1/3 right-1/3 w-64 h-64 bg-[#0C6F3C] rounded-full opacity-20 blur-2xl"></div>
+          <div className="absolute top-0 left-0 w-96 h-96 bg-[#0f172a] rounded-full opacity-30 blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
+          <div className="absolute top-1/2 left-1/4 w-72 h-72 bg-[#1e3a5f] rounded-full opacity-20 blur-3xl"></div>
+          <div className="absolute bottom-0 right-0 w-96 h-96 bg-[#0f172a] rounded-full opacity-30 blur-3xl translate-x-1/3 translate-y-1/3"></div>
+          <div className="absolute top-1/3 right-1/3 w-64 h-64 bg-[#1e3a5f] rounded-full opacity-20 blur-2xl"></div>
         </div>
 
         {/* Header */}
@@ -200,7 +200,7 @@ export default function ProviderCategoryPage() {
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-6 py-3">
           <div className="flex items-center gap-2 text-sm text-gray-600">
-            <Link href="/help/for-providers" className="hover:text-[#0C6F3C] transition-colors">All Collections</Link>
+            <Link href="/help/for-providers" className="hover:text-[#1e3a5f] transition-colors">All Collections</Link>
             <ChevronRight className="w-4 h-4" />
             <span className="text-gray-900">{category.title}</span>
           </div>
@@ -210,8 +210,8 @@ export default function ProviderCategoryPage() {
       {/* Category Content */}
       <section className="max-w-4xl mx-auto px-6 py-12">
         <div className="flex items-center gap-4 mb-6">
-          <div className="w-16 h-16 bg-[#0C6F3C]/10 rounded-full flex items-center justify-center">
-            <Icon className="w-8 h-8 text-[#0C6F3C]" />
+          <div className="w-16 h-16 bg-[#1e3a5f]/10 rounded-full flex items-center justify-center">
+            <Icon className="w-8 h-8 text-[#1e3a5f]" />
           </div>
           <div>
             <h1 className="text-4xl font-bold text-[#1A1A1A] mb-2">{category.title}</h1>
@@ -225,12 +225,12 @@ export default function ProviderCategoryPage() {
             <Link
               key={article.id}
               href={`/help/for-providers/${categorySlug}/${article.slug}`}
-              className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-[#0C6F3C] hover:bg-[#0C6F3C]/5 transition-all group"
+              className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-[#1e3a5f] hover:bg-[#1e3a5f]/5 transition-all group"
             >
-              <span className="text-lg text-[#1A1A1A] group-hover:text-[#0C6F3C] transition-colors">
+              <span className="text-lg text-[#1A1A1A] group-hover:text-[#1e3a5f] transition-colors">
                 {article.title}
               </span>
-              <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-[#0C6F3C] transition-colors" />
+              <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-[#1e3a5f] transition-colors" />
             </Link>
           ))}
         </div>

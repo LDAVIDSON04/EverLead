@@ -135,7 +135,7 @@ export default function AdminLeadsPage() {
                     <Td>{formatMoney(lead.price_charged_cents)}</Td>
                     <Td>
                       {lead.auction_enabled ? (
-                        <span className="text-xs text-green-600">On</span>
+                        <span className="text-xs text-navy-600">On</span>
                       ) : (
                         <span className="text-xs text-[#6b6b6b]">Off</span>
                       )}

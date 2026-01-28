@@ -55,7 +55,7 @@ function NavLinkWithPrefetch({
       onClick={onHomeClick ? handleClick : undefined}
       className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-left ${
         isActive 
-          ? 'bg-green-900/30 text-white' 
+          ? 'bg-navy-900/30 text-white' 
           : 'text-white/60 hover:bg-white/5 hover:text-white'
       }`}
     >
@@ -699,7 +699,7 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
                       onClick={() => setMobileMenuOpen(false)}
                       className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-left ${
                         isActive 
-                          ? 'bg-green-900/30 text-white' 
+                          ? 'bg-navy-900/30 text-white' 
                           : 'text-white/60 hover:bg-white/5 hover:text-white'
                       }`}
                     >
@@ -807,11 +807,11 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
       {showOnboarding && onboardingStatus && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl max-w-2xl w-full shadow-2xl transform transition-all animate-in fade-in zoom-in duration-200">
-            <div className="bg-gradient-to-r from-green-800 to-green-700 rounded-t-2xl p-6">
+            <div className="bg-gradient-to-r from-navy-800 to-navy-700 rounded-t-2xl p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-2xl font-bold text-white">Complete Your Setup</h2>
-                  <p className="text-green-100 text-sm mt-1">Finish these steps to start receiving appointments</p>
+                  <p className="text-navy-100 text-sm mt-1">Finish these steps to start receiving appointments</p>
                 </div>
                 {onboardingStatus.onboardingCompleted && (
                   <button
@@ -830,14 +830,14 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
               {/* Step 1: Update Profile */}
               <div className={`relative flex items-start gap-4 p-5 rounded-xl border-2 transition-all shadow-sm ${
                 onboardingStatus.hasProfilePicture 
-                  ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-300 shadow-green-100' 
+                  ? 'bg-gradient-to-r from-navy-50 to-navy-50 border-navy-300 shadow-navy-100' 
                   : onboardingStatus.hasProfilePicture === false
                   ? 'bg-white border-gray-200 hover:border-gray-300'
                   : 'bg-gray-50 border-gray-200 opacity-60'
               }`}>
                 <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center font-bold text-sm shadow-md transition-all ${
                   onboardingStatus.hasProfilePicture 
-                    ? 'bg-gradient-to-br from-green-600 to-green-700 text-white shadow-green-300' 
+                    ? 'bg-gradient-to-br from-navy-600 to-navy-700 text-white shadow-navy-300' 
                     : 'bg-gray-300 text-gray-600'
                 }`}>
                   {onboardingStatus.hasProfilePicture ? (
@@ -850,7 +850,7 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
                   <div className="flex items-center justify-between mb-2">
                     <div className="font-bold text-gray-900 text-base">Update Profile</div>
                     {onboardingStatus.hasProfilePicture && (
-                      <span className="text-xs font-semibold text-green-700 bg-green-200 px-3 py-1 rounded-full">Complete</span>
+                      <span className="text-xs font-semibold text-navy-700 bg-navy-200 px-3 py-1 rounded-full">Complete</span>
                     )}
                   </div>
                   <div className="text-sm text-gray-600 mb-3">Add your profile photo and update your information</div>
@@ -860,7 +860,7 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
                         setShowOnboarding(false);
                         router.push('/agent/settings?tab=profile');
                       }}
-                      className="px-5 py-2.5 bg-gradient-to-r from-green-800 to-green-700 text-white text-sm font-semibold rounded-lg hover:from-green-900 hover:to-green-800 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                      className="px-5 py-2.5 bg-gradient-to-r from-navy-800 to-navy-700 text-white text-sm font-semibold rounded-lg hover:from-navy-900 hover:to-navy-800 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                     >
                       Update Profile
                     </button>
@@ -871,14 +871,14 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
               {/* Step 2: Add Availability */}
               <div className={`relative flex items-start gap-4 p-5 rounded-xl border-2 transition-all shadow-sm ${
                 onboardingStatus.hasAvailability 
-                  ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-300 shadow-green-100' 
+                  ? 'bg-gradient-to-r from-navy-50 to-navy-50 border-navy-300 shadow-navy-100' 
                   : !onboardingStatus.hasProfilePicture
                   ? 'bg-gray-50 border-gray-200 opacity-60'
                   : 'bg-white border-gray-200 hover:border-gray-300'
               }`}>
                 <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center font-bold text-sm shadow-md transition-all ${
                   onboardingStatus.hasAvailability 
-                    ? 'bg-gradient-to-br from-green-600 to-green-700 text-white shadow-green-300' 
+                    ? 'bg-gradient-to-br from-navy-600 to-navy-700 text-white shadow-navy-300' 
                     : !onboardingStatus.hasProfilePicture
                     ? 'bg-gray-200 text-gray-400'
                     : 'bg-gray-300 text-gray-600'
@@ -897,7 +897,7 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
                       Add Availability
                     </div>
                     {onboardingStatus.hasAvailability && (
-                      <span className="text-xs font-semibold text-green-700 bg-green-200 px-3 py-1 rounded-full">Complete</span>
+                      <span className="text-xs font-semibold text-navy-700 bg-navy-200 px-3 py-1 rounded-full">Complete</span>
                     )}
                   </div>
                   <div className={`text-sm mb-3 ${!onboardingStatus.hasProfilePicture ? 'text-gray-400' : 'text-gray-600'}`}>
@@ -911,7 +911,7 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
                         setShowOnboarding(false);
                         router.push('/agent/schedule?openAvailability=true');
                       }}
-                      className="px-5 py-2.5 bg-gradient-to-r from-green-800 to-green-700 text-white text-sm font-semibold rounded-lg hover:from-green-900 hover:to-green-800 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                      className="px-5 py-2.5 bg-gradient-to-r from-navy-800 to-navy-700 text-white text-sm font-semibold rounded-lg hover:from-navy-900 hover:to-navy-800 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                     >
                       Add Availability
                     </button>
@@ -930,14 +930,14 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
               {/* Step 3: Add Payment Method */}
               <div className={`relative flex items-start gap-4 p-5 rounded-xl border-2 transition-all shadow-sm ${
                 onboardingStatus.hasPaymentMethod 
-                  ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-300 shadow-green-100' 
+                  ? 'bg-gradient-to-r from-navy-50 to-navy-50 border-navy-300 shadow-navy-100' 
                   : !onboardingStatus.hasAvailability || !onboardingStatus.hasProfilePicture
                   ? 'bg-gray-50 border-gray-200 opacity-60'
                   : 'bg-white border-gray-200 hover:border-gray-300'
               }`}>
                 <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center font-bold text-sm shadow-md transition-all ${
                   onboardingStatus.hasPaymentMethod 
-                    ? 'bg-gradient-to-br from-green-600 to-green-700 text-white shadow-green-300' 
+                    ? 'bg-gradient-to-br from-navy-600 to-navy-700 text-white shadow-navy-300' 
                     : !onboardingStatus.hasAvailability || !onboardingStatus.hasProfilePicture
                     ? 'bg-gray-200 text-gray-400'
                     : 'bg-gray-300 text-gray-600'
@@ -956,7 +956,7 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
                       Add Payment Method
                     </div>
                     {onboardingStatus.hasPaymentMethod && (
-                      <span className="text-xs font-semibold text-green-700 bg-green-200 px-3 py-1 rounded-full">Complete</span>
+                      <span className="text-xs font-semibold text-navy-700 bg-navy-200 px-3 py-1 rounded-full">Complete</span>
                     )}
                   </div>
                   <div className={`text-sm mb-3 ${!onboardingStatus.hasAvailability || !onboardingStatus.hasProfilePicture ? 'text-gray-400' : 'text-gray-600'}`}>
@@ -970,7 +970,7 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
                         setShowOnboarding(false);
                         router.push('/agent/billing');
                       }}
-                      className="px-5 py-2.5 bg-gradient-to-r from-green-800 to-green-700 text-white text-sm font-semibold rounded-lg hover:from-green-900 hover:to-green-800 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                      className="px-5 py-2.5 bg-gradient-to-r from-navy-800 to-navy-700 text-white text-sm font-semibold rounded-lg hover:from-navy-900 hover:to-navy-800 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                     >
                       Add Payment
                     </button>
@@ -989,16 +989,16 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
 
             {/* Completion Message */}
             {onboardingStatus.hasProfilePicture && onboardingStatus.hasPaymentMethod && onboardingStatus.hasAvailability && (
-              <div className="bg-gradient-to-r from-green-50 via-emerald-50 to-green-50 border-2 border-green-300 rounded-xl p-6 mb-6 shadow-md">
+              <div className="bg-gradient-to-r from-navy-50 via-navy-50 to-navy-50 border-2 border-navy-300 rounded-xl p-6 mb-6 shadow-md">
                 <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-green-600 to-green-700 flex items-center justify-center shadow-lg">
+                  <div className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-navy-600 to-navy-700 flex items-center justify-center shadow-lg">
                     <Check size={28} className="text-white" />
                   </div>
                   <div>
-                    <p className="text-xl font-bold text-green-900 mb-2">
+                    <p className="text-xl font-bold text-navy-900 mb-2">
                       🎉 Onboarding Complete!
                     </p>
-                    <p className="text-sm text-green-800">
+                    <p className="text-sm text-navy-800">
                       You're now ready to receive appointments and will appear in family search results.
                     </p>
                   </div>
@@ -1068,7 +1068,7 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
                       setShowOnboarding(false);
                     }
                   }}
-                  className="flex-1 bg-gradient-to-r from-green-800 to-green-700 text-white px-4 py-2.5 rounded-lg font-semibold hover:from-green-900 hover:to-green-800 transition-all shadow-md hover:shadow-lg"
+                  className="flex-1 bg-gradient-to-r from-navy-800 to-navy-700 text-white px-4 py-2.5 rounded-lg font-semibold hover:from-navy-900 hover:to-navy-800 transition-all shadow-md hover:shadow-lg"
                 >
                   Continue
                 </button>

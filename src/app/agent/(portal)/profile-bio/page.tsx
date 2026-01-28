@@ -16,7 +16,7 @@ function Label({ className = "", children, ...props }: React.LabelHTMLAttributes
 function Textarea({ className = "", ...props }: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
   return (
     <textarea
-      className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800 focus:border-transparent ${className}`}
+      className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-800 focus:border-transparent ${className}`}
       {...props}
     />
   );
@@ -27,7 +27,7 @@ function Select({ value, onValueChange, children, ...props }: { value: string; o
     <select
       value={value}
       onChange={(e) => onValueChange(e.target.value)}
-      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800 focus:border-transparent"
+      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-800 focus:border-transparent"
       {...props}
     >
       {children}
@@ -149,7 +149,7 @@ export default function ProfileBioPage() {
           <div className="bg-white border border-gray-200 rounded-lg p-6">
             <div className="flex items-center justify-center py-8">
               <div className="text-center">
-                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-green-800 mb-4"></div>
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-navy-800 mb-4"></div>
                 <p className="text-sm text-gray-600">Loading bio information...</p>
               </div>
             </div>
@@ -174,7 +174,7 @@ export default function ProfileBioPage() {
         <div className="bg-white border border-gray-200 rounded-lg p-6">
           {saveMessage && (
             <div className={`mb-6 p-4 rounded-lg ${
-              saveMessage.type === "success" ? "bg-green-50 text-green-800 border border-green-200" : "bg-red-50 text-red-800 border border-red-200"
+              saveMessage.type === "success" ? "bg-navy-50 text-navy-800 border border-navy-200" : "bg-red-50 text-red-800 border border-red-200"
             }`}>
               {saveMessage.text}
             </div>
@@ -182,10 +182,10 @@ export default function ProfileBioPage() {
 
           {/* Bio Status */}
           {generatedBio && (
-            <div className="mb-6 p-4 rounded-lg bg-green-50 border border-green-200">
+            <div className="mb-6 p-4 rounded-lg bg-navy-50 border border-navy-200">
               <div className="flex items-center gap-2">
-                <Check className="w-5 h-5 text-green-600" />
-                <p className="text-sm font-medium text-green-800">
+                <Check className="w-5 h-5 text-navy-600" />
+                <p className="text-sm font-medium text-navy-800">
                   Your bio is live on your profile and will update automatically when you save changes.
                 </p>
               </div>
@@ -258,7 +258,7 @@ export default function ProfileBioPage() {
             <button
               onClick={handleSave}
               disabled={saving || !bioData.years_of_experience || !bioData.practice_philosophy_help || !bioData.practice_philosophy_appreciate}
-              className="px-6 py-2 bg-green-800 text-white rounded-lg hover:bg-green-900 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-6 py-2 bg-navy-800 text-white rounded-lg hover:bg-navy-900 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {saving ? 'Saving...' : 'Save & Update Bio'}
             </button>

@@ -122,9 +122,9 @@ async function sendApprovalEmail(email: string, fullName: string | null, approve
             <img src="${siteUrl}/Soradin.png" alt="Soradin" style="height: 60px; width: auto; margin: 0 auto; display: block;" />
           </div>
           
-          <div style="background-color: #f0f9f4; border-left: 4px solid #0C6F3C; padding: 20px; margin-bottom: 30px; border-radius: 8px;">
+          <div style="background-color: #f0f9f4; border-left: 4px solid #1e3a5f; padding: 20px; margin-bottom: 30px; border-radius: 8px;">
             <h1 style="color: #1A1A1A; font-size: 28px; font-weight: 600; margin: 0 0 10px 0; line-height: 1.2;">Account Approved</h1>
-            <p style="color: #0C6F3C; font-size: 16px; margin: 0; font-weight: 500;">Welcome to Soradin</p>
+            <p style="color: #1e3a5f; font-size: 16px; margin: 0; font-weight: 500;">Welcome to Soradin</p>
           </div>
           
           <div style="color: #1A1A1A; font-size: 16px; line-height: 1.6;">
@@ -134,14 +134,14 @@ async function sendApprovalEmail(email: string, fullName: string | null, approve
           </div>
           
           <div style="text-align: center; margin: 40px 0;">
-            <a href="${siteUrl}/agent" style="background-color: #0C6F3C; color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 12px; display: inline-block; font-weight: 600; font-size: 16px; box-shadow: 0 2px 4px rgba(12, 111, 60, 0.2);">
+            <a href="${siteUrl}/agent" style="background-color: #1e3a5f; color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 12px; display: inline-block; font-weight: 600; font-size: 16px; box-shadow: 0 2px 4px rgba(30, 58, 95, 0.2);">
               Log In to Agent Portal
             </a>
           </div>
           
           <div style="margin-top: 40px; padding-top: 30px; border-top: 1px solid #e5e5e5;">
             <p style="color: #6b6b6b; font-size: 14px; line-height: 1.6; margin: 0 0 10px 0;">
-              If you have any questions, please contact our support team at <a href="mailto:support@soradin.com" style="color: #0C6F3C; text-decoration: none;">support@soradin.com</a>.
+              If you have any questions, please contact our support team at <a href="mailto:support@soradin.com" style="color: #1e3a5f; text-decoration: none;">support@soradin.com</a>.
             </p>
             <p style="color: #6b6b6b; font-size: 12px; margin: 20px 0 0 0;">
               © ${new Date().getFullYear()} Soradin, Inc. All rights reserved.

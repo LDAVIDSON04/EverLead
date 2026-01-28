@@ -220,7 +220,7 @@ export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId, onEdit
         <div className="flex-1 overflow-y-auto p-6">
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-700"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-navy-700"></div>
             </div>
           ) : error ? (
             <div className="text-center py-12">
@@ -381,7 +381,7 @@ export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId, onEdit
                           href={videoLink}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-800 transition-colors"
+                          className="inline-flex items-center px-4 py-2 bg-navy-700 text-white rounded-lg hover:bg-navy-800 transition-colors"
                         >
                           <span>Join Video Call</span>
                           <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -495,7 +495,7 @@ export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId, onEdit
                 onEdit(appointmentId, leadId);
                 onClose();
               }}
-              className="px-4 py-2 text-white bg-green-700 rounded-lg hover:bg-green-800 transition-colors"
+              className="px-4 py-2 text-white bg-navy-700 rounded-lg hover:bg-navy-800 transition-colors"
             >
               Edit Event
             </button>

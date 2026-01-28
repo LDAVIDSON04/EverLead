@@ -91,7 +91,7 @@ export function MonthSelectorModal({
             <select
               value={selectedYear}
               onChange={(e) => onYearChange(parseInt(e.target.value))}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-800 focus:border-transparent"
             >
               {availableYears.map((year) => (
                 <option key={year} value={year}>
@@ -111,7 +111,7 @@ export function MonthSelectorModal({
                   key={month}
                   onClick={() => onMonthSelect(selectedYear, month)}
                   disabled={loadingStatement}
-                  className="flex flex-col items-center justify-center p-4 border-2 border-gray-200 rounded-lg hover:border-green-800 hover:bg-green-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex flex-col items-center justify-center p-4 border-2 border-gray-200 rounded-lg hover:border-navy-800 hover:bg-navy-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <FileText
                     size={28}

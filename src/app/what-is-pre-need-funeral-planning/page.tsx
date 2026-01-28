@@ -28,7 +28,7 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
           </Link>
           <Link 
             href="/" 
-            className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors text-lg font-medium"
+            className="text-[#1A1A1A] hover:text-[#1e3a5f] transition-colors text-lg font-medium"
           >
             Home
           </Link>
@@ -104,7 +104,7 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
               </p>
               <button
                 onClick={navigateToSearch}
-                className="bg-[#0C6F3C] text-white px-8 py-4 rounded-xl hover:bg-[#0C6F3C]/90 transition-all shadow-sm text-lg font-medium"
+                className="bg-[#1e3a5f] text-white px-8 py-4 rounded-xl hover:bg-[#1e3a5f]/90 transition-all shadow-sm text-lg font-medium"
               >
                 Find care
               </button>
@@ -218,7 +218,7 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
               </p>
               <button
                 onClick={navigateToSearch}
-                className="bg-[#0C6F3C] text-white px-8 py-4 rounded-xl hover:bg-[#0C6F3C]/90 transition-all shadow-sm text-lg font-medium"
+                className="bg-[#1e3a5f] text-white px-8 py-4 rounded-xl hover:bg-[#1e3a5f]/90 transition-all shadow-sm text-lg font-medium"
               >
                 Find care
               </button>
@@ -312,7 +312,7 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
               </p>
               <button
                 onClick={navigateToSearch}
-                className="bg-[#0C6F3C] text-white px-8 py-4 rounded-xl hover:bg-[#0C6F3C]/90 transition-all shadow-sm text-lg font-medium"
+                className="bg-[#1e3a5f] text-white px-8 py-4 rounded-xl hover:bg-[#1e3a5f]/90 transition-all shadow-sm text-lg font-medium"
               >
                 Find care
               </button>

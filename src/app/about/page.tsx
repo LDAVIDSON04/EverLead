@@ -44,7 +44,7 @@ export default function AboutPage() {
           
           <Link 
             href="/"
-            className="px-4 py-2 text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors font-medium"
+            className="px-4 py-2 text-[#1A1A1A] hover:text-[#1e3a5f] transition-colors font-medium"
           >
             Home
           </Link>
@@ -153,7 +153,7 @@ export default function AboutPage() {
           </p>
           <button
             onClick={navigateToSearchWithLocation}
-            className="bg-[#0C6F3C] text-white px-8 py-4 rounded-xl hover:bg-[#0C6F3C]/90 transition-all shadow-sm text-lg font-medium"
+            className="bg-[#1e3a5f] text-white px-8 py-4 rounded-xl hover:bg-[#1e3a5f]/90 transition-all shadow-sm text-lg font-medium"
           >
             Book local experts today
           </button>

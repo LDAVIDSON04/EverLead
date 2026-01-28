@@ -21,7 +21,7 @@ function SearchChooseContent() {
   if (!location.trim()) {
     return (
       <div className="min-h-screen bg-[#FAF9F6] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#0C6F3C] border-t-transparent" />
+        <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#1e3a5f] border-t-transparent" />
       </div>
     );
   }
@@ -79,13 +79,13 @@ function SearchChooseContent() {
             onClick={() => handleCardClick("video")}
             onMouseEnter={() => setHoveredCard("video")}
             onMouseLeave={() => setHoveredCard(null)}
-            className="w-full text-left bg-white rounded-2xl p-8 sm:p-10 lg:p-12 shadow-md hover:shadow-xl border border-gray-200/60 hover:border-[#0C6F3C]/40 transition-all duration-300 group relative overflow-hidden"
+            className="w-full text-left bg-white rounded-2xl p-8 sm:p-10 lg:p-12 shadow-md hover:shadow-xl border border-gray-200/60 hover:border-[#1e3a5f]/40 transition-all duration-300 group relative overflow-hidden"
           >
             {/* Subtle gradient overlay on hover */}
-            <div className="absolute inset-0 bg-gradient-to-br from-[#0C6F3C]/0 to-[#0C6F3C]/0 group-hover:from-[#0C6F3C]/5 group-hover:to-transparent transition-all duration-300 pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-br from-[#1e3a5f]/0 to-[#1e3a5f]/0 group-hover:from-[#1e3a5f]/5 group-hover:to-transparent transition-all duration-300 pointer-events-none" />
             
             <div className="relative flex items-start gap-6 sm:gap-8 lg:gap-10">
-              <div className="w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28 rounded-2xl bg-gradient-to-br from-[#0C6F3C]/10 to-[#0C6F3C]/5 flex items-center justify-center flex-shrink-0 group-hover:from-[#0C6F3C]/20 group-hover:to-[#0C6F3C]/10 transition-all duration-300 group-hover:scale-110 shadow-sm overflow-hidden">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28 rounded-2xl bg-gradient-to-br from-[#1e3a5f]/10 to-[#1e3a5f]/5 flex items-center justify-center flex-shrink-0 group-hover:from-[#1e3a5f]/20 group-hover:to-[#1e3a5f]/10 transition-all duration-300 group-hover:scale-110 shadow-sm overflow-hidden">
                 <Image
                   src="/video-call-icon.png"
                   alt="Video call"
@@ -96,11 +96,11 @@ function SearchChooseContent() {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between gap-4 mb-3">
-                  <h2 className="text-2xl sm:text-3xl lg:text-4xl font-semibold text-gray-900 group-hover:text-[#0C6F3C] transition-colors duration-200">
+                  <h2 className="text-2xl sm:text-3xl lg:text-4xl font-semibold text-gray-900 group-hover:text-[#1e3a5f] transition-colors duration-200">
                     Video Call
                   </h2>
                   <ArrowRight 
-                    className={`w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-gray-400 group-hover:text-[#0C6F3C] transition-all duration-300 flex-shrink-0 mt-1 ${
+                    className={`w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-gray-400 group-hover:text-[#1e3a5f] transition-all duration-300 flex-shrink-0 mt-1 ${
                       hoveredCard === "video" ? "translate-x-1" : ""
                     }`}
                   />
@@ -117,13 +117,13 @@ function SearchChooseContent() {
             onClick={() => handleCardClick("in-person")}
             onMouseEnter={() => setHoveredCard("in-person")}
             onMouseLeave={() => setHoveredCard(null)}
-            className="w-full text-left bg-white rounded-2xl p-8 sm:p-10 lg:p-12 shadow-md hover:shadow-xl border border-gray-200/60 hover:border-[#0C6F3C]/40 transition-all duration-300 group relative overflow-hidden"
+            className="w-full text-left bg-white rounded-2xl p-8 sm:p-10 lg:p-12 shadow-md hover:shadow-xl border border-gray-200/60 hover:border-[#1e3a5f]/40 transition-all duration-300 group relative overflow-hidden"
           >
             {/* Subtle gradient overlay on hover */}
-            <div className="absolute inset-0 bg-gradient-to-br from-[#0C6F3C]/0 to-[#0C6F3C]/0 group-hover:from-[#0C6F3C]/5 group-hover:to-transparent transition-all duration-300 pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-br from-[#1e3a5f]/0 to-[#1e3a5f]/0 group-hover:from-[#1e3a5f]/5 group-hover:to-transparent transition-all duration-300 pointer-events-none" />
             
             <div className="relative flex items-start gap-6 sm:gap-8 lg:gap-10">
-              <div className="w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28 rounded-2xl bg-gradient-to-br from-[#0C6F3C]/10 to-[#0C6F3C]/5 flex items-center justify-center flex-shrink-0 group-hover:from-[#0C6F3C]/20 group-hover:to-[#0C6F3C]/10 transition-all duration-300 group-hover:scale-110 shadow-sm overflow-hidden">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28 rounded-2xl bg-gradient-to-br from-[#1e3a5f]/10 to-[#1e3a5f]/5 flex items-center justify-center flex-shrink-0 group-hover:from-[#1e3a5f]/20 group-hover:to-[#1e3a5f]/10 transition-all duration-300 group-hover:scale-110 shadow-sm overflow-hidden">
                 <Image
                   src="/in-person-meeting-icon.png"
                   alt="In person meeting"
@@ -134,11 +134,11 @@ function SearchChooseContent() {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between gap-4 mb-3">
-                  <h2 className="text-2xl sm:text-3xl lg:text-4xl font-semibold text-gray-900 group-hover:text-[#0C6F3C] transition-colors duration-200">
+                  <h2 className="text-2xl sm:text-3xl lg:text-4xl font-semibold text-gray-900 group-hover:text-[#1e3a5f] transition-colors duration-200">
                     In Person Meeting
                   </h2>
                   <ArrowRight 
-                    className={`w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-gray-400 group-hover:text-[#0C6F3C] transition-all duration-300 flex-shrink-0 mt-1 ${
+                    className={`w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-gray-400 group-hover:text-[#1e3a5f] transition-all duration-300 flex-shrink-0 mt-1 ${
                       hoveredCard === "in-person" ? "translate-x-1" : ""
                     }`}
                   />
@@ -159,7 +159,7 @@ export default function SearchChoosePage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-[#FAF9F6] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#0C6F3C] border-t-transparent" />
+        <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#1e3a5f] border-t-transparent" />
       </div>
     }>
       <SearchChooseContent />

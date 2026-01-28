@@ -612,8 +612,8 @@ function CancelAppointmentContent() {
         {status === "success" && (
           <>
             <div className="mb-6">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-16 h-16 bg-navy-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-navy-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
@@ -674,7 +674,7 @@ function CancelAppointmentContent() {
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header with Agent Info */}
-            <div className="bg-gradient-to-r from-green-50 to-white p-6 border-b border-gray-200 sticky top-0 z-10">
+            <div className="bg-gradient-to-r from-navy-50 to-white p-6 border-b border-gray-200 sticky top-0 z-10">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-2xl font-bold text-black">Reschedule Appointment</h2>
                 <button
@@ -695,12 +695,12 @@ function CancelAppointmentContent() {
                         alt={selectedAgentInfo.full_name || "Agent"}
                         width={80}
                         height={80}
-                        className="rounded-full object-cover border-2 border-green-600"
+                        className="rounded-full object-cover border-2 border-navy-600"
                         unoptimized
                       />
                     ) : (
-                      <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center border-2 border-green-600">
-                        <span className="text-green-700 text-2xl font-semibold">
+                      <div className="w-20 h-20 bg-navy-100 rounded-full flex items-center justify-center border-2 border-navy-600">
+                        <span className="text-navy-700 text-2xl font-semibold">
                           {(selectedAgentInfo.full_name || "A")[0].toUpperCase()}
                         </span>
                       </div>
@@ -779,7 +779,7 @@ function CancelAppointmentContent() {
                         }));
                       }
                     }}
-                    className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-lg hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-green-600 transition-all text-base"
+                    className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-lg hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-navy-600 focus:border-navy-600 transition-all text-base"
                   >
                     {officeLocations.map((loc: any) => (
                       <option key={loc.id} value={loc.city}>
@@ -791,13 +791,13 @@ function CancelAppointmentContent() {
               )}
               
               <div className="flex items-center gap-2 mb-4">
-                <Calendar className="w-5 h-5 text-green-600" />
+                <Calendar className="w-5 h-5 text-navy-600" />
                 <h3 className="text-lg font-semibold text-black">Select a date and time</h3>
               </div>
 
               {loadingAvailability ? (
                 <div className="text-center py-12">
-                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mb-4"></div>
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-navy-600 mb-4"></div>
                   <p className="text-gray-600">Loading available times...</p>
                 </div>
               ) : availabilityDays.length === 0 ? (
@@ -891,7 +891,7 @@ function CancelAppointmentContent() {
                       const hasSlots = formattedSlots.length > 0;
                       
                       return (
-                        <div key={dayIdx} className={`border-b border-gray-200 pb-6 last:border-b-0 ${isSelected ? 'bg-green-50 -mx-6 px-6 pt-4 rounded-lg' : ''}`}>
+                        <div key={dayIdx} className={`border-b border-gray-200 pb-6 last:border-b-0 ${isSelected ? 'bg-navy-50 -mx-6 px-6 pt-4 rounded-lg' : ''}`}>
                           <h4 className="text-base font-semibold text-black mb-3">{displayDate}</h4>
                           {!hasSlots ? (
                             <div className="text-center py-8 text-gray-500">
@@ -905,7 +905,7 @@ function CancelAppointmentContent() {
                                     key={idx}
                                     type="button"
                                     onClick={() => handleTimeSlotClick(timeSlot, day.date)}
-                                    className="w-full px-4 py-3 rounded-lg text-sm font-medium transition-all bg-green-100 text-black hover:bg-green-600 hover:text-white border-2 border-green-300 hover:border-green-600 shadow-sm hover:shadow-md"
+                                    className="w-full px-4 py-3 rounded-lg text-sm font-medium transition-all bg-navy-100 text-black hover:bg-navy-600 hover:text-white border-2 border-navy-300 hover:border-navy-600 shadow-sm hover:shadow-md"
                                   >
                                     {timeSlot.time}
                                   </button>
@@ -940,7 +940,7 @@ function CancelAppointmentContent() {
             <h3 className="text-xl font-semibold text-gray-900 mb-4">Confirm Time Selection</h3>
             <div className="mb-6">
               <p className="text-gray-600 mb-2">You have selected:</p>
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <div className="bg-navy-50 border border-navy-200 rounded-lg p-4">
                 <p className="text-lg font-semibold text-gray-900 mb-1">{pendingTimeSlot.time}</p>
                 <p className="text-sm text-gray-600">{pendingTimeSlot.displayDate}</p>
               </div>
@@ -955,7 +955,7 @@ function CancelAppointmentContent() {
               <button
                 onClick={handleConfirmTimeSelection}
                 disabled={rescheduling}
-                className="flex-1 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 px-4 py-3 bg-navy-600 text-white rounded-lg hover:bg-navy-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {rescheduling ? "Rescheduling..." : "Confirm"}
               </button>

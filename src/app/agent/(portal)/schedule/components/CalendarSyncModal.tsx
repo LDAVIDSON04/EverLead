@@ -168,7 +168,7 @@ export function CalendarSyncModal({ isOpen, onClose }: CalendarSyncModalProps) {
                 ) : (
                   <button
                     onClick={() => handleConnect("google")}
-                    className="px-4 py-2 text-sm bg-green-800 text-white rounded-lg hover:bg-green-900 transition-colors whitespace-nowrap"
+                    className="px-4 py-2 text-sm bg-navy-800 text-white rounded-lg hover:bg-navy-900 transition-colors whitespace-nowrap"
                   >
                     Connect
                   </button>
@@ -198,7 +198,7 @@ export function CalendarSyncModal({ isOpen, onClose }: CalendarSyncModalProps) {
                 ) : (
                   <button
                     onClick={() => handleConnect("microsoft")}
-                    className="px-4 py-2 text-sm bg-green-800 text-white rounded-lg hover:bg-green-900 transition-colors whitespace-nowrap"
+                    className="px-4 py-2 text-sm bg-navy-800 text-white rounded-lg hover:bg-navy-900 transition-colors whitespace-nowrap"
                   >
                     Connect
                   </button>

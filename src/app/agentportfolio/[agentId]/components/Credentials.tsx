@@ -70,7 +70,7 @@ export function Credentials({ agentData }: CredentialsProps) {
               <p className="text-sm text-gray-600">{credential.issuer} • {credential.year}</p>
             </div>
             <div className="flex items-center">
-              <div className="flex items-center gap-2 px-3 py-1 bg-green-50 rounded-full text-sm" style={{ color: '#1a4d2e' }}>
+              <div className="flex items-center gap-2 px-3 py-1 bg-navy-50 rounded-full text-sm" style={{ color: '#1a4d2e' }}>
                 <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#1a4d2e' }}></div>
                 Verified
               </div>

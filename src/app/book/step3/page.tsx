@@ -282,7 +282,7 @@ function BookingStep3Content() {
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
           <p className="text-gray-600 mb-4">Invalid booking information</p>
-          <Link href="/search" className="text-green-800 hover:underline">
+          <Link href="/search" className="text-navy-800 hover:underline">
             Return to search
           </Link>
         </div>
@@ -329,7 +329,7 @@ function BookingStep3Content() {
                   className="w-16 h-16 rounded-full object-cover flex-shrink-0"
                 />
               ) : (
-                <div className="w-16 h-16 bg-green-800 rounded-full flex items-center justify-center flex-shrink-0">
+                <div className="w-16 h-16 bg-navy-800 rounded-full flex items-center justify-center flex-shrink-0">
                   <span className="text-white text-2xl">
                     {agentInfo.first_name?.[0]?.toUpperCase() || agentInfo.full_name?.[0]?.toUpperCase() || "A"}
                   </span>
@@ -384,7 +384,7 @@ function BookingStep3Content() {
                 required
                 value={formData.phone}
                 onChange={(e) => handleInputChange("phone", e.target.value)}
-                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-800 ${
+                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-800 ${
                   formErrors.phone ? "border-red-500" : "border-gray-300"
                 }`}
                 placeholder="(555) 123-4567"
@@ -409,7 +409,7 @@ function BookingStep3Content() {
               <label
                 className={`flex items-center gap-4 p-4 border-2 rounded-lg cursor-pointer transition-colors ${
                   selectedService === "cremation"
-                    ? "border-green-800 bg-green-50"
+                    ? "border-navy-800 bg-navy-50"
                     : "border-gray-300 hover:border-gray-400"
                 }`}
               >
@@ -419,7 +419,7 @@ function BookingStep3Content() {
                   value="cremation"
                   checked={selectedService === "cremation"}
                   onChange={() => handleServiceSelect("cremation")}
-                  className="w-5 h-5 text-green-800 focus:ring-green-800"
+                  className="w-5 h-5 text-navy-800 focus:ring-navy-800"
                 />
                 <span className="text-gray-900 font-medium">Cremation</span>
               </label>
@@ -427,7 +427,7 @@ function BookingStep3Content() {
               <label
                 className={`flex items-center gap-4 p-4 border-2 rounded-lg cursor-pointer transition-colors ${
                   selectedService === "burial"
-                    ? "border-green-800 bg-green-50"
+                    ? "border-navy-800 bg-navy-50"
                     : "border-gray-300 hover:border-gray-400"
                 }`}
               >
@@ -437,7 +437,7 @@ function BookingStep3Content() {
                   value="burial"
                   checked={selectedService === "burial"}
                   onChange={() => handleServiceSelect("burial")}
-                  className="w-5 h-5 text-green-800 focus:ring-green-800"
+                  className="w-5 h-5 text-navy-800 focus:ring-navy-800"
                 />
                 <span className="text-gray-900 font-medium">Burial</span>
               </label>
@@ -445,7 +445,7 @@ function BookingStep3Content() {
               <label
                 className={`flex items-center gap-4 p-4 border-2 rounded-lg cursor-pointer transition-colors ${
                   selectedService === "unsure"
-                    ? "border-green-800 bg-green-50"
+                    ? "border-navy-800 bg-navy-50"
                     : "border-gray-300 hover:border-gray-400"
                 }`}
               >
@@ -455,7 +455,7 @@ function BookingStep3Content() {
                   value="unsure"
                   checked={selectedService === "unsure"}
                   onChange={() => handleServiceSelect("unsure")}
-                  className="w-5 h-5 text-green-800 focus:ring-green-800"
+                  className="w-5 h-5 text-navy-800 focus:ring-navy-800"
                 />
                 <span className="text-gray-900 font-medium">Unsure</span>
               </label>
@@ -476,7 +476,7 @@ function BookingStep3Content() {
           <button
             onClick={handleBook}
             disabled={isBooking}
-            className="w-full bg-green-800 text-white py-4 px-6 rounded-lg font-semibold text-lg hover:bg-green-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-navy-800 text-white py-4 px-6 rounded-lg font-semibold text-lg hover:bg-navy-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isBooking ? "Booking..." : "Book Appointment"}
           </button>

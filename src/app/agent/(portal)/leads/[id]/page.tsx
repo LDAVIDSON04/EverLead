@@ -545,7 +545,7 @@ export default function LeadDetailsPage() {
 
                 {/* Appointment request */}
                 {appointment && (
-                  <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-slate-800 shadow-sm">
+                  <div className="rounded-lg border border-navy-200 bg-navy-50 p-4 text-sm text-slate-800 shadow-sm">
                     <h2
                       className="mb-3 text-base font-normal text-[#2a2a2a]"
                       style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
@@ -778,7 +778,7 @@ export default function LeadDetailsPage() {
                       ))}
                     </select>
                     {statusSaved && (
-                      <p className="text-[10px] text-green-600">Saved</p>
+                      <p className="text-[10px] text-navy-600">Saved</p>
                     )}
                   </div>
                 </div>

@@ -370,12 +370,12 @@ export default function AgentDashboardPage() {
           {/* Left 2 Columns */}
           <div className="col-span-1 md:col-span-2 space-y-6">
             {/* Welcome Section */}
-            <div className="bg-gradient-to-r from-green-900 to-green-800 rounded-2xl p-6">
+            <div className="bg-gradient-to-r from-navy-900 to-navy-800 rounded-2xl p-6">
               <div>
                 <h2 className="text-2xl mb-2 text-white">
                   Welcome back, <span className="text-gray-100">{userFirstName || 'Agent'}</span>
                 </h2>
-                <p className="text-green-100">Have a nice day at work</p>
+                <p className="text-navy-100">Have a nice day at work</p>
               </div>
             </div>
             
@@ -389,8 +389,8 @@ export default function AgentDashboardPage() {
               <div className="grid grid-cols-1 gap-4">
                 {/* Appointments */}
                 <div className="bg-white rounded-xl p-4 border border-gray-200">
-                  <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mb-3">
-                    <Calendar size={20} className="text-green-800" />
+                  <div className="w-10 h-10 bg-navy-100 rounded-lg flex items-center justify-center mb-3">
+                    <Calendar size={20} className="text-navy-800" />
                   </div>
                   <div className="text-xs text-gray-500 mb-1">Appointments</div>
                   <div className="text-2xl text-gray-900">{currentWeekAppointmentsCount}</div>
@@ -409,7 +409,7 @@ export default function AgentDashboardPage() {
                   <div className="grid grid-cols-12 gap-4 text-xs text-gray-500 pb-2 border-b border-gray-100">
                     <div className="col-span-3 flex items-center gap-2">
                       Name
-                      <ArrowUpDown size={14} className="text-green-800" />
+                      <ArrowUpDown size={14} className="text-navy-800" />
                     </div>
                     <div className="col-span-2">Location</div>
                     <div className="col-span-3 flex items-center gap-2">
@@ -427,7 +427,7 @@ export default function AgentDashboardPage() {
                   {/* Table Rows */}
                   {appointments.length === 0 ? (
                     <div className="py-8 text-center text-sm text-gray-500">
-                      No appointments yet. <Link href="/agent/appointments" className="text-green-800 hover:underline">Browse available appointments</Link>
+                      No appointments yet. <Link href="/agent/appointments" className="text-navy-800 hover:underline">Browse available appointments</Link>
                     </div>
                   ) : (
                     appointments.map((apt, idx) => (
@@ -435,7 +435,7 @@ export default function AgentDashboardPage() {
                         key={apt.id}
                         href={`/agent/my-appointments`}
                         className={`grid grid-cols-12 gap-4 items-center py-3 rounded-lg transition-colors ${
-                          apt.status === 'confirmed' ? 'bg-green-50 hover:bg-green-100' : 'bg-white hover:bg-gray-50'
+                          apt.status === 'confirmed' ? 'bg-navy-50 hover:bg-navy-100' : 'bg-white hover:bg-gray-50'
                         }`}
                       >
                         <div className="col-span-3">
@@ -446,7 +446,7 @@ export default function AgentDashboardPage() {
                         <div className="col-span-2 text-sm text-gray-600">{apt.time}</div>
                         <div className="col-span-1">
                           {apt.status === 'confirmed' ? (
-                            <Check size={18} className="text-green-600" />
+                            <Check size={18} className="text-navy-600" />
                           ) : (
                             <AlertCircle size={18} className="text-red-500" />
                           )}
@@ -490,7 +490,7 @@ export default function AgentDashboardPage() {
                     <div key={day} className="text-center">
                       <div className="text-xs text-gray-500 mb-2">{day}</div>
                       <div className={`w-full aspect-square rounded-lg flex flex-col items-center justify-center text-sm ${
-                        isToday ? 'bg-green-800 text-white' : 'bg-gray-50 text-gray-900'
+                        isToday ? 'bg-navy-800 text-white' : 'bg-gray-50 text-gray-900'
                       }`}>
                         <div>{calendarDates[idx]}</div>
                         {(() => {
@@ -505,7 +505,7 @@ export default function AgentDashboardPage() {
                                   <span
                                     key={i}
                                     className={`w-1 h-1 rounded-full ${
-                                      isToday ? 'bg-white' : 'bg-green-600'
+                                      isToday ? 'bg-white' : 'bg-navy-600'
                                     }`}
                                   ></span>
                                 ))}
@@ -533,7 +533,7 @@ export default function AgentDashboardPage() {
                   <div key={idx} className="flex-1 flex flex-col items-center gap-2">
                     <div className="w-full flex flex-col items-center justify-end h-40">
                       <div 
-                        className="w-full bg-green-800 rounded-t hover:bg-green-900 transition-colors"
+                        className="w-full bg-navy-800 rounded-t hover:bg-navy-900 transition-colors"
                         style={{ height: `${item.value}%` }}
                       ></div>
                     </div>

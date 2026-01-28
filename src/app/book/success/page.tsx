@@ -38,8 +38,8 @@ function BookingSuccessContent() {
     <div className="min-h-screen bg-white flex items-center justify-center px-4">
       <div className="max-w-md w-full text-center">
         <div className="mb-6 flex justify-center">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-            <CheckCircle className="w-10 h-10 text-green-800" />
+          <div className="w-16 h-16 bg-navy-100 rounded-full flex items-center justify-center">
+            <CheckCircle className="w-10 h-10 text-navy-800" />
           </div>
         </div>
         
@@ -59,7 +59,7 @@ function BookingSuccessContent() {
         <div className="space-y-3">
           <Link
             href="/search"
-            className="block w-full bg-green-800 text-white py-3 px-6 rounded-lg font-semibold hover:bg-green-900 transition-colors"
+            className="block w-full bg-navy-800 text-white py-3 px-6 rounded-lg font-semibold hover:bg-navy-900 transition-colors"
           >
             Book Another Appointment
           </Link>

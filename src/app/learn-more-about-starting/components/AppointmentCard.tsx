@@ -36,7 +36,7 @@ export function AppointmentCard({
           <p className="text-gray-600 text-sm mt-0.5">{date}</p>
           <div className="mt-2 flex items-center gap-1.5">
             {!featured && (
-              <div className="bg-green-50 text-[#0D5C3D] px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1">
+              <div className="bg-navy-50 text-[#0D5C3D] px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1">
                 <Check className="w-3 h-3" />
                 {status}
               </div>

@@ -190,23 +190,23 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
           <div className="flex items-center gap-6">
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center gap-10">
-              <Link href="/about" className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors text-lg font-medium">
+              <Link href="/about" className="text-[#1A1A1A] hover:text-[#1e3a5f] transition-colors text-lg font-medium">
                 About Us
               </Link>
-              <Link href="/help" className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors text-lg font-medium">
+              <Link href="/help" className="text-[#1A1A1A] hover:text-[#1e3a5f] transition-colors text-lg font-medium">
                 Help
               </Link>
-              <Link href="/learn-more-about-starting" className="text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors text-lg font-medium">
+              <Link href="/learn-more-about-starting" className="text-[#1A1A1A] hover:text-[#1e3a5f] transition-colors text-lg font-medium">
                 List Your Specialty With Soradin
               </Link>
-              <Link href="/agent" className="bg-[#0C6F3C] text-white px-6 py-2.5 rounded-xl hover:bg-[#0C6F3C]/90 transition-all shadow-sm">
+              <Link href="/agent" className="bg-[#1e3a5f] text-white px-6 py-2.5 rounded-xl hover:bg-[#1e3a5f]/90 transition-all shadow-sm">
                 Log in
               </Link>
             </div>
             {/* Mobile: Hamburger menu */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors"
+              className="md:hidden p-2 text-[#1A1A1A] hover:text-[#1e3a5f] transition-colors"
               aria-label="Toggle menu"
             >
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -240,7 +240,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                     </div>
                     <button
                       onClick={() => setMobileMenuOpen(false)}
-                      className="p-2 text-[#1A1A1A] hover:text-[#0C6F3C] transition-colors"
+                      className="p-2 text-[#1A1A1A] hover:text-[#1e3a5f] transition-colors"
                       aria-label="Close menu"
                     >
                       <X className="w-6 h-6" />
@@ -256,7 +256,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                     <div className="w-full max-w-sm flex flex-col gap-4">
                       <Link 
                         href="/learn-more-about-starting" 
-                        className="px-6 py-4 bg-[#0C6F3C] text-white rounded-xl hover:bg-[#0C6F3C]/90 transition-all shadow-sm text-center text-base font-medium"
+                        className="px-6 py-4 bg-[#1e3a5f] text-white rounded-xl hover:bg-[#1e3a5f]/90 transition-all shadow-sm text-center text-base font-medium"
                         onClick={() => setMobileMenuOpen(false)}
                       >
                         Create account
@@ -281,7 +281,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
       <div className="relative bg-[#FAF9F6] pb-12 px-4 min-h-[calc(100vh-80px)] flex items-start md:pt-32 pt-0 md:pb-12 -mt-2 md:mt-0" style={{ overflow: 'visible' }}>
         {/* Abstract background shapes - deferred to prevent blocking initial render */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ contentVisibility: 'auto', contain: 'layout style paint' }}>
-          <div className="absolute top-20 right-10 w-96 h-96 bg-[#0C6F3C]/10 rounded-full blur-3xl" style={{ willChange: 'auto' }} />
+          <div className="absolute top-20 right-10 w-96 h-96 bg-[#1e3a5f]/10 rounded-full blur-3xl" style={{ willChange: 'auto' }} />
         </div>
 
         {/* Hero illustration - positioned absolutely on the right, above title */}
@@ -436,7 +436,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                 <div className="flex items-center lg:pl-2">
                   <button
                     type="submit"
-                    className="w-full lg:w-auto bg-[#0C6F3C] text-white px-8 py-3 rounded-xl hover:bg-[#0C6F3C]/90 transition-all shadow-sm"
+                    className="w-full lg:w-auto bg-[#1e3a5f] text-white px-8 py-3 rounded-xl hover:bg-[#1e3a5f]/90 transition-all shadow-sm"
                   >
                     Find care
                   </button>
@@ -450,8 +450,8 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
               <div className="grid grid-cols-2 gap-3 mb-3">
                 {/* Step 1 - Find Local Experts */}
                 <div className="flex flex-col items-center text-center">
-                  <div className="w-12 h-12 rounded-full bg-[#0C6F3C]/10 flex items-center justify-center mb-2">
-                    <Search className="w-6 h-6 text-[#0C6F3C]" />
+                  <div className="w-12 h-12 rounded-full bg-[#1e3a5f]/10 flex items-center justify-center mb-2">
+                    <Search className="w-6 h-6 text-[#1e3a5f]" />
                   </div>
                   <h3 className="text-base font-semibold text-[#1A1A1A] mb-1">Find Local Experts</h3>
                   <p className="text-xs text-[#1A1A1A]/70 leading-tight">
@@ -461,8 +461,8 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
 
                 {/* Step 2 - Compare at Your Pace */}
                 <div className="flex flex-col items-center text-center">
-                  <div className="w-12 h-12 rounded-full bg-[#0C6F3C]/10 flex items-center justify-center mb-2">
-                    <Calendar className="w-6 h-6 text-[#0C6F3C]" />
+                  <div className="w-12 h-12 rounded-full bg-[#1e3a5f]/10 flex items-center justify-center mb-2">
+                    <Calendar className="w-6 h-6 text-[#1e3a5f]" />
                   </div>
                   <h3 className="text-base font-semibold text-[#1A1A1A] mb-1">Compare at Your Pace</h3>
                   <p className="text-xs text-[#1A1A1A]/70 leading-tight">
@@ -474,8 +474,8 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
               {/* Bottom row: Book with Confidence centered */}
               <div className="flex justify-center">
                 <div className="flex flex-col items-center text-center max-w-[calc(50%-0.5rem)]">
-                  <div className="w-12 h-12 rounded-full bg-[#0C6F3C]/10 flex items-center justify-center mb-2">
-                    <Check className="w-6 h-6 text-[#0C6F3C]" />
+                  <div className="w-12 h-12 rounded-full bg-[#1e3a5f]/10 flex items-center justify-center mb-2">
+                    <Check className="w-6 h-6 text-[#1e3a5f]" />
                   </div>
                   <h3 className="text-base font-semibold text-[#1A1A1A] mb-1">Book with Confidence</h3>
                   <p className="text-xs text-[#1A1A1A]/70 leading-tight">
@@ -489,8 +489,8 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
             <div className="hidden md:flex items-center justify-center gap-8 mt-12 mb-8 max-w-4xl">
               {/* Step 1 */}
               <div className="flex flex-col items-center text-center flex-1">
-                <div className="w-16 h-16 rounded-full bg-[#0C6F3C]/10 flex items-center justify-center mb-4">
-                  <Search className="w-8 h-8 text-[#0C6F3C]" />
+                <div className="w-16 h-16 rounded-full bg-[#1e3a5f]/10 flex items-center justify-center mb-4">
+                  <Search className="w-8 h-8 text-[#1e3a5f]" />
                 </div>
                 <h3 className="text-lg font-semibold text-[#1A1A1A] mb-2">Find Local Experts</h3>
                 <p className="text-sm text-[#1A1A1A]/70 leading-relaxed">
@@ -503,8 +503,8 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
 
               {/* Step 2 */}
               <div className="flex flex-col items-center text-center flex-1">
-                <div className="w-16 h-16 rounded-full bg-[#0C6F3C]/10 flex items-center justify-center mb-4">
-                  <Calendar className="w-8 h-8 text-[#0C6F3C]" />
+                <div className="w-16 h-16 rounded-full bg-[#1e3a5f]/10 flex items-center justify-center mb-4">
+                  <Calendar className="w-8 h-8 text-[#1e3a5f]" />
                 </div>
                 <h3 className="text-lg font-semibold text-[#1A1A1A] mb-2">Compare at Your Pace</h3>
                 <p className="text-sm text-[#1A1A1A]/70 leading-relaxed">
@@ -517,8 +517,8 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
 
               {/* Step 3 */}
               <div className="flex flex-col items-center text-center flex-1">
-                <div className="w-16 h-16 rounded-full bg-[#0C6F3C]/10 flex items-center justify-center mb-4">
-                  <Check className="w-8 h-8 text-[#0C6F3C]" />
+                <div className="w-16 h-16 rounded-full bg-[#1e3a5f]/10 flex items-center justify-center mb-4">
+                  <Check className="w-8 h-8 text-[#1e3a5f]" />
                 </div>
                 <h3 className="text-lg font-semibold text-[#1A1A1A] mb-2">Book with Confidence</h3>
                 <p className="text-sm text-[#1A1A1A]/70 leading-relaxed">
@@ -569,7 +569,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                 </p>
                 <button 
                   onClick={navigateToSearchWithLocation}
-                  className="bg-[#0C6F3C] text-white px-5 py-2.5 rounded-xl hover:bg-[#0C6F3C]/90 transition-all shadow-sm text-sm"
+                  className="bg-[#1e3a5f] text-white px-5 py-2.5 rounded-xl hover:bg-[#1e3a5f]/90 transition-all shadow-sm text-sm"
                 >
                   See reviews
                 </button>
@@ -607,7 +607,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                 </p>
                 <button 
                   onClick={navigateToSearchWithLocation}
-                  className="bg-[#0C6F3C] text-white px-5 py-2.5 rounded-xl hover:bg-[#0C6F3C]/90 transition-all shadow-sm text-sm"
+                  className="bg-[#1e3a5f] text-white px-5 py-2.5 rounded-xl hover:bg-[#1e3a5f]/90 transition-all shadow-sm text-sm"
                 >
                   See availability
                 </button>
@@ -683,7 +683,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
 
               <div className="space-y-3 md:space-y-5 mb-4 md:mb-10">
                 <div className="flex items-start gap-2 md:gap-4">
-                  <div className="w-4 h-4 md:w-6 md:h-6 rounded-full bg-[#0C6F3C] flex items-center justify-center flex-shrink-0 mt-1">
+                  <div className="w-4 h-4 md:w-6 md:h-6 rounded-full bg-[#1e3a5f] flex items-center justify-center flex-shrink-0 mt-1">
                     <Check className="w-2.5 h-2.5 md:w-4 md:h-4 text-white" />
                   </div>
                   <p className="text-sm md:text-xl text-[#1A1A1A]/70 break-words flex-1">
@@ -692,7 +692,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                 </div>
 
                 <div className="flex items-start gap-2 md:gap-4">
-                  <div className="w-4 h-4 md:w-6 md:h-6 rounded-full bg-[#0C6F3C] flex items-center justify-center flex-shrink-0 mt-1">
+                  <div className="w-4 h-4 md:w-6 md:h-6 rounded-full bg-[#1e3a5f] flex items-center justify-center flex-shrink-0 mt-1">
                     <Check className="w-2.5 h-2.5 md:w-4 md:h-4 text-white" />
                   </div>
                   <p className="text-sm md:text-xl text-[#1A1A1A]/70 break-words flex-1">
@@ -704,7 +704,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
               <div>
                 <Link 
                   href="/learn-more-about-starting"
-                  className="inline-block bg-[#0C6F3C] text-white px-5 py-2.5 md:px-8 md:py-4 rounded-2xl hover:bg-[#0C6F3C]/90 transition-all text-sm md:text-lg shadow-sm w-full md:w-auto text-center"
+                  className="inline-block bg-[#1e3a5f] text-white px-5 py-2.5 md:px-8 md:py-4 rounded-2xl hover:bg-[#1e3a5f]/90 transition-all text-sm md:text-lg shadow-sm w-full md:w-auto text-center"
                 >
                   Learn more about starting with us
                 </Link>
@@ -727,7 +727,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
               </p>
               <button 
                 onClick={navigateToSearchWithLocation}
-                className="bg-[#0C6F3C] text-white px-8 py-4 rounded-xl hover:bg-[#0C6F3C]/90 transition-all shadow-sm text-lg"
+                className="bg-[#1e3a5f] text-white px-8 py-4 rounded-xl hover:bg-[#1e3a5f]/90 transition-all shadow-sm text-lg"
               >
                 Find care
               </button>
@@ -786,12 +786,12 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
               <Link
                 key={city}
                 href={`/search/choose?location=${encodeURIComponent(city)}`}
-                className="bg-transparent border-b-2 border-[#1A1A1A]/20 hover:border-[#0C6F3C] py-4 text-left transition-all group flex items-center justify-between"
+                className="bg-transparent border-b-2 border-[#1A1A1A]/20 hover:border-[#1e3a5f] py-4 text-left transition-all group flex items-center justify-between"
               >
-                <span className="text-[#1A1A1A] text-lg group-hover:text-[#0C6F3C] transition-colors">
+                <span className="text-[#1A1A1A] text-lg group-hover:text-[#1e3a5f] transition-colors">
                   {city}
                 </span>
-                <ChevronDown className="w-5 h-5 text-[#1A1A1A]/40 group-hover:text-[#0C6F3C] transition-colors" />
+                <ChevronDown className="w-5 h-5 text-[#1A1A1A]/40 group-hover:text-[#1e3a5f] transition-colors" />
               </Link>
             ))}
           </div>
