@@ -703,7 +703,10 @@ function SearchResults() {
         // Fetch 14 days of availability (2 weeks)
         const endDate = new Date(today.getTime() + 14 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
         
-        const locationParam = searchLocation ? `&location=${encodeURIComponent(searchLocation)}` : '';
+        // When in video fallback (or video mode), do not pass location so API returns video schedule
+        const locationParam = effectiveBookingMode === "in-person" && searchLocation
+          ? `&location=${encodeURIComponent(searchLocation)}`
+          : "";
         const res = await fetch(
           `/api/agents/availability?agentId=${agentId}&startDate=${startDate}&endDate=${endDate}${locationParam}`
         );
@@ -894,7 +897,10 @@ function SearchResults() {
         // Fetch 14 days of availability (2 weeks) to show multiple days in modal
         const endDate = new Date(todayForFetch.getTime() + 14 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
         
-        const locationParam = searchLocation ? `&location=${encodeURIComponent(searchLocation)}` : '';
+        // When in video fallback (or video mode), do not pass location so API returns video schedule
+        const locationParam = effectiveBookingMode === "in-person" && searchLocation
+          ? `&location=${encodeURIComponent(searchLocation)}`
+          : "";
         const res = await fetch(
           `/api/agents/availability?agentId=${agentId}&startDate=${startDate}&endDate=${endDate}${locationParam}`
         );
@@ -1083,7 +1089,9 @@ function SearchResults() {
         const startDate = today.toISOString().split("T")[0];
         const endDate = new Date(today.getTime() + 14 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
         
-        const locationParam = searchLocation ? `&location=${encodeURIComponent(searchLocation)}` : '';
+        const locationParam = effectiveBookingMode === "in-person" && searchLocation
+          ? `&location=${encodeURIComponent(searchLocation)}`
+          : "";
         const res = await fetch(
           `/api/agents/availability?agentId=${agentId}&startDate=${startDate}&endDate=${endDate}${locationParam}`
         );
