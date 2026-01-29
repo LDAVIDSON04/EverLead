@@ -473,11 +473,13 @@ function SearchResults() {
         const availabilityPromises = mappedAppointments.map(async (apt) => {
           if (!apt.agent?.id) return null;
           try {
-            const locationParam = searchLocation ? `&location=${encodeURIComponent(searchLocation)}` : '';
+            // For video mode, never pass location so API returns video schedule (not in-person by office)
+            const locationParam = mode === "video" ? "" : (searchLocation ? `&location=${encodeURIComponent(searchLocation)}` : "");
             const url = `/api/agents/availability?agentId=${apt.agent.id}&startDate=${startDate}&endDate=${endDate}${locationParam}`;
             
             console.log(`📅 [CALENDAR] Fetching availability for agent ${apt.agent.id}:`, {
               url,
+              mode,
               searchLocation,
               locationParam,
             });
