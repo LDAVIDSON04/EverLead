@@ -369,8 +369,8 @@ export default function AgentDashboardPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Left 2 Columns */}
           <div className="col-span-1 md:col-span-2 space-y-6">
-            {/* Welcome Section */}
-            <div className="bg-gradient-to-r from-neutral-900 to-neutral-800 rounded-2xl p-6">
+            {/* Welcome Section - dark green (this page only) */}
+            <div className="bg-gradient-to-r from-[#1a3a2e] to-[#0f2e1c] rounded-2xl p-6">
               <div>
                 <h2 className="text-2xl mb-2 text-white">
                   Welcome back, <span className="text-gray-100">{userFirstName || 'Agent'}</span>
@@ -472,10 +472,10 @@ export default function AgentDashboardPage() {
           
           {/* Right Column - Hidden on mobile */}
           <div className="hidden md:block space-y-6">
-            {/* Schedule Calendar */}
+            {/* Schedule Calendar - dark green title and today highlight (this page only) */}
             <div className="bg-white rounded-xl border border-gray-200 p-5">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm text-gray-900">Schedule Calendar</h3>
+                <h3 className="text-sm text-[#1a3a2e] font-medium">Schedule Calendar</h3>
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-gray-600">
                     {today.toLocaleDateString('en-US', { month: 'short' })}
@@ -490,7 +490,7 @@ export default function AgentDashboardPage() {
                     <div key={day} className="text-center">
                       <div className="text-xs text-gray-500 mb-2">{day}</div>
                       <div className={`w-full aspect-square rounded-lg flex flex-col items-center justify-center text-sm ${
-                        isToday ? 'bg-neutral-800 text-white' : 'bg-gray-50 text-gray-900'
+                        isToday ? 'bg-[#1a3a2e] text-white' : 'bg-gray-50 text-gray-900'
                       }`}>
                         <div>{calendarDates[idx]}</div>
                         {(() => {
@@ -505,7 +505,7 @@ export default function AgentDashboardPage() {
                                   <span
                                     key={i}
                                     className={`w-1 h-1 rounded-full ${
-                                      isToday ? 'bg-white' : 'bg-neutral-600'
+                                      isToday ? 'bg-white' : 'bg-[#1a3a2e]/70'
                                     }`}
                                   ></span>
                                 ))}
@@ -521,10 +521,10 @@ export default function AgentDashboardPage() {
               </div>
             </div>
             
-            {/* Number of Meetings Chart */}
+            {/* Number of Meetings Chart - dark green title and bars (this page only) */}
             <div className="bg-white rounded-xl border border-gray-200 p-5">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm text-gray-900">Number of Meetings</h3>
+                <h3 className="text-sm text-[#1a3a2e] font-medium">Number of Meetings</h3>
                 <button className="text-xs text-gray-500 hover:text-gray-700">Last week</button>
               </div>
               
@@ -533,7 +533,7 @@ export default function AgentDashboardPage() {
                   <div key={idx} className="flex-1 flex flex-col items-center gap-2">
                     <div className="w-full flex flex-col items-center justify-end h-40">
                       <div 
-                        className="w-full bg-neutral-800 rounded-t hover:bg-neutral-900 transition-colors"
+                        className="w-full bg-[#1a3a2e] rounded-t hover:bg-[#0f2e1c] transition-colors"
                         style={{ height: `${item.value}%` }}
                       ></div>
                     </div>
