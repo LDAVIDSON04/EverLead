@@ -16,7 +16,7 @@ export function SolutionsSection() {
         </div>
 
         {/* Card 1: Marketplace – text left, image right (Estate Planning style) */}
-        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 min-h-[min(70vh,520px)] md:min-h-[480px] gap-0 overflow-hidden rounded-2xl shadow-lg md:shadow-xl border-2 border-[#1A1A1A] mb-8">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 min-h-[min(70vh,520px)] md:min-h-[480px] gap-0 overflow-hidden rounded-2xl shadow-lg md:shadow-xl border-2 border-black mb-8">
           <div className="flex flex-col justify-center p-8 md:p-12 lg:p-16 bg-white rounded-t-2xl md:rounded-l-2xl md:rounded-tr-none order-2 md:order-1">
             <p className="text-sm font-medium text-[#1A1A1A]/60 uppercase tracking-wider mb-2">Marketplace</p>
             <h3 className="text-3xl md:text-4xl lg:text-5xl font-semibold text-[#1A1A1A] tracking-tight mb-4 md:mb-6">
@@ -47,7 +47,7 @@ export function SolutionsSection() {
         </div>
 
         {/* Card 2: Website scheduling – text left, image right */}
-        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 min-h-[min(70vh,520px)] md:min-h-[480px] gap-0 overflow-hidden rounded-2xl shadow-lg md:shadow-xl border-2 border-[#1A1A1A]">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 min-h-[min(70vh,520px)] md:min-h-[480px] gap-0 overflow-hidden rounded-2xl shadow-lg md:shadow-xl border-2 border-black">
           <div className="flex flex-col justify-center p-8 md:p-12 lg:p-16 bg-white rounded-t-2xl md:rounded-l-2xl md:rounded-tr-none order-2 md:order-1">
             <p className="text-sm font-medium text-[#1A1A1A]/60 uppercase tracking-wider mb-2">Scheduling</p>
             <h3 className="text-3xl md:text-4xl lg:text-5xl font-semibold text-[#1A1A1A] tracking-tight mb-4 md:mb-6">
