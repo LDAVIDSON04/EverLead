@@ -386,6 +386,8 @@ function SearchResults() {
               setVideoFallbackAvailability(videoAvailabilityMap);
               setAgentAvailability(videoAvailabilityMap); // so modal and handleDayClick have data
               setShowingVideoFallback(true);
+              setLoading(false);
+              return; // don't overwrite agentAvailability with empty in-person data below
             }
           }
         }
@@ -805,10 +807,12 @@ function SearchResults() {
 
     const agentId = appointment.agent.id;
     
-    // CRITICAL FIX: Get the actual date from the availability data, not from parsing the display string
-    // The display string can be ambiguous (e.g., "Jan 1" could be 2025 or 2026)
-    // We need to find the matching day in agentAvailability to get the correct YYYY-MM-DD date
-    const realAvailability = agentId ? agentAvailability[agentId] : null;
+    // Use same source as the grid: when in video fallback use videoFallbackAvailability so we never miss
+    const realAvailability = agentId
+      ? (showingVideoFallback && videoFallbackAvailability?.[agentId]
+        ? videoFallbackAvailability[agentId]
+        : agentAvailability[agentId])
+      : null;
     
     if (!realAvailability || realAvailability.length === 0) {
       console.error("No availability data found for agent", agentId);
