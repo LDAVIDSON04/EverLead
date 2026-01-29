@@ -54,7 +54,7 @@ export function TrustHighlights({ rating = 0, reviewCount = 0 }: TrustHighlights
         );
       case 'award': return <Award {...iconProps} />;
       case 'file': return <FileCheck {...iconProps} />;
-      case 'star': return <Star {...iconProps} fill="#1A1A1A" />;
+      case 'star': return <Star className="w-8 h-8" style={{ color: '#EAB308' }} fill="#EAB308" />;
       case 'clock': return <Clock {...iconProps} />;
       default: return <Check {...iconProps} />;
     }

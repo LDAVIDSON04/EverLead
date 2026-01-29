@@ -53,7 +53,7 @@ export function TrustHighlights({ agentId }: TrustHighlightsProps) {
         );
       case 'award': return <Award {...iconProps} />;
       case 'file': return <FileCheck {...iconProps} />;
-      case 'star': return <Star {...iconProps} fill="#1A1A1A" />;
+      case 'star': return <Star className="w-8 h-8" style={{ color: '#EAB308' }} fill="#EAB308" />;
       case 'clock': return <Clock {...iconProps} />;
       default: return <Check {...iconProps} />;
     }
@@ -65,7 +65,7 @@ export function TrustHighlights({ agentId }: TrustHighlightsProps) {
         <div className="space-y-6">
           <div className="flex items-start gap-4">
             <div className="flex-shrink-0">
-              <Star className="w-8 h-8" style={{ color: '#1A1A1A' }} fill="#1A1A1A" />
+              <Star className="w-8 h-8" style={{ color: '#EAB308' }} fill="#EAB308" />
             </div>
             <div>
               <h3 className="font-semibold text-gray-900 mb-1">Highly recommended</h3>
