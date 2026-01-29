@@ -46,9 +46,19 @@ export function SolutionsSection() {
           </div>
         </div>
 
-        {/* Card 2: Website scheduling – text left, image right */}
+        {/* Card 2: Website scheduling – image left, text right */}
         <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 min-h-[min(70vh,520px)] md:min-h-[480px] gap-0 overflow-hidden rounded-2xl shadow-lg md:shadow-xl border-2 border-black">
-          <div className="flex flex-col justify-center p-8 md:p-12 lg:p-16 bg-white rounded-t-2xl md:rounded-l-2xl md:rounded-tr-none order-2 md:order-1">
+          <div className="relative w-full min-h-[50vh] md:min-h-full rounded-t-2xl md:rounded-l-2xl md:rounded-tr-none overflow-hidden order-1 md:order-1">
+            <Image
+              src="/soradin-website-scheduling.png"
+              alt="Website scheduling calendar on laptop"
+              fill
+              className="object-cover object-center"
+              loading="lazy"
+              sizes="(max-width: 768px) 100vw, 50vw"
+            />
+          </div>
+          <div className="flex flex-col justify-center p-8 md:p-12 lg:p-16 bg-white rounded-b-2xl md:rounded-r-2xl md:rounded-bl-none order-2 md:order-2">
             <p className="text-sm font-medium text-[#1A1A1A]/60 uppercase tracking-wider mb-2">Scheduling</p>
             <h3 className="text-3xl md:text-4xl lg:text-5xl font-semibold text-[#1A1A1A] tracking-tight mb-4 md:mb-6">
               Website scheduling
@@ -64,16 +74,6 @@ export function SolutionsSection() {
               <span>Learn more</span>
               <ChevronRight className="w-5 h-5 shrink-0" />
             </Link>
-          </div>
-          <div className="relative w-full min-h-[50vh] md:min-h-full rounded-b-2xl md:rounded-r-2xl md:rounded-bl-none overflow-hidden order-1 md:order-2">
-            <Image
-              src="/soradin-website-scheduling.png"
-              alt="Website scheduling calendar on laptop"
-              fill
-              className="object-cover object-center"
-              loading="lazy"
-              sizes="(max-width: 768px) 100vw, 50vw"
-            />
           </div>
         </div>
       </div>
