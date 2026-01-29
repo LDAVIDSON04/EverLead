@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { supabaseClient } from "@/lib/supabaseClient";
-import { X, ChevronDown } from "lucide-react";
+import { X, ChevronDown, Video, MapPin } from "lucide-react";
 
 interface AddAvailabilityModalProps {
   isOpen: boolean;
@@ -52,7 +52,10 @@ function getDefaultScheduleCopy() {
   };
 }
 
+type MeetingType = "video" | "in-person";
+
 export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilityModalProps) {
+  const [meetingType, setMeetingType] = useState<MeetingType>("in-person");
   const [locations, setLocations] = useState<string[]>([]);
   const [selectedLocation, setSelectedLocation] = useState("");
   const [loading, setLoading] = useState(true);
@@ -61,16 +64,28 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
   const [availabilityByLocation, setAvailabilityByLocation] = useState<Record<string, typeof defaultSchedule>>({});
   const [appointmentLength, setAppointmentLength] = useState("30");
 
-  // Recurring state - use same structure as availability page
+  // Recurring state - use same structure as availability page (shared for video and in-person)
   const [recurringSchedule, setRecurringSchedule] = useState<typeof defaultSchedule>(getDefaultScheduleCopy);
+  // Video schedule stored separately when meeting type is video
+  const [videoSchedule, setVideoSchedule] = useState<typeof defaultSchedule | null>(null);
 
   useEffect(() => {
     if (isOpen) {
       loadLocations();
-      // Reset recurring schedule to defaults when modal opens (create a copy)
+      setMeetingType("in-person");
       setRecurringSchedule(getDefaultScheduleCopy());
     }
   }, [isOpen]);
+
+  // When switching to video, show video schedule (or default)
+  useEffect(() => {
+    if (meetingType !== "video") return;
+    if (videoSchedule) {
+      setRecurringSchedule(videoSchedule);
+    } else {
+      setRecurringSchedule(getDefaultScheduleCopy());
+    }
+  }, [meetingType]); // eslint-disable-line react-hooks/exhaustive-deps -- only when meetingType changes to video
 
   async function loadLocations() {
     try {
@@ -88,6 +103,7 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
       setLocations(data.locations || []);
       setAvailabilityByLocation(data.availabilityByLocation || {});
       setAppointmentLength(data.appointmentLength || "30");
+      setVideoSchedule(data.videoSchedule && typeof data.videoSchedule === "object" ? data.videoSchedule : null);
       
       if (data.locations && data.locations.length > 0) {
         setSelectedLocation(data.locations[0]);
@@ -135,17 +151,18 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
     }
   }
 
-  // Update recurring schedule when location changes
+  // Update recurring schedule when location changes (in-person only)
   useEffect(() => {
+    if (meetingType !== "in-person") return;
     if (selectedLocation && availabilityByLocation[selectedLocation]) {
       setRecurringSchedule(availabilityByLocation[selectedLocation]);
     } else if (selectedLocation) {
       setRecurringSchedule(getDefaultScheduleCopy());
     }
-  }, [selectedLocation, availabilityByLocation]);
+  }, [meetingType, selectedLocation, availabilityByLocation]);
 
   const handleSave = async () => {
-    if (!selectedLocation) return;
+    if (meetingType === "in-person" && !selectedLocation) return;
 
     setSaving(true);
     try {
@@ -240,26 +257,53 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
       });
       const currentData = await res.ok ? await res.json() : {};
 
-      // Update availability for selected location with checkbox format (same as availability page)
+      if (meetingType === "video") {
+        // Save video schedule only
+        await fetch("/api/agent/settings/availability", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({
+            locations: currentData.locations || locations,
+            availabilityByLocation: currentData.availabilityByLocation || availabilityByLocation,
+            appointmentLength: appointmentLength || currentData.appointmentLength || "30",
+            availabilityTypeByLocation: currentData.availabilityTypeByLocation || {},
+            videoSchedule: recurringSchedule,
+          }),
+        });
+        const enabledDays = days.filter(day => recurringSchedule[day as keyof typeof recurringSchedule].enabled);
+        const daysList = enabledDays.length > 0
+          ? enabledDays.map(day => day.charAt(0).toUpperCase() + day.slice(1)).join(", ")
+          : "";
+        const successMessage = enabledDays.length > 0
+          ? `Video call availability set for ${daysList}. Your province-wide video availability is now visible for families to book.`
+          : "Video call availability settings have been saved.";
+        setSaveMessage({ type: "success", text: successMessage });
+        onSave?.(successMessage);
+        setTimeout(() => { setSaveMessage(null); onClose(); }, 500);
+        setSaving(false);
+        return;
+      }
+
+      // In-person: update availability for selected location
       const updatedAvailabilityByLocation = {
         ...(currentData.availabilityByLocation || availabilityByLocation),
-        [normalizedLocation]: recurringSchedule, // Store checkbox format directly
+        [normalizedLocation]: recurringSchedule,
       };
 
-      // Ensure all locations have availability data (same as availability page)
       const completeAvailabilityByLocation: Record<string, any> = {};
       const allLocations = currentData.locations || locations;
       allLocations.forEach((loc: string) => {
         completeAvailabilityByLocation[loc] = updatedAvailabilityByLocation[loc] || defaultSchedule;
       });
 
-      // Update availabilityTypeByLocation - always set to "recurring"
       const updatedTypeByLocation = {
         ...(currentData.availabilityTypeByLocation || {}),
         [normalizedLocation]: "recurring" as const,
       };
 
-      // Save the recurring availability (same format as availability page)
       await fetch("/api/agent/settings/availability", {
         method: "POST",
         headers: {
@@ -274,14 +318,10 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
         }),
       });
 
-      // Generate success message with location and enabled days
       const enabledDays = days.filter(day => recurringSchedule[day as keyof typeof recurringSchedule].enabled);
       let successMessage = "Availability saved successfully!";
       if (enabledDays.length > 0) {
-        const daysList = enabledDays.map(day => {
-          const dayName = day.charAt(0).toUpperCase() + day.slice(1);
-          return dayName;
-        }).join(", ");
+        const daysList = enabledDays.map(day => day.charAt(0).toUpperCase() + day.slice(1)).join(", ");
         successMessage = `You have set recurring availability for ${selectedLocation} on ${daysList} and it is now visible for families to book.`;
       } else {
         successMessage = `Availability settings for ${selectedLocation} have been saved.`;
@@ -340,38 +380,81 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
             <div className="text-center py-8">
               <p className="text-gray-600">Loading...</p>
             </div>
-          ) : locations.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-gray-600 mb-4">No locations found. Please add office locations first.</p>
-              <button
-                onClick={onClose}
-                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
-              >
-                Close
-              </button>
-            </div>
           ) : (
             <>
-              {/* Office Location */}
+              {/* Meeting type toggle - always show when not loading */}
               <div className="mb-6">
-                <Label>Office Location</Label>
-                <div className="relative">
-                  <select
-                    value={selectedLocation}
-                    onChange={(e) => setSelectedLocation(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-800 focus:border-transparent appearance-none bg-white"
+                <Label className="mb-2 block">Meeting type</Label>
+                <div className="flex rounded-lg border border-gray-300 p-0.5 bg-gray-50">
+                  <button
+                    type="button"
+                    onClick={() => setMeetingType("video")}
+                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-md text-sm font-medium transition-colors ${
+                      meetingType === "video"
+                        ? "bg-white text-gray-900 shadow-sm border border-gray-200"
+                        : "text-gray-600 hover:text-gray-900"
+                    }`}
                   >
-                    {locations.map((loc) => (
-                      <option key={loc} value={loc}>
-                        {loc}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                    <Video className="w-4 h-4" />
+                    Video Call
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMeetingType("in-person")}
+                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-md text-sm font-medium transition-colors ${
+                      meetingType === "in-person"
+                        ? "bg-white text-gray-900 shadow-sm border border-gray-200"
+                        : "text-gray-600 hover:text-gray-900"
+                    }`}
+                  >
+                    <MapPin className="w-4 h-4" />
+                    In Person
+                  </button>
                 </div>
               </div>
 
-              {/* Recurring availability content */}
+              {meetingType === "in-person" && locations.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-600 mb-4">No locations found. Please add office locations first.</p>
+                  <button
+                    onClick={onClose}
+                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+                  >
+                    Close
+                  </button>
+                </div>
+              ) : (
+                <>
+                  {meetingType === "video" && (
+                    <div className="mb-6 p-4 rounded-lg bg-emerald-50 border border-emerald-200">
+                      <p className="text-sm text-emerald-800">
+                        Set your video call availability to open the entire province market for sales. Families can book video consultations with you regardless of location.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Office Location - only when in-person and we have locations */}
+                  {meetingType === "in-person" && locations.length > 0 && (
+                    <div className="mb-6">
+                      <Label>Office Location</Label>
+                      <div className="relative">
+                        <select
+                          value={selectedLocation}
+                          onChange={(e) => setSelectedLocation(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-800 focus:border-transparent appearance-none bg-white"
+                        >
+                          {locations.map((loc) => (
+                            <option key={loc} value={loc}>
+                              {loc}
+                            </option>
+                          ))}
+                        </select>
+                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Recurring availability content */}
               <div>
                 <div>
                   <Label className="mb-3 block">Weekly Availability</Label>
@@ -463,12 +546,14 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
                   </select>
                 </div>
               </div>
+                </>
+              )}
             </>
           )}
         </div>
 
-        {/* Actions - Fixed at bottom */}
-        {!loading && locations.length > 0 && (
+        {/* Actions - Fixed at bottom: show when we have locations (in-person) or when video so we can save video schedule */}
+        {!loading && (locations.length > 0 || meetingType === "video") && (
           <div className="flex gap-3 justify-end p-6 border-t border-gray-200 bg-white flex-shrink-0">
             <button
               onClick={onClose}
@@ -479,7 +564,7 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
             </button>
             <button
               onClick={handleSave}
-              className="px-4 py-2 bg-neutral-800 text-white rounded-lg hover:bg-neutral-900 transition-colors text-sm font-medium"
+              className="px-4 py-2 bg-emerald-800 text-white rounded-lg hover:bg-emerald-900 transition-colors text-sm font-medium"
               disabled={saving}
             >
               {saving ? "Saving..." : "Save"}

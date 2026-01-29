@@ -77,12 +77,15 @@ export async function GET(request: NextRequest) {
 
     // Get availability type per location (which type is active: "recurring" or "daily")
     const availabilityTypeByLocation = availabilityData.availabilityTypeByLocation || {};
+    // Video call availability (province-wide) - same schedule format as one location
+    const videoSchedule = availabilityData.videoSchedule || null;
 
     return NextResponse.json({
       locations: validLocations,
       availabilityByLocation: validAvailabilityByLocation,
       appointmentLength: availabilityData.appointmentLength || "30",
       availabilityTypeByLocation, // e.g., { "Kelowna": "recurring", "Penticton": "daily" }
+      videoSchedule,
     });
   } catch (err: any) {
     console.error("Error in GET /api/agent/settings/availability:", err);
@@ -110,7 +113,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { locations, availabilityByLocation, appointmentLength, availabilityTypeByLocation } = body;
+    const { locations, availabilityByLocation, appointmentLength, availabilityTypeByLocation, videoSchedule: videoSchedulePayload } = body;
     
     // CRITICAL: Log incoming availability data to track what's being saved
     console.log("💾 [AVAILABILITY SAVE] Incoming availability data:", {
@@ -119,6 +122,7 @@ export async function POST(request: NextRequest) {
       availabilityByLocation: JSON.stringify(availabilityByLocation, null, 2),
       appointmentLength,
       availabilityTypeByLocation,
+      hasVideoSchedule: !!videoSchedulePayload,
     });
 
     // Get cities from office locations
@@ -142,11 +146,33 @@ export async function POST(request: NextRequest) {
     // CRITICAL: Import timezone validation utilities
     const { validateBusinessHours, isValidTimeFormat } = await import("@/lib/timezone");
     
-    // Validate: ALL locations in availabilityByLocation must match office location cities
-    // This prevents typos like "pentction" instead of "Penticton"
-    const invalidLocations: string[] = [];
     const invalidTimes: string[] = [];
-    
+    // Validate video schedule if provided (same format as location schedule: day -> { enabled, start, end })
+    const validDayNames = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+    if (videoSchedulePayload && typeof videoSchedulePayload === "object") {
+      for (const dayName of validDayNames) {
+        const daySchedule = videoSchedulePayload[dayName];
+        if (daySchedule && daySchedule.enabled) {
+          const startTime = daySchedule.start;
+          const endTime = daySchedule.end;
+          if (!isValidTimeFormat(startTime)) {
+            invalidTimes.push(`Video ${dayName}: Invalid start time format "${startTime}"`);
+          }
+          if (!isValidTimeFormat(endTime)) {
+            invalidTimes.push(`Video ${dayName}: Invalid end time format "${endTime}"`);
+          }
+          if (isValidTimeFormat(startTime) && isValidTimeFormat(endTime)) {
+            const validation = validateBusinessHours(startTime, endTime);
+            if (!validation.isValid) {
+              invalidTimes.push(`Video ${dayName}: ${validation.error}`);
+            }
+          }
+        }
+      }
+    }
+
+    // Validate: ALL locations in availabilityByLocation must match office location cities
+    const invalidLocations: string[] = [];
     Object.keys(availabilityByLocation || {}).forEach((city: string) => {
       if (!city || !city.trim()) return;
       const normalizedCity = normalizeLocation(city);
@@ -301,6 +327,27 @@ export async function POST(request: NextRequest) {
     // Store availability type per location (which type is active)
     const availabilityTypeToStore = availabilityTypeByLocation || {};
 
+    // Normalize and validate video schedule for storage (same day keys as location schedule)
+    let videoScheduleToStore: Record<string, { enabled: boolean; start: string; end: string }> | undefined;
+    if (videoSchedulePayload && typeof videoSchedulePayload === "object" && Object.keys(videoSchedulePayload).length > 0) {
+      videoScheduleToStore = {};
+      for (const dayName of validDayNames) {
+        const daySchedule = videoSchedulePayload[dayName];
+        if (daySchedule && typeof daySchedule === "object" && daySchedule.enabled) {
+          const start = typeof daySchedule.start === "string" ? daySchedule.start : "09:00";
+          const end = typeof daySchedule.end === "string" ? daySchedule.end : "17:00";
+          if (isValidTimeFormat(start) && isValidTimeFormat(end)) {
+            const validation = validateBusinessHours(start, end);
+            if (validation.isValid) {
+              videoScheduleToStore[dayName] = { enabled: true, start, end };
+            }
+          }
+        } else {
+          videoScheduleToStore[dayName] = { enabled: false, start: "09:00", end: "17:00" };
+        }
+      }
+    }
+
     const { error } = await supabaseAdmin
       .from("profiles")
       .update({
@@ -312,6 +359,7 @@ export async function POST(request: NextRequest) {
             availabilityByLocation: filteredAvailabilityByLocation,
             appointmentLength,
             availabilityTypeByLocation: availabilityTypeToStore, // Store which type is active per location
+            ...(videoScheduleToStore && { videoSchedule: videoScheduleToStore }),
           },
         },
       })

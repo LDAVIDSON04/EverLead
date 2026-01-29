@@ -91,12 +91,19 @@ export async function GET(req: NextRequest) {
     const locations = availabilityData.locations || [];
     const availabilityByLocation = availabilityData.availabilityByLocation || {};
     const availabilityTypeByLocation = availabilityData.availabilityTypeByLocation || {}; // "recurring" or "daily"
+    const videoSchedule = availabilityData.videoSchedule || null; // Video call availability (province-wide)
     const appointmentLength = parseInt(availabilityData.appointmentLength || "30", 10);
     
     // Log the raw metadata to see what's actually stored
     console.log("Raw profile metadata.availability:", JSON.stringify(availabilityData, null, 2));
 
-    if (locations.length === 0) {
+    // When no location is passed (e.g. video search), prefer video schedule if set
+    const useVideoSchedule = !location && videoSchedule && typeof videoSchedule === "object" && Object.keys(videoSchedule).length > 0;
+    if (useVideoSchedule) {
+      console.log("📹 [AVAILABILITY API] Using video schedule (no location param)");
+    }
+
+    if (locations.length === 0 && !useVideoSchedule) {
       // No availability set up
       return NextResponse.json([]);
     }
@@ -116,15 +123,15 @@ export async function GET(req: NextRequest) {
       return trimmed;
     };
     
-    // Use the specified location, or fall back to first location, or agent's default city
+    // Use the specified location, or fall back to first location, or agent's default city (or video schedule when no location)
     let selectedLocation = location ? stripProvinceSuffix(location) : undefined;
-    if (!selectedLocation && locations.length > 0) {
+    if (!selectedLocation && locations.length > 0 && !useVideoSchedule) {
       selectedLocation = stripProvinceSuffix(locations[0]);
     }
-    if (!selectedLocation && profile.agent_city) {
+    if (!selectedLocation && profile.agent_city && !useVideoSchedule) {
       selectedLocation = stripProvinceSuffix(profile.agent_city);
     }
-    if (!selectedLocation && locations.length > 0) {
+    if (!selectedLocation && locations.length > 0 && !useVideoSchedule) {
       selectedLocation = stripProvinceSuffix(locations[0]);
     }
     
@@ -136,94 +143,82 @@ export async function GET(req: NextRequest) {
     console.log("🔍 Location selection:", {
       originalLocation: location,
       selectedLocation,
+      useVideoSchedule,
       availableLocations: locations,
     });
     
-    // Determine which type is active for this location
-    // CRITICAL: availabilityTypeByLocation keys are normalized (no "Office" suffix, no province)
-    // So we must use normalized location name for lookup
-    let locationType: "recurring" | "daily" = "recurring"; // Default to recurring
-    if (selectedLocation && availabilityTypeByLocation[selectedLocation]) {
-      locationType = availabilityTypeByLocation[selectedLocation] as "recurring" | "daily";
-    } else if (selectedLocation) {
-      // Try case-insensitive match for type
-      const normalizedSelected = selectedLocation.toLowerCase().trim();
-      const matchingLocationKey = Object.keys(availabilityTypeByLocation).find(
-        loc => loc.toLowerCase().trim() === normalizedSelected
-      );
-      if (matchingLocationKey) {
-        locationType = availabilityTypeByLocation[matchingLocationKey] as "recurring" | "daily";
-      }
-    }
-
-    // Get the schedule for the selected location (for recurring mode)
+    // For video schedule, use it directly as locationSchedule (same format: day -> { enabled, start, end })
     let locationSchedule: Record<string, any> = {};
+    if (useVideoSchedule && videoSchedule) {
+      locationSchedule = videoSchedule;
+    }
     
-    if (selectedLocation && locationType === "recurring") {
-      // Try exact match first (case-sensitive)
-      if (availabilityByLocation[selectedLocation]) {
-        locationSchedule = availabilityByLocation[selectedLocation];
-      } else {
-        // Try case-insensitive match
+    // Determine which type is active for this location (skip when using video schedule)
+    let locationType: "recurring" | "daily" = "recurring"; // Default to recurring
+    if (!useVideoSchedule) {
+      if (selectedLocation && availabilityTypeByLocation[selectedLocation]) {
+        locationType = availabilityTypeByLocation[selectedLocation] as "recurring" | "daily";
+      } else if (selectedLocation) {
         const normalizedSelected = selectedLocation.toLowerCase().trim();
-        const matchingLocation = Object.keys(availabilityByLocation).find(
+        const matchingLocationKey = Object.keys(availabilityTypeByLocation).find(
           loc => loc.toLowerCase().trim() === normalizedSelected
         );
-        
-        if (matchingLocation) {
-          locationSchedule = availabilityByLocation[matchingLocation];
-          selectedLocation = matchingLocation;
+        if (matchingLocationKey) {
+          locationType = availabilityTypeByLocation[matchingLocationKey] as "recurring" | "daily";
         }
       }
-    }
-    
-    // Only use fallback if no location was specified in the request
-    // If a location was specified but doesn't match, return empty schedule
-    if (locationType === "recurring" && Object.keys(locationSchedule).length === 0) {
-      if (!location) {
-        // No location specified - use first available location as fallback
-        if (locations.length > 0) {
+
+      // Get the schedule for the selected location (for recurring mode)
+      if (selectedLocation && locationType === "recurring") {
+        if (availabilityByLocation[selectedLocation]) {
+          locationSchedule = availabilityByLocation[selectedLocation];
+        } else {
+          const normalizedSelected = selectedLocation.toLowerCase().trim();
+          const matchingLocation = Object.keys(availabilityByLocation).find(
+            loc => loc.toLowerCase().trim() === normalizedSelected
+          );
+          if (matchingLocation) {
+            locationSchedule = availabilityByLocation[matchingLocation];
+            selectedLocation = matchingLocation;
+          }
+        }
+      }
+      
+      if (locationType === "recurring" && Object.keys(locationSchedule).length === 0) {
+        if (!location && locations.length > 0) {
           locationSchedule = availabilityByLocation[locations[0]] || {};
           selectedLocation = locations[0];
+        } else if (location) {
+          console.warn("⚠️ Specified location not found in availability:", {
+            requestedLocation: location,
+            selectedLocation,
+            availableLocations: locations,
+            availabilityByLocationKeys: Object.keys(availabilityByLocation),
+          });
+          return NextResponse.json([]);
         }
-      } else {
-        // Location was specified but didn't match - log warning but don't use fallback
-        console.warn("⚠️ Specified location not found in availability:", {
+      }
+      
+      if (location && locationType === "recurring" && Object.keys(locationSchedule).length === 0) {
+        console.error("❌ [AVAILABILITY API] Location specified but no schedule found:", {
           requestedLocation: location,
           selectedLocation,
-          availableLocations: locations,
+          allLocations: locations,
           availabilityByLocationKeys: Object.keys(availabilityByLocation),
         });
-        // Return empty schedule instead of falling back
         return NextResponse.json([]);
       }
     }
     
-    // Debug logging - comprehensive
     console.log("🔍 [AVAILABILITY API] Location matching result:", {
       agentId,
       requestedLocation: location,
       selectedLocation,
-      locationType,
-      allLocations: locations,
-      availabilityByLocationKeys: Object.keys(availabilityByLocation),
+      useVideoSchedule,
       locationScheduleKeys: Object.keys(locationSchedule),
       hasSchedule: Object.keys(locationSchedule).length > 0,
       appointmentLength,
-      availabilityTypeByLocation: availabilityTypeByLocation,
-      scheduleDayNames: locationSchedule ? Object.keys(locationSchedule) : [],
     });
-    
-    // CRITICAL: If location was specified but we didn't find a match, log and return empty
-    if (location && locationType === "recurring" && Object.keys(locationSchedule).length === 0) {
-      console.error("❌ [AVAILABILITY API] Location specified but no schedule found:", {
-        requestedLocation: location,
-        selectedLocation,
-        allLocations: locations,
-        availabilityByLocationKeys: Object.keys(availabilityByLocation),
-      });
-      return NextResponse.json([]);
-    }
     
     // Validate that we have a valid schedule
     if (Object.keys(locationSchedule).length === 0) {
