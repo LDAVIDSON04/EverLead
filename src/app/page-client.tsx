@@ -699,13 +699,13 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
         <div className="max-w-7xl mx-auto">
           <div className="grid md:grid-cols-[1.4fr_1fr] gap-6 md:gap-12 items-center">
             {/* Left side - Image - Using PNG version (722K) instead of JPG (6.7MB) for better performance */}
-            <div className="relative w-full md:min-h-[400px]" style={{ aspectRatio: "900/700", minHeight: "250px" }}>
+            <div className="relative w-full md:min-h-[400px] rounded-lg border-2 border-[#1A1A1A] overflow-hidden" style={{ aspectRatio: "900/700", minHeight: "250px" }}>
               <Image
                 src="/specialist-image.jpg"
                 alt="Professional funeral specialist"
                 width={900}
                 height={700}
-                className="w-full h-full object-cover rounded-lg"
+                className="w-full h-full object-cover"
                 loading="lazy"
                 fetchPriority="low"
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 900px"
