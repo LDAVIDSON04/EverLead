@@ -362,11 +362,11 @@ function SearchResults() {
               const today = new Date();
               const startDate = today.toISOString().split("T")[0];
               const endDate = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
-              const locationParam = searchLocation ? `&location=${encodeURIComponent(searchLocation)}` : "";
+              // Video fallback: do not pass location so API returns agent's default schedule (their bookable slots)
               const videoAvailabilityPromises = videoWithReviews.map(async (apt) => {
                 if (!apt.agent?.id) return null;
                 try {
-                  const url = `/api/agents/availability?agentId=${apt.agent.id}&startDate=${startDate}&endDate=${endDate}${locationParam}`;
+                  const url = `/api/agents/availability?agentId=${apt.agent.id}&startDate=${startDate}&endDate=${endDate}`;
                   const r = await fetch(url);
                   if (r.ok) {
                     const data: AvailabilityDay[] = await r.json();
@@ -1691,13 +1691,20 @@ function SearchResults() {
         ) : (
           <div className="space-y-4">
             {showingVideoFallback && videoFallbackAppointments.length > 0 && (
-              <div className="bg-white border border-gray-200 rounded-lg p-6 mb-4">
-                <p className="text-gray-900 font-medium mb-2">
-                  There are no agents available for in-person meetings in your city.
-                </p>
-                <p className="text-gray-600 text-sm">
-                  Here are some agents available to put your plan in place over a video call:
-                </p>
+              <div className="bg-gradient-to-br from-neutral-50 to-white border border-neutral-200 rounded-2xl p-8 mb-6 shadow-sm">
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-neutral-900 flex items-center justify-center">
+                    <Video className="w-5 h-5 text-white" strokeWidth={2} />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-neutral-900 mb-1.5">
+                      No in-person availability in your city
+                    </h3>
+                    <p className="text-neutral-600 text-sm leading-relaxed">
+                      There are no agents available for in-person meetings in your city. Here are some agents available to put your plan in place over a video call:
+                    </p>
+                  </div>
+                </div>
               </div>
             )}
             {displayAppointments.map((appointment, index) => {
