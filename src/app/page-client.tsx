@@ -728,7 +728,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                     <Check className="w-2.5 h-2.5 md:w-4 md:h-4 text-white" />
                   </div>
                   <p className="text-sm md:text-xl text-[#1A1A1A]/70 break-words flex-1">
-                    Reach thousands of families with Soradin
+                    Reach thousands of families across the province with Soradin
                   </p>
                 </div>
 
