@@ -13,7 +13,7 @@ export function SolutionsSection() {
       description: "Ensure families on your website can book anytime with 24/7 online scheduling.",
       icon: "🗓️",
       bgColor: "bg-white",
-      image: "/f103b18d805714f0cf26707650407e7192408cbe.png",
+      image: "/soradin-website-scheduling.png",
     },
   ];
 
