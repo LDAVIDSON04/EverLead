@@ -1939,8 +1939,8 @@ function SearchResults() {
                       </div>
                     </div>
 
-                    {/* Right Section: Day Blocks Grid */}
-                    <div className="flex-1 min-w-0">
+                    {/* Right Section: Day Blocks Grid - relative z-10 so clicks aren't blocked */}
+                    <div className="flex-1 min-w-0 relative z-10">
                       <div className="grid grid-cols-4 gap-2 w-full">
                         {availability.map((slot, slotIndex) => {
                           const hasSpots = slot.spots > 0;
@@ -1949,32 +1949,41 @@ function SearchResults() {
                               key={slotIndex}
                               type="button"
                               onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
                                 if (hasSpots && appointment.agent?.id) {
                                   handleDayClick(e, appointment, slot, index);
                                 }
                               }}
+                              onPointerDown={(e) => e.stopPropagation()}
                               disabled={!hasSpots}
                               className={`
-                                relative px-3 py-2 rounded-lg border text-center text-sm transition-colors
+                                relative px-3 py-2 rounded-lg border text-center text-sm transition-colors select-none
                                 ${hasSpots 
                                   ? 'bg-neutral-800 text-white border-neutral-800 hover:bg-neutral-900 cursor-pointer' 
                                   : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'}
                               `}
                             >
                               {hasSpots && displayMode === 'video' && (
-                                <span className="absolute top-1 right-1 text-white" aria-hidden>
+                                <span className="absolute top-1 right-1 text-white pointer-events-none" aria-hidden>
                                   <Video className="w-5 h-5" strokeWidth={2.5} />
                                 </span>
                               )}
-                              <div className="whitespace-pre-line leading-tight">{slot.date}</div>
-                              <div className="text-xs mt-1 whitespace-pre-line">
+                              <div className="whitespace-pre-line leading-tight pointer-events-none">{slot.date}</div>
+                              <div className="text-xs mt-1 whitespace-pre-line pointer-events-none">
                                 <span className="hidden md:inline">{hasSpots ? slot.spots + '\nappointments' : 'No\nappointments'}</span>
                               </div>
                             </button>
                           );
                         })}
-                        <button 
-                          onClick={() => handleMoreButtonClick(appointment, index)}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleMoreButtonClick(appointment, index);
+                          }}
+                          onPointerDown={(e) => e.stopPropagation()}
                           className="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:border-neutral-800 hover:bg-neutral-50 text-sm flex items-center justify-center"
                         >
                           More
@@ -2149,8 +2158,8 @@ function SearchResults() {
                       </div>
                     </div>
 
-                  {/* Mobile: Day blocks below provider info (unchanged) */}
-                  <div className="mt-4 md:hidden">
+                  {/* Mobile: Day blocks below provider info */}
+                  <div className="mt-4 md:hidden relative z-10">
                       <div className="grid grid-cols-4 gap-2">
                         {availability.map((slot, slotIndex) => {
                           const hasSpots = slot.spots > 0;
@@ -2159,32 +2168,41 @@ function SearchResults() {
                               key={slotIndex}
                               type="button"
                               onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
                                 if (hasSpots && appointment.agent?.id) {
                                   handleDayClick(e, appointment, slot, index);
                                 }
                               }}
+                              onPointerDown={(e) => e.stopPropagation()}
                               disabled={!hasSpots}
                               className={`
-                                relative px-3 py-2 rounded-lg border text-center text-sm transition-colors
+                                relative px-3 py-2 rounded-lg border text-center text-sm transition-colors select-none
                                 ${hasSpots 
                                   ? 'bg-neutral-800 text-white border-neutral-800 hover:bg-neutral-900 cursor-pointer' 
                                   : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'}
                               `}
                             >
                               {hasSpots && displayMode === 'video' && (
-                                <span className="absolute top-1 right-1 text-white" aria-hidden>
+                                <span className="absolute top-1 right-1 text-white pointer-events-none" aria-hidden>
                                   <Video className="w-5 h-5" strokeWidth={2.5} />
                                 </span>
                               )}
-                              <div className="whitespace-pre-line leading-tight">{slot.date}</div>
-                              <div className="text-xs mt-1 whitespace-pre-line">
+                              <div className="whitespace-pre-line leading-tight pointer-events-none">{slot.date}</div>
+                              <div className="text-xs mt-1 whitespace-pre-line pointer-events-none">
                                 <span>{hasSpots ? slot.spots + '\nappts' : 'No\nappts'}</span>
                               </div>
                             </button>
                           );
                         })}
-                        <button 
-                          onClick={() => handleMoreButtonClick(appointment, index)}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleMoreButtonClick(appointment, index);
+                          }}
+                          onPointerDown={(e) => e.stopPropagation()}
                           className="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:border-neutral-800 hover:bg-neutral-50 text-sm flex items-center justify-center"
                         >
                           More
