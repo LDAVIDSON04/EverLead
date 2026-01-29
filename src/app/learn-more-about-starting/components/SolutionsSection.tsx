@@ -16,7 +16,7 @@ export function SolutionsSection() {
         </div>
 
         {/* Card 1: Marketplace – text left, image right (Estate Planning style) */}
-        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 min-h-[min(70vh,520px)] md:min-h-[480px] gap-0 overflow-hidden rounded-2xl shadow-lg md:shadow-xl border-2 border-black mb-8">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 min-h-[min(70vh,520px)] md:min-h-[480px] gap-0 overflow-hidden rounded-2xl shadow-lg md:shadow-xl border-2 border-black mb-8 transition-all duration-300 ease-out hover:scale-[1.02] hover:shadow-2xl hover:-translate-y-1">
           <div className="flex flex-col justify-center p-8 md:p-12 lg:p-16 bg-white rounded-t-2xl md:rounded-l-2xl md:rounded-tr-none order-2 md:order-1">
             <p className="text-sm font-medium text-[#1A1A1A]/60 uppercase tracking-wider mb-2">Marketplace</p>
             <h3 className="text-3xl md:text-4xl lg:text-5xl font-semibold text-[#1A1A1A] tracking-tight mb-4 md:mb-6">
@@ -47,7 +47,7 @@ export function SolutionsSection() {
         </div>
 
         {/* Card 2: Website scheduling – image left, text right */}
-        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 min-h-[min(70vh,520px)] md:min-h-[480px] gap-0 overflow-hidden rounded-2xl shadow-lg md:shadow-xl border-2 border-black">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 min-h-[min(70vh,520px)] md:min-h-[480px] gap-0 overflow-hidden rounded-2xl shadow-lg md:shadow-xl border-2 border-black transition-all duration-300 ease-out hover:scale-[1.02] hover:shadow-2xl hover:-translate-y-1">
           <div className="relative w-full min-h-[50vh] md:min-h-full rounded-t-2xl md:rounded-l-2xl md:rounded-tr-none overflow-hidden order-1 md:order-1">
             <Image
               src="/soradin-website-scheduling.png"
