@@ -154,6 +154,10 @@ function SearchResults() {
   
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
+  // When in-person returns 0, we fetch video agents in same province and show this list
+  const [videoFallbackAppointments, setVideoFallbackAppointments] = useState<Appointment[]>([]);
+  const [showingVideoFallback, setShowingVideoFallback] = useState(false);
+  const [videoFallbackAvailability, setVideoFallbackAvailability] = useState<Record<string, AvailabilityDay[]>>({});
   // Input values (what user is typing)
   const [inputQuery, setInputQuery] = useState(query);
   const [inputLocation, setInputLocation] = useState(decodedLocation);
@@ -237,6 +241,9 @@ function SearchResults() {
   const [portfolioReviewsLoading, setPortfolioReviewsLoading] = useState(false);
   const [showAllReviews, setShowAllReviews] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+
+  // When showing video fallback (no in-person in city), booking should use video mode
+  const effectiveBookingMode = showingVideoFallback && videoFallbackAppointments.length > 0 ? "video" : mode;
   
   // Debug: Log modal state changes
   useEffect(() => {
@@ -265,6 +272,9 @@ function SearchResults() {
   useEffect(() => {
     async function loadAgents() {
       setLoading(true);
+      setShowingVideoFallback(false);
+      setVideoFallbackAppointments([]);
+      setVideoFallbackAvailability({});
       try {
         // Build query params for agent search
         const params = new URLSearchParams();
@@ -282,6 +292,103 @@ function SearchResults() {
 
         const { agents } = await res.json();
         console.log(`✅ [SEARCH] Found ${agents?.length || 0} agents for location "${searchLocation}"`);
+
+        // In-person with 0 results and a location: try video agents in same province
+        if (mode === "in-person" && (agents?.length || 0) === 0 && searchLocation) {
+          const videoParams = new URLSearchParams();
+          if (searchLocation) videoParams.set("location", searchLocation);
+          if (searchService) videoParams.set("service", searchService);
+          if (searchQuery) videoParams.set("q", searchQuery);
+          videoParams.set("mode", "video");
+          const videoRes = await fetch(`/api/agents/search?${videoParams.toString()}`);
+          if (videoRes.ok) {
+            const { agents: videoAgents } = await videoRes.json();
+            if (videoAgents?.length > 0) {
+              const videoMapped: Appointment[] = (videoAgents || []).map((agent: any) => ({
+                id: agent.id,
+                requested_date: new Date().toISOString().split("T")[0],
+                requested_window: "flexible",
+                status: "pending",
+                city: agent.agent_city,
+                province: agent.agent_province,
+                service_type: agent.specialty || agent.job_title || "Pre-need Planning",
+                price_cents: null,
+                leads: {
+                  first_name: agent.first_name,
+                  last_name: agent.last_name,
+                  city: agent.agent_city,
+                  province: agent.agent_province,
+                },
+                agent: {
+                  ...agent,
+                  business_address: agent.business_address,
+                  business_street: agent.business_street,
+                  business_city: agent.business_city,
+                  business_province: agent.business_province,
+                  business_zip: agent.business_zip,
+                  officeLocations: agent.officeLocations || [],
+                },
+              }));
+              const videoAgentIds = videoMapped.map((apt) => apt.agent?.id).filter(Boolean) as string[];
+              let videoReviewStats: Record<string, { averageRating: number; totalReviews: number }> = {};
+              if (videoAgentIds.length > 0) {
+                try {
+                  const reviewResponse = await fetch("/api/reviews/agents", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ agentIds: videoAgentIds }),
+                  });
+                  if (reviewResponse.ok) {
+                    const reviewData = await reviewResponse.json();
+                    videoReviewStats = reviewData.stats || {};
+                  }
+                } catch (err) {
+                  console.error("Error fetching review stats for video fallback:", err);
+                }
+              }
+              const videoWithReviews = videoMapped.map((apt) => {
+                const agentId = apt.agent?.id;
+                const stats = agentId ? videoReviewStats[agentId] : null;
+                return {
+                  ...apt,
+                  agent: apt.agent ? {
+                    ...apt.agent,
+                    id: apt.agent.id,
+                    rating: stats?.averageRating || 0,
+                    reviewCount: stats?.totalReviews || 0,
+                  } : undefined,
+                };
+              });
+              const today = new Date();
+              const startDate = today.toISOString().split("T")[0];
+              const endDate = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+              const locationParam = searchLocation ? `&location=${encodeURIComponent(searchLocation)}` : "";
+              const videoAvailabilityPromises = videoWithReviews.map(async (apt) => {
+                if (!apt.agent?.id) return null;
+                try {
+                  const url = `/api/agents/availability?agentId=${apt.agent.id}&startDate=${startDate}&endDate=${endDate}${locationParam}`;
+                  const r = await fetch(url);
+                  if (r.ok) {
+                    const data: AvailabilityDay[] = await r.json();
+                    return { agentId: apt.agent.id, availability: data };
+                  }
+                } catch (err) {
+                  console.error("Error loading availability for video fallback agent:", err);
+                }
+                return null;
+              });
+              const videoAvailabilityResults = await Promise.all(videoAvailabilityPromises);
+              const videoAvailabilityMap: Record<string, AvailabilityDay[]> = {};
+              videoAvailabilityResults.forEach((result) => {
+                if (result) videoAvailabilityMap[result.agentId] = result.availability;
+              });
+              setVideoFallbackAppointments(videoWithReviews);
+              setVideoFallbackAvailability(videoAvailabilityMap);
+              setAgentAvailability(videoAvailabilityMap); // so modal and handleDayClick have data
+              setShowingVideoFallback(true);
+            }
+          }
+        }
 
         // Map agents to appointment-like format for compatibility with existing UI
         const mappedAppointments: Appointment[] = (agents || []).map((agent: any) => ({
@@ -439,13 +546,13 @@ function SearchResults() {
   };
 
   // Generate availability slots for the calendar grid
-  const generateAvailability = (appointment: Appointment): AvailabilitySlot[] => {
+  const generateAvailability = (appointment: Appointment, availabilityMap?: Record<string, AvailabilityDay[]>): AvailabilitySlot[] => {
     const slots: AvailabilitySlot[] = [];
     const today = new Date();
-    
+    const map = availabilityMap ?? agentAvailability;
     // Get real availability if we have it
     const agentId = appointment.agent?.id;
-    const realAvailability = agentId ? agentAvailability[agentId] : null;
+    const realAvailability = agentId ? map[agentId] : null;
     const daysToShow = agentId ? (calendarDaysToShow[agentId] || 8) : 8;
     
     // Debug: Log what we're using - CRITICAL for debugging
@@ -1238,8 +1345,8 @@ function SearchResults() {
                             if (searchLocation) {
                               params.set("city", searchLocation);
                             }
-                            if (mode) {
-                              params.set("mode", mode);
+                            if (effectiveBookingMode) {
+                              params.set("mode", effectiveBookingMode);
                             }
                             return `/book/step2?agentId=${agentId}&${params.toString()}`;
                           })();
@@ -1553,11 +1660,16 @@ function SearchResults() {
         </div>
 
         {/* Appointment Cards */}
-        {loading ? (
+        {(() => {
+          const displayAppointments = showingVideoFallback && videoFallbackAppointments.length > 0 ? videoFallbackAppointments : appointments;
+          const displayMode = showingVideoFallback && videoFallbackAppointments.length > 0 ? "video" : mode;
+          const displayAvailability = showingVideoFallback && videoFallbackAppointments.length > 0 ? videoFallbackAvailability : agentAvailability;
+          const showEmptyState = displayAppointments.length === 0;
+          return loading ? (
           <div className="text-center py-12">
             <p className="text-gray-600">Loading appointments...</p>
           </div>
-        ) : appointments.length === 0 ? (
+        ) : showEmptyState ? (
           <div className="bg-white border border-gray-200 rounded-lg p-12 text-center">
             <p className="text-gray-600 mb-2 text-lg font-medium">
               No agents found
@@ -1578,9 +1690,19 @@ function SearchResults() {
           </div>
         ) : (
           <div className="space-y-4">
-            {appointments.map((appointment, index) => {
+            {showingVideoFallback && videoFallbackAppointments.length > 0 && (
+              <div className="bg-white border border-gray-200 rounded-lg p-6 mb-4">
+                <p className="text-gray-900 font-medium mb-2">
+                  There are no agents available for in-person meetings in your city.
+                </p>
+                <p className="text-gray-600 text-sm">
+                  Here are some agents available to put your plan in place over a video call:
+                </p>
+              </div>
+            )}
+            {displayAppointments.map((appointment, index) => {
               // Add location to key to force re-render when location changes
-              const availability = generateAvailability(appointment);
+              const availability = generateAvailability(appointment, displayAvailability);
               const specialistName = appointment.leads 
                 ? `${appointment.leads.first_name || ''} ${appointment.leads.last_name || ''}`.trim() || 'Pre-need Specialist'
                 : 'Pre-need Specialist';
@@ -1824,7 +1946,7 @@ function SearchResults() {
                                   : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'}
                               `}
                             >
-                              {hasSpots && mode === 'video' && (
+                              {hasSpots && displayMode === 'video' && (
                                 <span className="absolute top-1 right-1 text-white" aria-hidden>
                                   <Video className="w-5 h-5" strokeWidth={2.5} />
                                 </span>
@@ -2034,7 +2156,7 @@ function SearchResults() {
                                   : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'}
                               `}
                             >
-                              {hasSpots && mode === 'video' && (
+                              {hasSpots && displayMode === 'video' && (
                                 <span className="absolute top-1 right-1 text-white" aria-hidden>
                                   <Video className="w-5 h-5" strokeWidth={2.5} />
                                 </span>
@@ -2058,7 +2180,8 @@ function SearchResults() {
               );
             })}
           </div>
-        )}
+        );
+        })()}
       </main>
 
       {/* Time Slot Selection Modal */}
@@ -2146,7 +2269,7 @@ function SearchResults() {
                           <span className="text-sm font-semibold text-gray-900">
                             {(() => {
                               // Get rating from appointments if available
-                              const agentAppointment = appointments.find(apt => apt.agent?.id === selectedAgentIdForModal);
+                              const agentAppointment = (showingVideoFallback && videoFallbackAppointments.length > 0 ? videoFallbackAppointments : appointments).find(apt => apt.agent?.id === selectedAgentIdForModal);
                               const rating = agentAppointment?.agent?.rating || 0;
                               const reviewCount = agentAppointment?.agent?.reviewCount || 0;
                               if (rating > 0 && reviewCount > 0) {
@@ -2333,8 +2456,8 @@ function SearchResults() {
                                 if (searchLocation) {
                                   params.set("city", searchLocation);
                                 }
-                                if (mode) {
-                                  params.set("mode", mode);
+                                if (effectiveBookingMode) {
+                                  params.set("mode", effectiveBookingMode);
                                 }
                                 const bookingUrl = `${window.location.origin}/book/step2?agentId=${selectedAgentIdForModal}&${params.toString()}`;
                                 const timeSlotId = `time-slot-${dayIdx}-${idx}-${timeSlot.startsAt}`;
@@ -2357,8 +2480,8 @@ function SearchResults() {
                                       if (searchLocation) {
                                         params.set("city", searchLocation);
                                       }
-                                      if (mode) {
-                                        params.set("mode", mode);
+                                      if (effectiveBookingMode) {
+                                        params.set("mode", effectiveBookingMode);
                                       }
                                       const url = `${window.location.origin}/book/step2?agentId=${selectedAgentIdForModal}&${params.toString()}`;
                                       
@@ -2377,7 +2500,7 @@ function SearchResults() {
                                     }}
                                     className="group relative w-full px-4 py-3 rounded-lg text-sm font-medium transition-all bg-neutral-100 text-black hover:bg-neutral-600 hover:text-white border-2 border-neutral-300 hover:border-neutral-600 shadow-sm hover:shadow-md"
                                   >
-                                    {mode === 'video' && (
+                                    {effectiveBookingMode === 'video' && (
                                       <span className="absolute top-1.5 right-1.5 text-neutral-800 group-hover:text-white transition-colors" aria-hidden>
                                         <Video className="w-5 h-5" strokeWidth={2.5} />
                                       </span>
