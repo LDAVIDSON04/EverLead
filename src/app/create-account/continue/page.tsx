@@ -4,8 +4,18 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { X, Check } from "lucide-react";
+import { X, Check, Plus } from "lucide-react";
 import { Footer } from "@/app/learn-more-about-starting/components/Footer";
+
+interface OfficeLocation {
+  name: string;
+  street_address: string;
+  city: string;
+  province: string;
+  postal_code: string;
+}
+
+const PROVINCES = ["AB", "BC", "MB", "NB", "NL", "NS", "NT", "NU", "ON", "PE", "QC", "SK", "YT"];
 
 type Role =
   | "funeral-planner"
@@ -33,7 +43,15 @@ export default function CreateAccountContinuePage() {
   const [hasTruStage, setHasTruStage] = useState("");
   const [hasLLQP, setHasLLQP] = useState("");
   const [llqpQuebec, setLlqpQuebec] = useState("");
-  const [officeLocations, setOfficeLocations] = useState<string[]>([]);
+  const [officeLocations, setOfficeLocations] = useState<OfficeLocation[]>([]);
+  const [showAddLocation, setShowAddLocation] = useState(false);
+  const [newLocation, setNewLocation] = useState<OfficeLocation>({
+    name: "",
+    street_address: "",
+    city: "",
+    province: "BC",
+    postal_code: "",
+  });
 
   const [isLicensed, setIsLicensed] = useState("");
   const [lawSocietyName, setLawSocietyName] = useState("");
@@ -53,6 +71,23 @@ export default function CreateAccountContinuePage() {
     setOfficeLocations((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const addOfficeLocation = () => {
+    if (!newLocation.name.trim() || !newLocation.city.trim() || !newLocation.province) {
+      setError("Please fill in at least office name, city, and province.");
+      return;
+    }
+    setError(null);
+    setOfficeLocations((prev) => [...prev, { ...newLocation }]);
+    setNewLocation({
+      name: "",
+      street_address: "",
+      city: "",
+      province: "BC",
+      postal_code: "",
+    });
+    setShowAddLocation(false);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -68,7 +103,7 @@ export default function CreateAccountContinuePage() {
       "insurance-broker",
       "financial-advisor",
     ].includes(selectedRole);
-    if (hasOfficeLocations && !officeLocations.some((l) => l.trim() !== "")) {
+    if (hasOfficeLocations && officeLocations.length === 0) {
       setError("Please add at least one office location.");
       return;
     }
@@ -270,38 +305,91 @@ export default function CreateAccountContinuePage() {
                   ))}
                 </div>
               </div>
-              <div className="space-y-3">
-                <label className="text-sm text-gray-700">Office Locations <span className="text-red-600">*</span></label>
-                {officeLocations.map((location, index) => (
-                  <div key={index} className="flex gap-2 items-center">
+              <div className="space-y-3 border-t pt-6">
+                <div className="flex justify-between items-center mb-4">
+                  <label className="text-sm text-gray-700 font-medium">Office Locations <span className="text-red-600">*</span></label>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddLocation(!showAddLocation)}
+                    className="flex items-center gap-2 px-4 py-2 bg-neutral-700 text-white rounded-md text-sm hover:bg-neutral-800 transition-colors"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add Location
+                  </button>
+                </div>
+                {showAddLocation && (
+                  <div className="mb-4 p-4 border border-gray-300 rounded-lg bg-gray-50 space-y-3">
+                    <h4 className="font-medium text-sm text-gray-700">New Office Location</h4>
                     <input
                       type="text"
-                      value={location}
-                      onChange={(e) => {
-                        const next = [...officeLocations];
-                        next[index] = e.target.value;
-                        setOfficeLocations(next);
-                      }}
+                      value={newLocation.name}
+                      onChange={(e) => setNewLocation({ ...newLocation, name: e.target.value })}
+                      placeholder="Office name *"
                       className={inputClassName}
-                      placeholder="Address or location name"
                     />
-                    <button
-                      type="button"
-                      onClick={() => removeOfficeLocation(index)}
-                      className="p-2 text-gray-500 hover:text-red-600 shrink-0"
-                      aria-label="Remove location"
-                    >
+                    <input
+                      type="text"
+                      value={newLocation.street_address}
+                      onChange={(e) => setNewLocation({ ...newLocation, street_address: e.target.value })}
+                      placeholder="Street address"
+                      className={inputClassName}
+                    />
+                    <div className="grid grid-cols-3 gap-3">
+                      <input
+                        type="text"
+                        value={newLocation.city}
+                        onChange={(e) => setNewLocation({ ...newLocation, city: e.target.value })}
+                        placeholder="City *"
+                        className={inputClassName}
+                      />
+                      <select
+                        value={newLocation.province}
+                        onChange={(e) => setNewLocation({ ...newLocation, province: e.target.value })}
+                        className={inputClassName}
+                      >
+                        {PROVINCES.map((p) => (
+                          <option key={p} value={p}>{p}</option>
+                        ))}
+                      </select>
+                      <input
+                        type="text"
+                        value={newLocation.postal_code}
+                        onChange={(e) => setNewLocation({ ...newLocation, postal_code: e.target.value })}
+                        placeholder="Postal code"
+                        className={inputClassName}
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <button type="button" onClick={addOfficeLocation} className="px-4 py-2 bg-neutral-700 text-white rounded-md text-sm hover:bg-neutral-800">
+                        Add
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowAddLocation(false);
+                          setNewLocation({ name: "", street_address: "", city: "", province: "BC", postal_code: "" });
+                        }}
+                        className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md text-sm hover:bg-gray-300"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+                {officeLocations.map((loc, index) => (
+                  <div key={index} className="mb-3 p-3 border border-gray-300 rounded-lg flex justify-between items-start">
+                    <div>
+                      <div className="font-medium text-gray-900">{loc.name}</div>
+                      <div className="text-sm text-gray-600">
+                        {loc.street_address && `${loc.street_address}, `}
+                        {loc.city}, {loc.province} {loc.postal_code}
+                      </div>
+                    </div>
+                    <button type="button" onClick={() => removeOfficeLocation(index)} className="p-1 text-gray-500 hover:text-red-600 shrink-0" aria-label="Remove location">
                       <X className="w-5 h-5" />
                     </button>
                   </div>
                 ))}
-                <button
-                  type="button"
-                  onClick={() => setOfficeLocations([...officeLocations, ""])}
-                  className="flex items-center gap-2 text-sm text-black hover:underline"
-                >
-                  <span className="text-lg">+</span> Add location
-                </button>
               </div>
             </>
           )}
@@ -356,38 +444,91 @@ export default function CreateAccountContinuePage() {
                   required
                 />
               </div>
-              <div className="space-y-3">
-                <label className="text-sm text-gray-700">Office Locations <span className="text-red-600">*</span></label>
-                {officeLocations.map((location, index) => (
-                  <div key={index} className="flex gap-2 items-center">
+              <div className="space-y-3 border-t pt-6">
+                <div className="flex justify-between items-center mb-4">
+                  <label className="text-sm text-gray-700 font-medium">Office Locations <span className="text-red-600">*</span></label>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddLocation(!showAddLocation)}
+                    className="flex items-center gap-2 px-4 py-2 bg-neutral-700 text-white rounded-md text-sm hover:bg-neutral-800 transition-colors"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add Location
+                  </button>
+                </div>
+                {showAddLocation && (
+                  <div className="mb-4 p-4 border border-gray-300 rounded-lg bg-gray-50 space-y-3">
+                    <h4 className="font-medium text-sm text-gray-700">New Office Location</h4>
                     <input
                       type="text"
-                      value={location}
-                      onChange={(e) => {
-                        const next = [...officeLocations];
-                        next[index] = e.target.value;
-                        setOfficeLocations(next);
-                      }}
+                      value={newLocation.name}
+                      onChange={(e) => setNewLocation({ ...newLocation, name: e.target.value })}
+                      placeholder="Office name *"
                       className={inputClassName}
-                      placeholder="Address or location name"
                     />
-                    <button
-                      type="button"
-                      onClick={() => removeOfficeLocation(index)}
-                      className="p-2 text-gray-500 hover:text-red-600 shrink-0"
-                      aria-label="Remove location"
-                    >
+                    <input
+                      type="text"
+                      value={newLocation.street_address}
+                      onChange={(e) => setNewLocation({ ...newLocation, street_address: e.target.value })}
+                      placeholder="Street address"
+                      className={inputClassName}
+                    />
+                    <div className="grid grid-cols-3 gap-3">
+                      <input
+                        type="text"
+                        value={newLocation.city}
+                        onChange={(e) => setNewLocation({ ...newLocation, city: e.target.value })}
+                        placeholder="City *"
+                        className={inputClassName}
+                      />
+                      <select
+                        value={newLocation.province}
+                        onChange={(e) => setNewLocation({ ...newLocation, province: e.target.value })}
+                        className={inputClassName}
+                      >
+                        {PROVINCES.map((p) => (
+                          <option key={p} value={p}>{p}</option>
+                        ))}
+                      </select>
+                      <input
+                        type="text"
+                        value={newLocation.postal_code}
+                        onChange={(e) => setNewLocation({ ...newLocation, postal_code: e.target.value })}
+                        placeholder="Postal code"
+                        className={inputClassName}
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <button type="button" onClick={addOfficeLocation} className="px-4 py-2 bg-neutral-700 text-white rounded-md text-sm hover:bg-neutral-800">
+                        Add
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowAddLocation(false);
+                          setNewLocation({ name: "", street_address: "", city: "", province: "BC", postal_code: "" });
+                        }}
+                        className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md text-sm hover:bg-gray-300"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+                {officeLocations.map((loc, index) => (
+                  <div key={index} className="mb-3 p-3 border border-gray-300 rounded-lg flex justify-between items-start">
+                    <div>
+                      <div className="font-medium text-gray-900">{loc.name}</div>
+                      <div className="text-sm text-gray-600">
+                        {loc.street_address && `${loc.street_address}, `}
+                        {loc.city}, {loc.province} {loc.postal_code}
+                      </div>
+                    </div>
+                    <button type="button" onClick={() => removeOfficeLocation(index)} className="p-1 text-gray-500 hover:text-red-600 shrink-0" aria-label="Remove location">
                       <X className="w-5 h-5" />
                     </button>
                   </div>
                 ))}
-                <button
-                  type="button"
-                  onClick={() => setOfficeLocations([...officeLocations, ""])}
-                  className="flex items-center gap-2 text-sm text-black hover:underline"
-                >
-                  <span className="text-lg">+</span> Add location
-                </button>
               </div>
             </>
           )}
@@ -464,38 +605,91 @@ export default function CreateAccountContinuePage() {
                   />
                 </div>
               )}
-              <div className="space-y-3">
-                <label className="text-sm text-gray-700">Office Locations <span className="text-red-600">*</span></label>
-                {officeLocations.map((location, index) => (
-                  <div key={index} className="flex gap-2 items-center">
+              <div className="space-y-3 border-t pt-6">
+                <div className="flex justify-between items-center mb-4">
+                  <label className="text-sm text-gray-700 font-medium">Office Locations <span className="text-red-600">*</span></label>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddLocation(!showAddLocation)}
+                    className="flex items-center gap-2 px-4 py-2 bg-neutral-700 text-white rounded-md text-sm hover:bg-neutral-800 transition-colors"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add Location
+                  </button>
+                </div>
+                {showAddLocation && (
+                  <div className="mb-4 p-4 border border-gray-300 rounded-lg bg-gray-50 space-y-3">
+                    <h4 className="font-medium text-sm text-gray-700">New Office Location</h4>
                     <input
                       type="text"
-                      value={location}
-                      onChange={(e) => {
-                        const next = [...officeLocations];
-                        next[index] = e.target.value;
-                        setOfficeLocations(next);
-                      }}
+                      value={newLocation.name}
+                      onChange={(e) => setNewLocation({ ...newLocation, name: e.target.value })}
+                      placeholder="Office name *"
                       className={inputClassName}
-                      placeholder="Address or location name"
                     />
-                    <button
-                      type="button"
-                      onClick={() => removeOfficeLocation(index)}
-                      className="p-2 text-gray-500 hover:text-red-600 shrink-0"
-                      aria-label="Remove location"
-                    >
+                    <input
+                      type="text"
+                      value={newLocation.street_address}
+                      onChange={(e) => setNewLocation({ ...newLocation, street_address: e.target.value })}
+                      placeholder="Street address"
+                      className={inputClassName}
+                    />
+                    <div className="grid grid-cols-3 gap-3">
+                      <input
+                        type="text"
+                        value={newLocation.city}
+                        onChange={(e) => setNewLocation({ ...newLocation, city: e.target.value })}
+                        placeholder="City *"
+                        className={inputClassName}
+                      />
+                      <select
+                        value={newLocation.province}
+                        onChange={(e) => setNewLocation({ ...newLocation, province: e.target.value })}
+                        className={inputClassName}
+                      >
+                        {PROVINCES.map((p) => (
+                          <option key={p} value={p}>{p}</option>
+                        ))}
+                      </select>
+                      <input
+                        type="text"
+                        value={newLocation.postal_code}
+                        onChange={(e) => setNewLocation({ ...newLocation, postal_code: e.target.value })}
+                        placeholder="Postal code"
+                        className={inputClassName}
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <button type="button" onClick={addOfficeLocation} className="px-4 py-2 bg-neutral-700 text-white rounded-md text-sm hover:bg-neutral-800">
+                        Add
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowAddLocation(false);
+                          setNewLocation({ name: "", street_address: "", city: "", province: "BC", postal_code: "" });
+                        }}
+                        className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md text-sm hover:bg-gray-300"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+                {officeLocations.map((loc, index) => (
+                  <div key={index} className="mb-3 p-3 border border-gray-300 rounded-lg flex justify-between items-start">
+                    <div>
+                      <div className="font-medium text-gray-900">{loc.name}</div>
+                      <div className="text-sm text-gray-600">
+                        {loc.street_address && `${loc.street_address}, `}
+                        {loc.city}, {loc.province} {loc.postal_code}
+                      </div>
+                    </div>
+                    <button type="button" onClick={() => removeOfficeLocation(index)} className="p-1 text-gray-500 hover:text-red-600 shrink-0" aria-label="Remove location">
                       <X className="w-5 h-5" />
                     </button>
                   </div>
                 ))}
-                <button
-                  type="button"
-                  onClick={() => setOfficeLocations([...officeLocations, ""])}
-                  className="flex items-center gap-2 text-sm text-black hover:underline"
-                >
-                  <span className="text-lg">+</span> Add location
-                </button>
               </div>
             </>
           )}
@@ -550,38 +744,91 @@ export default function CreateAccountContinuePage() {
                   required
                 />
               </div>
-              <div className="space-y-3">
-                <label className="text-sm text-gray-700">Office Locations <span className="text-red-600">*</span></label>
-                {officeLocations.map((location, index) => (
-                  <div key={index} className="flex gap-2 items-center">
+              <div className="space-y-3 border-t pt-6">
+                <div className="flex justify-between items-center mb-4">
+                  <label className="text-sm text-gray-700 font-medium">Office Locations <span className="text-red-600">*</span></label>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddLocation(!showAddLocation)}
+                    className="flex items-center gap-2 px-4 py-2 bg-neutral-700 text-white rounded-md text-sm hover:bg-neutral-800 transition-colors"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add Location
+                  </button>
+                </div>
+                {showAddLocation && (
+                  <div className="mb-4 p-4 border border-gray-300 rounded-lg bg-gray-50 space-y-3">
+                    <h4 className="font-medium text-sm text-gray-700">New Office Location</h4>
                     <input
                       type="text"
-                      value={location}
-                      onChange={(e) => {
-                        const next = [...officeLocations];
-                        next[index] = e.target.value;
-                        setOfficeLocations(next);
-                      }}
+                      value={newLocation.name}
+                      onChange={(e) => setNewLocation({ ...newLocation, name: e.target.value })}
+                      placeholder="Office name *"
                       className={inputClassName}
-                      placeholder="Address or location name"
                     />
-                    <button
-                      type="button"
-                      onClick={() => removeOfficeLocation(index)}
-                      className="p-2 text-gray-500 hover:text-red-600 shrink-0"
-                      aria-label="Remove location"
-                    >
+                    <input
+                      type="text"
+                      value={newLocation.street_address}
+                      onChange={(e) => setNewLocation({ ...newLocation, street_address: e.target.value })}
+                      placeholder="Street address"
+                      className={inputClassName}
+                    />
+                    <div className="grid grid-cols-3 gap-3">
+                      <input
+                        type="text"
+                        value={newLocation.city}
+                        onChange={(e) => setNewLocation({ ...newLocation, city: e.target.value })}
+                        placeholder="City *"
+                        className={inputClassName}
+                      />
+                      <select
+                        value={newLocation.province}
+                        onChange={(e) => setNewLocation({ ...newLocation, province: e.target.value })}
+                        className={inputClassName}
+                      >
+                        {PROVINCES.map((p) => (
+                          <option key={p} value={p}>{p}</option>
+                        ))}
+                      </select>
+                      <input
+                        type="text"
+                        value={newLocation.postal_code}
+                        onChange={(e) => setNewLocation({ ...newLocation, postal_code: e.target.value })}
+                        placeholder="Postal code"
+                        className={inputClassName}
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <button type="button" onClick={addOfficeLocation} className="px-4 py-2 bg-neutral-700 text-white rounded-md text-sm hover:bg-neutral-800">
+                        Add
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowAddLocation(false);
+                          setNewLocation({ name: "", street_address: "", city: "", province: "BC", postal_code: "" });
+                        }}
+                        className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md text-sm hover:bg-gray-300"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+                {officeLocations.map((loc, index) => (
+                  <div key={index} className="mb-3 p-3 border border-gray-300 rounded-lg flex justify-between items-start">
+                    <div>
+                      <div className="font-medium text-gray-900">{loc.name}</div>
+                      <div className="text-sm text-gray-600">
+                        {loc.street_address && `${loc.street_address}, `}
+                        {loc.city}, {loc.province} {loc.postal_code}
+                      </div>
+                    </div>
+                    <button type="button" onClick={() => removeOfficeLocation(index)} className="p-1 text-gray-500 hover:text-red-600 shrink-0" aria-label="Remove location">
                       <X className="w-5 h-5" />
                     </button>
                   </div>
                 ))}
-                <button
-                  type="button"
-                  onClick={() => setOfficeLocations([...officeLocations, ""])}
-                  className="flex items-center gap-2 text-sm text-black hover:underline"
-                >
-                  <span className="text-lg">+</span> Add location
-                </button>
               </div>
             </>
           )}
