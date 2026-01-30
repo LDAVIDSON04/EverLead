@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import { Footer } from "@/app/learn-more-about-starting/components/Footer";
 
 type Role =
   | "funeral-planner"
@@ -52,7 +53,7 @@ export default function CreateAccountContinuePage() {
   };
 
   return (
-    <div className="w-full min-h-screen bg-white px-4 py-4">
+    <div className="w-full min-h-screen bg-white flex flex-col">
       {/* Logo */}
       <div className="mb-8">
         <Link href="/" className="flex items-center gap-2">
@@ -67,7 +68,7 @@ export default function CreateAccountContinuePage() {
         </Link>
       </div>
 
-      <div className="max-w-[700px] mx-auto">
+      <div className="max-w-[700px] mx-auto px-4 py-4 flex-1">
         <h1 className="text-2xl mb-8 text-black">Create an account</h1>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -483,6 +484,7 @@ export default function CreateAccountContinuePage() {
           </p>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

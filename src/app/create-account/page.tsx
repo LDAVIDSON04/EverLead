@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Info } from "lucide-react";
+import { Footer } from "@/app/learn-more-about-starting/components/Footer";
 
 export default function CreateAccountPage() {
   const router = useRouter();
@@ -35,7 +36,7 @@ export default function CreateAccountPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white flex flex-col">
       {/* Header with logo */}
       <div className="px-6 py-4">
         <Link href="/" className="flex items-center gap-2">
@@ -262,6 +263,7 @@ export default function CreateAccountPage() {
           </div>
         </form>
       </div>
+      <Footer />
     </div>
   );
 }
