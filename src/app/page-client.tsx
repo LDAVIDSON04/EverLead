@@ -436,7 +436,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                 <div className="flex items-center lg:pl-2">
                   <button
                     type="submit"
-                    className="w-full lg:w-auto bg-emerald-800 text-white px-8 py-3 rounded-xl hover:bg-emerald-900 transition-all shadow-sm"
+                    className="w-full lg:w-auto bg-[#1A1A1A] text-white px-8 py-3 rounded-xl hover:bg-[#1A1A1A]/90 transition-all shadow-sm"
                   >
                     Find care
                   </button>
