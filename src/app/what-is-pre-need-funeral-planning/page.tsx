@@ -118,11 +118,10 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
       >
         <div className="max-w-6xl mx-auto px-6">
           <div className="grid md:grid-cols-2 gap-16 items-start">
-            <div className="rounded-xl overflow-hidden shadow-lg min-h-[400px] md:min-h-[500px] bg-[#faf8f3] flex items-center justify-center">
-              {/* Image slot: replace src with your estate planning image path */}
+            <div className="rounded-xl overflow-hidden shadow-lg min-h-[400px] md:min-h-[500px] flex items-center justify-center">
               <img
-                src="/estate-planning-image.jpg"
-                alt="Estate planning and wills"
+                src="/estate-planning-couple-advisor.png"
+                alt="Couple meeting with an advisor to discuss estate planning and wills"
                 className="w-full h-full object-cover min-h-[400px] md:min-h-[500px]"
                 onError={(e) => {
                   e.currentTarget.style.display = "none";
@@ -194,8 +193,12 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
                 An estate lawyer helps translate personal wishes into legally sound documents that stand up when they are needed most.
               </p>
             </div>
-            <div className="rounded-xl overflow-hidden shadow-lg bg-[#e8e6e1] min-h-[400px] md:min-h-[500px] flex items-center justify-center order-1 md:order-2">
-              <span className="text-gray-400 text-sm uppercase tracking-wider">Image slot</span>
+            <div className="rounded-xl overflow-hidden shadow-lg min-h-[400px] md:min-h-[500px] order-1 md:order-2">
+              <img
+                src="/estate-lawyers-families.png"
+                alt="Professional and couple in office discussing estate planning and wills"
+                className="w-full h-full object-cover min-h-[400px] md:min-h-[500px]"
+              />
             </div>
           </div>
         </div>
