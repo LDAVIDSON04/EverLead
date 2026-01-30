@@ -20,7 +20,7 @@ export default function CreateAccountNextPage() {
   return (
     <div className="min-h-screen bg-white flex flex-col">
       {/* Header */}
-      <div className="px-8 pt-8 pb-6">
+      <div className="px-8 pt-4 pb-4">
         <Link href="/" className="flex items-center gap-2">
           <Image
             src="/Soradin.png"
@@ -34,11 +34,11 @@ export default function CreateAccountNextPage() {
       </div>
 
       {/* Form Container */}
-      <div className="max-w-[1000px] mx-auto px-8 py-12 flex-1 w-full">
-        <h1 className="text-3xl mb-4">Create an account</h1>
+      <div className="max-w-[1000px] mx-auto px-8 pt-6 pb-8 flex-1 w-full">
+        <h1 className="text-3xl mb-2">Create an account</h1>
 
         {/* Progress Indicator - Step 3 of 3 */}
-        <div className="mb-8">
+        <div className="mb-6">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2 text-neutral-700">
               <div className="w-8 h-8 rounded-full flex items-center justify-center bg-neutral-700 text-white">
@@ -63,7 +63,7 @@ export default function CreateAccountNextPage() {
           </div>
         </div>
 
-        <h2 className="text-xl font-semibold text-black mb-6">Step 3: Profile Bio</h2>
+        <h2 className="text-xl font-semibold text-black mb-4">Step 3: Profile Bio</h2>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Years of Experience */}
@@ -152,7 +152,7 @@ export default function CreateAccountNextPage() {
           </button>
 
           {/* Log in link */}
-          <div className="text-center text-sm">
+          <div className="text-center text-sm mt-8 mb-12">
             Already have an account?{" "}
             <Link href="/agent" className="underline text-black hover:text-gray-700">
               Log in
