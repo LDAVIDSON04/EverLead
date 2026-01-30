@@ -341,6 +341,11 @@ export async function POST(req: NextRequest) {
     if (job_title) {
       profileData.job_title = job_title;
     }
+
+    // New create-account flow: store business/firm name for display (all roles)
+    if (metadataFromBody?.business_name) {
+      profileData.funeral_home = metadataFromBody.business_name;
+    }
     
     // Automatically store timezone based on province (if province is set)
     if (profileData.agent_province && !metadata.timezone) {
@@ -470,6 +475,11 @@ export async function POST(req: NextRequest) {
           // Add job_title if provided
           if (job_title) {
             updateData.job_title = job_title;
+          }
+
+          // New create-account flow: store business/firm name for display (all roles)
+          if (metadataFromBody?.business_name) {
+            updateData.funeral_home = metadataFromBody.business_name;
           }
           
           // Legacy fields

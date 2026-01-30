@@ -45,6 +45,7 @@ export default function CreateAccountPage() {
     province: "",
     postalCode: "",
   });
+  const [passwordError, setPasswordError] = useState<string | null>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -61,6 +62,17 @@ export default function CreateAccountPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setPasswordError(null);
+    if (formData.password !== formData.confirmPassword) {
+      setPasswordError("Passwords do not match.");
+      return;
+    }
+    const draft = { step1: formData };
+    if (typeof window !== "undefined") {
+      try {
+        sessionStorage.setItem("createAccountDraft", JSON.stringify(draft));
+      } catch (_) {}
+    }
     router.push("/create-account/continue");
   };
 
@@ -109,6 +121,11 @@ export default function CreateAccountPage() {
 
         <h2 className="text-xl font-semibold text-black mb-3">Step 1: Basic Information</h2>
 
+        {passwordError && (
+          <div className="p-4 bg-red-50 border border-red-200 rounded-md text-sm text-red-700">
+            {passwordError}
+          </div>
+        )}
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Name fields */}
           <div className="grid grid-cols-2 gap-4">
@@ -227,6 +244,7 @@ export default function CreateAccountPage() {
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
                 required
+                minLength={6}
               />
             </div>
           </div>

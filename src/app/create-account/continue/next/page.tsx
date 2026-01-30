@@ -1,20 +1,165 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Check } from "lucide-react";
 import { Footer } from "@/app/learn-more-about-starting/components/Footer";
 
+const CREATE_ACCOUNT_DRAFT_KEY = "createAccountDraft";
+
 export default function CreateAccountNextPage() {
+  const router = useRouter();
   const [yearsOfExperience, setYearsOfExperience] = useState("");
   const [howYouHelp, setHowYouHelp] = useState("");
   const [whatFamiliesAppreciate, setWhatFamiliesAppreciate] = useState("");
   const [hasAnsweredAccurately, setHasAnsweredAccurately] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted || typeof window === "undefined") return;
+    try {
+      const raw = sessionStorage.getItem(CREATE_ACCOUNT_DRAFT_KEY);
+      const draft = raw ? JSON.parse(raw) : null;
+      if (!draft?.step1 || !draft?.step2) {
+        router.replace("/create-account");
+      }
+    } catch {
+      router.replace("/create-account");
+    }
+  }, [mounted, router]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: wire to signup/approval API
+    setError(null);
+    if (!hasAnsweredAccurately) {
+      setError("Please confirm you have answered all questions accurately.");
+      return;
+    }
+
+    let draft: { step1?: any; step2?: any } = {};
+    try {
+      const raw = typeof window !== "undefined" ? sessionStorage.getItem(CREATE_ACCOUNT_DRAFT_KEY) : null;
+      if (!raw) {
+        setError("Session expired. Please start from step 1.");
+        router.replace("/create-account");
+        return;
+      }
+      draft = JSON.parse(raw);
+    } catch {
+      setError("Session expired. Please start from step 1.");
+      router.replace("/create-account");
+      return;
+    }
+
+    const step1 = draft.step1;
+    const step2 = draft.step2;
+    if (!step1 || !step2) {
+      setError("Missing previous steps. Please start from step 1.");
+      router.replace("/create-account");
+      return;
+    }
+
+    const full_name = [step1.firstName, step1.lastName].filter(Boolean).join(" ").trim();
+    if (!full_name) {
+      setError("Please complete step 1 with your name.");
+      return;
+    }
+
+    const address = {
+      street: step1.homeAddress || "",
+      city: step1.city || "",
+      province: step1.province || "",
+      postalCode: step1.postalCode || "",
+    };
+    const notification_cities = step1.city && step1.province
+      ? [{ city: step1.city, province: step1.province }]
+      : [];
+
+    const metadata: Record<string, unknown> = {
+      agent_role: step2.selectedRole || "",
+      business_name: (step2.businessName || "").trim(),
+      bio: {
+        years_of_experience: String(yearsOfExperience).trim(),
+        practice_philosophy_help: howYouHelp.trim(),
+        practice_philosophy_appreciate: whatFamiliesAppreciate.trim(),
+      },
+    };
+
+    if (step2.selectedRole === "funeral-planner") {
+      metadata.trustage_enroller_number = step2.hasTruStage === "yes";
+      metadata.llqp_license = step2.hasLLQP === "yes";
+      metadata.llqp_quebec = step2.llqpQuebec || "";
+    }
+    if (step2.selectedRole === "lawyer") {
+      metadata.law_society_name = step2.lawSocietyName || "";
+      metadata.authorized_provinces = step2.authorizedProvinces || "";
+    }
+    if (step2.selectedRole === "insurance-broker") {
+      metadata.licensing_province = step2.licensingProvince || "";
+      metadata.has_multiple_provinces = step2.hasMultipleProvinces === "yes";
+      metadata.additional_provinces = step2.additionalProvinces || "";
+    }
+    if (step2.selectedRole === "financial-advisor") {
+      metadata.regulatory_organization = step2.regulatoryOrganization || "";
+      metadata.registered_provinces = step2.registeredProvinces || "";
+    }
+
+    const office_locations = Array.isArray(step2.officeLocations)
+      ? step2.officeLocations.map((loc: { name?: string; street_address?: string; city?: string; province?: string; postal_code?: string }) => ({
+          name: loc.name || "",
+          street_address: loc.street_address || null,
+          city: loc.city || "",
+          province: loc.province || "",
+          postal_code: loc.postal_code || null,
+        }))
+      : [];
+
+    const signupData = {
+      email: (step1.email || "").trim(),
+      password: step1.password || "",
+      full_name,
+      phone: (step1.phoneNumber || "").replace(/\D/g, "").slice(0, 10) || step1.phoneNumber,
+      address,
+      notification_cities,
+      job_title: (step2.professionalTitle || "").trim(),
+      metadata,
+      office_locations: office_locations.filter((loc: { name: string; city: string }) => loc.name && loc.city),
+    };
+
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/agent/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(signupData),
+      });
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        setError(data.error || "Signup failed. Please try again.");
+        setSubmitting(false);
+        return;
+      }
+
+      if (typeof window !== "undefined") {
+        try {
+          sessionStorage.removeItem(CREATE_ACCOUNT_DRAFT_KEY);
+        } catch (_) {}
+      }
+      router.replace("/create-account/success");
+      return;
+    } catch (err) {
+      setError("Something went wrong. Please try again.");
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -65,6 +210,11 @@ export default function CreateAccountNextPage() {
 
         <h2 className="text-xl font-semibold text-black mb-3">Step 3: Profile Bio</h2>
 
+        {error && (
+          <div className="p-4 bg-red-50 border border-red-200 rounded-md text-sm text-red-700">
+            {error}
+          </div>
+        )}
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Years of Experience */}
           <div>
@@ -146,9 +296,10 @@ export default function CreateAccountNextPage() {
           {/* Submit Button */}
           <button
             type="submit"
-            className="w-full bg-black text-white py-4 rounded-md font-medium hover:bg-gray-900 transition-colors mt-8"
+            disabled={submitting}
+            className="w-full bg-black text-white py-4 rounded-md font-medium hover:bg-gray-900 transition-colors mt-8 disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            Submit for approval
+            {submitting ? "Submitting…" : "Submit for approval"}
           </button>
 
           {/* Log in link */}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -66,6 +66,25 @@ export default function CreateAccountContinuePage() {
   const [regulatoryOrganization, setRegulatoryOrganization] = useState("");
   const [registeredProvinces, setRegisteredProvinces] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted || typeof window === "undefined") return;
+    try {
+      const raw = sessionStorage.getItem("createAccountDraft");
+      const draft = raw ? JSON.parse(raw) : null;
+      if (!draft?.step1) {
+        router.replace("/create-account");
+        return;
+      }
+    } catch {
+      router.replace("/create-account");
+    }
+  }, [mounted, router]);
 
   const removeOfficeLocation = (index: number) => {
     setOfficeLocations((prev) => prev.filter((_, i) => i !== index));
@@ -133,6 +152,30 @@ export default function CreateAccountContinuePage() {
       }
     }
 
+    try {
+      const raw = typeof window !== "undefined" ? sessionStorage.getItem("createAccountDraft") : null;
+      const draft = raw ? JSON.parse(raw) : { step1: {} };
+      const step2 = {
+        selectedRole,
+        businessName,
+        professionalTitle,
+        hasTruStage,
+        hasLLQP,
+        llqpQuebec,
+        officeLocations,
+        isLicensed,
+        lawSocietyName,
+        authorizedProvinces,
+        isLicensedInsurance,
+        licensingProvince,
+        hasMultipleProvinces,
+        additionalProvinces,
+        isRegistered,
+        regulatoryOrganization,
+        registeredProvinces,
+      };
+      sessionStorage.setItem("createAccountDraft", JSON.stringify({ ...draft, step2 }));
+    } catch (_) {}
     router.push("/create-account/continue/next");
   };
 
