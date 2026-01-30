@@ -55,7 +55,7 @@ export default function CreateAccountContinuePage() {
   return (
     <div className="w-full min-h-screen bg-white flex flex-col">
       {/* Logo */}
-      <div className="mb-8">
+      <div className="mb-8 px-8 pt-6">
         <Link href="/" className="flex items-center gap-2">
           <Image
             src="/Soradin.png"
