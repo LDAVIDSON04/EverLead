@@ -67,7 +67,7 @@ export default function CreateAccountPage() {
   return (
     <div className="min-h-screen bg-white flex flex-col">
       {/* Header with logo */}
-      <div className="px-6 pt-2 pb-1">
+      <div className="px-6 pt-1 pb-0">
         <Link href="/" className="flex items-center gap-2">
           <Image
             src="/Soradin.png"
