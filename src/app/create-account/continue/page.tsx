@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import { X } from "lucide-react";
 import { Footer } from "@/app/learn-more-about-starting/components/Footer";
 
 type Role =
@@ -46,9 +47,57 @@ export default function CreateAccountContinuePage() {
   const [isRegistered, setIsRegistered] = useState("");
   const [regulatoryOrganization, setRegulatoryOrganization] = useState("");
   const [registeredProvinces, setRegisteredProvinces] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  const removeOfficeLocation = (index: number) => {
+    setOfficeLocations((prev) => prev.filter((_, i) => i !== index));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+
+    if (!selectedRole) {
+      setError("Please select a role.");
+      return;
+    }
+
+    const hasOfficeLocations = [
+      "funeral-planner",
+      "lawyer",
+      "insurance-broker",
+      "financial-advisor",
+    ].includes(selectedRole);
+    if (hasOfficeLocations && !officeLocations.some((l) => l.trim() !== "")) {
+      setError("Please add at least one office location.");
+      return;
+    }
+
+    if (selectedRole === "funeral-planner") {
+      if (!hasTruStage || !hasLLQP || !llqpQuebec) {
+        setError("Please answer all questions for your role.");
+        return;
+      }
+    }
+    if (selectedRole === "lawyer") {
+      if (!isLicensed || !lawSocietyName.trim() || !authorizedProvinces.trim()) {
+        setError("Please complete all fields for your role.");
+        return;
+      }
+    }
+    if (selectedRole === "insurance-broker") {
+      if (!isLicensedInsurance || !licensingProvince.trim()) {
+        setError("Please complete all fields for your role.");
+        return;
+      }
+    }
+    if (selectedRole === "financial-advisor") {
+      if (!isRegistered || !regulatoryOrganization.trim() || !registeredProvinces.trim()) {
+        setError("Please complete all fields for your role.");
+        return;
+      }
+    }
+
     router.push("/create-account/continue/next");
   };
 
@@ -71,7 +120,12 @@ export default function CreateAccountContinuePage() {
       <div className="max-w-[1000px] mx-auto px-4 py-4 flex-1 w-full">
         <h1 className="text-2xl mb-8 text-black">Create an account</h1>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        {error && (
+            <div className="p-4 bg-red-50 border border-red-200 rounded-md text-sm text-red-700">
+              {error}
+            </div>
+          )}
+          <form onSubmit={handleSubmit} className="space-y-6">
           {/* Role Selection */}
           <div className="space-y-3">
             <label className="text-sm text-gray-700">Role</label>
@@ -140,6 +194,7 @@ export default function CreateAccountContinuePage() {
                         checked={hasTruStage === v}
                         onChange={(e) => setHasTruStage(e.target.value)}
                         className="w-4 h-4 border-2 border-gray-300"
+                        required={selectedRole === "funeral-planner"}
                       />
                       <span className="text-sm text-gray-700 capitalize">{v}</span>
                     </label>
@@ -160,6 +215,7 @@ export default function CreateAccountContinuePage() {
                         checked={hasLLQP === v}
                         onChange={(e) => setHasLLQP(e.target.value)}
                         className="w-4 h-4 border-2 border-gray-300"
+                        required={selectedRole === "funeral-planner"}
                       />
                       <span className="text-sm text-gray-700 capitalize">{v}</span>
                     </label>
@@ -180,6 +236,7 @@ export default function CreateAccountContinuePage() {
                         checked={llqpQuebec === v}
                         onChange={(e) => setLlqpQuebec(e.target.value)}
                         className="w-4 h-4 border-2 border-gray-300"
+                        required={selectedRole === "funeral-planner"}
                       />
                       <span className="text-sm text-gray-700">
                         {v === "non-applicable" ? "Non Applicable" : v.charAt(0).toUpperCase() + v.slice(1)}
@@ -191,17 +248,27 @@ export default function CreateAccountContinuePage() {
               <div className="space-y-3">
                 <label className="text-sm text-gray-700">Office Locations</label>
                 {officeLocations.map((location, index) => (
-                  <input
-                    key={index}
-                    type="text"
-                    value={location}
-                    onChange={(e) => {
-                      const next = [...officeLocations];
-                      next[index] = e.target.value;
-                      setOfficeLocations(next);
-                    }}
-                    className={inputClassName}
-                  />
+                  <div key={index} className="flex gap-2 items-center">
+                    <input
+                      type="text"
+                      value={location}
+                      onChange={(e) => {
+                        const next = [...officeLocations];
+                        next[index] = e.target.value;
+                        setOfficeLocations(next);
+                      }}
+                      className={inputClassName}
+                      placeholder="Address or location name"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeOfficeLocation(index)}
+                      className="p-2 text-gray-500 hover:text-red-600 shrink-0"
+                      aria-label="Remove location"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
                 ))}
                 <button
                   type="button"
@@ -231,6 +298,7 @@ export default function CreateAccountContinuePage() {
                         checked={isLicensed === v}
                         onChange={(e) => setIsLicensed(e.target.value)}
                         className="w-4 h-4 border-2 border-gray-300"
+                        required={selectedRole === "lawyer"}
                       />
                       <span className="text-sm text-gray-700 capitalize">{v}</span>
                     </label>
@@ -247,6 +315,7 @@ export default function CreateAccountContinuePage() {
                   value={lawSocietyName}
                   onChange={(e) => setLawSocietyName(e.target.value)}
                   className={inputClassName}
+                  required
                 />
               </div>
               <div className="space-y-2">
@@ -259,22 +328,33 @@ export default function CreateAccountContinuePage() {
                   value={authorizedProvinces}
                   onChange={(e) => setAuthorizedProvinces(e.target.value)}
                   className={inputClassName}
+                  required
                 />
               </div>
               <div className="space-y-3">
                 <label className="text-sm text-gray-700">Office Locations</label>
                 {officeLocations.map((location, index) => (
-                  <input
-                    key={index}
-                    type="text"
-                    value={location}
-                    onChange={(e) => {
-                      const next = [...officeLocations];
-                      next[index] = e.target.value;
-                      setOfficeLocations(next);
-                    }}
-                    className={inputClassName}
-                  />
+                  <div key={index} className="flex gap-2 items-center">
+                    <input
+                      type="text"
+                      value={location}
+                      onChange={(e) => {
+                        const next = [...officeLocations];
+                        next[index] = e.target.value;
+                        setOfficeLocations(next);
+                      }}
+                      className={inputClassName}
+                      placeholder="Address or location name"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeOfficeLocation(index)}
+                      className="p-2 text-gray-500 hover:text-red-600 shrink-0"
+                      aria-label="Remove location"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
                 ))}
                 <button
                   type="button"
@@ -304,6 +384,7 @@ export default function CreateAccountContinuePage() {
                         checked={isLicensedInsurance === v}
                         onChange={(e) => setIsLicensedInsurance(e.target.value)}
                         className="w-4 h-4 border-2 border-gray-300"
+                        required={selectedRole === "insurance-broker"}
                       />
                       <span className="text-sm text-gray-700 capitalize">{v}</span>
                     </label>
@@ -320,6 +401,7 @@ export default function CreateAccountContinuePage() {
                   value={licensingProvince}
                   onChange={(e) => setLicensingProvince(e.target.value)}
                   className={inputClassName}
+                  required
                 />
               </div>
               <div className="space-y-3">
@@ -336,6 +418,7 @@ export default function CreateAccountContinuePage() {
                         checked={hasMultipleProvinces === v}
                         onChange={(e) => setHasMultipleProvinces(e.target.value)}
                         className="w-4 h-4 border-2 border-gray-300"
+                        required={selectedRole === "insurance-broker"}
                       />
                       <span className="text-sm text-gray-700 capitalize">{v}</span>
                     </label>
@@ -359,17 +442,27 @@ export default function CreateAccountContinuePage() {
               <div className="space-y-3">
                 <label className="text-sm text-gray-700">Office Locations</label>
                 {officeLocations.map((location, index) => (
-                  <input
-                    key={index}
-                    type="text"
-                    value={location}
-                    onChange={(e) => {
-                      const next = [...officeLocations];
-                      next[index] = e.target.value;
-                      setOfficeLocations(next);
-                    }}
-                    className={inputClassName}
-                  />
+                  <div key={index} className="flex gap-2 items-center">
+                    <input
+                      type="text"
+                      value={location}
+                      onChange={(e) => {
+                        const next = [...officeLocations];
+                        next[index] = e.target.value;
+                        setOfficeLocations(next);
+                      }}
+                      className={inputClassName}
+                      placeholder="Address or location name"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeOfficeLocation(index)}
+                      className="p-2 text-gray-500 hover:text-red-600 shrink-0"
+                      aria-label="Remove location"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
                 ))}
                 <button
                   type="button"
@@ -399,6 +492,7 @@ export default function CreateAccountContinuePage() {
                         checked={isRegistered === v}
                         onChange={(e) => setIsRegistered(e.target.value)}
                         className="w-4 h-4 border-2 border-gray-300"
+                        required={selectedRole === "financial-advisor"}
                       />
                       <span className="text-sm text-gray-700 capitalize">{v}</span>
                     </label>
@@ -415,6 +509,7 @@ export default function CreateAccountContinuePage() {
                   value={regulatoryOrganization}
                   onChange={(e) => setRegulatoryOrganization(e.target.value)}
                   className={inputClassName}
+                  required
                 />
               </div>
               <div className="space-y-2">
@@ -427,22 +522,33 @@ export default function CreateAccountContinuePage() {
                   value={registeredProvinces}
                   onChange={(e) => setRegisteredProvinces(e.target.value)}
                   className={inputClassName}
+                  required
                 />
               </div>
               <div className="space-y-3">
                 <label className="text-sm text-gray-700">Office Locations</label>
                 {officeLocations.map((location, index) => (
-                  <input
-                    key={index}
-                    type="text"
-                    value={location}
-                    onChange={(e) => {
-                      const next = [...officeLocations];
-                      next[index] = e.target.value;
-                      setOfficeLocations(next);
-                    }}
-                    className={inputClassName}
-                  />
+                  <div key={index} className="flex gap-2 items-center">
+                    <input
+                      type="text"
+                      value={location}
+                      onChange={(e) => {
+                        const next = [...officeLocations];
+                        next[index] = e.target.value;
+                        setOfficeLocations(next);
+                      }}
+                      className={inputClassName}
+                      placeholder="Address or location name"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeOfficeLocation(index)}
+                      className="p-2 text-gray-500 hover:text-red-600 shrink-0"
+                      aria-label="Remove location"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
                 ))}
                 <button
                   type="button"
