@@ -281,44 +281,55 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
 
       {/* Who Benefits - White */}
       <section className="bg-white py-20">
-        <div className="max-w-5xl mx-auto px-6">
-          <h2 className="text-4xl md:text-5xl font-semibold text-gray-900 mb-8 leading-tight">
-            Who Benefits From Estate Planning
-          </h2>
-          <p className="text-gray-700 text-lg leading-relaxed mb-8">
-            Estate planning is valuable for people at many stages of life, including:
-          </p>
-          <ul className="space-y-5 mb-10">
-            <li className="flex items-start">
-              <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
-              <span className="text-gray-700 text-lg leading-relaxed">Parents with young or dependent children</span>
-            </li>
-            <li className="flex items-start">
-              <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
-              <span className="text-gray-700 text-lg leading-relaxed">Couples planning for the future</span>
-            </li>
-            <li className="flex items-start">
-              <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
-              <span className="text-gray-700 text-lg leading-relaxed">Individuals with property or savings</span>
-            </li>
-            <li className="flex items-start">
-              <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
-              <span className="text-gray-700 text-lg leading-relaxed">Business owners</span>
-            </li>
-            <li className="flex items-start">
-              <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
-              <span className="text-gray-700 text-lg leading-relaxed">Anyone who wants clarity and control</span>
-            </li>
-          </ul>
-          <p className="text-gray-700 text-lg leading-relaxed mb-8">
-            There is no perfect time to start. The right time is when you want your wishes clearly documented.
-          </p>
-          <button
-            onClick={navigateToSearch}
-            className="bg-[#1A1A1A] text-white px-8 py-4 rounded-xl hover:bg-[#1A1A1A]/90 transition-all shadow-sm text-lg font-medium"
-          >
-            Find care
-          </button>
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="grid md:grid-cols-2 gap-16 items-start">
+            <div className="rounded-xl overflow-hidden shadow-lg">
+              <img
+                src="/estate-who-benefits-infographic.png"
+                alt="Who benefits from estate planning: parents, couples, individuals with property, business owners, and anyone who wants clarity and control"
+                className="w-full h-auto object-contain"
+              />
+            </div>
+            <div>
+              <h2 className="text-4xl md:text-5xl font-semibold text-gray-900 mb-8 leading-tight">
+                Who Benefits From Estate Planning
+              </h2>
+              <p className="text-gray-700 text-lg leading-relaxed mb-8">
+                Estate planning is valuable for people at many stages of life, including:
+              </p>
+              <ul className="space-y-5 mb-10">
+                <li className="flex items-start">
+                  <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+                  <span className="text-gray-700 text-lg leading-relaxed">Parents with young or dependent children</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+                  <span className="text-gray-700 text-lg leading-relaxed">Couples planning for the future</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+                  <span className="text-gray-700 text-lg leading-relaxed">Individuals with property or savings</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+                  <span className="text-gray-700 text-lg leading-relaxed">Business owners</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+                  <span className="text-gray-700 text-lg leading-relaxed">Anyone who wants clarity and control</span>
+                </li>
+              </ul>
+              <p className="text-gray-700 text-lg leading-relaxed mb-8">
+                There is no perfect time to start. The right time is when you want your wishes clearly documented.
+              </p>
+              <button
+                onClick={navigateToSearch}
+                className="bg-[#1A1A1A] text-white px-8 py-4 rounded-xl hover:bg-[#1A1A1A]/90 transition-all shadow-sm text-lg font-medium"
+              >
+                Find care
+              </button>
+            </div>
+          </div>
         </div>
       </section>
 
