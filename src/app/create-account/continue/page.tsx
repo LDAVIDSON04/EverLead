@@ -112,7 +112,7 @@ export default function CreateAccountContinuePage() {
     setError(null);
 
     if (!selectedRole) {
-      setError("Please select a role.");
+      setError("Please select a profession.");
       return;
     }
 
@@ -229,9 +229,9 @@ export default function CreateAccountContinuePage() {
             </div>
           )}
           <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Role Selection */}
+          {/* Profession Selection */}
           <div className="space-y-3">
-            <label className="text-sm text-gray-700">Role <span className="text-red-600">*</span></label>
+            <label className="text-sm text-gray-700">Profession <span className="text-red-600">*</span></label>
             <div className="grid grid-cols-2 gap-2">
               {roles.map((role) => (
                 <button
