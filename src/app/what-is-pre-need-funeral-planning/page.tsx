@@ -550,44 +550,55 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
 
       {/* Who Should Consider - White */}
       <section className="bg-white py-20">
-        <div className="max-w-5xl mx-auto px-6">
-          <h2 className="text-4xl md:text-5xl font-semibold text-gray-900 mb-8 leading-tight">
-            Who Should Consider Life Insurance
-          </h2>
-          <p className="text-gray-700 text-lg leading-relaxed mb-8">
-            Life insurance is commonly considered by:
-          </p>
-          <ul className="space-y-5 mb-10">
-            <li className="flex items-start">
-              <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
-              <span className="text-gray-700 text-lg leading-relaxed">Individuals planning for funeral costs</span>
-            </li>
-            <li className="flex items-start">
-              <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
-              <span className="text-gray-700 text-lg leading-relaxed">Parents or caregivers</span>
-            </li>
-            <li className="flex items-start">
-              <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
-              <span className="text-gray-700 text-lg leading-relaxed">Homeowners with outstanding mortgages</span>
-            </li>
-            <li className="flex items-start">
-              <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
-              <span className="text-gray-700 text-lg leading-relaxed">Business owners</span>
-            </li>
-            <li className="flex items-start">
-              <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
-              <span className="text-gray-700 text-lg leading-relaxed">Anyone who wants to protect loved ones financially</span>
-            </li>
-          </ul>
-          <p className="text-gray-700 text-lg leading-relaxed mb-8">
-            Planning early often provides more options and affordability.
-          </p>
-          <button
-            onClick={navigateToSearch}
-            className="bg-[#1A1A1A] text-white px-8 py-4 rounded-xl hover:bg-[#1A1A1A]/90 transition-all shadow-sm text-lg font-medium"
-          >
-            Find care
-          </button>
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="grid md:grid-cols-2 gap-16 items-start">
+            <div className="rounded-xl overflow-hidden shadow-lg">
+              <img
+                src="/life-insurance-who-should-consider.png"
+                alt="Who should consider life insurance: funeral costs, protecting family, homeowners, business owners, legacy"
+                className="w-full h-auto object-contain"
+              />
+            </div>
+            <div>
+              <h2 className="text-4xl md:text-5xl font-semibold text-gray-900 mb-8 leading-tight">
+                Who Should Consider Life Insurance
+              </h2>
+              <p className="text-gray-700 text-lg leading-relaxed mb-8">
+                Life insurance is commonly considered by:
+              </p>
+              <ul className="space-y-5 mb-10">
+                <li className="flex items-start">
+                  <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+                  <span className="text-gray-700 text-lg leading-relaxed">Individuals planning for funeral costs</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+                  <span className="text-gray-700 text-lg leading-relaxed">Parents or caregivers</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+                  <span className="text-gray-700 text-lg leading-relaxed">Homeowners with outstanding mortgages</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+                  <span className="text-gray-700 text-lg leading-relaxed">Business owners</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+                  <span className="text-gray-700 text-lg leading-relaxed">Anyone who wants to protect loved ones financially</span>
+                </li>
+              </ul>
+              <p className="text-gray-700 text-lg leading-relaxed mb-8">
+                Planning early often provides more options and affordability.
+              </p>
+              <button
+                onClick={navigateToSearch}
+                className="bg-[#1A1A1A] text-white px-8 py-4 rounded-xl hover:bg-[#1A1A1A]/90 transition-all shadow-sm text-lg font-medium"
+              >
+                Find care
+              </button>
+            </div>
+          </div>
         </div>
       </section>
 
