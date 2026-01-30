@@ -139,7 +139,7 @@ export default function CreateAccountContinuePage() {
   return (
     <div className="w-full min-h-screen bg-white flex flex-col">
       {/* Logo */}
-      <div className="mb-4 px-8 pt-4">
+      <div className="mb-2 px-8 pt-2">
         <Link href="/" className="flex items-center gap-2">
           <Image
             src="/Soradin.png"
@@ -152,12 +152,12 @@ export default function CreateAccountContinuePage() {
         </Link>
       </div>
 
-      <div className="max-w-[1000px] mx-auto px-4 pt-2 pb-4 flex-1 w-full">
-        <h1 className="text-2xl mb-2 text-black">Create an account</h1>
-        <p className="text-gray-600 text-sm mb-4">Please complete all steps to submit your account for approval</p>
+      <div className="max-w-[1000px] mx-auto px-4 pt-0 pb-4 flex-1 w-full">
+        <h1 className="text-2xl mb-1 text-black">Create an account</h1>
+        <p className="text-gray-600 text-sm mb-2">Please complete all steps to submit your account for approval</p>
 
         {/* Progress: Step 2 active */}
-        <div className="mb-6">
+        <div className="mb-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-neutral-700">
               <div className="w-8 h-8 rounded-full flex items-center justify-center bg-neutral-700 text-white">
@@ -178,7 +178,7 @@ export default function CreateAccountContinuePage() {
           </div>
         </div>
 
-        <h2 className="text-xl font-semibold text-black mb-4">Step 2: Business Information</h2>
+        <h2 className="text-xl font-semibold text-black mb-3">Step 2: Business Information</h2>
 
         {error && (
             <div className="p-4 bg-red-50 border border-red-200 rounded-md text-sm text-red-700">
@@ -853,7 +853,7 @@ export default function CreateAccountContinuePage() {
           </div>
         </form>
 
-        <div className="text-center mt-8 mb-12">
+        <div className="text-center mt-8 mb-20">
           <p className="text-sm text-gray-600">
             Already have an account?{" "}
             <Link href="/agent" className="text-black underline hover:no-underline">

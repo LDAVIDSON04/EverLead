@@ -67,7 +67,7 @@ export default function CreateAccountPage() {
   return (
     <div className="min-h-screen bg-white flex flex-col">
       {/* Header with logo */}
-      <div className="px-6 py-2">
+      <div className="px-6 pt-2 pb-1">
         <Link href="/" className="flex items-center gap-2">
           <Image
             src="/Soradin.png"
@@ -81,14 +81,14 @@ export default function CreateAccountPage() {
       </div>
 
       {/* Form */}
-      <div className="max-w-3xl mx-auto px-6 pt-2">
-        <h1 className="text-3xl font-normal text-gray-900 mb-2">
+      <div className="max-w-3xl mx-auto px-6 pt-0">
+        <h1 className="text-3xl font-normal text-gray-900 mb-1">
           Create an account
         </h1>
-        <p className="text-gray-600 text-sm mb-4">Please complete all steps to submit your account for approval</p>
+        <p className="text-gray-600 text-sm mb-2">Please complete all steps to submit your account for approval</p>
 
         {/* Progress: Step 1 active */}
-        <div className="mb-6">
+        <div className="mb-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-neutral-700">
               <div className="w-8 h-8 rounded-full flex items-center justify-center bg-neutral-700 text-white text-sm font-medium">1</div>
@@ -107,7 +107,7 @@ export default function CreateAccountPage() {
           </div>
         </div>
 
-        <h2 className="text-xl font-semibold text-black mb-4">Step 1: Basic Information</h2>
+        <h2 className="text-xl font-semibold text-black mb-3">Step 1: Basic Information</h2>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Name fields */}
@@ -321,7 +321,7 @@ export default function CreateAccountPage() {
           </button>
 
           {/* Log in link */}
-          <div className="text-center text-sm text-gray-700 mt-8 mb-12">
+          <div className="text-center text-sm text-gray-700 mt-8 mb-20">
             Already have an account?{" "}
             <Link
               href="/agent"
