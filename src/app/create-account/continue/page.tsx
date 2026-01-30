@@ -60,15 +60,15 @@ export default function CreateAccountContinuePage() {
           <Image
             src="/Soradin.png"
             alt="Soradin"
-            width={32}
-            height={32}
-            className="h-8 w-8 object-contain"
+            width={96}
+            height={96}
+            className="h-24 w-24 object-contain"
           />
           <span className="font-semibold text-black">Soradin</span>
         </Link>
       </div>
 
-      <div className="max-w-[700px] mx-auto px-4 py-4 flex-1">
+      <div className="max-w-[1000px] mx-auto px-4 py-4 flex-1 w-full">
         <h1 className="text-2xl mb-8 text-black">Create an account</h1>
 
         <form onSubmit={handleSubmit} className="space-y-6">
