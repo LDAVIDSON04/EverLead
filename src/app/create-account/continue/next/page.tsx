@@ -1,9 +1,134 @@
 "use client";
 
+import { useState } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { Footer } from "@/app/learn-more-about-starting/components/Footer";
+
 export default function CreateAccountNextPage() {
+  const [yearsOfExperience, setYearsOfExperience] = useState("");
+  const [howYouHelp, setHowYouHelp] = useState("");
+  const [whatFamiliesAppreciate, setWhatFamiliesAppreciate] = useState("");
+  const [hasAnsweredAccurately, setHasAnsweredAccurately] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // TODO: wire to signup/approval API
+  };
+
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center">
-      <p className="text-gray-500">Next step — placeholder</p>
+    <div className="min-h-screen bg-white flex flex-col">
+      {/* Header */}
+      <div className="px-8 py-6">
+        <Link href="/" className="flex items-center gap-2">
+          <Image
+            src="/Soradin.png"
+            alt="Soradin"
+            width={32}
+            height={32}
+            className="h-8 w-8 object-contain"
+          />
+          <span className="font-semibold">Soradin</span>
+        </Link>
+      </div>
+
+      {/* Form Container */}
+      <div className="max-w-[800px] mx-auto px-8 py-12 flex-1">
+        <h1 className="text-3xl mb-8">Create an account</h1>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Years of Experience */}
+          <div>
+            <label htmlFor="years" className="block text-sm mb-2">
+              Years of experience
+            </label>
+            <input
+              id="years"
+              type="number"
+              value={yearsOfExperience}
+              onChange={(e) => setYearsOfExperience(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+              min={0}
+            />
+          </div>
+
+          {/* How do you typically help families */}
+          <div>
+            <label htmlFor="help" className="block text-sm mb-2">
+              How do you typically help families? (200 chars max)
+            </label>
+            <textarea
+              id="help"
+              value={howYouHelp}
+              onChange={(e) => {
+                if (e.target.value.length <= 200) {
+                  setHowYouHelp(e.target.value);
+                }
+              }}
+              className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black resize-none"
+              rows={2}
+              maxLength={200}
+            />
+            <div className="text-xs text-gray-500 mt-1 text-right">
+              {howYouHelp.length}/200
+            </div>
+          </div>
+
+          {/* What do families appreciate most */}
+          <div>
+            <label htmlFor="appreciate" className="block text-sm mb-2">
+              What do families appreciate most about your approach? (200 chars max)
+            </label>
+            <textarea
+              id="appreciate"
+              value={whatFamiliesAppreciate}
+              onChange={(e) => {
+                if (e.target.value.length <= 200) {
+                  setWhatFamiliesAppreciate(e.target.value);
+                }
+              }}
+              className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black resize-none"
+              rows={2}
+              maxLength={200}
+            />
+            <div className="text-xs text-gray-500 mt-1 text-right">
+              {whatFamiliesAppreciate.length}/200
+            </div>
+          </div>
+
+          {/* Checkbox */}
+          <div className="flex items-start gap-3 pt-2">
+            <input
+              id="accurate"
+              type="checkbox"
+              checked={hasAnsweredAccurately}
+              onChange={(e) => setHasAnsweredAccurately(e.target.checked)}
+              className="mt-1 w-4 h-4 cursor-pointer appearance-none border border-gray-300 rounded bg-white checked:bg-black checked:border-black"
+            />
+            <label htmlFor="accurate" className="text-sm cursor-pointer">
+              I have answered all questions accurately
+            </label>
+          </div>
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            className="w-full bg-black text-white py-4 rounded-md font-medium hover:bg-gray-900 transition-colors mt-8"
+          >
+            Submit for approval
+          </button>
+
+          {/* Log in link */}
+          <div className="text-center text-sm">
+            Already have an account?{" "}
+            <Link href="/agent" className="underline">
+              Log in
+            </Link>
+          </div>
+        </form>
+      </div>
+
+      <Footer />
     </div>
   );
 }
