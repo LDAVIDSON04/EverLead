@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { Check } from "lucide-react";
 import { Footer } from "@/app/learn-more-about-starting/components/Footer";
 
 export default function CreateAccountNextPage() {
@@ -34,13 +35,39 @@ export default function CreateAccountNextPage() {
 
       {/* Form Container */}
       <div className="max-w-[1000px] mx-auto px-8 py-12 flex-1 w-full">
-        <h1 className="text-3xl mb-8">Create an account</h1>
+        <h1 className="text-3xl mb-4">Create an account</h1>
+
+        {/* Progress Indicator - Step 3 of 3 */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2 text-neutral-700">
+              <div className="w-8 h-8 rounded-full flex items-center justify-center bg-neutral-700 text-white">
+                <Check className="w-5 h-5" />
+              </div>
+              <span className="font-medium">Step 1</span>
+            </div>
+            <div className="flex-1 h-1 mx-4 bg-neutral-700" />
+            <div className="flex items-center gap-2 text-neutral-700">
+              <div className="w-8 h-8 rounded-full flex items-center justify-center bg-neutral-700 text-white">
+                <Check className="w-5 h-5" />
+              </div>
+              <span className="font-medium">Step 2</span>
+            </div>
+            <div className="flex-1 h-1 mx-4 bg-neutral-700" />
+            <div className="flex items-center gap-2 text-neutral-700">
+              <div className="w-8 h-8 rounded-full flex items-center justify-center bg-neutral-700 text-white">
+                3
+              </div>
+              <span className="font-medium">Step 3</span>
+            </div>
+          </div>
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Years of Experience */}
           <div>
             <label htmlFor="years" className="block text-sm mb-2">
-              Years of experience
+              Years of experience <span className="text-red-600">*</span>
             </label>
             <input
               id="years"
@@ -49,13 +76,14 @@ export default function CreateAccountNextPage() {
               onChange={(e) => setYearsOfExperience(e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
               min={0}
+              required
             />
           </div>
 
           {/* How do you typically help families */}
           <div>
             <label htmlFor="help" className="block text-sm mb-2">
-              How do you typically help families? (200 chars max)
+              How do you typically help families? (200 chars max) <span className="text-red-600">*</span>
             </label>
             <textarea
               id="help"
@@ -68,6 +96,7 @@ export default function CreateAccountNextPage() {
               className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black resize-none"
               rows={2}
               maxLength={200}
+              required
             />
             <div className="text-xs text-gray-500 mt-1 text-right">
               {howYouHelp.length}/200
@@ -77,7 +106,7 @@ export default function CreateAccountNextPage() {
           {/* What do families appreciate most */}
           <div>
             <label htmlFor="appreciate" className="block text-sm mb-2">
-              What do families appreciate most about your approach? (200 chars max)
+              What do families appreciate most about your approach? (200 chars max) <span className="text-red-600">*</span>
             </label>
             <textarea
               id="appreciate"
@@ -90,6 +119,7 @@ export default function CreateAccountNextPage() {
               className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black resize-none"
               rows={2}
               maxLength={200}
+              required
             />
             <div className="text-xs text-gray-500 mt-1 text-right">
               {whatFamiliesAppreciate.length}/200
@@ -104,9 +134,10 @@ export default function CreateAccountNextPage() {
               checked={hasAnsweredAccurately}
               onChange={(e) => setHasAnsweredAccurately(e.target.checked)}
               className="mt-1 w-4 h-4 cursor-pointer appearance-none border border-gray-300 rounded bg-white checked:bg-black checked:border-black"
+              required
             />
             <label htmlFor="accurate" className="text-sm cursor-pointer">
-              I have answered all questions accurately
+              I have answered all questions accurately <span className="text-red-600">*</span>
             </label>
           </div>
 
