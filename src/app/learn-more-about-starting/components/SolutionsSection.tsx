@@ -64,7 +64,7 @@ export function SolutionsSection() {
               Website scheduling
             </h3>
             <p className="text-base md:text-lg text-[#1A1A1A]/70 leading-relaxed mb-6 md:mb-8 max-w-lg">
-              Ensure families on your website can book anytime with 24/7 online scheduling. One calendar for in-person and video—sync with Google or Microsoft.
+              Add your availability for families to view and book. Soradin's calendar works with your existing systems to ensure real time availability and no double bookings.
             </p>
             <Link
               href="/create-account"
