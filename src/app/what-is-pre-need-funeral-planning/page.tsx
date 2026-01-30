@@ -375,6 +375,7 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
         </>
       )}
 
+      {/* Life Insurance – full panel */}
       <section
         id="panel-insurance"
         role="tabpanel"
@@ -384,29 +385,252 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
       >
         <div className="max-w-6xl mx-auto px-6">
           <div className="grid md:grid-cols-2 gap-16 items-start">
-            <div className="rounded-xl overflow-hidden shadow-lg bg-[#faf8f3] min-h-[400px] md:min-h-[500px] flex items-center justify-center">
-              <span className="text-gray-400 text-sm uppercase tracking-wider">Life insurance</span>
+            <div className="rounded-xl overflow-hidden shadow-lg bg-[#e8e6e1] min-h-[400px] md:min-h-[500px] flex items-center justify-center">
+              <span className="text-gray-400 text-sm uppercase tracking-wider">Image slot</span>
             </div>
             <div className="pt-20">
               <h1 className="text-5xl md:text-6xl font-semibold text-gray-900 mb-8 leading-tight">
-                Life Insurance
+                What Is Life Insurance for End of Life Planning?
               </h1>
               <p className="text-gray-700 text-lg leading-relaxed mb-8">
-                Life insurance is a way to provide for your loved ones and cover final expenses, debts, or income replacement. Understanding your options with a licensed advisor helps you choose coverage that fits your goals and budget.
+                Life insurance is a financial tool designed to provide immediate support to loved ones when someone passes away. In the context of end of life planning, it plays a critical role in covering expenses, settling debts, and maintaining stability during a time of loss.
               </p>
               <p className="text-gray-700 text-lg leading-relaxed mb-8">
-                Rather than putting off the conversation, planning ahead lets you compare products, lock in rates where appropriate, and ensure your family has clear information about your coverage and how to make a claim when the time comes.
+                Life insurance pays a tax free lump sum to beneficiaries, allowing families to handle funeral costs and financial obligations without delay.
               </p>
-              <button
-                onClick={navigateToSearch}
-                className="bg-[#1A1A1A] text-white px-8 py-4 rounded-xl hover:bg-[#1A1A1A]/90 transition-all shadow-sm text-lg font-medium"
-              >
-                Find care
-              </button>
+              <p className="text-gray-700 text-lg leading-relaxed">
+                Rather than leaving loved ones to manage expenses during grief, life insurance provides certainty and protection when it matters most.
+              </p>
             </div>
           </div>
         </div>
       </section>
+
+      {activeTab === "insurance" && (
+        <>
+      {/* Why Families Include Life Insurance - Cream */}
+      <section className="bg-[#faf8f3] py-20">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="grid md:grid-cols-2 gap-16 items-start">
+            <div className="order-2 md:order-1">
+              <h2 className="text-4xl md:text-5xl font-semibold text-gray-900 mb-8 leading-tight">
+                Why Families Include Life Insurance in Their Planning
+              </h2>
+              <p className="text-gray-700 text-lg leading-relaxed mb-8">
+                Final expenses and financial obligations do not disappear after death. Without planning, families are often forced to make urgent financial decisions at an already stressful time.
+              </p>
+              <p className="text-gray-700 text-lg leading-relaxed mb-8">
+                Families choose life insurance because it allows them to:
+              </p>
+              <ul className="space-y-5 mb-10">
+                <li className="flex items-start">
+                  <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+                  <span className="text-gray-700 text-lg leading-relaxed">Cover funeral and burial or cremation costs</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+                  <span className="text-gray-700 text-lg leading-relaxed">Pay off outstanding debts or mortgages</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+                  <span className="text-gray-700 text-lg leading-relaxed">Provide financial support to surviving family members</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+                  <span className="text-gray-700 text-lg leading-relaxed">Avoid selling assets under pressure</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+                  <span className="text-gray-700 text-lg leading-relaxed">Transfer funds quickly outside of probate</span>
+                </li>
+              </ul>
+              <p className="text-gray-700 text-lg leading-relaxed italic">
+                Life insurance ensures financial responsibilities are handled with dignity and care.
+              </p>
+            </div>
+            <div className="rounded-xl overflow-hidden shadow-lg bg-[#e8e6e1] min-h-[400px] md:min-h-[500px] flex items-center justify-center order-1 md:order-2">
+              <span className="text-gray-400 text-sm uppercase tracking-wider">Image slot</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Types of Life Insurance - White */}
+      <section className="bg-white py-20">
+        <div className="max-w-5xl mx-auto px-6">
+          <h2 className="text-4xl md:text-5xl font-semibold text-gray-900 mb-6 leading-tight">
+            Types of Life Insurance Used in End of Life Planning
+          </h2>
+          <p className="text-gray-700 text-lg leading-relaxed mb-16 max-w-3xl">
+            Life insurance is not one size fits all. Common options include:
+          </p>
+          <div className="grid md:grid-cols-3 gap-10 mb-16">
+            <div>
+              <h3 className="text-2xl font-semibold text-gray-900 mb-6">Permanent Life Insurance</h3>
+              <ul className="space-y-4">
+                <li className="text-gray-700 leading-relaxed">Provides lifelong coverage</li>
+                <li className="text-gray-700 leading-relaxed">Often used to cover final expenses or estate taxes</li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-2xl font-semibold text-gray-900 mb-6">Term Life Insurance</h3>
+              <ul className="space-y-4">
+                <li className="text-gray-700 leading-relaxed">Covers a specific period of time</li>
+                <li className="text-gray-700 leading-relaxed">Often used to protect income or pay off debts</li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-2xl font-semibold text-gray-900 mb-6">Final Expense or Burial Insurance</h3>
+              <ul className="space-y-4">
+                <li className="text-gray-700 leading-relaxed">Designed specifically for funeral and medical costs</li>
+                <li className="text-gray-700 leading-relaxed">Typically easier to qualify for later in life</li>
+              </ul>
+            </div>
+          </div>
+          <p className="text-gray-700 text-lg leading-relaxed max-w-3xl">
+            A licensed insurance professional helps families understand which option aligns best with their goals and circumstances.
+          </p>
+        </div>
+      </section>
+
+      {/* What Life Insurance Is Not - Cream */}
+      <section className="bg-[#faf8f3] py-20">
+        <div className="max-w-5xl mx-auto px-6">
+          <h2 className="text-4xl md:text-5xl font-semibold text-gray-900 mb-8 leading-tight">
+            What Life Insurance Is Not
+          </h2>
+          <p className="text-gray-700 text-lg leading-relaxed mb-8">
+            Life insurance is not:
+          </p>
+          <ul className="space-y-5 mb-10">
+            <li className="flex items-start">
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+              <span className="text-gray-700 text-lg leading-relaxed">Only for families with children</span>
+            </li>
+            <li className="flex items-start">
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+              <span className="text-gray-700 text-lg leading-relaxed">Only for high income earners</span>
+            </li>
+            <li className="flex items-start">
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+              <span className="text-gray-700 text-lg leading-relaxed">A replacement for estate planning</span>
+            </li>
+            <li className="flex items-start">
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+              <span className="text-gray-700 text-lg leading-relaxed">A product you must commit to immediately</span>
+            </li>
+          </ul>
+          <p className="text-gray-700 text-lg leading-relaxed">
+            A consultation is meant to be educational, not transactional.
+          </p>
+        </div>
+      </section>
+
+      {/* Who Should Consider - White */}
+      <section className="bg-white py-20">
+        <div className="max-w-5xl mx-auto px-6">
+          <h2 className="text-4xl md:text-5xl font-semibold text-gray-900 mb-8 leading-tight">
+            Who Should Consider Life Insurance
+          </h2>
+          <p className="text-gray-700 text-lg leading-relaxed mb-8">
+            Life insurance is commonly considered by:
+          </p>
+          <ul className="space-y-5 mb-10">
+            <li className="flex items-start">
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+              <span className="text-gray-700 text-lg leading-relaxed">Individuals planning for funeral costs</span>
+            </li>
+            <li className="flex items-start">
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+              <span className="text-gray-700 text-lg leading-relaxed">Parents or caregivers</span>
+            </li>
+            <li className="flex items-start">
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+              <span className="text-gray-700 text-lg leading-relaxed">Homeowners with outstanding mortgages</span>
+            </li>
+            <li className="flex items-start">
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+              <span className="text-gray-700 text-lg leading-relaxed">Business owners</span>
+            </li>
+            <li className="flex items-start">
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+              <span className="text-gray-700 text-lg leading-relaxed">Anyone who wants to protect loved ones financially</span>
+            </li>
+          </ul>
+          <p className="text-gray-700 text-lg leading-relaxed mb-8">
+            Planning early often provides more options and affordability.
+          </p>
+          <button
+            onClick={navigateToSearch}
+            className="bg-[#1A1A1A] text-white px-8 py-4 rounded-xl hover:bg-[#1A1A1A]/90 transition-all shadow-sm text-lg font-medium"
+          >
+            Find care
+          </button>
+        </div>
+      </section>
+
+      {/* How Soradin Helps - Cream */}
+      <section className="bg-[#faf8f3] py-20">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="grid md:grid-cols-2 gap-16 items-start">
+            <div className="rounded-xl overflow-hidden shadow-lg bg-[#e8e6e1] min-h-[400px] md:min-h-[500px] flex items-center justify-center">
+              <span className="text-gray-400 text-sm uppercase tracking-wider">Image slot</span>
+            </div>
+            <div>
+              <h2 className="text-4xl md:text-5xl font-semibold text-gray-900 mb-8 leading-tight">
+                How Soradin Helps
+              </h2>
+              <p className="text-gray-700 text-lg leading-relaxed mb-8">
+                Soradin connects families with verified life insurance professionals who specialize in end of life and estate related planning.
+              </p>
+              <p className="text-gray-700 text-lg leading-relaxed mb-8">
+                Through Soradin, you can:
+              </p>
+              <ul className="space-y-5 mb-10">
+                <li className="flex items-start">
+                  <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+                  <span className="text-gray-700 text-lg leading-relaxed">Review broker profiles and experience</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+                  <span className="text-gray-700 text-lg leading-relaxed">Request virtual or in person consultations</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+                  <span className="text-gray-700 text-lg leading-relaxed">Ask questions without pressure</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+                  <span className="text-gray-700 text-lg leading-relaxed">Work with licensed professionals</span>
+                </li>
+              </ul>
+              <p className="text-gray-700 text-lg leading-relaxed">
+                Every insurance professional on Soradin is reviewed to ensure proper licensing and ethical standards.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Financial Protection With Purpose - White */}
+      <section className="bg-white py-20">
+        <div className="max-w-4xl mx-auto px-6 text-center">
+          <h2 className="text-4xl md:text-5xl font-semibold text-gray-900 mb-8 leading-tight">
+            Financial Protection With Purpose
+          </h2>
+          <p className="text-gray-700 text-xl leading-relaxed mb-6">
+            Life insurance is not about fear.
+          </p>
+          <p className="text-gray-700 text-xl leading-relaxed mb-6">
+            It is about responsibility, preparation, and care.
+          </p>
+          <p className="text-gray-700 text-lg leading-relaxed max-w-3xl mx-auto">
+            When used thoughtfully, it provides families with security, dignity, and peace of mind when they need it most.
+          </p>
+        </div>
+      </section>
+        </>
+      )}
 
       <section
         id="panel-financial"
