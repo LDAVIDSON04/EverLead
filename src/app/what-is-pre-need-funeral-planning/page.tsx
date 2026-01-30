@@ -14,6 +14,12 @@ const TABS = [
 
 type TabId = (typeof TABS)[number]["id"];
 
+const TAB_CTA = {
+  estate: { specialist: "estate lawyer", searchQuery: "estate+lawyer" },
+  insurance: { specialist: "life insurance professional", searchQuery: "life+insurance" },
+  financial: { specialist: "financial advisor", searchQuery: "financial+advisor" },
+} as const;
+
 export default function WhatIsPreNeedFuneralPlanningPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabId>("funeral");
@@ -322,12 +328,6 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
               <p className="text-gray-700 text-lg leading-relaxed mb-8">
                 There is no perfect time to start. The right time is when you want your wishes clearly documented.
               </p>
-              <button
-                onClick={navigateToSearch}
-                className="bg-[#1A1A1A] text-white px-8 py-4 rounded-xl hover:bg-[#1A1A1A]/90 transition-all shadow-sm text-lg font-medium"
-              >
-                Find care
-              </button>
             </div>
           </div>
         </div>
@@ -384,6 +384,24 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
           <p className="text-gray-700 text-lg leading-relaxed max-w-3xl mx-auto">
             A properly prepared estate plan brings clarity today and confidence for the future.
           </p>
+        </div>
+      </section>
+
+      {/* CTA Section - Estate */}
+      <section className="bg-[#1a3a2e] text-white py-24">
+        <div className="max-w-4xl mx-auto px-6 text-center">
+          <h2 className="text-4xl md:text-5xl font-semibold text-white mb-6 leading-tight">
+            Book Local Experts Today
+          </h2>
+          <p className="text-xl leading-relaxed mb-12 text-gray-100 max-w-2xl mx-auto">
+            Request an in-person consultation with a verified {TAB_CTA.estate.specialist} to explore your options at your own pace.
+          </p>
+          <Link
+            href={`/search?q=${TAB_CTA.estate.searchQuery}`}
+            className="inline-block bg-white text-[#1a3a2e] px-12 py-5 rounded-lg hover:bg-gray-100 transition-all shadow-lg text-lg font-medium"
+          >
+            Book Local Experts Today
+          </Link>
         </div>
       </section>
         </>
@@ -591,12 +609,6 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
               <p className="text-gray-700 text-lg leading-relaxed mb-8">
                 Planning early often provides more options and affordability.
               </p>
-              <button
-                onClick={navigateToSearch}
-                className="bg-[#1A1A1A] text-white px-8 py-4 rounded-xl hover:bg-[#1A1A1A]/90 transition-all shadow-sm text-lg font-medium"
-              >
-                Find care
-              </button>
             </div>
           </div>
         </div>
@@ -664,6 +676,24 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
           <p className="text-gray-700 text-lg leading-relaxed max-w-3xl mx-auto">
             When used thoughtfully, it provides families with security, dignity, and peace of mind when they need it most.
           </p>
+        </div>
+      </section>
+
+      {/* CTA Section - Life Insurance */}
+      <section className="bg-[#1a3a2e] text-white py-24">
+        <div className="max-w-4xl mx-auto px-6 text-center">
+          <h2 className="text-4xl md:text-5xl font-semibold text-white mb-6 leading-tight">
+            Book Local Experts Today
+          </h2>
+          <p className="text-xl leading-relaxed mb-12 text-gray-100 max-w-2xl mx-auto">
+            Request an in-person consultation with a verified {TAB_CTA.insurance.specialist} to explore your options at your own pace.
+          </p>
+          <Link
+            href={`/search?q=${TAB_CTA.insurance.searchQuery}`}
+            className="inline-block bg-white text-[#1a3a2e] px-12 py-5 rounded-lg hover:bg-gray-100 transition-all shadow-lg text-lg font-medium"
+          >
+            Book Local Experts Today
+          </Link>
         </div>
       </section>
         </>
@@ -863,12 +893,6 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
           <p className="text-gray-700 text-lg leading-relaxed mb-8">
             Even modest estates can benefit from proper coordination.
           </p>
-          <button
-            onClick={navigateToSearch}
-            className="bg-[#1A1A1A] text-white px-8 py-4 rounded-xl hover:bg-[#1A1A1A]/90 transition-all shadow-sm text-lg font-medium"
-          >
-            Find care
-          </button>
         </div>
       </section>
 
@@ -934,6 +958,24 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
           <p className="text-gray-700 text-lg leading-relaxed max-w-3xl mx-auto">
             Planning ahead allows you to leave clarity instead of questions.
           </p>
+        </div>
+      </section>
+
+      {/* CTA Section - Financial Advisors */}
+      <section className="bg-[#1a3a2e] text-white py-24">
+        <div className="max-w-4xl mx-auto px-6 text-center">
+          <h2 className="text-4xl md:text-5xl font-semibold text-white mb-6 leading-tight">
+            Book Local Experts Today
+          </h2>
+          <p className="text-xl leading-relaxed mb-12 text-gray-100 max-w-2xl mx-auto">
+            Request an in-person consultation with a verified {TAB_CTA.financial.specialist} to explore your options at your own pace.
+          </p>
+          <Link
+            href={`/search?q=${TAB_CTA.financial.searchQuery}`}
+            className="inline-block bg-white text-[#1a3a2e] px-12 py-5 rounded-lg hover:bg-gray-100 transition-all shadow-lg text-lg font-medium"
+          >
+            Book Local Experts Today
+          </Link>
         </div>
       </section>
         </>
