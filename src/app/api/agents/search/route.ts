@@ -30,7 +30,16 @@ type AgentSearchResult = {
   availabilityLocations: string[];
   availabilityByLocation: Record<string, any>;
   officeLocationCities?: string[];
+  videoSchedule?: Record<string, { enabled: boolean; start: string; end: string }> | null;
 };
+
+// Agent has set video availability if videoSchedule exists and at least one day is enabled
+function hasVideoAvailability(agent: AgentSearchResult): boolean {
+  const vs = agent.videoSchedule;
+  if (!vs || typeof vs !== "object" || Object.keys(vs).length === 0) return false;
+  const days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+  return days.some((day) => vs[day]?.enabled === true);
+}
 
 export async function GET(req: NextRequest) {
   try {
@@ -155,6 +164,7 @@ export async function GET(req: NextRequest) {
           const availability = (metadata as any)?.availability || {};
           const availabilityLocations = availability.locations || [];
           const availabilityByLocation = availability.availabilityByLocation || {};
+          const videoSchedule = availability.videoSchedule || null;
           
           // Get office locations for this agent
           const agentOfficeLocations = (allOfficeLocations || []).filter((loc: any) => loc.agent_id === profile.id);
@@ -197,6 +207,7 @@ export async function GET(req: NextRequest) {
             availabilityByLocation: availabilityByLocation,
             officeLocationCities: officeLocationCities, // Store separately for reference
             officeLocations: agentOfficeLocations, // Store full office location data
+            videoSchedule: videoSchedule && typeof videoSchedule === "object" ? videoSchedule : null,
           };
         } catch (err) {
           console.error(`[AGENT SEARCH] Error mapping agent ${profile.id}:`, err);
@@ -506,7 +517,16 @@ export async function GET(req: NextRequest) {
       }
 
       console.log(`✅ [AGENT SEARCH] After location filter "${location}" (mode=${mode}): ${filtered.length} agents matched`);
+    }
 
+    // Video mode: only show agents who have set video availability (even when no location)
+    if (mode === "video") {
+      const before = filtered.length;
+      filtered = filtered.filter((agent) => hasVideoAvailability(agent));
+      console.log(`✅ [AGENT SEARCH] Video mode: ${filtered.length} agents with video availability (${before} before filter)`);
+    }
+
+    if (location) {
       if (filtered.length === 0) {
         console.warn(`⚠️ [AGENT SEARCH] No agents found for location "${location}". Available locations in system:`,
           agentsWithAvailability.map(a => ({
