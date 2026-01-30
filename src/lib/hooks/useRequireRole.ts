@@ -21,7 +21,7 @@ export function useRequireRole(requiredRole: Role) {
         } = await supabaseClient.auth.getUser();
 
         if (!user) {
-          router.push("/login");
+          router.push("/agent");
           return;
         }
 
@@ -36,7 +36,7 @@ export function useRequireRole(requiredRole: Role) {
 
         if (error) {
           console.error("Error loading profile for role check:", error);
-          router.push("/login");
+          router.push("/agent");
           return;
         }
 
@@ -52,7 +52,7 @@ export function useRequireRole(requiredRole: Role) {
         setLoading(false);
       } catch (err) {
         console.error("Error in useRequireRole:", err);
-        router.push("/login");
+        router.push("/agent");
       }
     }
 

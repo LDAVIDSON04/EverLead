@@ -186,7 +186,7 @@ export default function CreateAccountPage() {
           <div className="text-center text-sm text-gray-700">
             Already have an account?{" "}
             <Link
-              href="/login"
+              href="/agent"
               className="text-black underline hover:text-gray-700"
             >
               Log in
