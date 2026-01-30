@@ -606,8 +606,12 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
       <section className="bg-[#faf8f3] py-20">
         <div className="max-w-6xl mx-auto px-6">
           <div className="grid md:grid-cols-2 gap-16 items-start">
-            <div className="rounded-xl overflow-hidden shadow-lg bg-[#e8e6e1] min-h-[400px] md:min-h-[500px] flex items-center justify-center">
-              <span className="text-gray-400 text-sm uppercase tracking-wider">Image slot</span>
+            <div className="rounded-xl overflow-hidden shadow-lg min-h-[400px] md:min-h-[500px]">
+              <img
+                src="/life-insurance-how-soradin-helps.png"
+                alt="How Soradin helps: verified profiles, virtual and in-person consultations, clear answers, licensed and ethical professionals"
+                className="w-full h-full object-cover min-h-[400px] md:min-h-[500px]"
+              />
             </div>
             <div>
               <h2 className="text-4xl md:text-5xl font-semibold text-gray-900 mb-8 leading-tight">
