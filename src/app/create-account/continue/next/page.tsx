@@ -19,21 +19,21 @@ export default function CreateAccountNextPage() {
   return (
     <div className="min-h-screen bg-white flex flex-col">
       {/* Header */}
-      <div className="px-8 py-6">
+      <div className="px-8 pt-8 pb-6">
         <Link href="/" className="flex items-center gap-2">
           <Image
             src="/Soradin.png"
             alt="Soradin"
-            width={32}
-            height={32}
-            className="h-8 w-8 object-contain"
+            width={96}
+            height={96}
+            className="h-24 w-24 object-contain"
           />
-          <span className="font-semibold">Soradin</span>
+          <span className="font-semibold text-black">Soradin</span>
         </Link>
       </div>
 
       {/* Form Container */}
-      <div className="max-w-[800px] mx-auto px-8 py-12 flex-1">
+      <div className="max-w-[1000px] mx-auto px-8 py-12 flex-1 w-full">
         <h1 className="text-3xl mb-8">Create an account</h1>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -121,7 +121,7 @@ export default function CreateAccountNextPage() {
           {/* Log in link */}
           <div className="text-center text-sm">
             Already have an account?{" "}
-            <Link href="/agent" className="underline">
+            <Link href="/agent" className="underline text-black hover:text-gray-700">
               Log in
             </Link>
           </div>
