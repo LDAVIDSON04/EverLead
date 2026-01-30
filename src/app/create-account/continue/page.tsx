@@ -833,24 +833,13 @@ export default function CreateAccountContinuePage() {
             </>
           )}
 
-          {/* Back & Next */}
-          <div className="pt-4">
-            <div className="flex justify-between gap-4">
-              <button
-                type="button"
-                onClick={() => router.push("/create-account")}
-                className="px-8 bg-white text-black border border-gray-300 hover:bg-gray-50 h-12 rounded-md text-sm font-medium"
-              >
-                Back
-              </button>
-              <button
-                type="submit"
-                className="px-8 bg-black text-white hover:bg-black/90 h-12 rounded-md text-sm font-medium"
-              >
-                Next
-              </button>
-            </div>
-          </div>
+          {/* Continue button */}
+          <button
+            type="submit"
+            className="w-full bg-black hover:bg-gray-800 text-white font-medium py-3 px-4 rounded-md transition-colors mt-4"
+          >
+            Continue
+          </button>
         </form>
 
         <div className="text-center mt-8 mb-20">
