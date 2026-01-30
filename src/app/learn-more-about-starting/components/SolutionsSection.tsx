@@ -28,9 +28,9 @@ export function SolutionsSection() {
             <Link
               href="/create-account"
               className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/90 transition-all shrink-0 text-sm font-medium w-fit"
-              aria-label="Learn more about Soradin Marketplace"
+              aria-label="Create account"
             >
-              <span>Learn more</span>
+              <span>Create account</span>
               <ChevronRight className="w-5 h-5 shrink-0" />
             </Link>
           </div>
@@ -69,9 +69,9 @@ export function SolutionsSection() {
             <Link
               href="/create-account"
               className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/90 transition-all shrink-0 text-sm font-medium w-fit"
-              aria-label="Learn more about Website scheduling"
+              aria-label="Join today"
             >
-              <span>Learn more</span>
+              <span>Join today</span>
               <ChevronRight className="w-5 h-5 shrink-0" />
             </Link>
           </div>
