@@ -1,14 +1,25 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
+const TABS = [
+  { id: "funeral", label: "Funeral pre planning" },
+  { id: "estate", label: "Estate lawyers and wills" },
+  { id: "insurance", label: "Life Insurance" },
+  { id: "financial", label: "Financial advisors" },
+] as const;
+
+type TabId = (typeof TABS)[number]["id"];
+
 export default function WhatIsPreNeedFuneralPlanningPage() {
   const router = useRouter();
+  const [activeTab, setActiveTab] = useState<TabId>("funeral");
 
   const navigateToSearch = () => {
-    router.push('/search');
+    router.push("/search");
   };
 
   return (
@@ -26,8 +37,8 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
             />
             <span className="text-2xl font-semibold text-[#1A1A1A]">Soradin</span>
           </Link>
-          <Link 
-            href="/" 
+          <Link
+            href="/"
             className="text-[#1A1A1A] hover:text-[#1A1A1A] transition-colors text-lg font-medium"
           >
             Home
@@ -35,13 +46,47 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
         </div>
       </header>
 
-      {/* Introduction - White Background */}
-      <section className="bg-white py-20">
+      {/* Tab bar */}
+      <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
+        <div className="max-w-6xl mx-auto px-6">
+          <nav className="flex gap-0" role="tablist" aria-label="Planning topics">
+            {TABS.map((tab) => (
+              <button
+                key={tab.id}
+                role="tab"
+                aria-selected={activeTab === tab.id}
+                aria-controls={`panel-${tab.id}`}
+                id={`tab-${tab.id}`}
+                onClick={() => setActiveTab(tab.id)}
+                className={`
+                  relative px-6 py-5 text-base font-medium transition-colors whitespace-nowrap
+                  focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a3a2e] focus-visible:ring-offset-2
+                  ${activeTab === tab.id
+                    ? "text-[#1a3a2e] border-b-2 border-[#1a3a2e] bg-[#faf8f3]"
+                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                  }
+                `}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </nav>
+        </div>
+      </div>
+
+      {/* Tab panels */}
+      <section
+        id="panel-funeral"
+        role="tabpanel"
+        aria-labelledby="tab-funeral"
+        hidden={activeTab !== "funeral"}
+        className="bg-white py-20"
+      >
         <div className="max-w-6xl mx-auto px-6">
           <div className="grid md:grid-cols-2 gap-16 items-start">
             <div className="rounded-xl overflow-hidden shadow-lg">
-              <Image 
-                src="/Liam_Davidson_Can_you_make_them_look_like_business_people_fa0c6ee9-eee5-43bd-b48a-bbaadc8f2153 (1).jpg" 
+              <Image
+                src="/Liam_Davidson_Can_you_make_them_look_like_business_people_fa0c6ee9-eee5-43bd-b48a-bbaadc8f2153 (1).jpg"
                 alt="Professional consultation with funeral planning specialists"
                 width={600}
                 height={600}
@@ -63,6 +108,108 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
         </div>
       </section>
 
+      <section
+        id="panel-estate"
+        role="tabpanel"
+        aria-labelledby="tab-estate"
+        hidden={activeTab !== "estate"}
+        className="bg-white py-20"
+      >
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="grid md:grid-cols-2 gap-16 items-start">
+            <div className="rounded-xl overflow-hidden shadow-lg bg-[#faf8f3] min-h-[400px] md:min-h-[500px] flex items-center justify-center">
+              <span className="text-gray-400 text-sm uppercase tracking-wider">Estate planning</span>
+            </div>
+            <div className="pt-20">
+              <h1 className="text-5xl md:text-6xl font-semibold text-gray-900 mb-8 leading-tight">
+                Estate Lawyers and Wills
+              </h1>
+              <p className="text-gray-700 text-lg leading-relaxed mb-8">
+                Estate planning with a qualified lawyer helps you protect your assets, name guardians for dependents, and ensure your wishes are carried out. A valid will and related documents reduce confusion and conflict for your family and give you peace of mind.
+              </p>
+              <p className="text-gray-700 text-lg leading-relaxed mb-8">
+                Rather than leaving critical decisions to the courts or to guesswork, working with an estate lawyer lets you document your intentions clearly, understand tax and probate implications, and plan for incapacity as well as for the transfer of your estate.
+              </p>
+              <button
+                onClick={navigateToSearch}
+                className="bg-[#1A1A1A] text-white px-8 py-4 rounded-xl hover:bg-[#1A1A1A]/90 transition-all shadow-sm text-lg font-medium"
+              >
+                Find care
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section
+        id="panel-insurance"
+        role="tabpanel"
+        aria-labelledby="tab-insurance"
+        hidden={activeTab !== "insurance"}
+        className="bg-white py-20"
+      >
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="grid md:grid-cols-2 gap-16 items-start">
+            <div className="rounded-xl overflow-hidden shadow-lg bg-[#faf8f3] min-h-[400px] md:min-h-[500px] flex items-center justify-center">
+              <span className="text-gray-400 text-sm uppercase tracking-wider">Life insurance</span>
+            </div>
+            <div className="pt-20">
+              <h1 className="text-5xl md:text-6xl font-semibold text-gray-900 mb-8 leading-tight">
+                Life Insurance
+              </h1>
+              <p className="text-gray-700 text-lg leading-relaxed mb-8">
+                Life insurance is a way to provide for your loved ones and cover final expenses, debts, or income replacement. Understanding your options with a licensed advisor helps you choose coverage that fits your goals and budget.
+              </p>
+              <p className="text-gray-700 text-lg leading-relaxed mb-8">
+                Rather than putting off the conversation, planning ahead lets you compare products, lock in rates where appropriate, and ensure your family has clear information about your coverage and how to make a claim when the time comes.
+              </p>
+              <button
+                onClick={navigateToSearch}
+                className="bg-[#1A1A1A] text-white px-8 py-4 rounded-xl hover:bg-[#1A1A1A]/90 transition-all shadow-sm text-lg font-medium"
+              >
+                Find care
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section
+        id="panel-financial"
+        role="tabpanel"
+        aria-labelledby="tab-financial"
+        hidden={activeTab !== "financial"}
+        className="bg-white py-20"
+      >
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="grid md:grid-cols-2 gap-16 items-start">
+            <div className="rounded-xl overflow-hidden shadow-lg bg-[#faf8f3] min-h-[400px] md:min-h-[500px] flex items-center justify-center">
+              <span className="text-gray-400 text-sm uppercase tracking-wider">Financial planning</span>
+            </div>
+            <div className="pt-20">
+              <h1 className="text-5xl md:text-6xl font-semibold text-gray-900 mb-8 leading-tight">
+                Financial Advisors
+              </h1>
+              <p className="text-gray-700 text-lg leading-relaxed mb-8">
+                A financial advisor can help you plan for retirement, education, and legacy goals while managing risk and tax efficiency. Whether you are building savings or preparing for later life, a qualified advisor can tailor a strategy to your situation.
+              </p>
+              <p className="text-gray-700 text-lg leading-relaxed mb-8">
+                Rather than navigating investments and estate implications alone, working with a regulated professional helps you document your objectives, understand your options, and adjust your plan as your life and regulations change.
+              </p>
+              <button
+                onClick={navigateToSearch}
+                className="bg-[#1A1A1A] text-white px-8 py-4 rounded-xl hover:bg-[#1A1A1A]/90 transition-all shadow-sm text-lg font-medium"
+              >
+                Find care
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Rest of page (funeral planning only) */}
+      {activeTab === "funeral" && (
+        <>
       {/* Why People Choose - Cream Background */}
       <section className="bg-[#faf8f3] py-20">
         <div className="max-w-6xl mx-auto px-6">
@@ -418,6 +565,8 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
           </Link>
         </div>
       </section>
+        </>
+      )}
     </div>
   );
 }
