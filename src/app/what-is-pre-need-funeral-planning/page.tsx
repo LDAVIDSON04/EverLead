@@ -52,10 +52,14 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
         </div>
       </header>
 
-      {/* Tab bar */}
+      {/* Tab bar: 2x2 grid on mobile (funeral+lawyer, finance+insurance), single row on desktop */}
       <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-6">
-          <nav className="flex gap-0" role="tablist" aria-label="Planning topics">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          <nav
+            className="grid grid-cols-2 md:flex md:flex-row gap-0"
+            role="tablist"
+            aria-label="Planning topics"
+          >
             {TABS.map((tab) => (
               <button
                 key={tab.id}
@@ -65,10 +69,16 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
                 id={`tab-${tab.id}`}
                 onClick={() => setActiveTab(tab.id)}
                 className={`
-                  relative px-6 py-5 text-base font-medium transition-colors whitespace-nowrap
+                  relative px-3 py-4 md:px-6 md:py-5 text-sm md:text-base font-medium transition-colors
+                  text-left md:text-center whitespace-normal md:whitespace-nowrap
+                  border-b border-gray-200 md:border-b-0
                   focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a3a2e] focus-visible:ring-offset-2
+                  ${tab.id === "funeral" ? "order-1 md:order-1" : ""}
+                  ${tab.id === "estate" ? "order-2 md:order-2" : ""}
+                  ${tab.id === "insurance" ? "order-4 md:order-3" : ""}
+                  ${tab.id === "financial" ? "order-3 md:order-4" : ""}
                   ${activeTab === tab.id
-                    ? "text-[#1a3a2e] border-b-2 border-[#1a3a2e] bg-[#faf8f3]"
+                    ? "text-[#1a3a2e] border-b-2 border-[#1a3a2e] bg-[#faf8f3] -mb-px md:border-b-2"
                     : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
                   }
                 `}
