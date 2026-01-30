@@ -632,6 +632,7 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
         </>
       )}
 
+      {/* Financial Advisors – full panel */}
       <section
         id="panel-financial"
         role="tabpanel"
@@ -641,29 +642,253 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
       >
         <div className="max-w-6xl mx-auto px-6">
           <div className="grid md:grid-cols-2 gap-16 items-start">
-            <div className="rounded-xl overflow-hidden shadow-lg bg-[#faf8f3] min-h-[400px] md:min-h-[500px] flex items-center justify-center">
-              <span className="text-gray-400 text-sm uppercase tracking-wider">Financial planning</span>
+            <div className="rounded-xl overflow-hidden shadow-lg bg-[#e8e6e1] min-h-[400px] md:min-h-[500px] flex items-center justify-center">
+              <span className="text-gray-400 text-sm uppercase tracking-wider">Image slot</span>
             </div>
             <div className="pt-20">
               <h1 className="text-5xl md:text-6xl font-semibold text-gray-900 mb-8 leading-tight">
-                Financial Advisors
+                What Is Financial Planning for End of Life?
               </h1>
               <p className="text-gray-700 text-lg leading-relaxed mb-8">
-                A financial advisor can help you plan for retirement, education, and legacy goals while managing risk and tax efficiency. Whether you are building savings or preparing for later life, a qualified advisor can tailor a strategy to your situation.
+                Financial planning for end of life focuses on organizing assets, minimizing taxes, and ensuring a smooth transfer of wealth according to personal wishes.
               </p>
               <p className="text-gray-700 text-lg leading-relaxed mb-8">
-                Rather than navigating investments and estate implications alone, working with a regulated professional helps you document your objectives, understand your options, and adjust your plan as your life and regulations change.
+                A financial advisor helps families coordinate the financial side of estate planning so that legal documents, beneficiary designations, and assets work together.
               </p>
-              <button
-                onClick={navigateToSearch}
-                className="bg-[#1A1A1A] text-white px-8 py-4 rounded-xl hover:bg-[#1A1A1A]/90 transition-all shadow-sm text-lg font-medium"
-              >
-                Find care
-              </button>
+              <p className="text-gray-700 text-lg leading-relaxed">
+                Rather than leaving finances scattered and unclear, financial planning brings structure, efficiency, and long term clarity.
+              </p>
             </div>
           </div>
         </div>
       </section>
+
+      {activeTab === "financial" && (
+        <>
+      {/* Why Families Work With Financial Advisors - Cream */}
+      <section className="bg-[#faf8f3] py-20">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="grid md:grid-cols-2 gap-16 items-start">
+            <div className="order-2 md:order-1">
+              <h2 className="text-4xl md:text-5xl font-semibold text-gray-900 mb-8 leading-tight">
+                Why Families Work With Financial Advisors
+              </h2>
+              <p className="text-gray-700 text-lg leading-relaxed mb-8">
+                End of life planning often involves complex financial decisions that extend beyond a will.
+              </p>
+              <p className="text-gray-700 text-lg leading-relaxed mb-8">
+                Families work with financial advisors because they help:
+              </p>
+              <ul className="space-y-5 mb-10">
+                <li className="flex items-start">
+                  <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+                  <span className="text-gray-700 text-lg leading-relaxed">Reduce tax burdens on estates</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+                  <span className="text-gray-700 text-lg leading-relaxed">Coordinate beneficiary designations</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+                  <span className="text-gray-700 text-lg leading-relaxed">Organize financial accounts and documentation</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+                  <span className="text-gray-700 text-lg leading-relaxed">Protect assets for future generations</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+                  <span className="text-gray-700 text-lg leading-relaxed">Support heirs who may lack financial experience</span>
+                </li>
+              </ul>
+              <p className="text-gray-700 text-lg leading-relaxed italic">
+                Professional guidance helps prevent costly mistakes and unnecessary stress.
+              </p>
+            </div>
+            <div className="rounded-xl overflow-hidden shadow-lg bg-[#e8e6e1] min-h-[400px] md:min-h-[500px] flex items-center justify-center order-1 md:order-2">
+              <span className="text-gray-400 text-sm uppercase tracking-wider">Image slot</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* What Financial Advisors Help With - White */}
+      <section className="bg-white py-20">
+        <div className="max-w-5xl mx-auto px-6">
+          <h2 className="text-4xl md:text-5xl font-semibold text-gray-900 mb-6 leading-tight">
+            What Financial Advisors Help With
+          </h2>
+          <p className="text-gray-700 text-lg leading-relaxed mb-16 max-w-3xl">
+            Financial advisors often support families by addressing:
+          </p>
+          <div className="grid md:grid-cols-3 gap-10 mb-16">
+            <div>
+              <h3 className="text-2xl font-semibold text-gray-900 mb-6">Estate and Legacy Planning</h3>
+              <ul className="space-y-4">
+                <li className="text-gray-700 leading-relaxed">Coordinating assets with legal documents</li>
+                <li className="text-gray-700 leading-relaxed">Structuring inheritances</li>
+                <li className="text-gray-700 leading-relaxed">Planning charitable giving</li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-2xl font-semibold text-gray-900 mb-6">Tax Efficiency</h3>
+              <ul className="space-y-4">
+                <li className="text-gray-700 leading-relaxed">Reducing capital gains and probate costs</li>
+                <li className="text-gray-700 leading-relaxed">Planning for business succession</li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-2xl font-semibold text-gray-900 mb-6">Support for Beneficiaries</h3>
+              <ul className="space-y-4">
+                <li className="text-gray-700 leading-relaxed">Guidance for heirs receiving assets</li>
+                <li className="text-gray-700 leading-relaxed">Long term financial education</li>
+              </ul>
+            </div>
+          </div>
+          <p className="text-gray-700 text-lg leading-relaxed max-w-3xl">
+            An advisor works alongside lawyers and insurance professionals to create a complete plan.
+          </p>
+        </div>
+      </section>
+
+      {/* What Financial Planning Is Not - Cream */}
+      <section className="bg-[#faf8f3] py-20">
+        <div className="max-w-5xl mx-auto px-6">
+          <h2 className="text-4xl md:text-5xl font-semibold text-gray-900 mb-8 leading-tight">
+            What Financial Planning Is Not
+          </h2>
+          <p className="text-gray-700 text-lg leading-relaxed mb-8">
+            Financial planning is not:
+          </p>
+          <ul className="space-y-5 mb-10">
+            <li className="flex items-start">
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+              <span className="text-gray-700 text-lg leading-relaxed">Only for wealthy families</span>
+            </li>
+            <li className="flex items-start">
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+              <span className="text-gray-700 text-lg leading-relaxed">Only about investments</span>
+            </li>
+            <li className="flex items-start">
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+              <span className="text-gray-700 text-lg leading-relaxed">A replacement for legal advice</span>
+            </li>
+            <li className="flex items-start">
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+              <span className="text-gray-700 text-lg leading-relaxed">Something done only after death</span>
+            </li>
+          </ul>
+          <p className="text-gray-700 text-lg leading-relaxed">
+            It is a proactive process designed to prevent confusion and loss.
+          </p>
+        </div>
+      </section>
+
+      {/* Who Benefits From Financial Planning - White */}
+      <section className="bg-white py-20">
+        <div className="max-w-5xl mx-auto px-6">
+          <h2 className="text-4xl md:text-5xl font-semibold text-gray-900 mb-8 leading-tight">
+            Who Benefits From Financial Planning
+          </h2>
+          <p className="text-gray-700 text-lg leading-relaxed mb-8">
+            Financial planning is valuable for:
+          </p>
+          <ul className="space-y-5 mb-10">
+            <li className="flex items-start">
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+              <span className="text-gray-700 text-lg leading-relaxed">Individuals with savings or investments</span>
+            </li>
+            <li className="flex items-start">
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+              <span className="text-gray-700 text-lg leading-relaxed">Homeowners</span>
+            </li>
+            <li className="flex items-start">
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+              <span className="text-gray-700 text-lg leading-relaxed">Business owners</span>
+            </li>
+            <li className="flex items-start">
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+              <span className="text-gray-700 text-lg leading-relaxed">Families concerned about tax exposure</span>
+            </li>
+            <li className="flex items-start">
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+              <span className="text-gray-700 text-lg leading-relaxed">Anyone planning a thoughtful legacy</span>
+            </li>
+          </ul>
+          <p className="text-gray-700 text-lg leading-relaxed mb-8">
+            Even modest estates can benefit from proper coordination.
+          </p>
+          <button
+            onClick={navigateToSearch}
+            className="bg-[#1A1A1A] text-white px-8 py-4 rounded-xl hover:bg-[#1A1A1A]/90 transition-all shadow-sm text-lg font-medium"
+          >
+            Find care
+          </button>
+        </div>
+      </section>
+
+      {/* How Soradin Helps - Cream */}
+      <section className="bg-[#faf8f3] py-20">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="grid md:grid-cols-2 gap-16 items-start">
+            <div className="rounded-xl overflow-hidden shadow-lg bg-[#e8e6e1] min-h-[400px] md:min-h-[500px] flex items-center justify-center">
+              <span className="text-gray-400 text-sm uppercase tracking-wider">Image slot</span>
+            </div>
+            <div>
+              <h2 className="text-4xl md:text-5xl font-semibold text-gray-900 mb-8 leading-tight">
+                How Soradin Helps
+              </h2>
+              <p className="text-gray-700 text-lg leading-relaxed mb-8">
+                Soradin connects families with verified financial advisors who focus on estate and end of life planning.
+              </p>
+              <p className="text-gray-700 text-lg leading-relaxed mb-8">
+                Through Soradin, you can:
+              </p>
+              <ul className="space-y-5 mb-10">
+                <li className="flex items-start">
+                  <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+                  <span className="text-gray-700 text-lg leading-relaxed">View advisor profiles and specialties</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+                  <span className="text-gray-700 text-lg leading-relaxed">Request consultations</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+                  <span className="text-gray-700 text-lg leading-relaxed">Understand how your finances fit into your overall plan</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+                  <span className="text-gray-700 text-lg leading-relaxed">Work with professionals who meet credentialing standards</span>
+                </li>
+              </ul>
+              <p className="text-gray-700 text-lg leading-relaxed">
+                Soradin allows families to approach financial planning with clarity rather than uncertainty.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* A Clear Path Forward - White */}
+      <section className="bg-white py-20">
+        <div className="max-w-4xl mx-auto px-6 text-center">
+          <h2 className="text-4xl md:text-5xl font-semibold text-gray-900 mb-8 leading-tight">
+            A Clear Path Forward
+          </h2>
+          <p className="text-gray-700 text-xl leading-relaxed mb-6">
+            End of life financial planning is about alignment.
+          </p>
+          <p className="text-gray-700 text-xl leading-relaxed mb-6">
+            When legal, financial, and insurance plans work together, families experience fewer delays, fewer conflicts, and greater peace of mind.
+          </p>
+          <p className="text-gray-700 text-lg leading-relaxed max-w-3xl mx-auto">
+            Planning ahead allows you to leave clarity instead of questions.
+          </p>
+        </div>
+      </section>
+        </>
+      )}
 
       {/* Rest of page (funeral planning only) */}
       {activeTab === "funeral" && (
