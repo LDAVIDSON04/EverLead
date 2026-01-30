@@ -660,7 +660,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
 
       {/* Pre-arrangements – card left, image right (Empathy-style) – Estate Planning */}
       <section className="bg-white py-16 md:py-24 px-4 md:px-6">
-        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 min-h-[min(80vh,640px)] md:min-h-[560px] gap-0 overflow-hidden rounded-2xl shadow-lg md:shadow-xl border-2 border-[#1A1A1A]">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 min-h-[min(80vh,640px)] md:min-h-[560px] gap-0 overflow-hidden rounded-2xl shadow-lg md:shadow-xl border-2 border-[#1A1A1A] transition-all duration-300 ease-out hover:scale-[1.02] hover:shadow-2xl hover:-translate-y-1">
           {/* Left: card */}
           <div className="flex flex-col justify-center p-8 md:p-12 lg:p-16 bg-white rounded-t-2xl md:rounded-l-2xl md:rounded-tr-none order-2 md:order-1">
             <p className="text-sm font-medium text-[#1A1A1A]/60 uppercase tracking-wider mb-2">Planning ahead</p>
