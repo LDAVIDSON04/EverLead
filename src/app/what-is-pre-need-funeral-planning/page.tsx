@@ -108,6 +108,7 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
         </div>
       </section>
 
+      {/* Estate lawyers and wills – full panel */}
       <section
         id="panel-estate"
         role="tabpanel"
@@ -117,29 +118,262 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
       >
         <div className="max-w-6xl mx-auto px-6">
           <div className="grid md:grid-cols-2 gap-16 items-start">
-            <div className="rounded-xl overflow-hidden shadow-lg bg-[#faf8f3] min-h-[400px] md:min-h-[500px] flex items-center justify-center">
-              <span className="text-gray-400 text-sm uppercase tracking-wider">Estate planning</span>
+            <div className="rounded-xl overflow-hidden shadow-lg min-h-[400px] md:min-h-[500px] bg-[#faf8f3] flex items-center justify-center">
+              {/* Image slot: replace src with your estate planning image path */}
+              <img
+                src="/estate-planning-image.jpg"
+                alt="Estate planning and wills"
+                className="w-full h-full object-cover min-h-[400px] md:min-h-[500px]"
+                onError={(e) => {
+                  e.currentTarget.style.display = "none";
+                  e.currentTarget.nextElementSibling?.classList.remove("hidden");
+                }}
+              />
+              <span className="hidden text-gray-400 text-sm uppercase tracking-wider p-8 text-center">Estate planning</span>
             </div>
             <div className="pt-20">
               <h1 className="text-5xl md:text-6xl font-semibold text-gray-900 mb-8 leading-tight">
-                Estate Lawyers and Wills
+                What Is Estate Planning and Why Are Wills Important?
               </h1>
               <p className="text-gray-700 text-lg leading-relaxed mb-8">
-                Estate planning with a qualified lawyer helps you protect your assets, name guardians for dependents, and ensure your wishes are carried out. A valid will and related documents reduce confusion and conflict for your family and give you peace of mind.
+                Estate planning is the process of legally documenting how your assets, responsibilities, and wishes should be handled if you pass away or become unable to make decisions for yourself.
               </p>
               <p className="text-gray-700 text-lg leading-relaxed mb-8">
-                Rather than leaving critical decisions to the courts or to guesswork, working with an estate lawyer lets you document your intentions clearly, understand tax and probate implications, and plan for incapacity as well as for the transfer of your estate.
+                At the center of estate planning is a will. A will clearly outlines who should receive your assets, who will act on your behalf, and how important decisions should be carried out. Without proper documentation, these decisions are left to provincial laws rather than personal choice.
               </p>
-              <button
-                onClick={navigateToSearch}
-                className="bg-[#1A1A1A] text-white px-8 py-4 rounded-xl hover:bg-[#1A1A1A]/90 transition-all shadow-sm text-lg font-medium"
-              >
-                Find care
-              </button>
+              <p className="text-gray-700 text-lg leading-relaxed mb-8">
+                Working with an estate lawyer ensures your wishes are legally binding, clearly written, and properly executed.
+              </p>
+              <p className="text-gray-700 text-lg leading-relaxed">
+                Rather than leaving loved ones to navigate complex legal systems during a difficult time, estate planning provides clarity, protection, and peace of mind.
+              </p>
             </div>
           </div>
         </div>
       </section>
+
+      {activeTab === "estate" && (
+        <>
+      {/* Why Families Create Wills - Cream */}
+      <section className="bg-[#faf8f3] py-20">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="grid md:grid-cols-2 gap-16 items-start">
+            <div className="order-2 md:order-1">
+              <h2 className="text-4xl md:text-5xl font-semibold text-gray-900 mb-8 leading-tight">
+                Why Families Create Wills and Work With Estate Lawyers
+              </h2>
+              <p className="text-gray-700 text-lg leading-relaxed mb-8">
+                Many families delay estate planning because it feels overwhelming or uncomfortable. Unfortunately, waiting often leads to confusion, delays, and conflict later.
+              </p>
+              <p className="text-gray-700 text-lg leading-relaxed mb-8">
+                Families choose to work with estate lawyers because it allows them to:
+              </p>
+              <ul className="space-y-5 mb-10">
+                <li className="flex items-start">
+                  <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+                  <span className="text-gray-700 text-lg leading-relaxed">Ensure assets are distributed according to their wishes</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+                  <span className="text-gray-700 text-lg leading-relaxed">Prevent legal disputes and unnecessary court involvement</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+                  <span className="text-gray-700 text-lg leading-relaxed">Appoint guardians for minor children or dependents</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+                  <span className="text-gray-700 text-lg leading-relaxed">Plan for incapacity with powers of attorney and healthcare directives</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+                  <span className="text-gray-700 text-lg leading-relaxed">Reduce stress and uncertainty for loved ones</span>
+                </li>
+              </ul>
+              <p className="text-gray-700 text-lg leading-relaxed italic">
+                An estate lawyer helps translate personal wishes into legally sound documents that stand up when they are needed most.
+              </p>
+            </div>
+            <div className="rounded-xl overflow-hidden shadow-lg bg-[#e8e6e1] min-h-[400px] md:min-h-[500px] flex items-center justify-center order-1 md:order-2">
+              <span className="text-gray-400 text-sm uppercase tracking-wider">Image slot</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* What Is Covered - White */}
+      <section className="bg-white py-20">
+        <div className="max-w-5xl mx-auto px-6">
+          <h2 className="text-4xl md:text-5xl font-semibold text-gray-900 mb-6 leading-tight">
+            What Is Covered in Estate Planning
+          </h2>
+          <p className="text-gray-700 text-lg leading-relaxed mb-16 max-w-3xl">
+            Estate planning typically involves more than writing a will. It is a coordinated process that may include:
+          </p>
+          <div className="grid md:grid-cols-3 gap-10 mb-16">
+            <div>
+              <h3 className="text-2xl font-semibold text-gray-900 mb-6">Legal Documents</h3>
+              <ul className="space-y-4">
+                <li className="text-gray-700 leading-relaxed">Wills</li>
+                <li className="text-gray-700 leading-relaxed">Powers of attorney</li>
+                <li className="text-gray-700 leading-relaxed">Advance healthcare directives</li>
+                <li className="text-gray-700 leading-relaxed">Trusts where appropriate</li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-2xl font-semibold text-gray-900 mb-6">Family and Personal Considerations</h3>
+              <ul className="space-y-4">
+                <li className="text-gray-700 leading-relaxed">Guardianship decisions</li>
+                <li className="text-gray-700 leading-relaxed">Blended family arrangements</li>
+                <li className="text-gray-700 leading-relaxed">Care for dependents with special needs</li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-2xl font-semibold text-gray-900 mb-6">Financial and Tax Planning</h3>
+              <ul className="space-y-4">
+                <li className="text-gray-700 leading-relaxed">Reducing probate and estate taxes</li>
+                <li className="text-gray-700 leading-relaxed">Protecting business or property interests</li>
+                <li className="text-gray-700 leading-relaxed">Structuring assets for efficient transfer</li>
+              </ul>
+            </div>
+          </div>
+          <p className="text-gray-700 text-lg leading-relaxed max-w-3xl">
+            A qualified estate lawyer explains each option clearly and helps families make informed decisions without rushing.
+          </p>
+        </div>
+      </section>
+
+      {/* What Estate Planning Is Not - Cream */}
+      <section className="bg-[#faf8f3] py-20">
+        <div className="max-w-5xl mx-auto px-6">
+          <h2 className="text-4xl md:text-5xl font-semibold text-gray-900 mb-8 leading-tight">
+            What Estate Planning Is Not
+          </h2>
+          <p className="text-gray-700 text-lg leading-relaxed mb-8">
+            Estate planning is often misunderstood. It is not:
+          </p>
+          <ul className="space-y-5 mb-10">
+            <li className="flex items-start">
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+              <span className="text-gray-700 text-lg leading-relaxed">Only for wealthy individuals</span>
+            </li>
+            <li className="flex items-start">
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+              <span className="text-gray-700 text-lg leading-relaxed">Only for older adults</span>
+            </li>
+            <li className="flex items-start">
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+              <span className="text-gray-700 text-lg leading-relaxed">A complicated or rigid process</span>
+            </li>
+            <li className="flex items-start">
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+              <span className="text-gray-700 text-lg leading-relaxed">Something that cannot be updated later</span>
+            </li>
+          </ul>
+          <p className="text-gray-700 text-lg leading-relaxed">
+            Estate plans can and should evolve as life circumstances change.
+          </p>
+        </div>
+      </section>
+
+      {/* Who Benefits - White */}
+      <section className="bg-white py-20">
+        <div className="max-w-5xl mx-auto px-6">
+          <h2 className="text-4xl md:text-5xl font-semibold text-gray-900 mb-8 leading-tight">
+            Who Benefits From Estate Planning
+          </h2>
+          <p className="text-gray-700 text-lg leading-relaxed mb-8">
+            Estate planning is valuable for people at many stages of life, including:
+          </p>
+          <ul className="space-y-5 mb-10">
+            <li className="flex items-start">
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+              <span className="text-gray-700 text-lg leading-relaxed">Parents with young or dependent children</span>
+            </li>
+            <li className="flex items-start">
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+              <span className="text-gray-700 text-lg leading-relaxed">Couples planning for the future</span>
+            </li>
+            <li className="flex items-start">
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+              <span className="text-gray-700 text-lg leading-relaxed">Individuals with property or savings</span>
+            </li>
+            <li className="flex items-start">
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+              <span className="text-gray-700 text-lg leading-relaxed">Business owners</span>
+            </li>
+            <li className="flex items-start">
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+              <span className="text-gray-700 text-lg leading-relaxed">Anyone who wants clarity and control</span>
+            </li>
+          </ul>
+          <p className="text-gray-700 text-lg leading-relaxed mb-8">
+            There is no perfect time to start. The right time is when you want your wishes clearly documented.
+          </p>
+          <button
+            onClick={navigateToSearch}
+            className="bg-[#1A1A1A] text-white px-8 py-4 rounded-xl hover:bg-[#1A1A1A]/90 transition-all shadow-sm text-lg font-medium"
+          >
+            Find care
+          </button>
+        </div>
+      </section>
+
+      {/* How Soradin Helps - Cream */}
+      <section className="bg-[#faf8f3] py-20">
+        <div className="max-w-6xl mx-auto px-6">
+          <h2 className="text-4xl md:text-5xl font-semibold text-gray-900 mb-8 leading-tight">
+            How Soradin Helps
+          </h2>
+          <p className="text-gray-700 text-lg leading-relaxed mb-8">
+            Soradin connects families with verified estate lawyers who focus on wills and end of life planning.
+          </p>
+          <p className="text-gray-700 text-lg leading-relaxed mb-8">
+            Through Soradin, you can:
+          </p>
+          <ul className="space-y-5 mb-10">
+            <li className="flex items-start">
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+              <span className="text-gray-700 text-lg leading-relaxed">Review lawyer profiles and areas of focus</span>
+            </li>
+            <li className="flex items-start">
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+              <span className="text-gray-700 text-lg leading-relaxed">Understand what services are offered</span>
+            </li>
+            <li className="flex items-start">
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+              <span className="text-gray-700 text-lg leading-relaxed">Request a consultation in person or virtually</span>
+            </li>
+            <li className="flex items-start">
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
+              <span className="text-gray-700 text-lg leading-relaxed">Feel confident you are working with a qualified professional</span>
+            </li>
+          </ul>
+          <p className="text-gray-700 text-lg leading-relaxed">
+            Every legal professional on Soradin is reviewed before being listed so families can focus on understanding their options, not verifying credentials.
+          </p>
+        </div>
+      </section>
+
+      {/* A Foundation for Peace of Mind - White */}
+      <section className="bg-white py-20">
+        <div className="max-w-4xl mx-auto px-6 text-center">
+          <h2 className="text-4xl md:text-5xl font-semibold text-gray-900 mb-8 leading-tight">
+            A Foundation for Peace of Mind
+          </h2>
+          <p className="text-gray-700 text-xl leading-relaxed mb-6">
+            Estate planning is not about anticipating the worst.
+          </p>
+          <p className="text-gray-700 text-xl leading-relaxed mb-6">
+            It is about protecting the people you care about and ensuring your intentions are respected.
+          </p>
+          <p className="text-gray-700 text-lg leading-relaxed max-w-3xl mx-auto">
+            A properly prepared estate plan brings clarity today and confidence for the future.
+          </p>
+        </div>
+      </section>
+        </>
+      )}
 
       <section
         id="panel-insurance"
