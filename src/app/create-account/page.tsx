@@ -339,7 +339,7 @@ export default function CreateAccountPage() {
           </button>
 
           {/* Log in link */}
-          <div className="text-center text-sm text-gray-700 mt-8 mb-20">
+          <div className="text-center text-sm text-gray-700 mt-4 mb-32">
             Already have an account?{" "}
             <Link
               href="/agent"
