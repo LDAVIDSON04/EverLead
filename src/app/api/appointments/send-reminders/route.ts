@@ -146,6 +146,7 @@ export async function GET(req: NextRequest) {
 
         // Send reminders based on type
         if (isVideoReminderTime && appointmentType === "video") {
+          // Same room: family = guest (customer), agent = host
           const consumerIdentity = `Customer | ${consumerName}`;
           const agentIdentity = `Agent | ${agentName}`;
           const videoLink = `${baseUrl}/video/join/appointment-${appointment.id}?identity=${encodeURIComponent(consumerIdentity)}&role=guest`;

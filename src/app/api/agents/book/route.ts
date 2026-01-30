@@ -734,18 +734,17 @@ export async function POST(req: NextRequest) {
       const resendApiKey = process.env.RESEND_API_KEY;
       const resendFromEmail = process.env.RESEND_FROM_EMAIL || 'Soradin <notifications@soradin.com>';
       
-      // Video call links: use unique identities (Customer | X, Agent | Y) so both can be in room
-      // Include role: "guest" for customers (waiting room), "host" for agents (can admit)
+      // Video call links: same room for both; agent = host (can admit), family = guest (customer, waiting room)
       const isVideoAppointment = appointmentType === "video";
       const videoRoomName = isVideoAppointment ? `appointment-${appointment.id}` : null;
       const customerIdentity = `Customer | ${`${firstName} ${lastName}`.trim() || "Guest"}`;
       const agentIdentity = `Agent | ${agentName}`;
       const customerVideoLink = isVideoAppointment && videoRoomName
         ? `${baseUrl}/video/join/${videoRoomName}?identity=${encodeURIComponent(customerIdentity)}&role=guest`
-        : null;
+        : null; // family/customer: guest role, same room
       const agentVideoLink = isVideoAppointment && videoRoomName
         ? `${baseUrl}/video/join/${videoRoomName}?identity=${encodeURIComponent(agentIdentity)}&role=host`
-        : null;
+        : null; // agent: host role, same room
       
       // Send email to family
       if (familyEmail && resendApiKey) {
