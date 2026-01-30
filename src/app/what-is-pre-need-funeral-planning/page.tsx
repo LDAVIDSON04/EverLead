@@ -679,8 +679,12 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
       >
         <div className="max-w-6xl mx-auto px-6">
           <div className="grid md:grid-cols-2 gap-16 items-start">
-            <div className="rounded-xl overflow-hidden shadow-lg bg-[#e8e6e1] min-h-[400px] md:min-h-[500px] flex items-center justify-center">
-              <span className="text-gray-400 text-sm uppercase tracking-wider">Image slot</span>
+            <div className="rounded-xl overflow-hidden shadow-lg min-h-[400px] md:min-h-[500px]">
+              <img
+                src="/financial-planning-intro.png"
+                alt="Financial planning: organizing assets, minimizing taxes, smooth transfer of wealth for structure, efficiency, and clarity"
+                className="w-full h-full object-cover min-h-[400px] md:min-h-[500px]"
+              />
             </div>
             <div className="pt-20">
               <h1 className="text-5xl md:text-6xl font-semibold text-gray-900 mb-8 leading-tight">
@@ -742,8 +746,12 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
                 Professional guidance helps prevent costly mistakes and unnecessary stress.
               </p>
             </div>
-            <div className="rounded-xl overflow-hidden shadow-lg bg-[#e8e6e1] min-h-[400px] md:min-h-[500px] flex items-center justify-center order-1 md:order-2">
-              <span className="text-gray-400 text-sm uppercase tracking-wider">Image slot</span>
+            <div className="rounded-xl overflow-hidden shadow-lg min-h-[400px] md:min-h-[500px] order-1 md:order-2">
+              <img
+                src="/financial-advisors-why-families.png"
+                alt="Why families work with financial advisors: reduce tax burdens, coordinate beneficiaries, organize accounts, protect assets, support heirs"
+                className="w-full h-full object-cover min-h-[400px] md:min-h-[500px]"
+              />
             </div>
           </div>
         </div>
