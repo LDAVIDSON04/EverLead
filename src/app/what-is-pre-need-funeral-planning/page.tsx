@@ -462,8 +462,12 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
                 Life insurance ensures financial responsibilities are handled with dignity and care.
               </p>
             </div>
-            <div className="rounded-xl overflow-hidden shadow-lg bg-[#e8e6e1] min-h-[400px] md:min-h-[500px] flex items-center justify-center order-1 md:order-2">
-              <span className="text-gray-400 text-sm uppercase tracking-wider">Image slot</span>
+            <div className="rounded-xl overflow-hidden shadow-lg min-h-[400px] md:min-h-[500px] order-1 md:order-2">
+              <img
+                src="/life-insurance-why-families.png"
+                alt="Why families include life insurance: protection from final expenses, mortgage debt, and loss of income; financial security and dignity"
+                className="w-full h-full object-cover min-h-[400px] md:min-h-[500px]"
+              />
             </div>
           </div>
         </div>
