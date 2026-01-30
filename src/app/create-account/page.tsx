@@ -82,9 +82,32 @@ export default function CreateAccountPage() {
 
       {/* Form */}
       <div className="max-w-3xl mx-auto px-6 pt-6">
-        <h1 className="text-3xl font-normal text-gray-900 mb-8">
+        <h1 className="text-3xl font-normal text-gray-900 mb-2">
           Create an account
         </h1>
+        <p className="text-gray-600 text-sm mb-6">Please complete all steps to submit your account for approval</p>
+
+        {/* Progress: Step 1 active */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-neutral-700">
+              <div className="w-8 h-8 rounded-full flex items-center justify-center bg-neutral-700 text-white text-sm font-medium">1</div>
+              <span className="font-medium">Basic Info</span>
+            </div>
+            <div className="flex-1 h-1 mx-4 bg-gray-200" />
+            <div className="flex items-center gap-2 text-gray-400">
+              <div className="w-8 h-8 rounded-full flex items-center justify-center bg-gray-200 text-sm font-medium">2</div>
+              <span className="font-medium">Business Info</span>
+            </div>
+            <div className="flex-1 h-1 mx-4 bg-gray-200" />
+            <div className="flex items-center gap-2 text-gray-400">
+              <div className="w-8 h-8 rounded-full flex items-center justify-center bg-gray-200 text-sm font-medium">3</div>
+              <span className="font-medium">Profile Bio</span>
+            </div>
+          </div>
+        </div>
+
+        <h2 className="text-xl font-semibold text-black mb-6">Step 1: Basic Information</h2>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Name fields */}
@@ -94,7 +117,7 @@ export default function CreateAccountPage() {
                 htmlFor="firstName"
                 className="flex items-center gap-1 text-sm text-gray-700 mb-2"
               >
-                Legal first name
+                Legal first name <span className="text-red-600">*</span>
                 <Info className="w-4 h-4 text-gray-400 shrink-0" />
               </label>
               <input
@@ -113,7 +136,7 @@ export default function CreateAccountPage() {
                 htmlFor="lastName"
                 className="flex items-center gap-1 text-sm text-gray-700 mb-2"
               >
-                Legal last name
+                Legal last name <span className="text-red-600">*</span>
                 <Info className="w-4 h-4 text-gray-400 shrink-0" />
               </label>
               <input
@@ -135,7 +158,7 @@ export default function CreateAccountPage() {
                 htmlFor="email"
                 className="block text-sm text-gray-700 mb-2"
               >
-                Email
+                Email <span className="text-red-600">*</span>
               </label>
               <input
                 type="email"
@@ -153,7 +176,7 @@ export default function CreateAccountPage() {
                 htmlFor="phoneNumber"
                 className="block text-sm text-gray-700 mb-2"
               >
-                Phone number
+                Phone number <span className="text-red-600">*</span>
               </label>
               <input
                 type="tel"
@@ -176,7 +199,7 @@ export default function CreateAccountPage() {
                 htmlFor="password"
                 className="block text-sm text-gray-700 mb-2"
               >
-                Password
+                Password <span className="text-red-600">*</span>
               </label>
               <input
                 type="password"
@@ -194,7 +217,7 @@ export default function CreateAccountPage() {
                 htmlFor="confirmPassword"
                 className="block text-sm text-gray-700 mb-2"
               >
-                Confirm password
+                Confirm password <span className="text-red-600">*</span>
               </label>
               <input
                 type="password"
@@ -214,7 +237,7 @@ export default function CreateAccountPage() {
               htmlFor="homeAddress"
               className="block text-sm text-gray-700 mb-2"
             >
-              Home address
+              Home address <span className="text-red-600">*</span>
             </label>
             <input
               type="text"
@@ -234,7 +257,7 @@ export default function CreateAccountPage() {
                 htmlFor="city"
                 className="block text-sm text-gray-700 mb-2"
               >
-                City
+                City <span className="text-red-600">*</span>
               </label>
               <input
                 type="text"
@@ -252,7 +275,7 @@ export default function CreateAccountPage() {
                 htmlFor="province"
                 className="block text-sm text-gray-700 mb-2"
               >
-                Province
+                Province <span className="text-red-600">*</span>
               </label>
               <select
                 id="province"
@@ -275,7 +298,7 @@ export default function CreateAccountPage() {
                 htmlFor="postalCode"
                 className="block text-sm text-gray-700 mb-2"
               >
-                Postal code
+                Postal code <span className="text-red-600">*</span>
               </label>
               <input
                 type="text"

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { X } from "lucide-react";
+import { X, Check } from "lucide-react";
 import { Footer } from "@/app/learn-more-about-starting/components/Footer";
 
 type Role =
@@ -118,7 +118,32 @@ export default function CreateAccountContinuePage() {
       </div>
 
       <div className="max-w-[1000px] mx-auto px-4 py-4 flex-1 w-full">
-        <h1 className="text-2xl mb-8 text-black">Create an account</h1>
+        <h1 className="text-2xl mb-2 text-black">Create an account</h1>
+        <p className="text-gray-600 text-sm mb-6">Please complete all steps to submit your account for approval</p>
+
+        {/* Progress: Step 2 active */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-neutral-700">
+              <div className="w-8 h-8 rounded-full flex items-center justify-center bg-neutral-700 text-white">
+                <Check className="w-5 h-5" />
+              </div>
+              <span className="font-medium">Basic Info</span>
+            </div>
+            <div className="flex-1 h-1 mx-4 bg-neutral-700" />
+            <div className="flex items-center gap-2 text-neutral-700">
+              <div className="w-8 h-8 rounded-full flex items-center justify-center bg-neutral-700 text-white text-sm font-medium">2</div>
+              <span className="font-medium">Business Info</span>
+            </div>
+            <div className="flex-1 h-1 mx-4 bg-gray-200" />
+            <div className="flex items-center gap-2 text-gray-400">
+              <div className="w-8 h-8 rounded-full flex items-center justify-center bg-gray-200 text-sm font-medium">3</div>
+              <span className="font-medium">Profile Bio</span>
+            </div>
+          </div>
+        </div>
+
+        <h2 className="text-xl font-semibold text-black mb-6">Step 2: Business Information</h2>
 
         {error && (
             <div className="p-4 bg-red-50 border border-red-200 rounded-md text-sm text-red-700">
@@ -128,7 +153,7 @@ export default function CreateAccountContinuePage() {
           <form onSubmit={handleSubmit} className="space-y-6">
           {/* Role Selection */}
           <div className="space-y-3">
-            <label className="text-sm text-gray-700">Role</label>
+            <label className="text-sm text-gray-700">Role <span className="text-red-600">*</span></label>
             <div className="grid grid-cols-2 gap-2">
               {roles.map((role) => (
                 <button
@@ -150,7 +175,7 @@ export default function CreateAccountContinuePage() {
           {/* Business Name */}
           <div className="space-y-2">
             <label htmlFor="businessName" className="text-sm text-gray-700">
-              Business/ Firm Name
+              Business/ Firm Name <span className="text-red-600">*</span>
             </label>
             <input
               id="businessName"
@@ -165,7 +190,7 @@ export default function CreateAccountContinuePage() {
           {/* Professional Title */}
           <div className="space-y-2">
             <label htmlFor="professionalTitle" className="text-sm text-gray-700">
-              Professional Title
+              Professional Title <span className="text-red-600">*</span>
             </label>
             <input
               id="professionalTitle"
@@ -182,7 +207,7 @@ export default function CreateAccountContinuePage() {
             <>
               <div className="space-y-3">
                 <label className="text-sm text-gray-700">
-                  Do you have a valid TruStage Life of Canada enrolee number?
+                  Do you have a valid TruStage Life of Canada enrolee number? <span className="text-red-600">*</span>
                 </label>
                 <div className="flex gap-6">
                   {["yes", "no"].map((v) => (
@@ -203,7 +228,7 @@ export default function CreateAccountContinuePage() {
               </div>
               <div className="space-y-3">
                 <label className="text-sm text-gray-700">
-                  Do you have a valid LLQP license?
+                  Do you have a valid LLQP license? <span className="text-red-600">*</span>
                 </label>
                 <div className="flex gap-6">
                   {["yes", "no"].map((v) => (
@@ -224,7 +249,7 @@ export default function CreateAccountContinuePage() {
               </div>
               <div className="space-y-3">
                 <label className="text-sm text-gray-700">
-                  Is your LLQP valid in Quebec?
+                  Is your LLQP valid in Quebec? <span className="text-red-600">*</span>
                 </label>
                 <div className="flex gap-6">
                   {["yes", "no", "non-applicable"].map((v) => (
@@ -246,7 +271,7 @@ export default function CreateAccountContinuePage() {
                 </div>
               </div>
               <div className="space-y-3">
-                <label className="text-sm text-gray-700">Office Locations</label>
+                <label className="text-sm text-gray-700">Office Locations <span className="text-red-600">*</span></label>
                 {officeLocations.map((location, index) => (
                   <div key={index} className="flex gap-2 items-center">
                     <input
@@ -286,7 +311,7 @@ export default function CreateAccountContinuePage() {
             <>
               <div className="space-y-3">
                 <label className="text-sm text-gray-700">
-                  Are you currently licensed and in good standing with your provincial law society?
+                  Are you currently licensed and in good standing with your provincial law society? <span className="text-red-600">*</span>
                 </label>
                 <div className="flex gap-6">
                   {["yes", "no"].map((v) => (
@@ -307,7 +332,7 @@ export default function CreateAccountContinuePage() {
               </div>
               <div className="space-y-2">
                 <label htmlFor="lawSocietyName" className="text-sm text-gray-700">
-                  Law society name
+                  Law society name <span className="text-red-600">*</span>
                 </label>
                 <input
                   id="lawSocietyName"
@@ -320,7 +345,7 @@ export default function CreateAccountContinuePage() {
               </div>
               <div className="space-y-2">
                 <label htmlFor="authorizedProvinces" className="text-sm text-gray-700">
-                  Province(s) you are authorized to practice in
+                  Province(s) you are authorized to practice in <span className="text-red-600">*</span>
                 </label>
                 <input
                   id="authorizedProvinces"
@@ -332,7 +357,7 @@ export default function CreateAccountContinuePage() {
                 />
               </div>
               <div className="space-y-3">
-                <label className="text-sm text-gray-700">Office Locations</label>
+                <label className="text-sm text-gray-700">Office Locations <span className="text-red-600">*</span></label>
                 {officeLocations.map((location, index) => (
                   <div key={index} className="flex gap-2 items-center">
                     <input
@@ -372,7 +397,7 @@ export default function CreateAccountContinuePage() {
             <>
               <div className="space-y-3">
                 <label className="text-sm text-gray-700">
-                  Are you a licensed life insurance agent in Canada?
+                  Are you a licensed life insurance agent in Canada? <span className="text-red-600">*</span>
                 </label>
                 <div className="flex gap-6">
                   {["yes", "no"].map((v) => (
@@ -393,7 +418,7 @@ export default function CreateAccountContinuePage() {
               </div>
               <div className="space-y-2">
                 <label htmlFor="licensingProvince" className="text-sm text-gray-700">
-                  Licensing province
+                  Licensing province <span className="text-red-600">*</span>
                 </label>
                 <input
                   id="licensingProvince"
@@ -406,7 +431,7 @@ export default function CreateAccountContinuePage() {
               </div>
               <div className="space-y-3">
                 <label className="text-sm text-gray-700">
-                  Are you licensed in multiple provinces?
+                  Are you licensed in multiple provinces? <span className="text-red-600">*</span>
                 </label>
                 <div className="flex gap-6">
                   {["yes", "no"].map((v) => (
@@ -440,7 +465,7 @@ export default function CreateAccountContinuePage() {
                 </div>
               )}
               <div className="space-y-3">
-                <label className="text-sm text-gray-700">Office Locations</label>
+                <label className="text-sm text-gray-700">Office Locations <span className="text-red-600">*</span></label>
                 {officeLocations.map((location, index) => (
                   <div key={index} className="flex gap-2 items-center">
                     <input
@@ -480,7 +505,7 @@ export default function CreateAccountContinuePage() {
             <>
               <div className="space-y-3">
                 <label className="text-sm text-gray-700">
-                  Are you registered with a regulatory organization?
+                  Are you registered with a regulatory organization? <span className="text-red-600">*</span>
                 </label>
                 <div className="flex gap-6">
                   {["yes", "no"].map((v) => (
@@ -501,7 +526,7 @@ export default function CreateAccountContinuePage() {
               </div>
               <div className="space-y-2">
                 <label htmlFor="regulatoryOrganization" className="text-sm text-gray-700">
-                  Regulatory organization
+                  Regulatory organization <span className="text-red-600">*</span>
                 </label>
                 <input
                   id="regulatoryOrganization"
@@ -514,7 +539,7 @@ export default function CreateAccountContinuePage() {
               </div>
               <div className="space-y-2">
                 <label htmlFor="registeredProvinces" className="text-sm text-gray-700">
-                  Province(s) you are registered in
+                  Province(s) you are registered in <span className="text-red-600">*</span>
                 </label>
                 <input
                   id="registeredProvinces"
@@ -526,7 +551,7 @@ export default function CreateAccountContinuePage() {
                 />
               </div>
               <div className="space-y-3">
-                <label className="text-sm text-gray-700">Office Locations</label>
+                <label className="text-sm text-gray-700">Office Locations <span className="text-red-600">*</span></label>
                 {officeLocations.map((location, index) => (
                   <div key={index} className="flex gap-2 items-center">
                     <input

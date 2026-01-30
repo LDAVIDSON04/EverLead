@@ -44,24 +44,26 @@ export default function CreateAccountNextPage() {
               <div className="w-8 h-8 rounded-full flex items-center justify-center bg-neutral-700 text-white">
                 <Check className="w-5 h-5" />
               </div>
-              <span className="font-medium">Step 1</span>
+              <span className="font-medium">Basic Info</span>
             </div>
             <div className="flex-1 h-1 mx-4 bg-neutral-700" />
             <div className="flex items-center gap-2 text-neutral-700">
               <div className="w-8 h-8 rounded-full flex items-center justify-center bg-neutral-700 text-white">
                 <Check className="w-5 h-5" />
               </div>
-              <span className="font-medium">Step 2</span>
+              <span className="font-medium">Business Info</span>
             </div>
             <div className="flex-1 h-1 mx-4 bg-neutral-700" />
             <div className="flex items-center gap-2 text-neutral-700">
-              <div className="w-8 h-8 rounded-full flex items-center justify-center bg-neutral-700 text-white">
+              <div className="w-8 h-8 rounded-full flex items-center justify-center bg-neutral-700 text-white text-sm font-medium">
                 3
               </div>
-              <span className="font-medium">Step 3</span>
+              <span className="font-medium">Profile Bio</span>
             </div>
           </div>
         </div>
+
+        <h2 className="text-xl font-semibold text-black mb-6">Step 3: Profile Bio</h2>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Years of Experience */}
