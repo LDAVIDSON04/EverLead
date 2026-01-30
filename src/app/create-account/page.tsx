@@ -42,9 +42,9 @@ export default function CreateAccountPage() {
           <Image
             src="/Soradin.png"
             alt="Soradin"
-            width={32}
-            height={32}
-            className="h-8 w-8 object-contain"
+            width={96}
+            height={96}
+            className="h-24 w-24 object-contain"
           />
           <span className="font-semibold text-black text-lg">Soradin</span>
         </Link>
