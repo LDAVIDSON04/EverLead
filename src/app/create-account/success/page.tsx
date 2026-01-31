@@ -28,10 +28,10 @@ export default function CreateAccountSuccessPage() {
           Your account has been submitted for approval. We&apos;ll review your information and get back to you soon. You can log in once your account is approved.
         </p>
         <Link
-          href="/agent"
+          href="/"
           className="inline-block bg-black text-white font-medium py-3 px-6 rounded-md hover:bg-gray-800 transition-colors"
         >
-          Log in
+          Return to home
         </Link>
       </div>
     </div>

@@ -241,6 +241,17 @@ export default function AgentApprovalPage() {
     }
   };
 
+  // Show the profession they picked in create-account (same labels as the dropdown)
+  const getSpecialtyLabel = (agent: PendingAgent): string => {
+    const meta = agent.metadata || {};
+    if (meta.specialty && typeof meta.specialty === 'string') return meta.specialty;
+    const role = meta.agent_role;
+    if (role === 'lawyer') return 'Lawyer';
+    if (role === 'insurance-broker') return 'Insurance Broker';
+    if (role === 'financial-advisor') return 'Financial Advisor';
+    return 'Funeral Planner';
+  };
+
   // Convert agents to specialists format for display
   const specialists: Specialist[] = pendingAgents.map((agent) => {
     // Single unified approval status
@@ -253,7 +264,7 @@ export default function AgentApprovalPage() {
       region: agent.notification_cities && agent.notification_cities.length > 0
         ? `${agent.notification_cities[0].city}, ${agent.notification_cities[0].province}`
         : 'N/A',
-      specialty: 'Funeral Services',
+      specialty: getSpecialtyLabel(agent),
       email: agent.email || 'N/A',
       submittedDate: new Date(agent.created_at).toISOString().split('T')[0],
       status: status as 'pending' | 'approved' | 'rejected' | 'needs-info',

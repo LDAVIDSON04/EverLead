@@ -83,8 +83,17 @@ export default function CreateAccountNextPage() {
       ? [{ city: step1.city, province: step1.province }]
       : [];
 
+    // Same labels as the profession dropdown on create-account (so admin shows what they picked)
+    const specialtyFromRole: Record<string, string> = {
+      "funeral-planner": "Funeral Planner",
+      "lawyer": "Lawyer",
+      "insurance-broker": "Insurance Broker",
+      "financial-advisor": "Financial Advisor",
+    };
+
     const metadata: Record<string, unknown> = {
       agent_role: step2.selectedRole || "",
+      specialty: step2.selectedRole ? (specialtyFromRole[step2.selectedRole] ?? "Funeral Planner") : "",
       business_name: (step2.businessName || "").trim(),
       bio: {
         years_of_experience: String(yearsOfExperience).trim(),
