@@ -36,6 +36,24 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
   const [locationSuggestions, setLocationSuggestions] = useState<string[]>([]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const citiesRef = useRef<string[] | null>(null);
+  const ipLocationFetched = useRef(false);
+
+  // Prefill Location with customer's IP city (exact city from IP geolocation)
+  useEffect(() => {
+    if (ipLocationFetched.current || (initialLocation && initialLocation.trim() !== "")) return;
+    ipLocationFetched.current = true;
+    fetch("/api/geolocation")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.location && typeof data.location === "string" && data.location.trim()) {
+          setLocation(data.location.trim());
+        } else if (data.city && typeof data.city === "string" && data.city.trim()) {
+          const province = data.province ? `, ${data.province}` : "";
+          setLocation(`${data.city.trim()}${province}`);
+        }
+      })
+      .catch(() => {});
+  }, [initialLocation]);
 
   // Rotating text for hero title - deferred for mobile performance
   const rotatingTexts = [
