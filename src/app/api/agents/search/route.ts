@@ -606,18 +606,30 @@ export async function GET(req: NextRequest) {
     }
 
     // Filter by profession: agent only shows when search query matches their registered agent_role (create-account choice)
-    // Applies to both in-person and video so e.g. "Life Insurance Broker" only shows insurance brokers
     if (query) {
       const requiredRole = queryToAgentRole(query);
+      const queryLower = query.toLowerCase().trim();
+      const beforeQueryFilter = [...filtered];
       if (requiredRole) {
         filtered = filtered.filter((agent) => {
           const role = (agent.agent_role || '').toLowerCase().trim().replace(/\s+/g, '-');
           return role === requiredRole;
         });
-        console.log(`[AGENT SEARCH] Filtering by profession: q="${query}" -> agent_role=${requiredRole}, ${filtered.length} agents`);
+        // When fallback (no in-person in city): if strict agent_role leaves 0, show agents whose specialty/job_title matches query so province list isn't empty
+        if (fallback && filtered.length === 0 && beforeQueryFilter.length > 0) {
+          filtered = beforeQueryFilter.filter((agent) => {
+            return (
+              agent.full_name?.toLowerCase().includes(queryLower) ||
+              agent.funeral_home?.toLowerCase().includes(queryLower) ||
+              agent.job_title?.toLowerCase().includes(queryLower) ||
+              agent.specialty?.toLowerCase().includes(queryLower)
+            );
+          });
+          console.log(`[AGENT SEARCH] Fallback: agent_role left 0, using text match on query "${query}" -> ${filtered.length} agents`);
+        } else {
+          console.log(`[AGENT SEARCH] Filtering by profession: q="${query}" -> agent_role=${requiredRole}, ${filtered.length} agents`);
+        }
       } else {
-        // No mapping: fallback to text match on name/specialty/job_title so odd queries still get results
-        const queryLower = query.toLowerCase().trim();
         filtered = filtered.filter((agent) => {
           return (
             agent.full_name?.toLowerCase().includes(queryLower) ||
