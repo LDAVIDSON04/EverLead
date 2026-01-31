@@ -172,10 +172,8 @@ export async function POST(req: NextRequest) {
                     { status: 400 }
                   );
                 } else if (existingUserProfile.approval_status === "declined") {
-                  return NextResponse.json(
-                    { error: "This account was previously declined. Please contact support if you believe this is an error." },
-                    { status: 400 }
-                  );
+                  // Allow re-application: fall through and update profile to pending with new data
+                  profileExists = true;
                 }
               } else {
                 return NextResponse.json(
