@@ -1812,24 +1812,26 @@ function SearchResults() {
                         </div>
                       </div>
 
-                      {/* Below profile pic: Location, address, rating, learn more (wrapping around) */}
+                      {/* Below profile pic: Location, address (in-person only), rating, learn more (wrapping around) */}
                       <div className="mt-2 space-y-1">
-                        {/* Location - Show searched location (the city the family is searching from) */}
-                        <div className="flex items-center gap-1">
-                          <MapPin className="w-4 h-4 text-gray-500 flex-shrink-0" />
-                          <span className="text-gray-600 text-sm">
-                            {searchLocation ? decodeURIComponent(searchLocation.replace(/\+/g, ' ')) : location ? decodeURIComponent(location.replace(/\+/g, ' ')) : 'Location not specified'}
-                          </span>
-                        </div>
-
-                        {/* Office/Company Address - Show matching office location or fallback */}
-                        {displayAddress && (
-                          <div className="flex items-start gap-1">
-                            <MapPin className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
-                            <span className="text-gray-500 text-xs">
-                              {displayAddress}
-                            </span>
-                          </div>
+                        {/* Location & address - only for in-person; hide for video calls */}
+                        {displayMode !== "video" && (
+                          <>
+                            <div className="flex items-center gap-1">
+                              <MapPin className="w-4 h-4 text-gray-500 flex-shrink-0" />
+                              <span className="text-gray-600 text-sm">
+                                {searchLocation ? decodeURIComponent(searchLocation.replace(/\+/g, ' ')) : location ? decodeURIComponent(location.replace(/\+/g, ' ')) : 'Location not specified'}
+                              </span>
+                            </div>
+                            {displayAddress && (
+                              <div className="flex items-start gap-1">
+                                <MapPin className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                                <span className="text-gray-500 text-xs">
+                                  {displayAddress}
+                                </span>
+                              </div>
+                            )}
+                          </>
                         )}
 
                         {/* Rating */}
@@ -2031,27 +2033,28 @@ function SearchResults() {
                       </div>
                     </div>
 
-                    {/* Mobile: Info under profile pic - hugging left border */}
+                    {/* Mobile: Info under profile pic - hugging left border (location/address only for in-person) */}
                     <div className="mt-2 space-y-1">
-                        {/* 1. Location */}
-                        <div className="flex items-center gap-1">
-                          <MapPin className="w-3 h-3 text-gray-500 flex-shrink-0" />
-                          <span className="text-gray-600 text-sm">
-                            {searchLocation ? decodeURIComponent(searchLocation.replace(/\+/g, ' ')) : location ? decodeURIComponent(location.replace(/\+/g, ' ')) : 'Location not specified'}
-                          </span>
-                        </div>
-
-                        {/* 2. Office Address */}
-                        {displayAddress && (
-                          <div className="flex items-start gap-1">
-                            <MapPin className="w-3 h-3 text-gray-400 mt-0.5 flex-shrink-0" />
-                            <span className="text-gray-500 text-xs">
-                              {displayAddress}
-                            </span>
-                          </div>
+                        {displayMode !== "video" && (
+                          <>
+                            <div className="flex items-center gap-1">
+                              <MapPin className="w-3 h-3 text-gray-500 flex-shrink-0" />
+                              <span className="text-gray-600 text-sm">
+                                {searchLocation ? decodeURIComponent(searchLocation.replace(/\+/g, ' ')) : location ? decodeURIComponent(location.replace(/\+/g, ' ')) : 'Location not specified'}
+                              </span>
+                            </div>
+                            {displayAddress && (
+                              <div className="flex items-start gap-1">
+                                <MapPin className="w-3 h-3 text-gray-400 mt-0.5 flex-shrink-0" />
+                                <span className="text-gray-500 text-xs">
+                                  {displayAddress}
+                                </span>
+                              </div>
+                            )}
+                          </>
                         )}
 
-                        {/* 3. Rating with star */}
+                        {/* Rating with star */}
                         {agent && agent.rating && agent.rating > 0 && agent.reviewCount && agent.reviewCount > 0 && (
                           <div className="flex items-center gap-1">
                             <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
@@ -2279,26 +2282,28 @@ function SearchResults() {
                       {selectedAgentInfo.funeral_home && (
                         <p className="text-gray-600 text-sm mb-2">{selectedAgentInfo.funeral_home}</p>
                       )}
-                      {/* Location - Show searched location (the city the family is searching from) */}
-                      {searchLocation && (
-                        <div className="flex items-center gap-1 mb-2">
-                          <MapPin className="w-4 h-4 text-gray-500" />
-                          <span className="text-gray-600 text-sm">
-                            {decodeURIComponent(searchLocation.replace(/\+/g, ' '))}
-                          </span>
-                        </div>
-                      )}
-                      
-                      {/* Company Address - Show if available (formatted like Zocdoc) */}
-                      {(selectedAgentInfo?.business_street || selectedAgentInfo?.business_address) && (
-                        <div className="flex items-start gap-2 mb-3">
-                          <MapPin className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
-                          <span className="text-gray-500 text-xs">
-                            {selectedAgentInfo.business_street && selectedAgentInfo.business_city && selectedAgentInfo.business_province && selectedAgentInfo.business_zip
-                              ? `${selectedAgentInfo.business_street}, ${selectedAgentInfo.business_city}, ${selectedAgentInfo.business_province} ${selectedAgentInfo.business_zip}`
-                              : selectedAgentInfo.business_address || `${selectedAgentInfo.business_street || ''}${selectedAgentInfo.business_city ? `, ${selectedAgentInfo.business_city}` : ''}${selectedAgentInfo.business_province ? `, ${selectedAgentInfo.business_province}` : ''}${selectedAgentInfo.business_zip ? ` ${selectedAgentInfo.business_zip}` : ''}`.trim()}
-                          </span>
-                        </div>
+                      {/* Location & address - only for in-person; hide for video calls */}
+                      {effectiveBookingMode !== "video" && (
+                        <>
+                          {searchLocation && (
+                            <div className="flex items-center gap-1 mb-2">
+                              <MapPin className="w-4 h-4 text-gray-500" />
+                              <span className="text-gray-600 text-sm">
+                                {decodeURIComponent(searchLocation.replace(/\+/g, ' '))}
+                              </span>
+                            </div>
+                          )}
+                          {(selectedAgentInfo?.business_street || selectedAgentInfo?.business_address) && (
+                            <div className="flex items-start gap-2 mb-3">
+                              <MapPin className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                              <span className="text-gray-500 text-xs">
+                                {selectedAgentInfo.business_street && selectedAgentInfo.business_city && selectedAgentInfo.business_province && selectedAgentInfo.business_zip
+                                  ? `${selectedAgentInfo.business_street}, ${selectedAgentInfo.business_city}, ${selectedAgentInfo.business_province} ${selectedAgentInfo.business_zip}`
+                                  : selectedAgentInfo.business_address || `${selectedAgentInfo.business_street || ''}${selectedAgentInfo.business_city ? `, ${selectedAgentInfo.business_city}` : ''}${selectedAgentInfo.business_province ? `, ${selectedAgentInfo.business_province}` : ''}${selectedAgentInfo.business_zip ? ` ${selectedAgentInfo.business_zip}` : ''}`.trim()}
+                              </span>
+                            </div>
+                          )}
+                        </>
                       )}
 
                       {/* Rating */}
