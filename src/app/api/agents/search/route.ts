@@ -566,23 +566,21 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    if (query) {
+    // For video mode: show all agents in province (all 4 professions: funeral, lawyer, insurance, financial)
+    // Don't filter by query so users see lawyers, insurance, financial advisors, and funeral planners in BC.
+    if (query && mode !== 'video') {
       const queryLower = query.toLowerCase().trim();
       
-      // List of funeral-related keywords that should show all funeral agents
+      // List of funeral-related keywords that should show all funeral agents (in-person only)
       const funeralKeywords = ['funeral', 'funeral director', 'funeral planning', 'funeral services', 'advanced planning director'];
       
-      // Check if query contains any funeral-related keywords (case-insensitive)
       const isFuneralRelatedSearch = funeralKeywords.some(keyword => 
         queryLower.includes(keyword.toLowerCase())
       );
       
       if (isFuneralRelatedSearch) {
-        // If funeral-related search, don't filter by query - show all agents
-        // (location and other filters still apply)
         console.log(`[AGENT SEARCH] Funeral-related search detected: "${query}" - showing all agents`);
       } else {
-        // For non-funeral searches, filter agents by matching query in their fields
         filtered = filtered.filter((agent) => {
           return (
             agent.full_name?.toLowerCase().includes(queryLower) ||
@@ -592,6 +590,8 @@ export async function GET(req: NextRequest) {
           );
         });
       }
+    } else if (query && mode === 'video') {
+      console.log(`[AGENT SEARCH] Video mode: not filtering by query "${query}" - showing all professions in province`);
     }
 
     // Fetch review counts for all agents and sort by review count (highest first)
