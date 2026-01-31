@@ -475,8 +475,8 @@ export async function GET(req: NextRequest) {
           // If no postal code match, fall through to city matching
         }
         
-        // Lawyer, insurance broker, financial advisor: show for any city in their province (e.g. all of BC)
-        const provinceWideRoles = ['lawyer', 'insurance-broker', 'financial-advisor'];
+        // All 4 industries (funeral, lawyer, insurance, financial): show for any city in their province (whole province like funeral)
+        const provinceWideRoles = ['funeral-planner', 'lawyer', 'insurance-broker', 'financial-advisor'];
         const agentRole = (agent as any).agent_role;
         if (agentRole && provinceWideRoles.includes(agentRole) && searchProvince) {
           const searchProvinceNormalized = normalizeProvince(searchProvince);
