@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Search, MapPin, Star, Calendar, Check, ChevronDown, Heart, Facebook, Instagram, Menu, X, ChevronRight } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
-// Major BC cities for the "Find funeral professionals near you" section (12 cities max)
+// Major BC cities for the "Find estate planning professionals near you" section (12 cities max)
 const majorBCCities = [
   "Vancouver, BC",
   "Victoria, BC",
@@ -839,7 +839,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
       <section className="py-24 px-4 bg-[#234a3d]">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-4xl mb-12 text-white font-medium tracking-tight">
-            Find funeral professionals near you
+            Find estate planning professionals near you
           </h2>
 
           <div className="grid grid-cols-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
