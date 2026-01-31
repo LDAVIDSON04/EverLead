@@ -293,12 +293,12 @@ function SearchResults() {
         const { agents } = await res.json();
         console.log(`✅ [SEARCH] Found ${agents?.length || 0} agents for location "${searchLocation}"`);
 
-        // In-person with 0 results and a location: show "no in-person" banner and list all video agents in province (all 4 professions)
+        // In-person with 0 results and a location: show "no in-person" banner and list video agents in same profession
         if (mode === "in-person" && (agents?.length || 0) === 0 && searchLocation) {
           const videoParams = new URLSearchParams();
           if (searchLocation) videoParams.set("location", searchLocation);
           if (searchService) videoParams.set("service", searchService);
-          // Don't pass q so we get all video agents in province (funeral, lawyer, insurance, financial) for the fallback list
+          if (searchQuery) videoParams.set("q", searchQuery);
           videoParams.set("mode", "video");
           const videoRes = await fetch(`/api/agents/search?${videoParams.toString()}`);
           if (videoRes.ok) {

@@ -42,6 +42,45 @@ function hasVideoAvailability(agent: AgentSearchResult): boolean {
   return days.some((day) => vs[day]?.enabled === true);
 }
 
+// Map search query (q) to agent_role so we only show agents whose registered profession matches
+const QUERY_TO_AGENT_ROLE: Record<string, string> = {
+  "funeral": "funeral-planner",
+  "funeral planner": "funeral-planner",
+  "funeral pre planner": "funeral-planner",
+  "funeral planning": "funeral-planner",
+  "funeral services": "funeral-planner",
+  "funeral director": "funeral-planner",
+  "advanced planning director": "funeral-planner",
+  "pre need": "funeral-planner",
+  "pre-need": "funeral-planner",
+  "lawyer": "lawyer",
+  "estate lawyer": "lawyer",
+  "estate lawyers": "lawyer",
+  "estate": "lawyer",
+  "wills": "lawyer",
+  "insurance": "insurance-broker",
+  "life insurance": "insurance-broker",
+  "insurance broker": "insurance-broker",
+  "life insurance broker": "insurance-broker",
+  "financial": "financial-advisor",
+  "financial advisor": "financial-advisor",
+  "financial planner": "financial-advisor",
+  "financial advisors": "financial-advisor",
+  "financial planners": "financial-advisor",
+};
+
+function queryToAgentRole(query: string): string | null {
+  if (!query || !query.trim()) return null;
+  const normalized = query.toLowerCase().trim();
+  // Exact key match first
+  if (QUERY_TO_AGENT_ROLE[normalized]) return QUERY_TO_AGENT_ROLE[normalized];
+  // Contains match: find first key that the query contains or that contains the query
+  for (const [key, role] of Object.entries(QUERY_TO_AGENT_ROLE)) {
+    if (normalized.includes(key) || key.includes(normalized)) return role;
+  }
+  return null;
+}
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
@@ -566,21 +605,16 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // For video mode: show all agents in province (all 4 professions: funeral, lawyer, insurance, financial)
-    // Don't filter by query so users see lawyers, insurance, financial advisors, and funeral planners in BC.
-    if (query && mode !== 'video') {
-      const queryLower = query.toLowerCase().trim();
-      
-      // List of funeral-related keywords that should show all funeral agents (in-person only)
-      const funeralKeywords = ['funeral', 'funeral director', 'funeral planning', 'funeral services', 'advanced planning director'];
-      
-      const isFuneralRelatedSearch = funeralKeywords.some(keyword => 
-        queryLower.includes(keyword.toLowerCase())
-      );
-      
-      if (isFuneralRelatedSearch) {
-        console.log(`[AGENT SEARCH] Funeral-related search detected: "${query}" - showing all agents`);
+    // Filter by profession: agent only shows when search query matches their registered agent_role (create-account choice)
+    // Applies to both in-person and video so e.g. "Life Insurance Broker" only shows insurance brokers
+    if (query) {
+      const requiredRole = queryToAgentRole(query);
+      if (requiredRole) {
+        filtered = filtered.filter((agent) => agent.agent_role === requiredRole);
+        console.log(`[AGENT SEARCH] Filtering by profession: q="${query}" -> agent_role=${requiredRole}, ${filtered.length} agents`);
       } else {
+        // No mapping: fallback to text match on name/specialty/job_title so odd queries still get results
+        const queryLower = query.toLowerCase().trim();
         filtered = filtered.filter((agent) => {
           return (
             agent.full_name?.toLowerCase().includes(queryLower) ||
@@ -590,8 +624,6 @@ export async function GET(req: NextRequest) {
           );
         });
       }
-    } else if (query && mode === 'video') {
-      console.log(`[AGENT SEARCH] Video mode: not filtering by query "${query}" - showing all professions in province`);
     }
 
     // Fetch review counts for all agents and sort by review count (highest first)

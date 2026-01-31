@@ -312,6 +312,12 @@ export async function POST(request: NextRequest) {
       .maybeSingle();
 
     const existingMetadata = existingProfile?.metadata || {};
+    const existingAvailability = existingMetadata.availability || {};
+
+    // When saving only video (videoSchedule in payload, no in-person data in request), preserve existing in-person availability
+    const isVideoOnlyUpdate = videoSchedulePayload && typeof videoSchedulePayload === "object" && Object.keys(videoSchedulePayload).length > 0 &&
+      (!locations || locations.length === 0) &&
+      (!availabilityByLocation || Object.keys(availabilityByLocation).length === 0);
 
     // Automatically store timezone based on province (if not already stored)
     let timezoneToStore = existingMetadata.timezone;
@@ -348,6 +354,9 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    const finalLocations = isVideoOnlyUpdate ? (existingAvailability.locations || validLocations) : validLocations;
+    const finalAvailabilityByLocation = isVideoOnlyUpdate ? (existingAvailability.availabilityByLocation || filteredAvailabilityByLocation) : filteredAvailabilityByLocation;
+
     const { error } = await supabaseAdmin
       .from("profiles")
       .update({
@@ -355,10 +364,10 @@ export async function POST(request: NextRequest) {
           ...existingMetadata,
           ...(timezoneToStore && { timezone: timezoneToStore }), // Store timezone if we have it
           availability: {
-            locations: validLocations,
-            availabilityByLocation: filteredAvailabilityByLocation,
-            appointmentLength,
-            availabilityTypeByLocation: availabilityTypeToStore, // Store which type is active per location
+            locations: finalLocations,
+            availabilityByLocation: finalAvailabilityByLocation,
+            appointmentLength: appointmentLength || existingAvailability.appointmentLength || "30",
+            availabilityTypeByLocation: availabilityTypeToStore,
             ...(videoScheduleToStore && { videoSchedule: videoScheduleToStore }),
           },
         },

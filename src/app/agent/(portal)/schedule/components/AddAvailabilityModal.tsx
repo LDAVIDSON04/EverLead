@@ -258,8 +258,8 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
       const currentData = await res.ok ? await res.json() : {};
 
       if (meetingType === "video") {
-        // Save video schedule only
-        await fetch("/api/agent/settings/availability", {
+        // Save video schedule only (API merges with existing in-person data)
+        const videoRes = await fetch("/api/agent/settings/availability", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -273,6 +273,10 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
             videoSchedule: recurringSchedule,
           }),
         });
+        if (!videoRes.ok) {
+          const errData = await videoRes.json().catch(() => ({}));
+          throw new Error(errData.error || "Failed to save video availability");
+        }
         const enabledDays = days.filter(day => recurringSchedule[day as keyof typeof recurringSchedule].enabled);
         const daysList = enabledDays.length > 0
           ? enabledDays.map(day => day.charAt(0).toUpperCase() + day.slice(1)).join(", ")
