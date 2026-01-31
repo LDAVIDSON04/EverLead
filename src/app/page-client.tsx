@@ -200,7 +200,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                 List Your Specialty With Soradin
               </Link>
               <Link href="/agent" className="bg-[#1A1A1A] text-white px-6 py-2.5 rounded-xl hover:bg-[#1A1A1A]/90 transition-all shadow-sm">
-                Log in
+                Agent Log In
               </Link>
             </div>
             {/* Mobile: Hamburger menu */}
@@ -266,7 +266,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                         className="px-6 py-4 bg-white border-2 border-[#1A1A1A] text-[#1A1A1A] rounded-xl hover:bg-[#FAF9F6] transition-all text-center text-base font-medium"
                         onClick={() => setMobileMenuOpen(false)}
                       >
-                        Log in
+                        Agent Log In
                       </Link>
                     </div>
                   </div>
