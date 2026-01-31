@@ -31,6 +31,7 @@ type AgentSearchResult = {
   availabilityByLocation: Record<string, any>;
   officeLocationCities?: string[];
   videoSchedule?: Record<string, { enabled: boolean; start: string; end: string }> | null;
+  agent_role?: string | null;
 };
 
 // Agent has set video availability if videoSchedule exists and at least one day is enabled
@@ -208,6 +209,7 @@ export async function GET(req: NextRequest) {
             officeLocationCities: officeLocationCities, // Store separately for reference
             officeLocations: agentOfficeLocations, // Store full office location data
             videoSchedule: videoSchedule && typeof videoSchedule === "object" ? videoSchedule : null,
+            agent_role: (metadata as any)?.agent_role || null,
           };
         } catch (err) {
           console.error(`[AGENT SEARCH] Error mapping agent ${profile.id}:`, err);
@@ -471,6 +473,20 @@ export async function GET(req: NextRequest) {
             return true;
           }
           // If no postal code match, fall through to city matching
+        }
+        
+        // Lawyer, insurance broker, financial advisor: show for any city in their province (e.g. all of BC)
+        const provinceWideRoles = ['lawyer', 'insurance-broker', 'financial-advisor'];
+        const agentRole = (agent as any).agent_role;
+        if (agentRole && provinceWideRoles.includes(agentRole) && searchProvince) {
+          const searchProvinceNormalized = normalizeProvince(searchProvince);
+          const agentProvinceNormalized = normalizeProvince(agent.agent_province || '');
+          const officeLocationsForProvince = (agent as any).officeLocations || [];
+          const officeProvinces = officeLocationsForProvince.map((loc: any) => normalizeProvince(loc.province || ''));
+          if (agentProvinceNormalized === searchProvinceNormalized || officeProvinces.includes(searchProvinceNormalized || '')) {
+            console.log(`[AGENT SEARCH] Agent ${agent.id} (${agentRole}) matches province "${searchProvince}" - showing for all ${searchProvince} cities`);
+            return true;
+          }
         }
         
         // City matching (existing logic)

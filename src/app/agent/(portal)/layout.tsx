@@ -807,11 +807,11 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
       {showOnboarding && onboardingStatus && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl max-w-2xl w-full shadow-2xl transform transition-all animate-in fade-in zoom-in duration-200">
-            <div className="bg-gradient-to-r from-neutral-800 to-neutral-700 rounded-t-2xl p-6">
+            <div className="bg-gradient-to-r from-[#1a3a2e] to-[#0f2a20] rounded-t-2xl p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-2xl font-bold text-white">Complete Your Setup</h2>
-                  <p className="text-neutral-100 text-sm mt-1">Finish these steps to start receiving appointments</p>
+                  <p className="text-white/90 text-sm mt-1">Finish these steps to start receiving appointments</p>
                 </div>
                 {onboardingStatus.onboardingCompleted && (
                   <button
@@ -830,14 +830,14 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
               {/* Step 1: Update Profile */}
               <div className={`relative flex items-start gap-4 p-5 rounded-xl border-2 transition-all shadow-sm ${
                 onboardingStatus.hasProfilePicture 
-                  ? 'bg-gradient-to-r from-neutral-50 to-neutral-50 border-neutral-300 shadow-neutral-100' 
+                  ? 'bg-[#f0f7f4] border-[#1a3a2e]/30 shadow-[#1a3a2e]/10' 
                   : onboardingStatus.hasProfilePicture === false
                   ? 'bg-white border-gray-200 hover:border-gray-300'
                   : 'bg-gray-50 border-gray-200 opacity-60'
               }`}>
                 <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center font-bold text-sm shadow-md transition-all ${
                   onboardingStatus.hasProfilePicture 
-                    ? 'bg-gradient-to-br from-neutral-600 to-neutral-700 text-white shadow-neutral-300' 
+                    ? 'bg-[#1a3a2e] text-white shadow-[#1a3a2e]/30' 
                     : 'bg-gray-300 text-gray-600'
                 }`}>
                   {onboardingStatus.hasProfilePicture ? (
@@ -850,7 +850,7 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
                   <div className="flex items-center justify-between mb-2">
                     <div className="font-bold text-gray-900 text-base">Update Profile</div>
                     {onboardingStatus.hasProfilePicture && (
-                      <span className="text-xs font-semibold text-neutral-700 bg-neutral-200 px-3 py-1 rounded-full">Complete</span>
+                      <span className="text-xs font-semibold text-[#1a3a2e] bg-[#1a3a2e]/15 px-3 py-1 rounded-full">Complete</span>
                     )}
                   </div>
                   <div className="text-sm text-gray-600 mb-3">Add your profile photo and update your information</div>
@@ -860,7 +860,7 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
                         setShowOnboarding(false);
                         router.push('/agent/settings?tab=profile');
                       }}
-                      className="px-5 py-2.5 bg-gradient-to-r from-neutral-800 to-neutral-700 text-white text-sm font-semibold rounded-lg hover:from-neutral-900 hover:to-neutral-800 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                      className="px-5 py-2.5 bg-[#1a3a2e] text-white text-sm font-semibold rounded-lg hover:bg-[#0f2a20] transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                     >
                       Update Profile
                     </button>
@@ -871,14 +871,14 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
               {/* Step 2: Add Availability */}
               <div className={`relative flex items-start gap-4 p-5 rounded-xl border-2 transition-all shadow-sm ${
                 onboardingStatus.hasAvailability 
-                  ? 'bg-gradient-to-r from-neutral-50 to-neutral-50 border-neutral-300 shadow-neutral-100' 
+                  ? 'bg-[#f0f7f4] border-[#1a3a2e]/30 shadow-[#1a3a2e]/10' 
                   : !onboardingStatus.hasProfilePicture
                   ? 'bg-gray-50 border-gray-200 opacity-60'
                   : 'bg-white border-gray-200 hover:border-gray-300'
               }`}>
                 <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center font-bold text-sm shadow-md transition-all ${
                   onboardingStatus.hasAvailability 
-                    ? 'bg-gradient-to-br from-neutral-600 to-neutral-700 text-white shadow-neutral-300' 
+                    ? 'bg-[#1a3a2e] text-white shadow-[#1a3a2e]/30' 
                     : !onboardingStatus.hasProfilePicture
                     ? 'bg-gray-200 text-gray-400'
                     : 'bg-gray-300 text-gray-600'
@@ -897,7 +897,7 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
                       Add Availability
                     </div>
                     {onboardingStatus.hasAvailability && (
-                      <span className="text-xs font-semibold text-neutral-700 bg-neutral-200 px-3 py-1 rounded-full">Complete</span>
+                      <span className="text-xs font-semibold text-[#1a3a2e] bg-[#1a3a2e]/15 px-3 py-1 rounded-full">Complete</span>
                     )}
                   </div>
                   <div className={`text-sm mb-3 ${!onboardingStatus.hasProfilePicture ? 'text-gray-400' : 'text-gray-600'}`}>
@@ -911,7 +911,7 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
                         setShowOnboarding(false);
                         router.push('/agent/schedule?openAvailability=true');
                       }}
-                      className="px-5 py-2.5 bg-gradient-to-r from-neutral-800 to-neutral-700 text-white text-sm font-semibold rounded-lg hover:from-neutral-900 hover:to-neutral-800 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                      className="px-5 py-2.5 bg-[#1a3a2e] text-white text-sm font-semibold rounded-lg hover:bg-[#0f2a20] transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                     >
                       Add Availability
                     </button>
@@ -930,14 +930,14 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
               {/* Step 3: Add Payment Method */}
               <div className={`relative flex items-start gap-4 p-5 rounded-xl border-2 transition-all shadow-sm ${
                 onboardingStatus.hasPaymentMethod 
-                  ? 'bg-gradient-to-r from-neutral-50 to-neutral-50 border-neutral-300 shadow-neutral-100' 
+                  ? 'bg-[#f0f7f4] border-[#1a3a2e]/30 shadow-[#1a3a2e]/10' 
                   : !onboardingStatus.hasAvailability || !onboardingStatus.hasProfilePicture
                   ? 'bg-gray-50 border-gray-200 opacity-60'
                   : 'bg-white border-gray-200 hover:border-gray-300'
               }`}>
                 <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center font-bold text-sm shadow-md transition-all ${
                   onboardingStatus.hasPaymentMethod 
-                    ? 'bg-gradient-to-br from-neutral-600 to-neutral-700 text-white shadow-neutral-300' 
+                    ? 'bg-[#1a3a2e] text-white shadow-[#1a3a2e]/30' 
                     : !onboardingStatus.hasAvailability || !onboardingStatus.hasProfilePicture
                     ? 'bg-gray-200 text-gray-400'
                     : 'bg-gray-300 text-gray-600'
@@ -956,7 +956,7 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
                       Add Payment Method
                     </div>
                     {onboardingStatus.hasPaymentMethod && (
-                      <span className="text-xs font-semibold text-neutral-700 bg-neutral-200 px-3 py-1 rounded-full">Complete</span>
+                      <span className="text-xs font-semibold text-[#1a3a2e] bg-[#1a3a2e]/15 px-3 py-1 rounded-full">Complete</span>
                     )}
                   </div>
                   <div className={`text-sm mb-3 ${!onboardingStatus.hasAvailability || !onboardingStatus.hasProfilePicture ? 'text-gray-400' : 'text-gray-600'}`}>
@@ -970,7 +970,7 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
                         setShowOnboarding(false);
                         router.push('/agent/billing');
                       }}
-                      className="px-5 py-2.5 bg-gradient-to-r from-neutral-800 to-neutral-700 text-white text-sm font-semibold rounded-lg hover:from-neutral-900 hover:to-neutral-800 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                      className="px-5 py-2.5 bg-[#1a3a2e] text-white text-sm font-semibold rounded-lg hover:bg-[#0f2a20] transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                     >
                       Add Payment
                     </button>
@@ -989,9 +989,9 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
 
             {/* Completion Message */}
             {onboardingStatus.hasProfilePicture && onboardingStatus.hasPaymentMethod && onboardingStatus.hasAvailability && (
-              <div className="bg-gradient-to-r from-neutral-50 via-neutral-50 to-neutral-50 border-2 border-neutral-300 rounded-xl p-6 mb-6 shadow-md">
+              <div className="bg-[#f0f7f4] border-2 border-[#1a3a2e]/30 rounded-xl p-6 mb-6 shadow-md">
                 <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-neutral-600 to-neutral-700 flex items-center justify-center shadow-lg">
+                  <div className="flex-shrink-0 w-12 h-12 rounded-full bg-[#1a3a2e] flex items-center justify-center shadow-lg">
                     <Check size={28} className="text-white" />
                   </div>
                   <div>
@@ -1068,7 +1068,7 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
                       setShowOnboarding(false);
                     }
                   }}
-                  className="flex-1 bg-gradient-to-r from-neutral-800 to-neutral-700 text-white px-4 py-2.5 rounded-lg font-semibold hover:from-neutral-900 hover:to-neutral-800 transition-all shadow-md hover:shadow-lg"
+                  className="flex-1 bg-[#1a3a2e] text-white px-4 py-2.5 rounded-lg font-semibold hover:bg-[#0f2a20] transition-all shadow-md hover:shadow-lg"
                 >
                   Continue
                 </button>
