@@ -135,6 +135,8 @@ export default function CreateAccountNextPage() {
       email: (step1.email || "").trim(),
       password: step1.password || "",
       full_name,
+      first_name: (step1.firstName || "").trim() || null,
+      last_name: (step1.lastName || "").trim() || null,
       phone: (step1.phoneNumber || "").replace(/\D/g, "").slice(0, 10) || step1.phoneNumber,
       address,
       notification_cities,

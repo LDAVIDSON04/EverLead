@@ -34,6 +34,16 @@ function Label({ className = "", children, ...props }: React.LabelHTMLAttributes
   );
 }
 
+// Format 10-digit phone for display; leave other values as-is
+function formatPhoneDisplay(value: string): string {
+  if (!value || typeof value !== "string") return "";
+  const digits = value.replace(/\D/g, "");
+  if (digits.length === 10) {
+    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+  }
+  return value;
+}
+
 function Textarea({ className = "", ...props }: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
   return (
     <textarea
@@ -232,12 +242,12 @@ export default function SettingsPage() {
             : "";
           setProfileData({
             fullName: profile.full_name || "",
-            firstName: profile.first_name || profile.full_name?.split(" ")[0] || "",
-            lastName: profile.last_name || profile.full_name?.split(" ").slice(1).join(" ") || "",
+            firstName: profile.first_name ?? (profile.full_name?.split(" ")[0] ?? ""),
+            lastName: profile.last_name ?? (profile.full_name?.split(" ").slice(1).join(" ") ?? ""),
             businessName,
             professionalTitle: profile.job_title || "",
             email: profile.email || "",
-            phone: profile.phone || "",
+            phone: formatPhoneDisplay(profile.phone || "") || (profile.phone || "") || (metadata as any).phone || "",
             regionsServed: (metadata as any).regions_served || (Array.isArray((metadata as any).regions_served_array) ? (metadata as any).regions_served_array.join(", ") : "") || "",
             licenseNumber,
             businessAddress: addressStreet,
@@ -525,6 +535,9 @@ function ProfileSection({
         saveData.firstName = '';
         saveData.lastName = '';
       }
+      // Persist phone as digits (10) for consistency with create-account
+      const phoneDigits = (saveData.phone || "").replace(/\D/g, "").slice(0, 10);
+      if (phoneDigits) saveData.phone = phoneDigits;
 
       console.log("Saving profile data:", {
         fullName: saveData.fullName,
@@ -589,7 +602,7 @@ function ProfileSection({
             businessName: updatedProfile.funeral_home || "",
             professionalTitle: updatedProfile.job_title || "",
             email: updatedProfile.email || "",
-            phone: updatedProfile.phone || "",
+            phone: formatPhoneDisplay(updatedProfile.phone || "") || updatedProfile.phone || "",
             regionsServed: metadata.regions_served || "",
             licenseNumber: metadata.license_number || "",
             businessAddress: metadata.business_address || "",
@@ -731,6 +744,7 @@ function ProfileSection({
             value={profileData.phone}
             onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
             className="mt-1"
+            placeholder="(XXX) XXX-XXXX"
           />
         </div>
 
@@ -769,17 +783,6 @@ function ProfileSection({
           )}
         </div>
       )}
-
-      <div className="mb-4">
-        <Label htmlFor="regionsServed">Regions served</Label>
-        <Input
-          id="regionsServed"
-          value={profileData.regionsServed || ""}
-          onChange={(e) => setProfileData({ ...profileData, regionsServed: e.target.value })}
-          className="mt-1"
-          placeholder="e.g., BC, AB"
-        />
-      </div>
 
       {profileData.professionalDetails && (
         <div className="mb-4">

@@ -74,11 +74,21 @@ export default function AgentProfilePage() {
           console.error('Error fetching reviews:', reviewError);
         }
 
-        // Use ai_generated_bio if available, otherwise fall back to generated summary/fullBio
+        // Use ai_generated_bio if available; else build from create-account metadata.bio; else fallback
         const generatedBio = data.ai_generated_bio || null;
-        const bioParagraphs = generatedBio ? generatedBio.split('\n\n') : [];
+        const metaBio = (metadata as any)?.bio;
+        const hasMetaBio = metaBio && (metaBio.years_of_experience || metaBio.practice_philosophy_help || metaBio.practice_philosophy_appreciate);
+        const bioFromCreateAccount = hasMetaBio
+          ? [
+              metaBio.years_of_experience ? `With ${metaBio.years_of_experience} year${String(metaBio.years_of_experience) === "1" ? "" : "s"} of experience.` : "",
+              metaBio.practice_philosophy_help || "",
+              metaBio.practice_philosophy_appreciate ? `Families appreciate: ${metaBio.practice_philosophy_appreciate}` : "",
+            ].filter(Boolean).join("\n\n")
+          : null;
+        const displayBio = generatedBio || bioFromCreateAccount;
+        const bioParagraphs = displayBio ? displayBio.split('\n\n') : [];
         const summary = bioParagraphs.length > 0 ? bioParagraphs[0] : `${data.full_name || 'This agent'} brings years of compassionate expertise in end-of-life planning and grief support. ${specialty || 'They help'} families navigate difficult decisions with dignity and care.`;
-        const fullBio = generatedBio || `${data.full_name || 'This agent'}'s journey into end-of-life care is driven by a commitment to helping families during life's most challenging moments.\n\n${specialty || 'Their expertise'} allows them to address both the emotional and practical aspects of end-of-life planning.\n\nThey are known for their patient, non-judgmental approach and their ability to facilitate difficult family conversations.`;
+        const fullBio = displayBio || `${data.full_name || 'This agent'}'s journey into end-of-life care is driven by a commitment to helping families during life's most challenging moments.\n\n${specialty || 'Their expertise'} allows them to address both the emotional and practical aspects of end-of-life planning.\n\nThey are known for their patient, non-judgmental approach and their ability to facilitate difficult family conversations.`;
 
         setAgentData({
           ...data,

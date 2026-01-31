@@ -20,6 +20,8 @@ export async function POST(req: NextRequest) {
           email,
           password,
           full_name,
+          first_name,
+          last_name,
           phone,
           address,
           certificates_licenses,
@@ -223,13 +225,15 @@ export async function POST(req: NextRequest) {
 
     // Create profile with approval_status = 'pending'
     // Note: email is NOT stored in profiles table - it's in auth.users
-    // Build profile data, only including fields that exist
+    // Build profile data; use first_name + last_name from create-account so name is never wrong
     const profileData: any = {
       id: userId,
-      full_name,
+      full_name: full_name || [first_name, last_name].filter(Boolean).join(" ").trim() || "",
       role: "agent",
       approval_status: "pending",
     };
+    if (first_name !== undefined && first_name !== null) profileData.first_name = String(first_name).trim() || null;
+    if (last_name !== undefined && last_name !== null) profileData.last_name = String(last_name).trim() || null;
 
     // Add basic fields
     if (phone) profileData.phone = phone;
@@ -393,11 +397,13 @@ export async function POST(req: NextRequest) {
           // Update existing profile instead
           // Note: email is NOT stored in profiles table - it's in auth.users
           const updateData: any = {
-            full_name,
+            full_name: full_name || [first_name, last_name].filter(Boolean).join(" ").trim() || "",
             role: "agent",
             approval_status: "pending",
           };
-          
+          if (first_name !== undefined && first_name !== null) updateData.first_name = String(first_name).trim() || null;
+          if (last_name !== undefined && last_name !== null) updateData.last_name = String(last_name).trim() || null;
+
           // Add basic fields
           if (phone) updateData.phone = phone;
           
