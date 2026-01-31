@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabaseClient } from "@/lib/supabaseClient";
 import { useRequireRole } from "@/lib/hooks/useRequireRole";
-import { Calendar, Clock, User, X, ChevronLeft, ChevronRight, MapPin } from "lucide-react";
+import { Calendar, Clock, User, X, ChevronLeft, ChevronRight, MapPin, Video } from "lucide-react";
 import { DateTime } from "luxon";
 import { ClientInfoModal } from "../my-appointments/components/ClientInfoModal";
 import { downloadClientInfo } from "@/lib/downloadClientInfo";
@@ -977,8 +977,13 @@ export default function SchedulePage() {
             setViewingExternalAppointment(apt);
           }
         }}
-        className={`${color} rounded p-0.5 md:p-1 shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-all border border-gray-200`}
+        className={`${color} rounded p-0.5 md:p-1 shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-all border border-gray-200 relative`}
       >
+        {isVideoCall && (
+          <span className="absolute top-0.5 right-0.5 text-gray-600 pointer-events-none" aria-hidden>
+            <Video className="w-3 h-3 md:w-3.5 md:h-3.5" strokeWidth={2.5} />
+          </span>
+        )}
         <div className="h-full flex flex-col gap-0.5 px-0.5 md:px-1 py-0.5">
           <div className="text-[9px] md:text-xs font-medium text-gray-700 leading-tight line-clamp-1 break-words">
             {apt.family_name || 'Appointment'}
@@ -1226,13 +1231,21 @@ export default function SchedulePage() {
                                     setViewingExternalAppointment(apt);
                                   }
                                 }}
-                                className={`absolute inset-x-0.5 ${color} rounded p-0.5 md:p-1 shadow-sm cursor-pointer hover:shadow-md transition-all border border-gray-200`}
+                                className={`absolute inset-x-0.5 ${color} rounded p-0.5 md:p-1 shadow-sm cursor-pointer hover:shadow-md transition-all border border-gray-200 relative`}
                                 style={{
                                   top: `${finalTop}px`,
                                   height: `${finalHeight}px`,
                                   zIndex: 5,
                                 } as React.CSSProperties}
                               >
+                                {(() => {
+                                  const isVideoCall = !apt.is_external && apt.office_location_id === null && apt.lead_id;
+                                  return isVideoCall ? (
+                                    <span className="absolute top-0.5 right-0.5 text-gray-600 pointer-events-none" aria-hidden>
+                                      <Video className="w-3 h-3 md:w-3.5 md:h-3.5" strokeWidth={2.5} />
+                                    </span>
+                                  ) : null;
+                                })()}
                                 <div className="h-full flex flex-col gap-0.5 px-0.5 md:px-1 py-0.5">
                                   {/* Customer Name - shows for both past and future appointments */}
                                   <div className="text-[9px] md:text-xs font-medium text-gray-700 leading-tight line-clamp-1 break-words">
@@ -1358,13 +1371,21 @@ export default function SchedulePage() {
                                     setViewingExternalAppointment(apt);
                                   }
                                 }}
-                                className={`absolute inset-x-0.5 ${color} rounded p-0.5 md:p-1 shadow-sm cursor-pointer hover:shadow-md transition-all border border-gray-200`}
+                                className={`absolute inset-x-0.5 ${color} rounded p-0.5 md:p-1 shadow-sm cursor-pointer hover:shadow-md transition-all border border-gray-200 relative`}
                                 style={{
                                   top: `${finalTop}px`,
                                   height: `${finalHeight}px`,
                                   zIndex: 5,
                                 } as React.CSSProperties}
                           >
+                            {(() => {
+                              const isVideoCall = !apt.is_external && apt.office_location_id === null && apt.lead_id;
+                              return isVideoCall ? (
+                                <span className="absolute top-0.5 right-0.5 text-gray-600 pointer-events-none" aria-hidden>
+                                  <Video className="w-3 h-3 md:w-3.5 md:h-3.5" strokeWidth={2.5} />
+                                </span>
+                              ) : null;
+                            })()}
                             <div className="h-full flex flex-col gap-0.5 px-0.5 md:px-1 py-0.5">
                               <div className="text-[9px] md:text-xs font-medium text-gray-700 leading-tight line-clamp-1 break-words">
                                 {apt.family_name || 'Appointment'}
@@ -1463,9 +1484,14 @@ export default function SchedulePage() {
                                 setViewingExternalAppointment(apt);
                               }
                             }}
-                            className={`${color} rounded px-1.5 py-0.5 text-[10px] cursor-pointer hover:opacity-80 transition-opacity border border-gray-300 truncate`}
+                            className={`${color} rounded px-1.5 py-0.5 text-[10px] cursor-pointer hover:opacity-80 transition-opacity border border-gray-300 truncate relative`}
                             title={subLabel ? `${timeStr} - ${apt.family_name || 'Appointment'} (${subLabel})` : `${timeStr} - ${apt.family_name || 'Appointment'}`}
                           >
+                            {isVideoCall && (
+                              <span className="absolute top-0.5 right-0.5 text-gray-600 pointer-events-none" aria-hidden>
+                                <Video className="w-2.5 h-2.5" strokeWidth={2.5} />
+                              </span>
+                            )}
                             <span className="font-medium">{timeStr}</span>
                             <span className="ml-1">{apt.family_name || 'Appointment'}</span>
                             {subLabel && <span className="block text-[9px] text-gray-600 truncate">{subLabel}</span>}
