@@ -564,7 +564,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                   Browse your options
                 </h3>
                 <p className="text-[#1A1A1A]/60 text-sm leading-relaxed mb-4">
-                  Browse and compare end of life specialists from the comfort of your home.
+                  Browse and compare estate planning specialists from the comfort of your home.
                 </p>
                 <button 
                   onClick={navigateToSearchWithLocation}
