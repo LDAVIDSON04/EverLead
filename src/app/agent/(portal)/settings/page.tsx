@@ -155,6 +155,10 @@ export default function SettingsPage() {
     businessProvince: "",
     businessZip: "",
     profilePictureUrl: "",
+    specialty: "",
+    agentRole: "",
+    professionalDetails: "" as string, // role-specific: law_society_name, licensing_province, etc. (display string)
+    notificationCities: "" as string, // e.g. "Penticton, BC; Victoria, BC" (from profile.notification_cities)
   });
 
   const [saving, setSaving] = useState(false);
@@ -202,28 +206,50 @@ export default function SettingsPage() {
             full_profile: profile, // Log entire profile to see all fields
           });
           
-          // Try multiple fallback locations for address
+          // Try multiple fallback locations for address (create-account stores in metadata.address)
           const addressStreet = metadata.address?.street || profile.street_address || metadata.business_street || "";
           const addressCity = metadata.address?.city || profile.city || profile.agent_city || metadata.business_city || "";
           const addressProvince = metadata.address?.province || profile.province || profile.agent_province || metadata.business_province || "";
           const addressZip = metadata.address?.postalCode || profile.postal_code || metadata.business_zip || "";
-          
+          // Business name: create-account stores in metadata.business_name; signup also sets profile.funeral_home
+          const businessName = profile.funeral_home || (metadata as any).business_name || "";
+          // License/credentials: create-account uses role-specific fields (law_society_name, licensing_province, regulatory_organization, llqp_license, etc.)
+          const licenseNumber = (metadata as any).license_number || (metadata as any).law_society_name || (metadata as any).licensing_province || (metadata as any).regulatory_organization || "";
+          // Build role-specific professional details string for display (all create-account fields)
+          const details: string[] = [];
+          if ((metadata as any).authorized_provinces) details.push(`Authorized provinces: ${(metadata as any).authorized_provinces}`);
+          if ((metadata as any).additional_provinces) details.push(`Additional provinces: ${(metadata as any).additional_provinces}`);
+          if ((metadata as any).registered_provinces) details.push(`Registered provinces: ${(metadata as any).registered_provinces}`);
+          if ((metadata as any).llqp_license) details.push("LLQP License: Yes");
+          if ((metadata as any).llqp_quebec) details.push(`LLQP Quebec: ${(metadata as any).llqp_quebec}`);
+          if ((metadata as any).trustage_enroller_number) details.push("TruStage Enroller: Yes");
+          if ((metadata as any).has_multiple_provinces) details.push("Multiple provinces: Yes");
+          const professionalDetails = details.length ? details.join(" • ") : "";
+          // Notification cities from signup (array of { city, province })
+          const notificationCitiesList = (profile as any).notification_cities;
+          const notificationCitiesStr = Array.isArray(notificationCitiesList)
+            ? notificationCitiesList.map((c: { city?: string; province?: string }) => `${c.city || ""}, ${c.province || ""}`).filter(Boolean).join("; ")
+            : "";
           setProfileData({
             fullName: profile.full_name || "",
             firstName: profile.first_name || profile.full_name?.split(" ")[0] || "",
             lastName: profile.last_name || profile.full_name?.split(" ").slice(1).join(" ") || "",
-            businessName: profile.funeral_home || "",
+            businessName,
             professionalTitle: profile.job_title || "",
             email: profile.email || "",
             phone: profile.phone || "",
-            regionsServed: metadata.regions_served || "",
-            licenseNumber: metadata.license_number || "",
+            regionsServed: (metadata as any).regions_served || (Array.isArray((metadata as any).regions_served_array) ? (metadata as any).regions_served_array.join(", ") : "") || "",
+            licenseNumber,
             businessAddress: addressStreet,
             businessStreet: addressStreet,
             businessCity: addressCity,
             businessProvince: addressProvince,
             businessZip: addressZip,
             profilePictureUrl: profile.profile_picture_url || "",
+            specialty: (metadata as any).specialty || "",
+            agentRole: (metadata as any).agent_role || "",
+            professionalDetails,
+            notificationCities: notificationCitiesStr,
           });
           
           console.log("🔍 [SETTINGS] Set profile data (final values):", {
@@ -414,7 +440,21 @@ function ProfileSection({
         const { profile: updatedProfile } = await reloadRes.json();
         if (updatedProfile) {
           const metadata = updatedProfile.metadata || {};
+          const notifCities = (updatedProfile as any).notification_cities;
+          const notificationCitiesStr = Array.isArray(notifCities)
+            ? notifCities.map((c: { city?: string; province?: string }) => `${c.city || ""}, ${c.province || ""}`).filter(Boolean).join("; ")
+            : profileData.notificationCities;
+          const details: string[] = [];
+          if (metadata.authorized_provinces) details.push(`Authorized provinces: ${metadata.authorized_provinces}`);
+          if (metadata.additional_provinces) details.push(`Additional provinces: ${metadata.additional_provinces}`);
+          if (metadata.registered_provinces) details.push(`Registered provinces: ${metadata.registered_provinces}`);
+          if (metadata.llqp_license) details.push("LLQP License: Yes");
+          if (metadata.llqp_quebec) details.push(`LLQP Quebec: ${metadata.llqp_quebec}`);
+          if (metadata.trustage_enroller_number) details.push("TruStage Enroller: Yes");
+          if (metadata.has_multiple_provinces) details.push("Multiple provinces: Yes");
+          const professionalDetails = details.length ? details.join(" • ") : "";
           setProfileData({
+            ...profileData,
             fullName: updatedProfile.full_name || profileData.fullName,
             firstName: updatedProfile.first_name || profileData.firstName,
             lastName: updatedProfile.last_name || profileData.lastName,
@@ -422,14 +462,17 @@ function ProfileSection({
             professionalTitle: updatedProfile.job_title || profileData.professionalTitle,
             email: updatedProfile.email || profileData.email,
             phone: updatedProfile.phone || profileData.phone,
-            regionsServed: metadata.regions_served || profileData.regionsServed,
-            specialty: metadata.specialty || profileData.specialty,
-            licenseNumber: metadata.license_number || profileData.licenseNumber,
-            businessAddress: metadata.business_address || profileData.businessAddress,
-            businessStreet: metadata.business_street || profileData.businessStreet,
-            businessCity: metadata.business_city || profileData.businessCity,
-            businessProvince: metadata.business_province || profileData.businessProvince,
-            businessZip: metadata.business_zip || profileData.businessZip,
+            regionsServed: metadata.regions_served ?? profileData.regionsServed,
+            specialty: metadata.specialty ?? profileData.specialty,
+            agentRole: metadata.agent_role ?? profileData.agentRole,
+            professionalDetails,
+            notificationCities: notificationCitiesStr,
+            licenseNumber: metadata.license_number ?? profileData.licenseNumber,
+            businessAddress: metadata.business_address ?? profileData.businessAddress,
+            businessStreet: metadata.business_street ?? profileData.businessStreet,
+            businessCity: metadata.business_city ?? profileData.businessCity,
+            businessProvince: metadata.business_province ?? profileData.businessProvince,
+            businessZip: metadata.business_zip ?? profileData.businessZip,
             profilePictureUrl: updatedProfile.profile_picture_url || publicUrl,
           });
         }
@@ -526,6 +569,19 @@ function ProfileSection({
         const { profile: updatedProfile } = await reloadRes.json();
         if (updatedProfile) {
           const metadata = updatedProfile.metadata || {};
+          const notifCities = (updatedProfile as any).notification_cities;
+          const notificationCitiesStr = Array.isArray(notifCities)
+            ? notifCities.map((c: { city?: string; province?: string }) => `${c.city || ""}, ${c.province || ""}`).filter(Boolean).join("; ")
+            : "";
+          const details: string[] = [];
+          if (metadata.authorized_provinces) details.push(`Authorized provinces: ${metadata.authorized_provinces}`);
+          if (metadata.additional_provinces) details.push(`Additional provinces: ${metadata.additional_provinces}`);
+          if (metadata.registered_provinces) details.push(`Registered provinces: ${metadata.registered_provinces}`);
+          if (metadata.llqp_license) details.push("LLQP License: Yes");
+          if (metadata.llqp_quebec) details.push(`LLQP Quebec: ${metadata.llqp_quebec}`);
+          if (metadata.trustage_enroller_number) details.push("TruStage Enroller: Yes");
+          if (metadata.has_multiple_provinces) details.push("Multiple provinces: Yes");
+          const professionalDetails = details.length ? details.join(" • ") : "";
           setProfileData({
             fullName: updatedProfile.full_name || "",
             firstName: updatedProfile.first_name || updatedProfile.full_name?.split(" ")[0] || "",
@@ -542,6 +598,10 @@ function ProfileSection({
             businessProvince: metadata.business_province || "",
             businessZip: metadata.business_zip || "",
             profilePictureUrl: updatedProfile.profile_picture_url || "",
+            specialty: metadata.specialty || "",
+            agentRole: metadata.agent_role || "",
+            professionalDetails,
+            notificationCities: notificationCitiesStr,
           });
         }
       }
@@ -685,6 +745,59 @@ function ProfileSection({
         </div>
       </div>
 
+      {/* Profession & specialty (from create-account) */}
+      {(profileData.agentRole || profileData.specialty) && (
+        <div className="grid grid-cols-2 gap-4 mb-4">
+          {profileData.agentRole && (
+            <div>
+              <Label>Profession</Label>
+              <div className="mt-1 px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-700 capitalize">
+                {(profileData.agentRole as string).replace(/-/g, " ")}
+              </div>
+            </div>
+          )}
+          {profileData.specialty && (
+            <div>
+              <Label>Specialty</Label>
+              <Input
+                value={profileData.specialty}
+                onChange={(e) => setProfileData({ ...profileData, specialty: e.target.value })}
+                className="mt-1"
+                placeholder="e.g., Funeral Planner"
+              />
+            </div>
+          )}
+        </div>
+      )}
+
+      <div className="mb-4">
+        <Label htmlFor="regionsServed">Regions served</Label>
+        <Input
+          id="regionsServed"
+          value={profileData.regionsServed || ""}
+          onChange={(e) => setProfileData({ ...profileData, regionsServed: e.target.value })}
+          className="mt-1"
+          placeholder="e.g., BC, AB"
+        />
+      </div>
+
+      {profileData.professionalDetails && (
+        <div className="mb-4">
+          <Label>Professional details</Label>
+          <p className="mt-1 px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-sm text-gray-700">
+            {profileData.professionalDetails}
+          </p>
+        </div>
+      )}
+
+      {profileData.notificationCities && (
+        <div className="mb-4">
+          <Label>Notification cities</Label>
+          <p className="mt-1 px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-sm text-gray-700">
+            {profileData.notificationCities}
+          </p>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <div>
