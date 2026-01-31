@@ -81,6 +81,25 @@ function queryToAgentRole(query: string): string | null {
   return null;
 }
 
+// Keywords that indicate an agent belongs to a role (for specialty/job_title when agent_role is missing or wrong)
+const ROLE_KEYWORDS: Record<string, string[]> = {
+  "funeral-planner": ["funeral", "pre need", "pre-need", "pre planner", "funeral director", "funeral planning", "funeral services", "advanced planning"],
+  "lawyer": ["lawyer", "estate", "wills", "legal"],
+  "insurance-broker": ["insurance", "life insurance", "broker"],
+  "financial-advisor": ["financial", "financial advisor", "financial planner", "advisor", "planner"],
+};
+
+function agentMatchesProfession(agent: AgentSearchResult, requiredRole: string): boolean {
+  const role = (agent.agent_role || '').toLowerCase().trim().replace(/\s+/g, '-');
+  if (role === requiredRole) return true;
+  const specialty = (agent.specialty || '').toLowerCase();
+  const jobTitle = (agent.job_title || '').toLowerCase();
+  const combined = `${specialty} ${jobTitle}`;
+  const keywords = ROLE_KEYWORDS[requiredRole];
+  if (!keywords) return false;
+  return keywords.some((kw) => combined.includes(kw));
+}
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
@@ -605,30 +624,13 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // Filter by profession: agent only shows when search query matches their registered agent_role (create-account choice)
+    // Filter by profession: only show agents whose role/profession matches the search (agent_role or specialty/job_title)
     if (query) {
       const requiredRole = queryToAgentRole(query);
       const queryLower = query.toLowerCase().trim();
-      const beforeQueryFilter = [...filtered];
       if (requiredRole) {
-        filtered = filtered.filter((agent) => {
-          const role = (agent.agent_role || '').toLowerCase().trim().replace(/\s+/g, '-');
-          return role === requiredRole;
-        });
-        // When fallback (no in-person in city): if strict agent_role leaves 0, show agents whose specialty/job_title matches query so province list isn't empty
-        if (fallback && filtered.length === 0 && beforeQueryFilter.length > 0) {
-          filtered = beforeQueryFilter.filter((agent) => {
-            return (
-              agent.full_name?.toLowerCase().includes(queryLower) ||
-              agent.funeral_home?.toLowerCase().includes(queryLower) ||
-              agent.job_title?.toLowerCase().includes(queryLower) ||
-              agent.specialty?.toLowerCase().includes(queryLower)
-            );
-          });
-          console.log(`[AGENT SEARCH] Fallback: agent_role left 0, using text match on query "${query}" -> ${filtered.length} agents`);
-        } else {
-          console.log(`[AGENT SEARCH] Filtering by profession: q="${query}" -> agent_role=${requiredRole}, ${filtered.length} agents`);
-        }
+        filtered = filtered.filter((agent) => agentMatchesProfession(agent, requiredRole));
+        console.log(`[AGENT SEARCH] Filtering by profession: q="${query}" -> ${requiredRole}, ${filtered.length} agents`);
       } else {
         filtered = filtered.filter((agent) => {
           return (
