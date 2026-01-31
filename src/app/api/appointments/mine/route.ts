@@ -579,6 +579,8 @@ export async function GET(req: NextRequest) {
       
       // If no location found, it will be null and will display as "N/A"
       
+      const isAgentCreatedEvent = lead?.email?.includes("@soradin.internal");
+
       const result = {
         id: apt.id,
         lead_id: apt.lead_id || (lead?.id || null),
@@ -588,6 +590,7 @@ export async function GET(req: NextRequest) {
         family_name: familyName,
         location: location || "N/A",
         office_location_id: apt.office_location_id || null, // Include to detect video calls
+        is_agent_created: !!isAgentCreatedEvent, // Agent-added events (e.g. Seminar BDC) show blank, not "Video Call"
       };
       
       // Debug logging for location assignment

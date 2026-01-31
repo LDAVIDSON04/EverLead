@@ -29,6 +29,7 @@ type Appointment = {
   location?: string;
   is_external?: boolean;
   provider?: string;
+  is_agent_created?: boolean; // Events agents add themselves - show blank, not "Video Call"
 };
 
 type ViewType = 'day' | 'week' | 'month';
@@ -956,8 +957,8 @@ export default function SchedulePage() {
 
   // Render appointment box (shared across views)
   const renderAppointmentBox = (apt: any, color: string, showLocation: boolean = true) => {
-    // Check if this is a video call (office_location_id is null and not an external event)
-    const isVideoCall = !apt.is_external && apt.office_location_id === null && apt.lead_id;
+    // Video call = family-booked appointment with no office (video mode). Agent-created events show blank.
+    const isVideoCall = !apt.is_external && apt.office_location_id === null && apt.lead_id && !apt.is_agent_created;
     
     const cleanLocation = apt.location && 
       apt.location !== "N/A" && 
@@ -1239,7 +1240,7 @@ export default function SchedulePage() {
                                 } as React.CSSProperties}
                               >
                                 {(() => {
-                                  const isVideoCall = !apt.is_external && apt.office_location_id === null && apt.lead_id;
+                                  const isVideoCall = !apt.is_external && apt.office_location_id === null && apt.lead_id && !apt.is_agent_created;
                                   return isVideoCall ? (
                                     <span className="absolute top-0.5 right-0.5 text-gray-600 pointer-events-none" aria-hidden>
                                       <Video className="w-3 h-3 md:w-3.5 md:h-3.5" strokeWidth={2.5} />
@@ -1252,9 +1253,9 @@ export default function SchedulePage() {
                                     {apt.family_name || 'Appointment'}
                                   </div>
                                   
-                                  {/* Location or Video Call - shows for both past and future */}
+                                  {/* Location or Video Call - shows for family-booked; agent-created events show blank */}
                                   {(() => {
-                                    const isVideoCall = !apt.is_external && apt.office_location_id === null && apt.lead_id;
+                                    const isVideoCall = !apt.is_external && apt.office_location_id === null && apt.lead_id && !apt.is_agent_created;
                                     const validLocation = apt.location && 
                                       apt.location !== "N/A" && 
                                       apt.location !== "External Calendar" &&
@@ -1379,7 +1380,7 @@ export default function SchedulePage() {
                                 } as React.CSSProperties}
                           >
                             {(() => {
-                              const isVideoCall = !apt.is_external && apt.office_location_id === null && apt.lead_id;
+                              const isVideoCall = !apt.is_external && apt.office_location_id === null && apt.lead_id && !apt.is_agent_created;
                               return isVideoCall ? (
                                 <span className="absolute top-0.5 right-0.5 text-gray-600 pointer-events-none" aria-hidden>
                                   <Video className="w-3 h-3 md:w-3.5 md:h-3.5" strokeWidth={2.5} />
@@ -1391,7 +1392,7 @@ export default function SchedulePage() {
                                 {apt.family_name || 'Appointment'}
                               </div>
                               {(() => {
-                                const isVideoCall = !apt.is_external && apt.office_location_id === null && apt.lead_id;
+                                const isVideoCall = !apt.is_external && apt.office_location_id === null && apt.lead_id && !apt.is_agent_created;
                                 const validLocation = apt.location && 
                                   apt.location !== "N/A" && 
                                   apt.location !== "External Calendar" &&
@@ -1468,9 +1469,9 @@ export default function SchedulePage() {
                         const ampm = hour >= 12 ? 'PM' : 'AM';
                         const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
                         const timeStr = `${displayHour}${apt.minute > 0 ? `:${String(apt.minute).padStart(2, '0')}` : ''} ${ampm}`;
-                        const isVideoCall = !apt.is_external && apt.office_location_id === null && apt.lead_id;
+                        const isVideoCall = !apt.is_external && apt.office_location_id === null && apt.lead_id && !apt.is_agent_created;
                         const validLoc = apt.location && apt.location !== "N/A" && apt.location !== "External Calendar" && !apt.location.match(/^(Google Calendar|Microsoft Calendar|ICS Calendar)$/i);
-                        const subLabel = isVideoCall ? 'Video Call' : (validLoc ? apt.location.replace(/Google Calendar|Microsoft Calendar|ICS Calendar/gi, '').trim() : null);
+                        const subLabel = isVideoCall ? 'Video Call' : (apt.is_agent_created ? null : (validLoc ? apt.location.replace(/Google Calendar|Microsoft Calendar|ICS Calendar/gi, '').trim() : null));
 
                         return (
                           <div
