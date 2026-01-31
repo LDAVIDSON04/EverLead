@@ -303,6 +303,7 @@ function SearchResults() {
           if (searchService) videoParams.set("service", searchService);
           if (searchQuery) videoParams.set("q", searchQuery);
           videoParams.set("mode", "video");
+          videoParams.set("fallback", "1"); // get ALL agents in province (same profession), not just those with video
           const videoRes = await fetch(`/api/agents/search?${videoParams.toString()}`);
           if (videoRes.ok) {
             const { agents: videoAgents } = await videoRes.json();

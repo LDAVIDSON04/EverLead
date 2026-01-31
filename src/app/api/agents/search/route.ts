@@ -88,12 +88,14 @@ export async function GET(req: NextRequest) {
     const service = searchParams.get("service") || "";
     const query = searchParams.get("q") || "";
     const mode = searchParams.get("mode") || "in-person"; // "in-person" | "video"
+    const fallback = searchParams.get("fallback") === "1"; // when true (in-person 0 results), return all agents in province same profession, don't require video
 
     console.log("🔍 [AGENT SEARCH API] Request received:", {
       location,
       service,
       query,
       mode,
+      fallback,
       allParams: Object.fromEntries(searchParams.entries())
     });
 
@@ -568,11 +570,15 @@ export async function GET(req: NextRequest) {
       console.log(`✅ [AGENT SEARCH] After location filter "${location}" (mode=${mode}): ${filtered.length} agents matched`);
     }
 
-    // Video mode: only show agents who have set video availability (even when no location)
+    // Video mode: show agents who have set video availability. When fallback=1 (no in-person in city), show ALL agents in province (same profession) so every agent shows below the popup
     if (mode === "video") {
       const before = filtered.length;
-      filtered = filtered.filter((agent) => hasVideoAvailability(agent));
-      console.log(`✅ [AGENT SEARCH] Video mode: ${filtered.length} agents with video availability (${before} before filter)`);
+      if (fallback) {
+        console.log(`✅ [AGENT SEARCH] Video fallback: showing all ${filtered.length} agents in province (no video required)`);
+      } else {
+        filtered = filtered.filter((agent) => hasVideoAvailability(agent));
+        console.log(`✅ [AGENT SEARCH] Video mode: ${filtered.length} agents with video availability (${before} before filter)`);
+      }
     }
 
     if (location) {
