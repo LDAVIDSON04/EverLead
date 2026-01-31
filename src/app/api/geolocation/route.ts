@@ -41,8 +41,10 @@ export async function GET(req: NextRequest) {
       };
 
       const province = provinceMap[vercelRegion] || vercelRegion;
-      const city = vercelCity;
+      // Decode city in case Vercel sends URL-encoded (e.g. "Santa%20Clara" -> "Santa Clara")
+      const city = decodeURIComponent(vercelCity);
       const country = vercelCountry;
+      // Always format as "City, Province" (no symbols, clean spacing)
       const locationString = `${city}, ${province}`;
 
       console.log("✅ [GEOLOCATION] Location detected from Vercel headers:", {
@@ -56,7 +58,7 @@ export async function GET(req: NextRequest) {
         city,
         province,
         country,
-        location: locationString, // Pre-formatted string for the search field
+        location: locationString, // Pre-formatted string for the search field (clean, no symbols)
       });
     }
 
@@ -125,11 +127,13 @@ export async function GET(req: NextRequest) {
       };
 
       const province = provinceMap[data.regionName] || data.region || null;
-      const city = data.city || null;
+      // Decode city in case the API returns URL-encoded values
+      const city = data.city ? decodeURIComponent(String(data.city)) : null;
       const country = data.country || null;
 
       let locationString: string | null = null;
       if (city && province) {
+        // Always format as "City, Province" (clean, no symbols)
         locationString = `${city}, ${province}`;
       } else if (city) {
         locationString = city;
