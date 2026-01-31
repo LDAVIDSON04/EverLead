@@ -287,14 +287,17 @@ function SearchResults() {
         
         if (!res.ok) {
           console.error("Error loading agents:", res.statusText);
+          setLoading(false);
           return;
         }
 
         const { agents } = await res.json();
         console.log(`✅ [SEARCH] Found ${agents?.length || 0} agents for location "${searchLocation}"`);
 
-        // In-person with 0 results and a location: show "no in-person" banner and list video agents in same profession
+        // In-person with 0 results (same for all 4 professions: funeral, lawyer, insurance, financial):
+        // Show "No in-person availability in your city" popup and list video agents in same profession + province
         if (mode === "in-person" && (agents?.length || 0) === 0 && searchLocation) {
+          setShowingVideoFallback(true);
           const videoParams = new URLSearchParams();
           if (searchLocation) videoParams.set("location", searchLocation);
           if (searchService) videoParams.set("service", searchService);
@@ -385,11 +388,18 @@ function SearchResults() {
               setVideoFallbackAppointments(videoWithReviews);
               setVideoFallbackAvailability(videoAvailabilityMap);
               setAgentAvailability(videoAvailabilityMap); // so modal and handleDayClick have data
-              setShowingVideoFallback(true);
               setLoading(false);
               return; // don't overwrite agentAvailability with empty in-person data below
             }
+            // Video fetch returned 0 agents: keep showing banner, empty list (handled in UI)
+            setVideoFallbackAppointments([]);
+            setVideoFallbackAvailability({});
+          } else {
+            setVideoFallbackAppointments([]);
+            setVideoFallbackAvailability({});
           }
+          setLoading(false);
+          return;
         }
 
         // Map agents to appointment-like format for compatibility with existing UI
@@ -1684,22 +1694,48 @@ function SearchResults() {
             <p className="text-gray-600">Loading appointments...</p>
           </div>
         ) : showEmptyState ? (
-          <div className="bg-white border border-gray-200 rounded-lg p-12 text-center">
-            <p className="text-gray-600 mb-2 text-lg font-medium">
-              No agents found
-            </p>
-            <p className="text-gray-500 mb-6 text-sm">
-              {searchLocation 
-                ? `We couldn't find any available agents in "${searchLocation}". Try searching for a different location or removing the location filter.`
-                : "No agents are currently available for booking. Agents need to set up their availability in their settings to appear here."}
-            </p>
-            <div className="flex gap-3 justify-center">
-              <Link
-                href="/"
-                className="inline-block bg-neutral-800 hover:bg-neutral-900 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
-              >
-                Return to Homepage
-              </Link>
+          <div className="space-y-4">
+            {showingVideoFallback && (
+              <div className="bg-gradient-to-br from-neutral-50 to-white border border-neutral-200 rounded-2xl p-8 mb-6 shadow-sm">
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-neutral-900 flex items-center justify-center">
+                    <Video className="w-5 h-5 text-white" strokeWidth={2} />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-neutral-900 mb-1.5">
+                      No in-person availability in your city
+                    </h3>
+                    <p className="text-neutral-600 text-sm leading-relaxed mb-2">
+                      There are no agents available for in-person meetings in your city.
+                    </p>
+                    <p className="text-neutral-600 text-sm leading-relaxed">
+                      {videoFallbackAppointments.length === 0
+                        ? "No video agents are available for this profession in your province right now. Try switching to “Video” in the search bar to see all options, or check back later."
+                        : "Here are some agents available to put your plan in place over a video call:"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+            <div className="bg-white border border-gray-200 rounded-lg p-12 text-center">
+              <p className="text-gray-600 mb-2 text-lg font-medium">
+                {showingVideoFallback && videoFallbackAppointments.length === 0 ? "No video agents in your province" : "No agents found"}
+              </p>
+              <p className="text-gray-500 mb-6 text-sm">
+                {showingVideoFallback && videoFallbackAppointments.length === 0
+                  ? "No agents with video availability were found for this profession in your province. Agents need to set up video availability in their portal to appear here."
+                  : searchLocation 
+                    ? `We couldn't find any available agents in "${searchLocation}". Try searching for a different location or switching to video.`
+                    : "No agents are currently available for booking. Agents need to set up their availability in their settings to appear here."}
+              </p>
+              <div className="flex gap-3 justify-center flex-wrap">
+                <Link
+                  href="/"
+                  className="inline-block bg-neutral-800 hover:bg-neutral-900 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
+                >
+                  Return to Homepage
+                </Link>
+              </div>
             </div>
           </div>
         ) : (

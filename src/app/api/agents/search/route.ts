@@ -366,29 +366,35 @@ export async function GET(req: NextRequest) {
         return normalized;
       };
 
-      // VIDEO MODE: filter by province only (all agents in province)
+      // VIDEO MODE: filter by province only (all agents in province; show for any BC city when searching BC)
       if (mode === 'video') {
         let matchedProvince: string | null = null;
         if (searchProvince) {
           matchedProvince = normalizeProvince(searchProvince);
+        } else if (searchCity.length <= 3) {
+          // Location is just province (e.g. "BC", "ON") – treat as province
+          matchedProvince = normalizeProvince(searchCity);
         } else {
           const provAbbr = cityToProvince[searchCity];
           if (provAbbr) matchedProvince = normalizeProvince(provAbbr);
         }
         if (matchedProvince) {
           filtered = filtered.filter((agent) => {
-            const agentProv = normalizeProvince(agent.agent_province || '');
+            const agentProv = normalizeProvince((agent.agent_province || '').trim());
             const officeProvinces = ((agent as any).officeLocations || []).map((loc: any) =>
-              normalizeProvince(loc.province || '')
+              normalizeProvince((loc.province || '').trim())
             );
-            return agentProv === matchedProvince || officeProvinces.includes(matchedProvince!);
+            const inProvince = agentProv === matchedProvince || officeProvinces.includes(matchedProvince!);
+            return inProvince;
           });
           console.log(`✅ [AGENT SEARCH] Video mode: ${filtered.length} agents in province "${matchedProvince}"`);
         } else {
           console.warn(`⚠️ [AGENT SEARCH] Video mode: could not derive province from "${location}"`);
         }
       } else {
-        // IN-PERSON MODE: filter by city (agents with office in that city)
+        // IN-PERSON MODE (all 4 professions: funeral, lawyer, insurance, financial):
+        // Only show agents who have an office or availability in the searched city.
+        // e.g. Prince George in-person → only agents in Prince George; no province-wide in-person.
         let isProvinceSearch = false;
         let matchedProvince: string | null = null;
 
@@ -453,10 +459,12 @@ export async function GET(req: NextRequest) {
             }
           }
           
-          // Specific known variations mapping
+          // Specific known variations mapping (multi-word cities, spelling)
           const variations: Record<string, string[]> = {
             'vaughan': ['vaughn'],
             'vaughn': ['vaughan'],
+            'prince george': ['princegeorge'],
+            'princegeorge': ['prince george'],
           };
           
           if (variations[norm1]?.includes(norm2) || variations[norm2]?.includes(norm1)) {
@@ -598,7 +606,7 @@ export async function GET(req: NextRequest) {
     if (query) {
       const requiredRole = queryToAgentRole(query);
       if (requiredRole) {
-        filtered = filtered.filter((agent) => agent.agent_role === requiredRole);
+        filtered = filtered.filter((agent) => (agent.agent_role || '').toLowerCase().trim() === requiredRole);
         console.log(`[AGENT SEARCH] Filtering by profession: q="${query}" -> agent_role=${requiredRole}, ${filtered.length} agents`);
       } else {
         // No mapping: fallback to text match on name/specialty/job_title so odd queries still get results
