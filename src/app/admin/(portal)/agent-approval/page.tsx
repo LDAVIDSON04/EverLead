@@ -679,62 +679,28 @@ export default function AgentApprovalPage() {
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-neutral-500 mb-1">Funeral Home</p>
+                    <p className="text-xs text-neutral-500 mb-1">Business / Firm Name</p>
                     <p className="text-sm text-neutral-900 flex items-center gap-2">
                       <Building className="w-4 h-4" />
-                      {selectedAgent.funeral_home || 'N/A'}
+                      {selectedAgent.funeral_home || (selectedAgent.metadata as any)?.business_name || 'N/A'}
                     </p>
                   </div>
-                  {selectedAgent.notification_cities && selectedAgent.notification_cities.length > 0 && (
-                    <div className="col-span-2">
-                      <p className="text-xs text-neutral-500 mb-1">Service Locations</p>
-                      <div className="flex flex-wrap gap-2">
-                        {selectedAgent.notification_cities.map((city, idx) => (
-                          <span key={idx} className="text-sm text-neutral-900 flex items-center gap-1 px-2 py-1 bg-neutral-100 rounded">
-                            <MapPin className="w-3 h-3" />
-                            {city.city}, {city.province}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  {/* Regions Served (from metadata) */}
-                  {(() => {
-                    const metadata = selectedAgent.metadata || {};
-                    const regionsServed = metadata.regions_served_array || 
-                      (metadata.regions_served ? metadata.regions_served.split(',').map((r: string) => r.trim()) : []);
-                    if (regionsServed.length > 0) {
-                      return (
-                        <div className="col-span-2">
-                          <p className="text-xs text-neutral-500 mb-1">Regions Served</p>
-                          <div className="flex flex-wrap gap-2">
-                            {regionsServed.map((region: string, idx: number) => (
-                              <span key={idx} className="text-sm text-neutral-900 px-2 py-1 bg-neutral-100 rounded">
-                                {region}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    }
-                    return null;
-                  })()}
-                  {/* Professional Title */}
                   {selectedAgent.job_title && (
-                    <div className="col-span-2">
+                    <div>
                       <p className="text-xs text-neutral-500 mb-1">Professional Title</p>
                       <p className="text-sm text-neutral-900">{selectedAgent.job_title}</p>
                     </div>
                   )}
-                  {/* Specialty */}
+                  {/* Home Address from create-account (metadata.address) */}
                   {(() => {
-                    const metadata = selectedAgent.metadata || {};
-                    const specialty = metadata.specialty;
-                    if (specialty) {
+                    const addr = (selectedAgent.metadata as any)?.address;
+                    if (addr && (addr.street || addr.city || addr.province || addr.postalCode)) {
                       return (
                         <div className="col-span-2">
-                          <p className="text-xs text-neutral-500 mb-1">Specialty / Services Offered</p>
-                          <p className="text-sm text-neutral-900">{specialty}</p>
+                          <p className="text-xs text-neutral-500 mb-1">Home Address</p>
+                          <p className="text-sm text-neutral-900">
+                            {[addr.street, addr.city, addr.province, addr.postalCode].filter(Boolean).join(', ')}
+                          </p>
                         </div>
                       );
                     }
@@ -743,17 +709,23 @@ export default function AgentApprovalPage() {
                 </div>
               </div>
 
-              {/* Business Information & Credentials */}
-              <div>
-                <h3 className="text-lg font-semibold text-black mb-4 flex items-center gap-2">
-                  <FileText className="w-5 h-5" />
-                  Business Information & Credentials
-                </h3>
-                <div className="space-y-3">
-                  <div className="grid grid-cols-2 gap-4">
-                    {(() => {
-                      const metadata = selectedAgent.metadata || {};
-                      return (
+              {/* Role-specific credentials (only show fields relevant to this profession) */}
+              {(() => {
+                const metadata = selectedAgent.metadata || {};
+                const role = (metadata.agent_role || '').toLowerCase().trim();
+                const hasAny = role === 'funeral-planner' && (metadata.trustage_enroller_number != null || metadata.llqp_license != null || metadata.llqp_quebec)
+                  || role === 'lawyer' && (metadata.law_society_name || metadata.authorized_provinces)
+                  || role === 'insurance-broker' && (metadata.licensing_province != null || metadata.additional_provinces != null || metadata.has_multiple_provinces != null)
+                  || role === 'financial-advisor' && (metadata.regulatory_organization || metadata.registered_provinces);
+                if (!hasAny) return null;
+                return (
+                  <div>
+                    <h3 className="text-lg font-semibold text-black mb-4 flex items-center gap-2">
+                      <FileText className="w-5 h-5" />
+                      Credentials
+                    </h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      {role === 'funeral-planner' && (
                         <>
                           <div>
                             <p className="text-xs text-neutral-500 mb-1">TruStage Enroller Number</p>
@@ -774,11 +746,65 @@ export default function AgentApprovalPage() {
                             </p>
                           </div>
                         </>
-                      );
-                    })()}
+                      )}
+                      {role === 'lawyer' && (
+                        <>
+                          {metadata.law_society_name && (
+                            <div>
+                              <p className="text-xs text-neutral-500 mb-1">Law Society Name</p>
+                              <p className="text-sm text-neutral-900">{metadata.law_society_name}</p>
+                            </div>
+                          )}
+                          {metadata.authorized_provinces && (
+                            <div>
+                              <p className="text-xs text-neutral-500 mb-1">Authorized Provinces</p>
+                              <p className="text-sm text-neutral-900">{metadata.authorized_provinces}</p>
+                            </div>
+                          )}
+                        </>
+                      )}
+                      {role === 'insurance-broker' && (
+                        <>
+                          {metadata.licensing_province != null && (
+                            <div>
+                              <p className="text-xs text-neutral-500 mb-1">Licensing Province</p>
+                              <p className="text-sm text-neutral-900">{String(metadata.licensing_province)}</p>
+                            </div>
+                          )}
+                          {(metadata.has_multiple_provinces === true || metadata.has_multiple_provinces === 'yes') && (
+                            <div>
+                              <p className="text-xs text-neutral-500 mb-1">Multiple Provinces</p>
+                              <p className="text-sm text-neutral-900">Yes</p>
+                            </div>
+                          )}
+                          {metadata.additional_provinces && (
+                            <div className="col-span-2">
+                              <p className="text-xs text-neutral-500 mb-1">Additional Provinces</p>
+                              <p className="text-sm text-neutral-900">{metadata.additional_provinces}</p>
+                            </div>
+                          )}
+                        </>
+                      )}
+                      {role === 'financial-advisor' && (
+                        <>
+                          {metadata.regulatory_organization && (
+                            <div>
+                              <p className="text-xs text-neutral-500 mb-1">Regulatory Organization</p>
+                              <p className="text-sm text-neutral-900">{metadata.regulatory_organization}</p>
+                            </div>
+                          )}
+                          {metadata.registered_provinces && (
+                            <div>
+                              <p className="text-xs text-neutral-500 mb-1">Registered Provinces</p>
+                              <p className="text-sm text-neutral-900">{metadata.registered_provinces}</p>
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </div>
+                );
+              })()}
 
               {/* Profile Bio */}
               {selectedAgent.ai_generated_bio && (

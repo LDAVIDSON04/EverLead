@@ -216,11 +216,11 @@ export default function SettingsPage() {
             full_profile: profile, // Log entire profile to see all fields
           });
           
-          // Try multiple fallback locations for address (create-account stores in metadata.address)
-          const addressStreet = metadata.address?.street || profile.street_address || metadata.business_street || "";
-          const addressCity = metadata.address?.city || profile.city || profile.agent_city || metadata.business_city || "";
-          const addressProvince = metadata.address?.province || profile.province || profile.agent_province || metadata.business_province || "";
-          const addressZip = metadata.address?.postalCode || profile.postal_code || metadata.business_zip || "";
+          // Prefer API-decoded address (profile.street_address etc from metadata.address) so create-account address always shows
+          const addressStreet = (profile as any).street_address ?? metadata.address?.street ?? metadata.business_street ?? "";
+          const addressCity = (profile as any).city ?? metadata.address?.city ?? profile.agent_city ?? metadata.business_city ?? "";
+          const addressProvince = (profile as any).province ?? metadata.address?.province ?? profile.agent_province ?? metadata.business_province ?? "";
+          const addressZip = (profile as any).postal_code ?? metadata.address?.postalCode ?? metadata.business_zip ?? "";
           // Business name: create-account stores in metadata.business_name; signup also sets profile.funeral_home
           const businessName = profile.funeral_home || (metadata as any).business_name || "";
           // License/credentials: create-account uses role-specific fields (law_society_name, licensing_province, regulatory_organization, llqp_license, etc.)
@@ -747,57 +747,21 @@ function ProfileSection({
             placeholder="(XXX) XXX-XXXX"
           />
         </div>
-
-        <div>
-          <Label htmlFor="licenseNumber">License Number(s) *</Label>
-          <Input
-            id="licenseNumber"
-            value={profileData.licenseNumber}
-            onChange={(e) => setProfileData({ ...profileData, licenseNumber: e.target.value })}
-            className="mt-1"
-          />
-        </div>
+        {profileData.agentRole && (
+          <div>
+            <Label>Profession</Label>
+            <div className="mt-1 px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-700 capitalize">
+              {(profileData.agentRole as string).replace(/-/g, " ")}
+            </div>
+          </div>
+        )}
       </div>
-
-      {/* Profession & specialty (from create-account) */}
-      {(profileData.agentRole || profileData.specialty) && (
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          {profileData.agentRole && (
-            <div>
-              <Label>Profession</Label>
-              <div className="mt-1 px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-700 capitalize">
-                {(profileData.agentRole as string).replace(/-/g, " ")}
-              </div>
-            </div>
-          )}
-          {profileData.specialty && (
-            <div>
-              <Label>Specialty</Label>
-              <Input
-                value={profileData.specialty}
-                onChange={(e) => setProfileData({ ...profileData, specialty: e.target.value })}
-                className="mt-1"
-                placeholder="e.g., Funeral Planner"
-              />
-            </div>
-          )}
-        </div>
-      )}
 
       {profileData.professionalDetails && (
         <div className="mb-4">
           <Label>Professional details</Label>
           <p className="mt-1 px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-sm text-gray-700">
             {profileData.professionalDetails}
-          </p>
-        </div>
-      )}
-
-      {profileData.notificationCities && (
-        <div className="mb-4">
-          <Label>Notification cities</Label>
-          <p className="mt-1 px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-sm text-gray-700">
-            {profileData.notificationCities}
           </p>
         </div>
       )}
