@@ -1869,12 +1869,7 @@ function SearchResults() {
                               </div>
                             )}
                           </>
-                        ) : (
-                          <div className="flex items-center gap-1">
-                            <Video className="w-4 h-4 text-gray-500 flex-shrink-0" />
-                            <span className="text-gray-600 text-sm">Video call · Available province-wide</span>
-                          </div>
-                        )}
+                        ) : null}
 
                         {/* Rating */}
                         {agent && agent.rating && agent.rating > 0 && agent.reviewCount && agent.reviewCount > 0 && (
@@ -2094,12 +2089,7 @@ function SearchResults() {
                               </div>
                             )}
                           </>
-                        ) : (
-                          <div className="flex items-center gap-1">
-                            <Video className="w-3 h-3 text-gray-500 flex-shrink-0" />
-                            <span className="text-gray-600 text-sm">Video call · Province-wide</span>
-                          </div>
-                        )}
+                        ) : null}
 
                         {/* Rating with star */}
                         {agent && agent.rating && agent.rating > 0 && agent.reviewCount && agent.reviewCount > 0 && (
@@ -2351,12 +2341,7 @@ function SearchResults() {
                             </div>
                           )}
                         </>
-                      ) : (
-                        <div className="flex items-center gap-1 mb-3">
-                          <Video className="w-4 h-4 text-gray-500" />
-                          <span className="text-gray-600 text-sm">Video call · Available province-wide</span>
-                        </div>
-                      )}
+                      ) : null}
 
                       {/* Rating */}
                       {selectedAgentInfo && (

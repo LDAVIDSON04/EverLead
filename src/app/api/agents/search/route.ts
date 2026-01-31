@@ -589,15 +589,9 @@ export async function GET(req: NextRequest) {
       console.log(`✅ [AGENT SEARCH] After location filter "${location}" (mode=${mode}): ${filtered.length} agents matched`);
     }
 
-    // Video mode: show agents who have set video availability. When fallback=1 (no in-person in city), show ALL agents in province (same profession) so every agent shows below the popup
+    // Video mode: show ALL agents in province (that profession) when customer chooses online video call - no video availability required
     if (mode === "video") {
-      const before = filtered.length;
-      if (fallback) {
-        console.log(`✅ [AGENT SEARCH] Video fallback: showing all ${filtered.length} agents in province (no video required)`);
-      } else {
-        filtered = filtered.filter((agent) => hasVideoAvailability(agent));
-        console.log(`✅ [AGENT SEARCH] Video mode: ${filtered.length} agents with video availability (${before} before filter)`);
-      }
+      console.log(`✅ [AGENT SEARCH] Video mode: ${filtered.length} agents in province (all with matching profession)`);
     }
 
     if (location) {
