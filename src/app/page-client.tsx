@@ -761,7 +761,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div className="order-2 lg:order-1 flex flex-col items-center text-center">
               <h2 className="text-5xl mb-6 text-white font-semibold tracking-tight leading-tight">
-                Trusted by agents from top funeral homes
+                Trusted by top estate planning professionals
               </h2>
               <p className="text-xl text-white/85 leading-relaxed mb-8 max-w-xl">
                 Funeral professionals across British Columbia rely on Soradin to connect with families and grow their practice with confidence.
