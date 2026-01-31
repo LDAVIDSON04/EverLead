@@ -149,40 +149,27 @@ export default function ProviderCategoryPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header & Hero Section Combined */}
-      <section className="relative bg-gradient-to-br from-[#1A1A1A] to-[#0a0a0a] px-6 overflow-hidden">
-        {/* Pattern overlay */}
+      {/* Header - compact */}
+      <section className="relative bg-gradient-to-br from-[#1A1A1A] to-[#0a0a0a] px-6 overflow-hidden py-4">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute inset-0" style={{
             backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.1) 10px, rgba(255,255,255,0.1) 20px),
                               repeating-linear-gradient(-45deg, transparent, transparent 10px, rgba(255,255,255,0.1) 10px, rgba(255,255,255,0.1) 20px)`
           }}></div>
         </div>
-        
-        {/* Decorative circles */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-0 left-0 w-96 h-96 bg-[#0a0a0a] rounded-full opacity-30 blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
-          <div className="absolute top-1/2 left-1/4 w-72 h-72 bg-[#1A1A1A] rounded-full opacity-20 blur-3xl"></div>
-          <div className="absolute bottom-0 right-0 w-96 h-96 bg-[#0a0a0a] rounded-full opacity-30 blur-3xl translate-x-1/3 translate-y-1/3"></div>
-          <div className="absolute top-1/3 right-1/3 w-64 h-64 bg-[#1A1A1A] rounded-full opacity-20 blur-2xl"></div>
-        </div>
-
-        {/* Header */}
-        <header className="relative z-10 pt-2 pb-1">
+        <header className="relative z-10">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex flex-col gap-0">
-                <span className="text-lg text-white leading-tight">Help Center</span>
-                <Link href="/" className="block -mt-1">
-                  <Image
-                    src="/Soradin.png"
-                    alt="Soradin logo"
-                    width={360}
-                    height={360}
-                    className="h-20 w-auto brightness-0 invert"
-                  />
-                </Link>
-              </div>
+            <div className="flex items-center gap-2">
+              <span className="text-base text-white leading-tight">Help Center</span>
+              <Link href="/" className="block">
+                <Image
+                  src="/Soradin.png"
+                  alt="Soradin logo"
+                  width={360}
+                  height={360}
+                  className="h-10 w-auto brightness-0 invert"
+                />
+              </Link>
             </div>
             <div className="flex items-center gap-6">
               <Link href="/learn-more-about-starting" className="text-sm text-white hover:text-gray-200 transition-colors">

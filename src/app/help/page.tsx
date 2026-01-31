@@ -14,8 +14,8 @@ export default function HelpPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header & Hero Section Combined */}
-      <section className="relative bg-gradient-to-br from-[#1A1A1A] to-[#0a0a0a] px-6 overflow-hidden flex flex-col md:min-h-[280px]">
+      {/* Header & Hero Section Combined - compact */}
+      <section className="relative bg-gradient-to-br from-[#1A1A1A] to-[#0a0a0a] px-6 overflow-hidden py-4 md:py-6">
         {/* Pattern overlay */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute inset-0" style={{
@@ -33,18 +33,18 @@ export default function HelpPage() {
         </div>
 
         {/* Header */}
-        <header className="relative z-10 pt-3 pb-2">
+        <header className="relative z-10">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="flex flex-col gap-1">
-                <span className="text-lg text-white font-medium leading-tight">Help Center</span>
+              <div className="flex items-center gap-2">
+                <span className="text-base text-white font-medium leading-tight">Help Center</span>
                 <Link href="/" className="block">
                   <Image
                     src="/Soradin.png"
                     alt="Soradin logo"
                     width={360}
                     height={360}
-                    className="h-20 w-auto brightness-0 invert"
+                    className="h-10 w-auto brightness-0 invert"
                   />
                 </Link>
               </div>
@@ -60,9 +60,9 @@ export default function HelpPage() {
           </div>
         </header>
 
-        {/* Hero Content - vertically centered in black block on desktop */}
-        <div className="max-w-3xl mx-auto relative z-10 pb-6 md:pb-0 md:flex-1 md:flex md:items-center md:justify-center">
-          <h1 className="text-3xl md:text-4xl font-bold text-white text-center">
+        {/* Hero headline - compact */}
+        <div className="max-w-3xl mx-auto relative z-10 pt-2 pb-1">
+          <h1 className="text-2xl md:text-3xl font-bold text-white text-center">
             How can we help?
           </h1>
         </div>
