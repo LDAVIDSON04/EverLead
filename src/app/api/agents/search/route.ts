@@ -514,20 +514,8 @@ export async function GET(req: NextRequest) {
           // If no postal code match, fall through to city matching
         }
         
-        // All 4 industries (funeral, lawyer, insurance, financial): show for any city in their province (whole province like funeral)
-        const provinceWideRoles = ['funeral-planner', 'lawyer', 'insurance-broker', 'financial-advisor'];
-        const agentRole = (agent as any).agent_role;
-        if (agentRole && provinceWideRoles.includes(agentRole) && searchProvince) {
-          const searchProvinceNormalized = normalizeProvince(searchProvince);
-          const agentProvinceNormalized = normalizeProvince(agent.agent_province || '');
-          const officeLocationsForProvince = (agent as any).officeLocations || [];
-          const officeProvinces = officeLocationsForProvince.map((loc: any) => normalizeProvince(loc.province || ''));
-          if (agentProvinceNormalized === searchProvinceNormalized || officeProvinces.includes(searchProvinceNormalized || '')) {
-            console.log(`[AGENT SEARCH] Agent ${agent.id} (${agentRole}) matches province "${searchProvince}" - showing for all ${searchProvince} cities`);
-            return true;
-          }
-        }
-        
+        // In-person: only show agents who have an office or availability in the searched city
+        // (No province-wide in-person: e.g. Victoria search must not show agents from Penticton/Kelowna)
         // City matching (existing logic)
         const normalizedSearch = normalizeCity(searchCity);
         if (!normalizedSearch) return false;

@@ -1814,8 +1814,8 @@ function SearchResults() {
 
                       {/* Below profile pic: Location, address (in-person only), rating, learn more (wrapping around) */}
                       <div className="mt-2 space-y-1">
-                        {/* Location & address - only for in-person; hide for video calls */}
-                        {displayMode !== "video" && (
+                        {/* Location & address - only for in-person; for video fallback show "Video call" */}
+                        {displayMode !== "video" ? (
                           <>
                             <div className="flex items-center gap-1">
                               <MapPin className="w-4 h-4 text-gray-500 flex-shrink-0" />
@@ -1832,6 +1832,11 @@ function SearchResults() {
                               </div>
                             )}
                           </>
+                        ) : (
+                          <div className="flex items-center gap-1">
+                            <Video className="w-4 h-4 text-gray-500 flex-shrink-0" />
+                            <span className="text-gray-600 text-sm">Video call · Available province-wide</span>
+                          </div>
                         )}
 
                         {/* Rating */}
@@ -2033,9 +2038,9 @@ function SearchResults() {
                       </div>
                     </div>
 
-                    {/* Mobile: Info under profile pic - hugging left border (location/address only for in-person) */}
+                    {/* Mobile: Info under profile pic - location/address for in-person, "Video call" for video fallback */}
                     <div className="mt-2 space-y-1">
-                        {displayMode !== "video" && (
+                        {displayMode !== "video" ? (
                           <>
                             <div className="flex items-center gap-1">
                               <MapPin className="w-3 h-3 text-gray-500 flex-shrink-0" />
@@ -2052,6 +2057,11 @@ function SearchResults() {
                               </div>
                             )}
                           </>
+                        ) : (
+                          <div className="flex items-center gap-1">
+                            <Video className="w-3 h-3 text-gray-500 flex-shrink-0" />
+                            <span className="text-gray-600 text-sm">Video call · Province-wide</span>
+                          </div>
                         )}
 
                         {/* Rating with star */}
@@ -2282,8 +2292,8 @@ function SearchResults() {
                       {selectedAgentInfo.funeral_home && (
                         <p className="text-gray-600 text-sm mb-2">{selectedAgentInfo.funeral_home}</p>
                       )}
-                      {/* Location & address - only for in-person; hide for video calls */}
-                      {effectiveBookingMode !== "video" && (
+                      {/* Location & address - only for in-person; for video show "Video call" */}
+                      {effectiveBookingMode !== "video" ? (
                         <>
                           {searchLocation && (
                             <div className="flex items-center gap-1 mb-2">
@@ -2304,6 +2314,11 @@ function SearchResults() {
                             </div>
                           )}
                         </>
+                      ) : (
+                        <div className="flex items-center gap-1 mb-3">
+                          <Video className="w-4 h-4 text-gray-500" />
+                          <span className="text-gray-600 text-sm">Video call · Available province-wide</span>
+                        </div>
                       )}
 
                       {/* Rating */}
