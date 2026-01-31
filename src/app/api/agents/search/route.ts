@@ -210,9 +210,9 @@ export async function GET(req: NextRequest) {
           const agentOfficeLocations = (allOfficeLocations || []).filter((loc: any) => loc.agent_id === profile.id);
           const officeLocationCities = Array.from(new Set(agentOfficeLocations.map((loc: any) => loc.city).filter(Boolean)));
           
-          // Merge availability locations with office location cities
-          // This ensures agents show up for all cities where they have offices OR have set availability
-          const allLocationCities = Array.from(new Set([...availabilityLocations, ...officeLocationCities]));
+          // Merge: availability.locations + office cities + availabilityByLocation keys (cities they set schedule for)
+          const byLocationCities = Object.keys(availabilityByLocation || {}).filter(Boolean);
+          const allLocationCities = Array.from(new Set([...availabilityLocations, ...officeLocationCities, ...byLocationCities]));
           
           // Debug log for the specific agent we're looking for
           if (profile.id === 'f7f6aeca-1059-4ae8-ae93-a059ad583b8f') {
@@ -522,13 +522,11 @@ export async function GET(req: NextRequest) {
           // If no postal code match, fall through to city matching
         }
         
-        // In-person: only show agents who have an office or availability in the searched city
-        // (No province-wide in-person: e.g. Victoria search must not show agents from Penticton/Kelowna)
-        // City matching (existing logic)
+        // In-person: ONLY agents with an office in the searched city. No province-wide.
+        // City matching: agent has office or availability in the searched city
         const normalizedSearch = normalizeCity(searchCity);
         if (!normalizedSearch) return false;
         
-        // Check if the city matches any of the agent's locations (availability or office locations)
         const hasLocationInList = agent.availabilityLocations.some((loc: string) => {
           if (!loc) return false;
           return fuzzyCityMatch(loc, searchCity);
@@ -606,7 +604,10 @@ export async function GET(req: NextRequest) {
     if (query) {
       const requiredRole = queryToAgentRole(query);
       if (requiredRole) {
-        filtered = filtered.filter((agent) => (agent.agent_role || '').toLowerCase().trim() === requiredRole);
+        filtered = filtered.filter((agent) => {
+          const role = (agent.agent_role || '').toLowerCase().trim().replace(/\s+/g, '-');
+          return role === requiredRole;
+        });
         console.log(`[AGENT SEARCH] Filtering by profession: q="${query}" -> agent_role=${requiredRole}, ${filtered.length} agents`);
       } else {
         // No mapping: fallback to text match on name/specialty/job_title so odd queries still get results
