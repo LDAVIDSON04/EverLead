@@ -372,8 +372,8 @@ export async function POST(req: NextRequest) {
       slotStartTime: slotStart.getTime(),
     });
     
-    // Get price per appointment (Stripe minimum is $0.50)
-    const pricePerAppointment = 0.50;
+    // Price per appointment - currently FREE for all agents (will charge later)
+    const pricePerAppointment = 0;
     const priceCents = Math.round(pricePerAppointment * 100);
     
     // CRITICAL: For video appointments, office_location_id must be null
@@ -433,99 +433,64 @@ export async function POST(req: NextRequest) {
     
     console.log("Appointment created successfully:", appointment.id);
 
-    // Charge agent's saved payment method immediately when appointment is booked
-    // Note: Payment failures are handled internally - family always sees success
-    console.log("🔄 Attempting to charge agent for appointment:", {
-      agentId,
-      appointmentId: appointment.id,
-      amountCents: priceCents,
-    });
-    
-    const chargeResult = await chargeAgentForAppointment(agentId, priceCents, appointment.id);
-    
-    console.log("💳 Charge result:", {
-      success: chargeResult.success,
-      paymentIntentId: chargeResult.paymentIntentId,
-      error: chargeResult.error,
-    });
-    
-    if (chargeResult.success && chargeResult.paymentIntentId) {
-      // Payment succeeded - update appointment with payment details
-      // Try to update appointments table (in case stripe_payment_intent_id column exists)
-      try {
-        await supabaseAdmin
-          .from("appointments")
-          .update({ 
-            price_cents: priceCents,
-            stripe_payment_intent_id: chargeResult.paymentIntentId,
-          })
-          .eq("id", appointment.id);
-      } catch (updateError: any) {
-        // If stripe_payment_intent_id column doesn't exist, just update price_cents
-        if (updateError?.code === '42703' && updateError?.message?.includes('stripe_payment_intent_id')) {
+    // Charge agent only when price > 0 (currently free - skip Stripe)
+    if (priceCents > 0) {
+      console.log("🔄 Attempting to charge agent for appointment:", {
+        agentId,
+        appointmentId: appointment.id,
+        amountCents: priceCents,
+      });
+      
+      const chargeResult = await chargeAgentForAppointment(agentId, priceCents, appointment.id);
+      
+      console.log("💳 Charge result:", {
+        success: chargeResult.success,
+        paymentIntentId: chargeResult.paymentIntentId,
+        error: chargeResult.error,
+      });
+      
+      if (chargeResult.success && chargeResult.paymentIntentId) {
+        try {
           await supabaseAdmin
             .from("appointments")
             .update({ 
               price_cents: priceCents,
+              stripe_payment_intent_id: chargeResult.paymentIntentId,
             })
             .eq("id", appointment.id);
-        } else {
-          throw updateError;
+        } catch (updateError: any) {
+          if (updateError?.code === '42703' && updateError?.message?.includes('stripe_payment_intent_id')) {
+            await supabaseAdmin
+              .from("appointments")
+              .update({ price_cents: priceCents })
+              .eq("id", appointment.id);
+          } else {
+            throw updateError;
+          }
         }
-      }
-      
-      // ALWAYS create a payment record in payments table for proper tracking and refunds
-      try {
-        await supabaseAdmin
-          .from("payments")
-          .insert({
+        
+        try {
+          await supabaseAdmin.from("payments").insert({
             appointment_id: appointment.id,
             stripe_payment_intent_id: chargeResult.paymentIntentId,
             amount_cents: priceCents,
             currency: 'CAD',
             status: 'completed',
           });
-        console.log("✅ Payment record created in payments table:", {
-          appointmentId: appointment.id,
-          paymentIntentId: chargeResult.paymentIntentId,
-        });
-      } catch (paymentInsertError: any) {
-        // Log error but don't fail - payment was successful, just tracking failed
-        console.error("⚠️ Failed to create payment record in payments table:", paymentInsertError);
-      }
-      
-      console.log("✅ Agent charged successfully for appointment:", {
-        appointmentId: appointment.id,
-        agentId,
-        amountCents: priceCents,
-        paymentIntentId: chargeResult.paymentIntentId,
-      });
-      
-      // Receipt emails are handled by Stripe, not Soradin
-    } else {
-      // Payment failed - mark appointment internally but don't fail the booking for the family
-      console.error("❌ Failed to charge agent for appointment:", {
-        appointmentId: appointment.id,
-        agentId,
-        error: chargeResult.error,
-        amountCents: priceCents,
-      });
-      
-      // Store payment failure info in appointment notes for internal tracking
-      // The appointment remains active - family sees successful booking
-      await supabaseAdmin
-        .from("appointments")
-        .update({ 
-          price_cents: null, // No price charged
-          notes: `Payment failed: ${chargeResult.error || 'Unknown error'}. Appointment created but agent payment needs to be processed.`,
-        })
-        .eq("id", appointment.id);
-      
-      // Record declined payment in declined_payments table
-      try {
+        } catch (paymentInsertError: any) {
+          console.error("⚠️ Failed to create payment record:", paymentInsertError);
+        }
+      } else {
         await supabaseAdmin
-          .from("declined_payments")
-          .insert({
+          .from("appointments")
+          .update({ 
+            price_cents: null,
+            notes: `Payment failed: ${chargeResult.error || 'Unknown error'}. Appointment created but agent payment needs to be processed.`,
+          })
+          .eq("id", appointment.id);
+        
+        try {
+          await supabaseAdmin.from("declined_payments").insert({
             agent_id: agentId,
             appointment_id: appointment.id,
             amount_cents: priceCents,
@@ -534,67 +499,54 @@ export async function POST(req: NextRequest) {
             stripe_error_message: chargeResult.stripeErrorMessage || chargeResult.error || null,
             status: 'pending',
           });
-        console.log("✅ Recorded declined payment for appointment:", appointment.id);
-      } catch (declinedPaymentError: any) {
-        console.error("❌ Error recording declined payment:", declinedPaymentError);
-        // Don't fail the booking if we can't record the declined payment
-      }
-      
-      // Pause agent's account by setting paused_account flag in metadata
-      try {
-        const { data: agentProfile } = await supabaseAdmin
-          .from("profiles")
-          .select("metadata")
-          .eq("id", agentId)
-          .single();
+        } catch (declinedPaymentError: any) {
+          console.error("❌ Error recording declined payment:", declinedPaymentError);
+        }
         
-        const metadata = agentProfile?.metadata || {};
-        await supabaseAdmin
-          .from("profiles")
-          .update({
-            metadata: {
-              ...metadata,
-              paused_account: true,
-              paused_at: new Date().toISOString(),
-            },
-          })
-          .eq("id", agentId);
-        console.log("✅ Paused agent account:", agentId);
-      } catch (pauseError: any) {
-        console.error("❌ Error pausing agent account:", pauseError);
-        // Don't fail the booking if we can't pause the account
-      }
-      
-      // Send email notification to agent
-      try {
-        const { data: agentAuth } = await supabaseAdmin.auth.admin.getUserById(agentId);
-        const agentEmail = agentAuth?.user?.email;
-        
-        if (agentEmail) {
+        try {
           const { data: agentProfile } = await supabaseAdmin
             .from("profiles")
-            .select("full_name, first_name, last_name")
+            .select("metadata")
             .eq("id", agentId)
             .single();
-          
-          const agentName = agentProfile?.full_name || 
-            (agentProfile?.first_name && agentProfile?.last_name 
-              ? `${agentProfile.first_name} ${agentProfile.last_name}` 
-              : null);
-          
-          await sendPaymentDeclineEmail({
-            to: agentEmail,
-            agentName: agentName || undefined,
-            appointmentId: appointment.id,
-            amountCents: priceCents,
-            declineReason: chargeResult.error || undefined,
-          });
-          console.log("✅ Sent payment decline email to agent:", agentEmail);
+          const metadata = agentProfile?.metadata || {};
+          await supabaseAdmin
+            .from("profiles")
+            .update({
+              metadata: { ...metadata, paused_account: true, paused_at: new Date().toISOString() },
+            })
+            .eq("id", agentId);
+        } catch (pauseError: any) {
+          console.error("❌ Error pausing agent account:", pauseError);
         }
-      } catch (emailError: any) {
-        console.error("❌ Error sending payment decline email:", emailError);
-        // Don't fail the booking if email fails
+        
+        try {
+          const { data: agentAuth } = await supabaseAdmin.auth.admin.getUserById(agentId);
+          const agentEmail = agentAuth?.user?.email;
+          if (agentEmail) {
+            const { data: agentProfile } = await supabaseAdmin
+              .from("profiles")
+              .select("full_name, first_name, last_name")
+              .eq("id", agentId)
+              .single();
+            const agentName = agentProfile?.full_name || 
+              (agentProfile?.first_name && agentProfile?.last_name 
+                ? `${agentProfile.first_name} ${agentProfile.last_name}` 
+                : null);
+            await sendPaymentDeclineEmail({
+              to: agentEmail,
+              agentName: agentName || undefined,
+              appointmentId: appointment.id,
+              amountCents: priceCents,
+              declineReason: chargeResult.error || undefined,
+            });
+          }
+        } catch (emailError: any) {
+          console.error("❌ Error sending payment decline email:", emailError);
+        }
       }
+    } else {
+      console.log("✅ Free booking - no charge to agent");
     }
 
     // Send confirmation emails to both agent and family
