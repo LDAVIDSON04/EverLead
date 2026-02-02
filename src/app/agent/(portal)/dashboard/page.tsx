@@ -438,7 +438,7 @@ export default function AgentDashboardPage() {
                   {/* Table Rows */}
                   {appointments.length === 0 ? (
                     <div className="py-8 text-center text-sm text-gray-500">
-                      No appointments yet. <Link href="/agent/appointments" className="text-neutral-800 hover:underline">Browse available appointments</Link>
+                      No upcoming appointments this week.
                     </div>
                   ) : (
                     appointments.map((apt, idx) => (
