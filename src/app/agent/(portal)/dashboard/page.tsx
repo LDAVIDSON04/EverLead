@@ -175,7 +175,7 @@ export default function AgentDashboardPage() {
         
         const appointmentsFromAPI = await appointmentsRes.json();
         
-        // Calculate current week appointments count from mine API data (same source as "My appointments")
+        // Calculate current week appointments count from mine API data (same source as "Upcoming appointments")
         // Exclude external events; filter by starts_at in agent's timezone, Mon–Sun
         let currentWeekCount = 0;
         if (appointmentsFromAPI && Array.isArray(appointmentsFromAPI)) {
@@ -190,10 +190,15 @@ export default function AgentDashboardPage() {
         
         // Format appointments for dashboard display and calendar widget (reuse same data)
         if (appointmentsFromAPI && Array.isArray(appointmentsFromAPI)) {
-          
-          // appointmentsFromAPI already has starts_at, ends_at, family_name, and location from the API
-          const formattedAppointments: Appointment[] = appointmentsFromAPI
-            .slice(0, 5) // Limit to 5 most recent
+          const soradinAppointments = appointmentsFromAPI.filter((apt: any) => !apt.is_external);
+          // Only upcoming: starts_at >= now in agent timezone
+          const upcomingOnly = soradinAppointments.filter((apt: any) => {
+            if (!apt.starts_at) return false;
+            const localStart = DateTime.fromISO(apt.starts_at, { zone: "utc" }).setZone(agentTimezone);
+            return localStart >= now;
+          });
+          const formattedAppointments: Appointment[] = upcomingOnly
+            .slice(0, 5) // Limit to 5 upcoming
             .map((apt: any) => {
               // Parse the ISO timestamps and convert to agent's timezone
               const startDate = DateTime.fromISO(apt.starts_at, { zone: "utc" });
@@ -406,7 +411,7 @@ export default function AgentDashboardPage() {
             
             {/* My Appointments */}
             <div className="bg-white rounded-xl border border-gray-200 p-6">
-              <h3 className="text-lg text-gray-900 mb-4">My appointments</h3>
+              <h3 className="text-lg text-gray-900 mb-4">Upcoming appointments</h3>
               
               {/* Scrollable container for mobile */}
               <div className="overflow-x-auto md:overflow-visible">
