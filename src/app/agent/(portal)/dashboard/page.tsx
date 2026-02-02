@@ -165,18 +165,10 @@ export default function AgentDashboardPage() {
         const currentWeekStart = now.startOf('week'); // Monday of this week
         const currentWeekEnd = now.endOf('week'); // Sunday of this week
         
-        // Fetch recent appointments and weekly appointments in parallel
-        const [appointmentsRes, weeklyAppointmentsResult] = await Promise.all([
-          fetch("/api/appointments/mine", {
-            headers: { Authorization: `Bearer ${session.access_token}` },
-          }),
-          supabaseClient
-            .from("appointments")
-            .select("requested_date, created_at")
-            .eq("agent_id", agentId)
-            .gte("created_at", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
-        ]);
-        
+        const appointmentsRes = await fetch("/api/appointments/mine", {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        });
+
         if (!appointmentsRes.ok) {
           throw new Error("Failed to fetch appointments");
         }
@@ -231,48 +223,61 @@ export default function AgentDashboardPage() {
           
           setAppointments(formattedAppointments);
 
-          // Also process calendar appointments from the same data (reuse instead of fetching again)
-          const appointmentsByDay: Record<number, number> = {};
-          appointmentsFromAPI.forEach((apt: any) => {
-            const startDate = DateTime.fromISO(apt.starts_at, { zone: "utc" });
-            const localStart = startDate.setZone(agentTimezone);
-            const dayOfMonth = localStart.day;
-            appointmentsByDay[dayOfMonth] = (appointmentsByDay[dayOfMonth] || 0) + 1;
+          // Schedule Calendar: only count appointments that fall in the current week (Mon–Sun), keyed by YYYY-MM-DD
+          const weekStart = now.startOf("week"); // Monday 00:00 in Luxon
+          const weekDateStrings: string[] = [];
+          for (let d = 0; d < 7; d++) {
+            weekDateStrings.push(weekStart.plus({ days: d }).toFormat("yyyy-MM-dd"));
+          }
+          setCurrentWeekDateStrings(weekDateStrings);
+
+          const appointmentsByDate: Record<string, number> = {};
+          weekDateStrings.forEach((dateStr) => {
+            appointmentsByDate[dateStr] = 0;
           });
-          setCalendarAppointments(appointmentsByDay);
+          const soradinOnly = appointmentsFromAPI.filter((apt: any) => !apt.is_external);
+          soradinOnly.forEach((apt: any) => {
+            if (!apt.starts_at) return;
+            const localStart = DateTime.fromISO(apt.starts_at, { zone: "utc" }).setZone(agentTimezone);
+            const dateStr = localStart.toFormat("yyyy-MM-dd");
+            if (appointmentsByDate.hasOwnProperty(dateStr)) {
+              appointmentsByDate[dateStr]++;
+            }
+          });
+          setCalendarAppointments(appointmentsByDate);
         }
 
-        // Use weekly appointments we already fetched
-        const { data: weeklyAppointments } = weeklyAppointmentsResult;
-
-        // Group appointments by day of week (Mon-Fri)
+        // Number of Meetings: last calendar week (Mon–Sun) by starts_at in agent timezone, actual counts
+        const lastWeekStart = now.minus({ weeks: 1 }).startOf("week");
+        const lastWeekEnd = lastWeekStart.plus({ days: 6 }).endOf("day");
         const dayCounts: Record<string, number> = {
-          'Mon': 0,
-          'Tue': 0,
-          'Wed': 0,
-          'Thu': 0,
-          'Fri': 0,
+          Mon: 0,
+          Tue: 0,
+          Wed: 0,
+          Thu: 0,
+          Fri: 0,
         };
-
-        (weeklyAppointments || []).forEach((apt: any) => {
-          const date = apt.requested_date ? new Date(apt.requested_date) : new Date(apt.created_at);
-          const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, etc.
-          const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-          const dayName = dayNames[dayOfWeek];
-          if (dayName && dayCounts[dayName] !== undefined) {
-            dayCounts[dayName]++;
-          }
-        });
-
-        // Calculate max value for percentage scaling
+        if (appointmentsFromAPI && Array.isArray(appointmentsFromAPI)) {
+          const soradinOnly = appointmentsFromAPI.filter((apt: any) => !apt.is_external);
+          soradinOnly.forEach((apt: any) => {
+            if (!apt.starts_at) return;
+            const localStart = DateTime.fromISO(apt.starts_at, { zone: "utc" }).setZone(agentTimezone);
+            if (localStart < lastWeekStart || localStart > lastWeekEnd) return;
+            const weekday = localStart.weekday; // 1 = Monday, 7 = Sunday
+            const dayNames = ["", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+            const dayName = dayNames[weekday];
+            if (dayName && dayCounts[dayName] !== undefined) {
+              dayCounts[dayName]++;
+            }
+          });
+        }
         const maxCount = Math.max(...Object.values(dayCounts), 1);
-        
         setMeetingsData([
-          { day: 'Mon', value: maxCount > 0 ? Math.round((dayCounts['Mon'] / maxCount) * 100) : 0 },
-          { day: 'Tue', value: maxCount > 0 ? Math.round((dayCounts['Tue'] / maxCount) * 100) : 0 },
-          { day: 'Wed', value: maxCount > 0 ? Math.round((dayCounts['Wed'] / maxCount) * 100) : 0 },
-          { day: 'Thu', value: maxCount > 0 ? Math.round((dayCounts['Thu'] / maxCount) * 100) : 0 },
-          { day: 'Fri', value: maxCount > 0 ? Math.round((dayCounts['Fri'] / maxCount) * 100) : 0 },
+          { day: "Mon", value: maxCount > 0 ? Math.round((dayCounts["Mon"] / maxCount) * 100) : 0 },
+          { day: "Tue", value: maxCount > 0 ? Math.round((dayCounts["Tue"] / maxCount) * 100) : 0 },
+          { day: "Wed", value: maxCount > 0 ? Math.round((dayCounts["Wed"] / maxCount) * 100) : 0 },
+          { day: "Thu", value: maxCount > 0 ? Math.round((dayCounts["Thu"] / maxCount) * 100) : 0 },
+          { day: "Fri", value: maxCount > 0 ? Math.round((dayCounts["Fri"] / maxCount) * 100) : 0 },
         ]);
 
         // Load appointments for calendar display - use the same API as schedule page
@@ -347,7 +352,8 @@ export default function AgentDashboardPage() {
     { day: 'Thu', value: 0 },
     { day: 'Fri', value: 0 },
   ]);
-  const [calendarAppointments, setCalendarAppointments] = useState<Record<number, number>>({});
+  const [calendarAppointments, setCalendarAppointments] = useState<Record<string, number>>({});
+  const [currentWeekDateStrings, setCurrentWeekDateStrings] = useState<string[]>([]);
   const [availabilitySettings, setAvailabilitySettings] = useState<{
     locations: string[];
     availabilityByLocation: Record<string, any>;
@@ -494,22 +500,21 @@ export default function AgentDashboardPage() {
                       }`}>
                         <div>{calendarDates[idx]}</div>
                         {(() => {
-                          const dayNum = calendarDates[idx];
-                          const appointmentCount = calendarAppointments[dayNum] || 0;
+                          const dateKey = currentWeekDateStrings[idx];
+                          const appointmentCount = dateKey ? (calendarAppointments[dateKey] || 0) : 0;
                           if (appointmentCount > 0) {
-                            // Show dots for appointments (max 3 dots)
                             const dotsToShow = Math.min(appointmentCount, 3);
                             return (
-                          <div className="flex gap-0.5 mt-1">
+                              <div className="flex gap-0.5 mt-1">
                                 {Array.from({ length: dotsToShow }).map((_, i) => (
                                   <span
                                     key={i}
                                     className={`w-1 h-1 rounded-full ${
-                                      isToday ? 'bg-white' : 'bg-[#1a3a2e]/70'
+                                      isToday ? "bg-white" : "bg-[#1a3a2e]/70"
                                     }`}
-                                  ></span>
+                                  />
                                 ))}
-                          </div>
+                              </div>
                             );
                           }
                           return null;
