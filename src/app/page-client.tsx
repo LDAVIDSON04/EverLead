@@ -161,24 +161,27 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
     setLocationSuggestions([]);
   };
 
-  // Function to navigate to search page with detected location from IP
-  // (Only used for buttons - search bar remains blank for manual input)
-  const navigateToSearchWithLocation = async (e: React.MouseEvent) => {
+  // Build URL for in-person/online booking (search/choose). Use current location or fetch from IP.
+  const getSearchChooseUrl = (): string => {
+    if (location && location.trim()) {
+      return `/search/choose?location=${encodeURIComponent(location.trim())}`;
+    }
+    return "#";
+  };
+
+  const handleCardButtonClick = async (e: React.MouseEvent) => {
+    if (location && location.trim()) {
+      router.push(getSearchChooseUrl());
+      return;
+    }
     e.preventDefault();
-    
-    // Detect location from IP, then navigate with it
     try {
       const res = await fetch("/api/geolocation");
       const data = await res.json();
-      
-      if (data.location) {
-        const searchUrl = `/search/choose?location=${encodeURIComponent(data.location)}`;
-        router.push(searchUrl);
-      } else {
-        router.push("/search");
-      }
-    } catch (err) {
-      router.push("/search");
+      const loc = (data.location && data.location.trim()) || (data.city && data.province ? `${data.city}, ${data.province}` : null) || "Canada";
+      window.location.href = `/search/choose?location=${encodeURIComponent(loc)}`;
+    } catch {
+      window.location.href = "/search/choose?location=Canada";
     }
   };
 
@@ -584,12 +587,13 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                 <p className="text-[#1A1A1A]/60 text-sm leading-relaxed mb-4">
                   Browse and compare estate planning specialists from the comfort of your home.
                 </p>
-                <button 
-                  onClick={navigateToSearchWithLocation}
-                  className="relative z-20 bg-[#1A1A1A] text-white px-5 py-2.5 rounded-xl hover:bg-[#1A1A1A]/90 transition-all shadow-sm text-sm touch-manipulation"
+                <Link
+                  href={getSearchChooseUrl()}
+                  onClick={(e) => { if (!location?.trim()) { e.preventDefault(); handleCardButtonClick(e); } }}
+                  className="relative z-20 bg-[#1A1A1A] text-white px-5 py-2.5 rounded-xl hover:bg-[#1A1A1A]/90 transition-all shadow-sm text-sm touch-manipulation inline-block text-center"
                 >
                   Browse specialists
-                </button>
+                </Link>
               </div>
             </div>
 
@@ -624,12 +628,13 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                 <p className="text-[#1A1A1A]/60 text-sm leading-relaxed mb-4">
                   Discover what families are saying about specialists in your area
                 </p>
-                <button 
-                  onClick={navigateToSearchWithLocation}
-                  className="relative z-20 bg-[#1A1A1A] text-white px-5 py-2.5 rounded-xl hover:bg-[#1A1A1A]/90 transition-all shadow-sm text-sm touch-manipulation"
+                <Link
+                  href={getSearchChooseUrl()}
+                  onClick={(e) => { if (!location?.trim()) { e.preventDefault(); handleCardButtonClick(e); } }}
+                  className="relative z-20 bg-[#1A1A1A] text-white px-5 py-2.5 rounded-xl hover:bg-[#1A1A1A]/90 transition-all shadow-sm text-sm touch-manipulation inline-block text-center"
                 >
                   See reviews
-                </button>
+                </Link>
               </div>
             </div>
 
@@ -664,12 +669,13 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                 <p className="text-[#1A1A1A]/60 text-sm leading-relaxed mb-4">
                   Book appointments with trusted specialists and put your plan in place today
                 </p>
-                <button 
-                  onClick={navigateToSearchWithLocation}
-                  className="relative z-20 bg-[#1A1A1A] text-white px-5 py-2.5 rounded-xl hover:bg-[#1A1A1A]/90 transition-all shadow-sm text-sm touch-manipulation"
+                <Link
+                  href={getSearchChooseUrl()}
+                  onClick={(e) => { if (!location?.trim()) { e.preventDefault(); handleCardButtonClick(e); } }}
+                  className="relative z-20 bg-[#1A1A1A] text-white px-5 py-2.5 rounded-xl hover:bg-[#1A1A1A]/90 transition-all shadow-sm text-sm touch-manipulation inline-block text-center"
                 >
                   See availability
-                </button>
+                </Link>
               </div>
             </div>
           </div>
@@ -784,12 +790,13 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
               <p className="text-xl text-white/85 leading-relaxed mb-8 max-w-xl">
                 Funeral professionals across British Columbia rely on Soradin to connect with families and grow their practice with confidence.
               </p>
-              <button 
-                onClick={navigateToSearchWithLocation}
-                className="bg-white text-[#234a3d] px-8 py-4 rounded-xl hover:bg-white/90 transition-all shadow-sm text-lg font-medium"
+              <Link
+                href={getSearchChooseUrl()}
+                onClick={(e) => { if (!location?.trim()) { e.preventDefault(); handleCardButtonClick(e); } }}
+                className="bg-white text-[#234a3d] px-8 py-4 rounded-xl hover:bg-white/90 transition-all shadow-sm text-lg font-medium inline-block"
               >
                 Find care
-              </button>
+              </Link>
             </div>
             <div className="relative w-full order-1 lg:order-2 flex items-center justify-center h-full">
               <div className="flex flex-col gap-12 w-full items-center justify-center">
