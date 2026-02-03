@@ -563,8 +563,8 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
             <div className="bg-[#FAF9F6] rounded-3xl p-6 border-2 border-[#1A1A1A] relative overflow-visible group flex flex-col transition-all duration-300 ease-out hover:scale-[1.03] hover:shadow-2xl hover:shadow-black/10 hover:-translate-y-1 max-md:hover:scale-100 max-md:hover:translate-y-0">
               {/* Reserved space for image to prevent CLS */}
               <div className="w-full h-12 flex-shrink-0" aria-hidden="true" />
-              {/* Image overlapping the top; mobile: slightly lower so hair doesn't block card above */}
-              <div className="absolute -top-32 max-md:-top-28 left-1/2 -translate-x-1/2 w-56 h-56 flex items-center justify-center" style={{ aspectRatio: "1/1" }}>
+              {/* Image overlapping the top; mobile: slightly lower, pointer-events-none so button receives taps */}
+              <div className="absolute -top-32 max-md:-top-28 left-1/2 -translate-x-1/2 w-56 h-56 flex items-center justify-center max-md:pointer-events-none" style={{ aspectRatio: "1/1" }}>
                 <Image
                   src="/browse-card-image.png"
                   alt="Start planning today with Soradin"
@@ -601,8 +601,8 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
             <div className="bg-[#FAF9F6] rounded-3xl p-6 border-2 border-[#1A1A1A] relative overflow-visible group flex flex-col transition-all duration-300 ease-out hover:scale-[1.03] hover:shadow-2xl hover:shadow-black/10 hover:-translate-y-1 max-md:hover:scale-100 max-md:hover:translate-y-0">
               {/* Reserved space for image to prevent CLS */}
               <div className="w-full h-12 flex-shrink-0" aria-hidden="true" />
-              {/* Image overlapping the top; mobile: slightly lower so hair doesn't overlap card above */}
-              <div className="absolute -top-32 max-md:-top-28 left-1/2 -translate-x-1/2 w-56 h-56 flex items-center justify-center overflow-hidden" style={{ aspectRatio: "1/1" }}>
+              {/* Image overlapping the top; mobile: slightly lower, pointer-events-none so button receives taps */}
+              <div className="absolute -top-32 max-md:-top-28 left-1/2 -translate-x-1/2 w-56 h-56 flex items-center justify-center overflow-hidden max-md:pointer-events-none" style={{ aspectRatio: "1/1" }}>
               <Image
                 src="/review-image.png"
                 alt="Person holding review card"
