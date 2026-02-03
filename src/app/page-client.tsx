@@ -598,7 +598,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
               {/* Reserved space for image (desktop only) */}
               <div className="w-full h-12 flex-shrink-0 hidden md:block" aria-hidden="true" />
               {/* Image: on mobile in-flow just above title; on desktop overlapping top */}
-              <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-56 h-56 flex items-center justify-center overflow-hidden max-md:relative max-md:top-0 max-md:left-0 max-md:translate-x-0 max-md:mx-auto max-md:mb-2 max-md:w-28 max-md:h-28" style={{ aspectRatio: "1/1" }}>
+              <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-56 h-56 flex items-center justify-center overflow-hidden max-md:relative max-md:top-0 max-md:left-0 max-md:translate-x-0 max-md:mx-auto max-md:mb-2" style={{ aspectRatio: "1/1" }}>
               <Image
                 src="/review-image.png"
                 alt="Person holding review card"
@@ -638,7 +638,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
               {/* Reserved space for image (desktop only) */}
               <div className="w-full h-12 flex-shrink-0 hidden md:block" aria-hidden="true" />
               {/* Image: on mobile in-flow just above title; on desktop overlapping top */}
-              <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-56 h-56 flex items-center justify-center overflow-hidden max-md:relative max-md:top-0 max-md:left-0 max-md:translate-x-0 max-md:mx-auto max-md:mb-2 max-md:w-28 max-md:h-28" style={{ aspectRatio: "1/1" }}>
+              <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-56 h-56 flex items-center justify-center overflow-hidden max-md:relative max-md:top-0 max-md:left-0 max-md:translate-x-0 max-md:mx-auto max-md:mb-2" style={{ aspectRatio: "1/1" }}>
                 <Image
                   src="/booking-image.png"
                   alt="Person holding book now sign"
