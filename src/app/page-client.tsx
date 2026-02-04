@@ -779,8 +779,8 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
         </div>
       </section>
 
-      {/* TRUSTED PARTNERS - same as footer for seamless blend */}
-      <section className="py-24 px-4 bg-[#1A1A1A]">
+      {/* TRUSTED PARTNERS - dark green like empathy.com */}
+      <section className="py-24 px-4 bg-[#234a3d]">
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div className="order-2 lg:order-1 flex flex-col items-center text-center">
@@ -793,7 +793,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
               <Link
                 href={getSearchChooseUrl()}
                 onClick={(e) => { if (!location?.trim()) { e.preventDefault(); handleCardButtonClick(e); } }}
-                className="bg-white text-[#1A1A1A] px-8 py-4 rounded-xl hover:bg-white/90 transition-all shadow-sm text-lg font-medium inline-block"
+                className="bg-white text-[#234a3d] px-8 py-4 rounded-xl hover:bg-white/90 transition-all shadow-sm text-lg font-medium inline-block"
               >
                 Find care
               </Link>
@@ -860,8 +860,8 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
         </div>
       </section>
 
-      {/* CITIES LIST - same as footer for seamless blend */}
-      <section className="py-24 px-4 bg-[#1A1A1A]">
+      {/* CITIES LIST - dark green like empathy.com */}
+      <section className="py-24 px-4 bg-[#234a3d]">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-4xl mb-12 text-white font-medium tracking-tight">
             Find estate planning professionals near you
@@ -971,9 +971,9 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
               </div>
             </div>
 
-            {/* Bottom section - layout like reference: logo + socials, then legal + trust badge, then copyright */}
+            {/* Bottom section */}
             <div className="border-t border-white/10 pt-10">
-              <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+              <div className="flex flex-col md:flex-row justify-between items-center gap-6 mb-6">
                 <div className="flex items-center gap-3">
                   <Image
                     src="/logo - white.png"
@@ -984,17 +984,18 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                   />
                   <span className="text-2xl font-medium">Soradin</span>
                 </div>
-                <div className="flex items-center gap-5">
+
+                <div className="flex gap-5">
                   <Link
                     href="#"
-                    className="text-white/60 hover:text-white transition-colors"
+                    className="text-white/50 hover:text-white transition-colors"
                     aria-label="Instagram"
                   >
                     <Instagram className="w-5 h-5" />
                   </Link>
                   <Link
                     href="https://www.facebook.com/profile.php?id=61583953961107"
-                    className="text-white/60 hover:text-white transition-colors"
+                    className="text-white/50 hover:text-white transition-colors"
                     aria-label="Facebook"
                     target="_blank"
                     rel="noopener noreferrer"
@@ -1004,30 +1005,18 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-8">
-                <div className="text-sm text-white/50 order-2 sm:order-1">
-                  <Link href="/terms" className="hover:text-white/70 transition-colors underline">
+              <div className="text-sm text-white/40 text-center md:text-left">
+                <p>
+                  © {new Date().getFullYear()} Soradin, Inc.{" "}
+                  <Link href="/terms" className="hover:text-white/60 transition-colors underline">
                     Terms
                   </Link>
                   {" · "}
-                  <Link href="/privacy" className="hover:text-white/70 transition-colors underline">
+                  <Link href="/privacy" className="hover:text-white/60 transition-colors underline">
                     Privacy
                   </Link>
-                </div>
-                <div className="order-1 sm:order-2 bg-black rounded-lg px-3 py-2" title="Secure connection (SSL)" aria-label="Secure connection (SSL)">
-                  <Image
-                    src="/ssl-secure-badge.png"
-                    alt="Secure SSL Encryption"
-                    width={440}
-                    height={132}
-                    className="h-28 w-auto object-contain"
-                  />
-                </div>
+                </p>
               </div>
-
-              <p className="text-sm text-white/40 text-center mt-6">
-                © {new Date().getFullYear()} Soradin, Inc. All rights reserved.
-              </p>
             </div>
           </div>
         </div>
