@@ -11,7 +11,7 @@ import { Footer } from "./components/Footer";
 
 export default function LearnMoreAboutStartingPage() {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[#FAF9F6]">
       <Header />
       <main>
         <HeroSection />

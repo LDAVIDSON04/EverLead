@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 
 export function HeroSection() {
   return (
-    <section className="bg-[#FFF9F0] py-8 md:py-20 relative overflow-hidden min-h-[700px]">
+    <section className="bg-[#FAF9F6] py-8 md:py-20 relative overflow-hidden min-h-[700px]">
       <div className="max-w-7xl mx-auto px-6">
         <div className="grid md:grid-cols-5 gap-12 items-center">
           {/* Left content */}

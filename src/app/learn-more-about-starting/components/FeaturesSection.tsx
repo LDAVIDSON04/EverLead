@@ -6,42 +6,42 @@ export function FeaturesSection() {
       title: "Calendar Integration",
       description: "Show patients accurate availability without extra work.",
       icon: "📅",
-      bgColor: "bg-[#FFF9F0]",
+      bgColor: "bg-[#FAF9F6]",
     },
     {
       title: "Soradin Video Service",
       description: "Connect with patients via our intuitive HIPAA-compliant telehealth solution.",
       icon: "🎥",
-      bgColor: "bg-[#FFF9F0]",
+      bgColor: "bg-[#FAF9F6]",
     },
     {
       title: "Intake",
       description: "Streamline appointment management by collecting forms online.",
       icon: "📋",
-      bgColor: "bg-[#FFF9F0]",
+      bgColor: "bg-[#FAF9F6]",
     },
     {
       title: "Appointment reminders",
       description: "Improve attendance rates with automated reminders.",
       icon: "📱",
-      bgColor: "bg-[#FFF9F0]",
+      bgColor: "bg-[#FAF9F6]",
     },
     {
       title: "Reviews",
       description: "Build trust with verified patient reviews, automatically collected for you.",
       icon: "👍",
-      bgColor: "bg-[#FFF9F0]",
+      bgColor: "bg-[#FAF9F6]",
     },
     {
       title: "Performance reporting",
       description: "Measure results with clear, actionable data.",
       icon: "📊",
-      bgColor: "bg-[#FFF9F0]",
+      bgColor: "bg-[#FAF9F6]",
     },
   ];
 
   return (
-    <section className="bg-[#FFF9F0] py-20">
+    <section className="bg-[#FAF9F6] py-20">
       <div className="max-w-7xl mx-auto px-6">
         <div className="mb-16 max-w-2xl">
           <h2 className="text-4xl md:text-5xl text-black mb-4">
