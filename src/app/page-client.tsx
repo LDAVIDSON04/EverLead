@@ -1018,9 +1018,9 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                   <Image
                     src="/ssl-secure-badge.png"
                     alt="Secure SSL Encryption"
-                    width={160}
-                    height={48}
-                    className="h-10 w-auto object-contain mix-blend-multiply"
+                    width={220}
+                    height={66}
+                    className="h-14 w-auto min-h-[3rem] object-contain drop-shadow-md"
                   />
                 </div>
               </div>
