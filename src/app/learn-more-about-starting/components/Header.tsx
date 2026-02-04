@@ -20,8 +20,14 @@ export function Header() {
           <span className="text-sm md:text-2xl font-semibold text-[#1A1A1A] md:mt-0 -mt-1">Soradin For Agents</span>
         </Link>
         
-        {/* Auth buttons */}
+        {/* Nav links + Auth */}
         <div className="flex items-center gap-3">
+          <Link href="/help/for-providers" className="text-black hover:text-[#1A1A1A] hover:underline text-sm font-medium">
+            Help
+          </Link>
+          <Link href="/" className="text-black hover:text-[#1A1A1A] hover:underline text-sm font-medium">
+            Find care
+          </Link>
           <Link href="/agent">
             <Button variant="ghost" className="text-black hover:text-[#1A1A1A] hover:bg-transparent">
               Log in
