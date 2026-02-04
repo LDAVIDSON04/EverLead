@@ -779,8 +779,8 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
         </div>
       </section>
 
-      {/* TRUSTED PARTNERS - dark green like empathy.com */}
-      <section className="py-24 px-4 bg-[#234a3d]">
+      {/* TRUSTED PARTNERS - same as footer for seamless blend */}
+      <section className="py-24 px-4 bg-[#1A1A1A]">
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div className="order-2 lg:order-1 flex flex-col items-center text-center">
@@ -793,7 +793,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
               <Link
                 href={getSearchChooseUrl()}
                 onClick={(e) => { if (!location?.trim()) { e.preventDefault(); handleCardButtonClick(e); } }}
-                className="bg-white text-[#234a3d] px-8 py-4 rounded-xl hover:bg-white/90 transition-all shadow-sm text-lg font-medium inline-block"
+                className="bg-white text-[#1A1A1A] px-8 py-4 rounded-xl hover:bg-white/90 transition-all shadow-sm text-lg font-medium inline-block"
               >
                 Find care
               </Link>
@@ -860,8 +860,8 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
         </div>
       </section>
 
-      {/* CITIES LIST - dark green like empathy.com */}
-      <section className="py-24 px-4 bg-[#234a3d]">
+      {/* CITIES LIST - same as footer for seamless blend */}
+      <section className="py-24 px-4 bg-[#1A1A1A]">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-4xl mb-12 text-white font-medium tracking-tight">
             Find estate planning professionals near you
