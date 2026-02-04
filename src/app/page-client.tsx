@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search, MapPin, Star, Calendar, Check, ChevronDown, Heart, Facebook, Instagram, Menu, X, ChevronRight, ShieldCheck } from "lucide-react";
+import { Search, MapPin, Star, Calendar, Check, ChevronDown, Heart, Facebook, Instagram, Menu, X, ChevronRight } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 // Major BC cities for the "Find estate planning professionals near you" section (12 cities max)
 const majorBCCities = [
@@ -1014,13 +1014,14 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                     Privacy
                   </Link>
                 </div>
-                <div
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-white/5 border border-white/10 order-1 sm:order-2"
-                  title="Secure connection (SSL)"
-                  aria-label="Secure connection (SSL)"
-                >
-                  <ShieldCheck className="w-4 h-4 text-white shrink-0" />
-                  <span className="text-xs font-semibold text-white tracking-wide">SECURE SSL</span>
+                <div className="order-1 sm:order-2" title="Secure connection (SSL)" aria-label="Secure connection (SSL)">
+                  <Image
+                    src="/ssl-secure-badge.png"
+                    alt="Secure SSL Encryption"
+                    width={160}
+                    height={48}
+                    className="h-10 w-auto object-contain mix-blend-multiply"
+                  />
                 </div>
               </div>
 
