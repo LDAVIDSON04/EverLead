@@ -971,9 +971,9 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
               </div>
             </div>
 
-            {/* Bottom section */}
+            {/* Bottom section - layout like reference: logo + socials, then legal + trust badge, then copyright */}
             <div className="border-t border-white/10 pt-10">
-              <div className="flex flex-col md:flex-row justify-between items-center gap-6 mb-6">
+              <div className="flex flex-col md:flex-row justify-between items-center gap-6">
                 <div className="flex items-center gap-3">
                   <Image
                     src="/logo - white.png"
@@ -984,45 +984,49 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                   />
                   <span className="text-2xl font-medium">Soradin</span>
                 </div>
-
-                <div className="flex flex-col items-center md:items-end gap-3">
-                  <div className="flex items-center gap-5">
-                    <Link
-                      href="#"
-                      className="text-white/50 hover:text-white transition-colors"
-                      aria-label="Instagram"
-                    >
-                      <Instagram className="w-5 h-5" />
-                    </Link>
-                    <Link
-                      href="https://www.facebook.com/profile.php?id=61583953961107"
-                      className="text-white/50 hover:text-white transition-colors"
-                      aria-label="Facebook"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <Facebook className="w-5 h-5" />
-                    </Link>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-white" title="Secure connection (SSL)" aria-label="Secure connection (SSL)">
-                    <ShieldCheck className="w-5 h-5 shrink-0" />
-                    <span className="text-xs font-semibold tracking-wide">SECURE SSL</span>
-                  </div>
+                <div className="flex items-center gap-5">
+                  <Link
+                    href="#"
+                    className="text-white/60 hover:text-white transition-colors"
+                    aria-label="Instagram"
+                  >
+                    <Instagram className="w-5 h-5" />
+                  </Link>
+                  <Link
+                    href="https://www.facebook.com/profile.php?id=61583953961107"
+                    className="text-white/60 hover:text-white transition-colors"
+                    aria-label="Facebook"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Facebook className="w-5 h-5" />
+                  </Link>
                 </div>
               </div>
 
-              <div className="text-sm text-white/40 text-center md:text-left">
-                <p>
-                  © {new Date().getFullYear()} Soradin, Inc.{" "}
-                  <Link href="/terms" className="hover:text-white/60 transition-colors underline">
+              <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-8">
+                <div className="text-sm text-white/50 order-2 sm:order-1">
+                  <Link href="/terms" className="hover:text-white/70 transition-colors underline">
                     Terms
                   </Link>
                   {" · "}
-                  <Link href="/privacy" className="hover:text-white/60 transition-colors underline">
+                  <Link href="/privacy" className="hover:text-white/70 transition-colors underline">
                     Privacy
                   </Link>
-                </p>
+                </div>
+                <div
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-white/5 border border-white/10 order-1 sm:order-2"
+                  title="Secure connection (SSL)"
+                  aria-label="Secure connection (SSL)"
+                >
+                  <ShieldCheck className="w-4 h-4 text-white shrink-0" />
+                  <span className="text-xs font-semibold text-white tracking-wide">SECURE SSL</span>
+                </div>
               </div>
+
+              <p className="text-sm text-white/40 text-center mt-6">
+                © {new Date().getFullYear()} Soradin, Inc. All rights reserved.
+              </p>
             </div>
           </div>
         </div>
