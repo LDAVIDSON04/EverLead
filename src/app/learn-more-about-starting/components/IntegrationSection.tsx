@@ -7,12 +7,12 @@ export function IntegrationSection() {
     <section className="bg-[#FAF9F6] py-4 md:py-8">
       <div className="max-w-7xl mx-auto px-6">
         <div className="grid md:grid-cols-2 gap-4 md:gap-16 items-center">
-          {/* Left - Diagram */}
-          <div className="relative h-[300px] md:h-[600px] flex items-center justify-center">
+          {/* Left - Diagram - blend so white background matches page cream */}
+          <div className="relative h-[300px] md:h-[600px] flex items-center justify-center bg-[#FAF9F6]">
             <img 
               src="/soradin-integration-diagram.png" 
               alt="Soradin integration diagram: Soradin connects to Soradin Website, Customer Reach Network, Google Calendar, and Microsoft Calendar" 
-              className="w-full h-full object-contain"
+              className="w-full h-full object-contain mix-blend-darken"
               onError={(e) => {
                 // Fallback to placeholder if image doesn't exist
                 e.currentTarget.style.display = 'none';
