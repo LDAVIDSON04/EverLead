@@ -985,7 +985,14 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                   <span className="text-2xl font-medium">Soradin</span>
                 </div>
 
-                <div className="flex gap-5">
+                <div className="flex items-center gap-5">
+                  <Image
+                    src="/logo - white.png"
+                    alt="Soradin"
+                    width={24}
+                    height={24}
+                    className="h-6 w-6 object-contain opacity-80 hover:opacity-100 transition-opacity"
+                  />
                   <Link
                     href="#"
                     className="text-white/50 hover:text-white transition-colors"
