@@ -20,21 +20,21 @@ export function Header() {
           <span className="text-sm md:text-2xl font-semibold text-[#1A1A1A] md:mt-0 -mt-1">Soradin For Agents</span>
         </Link>
         
-        {/* Nav links + Auth */}
+        {/* Nav links + Auth - match front page header size (text-lg) */}
         <div className="flex items-center gap-3">
-          <Link href="/help/for-providers" className="text-black hover:text-[#1A1A1A] hover:underline text-sm font-medium">
+          <Link href="/help/for-providers" className="text-black hover:text-[#1A1A1A] hover:underline text-lg font-medium">
             Help
           </Link>
-          <Link href="/" className="text-black hover:text-[#1A1A1A] hover:underline text-sm font-medium">
+          <Link href="/" className="text-black hover:text-[#1A1A1A] hover:underline text-lg font-medium">
             Find care
           </Link>
           <Link href="/agent">
-            <Button variant="ghost" className="text-black hover:text-[#1A1A1A] hover:bg-transparent">
+            <Button variant="ghost" className="text-black hover:text-[#1A1A1A] hover:bg-transparent text-lg font-medium">
               Log in
             </Button>
           </Link>
           <Link href="/create-account">
-            <Button className="bg-[#1A1A1A] hover:bg-[#1A1A1A]/90 text-white">
+            <Button className="bg-[#1A1A1A] hover:bg-[#1A1A1A]/90 text-white text-lg font-medium">
               Create account
             </Button>
           </Link>
