@@ -65,7 +65,7 @@ export default function ProviderHelpPage() {
         {/* Hero headline - compact */}
         <div className="max-w-3xl mx-auto relative z-10 pt-2 pb-1">
           <h1 className="text-2xl md:text-3xl font-bold text-white text-center">
-            Advisors, how can we help?
+            How can we help?
           </h1>
         </div>
       </section>
