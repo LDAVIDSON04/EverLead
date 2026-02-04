@@ -1014,13 +1014,13 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                     Privacy
                   </Link>
                 </div>
-                <div className="order-1 sm:order-2" title="Secure connection (SSL)" aria-label="Secure connection (SSL)">
+                <div className="order-1 sm:order-2 bg-black rounded-lg px-3 py-2" title="Secure connection (SSL)" aria-label="Secure connection (SSL)">
                   <Image
                     src="/ssl-secure-badge.png"
                     alt="Secure SSL Encryption"
-                    width={220}
-                    height={66}
-                    className="h-14 w-auto min-h-[3rem] object-contain drop-shadow-md"
+                    width={440}
+                    height={132}
+                    className="h-28 w-auto object-contain"
                   />
                 </div>
               </div>
