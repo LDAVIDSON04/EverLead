@@ -22,7 +22,7 @@ export function Header() {
         
         {/* Nav links + Auth - match front page header size (text-lg) */}
         <div className="flex items-center gap-3">
-          <Link href="/help/for-providers" className="text-black hover:text-[#1A1A1A] hover:underline text-lg font-medium">
+          <Link href="/help/for-providers" className="text-black hover:text-[#1A1A1A] hover:underline text-lg font-medium mr-5">
             Help
           </Link>
           <Link href="/" className="text-black hover:text-[#1A1A1A] hover:underline text-lg font-medium">
