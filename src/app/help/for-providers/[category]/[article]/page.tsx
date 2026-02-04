@@ -232,7 +232,7 @@ This feature supports record keeping while maintaining privacy standards.`,
       ]
     }
   },
-  'agent-solutions': {
+  'advisor-solutions': {
     'what-features-available': {
       title: 'What features are available to agents?',
       content: `Soradin provides agents with tools designed to simplify scheduling, improve visibility, and support better conversations with families.
@@ -742,7 +742,7 @@ export default function ProviderArticlePage() {
             </div>
             <div className="flex items-center gap-6">
               <Link href="/learn-more-about-starting" className="text-sm text-white hover:text-gray-200 transition-colors">
-                Soradin for Agents
+                Soradin for Advisors
               </Link>
               <Link href="mailto:support@soradin.com" className="text-sm text-white hover:text-gray-200 transition-colors">
                 Contact us

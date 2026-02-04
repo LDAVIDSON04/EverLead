@@ -40,8 +40,8 @@ const categoryData: Record<string, {
       { id: '11', title: 'How do I export my appointment data?', slug: 'how-do-i-export-my-appointment-data' }
     ]
   },
-  'agent-solutions': {
-    title: 'Agent Solutions',
+  'advisor-solutions': {
+    title: 'Advisor Solutions',
     icon: Shield,
     articles: [
       { id: '1', title: 'What features are available to agents?', slug: 'what-features-available' },
@@ -173,7 +173,7 @@ export default function ProviderCategoryPage() {
             </div>
             <div className="flex items-center gap-6">
               <Link href="/learn-more-about-starting" className="text-sm text-white hover:text-gray-200 transition-colors">
-                Soradin for Agents
+                Soradin for Advisors
               </Link>
               <Link href="mailto:support@soradin.com" className="text-sm text-white hover:text-gray-200 transition-colors">
                 Contact us

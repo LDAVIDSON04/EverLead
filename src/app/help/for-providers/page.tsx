@@ -8,7 +8,7 @@ export default function ProviderHelpPage() {
   const categories = [
     { id: 1, title: 'Getting Started', icon: Play, articles: 7 },
     { id: 2, title: 'Managing Appointments', icon: CalendarCheck, articles: 11 },
-    { id: 3, title: 'Agent Solutions', icon: Shield, articles: 15 },
+    { id: 3, title: 'Advisor Solutions', icon: Shield, articles: 15 },
     { id: 4, title: 'Settings', icon: Settings, articles: 14 },
     { id: 5, title: 'Account and Billing', icon: DollarSign, articles: 6 },
     { id: 6, title: 'Performance and Reporting', icon: BarChart3, articles: 4 }
@@ -53,7 +53,7 @@ export default function ProviderHelpPage() {
             </div>
             <div className="flex items-center gap-6">
               <Link href="/learn-more-about-starting" className="text-sm text-white hover:text-gray-200 transition-colors">
-                Soradin for Agents
+                Soradin for Advisors
               </Link>
               <Link href="mailto:support@soradin.com" className="text-sm text-white hover:text-gray-200 transition-colors">
                 Contact us
@@ -65,7 +65,7 @@ export default function ProviderHelpPage() {
         {/* Hero headline - compact */}
         <div className="max-w-3xl mx-auto relative z-10 pt-2 pb-1">
           <h1 className="text-2xl md:text-3xl font-bold text-white text-center">
-            Agents, how can we help?
+            Advisors, how can we help?
           </h1>
         </div>
       </section>
