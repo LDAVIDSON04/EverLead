@@ -10,8 +10,8 @@ export function IntegrationSection() {
           {/* Left - Diagram */}
           <div className="relative h-[300px] md:h-[600px] flex items-center justify-center">
             <img 
-              src="/6b0593cc835f18d9641d254dbc73276db55cd173.png" 
-              alt="Soradin integration diagram" 
+              src="/soradin-integration-diagram.png" 
+              alt="Soradin integration diagram: Soradin connects to Soradin Website, Customer Reach Network, Google Calendar, and Microsoft Calendar" 
               className="w-full h-full object-contain"
               onError={(e) => {
                 // Fallback to placeholder if image doesn't exist
