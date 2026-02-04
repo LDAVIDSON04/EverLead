@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search, MapPin, Star, Calendar, Check, ChevronDown, Heart, Facebook, Instagram, Menu, X, ChevronRight } from "lucide-react";
+import { Search, MapPin, Star, Calendar, Check, ChevronDown, Heart, Facebook, Instagram, Menu, X, ChevronRight, ShieldCheck } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 // Major BC cities for the "Find estate planning professionals near you" section (12 cities max)
 const majorBCCities = [
@@ -985,30 +985,29 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                   <span className="text-2xl font-medium">Soradin</span>
                 </div>
 
-                <div className="flex items-center gap-5">
-                  <Image
-                    src="/logo - white.png"
-                    alt="Soradin"
-                    width={24}
-                    height={24}
-                    className="h-6 w-6 object-contain opacity-80 hover:opacity-100 transition-opacity"
-                  />
-                  <Link
-                    href="#"
-                    className="text-white/50 hover:text-white transition-colors"
-                    aria-label="Instagram"
-                  >
-                    <Instagram className="w-5 h-5" />
-                  </Link>
-                  <Link
-                    href="https://www.facebook.com/profile.php?id=61583953961107"
-                    className="text-white/50 hover:text-white transition-colors"
-                    aria-label="Facebook"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <Facebook className="w-5 h-5" />
-                  </Link>
+                <div className="flex flex-col items-center md:items-end gap-3">
+                  <div className="flex items-center gap-5">
+                    <Link
+                      href="#"
+                      className="text-white/50 hover:text-white transition-colors"
+                      aria-label="Instagram"
+                    >
+                      <Instagram className="w-5 h-5" />
+                    </Link>
+                    <Link
+                      href="https://www.facebook.com/profile.php?id=61583953961107"
+                      className="text-white/50 hover:text-white transition-colors"
+                      aria-label="Facebook"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <Facebook className="w-5 h-5" />
+                    </Link>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-white" title="Secure connection (SSL)" aria-label="Secure connection (SSL)">
+                    <ShieldCheck className="w-5 h-5 shrink-0" />
+                    <span className="text-xs font-semibold tracking-wide">SECURE SSL</span>
+                  </div>
                 </div>
               </div>
 
