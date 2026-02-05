@@ -788,7 +788,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                 Trusted by leading estate planning professionals
               </h2>
               <p className="text-xl text-white/85 leading-relaxed mb-8 max-w-xl">
-                Funeral professionals across British Columbia rely on Soradin to connect with families and grow their practice with confidence.
+                Soradin builds trust and helps ease some of the hardest planning decisions in life.
               </p>
               <Link
                 href={getSearchChooseUrl()}
