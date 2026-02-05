@@ -799,62 +799,16 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
               </Link>
             </div>
             <div className="relative w-full order-1 lg:order-2 flex items-center justify-center h-full">
-              <div className="flex flex-col gap-12 w-full items-center justify-center">
-                <div className="flex items-center justify-center gap-8 md:gap-10">
-                  <Image
-                    src="/trusted-agent-1.png"
-                    alt="Funeral professional"
-                    width={200}
-                    height={200}
-                    className="w-24 h-24 md:w-32 md:h-32 rounded-full object-cover border-4 border-white/30 shadow-lg"
-                    loading="lazy"
-                    fetchPriority="low"
-                    sizes="(max-width: 768px) 128px, 160px"
-                  />
-                  <Image
-                    src="/trusted-agent-2.png"
-                    alt="Funeral professional"
-                    width={200}
-                    height={200}
-                    className="w-24 h-24 md:w-32 md:h-32 rounded-full object-cover border-4 border-white/30 shadow-lg"
-                    loading="lazy"
-                    fetchPriority="low"
-                    sizes="(max-width: 768px) 128px, 160px"
-                  />
-                  <Image
-                    src="/trusted-agent-3.png"
-                    alt="Funeral professional"
-                    width={200}
-                    height={200}
-                    className="w-24 h-24 md:w-32 md:h-32 rounded-full object-cover border-4 border-white/30 shadow-lg"
-                    loading="lazy"
-                    fetchPriority="low"
-                    sizes="(max-width: 768px) 128px, 160px"
-                  />
-                </div>
-                <div className="flex items-center justify-center gap-8 md:gap-10">
-                  <Image
-                    src="/trusted-agent-4.png"
-                    alt="Funeral professional"
-                    width={200}
-                    height={200}
-                    className="w-24 h-24 md:w-32 md:h-32 rounded-full object-cover border-4 border-white/30 shadow-lg"
-                    loading="lazy"
-                    fetchPriority="low"
-                    sizes="(max-width: 768px) 128px, 160px"
-                  />
-                  <Image
-                    src="/trusted-agent-5.png"
-                    alt="Funeral professional"
-                    width={200}
-                    height={200}
-                    className="w-24 h-24 md:w-32 md:h-32 rounded-full object-cover border-4 border-white/30 shadow-lg"
-                    loading="lazy"
-                    fetchPriority="low"
-                    sizes="(max-width: 768px) 128px, 160px"
-                  />
-                </div>
-              </div>
+              <Image
+                src="/trusted-professionals.png"
+                alt="Estate planning professionals"
+                width={800}
+                height={533}
+                className="w-full max-w-xl rounded-2xl object-cover shadow-lg border border-white/10"
+                loading="lazy"
+                fetchPriority="low"
+                sizes="(max-width: 768px) 100vw, 36rem"
+              />
             </div>
           </div>
         </div>
