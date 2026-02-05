@@ -175,26 +175,26 @@ export default function CreateAccountNextPage() {
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
-      {/* Header */}
-      <div className="px-8 pt-1 pb-1">
+      {/* Header - compact so title block sits higher */}
+      <div className="px-8 pt-2 pb-0">
         <Link href="/" className="flex items-center gap-2">
           <Image
             src="/Soradin.png"
             alt="Soradin"
             width={96}
             height={96}
-            className="h-24 w-24 object-contain"
+            className="h-16 w-16 object-contain"
           />
           <span className="font-semibold text-black">Soradin</span>
         </Link>
       </div>
 
       {/* Form Container */}
-      <div className="max-w-[1000px] mx-auto px-8 pt-0 pb-8 flex-1 w-full">
+      <div className="max-w-[1000px] mx-auto px-8 pt-2 -mt-2 pb-8 flex-1 w-full">
         <h1 className="text-3xl mb-1">Create an account</h1>
 
         {/* Progress Indicator - Step 3 of 3 */}
-        <div className="mb-4">
+        <div className="mb-10">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2 text-neutral-700">
               <div className="w-8 h-8 rounded-full flex items-center justify-center bg-neutral-700 text-white">

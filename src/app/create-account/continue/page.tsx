@@ -181,26 +181,26 @@ export default function CreateAccountContinuePage() {
 
   return (
     <div className="w-full min-h-screen bg-white flex flex-col">
-      {/* Logo */}
-      <div className="mb-2 px-8 pt-2">
+      {/* Logo - compact so title block sits higher */}
+      <div className="mb-0 px-8 pt-2 pb-0">
         <Link href="/" className="flex items-center gap-2">
           <Image
             src="/Soradin.png"
             alt="Soradin"
             width={96}
             height={96}
-            className="h-24 w-24 object-contain"
+            className="h-16 w-16 object-contain"
           />
           <span className="font-semibold text-black">Soradin</span>
         </Link>
       </div>
 
-      <div className="max-w-[1000px] mx-auto px-4 pt-0 pb-4 flex-1 w-full">
+      <div className="max-w-[1000px] mx-auto px-4 pt-2 -mt-2 pb-4 flex-1 w-full">
         <h1 className="text-2xl mb-1 text-black">Create an account</h1>
         <p className="text-gray-600 text-sm mb-2">Please complete all steps to submit your account for approval</p>
 
         {/* Progress: Step 2 active */}
-        <div className="mb-4">
+        <div className="mb-10">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-neutral-700">
               <div className="w-8 h-8 rounded-full flex items-center justify-center bg-neutral-700 text-white">
