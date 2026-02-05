@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -23,6 +23,11 @@ const TAB_CTA = {
 export default function WhatIsPreNeedFuneralPlanningPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabId>("funeral");
+
+  // Scroll to top when switching profession tabs so the new content is in view
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [activeTab]);
 
   const navigateToSearch = () => {
     router.push("/search");
@@ -78,7 +83,7 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
                   ${tab.id === "insurance" ? "order-4 md:order-3" : ""}
                   ${tab.id === "financial" ? "order-3 md:order-4" : ""}
                   ${activeTab === tab.id
-                    ? "text-[#1a3a2e] border-b-2 border-[#1a3a2e] bg-[#faf8f3] -mb-px md:border-b-2"
+                    ? "bg-[#234a3d] text-white border-b-2 border-[#234a3d] -mb-px md:border-b-2"
                     : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
                   }
                 `}
