@@ -89,6 +89,7 @@ export default function CreateAccountNextPage() {
       "lawyer": "Lawyer",
       "insurance-broker": "Insurance Broker",
       "financial-advisor": "Financial Advisor",
+      "financial_insurance_agent": "Financial and Insurance Agent",
     };
 
     const metadata: Record<string, unknown> = {
@@ -111,12 +112,12 @@ export default function CreateAccountNextPage() {
       metadata.law_society_name = step2.lawSocietyName || "";
       metadata.authorized_provinces = step2.authorizedProvinces || "";
     }
-    if (step2.selectedRole === "insurance-broker") {
+    if (step2.selectedRole === "insurance-broker" || step2.selectedRole === "financial_insurance_agent") {
       metadata.licensing_province = step2.licensingProvince || "";
       metadata.has_multiple_provinces = step2.hasMultipleProvinces === "yes";
       metadata.additional_provinces = step2.additionalProvinces || "";
     }
-    if (step2.selectedRole === "financial-advisor") {
+    if (step2.selectedRole === "financial-advisor" || step2.selectedRole === "financial_insurance_agent") {
       metadata.regulatory_organization = step2.regulatoryOrganization || "";
       metadata.registered_provinces = step2.registeredProvinces || "";
     }

@@ -22,20 +22,24 @@ type Role =
   | "lawyer"
   | "insurance-broker"
   | "financial-advisor"
+  | "financial_insurance_agent"
   | "";
 
-const roles = [
-  { value: "funeral-planner" as const, label: "Funeral Planner" },
-  { value: "lawyer" as const, label: "Lawyer" },
-  { value: "insurance-broker" as const, label: "Insurance Broker" },
-  { value: "financial-advisor" as const, label: "Financial Advisor" },
-];
+// Step 1 industry value → Step 2 role(s) and labels
+const INDUSTRY_LABELS: Record<string, string> = {
+  funeral_planner: "Funeral Planner",
+  estate_lawyer: "Estate Lawyer",
+  financial_advisor: "Financial Advisor",
+  insurance_broker: "Insurance Broker",
+  financial_insurance_agent: "Financial and Insurance Agent",
+};
 
 const inputClassName =
   "w-full h-11 px-3 bg-white border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-black focus:border-black";
 
 export default function CreateAccountContinuePage() {
   const router = useRouter();
+  const [step1Industry, setStep1Industry] = useState<string>("");
   const [selectedRole, setSelectedRole] = useState<Role>("");
   const [businessName, setBusinessName] = useState("");
   const [professionalTitle, setProfessionalTitle] = useState("");
@@ -81,10 +85,30 @@ export default function CreateAccountContinuePage() {
         router.replace("/create-account");
         return;
       }
+      const industry = (draft.step1.industry || "").trim();
+      if (!industry) {
+        router.replace("/create-account");
+        return;
+      }
+      setStep1Industry(industry);
+      // Map Step 1 industry to Step 2 role for payload
+      const roleMap: Record<string, Role> = {
+        funeral_planner: "funeral-planner",
+        estate_lawyer: "lawyer",
+        financial_advisor: "financial-advisor",
+        insurance_broker: "insurance-broker",
+        financial_insurance_agent: "financial_insurance_agent",
+      };
+      setSelectedRole(roleMap[industry] || "");
     } catch {
       router.replace("/create-account");
     }
   }, [mounted, router]);
+
+  const showFuneral = step1Industry === "funeral_planner";
+  const showLawyer = step1Industry === "estate_lawyer";
+  const showFinancial = step1Industry === "financial_advisor" || step1Industry === "financial_insurance_agent";
+  const showInsurance = step1Industry === "insurance_broker" || step1Industry === "financial_insurance_agent";
 
   const removeOfficeLocation = (index: number) => {
     setOfficeLocations((prev) => prev.filter((_, i) => i !== index));
@@ -111,41 +135,36 @@ export default function CreateAccountContinuePage() {
     e.preventDefault();
     setError(null);
 
-    if (!selectedRole) {
-      setError("Please select a profession.");
+    if (!step1Industry || !selectedRole) {
+      setError("Please complete Step 1 and select your industry.");
       return;
     }
 
-    const hasOfficeLocations = [
-      "funeral-planner",
-      "lawyer",
-      "insurance-broker",
-      "financial-advisor",
-    ].includes(selectedRole);
+    const hasOfficeLocations = showFuneral || showLawyer || showInsurance || showFinancial;
     if (hasOfficeLocations && officeLocations.length === 0) {
       setError("Please add at least one office location.");
       return;
     }
 
-    if (selectedRole === "funeral-planner") {
+    if (showFuneral) {
       if (!hasTruStage || !hasLLQP || !llqpQuebec) {
         setError("Please answer all questions for your role.");
         return;
       }
     }
-    if (selectedRole === "lawyer") {
+    if (showLawyer) {
       if (!isLicensed || !lawSocietyName.trim() || !authorizedProvinces.trim()) {
         setError("Please complete all fields for your role.");
         return;
       }
     }
-    if (selectedRole === "insurance-broker") {
+    if (showInsurance) {
       if (!isLicensedInsurance || !licensingProvince.trim()) {
         setError("Please complete all fields for your role.");
         return;
       }
     }
-    if (selectedRole === "financial-advisor") {
+    if (showFinancial) {
       if (!isRegistered || !regulatoryOrganization.trim() || !registeredProvinces.trim()) {
         setError("Please complete all fields for your role.");
         return;
@@ -156,6 +175,7 @@ export default function CreateAccountContinuePage() {
       const raw = typeof window !== "undefined" ? sessionStorage.getItem("createAccountDraft") : null;
       const draft = raw ? JSON.parse(raw) : { step1: {} };
       const step2 = {
+        step1Industry,
         selectedRole,
         businessName,
         professionalTitle,
@@ -229,26 +249,12 @@ export default function CreateAccountContinuePage() {
             </div>
           )}
           <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Profession Selection */}
-          <div className="space-y-3">
-            <label className="text-sm text-gray-700">Profession <span className="text-red-600">*</span></label>
-            <div className="grid grid-cols-2 gap-2">
-              {roles.map((role) => (
-                <button
-                  key={role.value}
-                  type="button"
-                  onClick={() => setSelectedRole(role.value)}
-                  className={`px-6 py-3 border rounded-md text-sm transition-colors ${
-                    selectedRole === role.value
-                      ? "bg-black text-white border-black"
-                      : "bg-white text-gray-700 border-gray-300 hover:border-gray-400"
-                  }`}
-                >
-                  {role.label}
-                </button>
-              ))}
+          {step1Industry && (
+            <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
+              <span className="text-sm font-medium text-gray-700">Your industry: </span>
+              <span className="text-sm text-gray-900">{INDUSTRY_LABELS[step1Industry] ?? step1Industry}</span>
             </div>
-          </div>
+          )}
 
           {/* Business Name */}
           <div className="space-y-2">
@@ -281,7 +287,7 @@ export default function CreateAccountContinuePage() {
           </div>
 
           {/* Funeral Planner */}
-          {selectedRole === "funeral-planner" && (
+          {showFuneral && (
             <>
               <div className="space-y-3">
                 <label className="text-sm text-gray-700">
@@ -297,7 +303,7 @@ export default function CreateAccountContinuePage() {
                         checked={hasTruStage === v}
                         onChange={(e) => setHasTruStage(e.target.value)}
                         className="w-4 h-4 border-2 border-gray-300"
-                        required={selectedRole === "funeral-planner"}
+                        required={showFuneral}
                       />
                       <span className="text-sm text-gray-700 capitalize">{v}</span>
                     </label>
@@ -318,7 +324,7 @@ export default function CreateAccountContinuePage() {
                         checked={hasLLQP === v}
                         onChange={(e) => setHasLLQP(e.target.value)}
                         className="w-4 h-4 border-2 border-gray-300"
-                        required={selectedRole === "funeral-planner"}
+                        required={showFuneral}
                       />
                       <span className="text-sm text-gray-700 capitalize">{v}</span>
                     </label>
@@ -339,7 +345,7 @@ export default function CreateAccountContinuePage() {
                         checked={llqpQuebec === v}
                         onChange={(e) => setLlqpQuebec(e.target.value)}
                         className="w-4 h-4 border-2 border-gray-300"
-                        required={selectedRole === "funeral-planner"}
+                        required={showFuneral}
                       />
                       <span className="text-sm text-gray-700">
                         {v === "non-applicable" ? "Non Applicable" : v.charAt(0).toUpperCase() + v.slice(1)}
@@ -438,7 +444,7 @@ export default function CreateAccountContinuePage() {
           )}
 
           {/* Lawyer */}
-          {selectedRole === "lawyer" && (
+          {showLawyer && (
             <>
               <div className="space-y-3">
                 <label className="text-sm text-gray-700">
@@ -454,7 +460,7 @@ export default function CreateAccountContinuePage() {
                         checked={isLicensed === v}
                         onChange={(e) => setIsLicensed(e.target.value)}
                         className="w-4 h-4 border-2 border-gray-300"
-                        required={selectedRole === "lawyer"}
+                        required={showLawyer}
                       />
                       <span className="text-sm text-gray-700 capitalize">{v}</span>
                     </label>
@@ -577,7 +583,7 @@ export default function CreateAccountContinuePage() {
           )}
 
           {/* Insurance Broker */}
-          {selectedRole === "insurance-broker" && (
+          {showInsurance && (
             <>
               <div className="space-y-3">
                 <label className="text-sm text-gray-700">
@@ -593,7 +599,7 @@ export default function CreateAccountContinuePage() {
                         checked={isLicensedInsurance === v}
                         onChange={(e) => setIsLicensedInsurance(e.target.value)}
                         className="w-4 h-4 border-2 border-gray-300"
-                        required={selectedRole === "insurance-broker"}
+                        required={showInsurance}
                       />
                       <span className="text-sm text-gray-700 capitalize">{v}</span>
                     </label>
@@ -627,7 +633,7 @@ export default function CreateAccountContinuePage() {
                         checked={hasMultipleProvinces === v}
                         onChange={(e) => setHasMultipleProvinces(e.target.value)}
                         className="w-4 h-4 border-2 border-gray-300"
-                        required={selectedRole === "insurance-broker"}
+                        required={showInsurance}
                       />
                       <span className="text-sm text-gray-700 capitalize">{v}</span>
                     </label>
@@ -738,7 +744,7 @@ export default function CreateAccountContinuePage() {
           )}
 
           {/* Financial Advisor */}
-          {selectedRole === "financial-advisor" && (
+          {showFinancial && (
             <>
               <div className="space-y-3">
                 <label className="text-sm text-gray-700">
@@ -754,7 +760,7 @@ export default function CreateAccountContinuePage() {
                         checked={isRegistered === v}
                         onChange={(e) => setIsRegistered(e.target.value)}
                         className="w-4 h-4 border-2 border-gray-300"
-                        required={selectedRole === "financial-advisor"}
+                        required={showFinancial}
                       />
                       <span className="text-sm text-gray-700 capitalize">{v}</span>
                     </label>
