@@ -804,7 +804,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                 alt="Estate planning professionals"
                 width={800}
                 height={533}
-                className="w-full max-w-xl rounded-2xl object-cover shadow-lg border border-white/10"
+                className="w-full max-w-xl rounded-2xl object-cover shadow-lg border-2 border-black"
                 loading="lazy"
                 fetchPriority="low"
                 sizes="(max-width: 768px) 100vw, 36rem"
