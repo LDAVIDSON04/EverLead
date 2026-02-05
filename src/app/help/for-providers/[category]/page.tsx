@@ -159,26 +159,16 @@ export default function ProviderCategoryPage() {
         </div>
         <header className="relative z-10">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="text-base text-white leading-tight">Help Center</span>
-              <Link href="/" className="block">
-                <Image
-                  src="/Soradin.png"
-                  alt="Soradin logo"
-                  width={360}
-                  height={360}
-                  className="h-10 w-auto brightness-0 invert"
-                />
-              </Link>
-            </div>
-            <div className="flex items-center gap-6">
-              <Link href="/learn-more-about-starting" className="text-sm text-white hover:text-gray-200 transition-colors">
-                Soradin for Advisors
-              </Link>
-              <Link href="mailto:support@soradin.com" className="text-sm text-white hover:text-gray-200 transition-colors">
-                Contact us
-              </Link>
-            </div>
+            <Link href="/" className="block flex-shrink-0">
+              <Image
+                src="/Soradin.png"
+                alt="Soradin logo"
+                width={360}
+                height={360}
+                className="h-20 w-auto brightness-0 invert"
+              />
+            </Link>
+            <span className="text-base text-white leading-tight">Help Center</span>
           </div>
         </header>
       </section>
