@@ -25,15 +25,6 @@ type Role =
   | "financial_insurance_agent"
   | "";
 
-// Step 1 industry value → Step 2 role(s) and labels
-const INDUSTRY_LABELS: Record<string, string> = {
-  funeral_planner: "Funeral Planner",
-  estate_lawyer: "Estate Lawyer",
-  financial_advisor: "Financial Advisor",
-  insurance_broker: "Insurance Broker",
-  financial_insurance_agent: "Financial and Insurance Agent",
-};
-
 const inputClassName =
   "w-full h-11 px-3 bg-white border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-black focus:border-black";
 
@@ -249,13 +240,6 @@ export default function CreateAccountContinuePage() {
             </div>
           )}
           <form onSubmit={handleSubmit} className="space-y-6">
-          {step1Industry && (
-            <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
-              <span className="text-sm font-medium text-gray-700">Your industry: </span>
-              <span className="text-sm text-gray-900">{INDUSTRY_LABELS[step1Industry] ?? step1Industry}</span>
-            </div>
-          )}
-
           {/* Business Name */}
           <div className="space-y-2">
             <label htmlFor="businessName" className="text-sm text-gray-700">
