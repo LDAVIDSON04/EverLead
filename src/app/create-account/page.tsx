@@ -78,29 +78,29 @@ export default function CreateAccountPage() {
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
-      {/* Header with logo */}
-      <div className="px-6 pt-1 pb-0">
+      {/* Header with logo - compact so title block sits higher */}
+      <div className="px-6 pt-2 pb-0">
         <Link href="/" className="flex items-center gap-2">
           <Image
             src="/Soradin.png"
             alt="Soradin"
             width={96}
             height={96}
-            className="h-24 w-24 object-contain"
+            className="h-16 w-16 object-contain"
           />
           <span className="font-semibold text-black text-lg">Soradin</span>
         </Link>
       </div>
 
       {/* Form */}
-      <div className="max-w-3xl mx-auto px-6 pt-0">
+      <div className="max-w-3xl mx-auto px-6 pt-2 -mt-2">
         <h1 className="text-3xl font-normal text-gray-900 mb-1">
           Create an account
         </h1>
         <p className="text-gray-600 text-sm mb-2">Please complete all steps to submit your account for approval</p>
 
         {/* Progress: Step 1 active */}
-        <div className="mb-4">
+        <div className="mb-10">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-neutral-700">
               <div className="w-8 h-8 rounded-full flex items-center justify-center bg-neutral-700 text-white text-sm font-medium">1</div>
