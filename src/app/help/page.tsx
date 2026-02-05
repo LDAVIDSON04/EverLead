@@ -32,31 +32,19 @@ export default function HelpPage() {
           <div className="absolute top-1/3 right-1/3 w-64 h-64 bg-[#1A1A1A] rounded-full opacity-20 blur-2xl"></div>
         </div>
 
-        {/* Header */}
+        {/* Header - logo left (2x), Help Center right */}
         <header className="relative z-10">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2">
-                <span className="text-base text-white font-medium leading-tight">Help Center</span>
-                <Link href="/" className="block">
-                  <Image
-                    src="/Soradin.png"
-                    alt="Soradin logo"
-                    width={360}
-                    height={360}
-                    className="h-10 w-auto brightness-0 invert"
-                  />
-                </Link>
-              </div>
-            </div>
-            <div className="flex items-center gap-6">
-              <Link href="/" className="text-sm text-white hover:text-gray-200 transition-colors">
-                Soradin
-              </Link>
-              <Link href="mailto:support@soradin.com" className="text-sm text-white hover:text-gray-200 transition-colors">
-                Contact us
-              </Link>
-            </div>
+            <Link href="/" className="block flex-shrink-0">
+              <Image
+                src="/Soradin.png"
+                alt="Soradin logo"
+                width={360}
+                height={360}
+                className="h-20 w-auto brightness-0 invert"
+              />
+            </Link>
+            <span className="text-base text-white font-medium leading-tight">Help Center</span>
           </div>
         </header>
 
