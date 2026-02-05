@@ -2,30 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 
 export default function AboutPage() {
-  const router = useRouter();
-
-  // Function to navigate to search page with detected location from IP
-  const navigateToSearchWithLocation = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    
-    try {
-      const res = await fetch("/api/geolocation");
-      const data = await res.json();
-      
-      if (data.location) {
-        const searchUrl = `/search/choose?location=${encodeURIComponent(data.location)}`;
-        router.push(searchUrl);
-      } else {
-        router.push("/search");
-      }
-    } catch (err) {
-      router.push("/search");
-    }
-  };
-
   return (
     <div className="min-h-screen bg-white">
       {/* Header with Logo and Home Button */}
@@ -151,12 +129,12 @@ export default function AboutPage() {
           <p className="text-lg leading-relaxed text-[#4a4a4a] mb-8">
             By focusing on transparency, education, and respectful connection, Soradin aims to set a new standard for how families and professionals come together around life&apos;s most important planning decisions.
           </p>
-          <button
-            onClick={navigateToSearchWithLocation}
-            className="bg-[#1A1A1A] text-white px-8 py-4 rounded-xl hover:bg-[#1A1A1A]/90 transition-all shadow-sm text-lg font-medium"
+          <Link
+            href="/"
+            className="inline-block bg-[#1A1A1A] text-white px-8 py-4 rounded-xl hover:bg-[#1A1A1A]/90 transition-all shadow-sm text-lg font-medium"
           >
             Book local experts today
-          </button>
+          </Link>
         </section>
       </div>
     </div>
