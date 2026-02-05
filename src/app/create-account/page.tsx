@@ -7,6 +7,15 @@ import Image from "next/image";
 import { Info } from "lucide-react";
 import { Footer } from "@/app/learn-more-about-starting/components/Footer";
 
+const INDUSTRIES = [
+  { value: "", label: "Select your industry" },
+  { value: "funeral_planner", label: "Funeral Planner" },
+  { value: "estate_lawyer", label: "Estate Lawyer" },
+  { value: "financial_advisor", label: "Financial Advisor" },
+  { value: "insurance_broker", label: "Insurance Broker" },
+  { value: "financial_insurance_agent", label: "Financial and Insurance Agent" },
+];
+
 const PROVINCES = [
   { value: "", label: "Province" },
   { value: "AB", label: "Alberta" },
@@ -40,6 +49,7 @@ export default function CreateAccountPage() {
     phoneNumber: "",
     password: "",
     confirmPassword: "",
+    industry: "",
     homeAddress: "",
     city: "",
     province: "",
@@ -247,6 +257,31 @@ export default function CreateAccountPage() {
                 minLength={6}
               />
             </div>
+          </div>
+
+          {/* Industry */}
+          <div>
+            <label
+              htmlFor="industry"
+              className="block text-sm text-gray-700 mb-2"
+            >
+              Select your industry <span className="text-red-600">*</span>
+            </label>
+            <select
+              id="industry"
+              name="industry"
+              value={formData.industry}
+              onChange={handleInputChange}
+              required
+              className="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent bg-white text-gray-900 appearance-none cursor-pointer"
+              style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23374151'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 0.5rem center", backgroundSize: "1.25rem 1.25rem", paddingRight: "2.25rem" }}
+            >
+              {INDUSTRIES.map((opt) => (
+                <option key={opt.value || "placeholder"} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Home address */}
