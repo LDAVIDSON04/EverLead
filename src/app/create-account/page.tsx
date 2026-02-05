@@ -339,7 +339,7 @@ export default function CreateAccountPage() {
           </button>
 
           {/* Log in link */}
-          <div className="text-center text-sm text-gray-700 mt-4 mb-32">
+          <div className="text-center text-sm text-gray-700 mt-4 mb-8">
             Already have an account?{" "}
             <Link
               href="/agent"
@@ -350,7 +350,9 @@ export default function CreateAccountPage() {
           </div>
         </form>
       </div>
-      <Footer />
+      <div className="mt-16">
+        <Footer />
+      </div>
     </div>
   );
 }
