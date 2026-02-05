@@ -580,7 +580,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                 />
               </div>
 
-              <div className="relative z-10 flex flex-col items-center text-center">
+              <div className="relative z-10 flex flex-1 flex-col items-center text-center">
                 <h3 className="text-xl mb-2 text-[#1A1A1A] font-semibold">
                   Browse your options
                 </h3>
@@ -590,7 +590,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                 <Link
                   href={getSearchChooseUrl()}
                   onClick={(e) => { if (!location?.trim()) { e.preventDefault(); handleCardButtonClick(e); } }}
-                  className="relative z-20 bg-[#1A1A1A] text-white px-5 py-2.5 rounded-xl hover:bg-[#1A1A1A]/90 transition-all shadow-sm text-sm touch-manipulation inline-block text-center"
+                  className="relative z-20 mt-auto bg-[#1A1A1A] text-white px-5 py-2.5 rounded-xl hover:bg-[#1A1A1A]/90 transition-all shadow-sm text-sm touch-manipulation inline-block text-center"
                 >
                   Browse specialists
                 </Link>
@@ -621,7 +621,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
               <div className="absolute bottom-3 left-1/2 -translate-x-1/2 w-28 h-px bg-[#1A1A1A]/25 max-md:pointer-events-none" aria-hidden="true" />
               </div>
 
-              <div className="relative z-10 max-md:z-[100] flex flex-col items-center text-center">
+              <div className="relative z-10 max-md:z-[100] flex flex-1 flex-col items-center text-center">
                 <h3 className="text-xl mb-2 text-[#1A1A1A] font-semibold">
                   Read reviews from families
                 </h3>
@@ -631,7 +631,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                 <Link
                   href={getSearchChooseUrl()}
                   onClick={(e) => { if (!location?.trim()) { e.preventDefault(); handleCardButtonClick(e); } }}
-                  className="relative z-20 max-md:z-[200] bg-[#1A1A1A] text-white px-5 py-2.5 rounded-xl hover:bg-[#1A1A1A]/90 transition-all shadow-sm text-sm touch-manipulation inline-block text-center"
+                  className="relative z-20 max-md:z-[200] mt-auto bg-[#1A1A1A] text-white px-5 py-2.5 rounded-xl hover:bg-[#1A1A1A]/90 transition-all shadow-sm text-sm touch-manipulation inline-block text-center"
                 >
                   See reviews
                 </Link>
@@ -662,7 +662,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                 <div className="absolute bottom-3 left-1/2 -translate-x-1/2 w-28 h-px bg-[#1A1A1A]/25" aria-hidden="true" />
               </div>
 
-              <div className="relative z-10 flex flex-col items-center text-center">
+              <div className="relative z-10 flex flex-1 flex-col items-center text-center">
                 <h3 className="text-xl mb-2 text-[#1A1A1A] font-semibold">
                   Book an appointment today
                 </h3>
@@ -672,7 +672,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                 <Link
                   href={getSearchChooseUrl()}
                   onClick={(e) => { if (!location?.trim()) { e.preventDefault(); handleCardButtonClick(e); } }}
-                  className="relative z-20 bg-[#1A1A1A] text-white px-5 py-2.5 rounded-xl hover:bg-[#1A1A1A]/90 transition-all shadow-sm text-sm touch-manipulation inline-block text-center"
+                  className="relative z-20 mt-auto bg-[#1A1A1A] text-white px-5 py-2.5 rounded-xl hover:bg-[#1A1A1A]/90 transition-all shadow-sm text-sm touch-manipulation inline-block text-center"
                 >
                   See availability
                 </Link>
