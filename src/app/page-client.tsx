@@ -59,7 +59,9 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
   const rotatingTexts = [
     "Funeral Pre Planners",
     "Estate Lawyers",
-    "Financial Advisors",
+    "Notary Publics",
+    "Financial Planners",
+    "Tax Advisors",
     "Insurance Brokers",
   ];
   const [currentTextIndex, setCurrentTextIndex] = useState(0);
