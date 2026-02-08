@@ -9,15 +9,15 @@ export default function AboutPage() {
       {/* Header with Logo and Home Button */}
       <header className="w-full bg-white">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-4">
+          <Link href="/" className="flex items-center gap-3">
             <Image 
               src="/logo.png" 
               alt="Soradin Logo" 
-              width={120} 
-              height={120}
-              className="h-[120px] w-[120px] object-contain"
+              width={80} 
+              height={80}
+              className="h-20 w-20 object-contain"
             />
-            <span className="text-5xl font-medium text-[#1A1A1A]">Soradin</span>
+            <span className="text-2xl font-medium text-[#1A1A1A]">Soradin</span>
           </Link>
           
           <Link 
