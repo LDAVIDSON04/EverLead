@@ -6,7 +6,7 @@ export function CaseStudiesSection() {
   const caseStudies = [
     {
       category: "Reach & Demand",
-      title: "Reach the right patients, at the right time",
+      title: "Reach the right customers, at the right time",
       description: "Agents use Soradin to connect with families actively seeking in-person care. By offering real-time availability and verified provider profiles, Soradin helps agents increase appointment requests without increasing administrative workload.",
       bgColor: "bg-[#FFE87C]",
       illustration: (
