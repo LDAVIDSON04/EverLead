@@ -1213,7 +1213,7 @@ function SearchResults() {
   ];
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="bg-white flex flex-col">
       {/* Appointment Booking Modal */}
       {selectedAppointment && (
         <div 
@@ -1591,8 +1591,7 @@ function SearchResults() {
       </header>
 
       {/* Main Content */}
-      {/* Main Content Area - Takes up space and pushes footer down */}
-      <main className="flex-1 min-h-[calc(100vh-100px)] max-w-[1200px] mx-auto px-4 py-6 w-full">
+      <main className="max-w-[1200px] mx-auto px-4 py-6 w-full">
 
         {/* Desktop Results Header */}
         <div className="hidden md:flex items-center justify-between mb-6">
@@ -2821,7 +2820,7 @@ function SearchResults() {
       )}
 
       {/* FOOTER */}
-      <footer className="bg-[#1A1A1A] text-white mt-auto">
+      <footer className="bg-[#1A1A1A] text-white">
         {/* Main Footer */}
         <div className="py-16 px-4">
           <div className="max-w-7xl mx-auto">
