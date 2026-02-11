@@ -109,6 +109,7 @@ export default function CreateAccountNextPage() {
       metadata.llqp_quebec = step2.llqpQuebec || "";
     }
     if (step2.selectedRole === "lawyer") {
+      metadata.law_society_license_number = step2.lawSocietyLicenseNumber || "";
       metadata.law_society_name = step2.lawSocietyName || "";
       metadata.authorized_provinces = step2.authorizedProvinces || "";
     }

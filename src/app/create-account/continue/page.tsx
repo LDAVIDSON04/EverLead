@@ -17,6 +17,23 @@ interface OfficeLocation {
 
 const PROVINCES = ["AB", "BC", "MB", "NB", "NL", "NS", "NT", "NU", "ON", "PE", "QC", "SK", "YT"];
 
+const PROVINCE_OPTIONS: { value: string; label: string }[] = [
+  { value: "", label: "Select province" },
+  { value: "AB", label: "Alberta" },
+  { value: "BC", label: "British Columbia" },
+  { value: "MB", label: "Manitoba" },
+  { value: "NB", label: "New Brunswick" },
+  { value: "NL", label: "Newfoundland and Labrador" },
+  { value: "NS", label: "Nova Scotia" },
+  { value: "NT", label: "Northwest Territories" },
+  { value: "NU", label: "Nunavut" },
+  { value: "ON", label: "Ontario" },
+  { value: "PE", label: "Prince Edward Island" },
+  { value: "QC", label: "Quebec" },
+  { value: "SK", label: "Saskatchewan" },
+  { value: "YT", label: "Yukon" },
+];
+
 type Role =
   | "funeral-planner"
   | "lawyer"
@@ -49,6 +66,7 @@ export default function CreateAccountContinuePage() {
   });
 
   const [isLicensed, setIsLicensed] = useState("");
+  const [lawSocietyLicenseNumber, setLawSocietyLicenseNumber] = useState("");
   const [lawSocietyName, setLawSocietyName] = useState("");
   const [authorizedProvinces, setAuthorizedProvinces] = useState("");
 
@@ -144,7 +162,7 @@ export default function CreateAccountContinuePage() {
       }
     }
     if (showLawyer) {
-      if (!isLicensed || !lawSocietyName.trim() || !authorizedProvinces.trim()) {
+      if (!isLicensed || !lawSocietyLicenseNumber.trim() || !lawSocietyName.trim() || !authorizedProvinces) {
         setError("Please complete all fields for your role.");
         return;
       }
@@ -175,6 +193,7 @@ export default function CreateAccountContinuePage() {
         llqpQuebec,
         officeLocations,
         isLicensed,
+        lawSocietyLicenseNumber,
         lawSocietyName,
         authorizedProvinces,
         isLicensedInsurance,
@@ -452,6 +471,20 @@ export default function CreateAccountContinuePage() {
                 </div>
               </div>
               <div className="space-y-2">
+                <label htmlFor="lawSocietyLicenseNumber" className="text-sm text-gray-700">
+                  License / member number please. <span className="text-red-600">*</span>
+                </label>
+                <input
+                  id="lawSocietyLicenseNumber"
+                  type="text"
+                  value={lawSocietyLicenseNumber}
+                  onChange={(e) => setLawSocietyLicenseNumber(e.target.value)}
+                  className={inputClassName}
+                  placeholder="e.g. member or license number"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
                 <label htmlFor="lawSocietyName" className="text-sm text-gray-700">
                   Law society name <span className="text-red-600">*</span>
                 </label>
@@ -468,14 +501,19 @@ export default function CreateAccountContinuePage() {
                 <label htmlFor="authorizedProvinces" className="text-sm text-gray-700">
                   Province(s) you are authorized to practice in <span className="text-red-600">*</span>
                 </label>
-                <input
+                <select
                   id="authorizedProvinces"
-                  type="text"
                   value={authorizedProvinces}
                   onChange={(e) => setAuthorizedProvinces(e.target.value)}
                   className={inputClassName}
                   required
-                />
+                >
+                  {PROVINCE_OPTIONS.map((p) => (
+                    <option key={p.value || "placeholder"} value={p.value}>
+                      {p.label}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className="space-y-3 border-t pt-6">
                 <div className="flex justify-between items-center mb-4">
