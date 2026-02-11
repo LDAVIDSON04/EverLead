@@ -622,13 +622,28 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
               <div className="absolute bottom-3 left-1/2 -translate-x-1/2 w-28 h-px bg-[#1A1A1A]/25 max-md:pointer-events-none" aria-hidden="true" />
               </div>
 
-              <div className="relative z-10 max-md:z-[100] flex flex-1 flex-col items-center text-center">
+              <div className="relative z-10 max-md:z-[100] max-md:isolate flex flex-1 flex-col items-center text-center">
                 <h3 className="text-xl mb-2 text-[#1A1A1A] font-semibold">
                   Read reviews from families
                 </h3>
                 <p className="text-[#1A1A1A]/60 text-sm leading-relaxed mb-4">
                   Discover what families are saying about specialists in your area
                 </p>
+                {/* Mobile: use button to avoid Link tap/focus blink; desktop: use Link */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (location?.trim()) {
+                      router.push(getSearchChooseUrl());
+                    } else {
+                      handleCardButtonClick({ preventDefault: () => {} } as React.MouseEvent);
+                    }
+                  }}
+                  className="md:hidden relative z-20 mt-auto bg-[#1A1A1A] text-white px-5 py-2.5 rounded-xl active:bg-[#1A1A1A]/90 transition-colors shadow-sm text-sm touch-manipulation min-w-[140px] border-0 cursor-pointer"
+                  style={{ WebkitTapHighlightColor: "transparent" }}
+                >
+                  See reviews
+                </button>
                 <Link
                   href={location?.trim() ? getSearchChooseUrl() : "/search/choose"}
                   onClick={(e) => {
@@ -639,8 +654,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                       handleCardButtonClick(e);
                     }
                   }}
-                  className="relative z-20 max-md:z-[200] mt-auto bg-[#1A1A1A] text-white px-5 py-2.5 rounded-xl hover:bg-[#1A1A1A]/90 transition-all shadow-sm text-sm touch-manipulation inline-block text-center min-w-[140px]"
-                  style={{ WebkitTapHighlightColor: "transparent" }}
+                  className="hidden md:inline-block relative z-20 mt-auto bg-[#1A1A1A] text-white px-5 py-2.5 rounded-xl hover:bg-[#1A1A1A]/90 transition-all shadow-sm text-sm text-center min-w-[140px]"
                 >
                   See reviews
                 </Link>
