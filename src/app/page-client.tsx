@@ -186,6 +186,27 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
     }
   };
 
+  const seeReviewsNavigating = useRef(false);
+  /** Mobile-only: full page nav so "See reviews" works reliably on touch (no router). */
+  const handleSeeReviewsPress = () => {
+    if (seeReviewsNavigating.current) return;
+    seeReviewsNavigating.current = true;
+    if (location?.trim()) {
+      window.location.href = getSearchChooseUrl();
+      return;
+    }
+    (async () => {
+      try {
+        const res = await fetch("/api/geolocation");
+        const data = await res.json();
+        const loc = (data.location && data.location.trim()) || (data.city && data.province ? `${data.city}, ${data.province}` : null) || "Canada";
+        window.location.href = `/search/choose?location=${encodeURIComponent(loc)}`;
+      } catch {
+        window.location.href = "/search/choose?location=Canada";
+      }
+    })();
+  };
+
   return (
     <main className="min-h-screen bg-[#FAF9F6]">
       {/* HEADER */}
@@ -602,8 +623,8 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
             <div className="bg-[#FAF9F6] rounded-3xl p-6 border-2 border-[#1A1A1A] relative overflow-visible group flex flex-col transition-all duration-300 ease-out hover:scale-[1.03] hover:shadow-2xl hover:shadow-black/10 hover:-translate-y-1 max-md:hover:scale-100 max-md:hover:translate-y-0">
               {/* Reserved space for image to prevent CLS */}
               <div className="w-full h-12 flex-shrink-0" aria-hidden="true" />
-              {/* Image overlapping the top; mobile: behind content and pointer-events-none so button receives taps */}
-              <div className="absolute -top-32 max-md:-top-28 left-1/2 -translate-x-1/2 w-56 h-56 flex items-center justify-center overflow-hidden max-md:z-0 max-md:pointer-events-none [&_*]:max-md:pointer-events-none" style={{ aspectRatio: "1/1" }}>
+              {/* Image: mobile z-below and pointer-events-none so button always receives touch */}
+              <div className="absolute -top-32 max-md:-top-28 left-1/2 -translate-x-1/2 w-56 h-56 flex items-center justify-center overflow-hidden max-md:z-[-1] max-md:pointer-events-none [&_*]:max-md:pointer-events-none" style={{ aspectRatio: "1/1" }}>
               <Image
                 src="/review-image.png"
                 alt="Person holding review card"
@@ -622,25 +643,28 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
               <div className="absolute bottom-3 left-1/2 -translate-x-1/2 w-28 h-px bg-[#1A1A1A]/25 max-md:pointer-events-none" aria-hidden="true" />
               </div>
 
-              <div className="relative z-10 max-md:z-[100] max-md:isolate flex flex-1 flex-col items-center text-center">
+              <div className="relative z-10 max-md:z-[100] max-md:isolate flex flex-1 flex-col items-center text-center max-md:touch-manipulation">
                 <h3 className="text-xl mb-2 text-[#1A1A1A] font-semibold">
                   Read reviews from families
                 </h3>
                 <p className="text-[#1A1A1A]/60 text-sm leading-relaxed mb-4">
                   Discover what families are saying about specialists in your area
                 </p>
-                {/* Mobile: use button to avoid Link tap/focus blink; desktop: use Link */}
+                {/* Mobile: native button + touch handler + full page nav so tap always works */}
                 <button
                   type="button"
-                  onClick={() => {
-                    if (location?.trim()) {
-                      router.push(getSearchChooseUrl());
-                    } else {
-                      handleCardButtonClick({ preventDefault: () => {} } as React.MouseEvent);
-                    }
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleSeeReviewsPress();
                   }}
-                  className="md:hidden relative z-20 mt-auto bg-[#1A1A1A] text-white px-5 py-2.5 rounded-xl active:bg-[#1A1A1A]/90 transition-colors shadow-sm text-sm touch-manipulation min-w-[140px] border-0 cursor-pointer"
-                  style={{ WebkitTapHighlightColor: "transparent" }}
+                  onTouchEnd={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleSeeReviewsPress();
+                  }}
+                  className="md:hidden relative z-[100] mt-auto bg-[#1A1A1A] text-white px-5 py-2.5 rounded-xl active:bg-[#1A1A1A]/90 transition-colors shadow-sm text-sm touch-manipulation min-w-[140px] border-0 cursor-pointer"
+                  style={{ WebkitTapHighlightColor: "transparent", touchAction: "manipulation" }}
                 >
                   See reviews
                 </button>
