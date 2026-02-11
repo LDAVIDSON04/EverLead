@@ -191,9 +191,9 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
       {/* HEADER */}
       <header className="bg-[#FAF9F6] py-5 px-4 relative z-30 overflow-visible">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          {/* Logo and Name - not clickable, same font as nav */}
+          {/* Logo and Name - not clickable, same font as nav; tighter gap on mobile only */}
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-3 cursor-default">
+            <div className="flex items-center gap-2 md:gap-3 cursor-default">
               <Image
                 src="/Soradin.png"
                 alt="Soradin Logo"
@@ -250,7 +250,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                 {/* Header */}
                 <div className="px-4 py-5 bg-[#FAF9F6]">
                   <div className="flex items-center justify-between max-w-7xl mx-auto">
-                    <div className="flex items-center gap-3 cursor-default">
+                    <div className="flex items-center gap-2 cursor-default">
                       <Image
                         src="/Soradin.png"
                         alt="Soradin Logo"
