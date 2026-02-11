@@ -71,9 +71,10 @@ export default function CreateAccountContinuePage() {
   const [authorizedProvinces, setAuthorizedProvinces] = useState("");
 
   const [isLicensedInsurance, setIsLicensedInsurance] = useState("");
-  const [licensingProvince, setLicensingProvince] = useState("");
-  const [hasMultipleProvinces, setHasMultipleProvinces] = useState("");
-  const [additionalProvinces, setAdditionalProvinces] = useState("");
+  const [insuranceLicenseNumber, setInsuranceLicenseNumber] = useState("");
+  const [regulatoryBody, setRegulatoryBody] = useState("");
+  const [brokerageMga, setBrokerageMga] = useState("");
+  const [eoCoverageInsurance, setEoCoverageInsurance] = useState("");
 
   const [isRegistered, setIsRegistered] = useState("");
   const [regulatoryOrganization, setRegulatoryOrganization] = useState("");
@@ -150,6 +151,10 @@ export default function CreateAccountContinuePage() {
       setError("Please complete Step 1 and select your industry.");
       return;
     }
+    if (!businessName.trim() || !professionalTitle.trim()) {
+      setError("Please enter your Business/ Firm Name and Professional Title.");
+      return;
+    }
 
     const hasOfficeLocations = showFuneral || showLawyer || showInsurance || showFinancial;
     if (hasOfficeLocations && officeLocations.length === 0) {
@@ -170,7 +175,7 @@ export default function CreateAccountContinuePage() {
       }
     }
     if (showInsurance) {
-      if (!isLicensedInsurance || !licensingProvince.trim()) {
+      if (!isLicensedInsurance || !insuranceLicenseNumber.trim() || !regulatoryBody.trim() || !brokerageMga.trim() || !eoCoverageInsurance) {
         setError("Please complete all fields for your role.");
         return;
       }
@@ -199,9 +204,10 @@ export default function CreateAccountContinuePage() {
         lawSocietyName,
         authorizedProvinces,
         isLicensedInsurance,
-        licensingProvince,
-        hasMultipleProvinces,
-        additionalProvinces,
+        insuranceLicenseNumber,
+        regulatoryBody,
+        brokerageMga,
+        eoCoverageInsurance,
         isRegistered,
         regulatoryOrganization,
         registrationLicenseNumber,
@@ -608,12 +614,12 @@ export default function CreateAccountContinuePage() {
             </>
           )}
 
-          {/* Insurance Broker */}
+          {/* Insurance Broker / Agent */}
           {showInsurance && (
             <>
               <div className="space-y-3">
                 <label className="text-sm text-gray-700">
-                  Are you a licensed life insurance agent in Canada? <span className="text-red-600">*</span>
+                  Are you licensed in Canada? <span className="text-red-600">*</span>
                 </label>
                 <div className="flex gap-6">
                   {["yes", "no"].map((v) => (
@@ -633,31 +639,57 @@ export default function CreateAccountContinuePage() {
                 </div>
               </div>
               <div className="space-y-2">
-                <label htmlFor="licensingProvince" className="text-sm text-gray-700">
-                  Licensing province <span className="text-red-600">*</span>
+                <label htmlFor="insuranceLicenseNumber" className="text-sm text-gray-700">
+                  License number <span className="text-red-600">*</span>
                 </label>
                 <input
-                  id="licensingProvince"
+                  id="insuranceLicenseNumber"
                   type="text"
-                  value={licensingProvince}
-                  onChange={(e) => setLicensingProvince(e.target.value)}
+                  value={insuranceLicenseNumber}
+                  onChange={(e) => setInsuranceLicenseNumber(e.target.value)}
+                  className={inputClassName}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="regulatoryBody" className="text-sm text-gray-700">
+                  Regulatory body <span className="text-red-600">*</span>
+                </label>
+                <input
+                  id="regulatoryBody"
+                  type="text"
+                  value={regulatoryBody}
+                  onChange={(e) => setRegulatoryBody(e.target.value)}
+                  className={inputClassName}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="brokerageMga" className="text-sm text-gray-700">
+                  Brokerage / MGA / Sponsoring organization <span className="text-red-600">*</span>
+                </label>
+                <input
+                  id="brokerageMga"
+                  type="text"
+                  value={brokerageMga}
+                  onChange={(e) => setBrokerageMga(e.target.value)}
                   className={inputClassName}
                   required
                 />
               </div>
               <div className="space-y-3">
                 <label className="text-sm text-gray-700">
-                  Are you licensed in multiple provinces? <span className="text-red-600">*</span>
+                  I maintain required Errors &amp; Omissions coverage <span className="text-red-600">*</span>
                 </label>
                 <div className="flex gap-6">
                   {["yes", "no"].map((v) => (
                     <label key={v} className="flex items-center gap-2 cursor-pointer">
                       <input
                         type="radio"
-                        name="hasMultipleProvinces"
+                        name="eoCoverageInsurance"
                         value={v}
-                        checked={hasMultipleProvinces === v}
-                        onChange={(e) => setHasMultipleProvinces(e.target.value)}
+                        checked={eoCoverageInsurance === v}
+                        onChange={(e) => setEoCoverageInsurance(e.target.value)}
                         className="w-4 h-4 border-2 border-gray-300"
                         required={showInsurance}
                       />
@@ -666,20 +698,6 @@ export default function CreateAccountContinuePage() {
                   ))}
                 </div>
               </div>
-              {hasMultipleProvinces === "yes" && (
-                <div className="space-y-2">
-                  <label htmlFor="additionalProvinces" className="text-sm text-gray-700">
-                    Additional provinces
-                  </label>
-                  <input
-                    id="additionalProvinces"
-                    type="text"
-                    value={additionalProvinces}
-                    onChange={(e) => setAdditionalProvinces(e.target.value)}
-                    className={inputClassName}
-                  />
-                </div>
-              )}
               <div className="space-y-3 border-t pt-6">
                 <div className="flex justify-between items-center mb-4">
                   <label className="text-sm text-gray-700 font-medium">Office Locations <span className="text-red-600">*</span></label>

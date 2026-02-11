@@ -114,9 +114,11 @@ export default function CreateAccountNextPage() {
       metadata.authorized_provinces = step2.authorizedProvinces || "";
     }
     if (step2.selectedRole === "insurance-broker" || step2.selectedRole === "financial_insurance_agent") {
-      metadata.licensing_province = step2.licensingProvince || "";
-      metadata.has_multiple_provinces = step2.hasMultipleProvinces === "yes";
-      metadata.additional_provinces = step2.additionalProvinces || "";
+      metadata.licensed_in_canada = step2.isLicensedInsurance === "yes";
+      metadata.license_number = step2.insuranceLicenseNumber || "";
+      metadata.regulatory_body = step2.regulatoryBody || "";
+      metadata.brokerage_mga = step2.brokerageMga || "";
+      metadata.eo_coverage = step2.eoCoverageInsurance === "yes";
     }
     if (step2.selectedRole === "financial-advisor" || step2.selectedRole === "financial_insurance_agent") {
       metadata.regulatory_organization = step2.regulatoryOrganization || "";
