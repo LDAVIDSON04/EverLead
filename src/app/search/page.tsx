@@ -2895,7 +2895,7 @@ function SearchResults() {
 
               {/* Column 5 - Are you a specialist */}
               <div>
-                <h4 className="mb-6 text-lg font-medium">Are you a funeral specialist?</h4>
+                <h4 className="mb-6 text-lg font-medium">Are you a planning professional?</h4>
                 <ul className="space-y-3">
                   <li>
                     <Link href="/learn-more-about-starting" className="text-white/60 hover:text-white transition-colors">
