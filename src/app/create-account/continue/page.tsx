@@ -121,6 +121,9 @@ export default function CreateAccountContinuePage() {
   const showLawyer = step1Industry === "estate_lawyer";
   const showFinancial = step1Industry === "financial_advisor" || step1Industry === "financial_insurance_agent";
   const showInsurance = step1Industry === "insurance_broker" || step1Industry === "financial_insurance_agent";
+  const showInsuranceOnly = step1Industry === "insurance_broker";
+  const showFinancialOnly = step1Industry === "financial_advisor";
+  const showFinancialAndInsurance = step1Industry === "financial_insurance_agent";
 
   const removeOfficeLocation = (index: number) => {
     setOfficeLocations((prev) => prev.filter((_, i) => i !== index));
@@ -614,8 +617,8 @@ export default function CreateAccountContinuePage() {
             </>
           )}
 
-          {/* Insurance Broker / Agent */}
-          {showInsurance && (
+          {/* Insurance Broker only */}
+          {showInsuranceOnly && (
             <>
               <div className="space-y-3">
                 <label className="text-sm text-gray-700">
@@ -631,7 +634,7 @@ export default function CreateAccountContinuePage() {
                         checked={isLicensedInsurance === v}
                         onChange={(e) => setIsLicensedInsurance(e.target.value)}
                         className="w-4 h-4 border-2 border-gray-300"
-                        required={showInsurance}
+                        required={showInsuranceOnly}
                       />
                       <span className="text-sm text-gray-700 capitalize">{v}</span>
                     </label>
@@ -691,7 +694,7 @@ export default function CreateAccountContinuePage() {
                         checked={eoCoverageInsurance === v}
                         onChange={(e) => setEoCoverageInsurance(e.target.value)}
                         className="w-4 h-4 border-2 border-gray-300"
-                        required={showInsurance}
+                        required={showInsuranceOnly}
                       />
                       <span className="text-sm text-gray-700 capitalize">{v}</span>
                     </label>
@@ -787,8 +790,258 @@ export default function CreateAccountContinuePage() {
             </>
           )}
 
-          {/* Financial Advisor */}
-          {showFinancial && (
+          {/* Financial & Insurance (combined for dual role) */}
+          {showFinancialAndInsurance && (
+            <>
+              <p className="text-sm font-medium text-gray-800 border-b pb-2">Financial &amp; Insurance Information</p>
+              {/* Financial questions */}
+              <div className="space-y-3">
+                <label className="text-sm text-gray-700">
+                  Are you registered with a regulatory organization? <span className="text-red-600">*</span>
+                </label>
+                <div className="flex gap-6">
+                  {["yes", "no"].map((v) => (
+                    <label key={v} className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="isRegisteredDual"
+                        value={v}
+                        checked={isRegistered === v}
+                        onChange={(e) => setIsRegistered(e.target.value)}
+                        className="w-4 h-4 border-2 border-gray-300"
+                        required={showFinancialAndInsurance}
+                      />
+                      <span className="text-sm text-gray-700 capitalize">{v}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="regulatoryOrganizationDual" className="text-sm text-gray-700">
+                  Regulatory organization name <span className="text-red-600">*</span>
+                </label>
+                <input
+                  id="regulatoryOrganizationDual"
+                  type="text"
+                  value={regulatoryOrganization}
+                  onChange={(e) => setRegulatoryOrganization(e.target.value)}
+                  className={inputClassName}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="registrationLicenseNumberDual" className="text-sm text-gray-700">
+                  License / Registration number <span className="text-red-600">*</span>
+                </label>
+                <input
+                  id="registrationLicenseNumberDual"
+                  type="text"
+                  value={registrationLicenseNumber}
+                  onChange={(e) => setRegistrationLicenseNumber(e.target.value)}
+                  className={inputClassName}
+                  placeholder="e.g. registration or license number"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="registeredProvincesDual" className="text-sm text-gray-700">
+                  Province(s) you are registered in <span className="text-red-600">*</span>
+                </label>
+                <input
+                  id="registeredProvincesDual"
+                  type="text"
+                  value={registeredProvinces}
+                  onChange={(e) => setRegisteredProvinces(e.target.value)}
+                  className={inputClassName}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={eoInsuranceConfirmed}
+                    onChange={(e) => setEoInsuranceConfirmed(e.target.checked)}
+                    className="w-4 h-4 border-2 border-gray-300 rounded"
+                  />
+                  <span className="text-sm text-gray-700">
+                    I maintain required E&O / professional liability coverage. <span className="text-red-600">*</span>
+                  </span>
+                </label>
+              </div>
+              {/* Insurance questions */}
+              <div className="space-y-3 border-t pt-4 mt-4">
+                <label className="text-sm text-gray-700">
+                  Are you licensed in Canada? <span className="text-red-600">*</span>
+                </label>
+                <div className="flex gap-6">
+                  {["yes", "no"].map((v) => (
+                    <label key={v} className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="isLicensedInsuranceDual"
+                        value={v}
+                        checked={isLicensedInsurance === v}
+                        onChange={(e) => setIsLicensedInsurance(e.target.value)}
+                        className="w-4 h-4 border-2 border-gray-300"
+                        required={showFinancialAndInsurance}
+                      />
+                      <span className="text-sm text-gray-700 capitalize">{v}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="insuranceLicenseNumberDual" className="text-sm text-gray-700">
+                  License number <span className="text-red-600">*</span>
+                </label>
+                <input
+                  id="insuranceLicenseNumberDual"
+                  type="text"
+                  value={insuranceLicenseNumber}
+                  onChange={(e) => setInsuranceLicenseNumber(e.target.value)}
+                  className={inputClassName}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="regulatoryBodyDual" className="text-sm text-gray-700">
+                  Regulatory body <span className="text-red-600">*</span>
+                </label>
+                <input
+                  id="regulatoryBodyDual"
+                  type="text"
+                  value={regulatoryBody}
+                  onChange={(e) => setRegulatoryBody(e.target.value)}
+                  className={inputClassName}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="brokerageMgaDual" className="text-sm text-gray-700">
+                  Brokerage / MGA / Sponsoring organization <span className="text-red-600">*</span>
+                </label>
+                <input
+                  id="brokerageMgaDual"
+                  type="text"
+                  value={brokerageMga}
+                  onChange={(e) => setBrokerageMga(e.target.value)}
+                  className={inputClassName}
+                  required
+                />
+              </div>
+              <div className="space-y-3">
+                <label className="text-sm text-gray-700">
+                  I maintain required Errors &amp; Omissions coverage <span className="text-red-600">*</span>
+                </label>
+                <div className="flex gap-6">
+                  {["yes", "no"].map((v) => (
+                    <label key={v} className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="eoCoverageInsuranceDual"
+                        value={v}
+                        checked={eoCoverageInsurance === v}
+                        onChange={(e) => setEoCoverageInsurance(e.target.value)}
+                        className="w-4 h-4 border-2 border-gray-300"
+                        required={showFinancialAndInsurance}
+                      />
+                      <span className="text-sm text-gray-700 capitalize">{v}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <div className="space-y-3 border-t pt-6">
+                <div className="flex justify-between items-center mb-4">
+                  <label className="text-sm text-gray-700 font-medium">Office Locations <span className="text-red-600">*</span></label>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddLocation(!showAddLocation)}
+                    className="flex items-center gap-2 px-4 py-2 bg-neutral-700 text-white rounded-md text-sm hover:bg-neutral-800 transition-colors"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add Location
+                  </button>
+                </div>
+                {showAddLocation && (
+                  <div className="mb-4 p-4 border border-gray-300 rounded-lg bg-gray-50 space-y-3">
+                    <h4 className="font-medium text-sm text-gray-700">New Office Location</h4>
+                    <input
+                      type="text"
+                      value={newLocation.name}
+                      onChange={(e) => setNewLocation({ ...newLocation, name: e.target.value })}
+                      placeholder="Office name *"
+                      className={inputClassName}
+                    />
+                    <input
+                      type="text"
+                      value={newLocation.street_address}
+                      onChange={(e) => setNewLocation({ ...newLocation, street_address: e.target.value })}
+                      placeholder="Street address"
+                      className={inputClassName}
+                    />
+                    <div className="grid grid-cols-3 gap-3">
+                      <input
+                        type="text"
+                        value={newLocation.city}
+                        onChange={(e) => setNewLocation({ ...newLocation, city: e.target.value })}
+                        placeholder="City *"
+                        className={inputClassName}
+                      />
+                      <select
+                        value={newLocation.province}
+                        onChange={(e) => setNewLocation({ ...newLocation, province: e.target.value })}
+                        className={inputClassName}
+                      >
+                        {PROVINCES.map((p) => (
+                          <option key={p} value={p}>{p}</option>
+                        ))}
+                      </select>
+                      <input
+                        type="text"
+                        value={newLocation.postal_code}
+                        onChange={(e) => setNewLocation({ ...newLocation, postal_code: e.target.value })}
+                        placeholder="Postal code"
+                        className={inputClassName}
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <button type="button" onClick={addOfficeLocation} className="px-4 py-2 bg-neutral-700 text-white rounded-md text-sm hover:bg-neutral-800">
+                        Add
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowAddLocation(false);
+                          setNewLocation({ name: "", street_address: "", city: "", province: "BC", postal_code: "" });
+                        }}
+                        className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md text-sm hover:bg-gray-300"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+                {officeLocations.map((loc, index) => (
+                  <div key={index} className="mb-3 p-3 border border-gray-300 rounded-lg flex justify-between items-start">
+                    <div>
+                      <div className="font-medium text-gray-900">{loc.name}</div>
+                      <div className="text-sm text-gray-600">
+                        {loc.street_address && `${loc.street_address}, `}
+                        {loc.city}, {loc.province} {loc.postal_code}
+                      </div>
+                    </div>
+                    <button type="button" onClick={() => removeOfficeLocation(index)} className="p-1 text-gray-500 hover:text-red-600 shrink-0" aria-label="Remove location">
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* Financial Advisor only */}
+          {showFinancialOnly && (
             <>
               <div className="space-y-3">
                 <label className="text-sm text-gray-700">
@@ -804,7 +1057,7 @@ export default function CreateAccountContinuePage() {
                         checked={isRegistered === v}
                         onChange={(e) => setIsRegistered(e.target.value)}
                         className="w-4 h-4 border-2 border-gray-300"
-                        required={showFinancial}
+                        required={showFinancialOnly}
                       />
                       <span className="text-sm text-gray-700 capitalize">{v}</span>
                     </label>
