@@ -486,14 +486,15 @@ export default function AdminSpecialistsPage() {
                       {(() => {
                         const created = new Date(selectedSpecialist.created_at);
                         const now = new Date();
-                        const months = Math.floor((now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24 * 30));
-                        const years = Math.floor(months / 12);
-                        const remainingMonths = months % 12;
+                        const totalMonths = (now.getFullYear() - created.getFullYear()) * 12 + (now.getMonth() - created.getMonth());
+                        if (totalMonths < 1) return "Less than 1 month on platform";
+                        const years = Math.floor(totalMonths / 12);
+                        const remainingMonths = totalMonths % 12;
                         if (years > 0) {
-                          return `${years} year${years > 1 ? 's' : ''}${remainingMonths > 0 ? `, ${remainingMonths} month${remainingMonths > 1 ? 's' : ''}` : ''}`;
+                          return `${years} year${years > 1 ? "s" : ""}${remainingMonths > 0 ? `, ${remainingMonths} month${remainingMonths > 1 ? "s" : ""}` : ""} on platform`;
                         }
-                        return `${months} month${months !== 1 ? 's' : ''}`;
-                      })()} on platform
+                        return `${totalMonths} month${totalMonths !== 1 ? "s" : ""} on platform`;
+                      })()}
                     </p>
                   </div>
                   <div className="bg-neutral-50 rounded-lg p-4">
