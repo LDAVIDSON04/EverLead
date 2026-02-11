@@ -59,7 +59,6 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
   const rotatingTexts = [
     "Funeral Pre Planners",
     "Estate Lawyers",
-    "Notary Publics",
     "Financial Planners",
     "Tax Advisors",
     "Insurance Brokers",
