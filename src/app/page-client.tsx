@@ -623,8 +623,8 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
             <div className="bg-[#FAF9F6] rounded-3xl p-6 border-2 border-[#1A1A1A] relative overflow-visible group flex flex-col transition-all duration-300 ease-out hover:scale-[1.03] hover:shadow-2xl hover:shadow-black/10 hover:-translate-y-1 max-md:hover:scale-100 max-md:hover:translate-y-0">
               {/* Reserved space for image to prevent CLS */}
               <div className="w-full h-12 flex-shrink-0" aria-hidden="true" />
-              {/* Image: mobile z-below and pointer-events-none so button always receives touch */}
-              <div className="absolute -top-32 max-md:-top-28 left-1/2 -translate-x-1/2 w-56 h-56 flex items-center justify-center overflow-hidden max-md:z-[-1] max-md:pointer-events-none [&_*]:max-md:pointer-events-none" style={{ aspectRatio: "1/1" }}>
+              {/* Image overlapping the top; mobile: pointer-events-none so button receives taps, same z as other cards */}
+              <div className="absolute -top-32 max-md:-top-28 left-1/2 -translate-x-1/2 w-56 h-56 flex items-center justify-center overflow-hidden max-md:z-0 max-md:pointer-events-none [&_*]:max-md:pointer-events-none" style={{ aspectRatio: "1/1" }}>
               <Image
                 src="/review-image.png"
                 alt="Person holding review card"
@@ -643,7 +643,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
               <div className="absolute bottom-3 left-1/2 -translate-x-1/2 w-28 h-px bg-[#1A1A1A]/25 max-md:pointer-events-none" aria-hidden="true" />
               </div>
 
-              <div className="relative z-10 max-md:z-[100] max-md:isolate flex flex-1 flex-col items-center text-center max-md:touch-manipulation">
+              <div className="relative z-10 max-md:z-[100] flex flex-1 flex-col items-center text-center max-md:touch-manipulation">
                 <h3 className="text-xl mb-2 text-[#1A1A1A] font-semibold">
                   Read reviews from families
                 </h3>
