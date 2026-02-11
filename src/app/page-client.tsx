@@ -630,9 +630,17 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                   Discover what families are saying about specialists in your area
                 </p>
                 <Link
-                  href={getSearchChooseUrl()}
-                  onClick={(e) => { if (!location?.trim()) { e.preventDefault(); handleCardButtonClick(e); } }}
-                  className="relative z-20 max-md:z-[200] mt-auto bg-[#1A1A1A] text-white px-5 py-2.5 rounded-xl hover:bg-[#1A1A1A]/90 transition-all shadow-sm text-sm touch-manipulation inline-block text-center"
+                  href={location?.trim() ? getSearchChooseUrl() : "/search/choose"}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (location?.trim()) {
+                      router.push(getSearchChooseUrl());
+                    } else {
+                      handleCardButtonClick(e);
+                    }
+                  }}
+                  className="relative z-20 max-md:z-[200] mt-auto bg-[#1A1A1A] text-white px-5 py-2.5 rounded-xl hover:bg-[#1A1A1A]/90 transition-all shadow-sm text-sm touch-manipulation inline-block text-center min-w-[140px]"
+                  style={{ WebkitTapHighlightColor: "transparent" }}
                 >
                   See reviews
                 </Link>
