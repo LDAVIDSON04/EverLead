@@ -120,7 +120,9 @@ export default function CreateAccountNextPage() {
     }
     if (step2.selectedRole === "financial-advisor" || step2.selectedRole === "financial_insurance_agent") {
       metadata.regulatory_organization = step2.regulatoryOrganization || "";
+      metadata.license_registration_number = step2.registrationLicenseNumber || "";
       metadata.registered_provinces = step2.registeredProvinces || "";
+      metadata.eo_insurance_confirmed = step2.eoInsuranceConfirmed === true;
     }
 
     const office_locations = Array.isArray(step2.officeLocations)

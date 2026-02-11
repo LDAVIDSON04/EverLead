@@ -77,7 +77,9 @@ export default function CreateAccountContinuePage() {
 
   const [isRegistered, setIsRegistered] = useState("");
   const [regulatoryOrganization, setRegulatoryOrganization] = useState("");
+  const [registrationLicenseNumber, setRegistrationLicenseNumber] = useState("");
   const [registeredProvinces, setRegisteredProvinces] = useState("");
+  const [eoInsuranceConfirmed, setEoInsuranceConfirmed] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
 
@@ -174,8 +176,8 @@ export default function CreateAccountContinuePage() {
       }
     }
     if (showFinancial) {
-      if (!isRegistered || !regulatoryOrganization.trim() || !registeredProvinces.trim()) {
-        setError("Please complete all fields for your role.");
+      if (!isRegistered || !regulatoryOrganization.trim() || !registrationLicenseNumber.trim() || !registeredProvinces.trim() || !eoInsuranceConfirmed) {
+        setError("Please complete all fields for your role and confirm E&O coverage.");
         return;
       }
     }
@@ -202,7 +204,9 @@ export default function CreateAccountContinuePage() {
         additionalProvinces,
         isRegistered,
         regulatoryOrganization,
+        registrationLicenseNumber,
         registeredProvinces,
+        eoInsuranceConfirmed,
       };
       sessionStorage.setItem("createAccountDraft", JSON.stringify({ ...draft, step2 }));
     } catch (_) {}
@@ -791,7 +795,7 @@ export default function CreateAccountContinuePage() {
               </div>
               <div className="space-y-2">
                 <label htmlFor="regulatoryOrganization" className="text-sm text-gray-700">
-                  Regulatory organization <span className="text-red-600">*</span>
+                  Regulatory organization name <span className="text-red-600">*</span>
                 </label>
                 <input
                   id="regulatoryOrganization"
@@ -799,6 +803,20 @@ export default function CreateAccountContinuePage() {
                   value={regulatoryOrganization}
                   onChange={(e) => setRegulatoryOrganization(e.target.value)}
                   className={inputClassName}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="registrationLicenseNumber" className="text-sm text-gray-700">
+                  License / Registration number <span className="text-red-600">*</span>
+                </label>
+                <input
+                  id="registrationLicenseNumber"
+                  type="text"
+                  value={registrationLicenseNumber}
+                  onChange={(e) => setRegistrationLicenseNumber(e.target.value)}
+                  className={inputClassName}
+                  placeholder="e.g. registration or license number"
                   required
                 />
               </div>
@@ -814,6 +832,19 @@ export default function CreateAccountContinuePage() {
                   className={inputClassName}
                   required
                 />
+              </div>
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={eoInsuranceConfirmed}
+                    onChange={(e) => setEoInsuranceConfirmed(e.target.checked)}
+                    className="w-4 h-4 border-2 border-gray-300 rounded"
+                  />
+                  <span className="text-sm text-gray-700">
+                    I maintain required E&O / professional liability coverage. <span className="text-red-600">*</span>
+                  </span>
+                </label>
               </div>
               <div className="space-y-3 border-t pt-6">
                 <div className="flex justify-between items-center mb-4">
