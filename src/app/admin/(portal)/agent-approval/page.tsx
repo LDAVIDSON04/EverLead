@@ -709,14 +709,16 @@ export default function AgentApprovalPage() {
                 </div>
               </div>
 
-              {/* Role-specific credentials (only show fields relevant to this profession) */}
+              {/* Role-specific credentials (all create-account info including license numbers) */}
               {(() => {
                 const metadata = selectedAgent.metadata || {};
                 const role = (metadata.agent_role || '').toLowerCase().trim();
+                const isInsurance = role === 'insurance-broker' || role === 'financial_insurance_agent';
+                const isFinancial = role === 'financial-advisor' || role === 'financial_insurance_agent';
                 const hasAny = role === 'funeral-planner' && (metadata.trustage_enroller_number != null || metadata.llqp_license != null || metadata.llqp_quebec)
-                  || role === 'lawyer' && (metadata.law_society_name || metadata.authorized_provinces)
-                  || role === 'insurance-broker' && (metadata.licensing_province != null || metadata.additional_provinces != null || metadata.has_multiple_provinces != null)
-                  || role === 'financial-advisor' && (metadata.regulatory_organization || metadata.registered_provinces);
+                  || role === 'lawyer' && (metadata.law_society_name || metadata.authorized_provinces || metadata.law_society_license_number)
+                  || isInsurance && (metadata.licensed_in_canada != null || metadata.license_number || metadata.regulatory_body || metadata.brokerage_mga || metadata.eo_coverage != null || metadata.licensing_province != null || metadata.additional_provinces != null)
+                  || isFinancial && (metadata.regulatory_organization || metadata.registered_provinces || metadata.license_registration_number || metadata.eo_insurance_confirmed != null);
                 if (!hasAny) return null;
                 return (
                   <div>
@@ -747,8 +749,14 @@ export default function AgentApprovalPage() {
                           </div>
                         </>
                       )}
-                      {role === 'lawyer' && (
+                      {(role === 'lawyer') && (
                         <>
+                          {metadata.law_society_license_number && (
+                            <div>
+                              <p className="text-xs text-neutral-500 mb-1">License / Member Number</p>
+                              <p className="text-sm text-neutral-900">{metadata.law_society_license_number}</p>
+                            </div>
+                          )}
                           {metadata.law_society_name && (
                             <div>
                               <p className="text-xs text-neutral-500 mb-1">Law Society Name</p>
@@ -763,8 +771,38 @@ export default function AgentApprovalPage() {
                           )}
                         </>
                       )}
-                      {role === 'insurance-broker' && (
+                      {isInsurance && (
                         <>
+                          {metadata.licensed_in_canada != null && (
+                            <div>
+                              <p className="text-xs text-neutral-500 mb-1">Licensed in Canada</p>
+                              <p className="text-sm text-neutral-900">{metadata.licensed_in_canada === true ? 'Yes' : 'No'}</p>
+                            </div>
+                          )}
+                          {metadata.license_number && (
+                            <div>
+                              <p className="text-xs text-neutral-500 mb-1">License Number</p>
+                              <p className="text-sm text-neutral-900">{metadata.license_number}</p>
+                            </div>
+                          )}
+                          {metadata.regulatory_body && (
+                            <div>
+                              <p className="text-xs text-neutral-500 mb-1">Regulatory Body</p>
+                              <p className="text-sm text-neutral-900">{metadata.regulatory_body}</p>
+                            </div>
+                          )}
+                          {metadata.brokerage_mga && (
+                            <div className="col-span-2">
+                              <p className="text-xs text-neutral-500 mb-1">Brokerage / MGA / Sponsoring Organization</p>
+                              <p className="text-sm text-neutral-900">{metadata.brokerage_mga}</p>
+                            </div>
+                          )}
+                          {metadata.eo_coverage != null && (
+                            <div>
+                              <p className="text-xs text-neutral-500 mb-1">E&amp;O Coverage</p>
+                              <p className="text-sm text-neutral-900">{metadata.eo_coverage === true ? 'Yes' : 'No'}</p>
+                            </div>
+                          )}
                           {metadata.licensing_province != null && (
                             <div>
                               <p className="text-xs text-neutral-500 mb-1">Licensing Province</p>
@@ -785,7 +823,7 @@ export default function AgentApprovalPage() {
                           )}
                         </>
                       )}
-                      {role === 'financial-advisor' && (
+                      {isFinancial && (
                         <>
                           {metadata.regulatory_organization && (
                             <div>
@@ -793,10 +831,22 @@ export default function AgentApprovalPage() {
                               <p className="text-sm text-neutral-900">{metadata.regulatory_organization}</p>
                             </div>
                           )}
+                          {metadata.license_registration_number && (
+                            <div>
+                              <p className="text-xs text-neutral-500 mb-1">License / Registration Number</p>
+                              <p className="text-sm text-neutral-900">{metadata.license_registration_number}</p>
+                            </div>
+                          )}
                           {metadata.registered_provinces && (
                             <div>
                               <p className="text-xs text-neutral-500 mb-1">Registered Provinces</p>
                               <p className="text-sm text-neutral-900">{metadata.registered_provinces}</p>
+                            </div>
+                          )}
+                          {metadata.eo_insurance_confirmed != null && (
+                            <div>
+                              <p className="text-xs text-neutral-500 mb-1">E&amp;O / Professional Liability Coverage</p>
+                              <p className="text-sm text-neutral-900">{metadata.eo_insurance_confirmed === true ? 'Yes' : 'No'}</p>
                             </div>
                           )}
                         </>

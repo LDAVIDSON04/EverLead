@@ -143,7 +143,7 @@ export default function DeclinedPaymentsPage() {
                       )}
                       {payment.agent?.funeralHome && (
                         <p>
-                          <span className="font-medium text-neutral-700">Funeral Home:</span>{" "}
+                          <span className="font-medium text-neutral-700">Work Place:</span>{" "}
                           <span className="text-neutral-900">{payment.agent.funeralHome}</span>
                         </p>
                       )}

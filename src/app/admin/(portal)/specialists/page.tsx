@@ -419,13 +419,27 @@ export default function AdminSpecialistsPage() {
                   )}
                   {selectedSpecialist.funeral_home && (
                     <div>
-                      <p className="text-xs text-neutral-500 mb-1">Funeral Home</p>
+                      <p className="text-xs text-neutral-500 mb-1">Work Place</p>
                       <p className="text-sm text-neutral-900 flex items-center gap-2">
                         <Building className="w-4 h-4" />
                         {selectedSpecialist.funeral_home}
                       </p>
                     </div>
                   )}
+                  {(() => {
+                    const meta = selectedSpecialist.metadata || {};
+                    const licenses: string[] = [];
+                    if (meta.law_society_license_number) licenses.push(`Law society: ${meta.law_society_license_number}`);
+                    if (meta.license_number) licenses.push(`License: ${meta.license_number}`);
+                    if (meta.license_registration_number) licenses.push(`Registration: ${meta.license_registration_number}`);
+                    if (licenses.length === 0) return null;
+                    return (
+                      <div className="col-span-2">
+                        <p className="text-xs text-neutral-500 mb-1">License Number/s</p>
+                        <p className="text-sm text-neutral-900">{licenses.join(' • ')}</p>
+                      </div>
+                    );
+                  })()}
                   {selectedSpecialist.regions && selectedSpecialist.regions.length > 0 && (
                     <div className="col-span-2">
                       <p className="text-xs text-neutral-500 mb-1">Service Locations</p>

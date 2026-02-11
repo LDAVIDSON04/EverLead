@@ -509,7 +509,7 @@ export default function AdminAppointmentsPage() {
                         </div>
                         {viewModalData.agent.funeral_home && (
                           <div>
-                            <dt className="text-neutral-500">Funeral Home</dt>
+                            <dt className="text-neutral-500">Work Place</dt>
                             <dd className="text-black">{viewModalData.agent.funeral_home}</dd>
                           </div>
                         )}
