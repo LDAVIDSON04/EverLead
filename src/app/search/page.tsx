@@ -1697,9 +1697,7 @@ function SearchResults() {
           <div className="space-y-4">
             <div className="bg-white border border-gray-200 rounded-lg p-12 text-center">
               <p className="text-gray-600 mb-6 text-lg font-medium">
-                {mode === "video"
-                  ? "There is no video meeting availability"
-                  : "There is no in person availability in your city."}
+                There are no available providers in your city.
               </p>
               <div className="flex gap-3 justify-center flex-wrap">
                 <Link
