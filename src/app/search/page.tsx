@@ -1695,38 +1695,9 @@ function SearchResults() {
           </div>
         ) : showEmptyState ? (
           <div className="space-y-4">
-            {showingVideoFallback && (
-              <div className="bg-gradient-to-br from-neutral-50 to-white border border-neutral-200 rounded-2xl p-8 mb-6 shadow-sm">
-                <div className="flex items-start gap-3">
-                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-neutral-900 flex items-center justify-center">
-                    <Video className="w-5 h-5 text-white" strokeWidth={2} />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-neutral-900 mb-1.5">
-                      No in-person availability in your city
-                    </h3>
-                    <p className="text-neutral-600 text-sm leading-relaxed mb-2">
-                      There are no agents available for in-person meetings in your city.
-                    </p>
-                    <p className="text-neutral-600 text-sm leading-relaxed">
-                      {videoFallbackAppointments.length === 0
-                        ? "No video agents are available for this profession in your province right now. Try switching to “Video” in the search bar to see all options, or check back later."
-                        : "Here are some agents available to put your plan in place over a video call:"}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
             <div className="bg-white border border-gray-200 rounded-lg p-12 text-center">
-              <p className="text-gray-600 mb-2 text-lg font-medium">
-                {showingVideoFallback && videoFallbackAppointments.length === 0 ? "No video agents in your province" : "No agents found"}
-              </p>
-              <p className="text-gray-500 mb-6 text-sm">
-                {showingVideoFallback && videoFallbackAppointments.length === 0
-                  ? "No agents with video availability were found for this profession in your province. Agents need to set up video availability in their portal to appear here."
-                  : searchLocation 
-                    ? `We couldn't find any available agents in "${searchLocation}". Try searching for a different location or switching to video.`
-                    : "No agents are currently available for booking. Agents need to set up their availability in their settings to appear here."}
+              <p className="text-gray-600 mb-6 text-lg font-medium">
+                No in person availability in your city
               </p>
               <div className="flex gap-3 justify-center flex-wrap">
                 <Link
