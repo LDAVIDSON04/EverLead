@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -56,6 +56,35 @@ export default function CreateAccountPage() {
     postalCode: "",
   });
   const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted || typeof window === "undefined") return;
+    try {
+      const raw = sessionStorage.getItem("createAccountDraft");
+      const draft = raw ? JSON.parse(raw) : null;
+      const step1 = draft?.step1;
+      if (step1 && typeof step1 === "object") {
+        setFormData({
+          firstName: step1.firstName ?? "",
+          lastName: step1.lastName ?? "",
+          email: step1.email ?? "",
+          phoneNumber: step1.phoneNumber ?? "",
+          password: step1.password ?? "",
+          confirmPassword: step1.confirmPassword ?? "",
+          industry: step1.industry ?? "",
+          homeAddress: step1.homeAddress ?? "",
+          city: step1.city ?? "",
+          province: step1.province ?? "",
+          postalCode: step1.postalCode ?? "",
+        });
+      }
+    } catch (_) {}
+  }, [mounted]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
