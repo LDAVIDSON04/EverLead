@@ -436,6 +436,11 @@ function BookingStep3Content() {
                     ? `${agentInfo.first_name} ${agentInfo.last_name}`
                     : "Pre-need Specialist")}
                 </h2>
+                {agentInfo.funeral_home && (
+                  <p className="text-gray-700 text-sm font-medium mb-0.5">
+                    {agentInfo.funeral_home}
+                  </p>
+                )}
                 <p className="text-gray-600 text-sm mb-3">
                   {agentInfo.job_title || "Pre-need Planning Specialist"}
                 </p>
