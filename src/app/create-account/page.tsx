@@ -65,6 +65,14 @@ export default function CreateAccountPage() {
   useEffect(() => {
     if (!mounted || typeof window === "undefined") return;
     try {
+      // Only restore draft when user is coming back from the continue step (e.g. clicked Back).
+      // If they landed here from the main nav / another page, show a blank form.
+      const referrer = document.referrer || "";
+      const fromContinue = referrer.includes("/create-account/continue");
+      if (!fromContinue) {
+        sessionStorage.removeItem("createAccountDraft");
+        return;
+      }
       const raw = sessionStorage.getItem("createAccountDraft");
       const draft = raw ? JSON.parse(raw) : null;
       const step1 = draft?.step1;
