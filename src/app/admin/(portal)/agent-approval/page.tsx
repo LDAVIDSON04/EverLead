@@ -715,7 +715,7 @@ export default function AgentApprovalPage() {
                 const role = (metadata.agent_role || '').toLowerCase().trim();
                 const isInsurance = role === 'insurance-broker' || role === 'financial_insurance_agent';
                 const isFinancial = role === 'financial-advisor' || role === 'financial_insurance_agent';
-                const hasAny = role === 'funeral-planner' && (metadata.trustage_enroller_number != null || metadata.llqp_license != null || metadata.llqp_quebec)
+                const hasAny = role === 'funeral-planner' && (metadata.trustage_enroller_number != null || metadata.trustage_enroller_number_value || metadata.trustage_enrollee_number || metadata.llqp_license != null || metadata.llqp_quebec)
                   || role === 'lawyer' && (metadata.law_society_name || metadata.authorized_provinces || metadata.law_society_license_number)
                   || isInsurance && (metadata.licensed_in_canada != null || metadata.license_number || metadata.regulatory_body || metadata.brokerage_mga || metadata.eo_coverage != null || metadata.licensing_province != null || metadata.additional_provinces != null)
                   || isFinancial && (metadata.regulatory_organization || metadata.registered_provinces || metadata.license_registration_number || metadata.eo_insurance_confirmed != null);
@@ -735,6 +735,12 @@ export default function AgentApprovalPage() {
                               {metadata.trustage_enroller_number === true || metadata.trustage_enroller_number === 'yes' ? 'Yes' : 'No'}
                             </p>
                           </div>
+                          {(metadata.trustage_enroller_number === true || metadata.trustage_enroller_number === 'yes') && (metadata.trustage_enroller_number_value || metadata.trustage_enrollee_number) && (
+                            <div>
+                              <p className="text-xs text-neutral-500 mb-1">TruStage Enrolee Number</p>
+                              <p className="text-sm text-neutral-900">{metadata.trustage_enroller_number_value || metadata.trustage_enrollee_number}</p>
+                            </div>
+                          )}
                           <div>
                             <p className="text-xs text-neutral-500 mb-1">LLQP License</p>
                             <p className="text-sm text-neutral-900">

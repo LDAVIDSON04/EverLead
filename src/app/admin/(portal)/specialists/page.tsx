@@ -429,6 +429,7 @@ export default function AdminSpecialistsPage() {
                   {(() => {
                     const meta = selectedSpecialist.metadata || {};
                     const licenses: string[] = [];
+                    if (meta.trustage_enroller_number_value || meta.trustage_enrollee_number) licenses.push(`TruStage: ${meta.trustage_enroller_number_value || meta.trustage_enrollee_number}`);
                     if (meta.law_society_license_number) licenses.push(`Law society: ${meta.law_society_license_number}`);
                     if (meta.license_number) licenses.push(`License: ${meta.license_number}`);
                     if (meta.license_registration_number) licenses.push(`Registration: ${meta.license_registration_number}`);
