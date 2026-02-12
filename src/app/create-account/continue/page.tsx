@@ -225,7 +225,12 @@ export default function CreateAccountContinuePage() {
         return;
       }
     }
-    if (showFinancial) {
+    if (showFinancialAndInsurance) {
+      if (!isRegistered || !regulatoryOrganization.trim() || !registrationLicenseNumber.trim() || !eoCoverageInsurance) {
+        setError("Please complete all fields for Financial & Insurance advisor.");
+        return;
+      }
+    } else if (showFinancial) {
       if (!isRegistered || !regulatoryOrganization.trim() || !registrationLicenseNumber.trim() || !registeredProvinces.trim() || !eoInsuranceConfirmed) {
         setError("Please complete all fields for your role and confirm E&O coverage.");
         return;
@@ -862,14 +867,13 @@ export default function CreateAccountContinuePage() {
             </>
           )}
 
-          {/* Financial & Insurance (combined for dual role) */}
+          {/* Financial & Insurance advisor (simplified) */}
           {showFinancialAndInsurance && (
             <>
               <p className="text-sm font-medium text-gray-800 border-b pb-2">Financial &amp; Insurance Information</p>
-              {/* Financial questions */}
               <div className="space-y-3">
                 <label className="text-sm text-gray-700">
-                  Are you registered with a regulatory organization? <span className="text-red-600">*</span>
+                  Are you licensed to provide regulated financial or insurance services? <span className="text-red-600">*</span>
                 </label>
                 <div className="flex gap-6">
                   {["yes", "no"].map((v) => (
@@ -890,7 +894,7 @@ export default function CreateAccountContinuePage() {
               </div>
               <div className="space-y-2">
                 <label htmlFor="regulatoryOrganizationDual" className="text-sm text-gray-700">
-                  Regulatory organization name <span className="text-red-600">*</span>
+                  Primary regulatory body <span className="text-red-600">*</span>
                 </label>
                 <input
                   id="regulatoryOrganizationDual"
@@ -898,7 +902,8 @@ export default function CreateAccountContinuePage() {
                   value={regulatoryOrganization}
                   onChange={(e) => setRegulatoryOrganization(e.target.value)}
                   className={inputClassName}
-                  required
+                  placeholder="e.g. IIROC / CIRO, MFDA / CIRO, Provincial Insurance Council"
+                  required={showFinancialAndInsurance}
                 />
               </div>
               <div className="space-y-2">
@@ -912,99 +917,12 @@ export default function CreateAccountContinuePage() {
                   onChange={(e) => setRegistrationLicenseNumber(e.target.value)}
                   className={inputClassName}
                   placeholder="e.g. registration or license number"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="registeredProvincesDual" className="text-sm text-gray-700">
-                  Province(s) you are registered in <span className="text-red-600">*</span>
-                </label>
-                <input
-                  id="registeredProvincesDual"
-                  type="text"
-                  value={registeredProvinces}
-                  onChange={(e) => setRegisteredProvinces(e.target.value)}
-                  className={inputClassName}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={eoInsuranceConfirmed}
-                    onChange={(e) => setEoInsuranceConfirmed(e.target.checked)}
-                    className="w-4 h-4 border-2 border-gray-300 rounded"
-                  />
-                  <span className="text-sm text-gray-700">
-                    I maintain required E&O / professional liability coverage. <span className="text-red-600">*</span>
-                  </span>
-                </label>
-              </div>
-              {/* Insurance questions */}
-              <div className="space-y-3 border-t pt-4 mt-4">
-                <label className="text-sm text-gray-700">
-                  Are you licensed in Canada? <span className="text-red-600">*</span>
-                </label>
-                <div className="flex gap-6">
-                  {["yes", "no"].map((v) => (
-                    <label key={v} className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="isLicensedInsuranceDual"
-                        value={v}
-                        checked={isLicensedInsurance === v}
-                        onChange={(e) => setIsLicensedInsurance(e.target.value)}
-                        className="w-4 h-4 border-2 border-gray-300"
-                        required={showFinancialAndInsurance}
-                      />
-                      <span className="text-sm text-gray-700 capitalize">{v}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="insuranceLicenseNumberDual" className="text-sm text-gray-700">
-                  License number <span className="text-red-600">*</span>
-                </label>
-                <input
-                  id="insuranceLicenseNumberDual"
-                  type="text"
-                  value={insuranceLicenseNumber}
-                  onChange={(e) => setInsuranceLicenseNumber(e.target.value)}
-                  className={inputClassName}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="regulatoryBodyDual" className="text-sm text-gray-700">
-                  Regulatory body <span className="text-red-600">*</span>
-                </label>
-                <input
-                  id="regulatoryBodyDual"
-                  type="text"
-                  value={regulatoryBody}
-                  onChange={(e) => setRegulatoryBody(e.target.value)}
-                  className={inputClassName}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="brokerageMgaDual" className="text-sm text-gray-700">
-                  Brokerage / MGA / Sponsoring organization <span className="text-red-600">*</span>
-                </label>
-                <input
-                  id="brokerageMgaDual"
-                  type="text"
-                  value={brokerageMga}
-                  onChange={(e) => setBrokerageMga(e.target.value)}
-                  className={inputClassName}
-                  required
+                  required={showFinancialAndInsurance}
                 />
               </div>
               <div className="space-y-3">
                 <label className="text-sm text-gray-700">
-                  I maintain required Errors &amp; Omissions coverage <span className="text-red-600">*</span>
+                  Do you maintain active Errors &amp; Omissions (E&O) insurance? <span className="text-red-600">*</span>
                 </label>
                 <div className="flex gap-6">
                   {["yes", "no"].map((v) => (
