@@ -235,36 +235,48 @@ export default function CreateAccountContinuePage() {
     try {
       const raw = typeof window !== "undefined" ? sessionStorage.getItem("createAccountDraft") : null;
       const draft = raw ? JSON.parse(raw) : { step1: {} };
-      const step2 = {
-        step1Industry,
-        selectedRole,
-        businessName,
-        professionalTitle,
-        licensedOrEmployedFuneral,
-        regulatorName,
-        preNeedPurpleShield,
-        preNeedTrustage,
-        preNeedOther,
-        preNeedOtherSpecify,
-        officeLocations,
-        isLicensed,
-        lawSocietyLicenseNumber,
-        lawSocietyName,
-        authorizedProvinces,
-        isLicensedInsurance,
-        insuranceLicenseNumber,
-        regulatoryBody,
-        brokerageMga,
-        eoCoverageInsurance,
-        isRegistered,
-        regulatoryOrganization,
-        registrationLicenseNumber,
-        registeredProvinces,
-        eoInsuranceConfirmed,
-      };
+      const step2 = buildStep2Payload();
       sessionStorage.setItem("createAccountDraft", JSON.stringify({ ...draft, step2 }));
     } catch (_) {}
     router.push("/create-account/continue/next");
+  };
+
+  const buildStep2Payload = () => ({
+    step1Industry,
+    selectedRole,
+    businessName,
+    professionalTitle,
+    licensedOrEmployedFuneral,
+    regulatorName,
+    preNeedPurpleShield,
+    preNeedTrustage,
+    preNeedOther,
+    preNeedOtherSpecify,
+    officeLocations,
+    isLicensed,
+    lawSocietyLicenseNumber,
+    lawSocietyName,
+    authorizedProvinces,
+    isLicensedInsurance,
+    insuranceLicenseNumber,
+    regulatoryBody,
+    brokerageMga,
+    eoCoverageInsurance,
+    isRegistered,
+    regulatoryOrganization,
+    registrationLicenseNumber,
+    registeredProvinces,
+    eoInsuranceConfirmed,
+  });
+
+  const handleBackToStep1 = () => {
+    try {
+      const raw = typeof window !== "undefined" ? sessionStorage.getItem("createAccountDraft") : null;
+      const draft = raw ? JSON.parse(raw) : { step1: {} };
+      const step2 = buildStep2Payload();
+      sessionStorage.setItem("createAccountDraft", JSON.stringify({ ...draft, step2 }));
+    } catch (_) {}
+    router.push("/create-account");
   };
 
   return (
@@ -1266,14 +1278,15 @@ export default function CreateAccountContinuePage() {
             </>
           )}
 
-          {/* Back and Continue buttons */}
+          {/* Back and Continue buttons - Back saves current form to draft so it's there when they return */}
           <div className="flex gap-3 mt-4">
-            <Link
-              href="/create-account"
-              className="flex-1 py-3 px-4 rounded-md border border-gray-300 bg-white text-gray-700 font-medium hover:bg-gray-50 transition-colors text-center"
+            <button
+              type="button"
+              onClick={handleBackToStep1}
+              className="flex-1 py-3 px-4 rounded-md border border-gray-300 bg-white text-gray-700 font-medium hover:bg-gray-50 transition-colors"
             >
               Back
-            </Link>
+            </button>
             <button
               type="submit"
               className="flex-1 bg-black hover:bg-gray-800 text-white font-medium py-3 px-4 rounded-md transition-colors"
