@@ -1,7 +1,28 @@
 // src/app/api/admin/approve-agent/route.ts
 import { NextRequest, NextResponse } from "next/server";
+import fs from "fs";
+import path from "path";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { createClient } from "@supabase/supabase-js";
+
+/** Black logo as base64 data URI so it always displays in emails (no external image load). */
+let blackLogoDataUri: string | null = null;
+function getBlackLogoDataUri(): string {
+  if (blackLogoDataUri) return blackLogoDataUri;
+  try {
+    const logoPath = path.join(process.cwd(), "public", "logo.png");
+    const fallbackPath = path.join(process.cwd(), "public", "Soradin.png");
+    const filePath = fs.existsSync(logoPath) ? logoPath : fallbackPath;
+    if (fs.existsSync(filePath)) {
+      const buffer = fs.readFileSync(filePath);
+      blackLogoDataUri = `data:image/png;base64,${buffer.toString("base64")}`;
+      return blackLogoDataUri;
+    }
+  } catch (_) {
+    // ignore
+  }
+  return "";
+}
 
 async function sendRequestInfoEmail(email: string, fullName: string | null, notes: string) {
   const resendApiKey = process.env.RESEND_API_KEY;
@@ -15,12 +36,13 @@ async function sendRequestInfoEmail(email: string, fullName: string | null, note
 
   try {
     const subject = "Additional Information Required for Your Soradin Agent Application";
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.soradin.com";
+    const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "https://www.soradin.com").replace(/\/+$/, "") || "https://www.soradin.com";
+    const logoSrc = getBlackLogoDataUri() || `${siteUrl}/logo.png`;
     
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <div style="text-align: center; margin-bottom: 30px;">
-          <img src="${siteUrl}/logo%20-%20white.png" alt="Soradin" style="height: 40px; width: auto; margin: 0 auto 10px; display: block;" />
+          <img src="${logoSrc}" alt="Soradin" width="120" height="40" style="height: 40px; width: auto; margin: 0 auto 10px; display: block; border: 0;" />
           <div style="display: none;">
             <h1 style="color: #2a2a2a; font-size: 28px; margin: 0; font-weight: 300;">Soradin</h1>
             <p style="color: #6b6b6b; font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; margin: 5px 0 0 0;">Pre-Planning</p>
@@ -113,13 +135,14 @@ async function sendApprovalEmail(email: string, fullName: string | null, approve
       ? "Your Soradin Agent Account Has Been Approved"
       : "Your Soradin Agent Account Application";
 
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.soradin.com";
+    const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "https://www.soradin.com").replace(/\/+$/, "") || "https://www.soradin.com";
+    const logoSrc = getBlackLogoDataUri() || `${siteUrl}/logo.png`;
     
     const html = approved
       ? `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px; background-color: #ffffff;">
           <div style="text-align: center; margin-bottom: 40px;">
-            <img src="${siteUrl}/Soradin.png" alt="Soradin" style="height: 60px; width: auto; margin: 0 auto; display: block;" />
+            <img src="${logoSrc}" alt="Soradin" width="140" height="48" style="height: 48px; width: auto; margin: 0 auto; display: block; border: 0;" />
           </div>
           
           <div style="background-color: #f0f9f4; border-left: 4px solid #1A1A1A; padding: 20px; margin-bottom: 30px; border-radius: 8px;">
@@ -152,11 +175,7 @@ async function sendApprovalEmail(email: string, fullName: string | null, approve
       : `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="text-align: center; margin-bottom: 30px;">
-            <img src="${siteUrl}/logo%20-%20white.png" alt="Soradin" style="height: 40px; width: auto; margin: 0 auto 10px; display: block;" />
-            <div style="display: none;">
-              <h1 style="color: #2a2a2a; font-size: 28px; margin: 0; font-weight: 300;">Soradin</h1>
-              <p style="color: #6b6b6b; font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; margin: 5px 0 0 0;">Pre-Planning</p>
-            </div>
+            <img src="${logoSrc}" alt="Soradin" width="120" height="40" style="height: 40px; width: auto; margin: 0 auto 10px; display: block; border: 0;" />
           </div>
           <h2 style="color: #2a2a2a; margin-bottom: 20px;">Application Update</h2>
           <p>Hi ${fullName || "there"},</p>
