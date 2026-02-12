@@ -130,6 +130,14 @@ const CANADIAN_CITIES = [
     "Iqaluit, NU",
 ] as const;
 
+// Suggested specialties for service/specialist input (matches search API roles)
+const SERVICE_SUGGESTIONS = [
+  "Pre-need planning",
+  "Estate lawyer",
+  "Life insurance",
+  "Financial advisor",
+];
+
 // Dynamic imports for heavy components to improve initial load and reduce bundle size
 const BookingPanel = dynamic(() => import("@/app/agent/[agentId]/components/BookingPanel").then(mod => ({ default: mod.BookingPanel })), {
   loading: () => <div className="animate-pulse bg-gray-200 h-64 rounded-lg" />,
@@ -169,6 +177,9 @@ function SearchResults() {
   // Location autocomplete
   const [locationSuggestions, setLocationSuggestions] = useState<string[]>([]);
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
+  // Service/specialist suggestions (show 4 options on focus)
+  const [showServiceSuggestionsDesktop, setShowServiceSuggestionsDesktop] = useState(false);
+  const [showServiceSuggestionsMobile, setShowServiceSuggestionsMobile] = useState(false);
 
   // Handle location input change with autocomplete - memoized to prevent recreation
   const handleLocationChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -200,6 +211,20 @@ function SearchResults() {
     params.set("mode", mode);
     router.push(`/search?${params.toString()}`);
   }, [inputQuery, inputService, mode, router]);
+
+  const handleServiceSuggestionSelect = useCallback((suggestion: string) => {
+    setInputQuery(suggestion);
+    setSearchQuery(suggestion);
+    setShowServiceSuggestionsDesktop(false);
+    setShowServiceSuggestionsMobile(false);
+    const params = new URLSearchParams();
+    params.set("q", suggestion);
+    if (inputLocation) params.set("location", inputLocation);
+    if (inputService) params.set("service", inputService);
+    params.set("mode", mode);
+    router.push(`/search?${params.toString()}`);
+  }, [inputLocation, inputService, mode, router]);
+
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [selectedAppointmentIndex, setSelectedAppointmentIndex] = useState<number>(0);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -1527,13 +1552,37 @@ function SearchResults() {
             {/* Search Bar */}
             <form onSubmit={handleSearch} className="flex-1 max-w-2xl">
               <div className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="Service or specialist"
-                  value={inputQuery}
-                  onChange={(e) => setInputQuery(e.target.value)}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-800"
-                />
+                <div className="relative flex-1">
+                  <input
+                    type="text"
+                    placeholder="Service or specialist"
+                    value={inputQuery}
+                    onChange={(e) => setInputQuery(e.target.value)}
+                    onFocus={() => setShowServiceSuggestionsDesktop(true)}
+                    onBlur={() => setTimeout(() => setShowServiceSuggestionsDesktop(false), 200)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-800"
+                  />
+                  {showServiceSuggestionsDesktop && (
+                    <div
+                      className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 py-1"
+                      onMouseDown={(e) => e.preventDefault()}
+                    >
+                      {SERVICE_SUGGESTIONS.map((s) => (
+                        <button
+                          key={s}
+                          type="button"
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            handleServiceSuggestionSelect(s);
+                          }}
+                          className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm text-gray-900"
+                        >
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
                 <div className="relative flex-1 min-w-[200px]">
                   <input
                     type="text"
@@ -1615,32 +1664,58 @@ function SearchResults() {
               <ChevronRight className="w-4 h-4 flex-shrink-0" />
             </button>
           </div>
-          <input
-            type="text"
-            placeholder="Service or specialist"
-            value={inputQuery}
-            onChange={(e) => setInputQuery(e.target.value)}
-            onBlur={() => {
-              const params = new URLSearchParams();
-              if (inputQuery) params.set("q", inputQuery);
-              if (inputLocation) params.set("location", inputLocation);
-              if (inputService) params.set("service", inputService);
-              params.set("mode", mode);
-              router.push(`/search?${params.toString()}`);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault();
-                const params = new URLSearchParams();
-                if (inputQuery) params.set("q", inputQuery);
-                if (inputLocation) params.set("location", inputLocation);
-                if (inputService) params.set("service", inputService);
-                params.set("mode", mode);
-                router.push(`/search?${params.toString()}`);
-              }
-            }}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-800 text-sm"
-          />
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Service or specialist"
+              value={inputQuery}
+              onChange={(e) => setInputQuery(e.target.value)}
+              onFocus={() => setShowServiceSuggestionsMobile(true)}
+              onBlur={() => {
+                setTimeout(() => {
+                  setShowServiceSuggestionsMobile(false);
+                  const params = new URLSearchParams();
+                  if (inputQuery) params.set("q", inputQuery);
+                  if (inputLocation) params.set("location", inputLocation);
+                  if (inputService) params.set("service", inputService);
+                  params.set("mode", mode);
+                  router.push(`/search?${params.toString()}`);
+                }, 200);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  const params = new URLSearchParams();
+                  if (inputQuery) params.set("q", inputQuery);
+                  if (inputLocation) params.set("location", inputLocation);
+                  if (inputService) params.set("service", inputService);
+                  params.set("mode", mode);
+                  router.push(`/search?${params.toString()}`);
+                }
+              }}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-800 text-sm"
+            />
+            {showServiceSuggestionsMobile && (
+              <div
+                className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 py-1"
+                onMouseDown={(e) => e.preventDefault()}
+              >
+                {SERVICE_SUGGESTIONS.map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      handleServiceSuggestionSelect(s);
+                    }}
+                    className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm text-gray-900"
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           <div className="relative">
             <input
               type="text"
