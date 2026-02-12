@@ -1590,8 +1590,8 @@ function SearchResults() {
         </div>
       </header>
 
-      {/* Main Content - flex-1 so footer stays at bottom, no white below */}
-      <main className="flex-1 max-w-[1200px] mx-auto px-4 py-6 w-full">
+      {/* Main Content - flex-1 so footer stays at bottom, no white below; less top padding on mobile for service bar */}
+      <main className="flex-1 max-w-[1200px] mx-auto px-4 pt-4 pb-6 md:py-6 w-full">
 
         {/* Desktop Results Header */}
         <div className="hidden md:flex items-center justify-between mb-6">
@@ -1604,17 +1604,43 @@ function SearchResults() {
           </button>
         </div>
 
-        {/* Mobile: Providers count, Date, and Location Search Bar */}
+        {/* Mobile: Providers count, Date, Service bar, then Location Search Bar */}
         <div className="md:hidden mb-4 space-y-2">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg text-gray-900">
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="text-base text-gray-900 font-medium">
               {loading ? "Loading..." : `${appointments.length} ${appointments.length === 1 ? 'provider' : 'providers'} available`}
             </h2>
-            <button className="flex items-center gap-2 text-gray-700 hover:text-gray-900 text-sm">
-              <span>{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</span>
-              <ChevronRight className="w-4 h-4" />
+            <button type="button" className="flex items-center gap-1 shrink-0 text-gray-700 hover:text-gray-900 text-sm">
+              <span className="truncate">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</span>
+              <ChevronRight className="w-4 h-4 flex-shrink-0" />
             </button>
           </div>
+          <input
+            type="text"
+            placeholder="Service or specialist"
+            value={inputQuery}
+            onChange={(e) => setInputQuery(e.target.value)}
+            onBlur={() => {
+              const params = new URLSearchParams();
+              if (inputQuery) params.set("q", inputQuery);
+              if (inputLocation) params.set("location", inputLocation);
+              if (inputService) params.set("service", inputService);
+              params.set("mode", mode);
+              router.push(`/search?${params.toString()}`);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                const params = new URLSearchParams();
+                if (inputQuery) params.set("q", inputQuery);
+                if (inputLocation) params.set("location", inputLocation);
+                if (inputService) params.set("service", inputService);
+                params.set("mode", mode);
+                router.push(`/search?${params.toString()}`);
+              }
+            }}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-800 text-sm"
+          />
           <div className="relative">
             <input
               type="text"
@@ -2201,7 +2227,7 @@ function SearchResults() {
                             >
                               {hasSpots && displayMode === 'video' && (
                                 <span className="absolute top-1 right-1 text-white pointer-events-none" aria-hidden>
-                                  <Video className="w-5 h-5" strokeWidth={2.5} />
+                                  <Video className="w-3 h-3" strokeWidth={2.5} />
                                 </span>
                               )}
                               <div className="whitespace-pre-line leading-tight pointer-events-none">{slot.date}</div>
