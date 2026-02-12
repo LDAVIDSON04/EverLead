@@ -113,42 +113,12 @@ export async function GET(req: NextRequest) {
       }
 
       const room = await createRes.json();
-      
-      // If role is "guest", generate a meeting token for them (they'll be in waiting room)
+
+      // Guest (customer/family): do NOT issue a token — they join without one and "knock";
+      // Daily shows waiting room until host (agent) admits them.
       if (role === "guest") {
-        const properties: Record<string, unknown> = {
-          room_name: safeName,
-          is_owner: false, // Guest, not owner
-          enable_screenshare: true,
-          start_video_off: false,
-          start_audio_off: false,
-        };
-        if (userName) properties.user_name = userName;
-        if (userId) properties.user_id = userId;
-        if (tokenExpiryUnix !== null) {
-          properties.exp = tokenExpiryUnix;
-          properties.eject_at_token_exp = true;
-        }
-
-        const tokenRes = await fetch(`${DAILY_API_BASE}/meeting-tokens`, {
-          method: "POST",
-          headers,
-          body: JSON.stringify({ properties }),
-        });
-
-        if (!tokenRes.ok) {
-          const errText = await tokenRes.text();
-          console.error("Daily create token error:", tokenRes.status, errText);
-          return NextResponse.json(
-            { error: "Failed to create meeting token", details: errText },
-            { status: 502 }
-          );
-        }
-
-        const tokenData = await tokenRes.json();
-        // Return room URL with token appended
-        const urlWithToken = `${room.url}?t=${tokenData.token}`;
-        return NextResponse.json({ url: urlWithToken, name: room.name, token: tokenData.token });
+        const guestUrl = userName ? `${room.url}?userName=${encodeURIComponent(userName)}` : room.url;
+        return NextResponse.json({ url: guestUrl, name: room.name });
       }
 
       // For hosts (agents), generate owner token
@@ -202,34 +172,12 @@ export async function GET(req: NextRequest) {
 
     const room = await res.json();
 
-    // If room exists and role is specified, generate appropriate token
+    // Guest (customer): no token — they knock and host admits (waiting room)
     if (role === "guest") {
-      const properties: Record<string, unknown> = {
-        room_name: safeName,
-        is_owner: false,
-        enable_screenshare: true,
-        start_video_off: false,
-        start_audio_off: false,
-      };
-      if (userName) properties.user_name = userName;
-      if (userId) properties.user_id = userId;
-      if (tokenExpiryUnix !== null) {
-        properties.exp = tokenExpiryUnix;
-        properties.eject_at_token_exp = true;
-      }
-
-      const tokenRes = await fetch(`${DAILY_API_BASE}/meeting-tokens`, {
-        method: "POST",
-        headers,
-        body: JSON.stringify({ properties }),
-      });
-
-      if (tokenRes.ok) {
-        const tokenData = await tokenRes.json();
-        const urlWithToken = `${room.url}?t=${tokenData.token}`;
-        return NextResponse.json({ url: urlWithToken, name: room.name, token: tokenData.token });
-      }
-    } else if (role === "host") {
+      const guestUrl = userName ? `${room.url}?userName=${encodeURIComponent(userName)}` : room.url;
+      return NextResponse.json({ url: guestUrl, name: room.name });
+    }
+    if (role === "host") {
       const properties: Record<string, unknown> = {
         room_name: safeName,
         is_owner: true,
