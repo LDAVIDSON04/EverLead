@@ -432,7 +432,7 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
                   {meetingType === "video" && (
                     <div className="mb-6 p-4 rounded-lg bg-emerald-50 border border-emerald-200">
                       <p className="text-sm text-emerald-800">
-                        Set your video call availability to open the entire province market for sales. Families can book video consultations with you regardless of location.
+                        Add video meeting availability to open your client base to the entire province and receive more booked appointments.
                       </p>
                     </div>
                   )}
