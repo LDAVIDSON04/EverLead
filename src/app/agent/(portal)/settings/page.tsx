@@ -747,24 +747,7 @@ function ProfileSection({
             placeholder="(XXX) XXX-XXXX"
           />
         </div>
-        {profileData.agentRole && (
-          <div>
-            <Label>Profession</Label>
-            <div className="mt-1 px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-700 capitalize">
-              {(profileData.agentRole as string).replace(/-/g, " ")}
-            </div>
-          </div>
-        )}
       </div>
-
-      {profileData.professionalDetails && (
-        <div className="mb-4">
-          <Label>Professional details</Label>
-          <p className="mt-1 px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-sm text-gray-700">
-            {profileData.professionalDetails}
-          </p>
-        </div>
-      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <div>
