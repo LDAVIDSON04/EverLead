@@ -475,8 +475,14 @@ export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId, onEdit
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="text-sm font-medium text-gray-500">Service Type</label>
-                    <p className="text-gray-900">{formatField('', leadData.service_type)}</p>
+                    <p className="text-gray-900 whitespace-pre-wrap">{formatField('', leadData.service_type)}</p>
                   </div>
+                  {leadData.additional_notes && (
+                    <div className="md:col-span-2">
+                      <label className="text-sm font-medium text-gray-500">Booking notes</label>
+                      <p className="text-gray-900 whitespace-pre-wrap mt-1">{leadData.additional_notes}</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

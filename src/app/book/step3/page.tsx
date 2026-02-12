@@ -14,6 +14,72 @@ const supabaseClient = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
+// Profession from agent metadata.agent_role (create-account flow)
+type BookingProfession = "funeral" | "lawyer" | "financial" | "insurance";
+
+const BOOKING_QUESTIONS: Record<
+  BookingProfession,
+  { question: string; subtext: string; options: { value: string; label: string }[]; multi: boolean }
+> = {
+  funeral: {
+    question: "What type of arrangement are you looking for?",
+    subtext: "Help us understand your needs so we can better prepare for your appointment.",
+    multi: false,
+    options: [
+      { value: "cremation", label: "Cremation" },
+      { value: "burial", label: "Burial" },
+      { value: "unsure", label: "Unsure" },
+    ],
+  },
+  lawyer: {
+    question: "What would you like help with?",
+    subtext: "Help us understand your needs so we can better prepare for your appointment.",
+    multi: true,
+    options: [
+      { value: "Creating my first will", label: "Creating my first will" },
+      { value: "Updating an existing will", label: "Updating an existing will" },
+      { value: "Power of attorney / representation agreement", label: "Power of attorney / representation agreement" },
+      { value: "Setting up a trust", label: "Setting up a trust" },
+      { value: "Probate / estate administration", label: "Probate / estate administration" },
+      { value: "Not sure yet", label: "Not sure yet." },
+    ],
+  },
+  financial: {
+    question: "What would you like help organizing for the future?",
+    subtext: "Help us understand your needs so we can better prepare for your appointment.",
+    multi: true,
+    options: [
+      { value: "Retirement income planning", label: "Retirement income planning" },
+      { value: "Preparing assets for my family", label: "Preparing assets for my family" },
+      { value: "Reducing taxes on my estate", label: "Reducing taxes on my estate" },
+      { value: "Planning charitable or legacy gifts", label: "Planning charitable or legacy gifts" },
+      { value: "General financial readiness", label: "General financial readiness" },
+      { value: "Not sure yet", label: "Not sure yet." },
+    ],
+  },
+  insurance: {
+    question: "What would you like help with today?",
+    subtext: "Help us understand your needs so we can better prepare for your appointment.",
+    multi: true,
+    options: [
+      { value: "Getting life insurance for the first time", label: "Getting life insurance for the first time" },
+      { value: "Reviewing or updating my current policy", label: "Reviewing or updating my current policy" },
+      { value: "Covering funeral and final expenses", label: "Covering funeral and final expenses" },
+      { value: "Protecting my family financially", label: "Protecting my family financially" },
+      { value: "I'm not sure — I want guidance", label: "I'm not sure — I want guidance." },
+    ],
+  },
+};
+
+function getBookingProfession(agentRole: string | null | undefined): BookingProfession {
+  if (!agentRole) return "funeral";
+  const r = agentRole.toLowerCase();
+  if (r === "lawyer" || r === "estate_lawyer") return "lawyer";
+  if (r === "financial-advisor" || r === "financial_insurance_agent") return "financial";
+  if (r === "insurance-broker") return "insurance";
+  return "funeral";
+}
+
 function BookingStep3Content() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -36,7 +102,8 @@ function BookingStep3Content() {
   const [formData, setFormData] = useState({
     phone: "",
   });
-  const [selectedService, setSelectedService] = useState<string>("");
+  const [selectedService, setSelectedService] = useState<string>(""); // funeral: single
+  const [selectedServices, setSelectedServices] = useState<string[]>([]); // lawyer/financial/insurance: multi
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [isBooking, setIsBooking] = useState(false);
@@ -52,7 +119,7 @@ function BookingStep3Content() {
       try {
         const { data, error } = await supabaseClient
           .from("profiles")
-          .select("full_name, first_name, last_name, profile_picture_url, funeral_home, job_title, agent_city, agent_province")
+          .select("full_name, first_name, last_name, profile_picture_url, funeral_home, job_title, agent_city, agent_province, metadata")
           .eq("id", agentId)
           .eq("role", "agent")
           .single();
@@ -187,6 +254,10 @@ function BookingStep3Content() {
     setError(null);
   };
 
+  const agentRole = (agentInfo?.metadata as any)?.agent_role ?? null;
+  const profession: BookingProfession = getBookingProfession(agentRole);
+  const questionConfig = BOOKING_QUESTIONS[profession];
+
   const validateForm = (): boolean => {
     const errors: Record<string, string> = {};
 
@@ -194,8 +265,14 @@ function BookingStep3Content() {
       errors.phone = "Telephone number is required";
     }
 
-    if (!selectedService) {
-      errors.service = "Please select a service type";
+    if (questionConfig.multi) {
+      if (selectedServices.length === 0) {
+        errors.service = "Please select at least one option";
+      }
+    } else {
+      if (!selectedService) {
+        errors.service = "Please select a service type";
+      }
     }
 
     setFormErrors(errors);
@@ -214,6 +291,20 @@ function BookingStep3Content() {
     }
   };
 
+  const handleMultiToggle = (value: string) => {
+    setSelectedServices((prev) =>
+      prev.includes(value) ? prev.filter((s) => s !== value) : [...prev, value]
+    );
+    setError(null);
+    if (formErrors.service) {
+      setFormErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors.service;
+        return newErrors;
+      });
+    }
+  };
+
   const handleBook = async () => {
     if (!validateForm()) {
       return;
@@ -221,6 +312,10 @@ function BookingStep3Content() {
 
     setIsBooking(true);
     setError(null);
+
+    const serviceTypeValue = questionConfig.multi
+      ? selectedServices.join(", ")
+      : selectedService;
 
     try {
       const res = await fetch("/api/agents/book", {
@@ -236,7 +331,7 @@ function BookingStep3Content() {
           phone: formData.phone.trim(),
           city: searchedCity || agentInfo?.agent_city || null,
           province: agentInfo?.agent_province || null,
-          serviceType: selectedService,
+          serviceType: serviceTypeValue,
           notes: `Date of Birth: ${dateOfBirth}`,
           officeLocationId: officeLocationId || null,
           appointmentType: mode, // "in-person" | "video"
@@ -398,67 +493,54 @@ function BookingStep3Content() {
 
           <div className="mb-8">
             <h2 className="text-2xl font-semibold text-gray-900 mb-2">
-              What type of arrangement are you looking for? <span className="text-red-500">*</span>
+              {questionConfig.question} <span className="text-red-500">*</span>
             </h2>
             <p className="text-gray-600 mb-4">
-              Help us understand your needs so we can better prepare for your appointment.
+              {questionConfig.subtext}
             </p>
 
             <div className="space-y-4">
-              {/* Service Options */}
-              <label
-                className={`flex items-center gap-4 p-4 border-2 rounded-lg cursor-pointer transition-colors ${
-                  selectedService === "cremation"
-                    ? "border-neutral-800 bg-neutral-50"
-                    : "border-gray-300 hover:border-gray-400"
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="service"
-                  value="cremation"
-                  checked={selectedService === "cremation"}
-                  onChange={() => handleServiceSelect("cremation")}
-                  className="w-5 h-5 text-neutral-800 focus:ring-neutral-800"
-                />
-                <span className="text-gray-900 font-medium">Cremation</span>
-              </label>
-
-              <label
-                className={`flex items-center gap-4 p-4 border-2 rounded-lg cursor-pointer transition-colors ${
-                  selectedService === "burial"
-                    ? "border-neutral-800 bg-neutral-50"
-                    : "border-gray-300 hover:border-gray-400"
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="service"
-                  value="burial"
-                  checked={selectedService === "burial"}
-                  onChange={() => handleServiceSelect("burial")}
-                  className="w-5 h-5 text-neutral-800 focus:ring-neutral-800"
-                />
-                <span className="text-gray-900 font-medium">Burial</span>
-              </label>
-
-              <label
-                className={`flex items-center gap-4 p-4 border-2 rounded-lg cursor-pointer transition-colors ${
-                  selectedService === "unsure"
-                    ? "border-neutral-800 bg-neutral-50"
-                    : "border-gray-300 hover:border-gray-400"
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="service"
-                  value="unsure"
-                  checked={selectedService === "unsure"}
-                  onChange={() => handleServiceSelect("unsure")}
-                  className="w-5 h-5 text-neutral-800 focus:ring-neutral-800"
-                />
-                <span className="text-gray-900 font-medium">Unsure</span>
-              </label>
+              {questionConfig.options.map((opt) =>
+                questionConfig.multi ? (
+                  <label
+                    key={opt.value}
+                    className={`flex items-center gap-4 p-4 border-2 rounded-lg cursor-pointer transition-colors ${
+                      selectedServices.includes(opt.value)
+                        ? "border-neutral-800 bg-neutral-50"
+                        : "border-gray-300 hover:border-gray-400"
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      name="service-multi"
+                      value={opt.value}
+                      checked={selectedServices.includes(opt.value)}
+                      onChange={() => handleMultiToggle(opt.value)}
+                      className="w-5 h-5 rounded border-gray-300 text-neutral-800 focus:ring-neutral-800"
+                    />
+                    <span className="text-gray-900 font-medium">{opt.label}</span>
+                  </label>
+                ) : (
+                  <label
+                    key={opt.value}
+                    className={`flex items-center gap-4 p-4 border-2 rounded-lg cursor-pointer transition-colors ${
+                      selectedService === opt.value
+                        ? "border-neutral-800 bg-neutral-50"
+                        : "border-gray-300 hover:border-gray-400"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="service"
+                      value={opt.value}
+                      checked={selectedService === opt.value}
+                      onChange={() => handleServiceSelect(opt.value)}
+                      className="w-5 h-5 text-neutral-800 focus:ring-neutral-800"
+                    />
+                    <span className="text-gray-900 font-medium">{opt.label}</span>
+                  </label>
+                )
+              )}
             </div>
             {formErrors.service && (
               <p className="text-sm text-red-500 mt-2">{formErrors.service}</p>

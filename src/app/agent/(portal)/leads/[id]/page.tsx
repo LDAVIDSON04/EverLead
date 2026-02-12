@@ -614,7 +614,7 @@ export default function LeadDetailsPage() {
                       <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
                         Service type
                       </dt>
-                      <dd className="mt-1 text-[#2a2a2a]">
+                      <dd className="mt-1 text-[#2a2a2a] whitespace-pre-wrap">
                         {lead.service_type === "cremation"
                           ? "Cremation"
                           : lead.service_type === "burial"

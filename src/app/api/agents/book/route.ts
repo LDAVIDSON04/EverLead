@@ -247,28 +247,24 @@ export async function POST(req: NextRequest) {
 
     if (existingLead) {
       leadId = existingLead.id;
-      // Update the lead's information (city, province, phone) if provided
-      // This ensures the location and contact info shown matches the booking
+      // Update the lead's information (city, province, phone, service_type, additional_notes) if provided
       const updateData: any = {};
-      if (city && city.trim()) {
-        updateData.city = city.trim();
+      if (city && city.trim()) updateData.city = city.trim();
+      if (province && province.trim()) updateData.province = province.trim();
+      if (phone && phone.trim()) updateData.phone = phone.trim();
+      if (serviceType != null && typeof serviceType === "string") {
+        updateData.service_type = serviceType.trim() || "Pre-need Planning";
       }
-      if (province && province.trim()) {
-        updateData.province = province.trim();
+      if (notes != null && typeof notes === "string" && notes.trim()) {
+        updateData.additional_notes = notes.trim();
       }
-      if (phone && phone.trim()) {
-        updateData.phone = phone.trim();
-      }
-      
       if (Object.keys(updateData).length > 0) {
         const { error: updateError } = await supabaseAdmin
           .from("leads")
           .update(updateData)
           .eq("id", leadId);
-        
         if (updateError) {
           console.warn("Failed to update lead information for booking:", updateError);
-          // Don't fail the booking if update fails
         }
       }
     } else {
@@ -286,17 +282,16 @@ export async function POST(req: NextRequest) {
         city: city?.trim() || null,
         province: province?.trim() || null,
         service_type: serviceType?.trim() || "Pre-need Planning",
+        additional_notes: notes != null && typeof notes === "string" && notes.trim() ? notes.trim() : null,
         status: "new",
         urgency_level: urgencyLevel,
-        lead_price: leadPrice, // Required field - calculate from urgency
-        buy_now_price_cents: leadPrice * 100, // For backward compatibility
-        // Provide default empty strings for fields that might be required
+        lead_price: leadPrice,
+        buy_now_price_cents: leadPrice * 100,
         timeline_intent: "not_specified",
         planning_for: "self",
         remains_disposition: null,
         service_celebration: null,
         family_pre_arranged: null,
-        // Ensure lead is unsold
         assigned_agent_id: null,
         auction_enabled: false,
       };

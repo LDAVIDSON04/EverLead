@@ -126,6 +126,7 @@ export default function MyAppointmentsClient({
     if (service === 'cremation') return 'Cremation';
     if (service === 'burial') return 'Burial';
     if (service === 'unsure') return 'Unsure';
+    // Comma-separated questionnaire answers (lawyer, financial, insurance)
     return service;
   }
 
