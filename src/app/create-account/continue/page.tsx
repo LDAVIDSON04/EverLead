@@ -106,7 +106,6 @@ export default function CreateAccountContinuePage() {
         return;
       }
       setStep1Industry(industry);
-      // Map Step 1 industry to Step 2 role for payload
       const roleMap: Record<string, Role> = {
         funeral_planner: "funeral-planner",
         estate_lawyer: "lawyer",
@@ -115,6 +114,34 @@ export default function CreateAccountContinuePage() {
         financial_insurance_agent: "financial_insurance_agent",
       };
       setSelectedRole(roleMap[industry] || "");
+
+      // Restore Step 2 from draft so Back → edit Step 1 → Continue brings them back with their data
+      const s2 = draft.step2;
+      if (s2) {
+        if (s2.businessName != null) setBusinessName(s2.businessName);
+        if (s2.professionalTitle != null) setProfessionalTitle(s2.professionalTitle);
+        if (Array.isArray(s2.officeLocations) && s2.officeLocations.length > 0) setOfficeLocations(s2.officeLocations);
+        if (s2.licensedOrEmployedFuneral != null) setLicensedOrEmployedFuneral(s2.licensedOrEmployedFuneral);
+        if (s2.regulatorName != null) setRegulatorName(s2.regulatorName);
+        if (s2.preNeedPurpleShield != null) setPreNeedPurpleShield(!!s2.preNeedPurpleShield);
+        if (s2.preNeedTrustage != null) setPreNeedTrustage(!!s2.preNeedTrustage);
+        if (s2.preNeedOther != null) setPreNeedOther(!!s2.preNeedOther);
+        if (s2.preNeedOtherSpecify != null) setPreNeedOtherSpecify(s2.preNeedOtherSpecify);
+        if (s2.isLicensed != null) setIsLicensed(s2.isLicensed);
+        if (s2.lawSocietyLicenseNumber != null) setLawSocietyLicenseNumber(s2.lawSocietyLicenseNumber);
+        if (s2.lawSocietyName != null) setLawSocietyName(s2.lawSocietyName);
+        if (s2.authorizedProvinces != null) setAuthorizedProvinces(s2.authorizedProvinces);
+        if (s2.isLicensedInsurance != null) setIsLicensedInsurance(s2.isLicensedInsurance);
+        if (s2.insuranceLicenseNumber != null) setInsuranceLicenseNumber(s2.insuranceLicenseNumber);
+        if (s2.regulatoryBody != null) setRegulatoryBody(s2.regulatoryBody);
+        if (s2.brokerageMga != null) setBrokerageMga(s2.brokerageMga);
+        if (s2.eoCoverageInsurance != null) setEoCoverageInsurance(s2.eoCoverageInsurance);
+        if (s2.isRegistered != null) setIsRegistered(s2.isRegistered);
+        if (s2.regulatoryOrganization != null) setRegulatoryOrganization(s2.regulatoryOrganization);
+        if (s2.registrationLicenseNumber != null) setRegistrationLicenseNumber(s2.registrationLicenseNumber);
+        if (s2.registeredProvinces != null) setRegisteredProvinces(s2.registeredProvinces);
+        if (s2.eoInsuranceConfirmed != null) setEoInsuranceConfirmed(s2.eoInsuranceConfirmed);
+      }
     } catch {
       router.replace("/create-account");
     }
@@ -1239,13 +1266,21 @@ export default function CreateAccountContinuePage() {
             </>
           )}
 
-          {/* Continue button */}
-          <button
-            type="submit"
-            className="w-full bg-black hover:bg-gray-800 text-white font-medium py-3 px-4 rounded-md transition-colors mt-4"
-          >
-            Continue
-          </button>
+          {/* Back and Continue buttons */}
+          <div className="flex gap-3 mt-4">
+            <Link
+              href="/create-account"
+              className="flex-1 py-3 px-4 rounded-md border border-gray-300 bg-white text-gray-700 font-medium hover:bg-gray-50 transition-colors text-center"
+            >
+              Back
+            </Link>
+            <button
+              type="submit"
+              className="flex-1 bg-black hover:bg-gray-800 text-white font-medium py-3 px-4 rounded-md transition-colors"
+            >
+              Continue
+            </button>
+          </div>
         </form>
 
         <div className="text-center mt-8 mb-20">
