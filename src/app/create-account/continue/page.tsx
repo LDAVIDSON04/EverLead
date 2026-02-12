@@ -52,10 +52,12 @@ export default function CreateAccountContinuePage() {
   const [businessName, setBusinessName] = useState("");
   const [professionalTitle, setProfessionalTitle] = useState("");
 
-  const [hasTruStage, setHasTruStage] = useState("");
-  const [truStageEnroleeNumber, setTruStageEnroleeNumber] = useState("");
-  const [hasLLQP, setHasLLQP] = useState("");
-  const [fpcPurpleShieldOther, setFpcPurpleShieldOther] = useState("");
+  const [licensedOrEmployedFuneral, setLicensedOrEmployedFuneral] = useState("");
+  const [regulatorName, setRegulatorName] = useState("");
+  const [preNeedPurpleShield, setPreNeedPurpleShield] = useState(false);
+  const [preNeedTrustage, setPreNeedTrustage] = useState(false);
+  const [preNeedOther, setPreNeedOther] = useState(false);
+  const [preNeedOtherSpecify, setPreNeedOtherSpecify] = useState("");
   const [officeLocations, setOfficeLocations] = useState<OfficeLocation[]>([]);
   const [showAddLocation, setShowAddLocation] = useState(false);
   const [newLocation, setNewLocation] = useState<OfficeLocation>({
@@ -167,8 +169,20 @@ export default function CreateAccountContinuePage() {
     }
 
     if (showFuneral) {
-      if (!hasTruStage || !hasLLQP) {
-        setError("Please answer all questions for your role.");
+      if (!licensedOrEmployedFuneral) {
+        setError("Please answer whether you are licensed or employed by a licensed funeral establishment.");
+        return;
+      }
+      if (!regulatorName.trim()) {
+        setError("Please enter your regulator name.");
+        return;
+      }
+      if (!preNeedPurpleShield && !preNeedTrustage && !preNeedOther) {
+        setError("Please select at least one pre-need product you sell (Purple Shield, Trustage, or other).");
+        return;
+      }
+      if (preNeedOther && !preNeedOtherSpecify.trim()) {
+        setError("Please specify which other pre-need products you sell.");
         return;
       }
     }
@@ -199,10 +213,12 @@ export default function CreateAccountContinuePage() {
         selectedRole,
         businessName,
         professionalTitle,
-        hasTruStage,
-        truStageEnroleeNumber,
-        hasLLQP,
-        fpcPurpleShieldOther,
+        licensedOrEmployedFuneral,
+        regulatorName,
+        preNeedPurpleShield,
+        preNeedTrustage,
+        preNeedOther,
+        preNeedOtherSpecify,
         officeLocations,
         isLicensed,
         lawSocietyLicenseNumber,
@@ -309,38 +325,17 @@ export default function CreateAccountContinuePage() {
             <>
               <div className="space-y-3">
                 <label className="text-sm text-gray-700">
-                  Do you have a valid TruStage Life of Canada enrolee number? <span className="text-red-600">*</span>
+                  Are you licensed or employed by a licensed funeral establishment? <span className="text-red-600">*</span>
                 </label>
                 <div className="flex gap-6">
                   {["yes", "no"].map((v) => (
                     <label key={v} className="flex items-center gap-2 cursor-pointer">
                       <input
                         type="radio"
-                        name="hasTruStage"
+                        name="licensedOrEmployedFuneral"
                         value={v}
-                        checked={hasTruStage === v}
-                        onChange={(e) => setHasTruStage(e.target.value)}
-                        className="w-4 h-4 border-2 border-gray-300"
-                        required={showFuneral}
-                      />
-                      <span className="text-sm text-gray-700 capitalize">{v}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-              <div className="space-y-3">
-                <label className="text-sm text-gray-700">
-                  Do you have a valid LLQP license? <span className="text-red-600">*</span>
-                </label>
-                <div className="flex gap-6">
-                  {["yes", "no"].map((v) => (
-                    <label key={v} className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="hasLLQP"
-                        value={v}
-                        checked={hasLLQP === v}
-                        onChange={(e) => setHasLLQP(e.target.value)}
+                        checked={licensedOrEmployedFuneral === v}
+                        onChange={(e) => setLicensedOrEmployedFuneral(e.target.value)}
                         className="w-4 h-4 border-2 border-gray-300"
                         required={showFuneral}
                       />
@@ -350,17 +345,63 @@ export default function CreateAccountContinuePage() {
                 </div>
               </div>
               <div className="space-y-2">
-                <label htmlFor="fpcPurpleShieldOther" className="text-sm text-gray-700">
-                  Do you have a valid FPC / Purple shield / Other?
+                <label htmlFor="regulatorName" className="text-sm text-gray-700">
+                  Regulator name <span className="text-red-600">*</span>
                 </label>
                 <input
-                  id="fpcPurpleShieldOther"
+                  id="regulatorName"
                   type="text"
-                  value={fpcPurpleShieldOther}
-                  onChange={(e) => setFpcPurpleShieldOther(e.target.value)}
+                  value={regulatorName}
+                  onChange={(e) => setRegulatorName(e.target.value)}
                   className={inputClassName}
-                  placeholder="e.g. FPC, Purple shield, or other – specify which you have"
+                  placeholder="e.g., Consumer Protection BC, BAO, etc."
+                  required={showFuneral}
                 />
+              </div>
+              <div className="space-y-3">
+                <label className="text-sm text-gray-700">
+                  Do you sell pre-need products for: <span className="text-red-600">*</span>
+                </label>
+                <div className="flex flex-col gap-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={preNeedPurpleShield}
+                      onChange={(e) => setPreNeedPurpleShield(e.target.checked)}
+                      className="w-4 h-4 border-2 border-gray-300 rounded"
+                    />
+                    <span className="text-sm text-gray-700">Purple Shield</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={preNeedTrustage}
+                      onChange={(e) => setPreNeedTrustage(e.target.checked)}
+                      className="w-4 h-4 border-2 border-gray-300 rounded"
+                    />
+                    <span className="text-sm text-gray-700">Trustage</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={preNeedOther}
+                      onChange={(e) => setPreNeedOther(e.target.checked)}
+                      className="w-4 h-4 border-2 border-gray-300 rounded"
+                    />
+                    <span className="text-sm text-gray-700">Other</span>
+                  </label>
+                </div>
+                {preNeedOther && (
+                  <div className="mt-2 pl-6">
+                    <input
+                      type="text"
+                      value={preNeedOtherSpecify}
+                      onChange={(e) => setPreNeedOtherSpecify(e.target.value)}
+                      className={inputClassName}
+                      placeholder="Specify which other pre-need products you have"
+                    />
+                  </div>
+                )}
               </div>
               <div className="space-y-3 border-t pt-6">
                 <div className="flex justify-between items-center mb-4">

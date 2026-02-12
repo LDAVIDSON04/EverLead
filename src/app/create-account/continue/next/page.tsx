@@ -104,12 +104,12 @@ export default function CreateAccountNextPage() {
     };
 
     if (step2.selectedRole === "funeral-planner") {
-      metadata.trustage_enroller_number = step2.hasTruStage === "yes";
-      if (step2.hasTruStage === "yes" && step2.truStageEnroleeNumber) {
-        metadata.trustage_enroller_number_value = String(step2.truStageEnroleeNumber).trim();
-      }
-      metadata.llqp_license = step2.hasLLQP === "yes";
-      metadata.fpc_purple_shield_other = (step2.fpcPurpleShieldOther || "").trim();
+      metadata.licensed_or_employed_funeral = step2.licensedOrEmployedFuneral === "yes";
+      metadata.regulator_name = (step2.regulatorName || "").trim();
+      metadata.pre_need_purple_shield = step2.preNeedPurpleShield === true;
+      metadata.pre_need_trustage = step2.preNeedTrustage === true;
+      metadata.pre_need_other = step2.preNeedOther === true;
+      metadata.pre_need_other_specify = (step2.preNeedOtherSpecify || "").trim();
     }
     if (step2.selectedRole === "lawyer") {
       metadata.law_society_license_number = step2.lawSocietyLicenseNumber || "";
