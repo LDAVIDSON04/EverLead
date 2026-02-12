@@ -8,11 +8,8 @@ interface TrustHighlightsProps {
 }
 
 export function TrustHighlights({ rating = 0, reviewCount = 0 }: TrustHighlightsProps) {
-  // Calculate real stats for "Highly recommended"
+  // Only show "Highly recommended" when agent has at least one review
   const getRecommendedDescription = () => {
-    if (reviewCount === 0) {
-      return 'No reviews yet';
-    }
     if (rating >= 4.5) {
       const percentage = Math.round((rating / 5) * 100);
       return `${percentage}% of patients give this specialist ${rating >= 4.8 ? '5' : '4-5'} stars`;
@@ -21,18 +18,16 @@ export function TrustHighlights({ rating = 0, reviewCount = 0 }: TrustHighlights
   };
 
   const highlights = [
+    ...(reviewCount > 0
+      ? [{ icon: 'star' as const, title: 'Highly recommended', description: getRecommendedDescription() }]
+      : []),
     { 
-      icon: 'star', 
-      title: 'Highly recommended', 
-      description: getRecommendedDescription()
-    },
-    { 
-      icon: 'clock', 
+      icon: 'clock' as const, 
       title: 'Excellent response time', 
       description: '100% of inquiries answered within 2 hours' 
     },
     { 
-      icon: 'shield', 
+      icon: 'shield' as const, 
       title: 'Verified by Soradin', 
       description: 'All credentials and background checks verified' 
     },

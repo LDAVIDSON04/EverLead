@@ -64,11 +64,16 @@ export function TrustHighlights({ agentId }: TrustHighlightsProps) {
       <div id="highlights" className="py-8">
         <div className="space-y-6">
           <div className="flex items-start gap-4">
-            <div className="flex-shrink-0">
-              <Star className="w-8 h-8" style={{ color: '#EAB308' }} fill="#EAB308" />
-            </div>
+            <div className="flex-shrink-0">{getIcon('clock')}</div>
             <div>
-              <h3 className="font-semibold text-gray-900 mb-1">Highly recommended</h3>
+              <h3 className="font-semibold text-gray-900 mb-1">Excellent response time</h3>
+              <p className="text-gray-600 text-sm">Loading...</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-4">
+            <div className="flex-shrink-0">{getIcon('shield')}</div>
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-1">Verified by Soradin</h3>
               <p className="text-gray-600 text-sm">Loading...</p>
             </div>
           </div>
@@ -78,22 +83,22 @@ export function TrustHighlights({ agentId }: TrustHighlightsProps) {
   }
 
   const highlights = [
+    ...(stats.totalReviews > 0
+      ? [{
+          icon: 'star' as const,
+          title: 'Highly recommended',
+          description: `${stats.fiveStarPercentage}% of users give this specialist 5 stars`
+        }]
+      : []),
     { 
-      icon: 'star', 
-      title: 'Highly recommended', 
-      description: stats.totalReviews > 0 
-        ? `${stats.fiveStarPercentage}% of users give this specialist 5 stars`
-        : 'No reviews yet'
-    },
-    { 
-      icon: 'clock', 
+      icon: 'clock' as const, 
       title: 'Excellent response time', 
       description: stats.responseTimePercentage > 0
         ? `${stats.responseTimePercentage}% of inquiries answered within 2 hours`
         : 'Response time data not available'
     },
     { 
-      icon: 'shield', 
+      icon: 'shield' as const, 
       title: 'Verified by Soradin', 
       description: 'All credentials and background checks verified' 
     },
