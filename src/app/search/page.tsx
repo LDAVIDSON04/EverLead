@@ -1452,12 +1452,12 @@ function SearchResults() {
           </div>
         </div>
       )}
-      {/* Header */}
+      {/* Header - tighter vertical padding on mobile so content sits higher */}
       <header className="bg-white border-b-0 md:border-b border-gray-200 sticky top-0 z-50">
-        <div className="max-w-[1200px] mx-auto px-4 py-4">
+        <div className="max-w-[1200px] mx-auto px-4 py-3 pb-2 md:py-4">
           {/* Mobile Header */}
           <div className="md:hidden">
-            <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center justify-between mb-1">
               {/* Logo and Soradin */}
               <Link href="/" className="flex items-center gap-2">
                 <Image
@@ -1590,8 +1590,8 @@ function SearchResults() {
         </div>
       </header>
 
-      {/* Main Content - flex-1 so footer stays at bottom, no white below; less top padding on mobile for service bar */}
-      <main className="flex-1 max-w-[1200px] mx-auto px-4 pt-4 pb-6 md:py-6 w-full">
+      {/* Main Content - flex-1 so footer stays at bottom; minimal top padding on mobile so content sits higher */}
+      <main className="flex-1 max-w-[1200px] mx-auto px-4 pt-2 pb-6 md:py-6 w-full">
 
         {/* Desktop Results Header */}
         <div className="hidden md:flex items-center justify-between mb-6">
@@ -1605,7 +1605,7 @@ function SearchResults() {
         </div>
 
         {/* Mobile: Providers count, Date, Service bar, then Location Search Bar */}
-        <div className="md:hidden mb-4 space-y-2">
+        <div className="md:hidden mb-3 space-y-1.5">
           <div className="flex items-center justify-between gap-2">
             <h2 className="text-base text-gray-900 font-medium">
               {loading ? "Loading..." : `${appointments.length} ${appointments.length === 1 ? 'provider' : 'providers'} available`}
