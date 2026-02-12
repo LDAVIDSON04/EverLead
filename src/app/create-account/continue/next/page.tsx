@@ -109,7 +109,7 @@ export default function CreateAccountNextPage() {
         metadata.trustage_enroller_number_value = String(step2.truStageEnroleeNumber).trim();
       }
       metadata.llqp_license = step2.hasLLQP === "yes";
-      metadata.llqp_quebec = step2.llqpQuebec || "";
+      metadata.fpc_purple_shield_other = (step2.fpcPurpleShieldOther || "").trim();
     }
     if (step2.selectedRole === "lawyer") {
       metadata.law_society_license_number = step2.lawSocietyLicenseNumber || "";

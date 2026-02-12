@@ -55,7 +55,7 @@ export default function CreateAccountContinuePage() {
   const [hasTruStage, setHasTruStage] = useState("");
   const [truStageEnroleeNumber, setTruStageEnroleeNumber] = useState("");
   const [hasLLQP, setHasLLQP] = useState("");
-  const [llqpQuebec, setLlqpQuebec] = useState("");
+  const [fpcPurpleShieldOther, setFpcPurpleShieldOther] = useState("");
   const [officeLocations, setOfficeLocations] = useState<OfficeLocation[]>([]);
   const [showAddLocation, setShowAddLocation] = useState(false);
   const [newLocation, setNewLocation] = useState<OfficeLocation>({
@@ -167,12 +167,8 @@ export default function CreateAccountContinuePage() {
     }
 
     if (showFuneral) {
-      if (!hasTruStage || !hasLLQP || !llqpQuebec) {
+      if (!hasTruStage || !hasLLQP) {
         setError("Please answer all questions for your role.");
-        return;
-      }
-      if (hasTruStage === "yes" && !truStageEnroleeNumber.trim()) {
-        setError("Please enter your TruStage enrolee number.");
         return;
       }
     }
@@ -206,7 +202,7 @@ export default function CreateAccountContinuePage() {
         hasTruStage,
         truStageEnroleeNumber,
         hasLLQP,
-        llqpQuebec,
+        fpcPurpleShieldOther,
         officeLocations,
         isLicensed,
         lawSocietyLicenseNumber,
@@ -332,22 +328,6 @@ export default function CreateAccountContinuePage() {
                   ))}
                 </div>
               </div>
-              {hasTruStage === "yes" && (
-                <div className="space-y-2">
-                  <label htmlFor="truStageEnroleeNumber" className="text-sm text-gray-700">
-                    TruStage enrolee number <span className="text-red-600">*</span>
-                  </label>
-                  <input
-                    id="truStageEnroleeNumber"
-                    type="text"
-                    value={truStageEnroleeNumber}
-                    onChange={(e) => setTruStageEnroleeNumber(e.target.value)}
-                    className={inputClassName}
-                    placeholder="Enter your enrolee number"
-                    required={hasTruStage === "yes"}
-                  />
-                </div>
-              )}
               <div className="space-y-3">
                 <label className="text-sm text-gray-700">
                   Do you have a valid LLQP license? <span className="text-red-600">*</span>
@@ -369,28 +349,18 @@ export default function CreateAccountContinuePage() {
                   ))}
                 </div>
               </div>
-              <div className="space-y-3">
-                <label className="text-sm text-gray-700">
-                  Is your LLQP valid in Quebec? <span className="text-red-600">*</span>
+              <div className="space-y-2">
+                <label htmlFor="fpcPurpleShieldOther" className="text-sm text-gray-700">
+                  Do you have a valid FPC / Purple shield / Other?
                 </label>
-                <div className="flex gap-6">
-                  {["yes", "no", "non-applicable"].map((v) => (
-                    <label key={v} className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="llqpQuebec"
-                        value={v}
-                        checked={llqpQuebec === v}
-                        onChange={(e) => setLlqpQuebec(e.target.value)}
-                        className="w-4 h-4 border-2 border-gray-300"
-                        required={showFuneral}
-                      />
-                      <span className="text-sm text-gray-700">
-                        {v === "non-applicable" ? "Non Applicable" : v.charAt(0).toUpperCase() + v.slice(1)}
-                      </span>
-                    </label>
-                  ))}
-                </div>
+                <input
+                  id="fpcPurpleShieldOther"
+                  type="text"
+                  value={fpcPurpleShieldOther}
+                  onChange={(e) => setFpcPurpleShieldOther(e.target.value)}
+                  className={inputClassName}
+                  placeholder="e.g. FPC, Purple shield, or other – specify which you have"
+                />
               </div>
               <div className="space-y-3 border-t pt-6">
                 <div className="flex justify-between items-center mb-4">
