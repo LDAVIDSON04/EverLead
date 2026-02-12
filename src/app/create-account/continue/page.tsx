@@ -870,7 +870,6 @@ export default function CreateAccountContinuePage() {
           {/* Financial & Insurance advisor (simplified) */}
           {showFinancialAndInsurance && (
             <>
-              <p className="text-sm font-medium text-gray-800 border-b pb-2">Financial &amp; Insurance Information</p>
               <div className="space-y-3">
                 <label className="text-sm text-gray-700">
                   Are you licensed to provide regulated financial or insurance services? <span className="text-red-600">*</span>
