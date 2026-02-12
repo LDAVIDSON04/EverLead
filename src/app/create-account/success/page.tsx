@@ -26,7 +26,7 @@ export default function CreateAccountSuccessPage() {
             <Check className="w-7 h-7 sm:w-8 sm:h-8 text-white" strokeWidth={2.5} />
           </div>
           <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900 mb-3 tracking-tight">
-            Application submitted
+            Submitted for approval
           </h1>
           <p className="text-gray-600 text-base leading-relaxed mb-8 max-w-sm mx-auto">
             Your account has been submitted for approval. We&apos;ll review your information and get back to you soon. You can log in once your account is approved.
