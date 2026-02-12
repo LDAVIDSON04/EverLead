@@ -2,12 +2,31 @@
 // Creates a lead if needed, then creates the appointment
 
 import { NextRequest, NextResponse } from "next/server";
+import fs from "fs";
+import path from "path";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getLeadPriceFromUrgency } from "@/lib/leads/pricing";
 import { chargeAgentForAppointment } from "@/lib/chargeAgentForAppointment";
 import { sendPaymentDeclineEmail } from "@/lib/emails";
 import { sendConsumerBookingSMS, sendAgentNewAppointmentSMS } from "@/lib/sms";
 import { DateTime } from "luxon";
+
+/** White logo as base64 so it always shows in emails (no external image load). */
+let whiteLogoDataUri: string | null = null;
+function getWhiteLogoDataUri(): string {
+  if (whiteLogoDataUri) return whiteLogoDataUri;
+  try {
+    const logoPath = path.join(process.cwd(), "public", "logo - white.png");
+    if (fs.existsSync(logoPath)) {
+      const buffer = fs.readFileSync(logoPath);
+      whiteLogoDataUri = `data:image/png;base64,${buffer.toString("base64")}`;
+      return whiteLogoDataUri;
+    }
+  } catch (_) {
+    // ignore
+  }
+  return "";
+}
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -700,7 +719,7 @@ export async function POST(req: NextRequest) {
           if (!cleanSiteUrl.startsWith('http')) {
             cleanSiteUrl = `https://${cleanSiteUrl}`;
           }
-          console.log('📧 [EMAIL] Header logo URL:', `${cleanSiteUrl}/logo%20-%20white.png`);
+          const whiteLogoSrc = getWhiteLogoDataUri() || `${cleanSiteUrl}/logo%20-%20white.png`;
           await fetch('https://api.resend.com/emails', {
             method: 'POST',
             headers: {
@@ -730,7 +749,7 @@ export async function POST(req: NextRequest) {
                               <table cellpadding="0" cellspacing="0" border="0">
                                 <tr>
                                   <td style="vertical-align: middle; padding-right: 12px;">
-                                    <img src="${cleanSiteUrl}/logo%20-%20white.png" alt="Soradin" width="120" height="40" style="display: block; height: 40px; width: auto; max-height: 40px; border: 0; outline: none; text-decoration: none;" />
+                                    <img src="${whiteLogoSrc}" alt="Soradin" width="120" height="40" style="display: block; height: 40px; width: auto; max-height: 40px; border: 0; outline: none; text-decoration: none;" />
                                   </td>
                                   <td style="vertical-align: middle;">
                                     <span style="color: #ffffff; font-size: 24px; font-weight: bold; margin: 0;">Soradin</span>
@@ -857,7 +876,7 @@ export async function POST(req: NextRequest) {
           if (!cleanSiteUrl.startsWith('http')) {
             cleanSiteUrl = `https://${cleanSiteUrl}`;
           }
-          console.log('📧 [EMAIL] Header logo URL:', `${cleanSiteUrl}/logo%20-%20white.png`);
+          const whiteLogoSrc = getWhiteLogoDataUri() || `${cleanSiteUrl}/logo%20-%20white.png`;
           await fetch('https://api.resend.com/emails', {
             method: 'POST',
             headers: {
@@ -887,7 +906,7 @@ export async function POST(req: NextRequest) {
                               <table cellpadding="0" cellspacing="0" border="0">
                                 <tr>
                                   <td style="vertical-align: middle; padding-right: 12px;">
-                                    <img src="${cleanSiteUrl}/logo%20-%20white.png" alt="Soradin" width="120" height="40" style="display: block; height: 40px; width: auto; max-height: 40px; border: 0; outline: none; text-decoration: none;" />
+                                    <img src="${whiteLogoSrc}" alt="Soradin" width="120" height="40" style="display: block; height: 40px; width: auto; max-height: 40px; border: 0; outline: none; text-decoration: none;" />
                                   </td>
                                   <td style="vertical-align: middle;">
                                     <span style="color: #ffffff; font-size: 24px; font-weight: bold; margin: 0;">Soradin</span>
