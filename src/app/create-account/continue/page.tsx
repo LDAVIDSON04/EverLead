@@ -53,6 +53,7 @@ export default function CreateAccountContinuePage() {
   const [professionalTitle, setProfessionalTitle] = useState("");
 
   const [hasTruStage, setHasTruStage] = useState("");
+  const [truStageEnroleeNumber, setTruStageEnroleeNumber] = useState("");
   const [hasLLQP, setHasLLQP] = useState("");
   const [llqpQuebec, setLlqpQuebec] = useState("");
   const [officeLocations, setOfficeLocations] = useState<OfficeLocation[]>([]);
@@ -170,6 +171,10 @@ export default function CreateAccountContinuePage() {
         setError("Please answer all questions for your role.");
         return;
       }
+      if (hasTruStage === "yes" && !truStageEnroleeNumber.trim()) {
+        setError("Please enter your TruStage enrolee number.");
+        return;
+      }
     }
     if (showLawyer) {
       if (!isLicensed || !lawSocietyLicenseNumber.trim() || !lawSocietyName.trim() || !authorizedProvinces) {
@@ -199,6 +204,7 @@ export default function CreateAccountContinuePage() {
         businessName,
         professionalTitle,
         hasTruStage,
+        truStageEnroleeNumber,
         hasLLQP,
         llqpQuebec,
         officeLocations,
@@ -326,6 +332,22 @@ export default function CreateAccountContinuePage() {
                   ))}
                 </div>
               </div>
+              {hasTruStage === "yes" && (
+                <div className="space-y-2">
+                  <label htmlFor="truStageEnroleeNumber" className="text-sm text-gray-700">
+                    TruStage enrolee number <span className="text-red-600">*</span>
+                  </label>
+                  <input
+                    id="truStageEnroleeNumber"
+                    type="text"
+                    value={truStageEnroleeNumber}
+                    onChange={(e) => setTruStageEnroleeNumber(e.target.value)}
+                    className={inputClassName}
+                    placeholder="Enter your enrolee number"
+                    required={hasTruStage === "yes"}
+                  />
+                </div>
+              )}
               <div className="space-y-3">
                 <label className="text-sm text-gray-700">
                   Do you have a valid LLQP license? <span className="text-red-600">*</span>

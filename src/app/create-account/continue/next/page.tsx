@@ -105,6 +105,9 @@ export default function CreateAccountNextPage() {
 
     if (step2.selectedRole === "funeral-planner") {
       metadata.trustage_enroller_number = step2.hasTruStage === "yes";
+      if (step2.hasTruStage === "yes" && step2.truStageEnroleeNumber) {
+        metadata.trustage_enroller_number_value = String(step2.truStageEnroleeNumber).trim();
+      }
       metadata.llqp_license = step2.hasLLQP === "yes";
       metadata.llqp_quebec = step2.llqpQuebec || "";
     }
