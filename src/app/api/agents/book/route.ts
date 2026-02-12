@@ -11,25 +11,21 @@ import { sendPaymentDeclineEmail } from "@/lib/emails";
 import { sendConsumerBookingSMS, sendAgentNewAppointmentSMS } from "@/lib/sms";
 import { DateTime } from "luxon";
 
-/** White logo base64 (for CID attachment). Gmail displays CID inline images; data URIs can render poorly. */
-let whiteLogoBase64: string | null = null;
-function getWhiteLogoBase64(): string {
-  if (whiteLogoBase64) return whiteLogoBase64;
+/** White logo as base64 data URI so it shows inline in Outlook (no attachment). */
+let whiteLogoDataUri: string | null = null;
+function getWhiteLogoDataUri(): string {
+  if (whiteLogoDataUri) return whiteLogoDataUri;
   try {
     const logoPath = path.join(process.cwd(), "public", "logo - white.png");
     if (fs.existsSync(logoPath)) {
       const buffer = fs.readFileSync(logoPath);
-      whiteLogoBase64 = buffer.toString("base64");
-      return whiteLogoBase64;
+      whiteLogoDataUri = `data:image/png;base64,${buffer.toString("base64")}`;
+      return whiteLogoDataUri;
     }
   } catch (_) {
     // ignore
   }
   return "";
-}
-function getWhiteLogoDataUri(): string {
-  const b64 = getWhiteLogoBase64();
-  return b64 ? `data:image/png;base64,${b64}` : "";
 }
 
 export const dynamic = "force-dynamic";
@@ -723,9 +719,7 @@ export async function POST(req: NextRequest) {
           if (!cleanSiteUrl.startsWith('http')) {
             cleanSiteUrl = `https://${cleanSiteUrl}`;
           }
-          const logoB64 = getWhiteLogoBase64();
-          const logoImgSrc = logoB64 ? "cid:soradin-logo-white" : (getWhiteLogoDataUri() || `${cleanSiteUrl}/logo%20-%20white.png`);
-          const logoAttachments = logoB64 ? [{ content: logoB64, filename: "logo.png", contentId: "soradin-logo-white", content_type: "image/png" }] : [];
+          const whiteLogoSrc = getWhiteLogoDataUri() || `${cleanSiteUrl}/logo%20-%20white.png`;
           await fetch('https://api.resend.com/emails', {
             method: 'POST',
             headers: {
@@ -736,7 +730,6 @@ export async function POST(req: NextRequest) {
               from: resendFromEmail.includes('<') ? resendFromEmail : `Soradin <${resendFromEmail}>`,
               to: [familyEmail],
               subject: `Appointment Confirmed with ${agentName}`,
-              attachments: logoAttachments,
               html: `
                 <!DOCTYPE html>
                 <html>
@@ -756,7 +749,7 @@ export async function POST(req: NextRequest) {
                               <table cellpadding="0" cellspacing="0" border="0">
                                 <tr>
                                   <td style="vertical-align: middle; padding-right: 12px;">
-                                    <img src="${logoImgSrc}" alt="Soradin" width="120" height="40" style="display: block; height: 40px; width: auto; max-height: 40px; border: 0; outline: none; text-decoration: none;" />
+                                    <img src="${whiteLogoSrc}" alt="Soradin" width="120" height="40" style="display: block; height: 40px; width: auto; max-height: 40px; border: 0; outline: none; text-decoration: none;" />
                                   </td>
                                   <td style="vertical-align: middle;">
                                     <span style="color: #ffffff; font-size: 24px; font-weight: bold; margin: 0;">Soradin</span>
@@ -883,9 +876,7 @@ export async function POST(req: NextRequest) {
           if (!cleanSiteUrl.startsWith('http')) {
             cleanSiteUrl = `https://${cleanSiteUrl}`;
           }
-          const agentLogoB64 = getWhiteLogoBase64();
-          const agentLogoImgSrc = agentLogoB64 ? "cid:soradin-logo-white" : (getWhiteLogoDataUri() || `${cleanSiteUrl}/logo%20-%20white.png`);
-          const agentLogoAttachments = agentLogoB64 ? [{ content: agentLogoB64, filename: "logo.png", contentId: "soradin-logo-white", content_type: "image/png" }] : [];
+          const whiteLogoSrc = getWhiteLogoDataUri() || `${cleanSiteUrl}/logo%20-%20white.png`;
           await fetch('https://api.resend.com/emails', {
             method: 'POST',
             headers: {
@@ -896,7 +887,6 @@ export async function POST(req: NextRequest) {
               from: resendFromEmail.includes('<') ? resendFromEmail : `Soradin <${resendFromEmail}>`,
               to: [agentEmail],
               subject: `New Appointment: ${familyName}`,
-              attachments: agentLogoAttachments,
               html: `
                 <!DOCTYPE html>
                 <html>
@@ -916,7 +906,7 @@ export async function POST(req: NextRequest) {
                               <table cellpadding="0" cellspacing="0" border="0">
                                 <tr>
                                   <td style="vertical-align: middle; padding-right: 12px;">
-                                    <img src="${agentLogoImgSrc}" alt="Soradin" width="120" height="40" style="display: block; height: 40px; width: auto; max-height: 40px; border: 0; outline: none; text-decoration: none;" />
+                                    <img src="${whiteLogoSrc}" alt="Soradin" width="120" height="40" style="display: block; height: 40px; width: auto; max-height: 40px; border: 0; outline: none; text-decoration: none;" />
                                   </td>
                                   <td style="vertical-align: middle;">
                                     <span style="color: #ffffff; font-size: 24px; font-weight: bold; margin: 0;">Soradin</span>
