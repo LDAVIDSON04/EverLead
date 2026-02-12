@@ -522,9 +522,10 @@ function CancelAppointmentContent() {
                   <p className="text-gray-600">{appointmentData.agent.funeral_home}</p>
                 )}
                 {(() => {
-                  // Show office location city if available, otherwise fall back to agent city
-                  const displayCity = appointmentData.office_location?.city || appointmentData.agent.agent_city;
-                  const displayProvince = appointmentData.office_location?.province || appointmentData.agent.agent_province;
+                  // Only show location for in-person appointments; video calls have no address
+                  if (!appointmentData.office_location) return null;
+                  const displayCity = appointmentData.office_location.city || appointmentData.agent?.agent_city;
+                  const displayProvince = appointmentData.office_location.province || appointmentData.agent?.agent_province;
                   if (displayCity || displayProvince) {
                     return (
                       <p className="text-sm text-gray-500 flex items-center gap-1 mt-1">
@@ -558,6 +559,7 @@ function CancelAppointmentContent() {
                 <p className="text-gray-900 font-medium">{appointmentData.time_display}</p>
               </div>
             </div>
+            {/* Only show location for in-person appointments; video calls have no address */}
             {appointmentData.office_location && (
               <div className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 text-gray-400 mt-0.5" />
@@ -715,7 +717,8 @@ function CancelAppointmentContent() {
                       {selectedAgentInfo.funeral_home && (
                         <p className="text-gray-600 text-sm mb-2">{selectedAgentInfo.funeral_home}</p>
                       )}
-                      {(selectedAgentInfo?.displayCity || appointmentData.agent?.agent_city) && (
+                      {/* Only show location/address for in-person reschedule */}
+                      {appointmentData.office_location && (selectedAgentInfo?.displayCity || appointmentData.agent?.agent_city) && (
                         <div className="flex items-center gap-1 mb-2">
                           <MapPin className="w-4 h-4 text-gray-500" />
                           <span className="text-gray-600 text-sm">
@@ -725,7 +728,7 @@ function CancelAppointmentContent() {
                         </div>
                       )}
                       
-                      {(selectedAgentInfo?.business_street || selectedAgentInfo?.business_address) && (
+                      {appointmentData.office_location && (selectedAgentInfo?.business_street || selectedAgentInfo?.business_address) && (
                         <div className="flex items-start gap-2 mb-3">
                           <MapPin className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
                           <span className="text-gray-500 text-xs">
@@ -749,8 +752,8 @@ function CancelAppointmentContent() {
 
             {/* Content */}
             <div className="p-6">
-              {/* Office Location Selector */}
-              {officeLocations.length > 1 && (
+              {/* Office Location Selector - only for in-person appointments */}
+              {appointmentData.office_location && officeLocations.length > 1 && (
                 <div className="mb-6">
                   <label className="block text-sm font-semibold text-gray-900 mb-2">
                     Select office location

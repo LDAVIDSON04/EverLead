@@ -349,7 +349,7 @@ function BookingStep2Content() {
                     {formatDate(date)}, {formatTime(startsAt)}
                   </span>
                 </div>
-                {selectedOfficeLocation && (
+                {mode === "in-person" && selectedOfficeLocation && (
                   <div className="flex items-center gap-2">
                     <MapPin className="w-4 h-4" />
                     <span>{selectedOfficeLocation}</span>
