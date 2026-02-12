@@ -378,13 +378,15 @@ function SearchResults() {
               const videoWithReviews = videoMapped.map((apt) => {
                 const agentId = apt.agent?.id;
                 const stats = agentId ? videoReviewStats[agentId] : null;
+                const totalReviews = Number(stats?.totalReviews) || 0;
+                const averageRating = Number(stats?.averageRating) || 0;
                 return {
                   ...apt,
                   agent: apt.agent ? {
                     ...apt.agent,
                     id: apt.agent.id,
-                    rating: stats?.averageRating || 0,
-                    reviewCount: stats?.totalReviews || 0,
+                    rating: averageRating,
+                    reviewCount: totalReviews,
                   } : undefined,
                 };
               });
@@ -475,17 +477,19 @@ function SearchResults() {
           }
         }
 
-        // Add review stats to appointments
+        // Add review stats to appointments (ensure numbers so we never show "0" when no reviews)
         const appointmentsWithReviews = mappedAppointments.map((apt) => {
           const agentId = apt.agent?.id;
           const stats = agentId ? reviewStats[agentId] : null;
+          const totalReviews = Number(stats?.totalReviews) || 0;
+          const averageRating = Number(stats?.averageRating) || 0;
           return {
             ...apt,
             agent: apt.agent ? {
               ...apt.agent,
               id: apt.agent.id, // Ensure id is always defined
-              rating: stats?.averageRating || 0,
-              reviewCount: stats?.totalReviews || 0,
+              rating: averageRating,
+              reviewCount: totalReviews,
             } : undefined,
           };
         });
@@ -1317,11 +1321,11 @@ function SearchResults() {
                     <p className="text-gray-500 text-xs mb-2">{selectedAppointment.agent.funeral_home}</p>
                   )}
                   
-                  {selectedAppointment.agent?.rating && selectedAppointment.agent.rating > 0 && selectedAppointment.agent?.reviewCount && selectedAppointment.agent.reviewCount > 0 && (
+                  {(Number(selectedAppointment.agent?.rating) || 0) > 0 && (Number(selectedAppointment.agent?.reviewCount) || 0) > 0 && (
                     <div className="flex items-center gap-1">
                       <Star className="w-4 h-4 fill-neutral-600 text-neutral-600" />
-                      <span className="text-sm text-black">{selectedAppointment.agent.rating.toFixed(1)}</span>
-                      <span className="text-sm text-gray-500">· {selectedAppointment.agent.reviewCount} {selectedAppointment.agent.reviewCount === 1 ? 'review' : 'reviews'}</span>
+                      <span className="text-sm text-black">{(Number(selectedAppointment.agent?.rating) || 0).toFixed(1)}</span>
+                      <span className="text-sm text-gray-500">· {Number(selectedAppointment.agent?.reviewCount) || 0} {(Number(selectedAppointment.agent?.reviewCount) || 0) === 1 ? 'review' : 'reviews'}</span>
                     </div>
                   )}
                 </div>
@@ -1942,12 +1946,12 @@ function SearchResults() {
                           </>
                         ) : null}
 
-                        {/* Rating */}
-                        {agent && agent.rating && agent.rating > 0 && agent.reviewCount && agent.reviewCount > 0 && (
+                        {/* Rating - only show when agent has at least one review */}
+                        {agent && (Number(agent.rating) || 0) > 0 && (Number(agent.reviewCount) || 0) > 0 && (
                           <div className="flex items-center gap-1">
                             <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                            <span className="text-gray-900 text-sm">{agent.rating.toFixed(1)}</span>
-                            <span className="text-gray-500 text-sm">· {agent.reviewCount} {agent.reviewCount === 1 ? 'review' : 'reviews'}</span>
+                            <span className="text-gray-900 text-sm">{(Number(agent.rating) || 0).toFixed(1)}</span>
+                            <span className="text-gray-500 text-sm">· {Number(agent.reviewCount) || 0} {(Number(agent.reviewCount) || 0) === 1 ? 'review' : 'reviews'}</span>
                           </div>
                         )}
 
@@ -2162,12 +2166,12 @@ function SearchResults() {
                           </>
                         ) : null}
 
-                        {/* Rating with star */}
-                        {agent && agent.rating && agent.rating > 0 && agent.reviewCount && agent.reviewCount > 0 && (
+                        {/* Rating with star - only show when agent has at least one review */}
+                        {agent && (Number(agent.rating) || 0) > 0 && (Number(agent.reviewCount) || 0) > 0 && (
                           <div className="flex items-center gap-1">
                             <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                            <span className="text-gray-900 text-sm">{agent.rating.toFixed(1)}</span>
-                            <span className="text-gray-500 text-sm">· {agent.reviewCount} {agent.reviewCount === 1 ? 'review' : 'reviews'}</span>
+                            <span className="text-gray-900 text-sm">{(Number(agent.rating) || 0).toFixed(1)}</span>
+                            <span className="text-gray-500 text-sm">· {Number(agent.reviewCount) || 0} {(Number(agent.reviewCount) || 0) === 1 ? 'review' : 'reviews'}</span>
                           </div>
                         )}
 
