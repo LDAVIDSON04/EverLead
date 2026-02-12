@@ -300,16 +300,23 @@ export default function CreateAccountNextPage() {
 
           {/* Checkbox */}
           <div className="flex items-start gap-3 pt-2">
-            <input
-              id="accurate"
-              type="checkbox"
-              checked={hasAnsweredAccurately}
-              onChange={(e) => setHasAnsweredAccurately(e.target.checked)}
-              className="mt-1 w-4 h-4 cursor-pointer appearance-none border border-gray-300 rounded bg-white checked:bg-black checked:border-black"
-              required
-            />
-            <label htmlFor="accurate" className="text-sm cursor-pointer">
-              I have answered all questions accurately <span className="text-red-600">*</span>
+            <label className="flex items-start gap-3 cursor-pointer">
+              <span className={`relative flex h-4 w-4 shrink-0 items-center justify-center rounded border-2 mt-1 transition-colors ${hasAnsweredAccurately ? "border-black bg-black" : "border-gray-300 bg-white"}`}>
+                <input
+                  id="accurate"
+                  type="checkbox"
+                  checked={hasAnsweredAccurately}
+                  onChange={(e) => setHasAnsweredAccurately(e.target.checked)}
+                  className="absolute inset-0 cursor-pointer opacity-0"
+                  required
+                />
+                {hasAnsweredAccurately && (
+                  <Check className="h-3 w-3 text-white stroke-[3]" strokeWidth={3} />
+                )}
+              </span>
+              <span className="text-sm select-none">
+                I have answered all questions accurately <span className="text-red-600">*</span>
+              </span>
             </label>
           </div>
 
