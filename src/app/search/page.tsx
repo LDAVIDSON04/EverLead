@@ -1514,14 +1514,14 @@ function SearchResults() {
                   placeholder="Service or specialist"
                   value={inputQuery}
                   onChange={(e) => setInputQuery(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-800"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-800 text-base"
                 />
                 <input
                   type="text"
                   placeholder="Service type"
                   value={inputService}
                   onChange={(e) => setInputService(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-800"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-800 text-base"
                 />
                 <button 
                   type="submit"
@@ -1693,7 +1693,7 @@ function SearchResults() {
                   router.push(`/search?${params.toString()}`);
                 }
               }}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-800 text-sm"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-800 text-base"
             />
             {showServiceSuggestionsMobile && (
               <div
@@ -1756,7 +1756,7 @@ function SearchResults() {
                   router.push(`/search?${params.toString()}`);
                 }
               }}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-800 text-sm"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-800 text-base"
             />
             {/* Location Autocomplete Dropdown */}
             {showLocationDropdown && locationSuggestions.length > 0 && (

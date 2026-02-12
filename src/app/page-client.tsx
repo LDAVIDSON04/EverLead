@@ -374,7 +374,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                     <input
                       type="text"
                       placeholder="Service or specialist"
-                      className="w-full pl-12 pr-4 py-3 bg-transparent border-none focus:outline-none text-[#1A1A1A] placeholder:text-[#1A1A1A]/40 relative z-10"
+                      className="w-full pl-12 pr-4 py-3 bg-transparent border-none focus:outline-none text-[#1A1A1A] placeholder:text-[#1A1A1A]/40 relative z-10 text-base"
                       value={specialty}
                       onChange={(e) => setSpecialty(e.target.value)}
                       onFocus={() => setShowSpecialtyDropdown(true)}
@@ -420,7 +420,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                     <input
                       type="text"
                       placeholder="Location"
-                      className="w-full pl-12 pr-4 py-3 bg-transparent border-none focus:outline-none text-[#1A1A1A] placeholder:text-[#1A1A1A]/40 relative z-10"
+                      className="w-full pl-12 pr-4 py-3 bg-transparent border-none focus:outline-none text-[#1A1A1A] placeholder:text-[#1A1A1A]/40 relative z-10 text-base"
                       value={location}
                       onChange={handleLocationChange}
                       onFocus={async () => {
