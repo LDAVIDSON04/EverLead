@@ -810,8 +810,8 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
             <div className="bg-gradient-to-r from-[#1a3a2e] to-[#0f2a20] rounded-t-2xl p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-2xl font-bold text-white">Complete Your Setup</h2>
-                  <p className="text-white/90 text-sm mt-1">Finish these steps to start receiving appointments</p>
+                  <h2 className="text-2xl font-bold text-white">Welcome to Soradin</h2>
+                  <p className="text-white/90 text-sm mt-1">Please complete account setup to start receiving appointments.</p>
                 </div>
                 {onboardingStatus.onboardingCompleted && (
                   <button
