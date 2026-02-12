@@ -367,192 +367,182 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
           </button>
         </div>
 
-        {/* Content - Scrollable */}
-        <div className="p-6 overflow-y-auto flex-1">
-          {/* Save Message */}
-          {saveMessage && (
-            <div className={`mb-4 p-3 rounded-lg ${
-              saveMessage.type === "success" 
-                ? "bg-neutral-50 border border-neutral-200 text-neutral-800" 
-                : "bg-red-50 border border-red-200 text-red-800"
-            }`}>
-              <p className="text-sm font-medium">{saveMessage.text}</p>
-            </div>
-          )}
-          
-          {loading ? (
-            <div className="text-center py-8">
-              <p className="text-gray-600">Loading...</p>
-            </div>
-          ) : (
-            <>
-              {/* Meeting type toggle - always show when not loading */}
-              <div className="mb-6">
-                <Label className="mb-2 block">Meeting type</Label>
-                <div className="flex rounded-lg border border-gray-300 p-0.5 bg-gray-50">
-                  <button
-                    type="button"
-                    onClick={() => setMeetingType("video")}
-                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-md text-sm font-medium transition-colors ${
-                      meetingType === "video"
-                        ? "bg-white text-gray-900 shadow-sm border border-gray-200"
-                        : "text-gray-600 hover:text-gray-900"
-                    }`}
-                  >
-                    <Video className="w-4 h-4" />
-                    Video Call
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setMeetingType("in-person")}
-                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-md text-sm font-medium transition-colors ${
-                      meetingType === "in-person"
-                        ? "bg-white text-gray-900 shadow-sm border border-gray-200"
-                        : "text-gray-600 hover:text-gray-900"
-                    }`}
-                  >
-                    <MapPin className="w-4 h-4" />
-                    In Person
-                  </button>
-                </div>
+        {/* Content - scrollable middle, fixed appointment length + actions at bottom */}
+        <div className="flex flex-col flex-1 min-h-0">
+          <div className="p-6 overflow-y-auto flex-1 min-h-0">
+            {/* Save Message */}
+            {saveMessage && (
+              <div className={`mb-4 p-3 rounded-lg ${
+                saveMessage.type === "success" 
+                  ? "bg-neutral-50 border border-neutral-200 text-neutral-800" 
+                  : "bg-red-50 border border-red-200 text-red-800"
+              }`}>
+                <p className="text-sm font-medium">{saveMessage.text}</p>
               </div>
+            )}
 
-              {meetingType === "in-person" && locations.length === 0 ? (
-                <div className="text-center py-8">
-                  <p className="text-gray-600 mb-4">No locations found. Please add office locations first.</p>
-                  <button
-                    onClick={onClose}
-                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
-                  >
-                    Close
-                  </button>
-                </div>
-              ) : (
-                <>
-                  {meetingType === "video" && (
-                    <div className="mb-6 p-4 rounded-lg bg-emerald-50 border border-emerald-200">
-                      <p className="text-sm text-emerald-800">
-                        Add video meeting availability to open your client base to the entire province and receive more booked appointments.
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Office Location - only when in-person and we have locations */}
-                  {meetingType === "in-person" && locations.length > 0 && (
-                    <div className="mb-6">
-                      <Label>Office Location</Label>
-                      <div className="relative">
-                        <select
-                          value={selectedLocation}
-                          onChange={(e) => setSelectedLocation(e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-800 focus:border-transparent appearance-none bg-white"
-                        >
-                          {locations.map((loc) => (
-                            <option key={loc} value={loc}>
-                              {loc}
-                            </option>
-                          ))}
-                        </select>
-                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Recurring availability content */}
-              <div>
-                <div>
-                  <Label className="mb-3 block">Weekly Availability</Label>
-                  <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
-                    {days.map((day) => {
-                      const dayData = recurringSchedule[day as keyof typeof recurringSchedule];
-                      return (
-                        <div key={day} className="flex items-center gap-4 p-3 border border-gray-200 rounded-lg bg-white">
-                          <input
-                            type="checkbox"
-                            checked={dayData.enabled}
-                            onChange={(e) => {
-                              setRecurringSchedule({
-                                ...recurringSchedule,
-                                [day]: { ...dayData, enabled: e.target.checked },
-                              });
-                            }}
-                            className="w-4 h-4 accent-neutral-800"
-                          />
-                          <div className="w-24 capitalize">{day}</div>
-                          {dayData.enabled ? (
-                            <div className="flex items-center gap-2 flex-1">
-                              <Input
-                                type="time"
-                                value={dayData.start}
-                                onChange={(e) => {
-                                  const newValue = e.target.value;
-                                  // Validate time format immediately
-                                  const timeRegex = /^([0-1][0-9]|2[0-3]):[0-5][0-9]$/;
-                                  if (!timeRegex.test(newValue)) {
-                                    console.error(`Invalid time format for ${day} start:`, newValue);
-                                    return; // Don't update if invalid
-                                  }
-                                  // Log changes for debugging
-                                  if (dayData.start !== newValue) {
-                                    console.log(`📝 [AVAILABILITY] ${day} start time changed: "${dayData.start}" → "${newValue}"`);
-                                  }
-                                  setRecurringSchedule({
-                                    ...recurringSchedule,
-                                    [day]: { ...dayData, start: newValue },
-                                  });
-                                }}
-                                className="w-32"
-                              />
-                              <span className="text-gray-500">to</span>
-                              <Input
-                                type="time"
-                                value={dayData.end}
-                                onChange={(e) => {
-                                  const newValue = e.target.value;
-                                  // Validate time format immediately
-                                  const timeRegex = /^([0-1][0-9]|2[0-3]):[0-5][0-9]$/;
-                                  if (!timeRegex.test(newValue)) {
-                                    console.error(`Invalid time format for ${day} end:`, newValue);
-                                    return; // Don't update if invalid
-                                  }
-                                  // Log changes for debugging
-                                  if (dayData.end !== newValue) {
-                                    console.log(`📝 [AVAILABILITY] ${day} end time changed: "${dayData.end}" → "${newValue}"`);
-                                  }
-                                  setRecurringSchedule({
-                                    ...recurringSchedule,
-                                    [day]: { ...dayData, end: newValue },
-                                  });
-                                }}
-                                className="w-32"
-                              />
-                            </div>
-                          ) : (
-                            <span className="text-gray-400 text-sm">Unavailable</span>
-                          )}
-                        </div>
-                      );
-                    })}
+            {loading ? (
+              <div className="text-center py-8">
+                <p className="text-gray-600">Loading...</p>
+              </div>
+            ) : (
+              <>
+                {/* Meeting type toggle - always show when not loading */}
+                <div className="mb-6">
+                  <Label className="mb-2 block">Meeting type</Label>
+                  <div className="flex rounded-lg border border-gray-300 p-0.5 bg-gray-50">
+                    <button
+                      type="button"
+                      onClick={() => setMeetingType("video")}
+                      className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-md text-sm font-medium transition-colors ${
+                        meetingType === "video"
+                          ? "bg-white text-gray-900 shadow-sm border border-gray-200"
+                          : "text-gray-600 hover:text-gray-900"
+                      }`}
+                    >
+                      <Video className="w-4 h-4" />
+                      Video Call
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setMeetingType("in-person")}
+                      className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-md text-sm font-medium transition-colors ${
+                        meetingType === "in-person"
+                          ? "bg-white text-gray-900 shadow-sm border border-gray-200"
+                          : "text-gray-600 hover:text-gray-900"
+                      }`}
+                    >
+                      <MapPin className="w-4 h-4" />
+                      In Person
+                    </button>
                   </div>
                 </div>
-                <div className="mt-6">
-                  <Label>Appointment Length</Label>
-                  <select
-                    value={appointmentLength}
-                    onChange={(e) => setAppointmentLength(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-800 focus:border-transparent mt-1"
-                  >
-                    <option value="15">15 minutes</option>
-                    <option value="30">30 minutes</option>
-                    <option value="45">45 minutes</option>
-                    <option value="60">60 minutes</option>
-                    <option value="90">90 minutes</option>
-                  </select>
-                </div>
+
+                {meetingType === "in-person" && locations.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-gray-600 mb-4">No locations found. Please add office locations first.</p>
+                    <button
+                      onClick={onClose}
+                      className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+                    >
+                      Close
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    {meetingType === "video" && (
+                      <div className="mb-6 p-4 rounded-lg bg-emerald-50 border border-emerald-200">
+                        <p className="text-sm text-emerald-800">
+                          Add video meeting availability to open your client base to the entire province and receive more booked appointments.
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Office Location - only when in-person and we have locations */}
+                    {meetingType === "in-person" && locations.length > 0 && (
+                      <div className="mb-6">
+                        <Label>Office Location</Label>
+                        <div className="relative">
+                          <select
+                            value={selectedLocation}
+                            onChange={(e) => setSelectedLocation(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-800 focus:border-transparent appearance-none bg-white"
+                          >
+                            {locations.map((loc) => (
+                              <option key={loc} value={loc}>
+                                {loc}
+                              </option>
+                            ))}
+                          </select>
+                          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Weekly Availability - scrollable list of days */}
+                    <div>
+                      <Label className="mb-3 block">Weekly Availability</Label>
+                      <div className="space-y-2 overflow-y-auto max-h-[280px] pr-2">
+                        {days.map((day) => {
+                          const dayData = recurringSchedule[day as keyof typeof recurringSchedule];
+                          return (
+                            <div key={day} className="flex items-center gap-4 p-3 border border-gray-200 rounded-lg bg-white">
+                              <input
+                                type="checkbox"
+                                checked={dayData.enabled}
+                                onChange={(e) => {
+                                  setRecurringSchedule({
+                                    ...recurringSchedule,
+                                    [day]: { ...dayData, enabled: e.target.checked },
+                                  });
+                                }}
+                                className="w-4 h-4 accent-neutral-800"
+                              />
+                              <div className="w-24 capitalize">{day}</div>
+                              {dayData.enabled ? (
+                                <div className="flex items-center gap-2 flex-1">
+                                  <Input
+                                    type="time"
+                                    value={dayData.start}
+                                    onChange={(e) => {
+                                      const newValue = e.target.value;
+                                      const timeRegex = /^([0-1][0-9]|2[0-3]):[0-5][0-9]$/;
+                                      if (!timeRegex.test(newValue)) return;
+                                      setRecurringSchedule({
+                                        ...recurringSchedule,
+                                        [day]: { ...dayData, start: newValue },
+                                      });
+                                    }}
+                                    className="w-32"
+                                  />
+                                  <span className="text-gray-500">to</span>
+                                  <Input
+                                    type="time"
+                                    value={dayData.end}
+                                    onChange={(e) => {
+                                      const newValue = e.target.value;
+                                      const timeRegex = /^([0-1][0-9]|2[0-3]):[0-5][0-9]$/;
+                                      if (!timeRegex.test(newValue)) return;
+                                      setRecurringSchedule({
+                                        ...recurringSchedule,
+                                        [day]: { ...dayData, end: newValue },
+                                      });
+                                    }}
+                                    className="w-32"
+                                  />
+                                </div>
+                              ) : (
+                                <span className="text-gray-400 text-sm">Unavailable</span>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </>
+            )}
+          </div>
+
+          {/* Appointment length + actions always visible at bottom (when content is shown) */}
+          {!loading && (locations.length > 0 || meetingType === "video") && (
+            <div className="p-6 pt-4 border-t border-gray-200 bg-white flex-shrink-0 space-y-4">
+              <div>
+                <Label>Appointment Length</Label>
+                <select
+                  value={appointmentLength}
+                  onChange={(e) => setAppointmentLength(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-800 focus:border-transparent mt-1"
+                >
+                  <option value="15">15 minutes</option>
+                  <option value="30">30 minutes</option>
+                  <option value="45">45 minutes</option>
+                  <option value="60">60 minutes</option>
+                  <option value="90">90 minutes</option>
+                </select>
               </div>
-                </>
-              )}
-            </>
+            </div>
           )}
         </div>
 
