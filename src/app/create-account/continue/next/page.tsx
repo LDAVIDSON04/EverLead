@@ -89,7 +89,7 @@ export default function CreateAccountNextPage() {
       "lawyer": "Lawyer",
       "insurance-broker": "Insurance Broker",
       "financial-advisor": "Financial Advisor",
-      "financial_insurance_agent": "Financial and Insurance Agent",
+      "financial_insurance_agent": "Financial & Insurance advisor",
     };
 
     const metadata: Record<string, unknown> = {

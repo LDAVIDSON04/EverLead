@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create account - Soradin</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0a0a0a;
+      color: #fff;
+      min-height: 100vh;
+      padding-top: 48px;
+      display: flex;
+      flex-direction: column;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    .top-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      padding: 12px 20px;
+      background: rgba(0,0,0,0.6);
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .top-bar a {
+      color: #fff;
+      text-decoration: none;
+      font-size: 0.95rem;
+      font-weight: 500;
+    }
+    .top-bar a:hover { text-decoration: underline; }
+    .logo {
+      position: absolute;
+      top: 40px;
+      left: 40px;
+      width: 96px;
+      height: 96px;
+      object-fit: contain;
+    }
+    .wrap {
+      flex: 1;
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 100px 24px 48px;
+      width: 100%;
+    }
+    h1 { font-size: 1.5rem; font-weight: 600; margin-bottom: 4px; }
+    .sub { font-size: 0.875rem; color: rgba(255,255,255,0.6); margin-bottom: 24px; }
+    .progress {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 28px;
+    }
+    .progress .step {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.15);
+      color: rgba(255,255,255,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+    .progress .step.done { background: rgba(255,255,255,0.25); color: #fff; }
+    .progress .step.active { background: #fff; color: #000; }
+    .progress .bar { flex: 1; height: 2px; background: rgba(255,255,255,0.2); max-width: 60px; }
+    .progress .bar.done { background: rgba(255,255,255,0.4); }
+    h2 { font-size: 1.1rem; font-weight: 600; margin-bottom: 16px; color: rgba(255,255,255,0.9); }
+    .step-panel { display: none; }
+    .step-panel.active { display: block; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 0.8rem; color: rgba(255,255,255,0.8); margin-bottom: 6px; }
+    .form-group label .req { color: #f87171; }
+    input[type="text"], input[type="email"], input[type="password"], input[type="tel"], input[type="number"],
+    select, textarea {
+      width: 100%;
+      padding: 10px 12px;
+      font-size: 0.95rem;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      background: rgba(0,0,0,0.3);
+      color: #fff;
+      outline: none;
+    }
+    input:focus, select:focus, textarea:focus { border-color: rgba(255,255,255,0.4); }
+    textarea { resize: vertical; min-height: 72px; }
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+    .radio-group { display: flex; gap: 16px; flex-wrap: wrap; }
+    .radio-group label { display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: normal; }
+    .radio-group input { width: auto; }
+    .error { font-size: 0.875rem; color: #f87171; margin-bottom: 12px; }
+    .btn {
+      display: inline-block;
+      padding: 12px 24px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      text-decoration: none;
+      text-align: center;
+    }
+    .btn-primary { background: #fff; color: #000; margin-top: 8px; }
+    .btn-primary:hover { background: rgba(255,255,255,0.9); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-secondary { background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); margin-right: 8px; }
+    .btn-secondary:hover { background: rgba(255,255,255,0.15); }
+    .actions { margin-top: 24px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .add-loc { margin-top: 12px; padding: 12px; border: 1px dashed rgba(255,255,255,0.2); border-radius: 8px; }
+    .loc-item { padding: 10px 12px; background: rgba(0,0,0,0.3); border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+    .loc-item span { font-size: 0.9rem; }
+    .loc-item button { background: none; border: none; color: rgba(255,255,255,0.6); cursor: pointer; padding: 4px; }
+    .success-panel { text-align: center; padding: 48px 24px; }
+    .success-panel h2 { margin-bottom: 12px; }
+    .success-panel p { color: rgba(255,255,255,0.8); margin-bottom: 24px; max-width: 360px; margin-left: auto; margin-right: auto; }
+    .char-count { font-size: 0.75rem; color: rgba(255,255,255,0.5); text-align: right; margin-top: 4px; }
+  </style>
+</head>
+<body>
+  <nav class="top-bar">
+    <a href="welcome.html">← Back to home</a>
+  </nav>
+  <img src="welcome-logo.png" alt="Soradin" class="logo" />
+  <div class="wrap">
+    <h1>Create an account</h1>
+    <p class="sub">Please complete all steps to submit your account for approval.</p>
+
+    <div id="progressBar" class="progress">
+      <div class="step active" data-s="1">1</div>
+      <div class="bar" data-b="1"></div>
+      <div class="step" data-s="2">2</div>
+      <div class="bar" data-b="2"></div>
+      <div class="step" data-s="3">3</div>
+    </div>
+
+    <div id="successPanel" class="success-panel" style="display:none;">
+      <h2>Application submitted</h2>
+      <p>Your account has been submitted for approval. We'll review your information and get back to you soon. You can log in once your account is approved.</p>
+      <a href="welcome.html" class="btn btn-primary">Back to welcome</a>
+    </div>
+
+    <div id="step1" class="step-panel active">
+      <h2>Step 1: Basic Information</h2>
+      <div id="err1" class="error" style="display:none;"></div>
+      <form id="form1">
+        <div class="row2 form-group">
+          <div><label>Legal first name <span class="req">*</span></label><input type="text" id="firstName" required></div>
+          <div><label>Legal last name <span class="req">*</span></label><input type="text" id="lastName" required></div>
+        </div>
+        <div class="row2 form-group">
+          <div><label>Email <span class="req">*</span></label><input type="email" id="email" required></div>
+          <div><label>Phone <span class="req">*</span></label><input type="tel" id="phoneNumber" placeholder="(XXX) XXX-XXXX" maxlength="14"></div>
+        </div>
+        <div class="row2 form-group">
+          <div><label>Password <span class="req">*</span></label><input type="password" id="password" required minlength="6"></div>
+          <div><label>Confirm password <span class="req">*</span></label><input type="password" id="confirmPassword" required></div>
+        </div>
+        <div class="form-group">
+          <label>Select your industry <span class="req">*</span></label>
+          <select id="industry" required>
+            <option value="">Select your industry</option>
+            <option value="funeral_planner">Funeral Planner</option>
+            <option value="estate_lawyer">Estate Lawyer</option>
+            <option value="financial_advisor">Financial Advisor</option>
+            <option value="insurance_broker">Insurance Broker</option>
+            <option value="financial_insurance_agent">Financial & Insurance advisor</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Home address <span class="req">*</span></label>
+          <input type="text" id="homeAddress" required>
+        </div>
+        <div class="row3 form-group">
+          <div><label>City <span class="req">*</span></label><input type="text" id="city" required></div>
+          <div><label>Province <span class="req">*</span></label>
+            <select id="province" required>
+              <option value="">Province</option>
+              <option value="AB">Alberta</option><option value="BC">British Columbia</option><option value="MB">Manitoba</option>
+              <option value="NB">New Brunswick</option><option value="NL">Newfoundland and Labrador</option><option value="NS">Nova Scotia</option>
+              <option value="NT">Northwest Territories</option><option value="NU">Nunavut</option><option value="ON">Ontario</option>
+              <option value="PE">Prince Edward Island</option><option value="QC">Quebec</option><option value="SK">Saskatchewan</option><option value="YT">Yukon</option>
+            </select>
+          </div>
+          <div><label>Postal code <span class="req">*</span></label><input type="text" id="postalCode" required></div>
+        </div>
+        <div class="actions">
+          <button type="submit" class="btn btn-primary">Continue</button>
+        </div>
+        <p class="sub" style="margin-top:20px;text-align:center;">Already have an account? <a href="login.html" style="color:#fff;text-decoration:underline;">Log in</a></p>
+      </form>
+    </div>
+
+    <div id="step2" class="step-panel">
+      <h2>Step 2: Business Information</h2>
+      <div id="err2" class="error" style="display:none;"></div>
+      <form id="form2">
+        <div class="form-group">
+          <label>Business / Firm name <span class="req">*</span></label>
+          <input type="text" id="businessName" required>
+        </div>
+        <div class="form-group">
+          <label>Professional title <span class="req">*</span></label>
+          <input type="text" id="professionalTitle" required>
+        </div>
+        <div id="step2RoleFields"></div>
+        <div class="actions">
+          <button type="button" class="btn btn-secondary" id="backToStep1">Back</button>
+          <button type="submit" class="btn btn-primary">Continue</button>
+        </div>
+        <p class="sub" style="margin-top:20px;text-align:center;">Already have an account? <a href="login.html" style="color:#fff;text-decoration:underline;">Log in</a></p>
+      </form>
+    </div>
+
+    <div id="step3" class="step-panel">
+      <h2>Step 3: Profile Bio</h2>
+      <div id="err3" class="error" style="display:none;"></div>
+      <form id="form3">
+        <div class="form-group">
+          <label>Years of experience <span class="req">*</span></label>
+          <input type="number" id="yearsOfExperience" min="0" required>
+        </div>
+        <div class="form-group">
+          <label>How do you typically help families? (200 chars max) <span class="req">*</span></label>
+          <textarea id="howYouHelp" maxlength="200" required></textarea>
+          <div class="char-count"><span id="countHelp">0</span>/200</div>
+        </div>
+        <div class="form-group">
+          <label>What do families appreciate most about your approach? (200 chars max) <span class="req">*</span></label>
+          <textarea id="whatFamiliesAppreciate" maxlength="200" required></textarea>
+          <div class="char-count"><span id="countAppreciate">0</span>/200</div>
+        </div>
+        <div class="form-group">
+          <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;">
+            <input type="checkbox" id="hasAnsweredAccurately" required style="width:18px;height:18px;margin-top:2px;">
+            <span>I have answered all questions accurately <span class="req">*</span></span>
+          </label>
+        </div>
+        <div class="actions">
+          <button type="button" class="btn btn-secondary" id="backToStep2">Back</button>
+          <button type="submit" class="btn btn-primary" id="submitBtn">Submit for approval</button>
+        </div>
+        <p class="sub" style="margin-top:20px;text-align:center;">Already have an account? <a href="login.html" style="color:#fff;text-decoration:underline;">Log in</a></p>
+      </form>
+    </div>
+  </div>
+
+  <script src="create-account.js"></script>
+</body>
+</html>
