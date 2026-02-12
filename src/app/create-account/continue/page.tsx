@@ -231,7 +231,7 @@ export default function CreateAccountContinuePage() {
         return;
       }
     } else if (showFinancial) {
-      if (!isRegistered || !regulatoryOrganization.trim() || !registrationLicenseNumber.trim() || !registeredProvinces.trim() || !eoInsuranceConfirmed) {
+      if (!isRegistered || !regulatoryOrganization.trim() || !registrationLicenseNumber.trim() || !eoInsuranceConfirmed) {
         setError("Please complete all fields for your role and confirm E&O coverage.");
         return;
       }
@@ -1077,19 +1077,6 @@ export default function CreateAccountContinuePage() {
                   onChange={(e) => setRegistrationLicenseNumber(e.target.value)}
                   className={inputClassName}
                   placeholder="e.g. registration or license number"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="registeredProvinces" className="text-sm text-gray-700">
-                  Province(s) you are registered in <span className="text-red-600">*</span>
-                </label>
-                <input
-                  id="registeredProvinces"
-                  type="text"
-                  value={registeredProvinces}
-                  onChange={(e) => setRegisteredProvinces(e.target.value)}
-                  className={inputClassName}
                   required
                 />
               </div>
