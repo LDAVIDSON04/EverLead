@@ -1213,7 +1213,7 @@ function SearchResults() {
   ];
 
   return (
-    <div className="bg-white flex flex-col">
+    <div className="bg-white flex flex-col min-h-screen">
       {/* Appointment Booking Modal */}
       {selectedAppointment && (
         <div 
@@ -1590,8 +1590,8 @@ function SearchResults() {
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="max-w-[1200px] mx-auto px-4 py-6 w-full">
+      {/* Main Content - flex-1 so footer stays at bottom, no white below */}
+      <main className="flex-1 max-w-[1200px] mx-auto px-4 py-6 w-full">
 
         {/* Desktop Results Header */}
         <div className="hidden md:flex items-center justify-between mb-6">
