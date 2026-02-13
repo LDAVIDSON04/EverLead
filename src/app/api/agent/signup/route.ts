@@ -2,21 +2,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { checkBotId } from 'botid/server';
 import { checkRateLimit } from "@/lib/rateLimit";
 
 export async function POST(req: NextRequest) {
   const rateLimitRes = checkRateLimit(req, "signup", 10);
   if (rateLimitRes) return rateLimitRes;
 
-  // Check for bots
-  const verification = await checkBotId();
-  if (verification.isBot) {
-    return NextResponse.json(
-      { error: 'Bot detected. Access denied.' },
-      { status: 403 }
-    );
-  }
+  // Bot check disabled for signup to avoid blocking real users (VPN, ad blockers, strict privacy).
+  // Rate limiting (10/min per IP) still protects against abuse.
 
   try {
     const body = await req.json();
