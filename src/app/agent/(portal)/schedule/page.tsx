@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabaseClient } from "@/lib/supabaseClient";
 import { useRequireRole } from "@/lib/hooks/useRequireRole";
-import { Calendar, Clock, User, X, ChevronLeft, ChevronRight, MapPin, Video, RefreshCw } from "lucide-react";
+import { Calendar, Clock, User, X, ChevronLeft, ChevronRight, MapPin, Video } from "lucide-react";
 import { DateTime } from "luxon";
 import { ClientInfoModal } from "../my-appointments/components/ClientInfoModal";
 import { downloadClientInfo } from "@/lib/downloadClientInfo";
@@ -73,10 +73,6 @@ export default function SchedulePage() {
   const calendarScrollRef = useRef<HTMLDivElement>(null);
   const [showSyncSuccessModal, setShowSyncSuccessModal] = useState(false);
   const [syncProvider, setSyncProvider] = useState<"google" | "microsoft" | null>(null);
-  // Per-day availability for calendar (0=Sun..6=Sat): { start: "09:00", end: "17:00" } or null
-  const [displayAvailabilityByDay, setDisplayAvailabilityByDay] = useState<Record<number, { start: string; end: string } | null>>({
-    0: null, 1: null, 2: null, 3: null, 4: null, 5: null, 6: null,
-  });
 
   // Detect if we're on desktop
   useEffect(() => {
@@ -185,31 +181,6 @@ export default function SchedulePage() {
       'bg-pink-200',      // Saturday - pink
     ];
     return dayColors[dayIndex] || 'bg-gray-200';
-  };
-
-  // Check if a time slot (hour, minute) falls within the day's availability
-  const isSlotInAvailability = (dayOfWeek: number, hour: number, minute: number): boolean => {
-    const dayAvail = displayAvailabilityByDay[dayOfWeek];
-    if (!dayAvail) return false;
-    const [startH, startM] = dayAvail.start.split(":").map(Number);
-    const [endH, endM] = dayAvail.end.split(":").map(Number);
-    const slotMinutes = hour * 60 + minute;
-    const startMinutes = startH * 60 + startM;
-    const endMinutes = endH * 60 + endM;
-    return slotMinutes >= startMinutes && slotMinutes < endMinutes;
-  };
-
-  // Format "09:00"-"17:00" as "9 AM - 5 PM" for display
-  const formatAvailabilityLabel = (range: { start: string; end: string } | null): string => {
-    if (!range) return "Unavailable";
-    const fmt = (s: string) => {
-      const [h, m] = s.split(":").map(Number);
-      if (h === 12) return `12${m ? `:${String(m).padStart(2, "0")}` : ""} PM`;
-      if (h === 0) return `12${m ? `:${String(m).padStart(2, "0")}` : ""} AM`;
-      if (h > 12) return `${h - 12}${m ? `:${String(m).padStart(2, "0")}` : ""} PM`;
-      return `${h}${m ? `:${String(m).padStart(2, "0")}` : ""} AM`;
-    };
-    return `${fmt(range.start)} - ${fmt(range.end)}`;
   };
 
   const formatWeekRange = () => {
@@ -363,44 +334,6 @@ export default function SchedulePage() {
         const availability = (metadata as any)?.availability || {};
         const length = availability.appointmentLength ? parseInt(availability.appointmentLength, 10) : 60;
         setAppointmentLength(length);
-
-        // Build per-day display availability (merge all locations + video; union of hours)
-        const dayKeys = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
-        const merged: Record<number, { start: string; end: string } | null> = { 0: null, 1: null, 2: null, 3: null, 4: null, 5: null, 6: null };
-        const byLocation = availability.availabilityByLocation || {};
-        const videoSchedule = availability.videoSchedule || {};
-        for (let d = 0; d < 7; d++) {
-          const key = dayKeys[d];
-          const ranges: { start: string; end: string }[] = [];
-          if (videoSchedule[key]?.enabled && videoSchedule[key]?.start && videoSchedule[key]?.end) {
-            ranges.push({ start: videoSchedule[key].start, end: videoSchedule[key].end });
-          }
-          Object.values(byLocation).forEach((locSchedule: any) => {
-            const daySchedule = locSchedule?.[key];
-            if (daySchedule?.enabled && daySchedule?.start && daySchedule?.end) {
-              ranges.push({ start: daySchedule.start, end: daySchedule.end });
-            }
-          });
-          if (ranges.length === 0) {
-            merged[d] = null;
-          } else {
-            const starts = ranges.map(r => {
-              const [h, m] = r.start.split(":").map(Number);
-              return h * 60 + m;
-            });
-            const ends = ranges.map(r => {
-              const [h, m] = r.end.split(":").map(Number);
-              return h * 60 + m;
-            });
-            const startMin = Math.min(...starts);
-            const endMax = Math.max(...ends);
-            merged[d] = {
-              start: `${Math.floor(startMin / 60)}:${String(startMin % 60).padStart(2, "0")}`,
-              end: `${Math.floor(endMax / 60)}:${String(endMax % 60).padStart(2, "0")}`,
-            };
-          }
-        }
-        setDisplayAvailabilityByDay(merged);
 
         let specialistData = null;
         if (specialistRes.ok) {
@@ -1178,14 +1111,12 @@ export default function SchedulePage() {
         {/* Week View - EXACTLY AS BEFORE */}
         {view === 'week' && (
           <div className="inline-block min-w-full" style={{ borderBottom: 'none' }}>
-            {/* Day Headers with availability label (Zocdoc-style) */}
+            {/* Day Headers */}
             <div className="flex sticky top-0 bg-white z-20 border-b border-gray-200 shadow-sm">
               <div className="w-20 flex-shrink-0"></div>
               {weekDays.map((day, index) => {
                 const date = weekDates[index];
                 const today = isToday(date);
-                const dayAvail = displayAvailabilityByDay[index];
-                const label = formatAvailabilityLabel(dayAvail);
                 return (
                   <div key={`${day}-${index}`} className="flex-1 min-w-[100px] px-2 py-3">
                     <div className="flex flex-col items-center gap-0.5">
@@ -1193,10 +1124,6 @@ export default function SchedulePage() {
                       <span className={`text-xs text-gray-500 ${today ? 'font-medium' : ''}`}>
                         {date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                       </span>
-                      <div className="flex items-center gap-1 mt-1 text-[10px] text-gray-600">
-                        <RefreshCw className="w-3 h-3 flex-shrink-0" aria-hidden />
-                        <span className="truncate">{label}</span>
-                      </div>
                     </div>
                   </div>
                 );
@@ -1234,16 +1161,15 @@ export default function SchedulePage() {
                         console.log(`📋 Cell (${day} ${hour}:00) has ${cellAppointments.length} appointment(s)`, cellAppointments);
                       }
 
-                      const inAvailability = isSlotInAvailability(dayIndex, hour, 0);
                       return (
                         <div
                           key={`${day}-${hour}`}
-                          className={`flex-1 min-w-[50px] md:min-w-[100px] border-l border-gray-200 relative ${inAvailability ? "bg-white" : "bg-gray-100"}`}
+                          className="flex-1 min-w-[50px] md:min-w-[100px] border-l border-gray-200 relative"
                           style={{ height: isDesktop ? '65px' : '55px', overflow: 'visible' }}
                         >
                           {cellAppointments.length === 0 ? (
                             <div
-                              className={`absolute inset-0 cursor-pointer transition-colors ${inAvailability ? "hover:bg-gray-50" : "hover:bg-gray-200"}`}
+                              className="absolute inset-0 cursor-pointer hover:bg-gray-50 transition-colors"
                               onClick={() => handleEmptyBlockClick(weekDates[dayIndex], hour, 0)}
                             />
                           ) : (
@@ -1370,7 +1296,7 @@ export default function SchedulePage() {
         {/* Day View */}
         {view === 'day' && (
           <div className="inline-block min-w-full">
-            {/* Day Header with availability label (Zocdoc-style) */}
+            {/* Day Header */}
             <div className="flex sticky top-0 bg-white z-20 border-b border-gray-200 shadow-sm">
               <div className="w-20 flex-shrink-0"></div>
               <div className="flex-1 px-2 py-3">
@@ -1381,10 +1307,6 @@ export default function SchedulePage() {
                   <span className={`text-xs text-gray-500 ${isToday(dayDate) ? 'font-medium' : ''}`}>
                     {dayDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                   </span>
-                  <div className="flex items-center gap-1 mt-1 text-[10px] text-gray-600">
-                    <RefreshCw className="w-3 h-3 flex-shrink-0" aria-hidden />
-                    <span>{formatAvailabilityLabel(displayAvailabilityByDay[dayDate.getDay()])}</span>
-                  </div>
                 </div>
               </div>
             </div>
@@ -1394,7 +1316,6 @@ export default function SchedulePage() {
               {dayHours.map((hour) => {
                 const cellAppointments = dayAppointments.filter((apt: any) => apt.hour === hour);
                 const dayIndex = dayDate.getDay();
-                const inAvailability = isSlotInAvailability(dayIndex, hour, 0);
 
                 return (
                     <div 
@@ -1404,12 +1325,12 @@ export default function SchedulePage() {
                     <div className="w-12 md:w-20 flex-shrink-0 pr-1 md:pr-3 pt-1 md:pt-1.5 text-[10px] md:text-xs text-gray-500 text-right">
                       {hour === 12 ? '12 PM' : hour > 12 ? `${hour - 12} PM` : `${hour} AM`}
                     </div>
-                    <div className={`flex-1 min-w-[50px] md:min-w-[100px] border-l border-gray-200 relative ${inAvailability ? "bg-white" : "bg-gray-100"}`}
+                    <div className="flex-1 min-w-[50px] md:min-w-[100px] border-l border-gray-200 relative"
                       style={{ height: isDesktop ? '70px' : '60px', overflow: 'visible' }}
                     >
                       {cellAppointments.length === 0 ? (
                         <div
-                          className={`absolute inset-0 cursor-pointer transition-colors ${inAvailability ? "hover:bg-gray-50" : "hover:bg-gray-200"}`}
+                          className="absolute inset-0 cursor-pointer hover:bg-gray-50 transition-colors"
                           onClick={() => handleEmptyBlockClick(dayDate, hour, 0)}
                         />
                       ) : (
