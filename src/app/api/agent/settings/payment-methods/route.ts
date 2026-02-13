@@ -3,8 +3,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { supabaseServer } from "@/lib/supabaseServer";
 import { stripe } from "@/lib/stripe";
 
-// DELETE: Remove a payment method
-// Enforces the rule: agents cannot remove their payment method unless replacing it with a new valid one
+// DELETE: Remove a payment method (fully detaches from Stripe for this agent's customer)
 export async function DELETE(request: NextRequest) {
   try {
     // Get authenticated user from Authorization header
@@ -53,18 +52,7 @@ export async function DELETE(request: NextRequest) {
       type: "card",
     });
 
-    // If this is the only payment method and no new one is provided, block removal
-    if (paymentMethods.data.length === 1 && !newPaymentMethodId) {
-      return NextResponse.json(
-        { 
-          error: "You cannot remove your payment method unless you are replacing it with a new one. Please add a new payment method first, then you can remove this one.",
-          code: "REQUIRES_REPLACEMENT"
-        },
-        { status: 400 }
-      );
-    }
-
-    // If a new payment method is provided, verify it exists and is valid
+    // If a new payment method is provided (optional replacement), verify it exists and is valid
     if (newPaymentMethodId) {
       try {
         const newPaymentMethod = await stripe.paymentMethods.retrieve(newPaymentMethodId);
@@ -108,18 +96,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // If removing the last payment method and no replacement provided, block
-    if (paymentMethods.data.length === 1 && !newPaymentMethodId) {
-      return NextResponse.json(
-        { 
-          error: "You must maintain at least one valid payment method on file. Please add a new payment method before removing this one.",
-          code: "REQUIRES_REPLACEMENT"
-        },
-        { status: 400 }
-      );
-    }
-
-    // Delete the payment method
+    // Detach the payment method from the customer (fully removed from Stripe for this customer)
     try {
       await stripe.paymentMethods.detach(paymentMethodId);
       return NextResponse.json({ success: true, message: "Payment method removed successfully" });

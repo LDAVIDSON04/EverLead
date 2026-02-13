@@ -17,8 +17,16 @@ function Badge({ className = "", children, ...props }: React.HTMLAttributes<HTML
   );
 }
 
-// Modern confirm modal for removing a payment method
-function RemovePaymentButton({ paymentMethodId, onRemoved }: { paymentMethodId: string; onRemoved: () => Promise<void> | void }) {
+// Confirm modal and button to fully remove a payment method (detaches from Stripe)
+function RemovePaymentButton({
+  paymentMethodId,
+  isOnlyCard,
+  onRemoved,
+}: {
+  paymentMethodId: string;
+  isOnlyCard: boolean;
+  onRemoved: () => Promise<void> | void;
+}) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -55,8 +63,9 @@ function RemovePaymentButton({ paymentMethodId, onRemoved }: { paymentMethodId: 
   return (
     <>
       <button
+        type="button"
         onClick={() => setOpen(true)}
-        className="px-3 py-1 text-sm text-red-600 hover:text-red-800"
+        className="px-3 py-1.5 text-sm font-medium text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md"
       >
         Remove
       </button>
@@ -68,13 +77,16 @@ function RemovePaymentButton({ paymentMethodId, onRemoved }: { paymentMethodId: 
                 <div className="w-10 h-10 rounded-full bg-red-100 text-red-700 flex items-center justify-center">
                   <AlertCircle size={20} />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900">Remove payment method?</h3>
+                <h3 className="text-lg font-semibold text-gray-900">Remove this card?</h3>
               </div>
               <p className="text-sm text-gray-600 mb-4">
-                You must keep at least one payment method on file. Removing this card will stop charges to it for new appointments.
+                {isOnlyCard
+                  ? "This is your only payment method. After removing it you will have no card on file. You’ll need to add a new payment method to receive new bookings and charges."
+                  : "This card will be removed from your account and will no longer be charged for new appointments."}
               </p>
               <div className="flex items-center justify-end gap-3">
                 <button
+                  type="button"
                   disabled={loading}
                   onClick={() => setOpen(false)}
                   className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50"
@@ -82,11 +94,12 @@ function RemovePaymentButton({ paymentMethodId, onRemoved }: { paymentMethodId: 
                   Cancel
                 </button>
                 <button
+                  type="button"
                   disabled={loading}
                   onClick={handleRemove}
                   className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
                 >
-                  {loading ? "Removing…" : "Remove"}
+                  {loading ? "Removing…" : "Remove card"}
                 </button>
               </div>
             </div>
@@ -279,9 +292,11 @@ export default function BillingPage() {
                       </div>
                     </div>
                   </div>
-                  {paymentMethods.length > 1 && (
-                    <RemovePaymentButton paymentMethodId={pm.id} onRemoved={loadBilling} />
-                  )}
+                  <RemovePaymentButton
+                    paymentMethodId={pm.id}
+                    isOnlyCard={paymentMethods.length === 1}
+                    onRemoved={loadBilling}
+                  />
                 </div>
               ))}
               <button
