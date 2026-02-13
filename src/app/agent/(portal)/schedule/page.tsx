@@ -1104,8 +1104,14 @@ export default function SchedulePage() {
         {/* Action buttons */}
         <div className="flex items-center gap-2 md:gap-4 md:justify-end">
           <button 
+            onClick={() => setShowAddAvailabilityModal(true)}
+            className="px-3 py-1.5 md:px-6 md:py-2 text-xs md:text-sm bg-green-800 text-white rounded-lg hover:bg-green-700 transition-colors"
+          >
+            Set availability
+          </button>
+          <button 
             onClick={() => setShowCalendarSyncModal(true)}
-            className="px-3 py-1.5 md:px-6 md:py-2 text-xs md:text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-gray-700"
+            className="px-3 py-1.5 md:px-6 md:py-2 text-xs md:text-sm bg-neutral-900 text-white rounded-lg hover:bg-neutral-800 transition-colors"
           >
             Calendar sync
           </button>
@@ -1114,12 +1120,6 @@ export default function SchedulePage() {
             className="px-3 py-1.5 md:px-6 md:py-2 text-xs md:text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-gray-700"
           >
             Set out of office
-          </button>
-          <button 
-            onClick={() => setShowAddAvailabilityModal(true)}
-            className="px-3 py-1.5 md:px-6 md:py-2 text-xs md:text-sm bg-neutral-700 text-white rounded-lg hover:bg-neutral-800 transition-colors"
-          >
-            Edit availability
           </button>
         </div>
       </div>
