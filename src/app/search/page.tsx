@@ -2377,8 +2377,10 @@ function SearchResults() {
                   ? (selectedAgentInfo.first_business_name || selectedAgentInfo.funeral_home)
                   : (() => {
                       const norm = (s: string | null | undefined) => (!s ? "" : String(s).split(",").map((x) => x.trim())[0].replace(/\s+office$/i, "").trim().toLowerCase());
-                      const match = searchLocation && selectedAgentInfo.officeLocations?.find((loc: any) => norm(loc.city) === norm(decodeURIComponent(searchLocation.replace(/\+/g, " "))));
-                      return match?.associated_firm || selectedAgentInfo.funeral_home;
+                      const locs = selectedAgentInfo.officeLocations;
+                      const matchedLoc = searchLocation && locs ? locs.find((loc: { city?: string | null }) => norm(loc.city) === norm(decodeURIComponent(searchLocation.replace(/\+/g, " ")))) : undefined;
+                      const firm = matchedLoc && typeof matchedLoc === "object" && "associated_firm" in matchedLoc ? matchedLoc.associated_firm : null;
+                      return firm ?? selectedAgentInfo.funeral_home;
                     })();
                 return (
                 <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
