@@ -440,7 +440,7 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
 
                     {/* Video: Appointment Length above Weekly Availability */}
                     {meetingType === "video" && (
-                      <div className="mb-4">
+                      <div className="mb-4 max-w-[220px]">
                         <Label className="text-gray-700 font-medium">Appointment Length</Label>
                         <select
                           value={appointmentLength}
