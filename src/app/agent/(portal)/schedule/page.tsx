@@ -201,7 +201,7 @@ export default function SchedulePage() {
 
   // Format "09:00"-"17:00" as "9 AM - 5 PM" for display
   const formatAvailabilityLabel = (range: { start: string; end: string } | null): string => {
-    if (!range) return "";
+    if (!range) return "Unavailable";
     const fmt = (s: string) => {
       const [h, m] = s.split(":").map(Number);
       if (h === 12) return `12${m ? `:${String(m).padStart(2, "0")}` : ""} PM`;
@@ -1193,12 +1193,10 @@ export default function SchedulePage() {
                       <span className={`text-xs text-gray-500 ${today ? 'font-medium' : ''}`}>
                         {date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                       </span>
-                      {label ? (
-                        <div className="flex items-center gap-1 mt-1 text-[10px] text-gray-600">
-                          <RefreshCw className="w-3 h-3 flex-shrink-0" aria-hidden />
-                          <span className="truncate">{label}</span>
-                        </div>
-                      ) : null}
+                      <div className="flex items-center gap-1 mt-1 text-[10px] text-gray-600">
+                        <RefreshCw className="w-3 h-3 flex-shrink-0" aria-hidden />
+                        <span className="truncate">{label}</span>
+                      </div>
                     </div>
                   </div>
                 );
@@ -1383,15 +1381,10 @@ export default function SchedulePage() {
                   <span className={`text-xs text-gray-500 ${isToday(dayDate) ? 'font-medium' : ''}`}>
                     {dayDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                   </span>
-                  {(() => {
-                    const dayLabel = formatAvailabilityLabel(displayAvailabilityByDay[dayDate.getDay()]);
-                    return dayLabel ? (
-                      <div className="flex items-center gap-1 mt-1 text-[10px] text-gray-600">
-                        <RefreshCw className="w-3 h-3 flex-shrink-0" aria-hidden />
-                        <span>{dayLabel}</span>
-                      </div>
-                    ) : null;
-                  })()}
+                  <div className="flex items-center gap-1 mt-1 text-[10px] text-gray-600">
+                    <RefreshCw className="w-3 h-3 flex-shrink-0" aria-hidden />
+                    <span>{formatAvailabilityLabel(displayAvailabilityByDay[dayDate.getDay()])}</span>
+                  </div>
                 </div>
               </div>
             </div>
