@@ -203,11 +203,11 @@ export default function CreateAccountContinuePage() {
     if (showFuneral) {
       const names = businessNames.map((n) => n.trim()).filter(Boolean);
       if (names.length === 0 || !professionalTitle.trim()) {
-        setError("Please enter at least one Business/ Firm Name and your Professional Title.");
+        setError("Please enter at least one Business / Firm Name and your Professional Title.");
         return;
       }
     } else if (!businessName.trim() || !professionalTitle.trim()) {
-      setError("Please enter your Business/ Firm Name and Professional Title.");
+      setError("Please enter your Business / Firm Name and Professional Title.");
       return;
     }
 
@@ -358,7 +358,7 @@ export default function CreateAccountContinuePage() {
           {showFuneral ? (
             <div className="space-y-3">
               <label className="block text-sm text-gray-700">
-                Business/ Firm Name(s) <span className="text-red-600">*</span>
+                Business / Firm Name(s) <span className="text-red-600">*</span>
               </label>
               {businessNames.map((name, index) => (
                 <div key={index} className="flex gap-2 items-center">
@@ -399,7 +399,7 @@ export default function CreateAccountContinuePage() {
           ) : (
             <div className="space-y-2">
               <label htmlFor="businessName" className="text-sm text-gray-700">
-                Business/ Firm Name <span className="text-red-600">*</span>
+                Business / Firm Name <span className="text-red-600">*</span>
               </label>
               <input
                 id="businessName"
