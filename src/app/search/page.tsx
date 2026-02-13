@@ -12,6 +12,7 @@ import { supabaseClient } from "@/lib/supabaseClient";
 // Removed static imports - now using dynamic imports below
 import { TrustHighlights } from "@/app/agent/[agentId]/components/TrustHighlights";
 import { DateTime } from 'luxon';
+import { cities as CANADIAN_CITIES } from "@/lib/cities";
 
 type Appointment = {
   id: string;
@@ -89,49 +90,6 @@ type AvailabilityDay = {
   slots: { startsAt: string; endsAt: string }[];
 };
 
-// Canadian cities list for autocomplete - moved outside component to prevent recreation on every render
-const CANADIAN_CITIES = [
-    // Alberta
-    "Calgary, AB", "Edmonton, AB", "Red Deer, AB", "Lethbridge, AB", "Medicine Hat, AB",
-    "Grande Prairie, AB", "Fort McMurray, AB", "Airdrie, AB", "St. Albert, AB", "Leduc, AB",
-    "Spruce Grove, AB", "Cochrane, AB", "Okotoks, AB", "Canmore, AB", "Banff, AB",
-    // British Columbia
-    "Vancouver, BC", "Victoria, BC", "Kelowna, BC", "Surrey, BC", "Burnaby, BC",
-    "Richmond, BC", "Langley, BC", "Abbotsford, BC", "Coquitlam, BC", "Saanich, BC",
-    "Delta, BC", "Kamloops, BC", "Nanaimo, BC", "Prince George, BC", "Chilliwack, BC",
-    "Maple Ridge, BC", "New Westminster, BC", "Port Coquitlam, BC", "North Vancouver, BC",
-    "West Vancouver, BC", "Penticton, BC", "Vernon, BC", "Salmon Arm, BC", "Courtenay, BC",
-    "Campbell River, BC", "Duncan, BC", "Port Alberni, BC",
-    // Saskatchewan
-    "Saskatoon, SK", "Regina, SK", "Prince Albert, SK", "Moose Jaw, SK", "Swift Current, SK",
-    "Yorkton, SK", "North Battleford, SK",
-    // Manitoba
-    "Winnipeg, MB", "Brandon, MB", "Steinbach, MB", "Thompson, MB", "Portage la Prairie, MB",
-    // Ontario
-    "Toronto, ON", "Ottawa, ON", "Mississauga, ON", "Brampton, ON", "Hamilton, ON",
-    "London, ON", "Markham, ON", "Vaughan, ON", "Kitchener, ON", "Windsor, ON",
-    "Richmond Hill, ON", "Oakville, ON", "Burlington, ON", "Oshawa, ON", "St. Catharines, ON",
-    "Cambridge, ON", "Guelph, ON", "Barrie, ON", "Kingston, ON", "Thunder Bay, ON",
-    "Sudbury, ON", "Sault Ste. Marie, ON", "North Bay, ON", "Timmins, ON",
-    // Quebec
-    "Montreal, QC", "Quebec City, QC", "Laval, QC", "Gatineau, QC", "Longueuil, QC",
-    "Sherbrooke, QC", "Saguenay, QC", "Lévis, QC", "Trois-Rivières, QC", "Terrebonne, QC",
-    // New Brunswick
-    "Saint John, NB", "Moncton, NB", "Fredericton, NB", "Dieppe, NB", "Miramichi, NB",
-    // Nova Scotia
-    "Halifax, NS", "Dartmouth, NS", "Sydney, NS", "Truro, NS", "New Glasgow, NS",
-    // Prince Edward Island
-    "Charlottetown, PE", "Summerside, PE",
-    // Newfoundland and Labrador
-    "St. John's, NL", "Mount Pearl, NL", "Corner Brook, NL", "Conception Bay South, NL",
-    // Yukon
-    "Whitehorse, YT",
-    // Northwest Territories
-    "Yellowknife, NT",
-    // Nunavut
-    "Iqaluit, NU",
-] as const;
-
 // Suggested specialties for service/specialist input (matches search API roles)
 const SERVICE_SUGGESTIONS = [
   "Pre-need planning",
@@ -191,7 +149,7 @@ function SearchResults() {
     if (value.length > 0) {
       const filtered = CANADIAN_CITIES.filter(city => 
         city.toLowerCase().includes(value.toLowerCase())
-      ).slice(0, 10); // Limit to 10 suggestions
+      ).slice(0, 80); // Show up to 80 matches (includes small cities across Canada)
       setLocationSuggestions(filtered);
       setShowLocationDropdown(true);
     } else {
