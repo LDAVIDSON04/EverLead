@@ -355,10 +355,10 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] shadow-xl flex flex-col">
+      <div className="bg-white rounded-xl w-full max-w-4xl max-h-[90vh] shadow-xl flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 flex-shrink-0">
-          <h2 className="text-lg font-semibold text-gray-900">Add availability</h2>
+        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-200 flex-shrink-0">
+          <h2 className="text-xl font-semibold text-gray-900">Add availability</h2>
           <button
             onClick={onClose}
             className="p-1 hover:bg-gray-100 rounded transition-colors"
@@ -369,7 +369,7 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
 
         {/* Content - scrollable middle, fixed appointment length + actions at bottom */}
         <div className="flex flex-col flex-1 min-h-0">
-          <div className="p-6 overflow-y-auto flex-1 min-h-0">
+          <div className="p-8 overflow-y-auto flex-1 min-h-0">
             {/* Save Message */}
             {saveMessage && (
               <div className={`mb-4 p-3 rounded-lg ${
@@ -527,7 +527,7 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
 
           {/* Appointment length + actions always visible at bottom (when content is shown) */}
           {!loading && (locations.length > 0 || meetingType === "video") && (
-            <div className="p-6 pt-4 border-t border-gray-200 bg-white flex-shrink-0 space-y-4">
+            <div className="px-8 py-6 border-t border-gray-200 bg-white flex-shrink-0 space-y-4">
               <div>
                 <Label>Appointment Length</Label>
                 <select
@@ -548,7 +548,7 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
 
         {/* Actions - Fixed at bottom: show when we have locations (in-person) or when video so we can save video schedule */}
         {!loading && (locations.length > 0 || meetingType === "video") && (
-          <div className="flex gap-3 justify-end p-6 border-t border-gray-200 bg-white flex-shrink-0">
+          <div className="flex gap-3 justify-end px-8 py-6 border-t border-gray-200 bg-white flex-shrink-0">
             <button
               onClick={onClose}
               className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium"
