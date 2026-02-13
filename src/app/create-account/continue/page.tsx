@@ -197,11 +197,7 @@ export default function CreateAccountContinuePage() {
 
     if (showFuneral) {
       if (!licensedOrEmployedFuneral) {
-        setError("Please answer whether you are licensed or employed by a licensed funeral establishment.");
-        return;
-      }
-      if (!regulatorName.trim()) {
-        setError("Please enter your regulator name.");
+        setError("Please answer whether you are licensed or employed by a funeral establishment.");
         return;
       }
       if (!preNeedPurpleShield && !preNeedTrustage && !preNeedOther) {
@@ -369,7 +365,7 @@ export default function CreateAccountContinuePage() {
             <>
               <div className="space-y-3">
                 <label className="text-sm text-gray-700">
-                  Are you licensed or employed by a licensed funeral establishment? <span className="text-red-600">*</span>
+                  Are you licensed or employed by a funeral establishment? <span className="text-red-600">*</span>
                 </label>
                 <div className="flex gap-6">
                   {["yes", "no"].map((v) => (
@@ -387,20 +383,6 @@ export default function CreateAccountContinuePage() {
                     </label>
                   ))}
                 </div>
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="regulatorName" className="text-sm text-gray-700">
-                  Regulator name <span className="text-red-600">*</span>
-                </label>
-                <input
-                  id="regulatorName"
-                  type="text"
-                  value={regulatorName}
-                  onChange={(e) => setRegulatorName(e.target.value)}
-                  className={inputClassName}
-                  placeholder="e.g., Consumer Protection BC, BAO, etc."
-                  required={showFuneral}
-                />
               </div>
               <div className="space-y-3">
                 <label className="text-sm text-gray-700">
