@@ -89,6 +89,8 @@ export async function GET(req: NextRequest) {
     const metadata = profile.metadata || {};
     const availabilityData = metadata.availability || {};
     const locations = availabilityData.locations || [];
+    const outOfOfficeDates = (metadata.outOfOfficeDates as string[]) || [];
+    const outOfOfficeSet = new Set(outOfOfficeDates.filter((d) => typeof d === "string" && /^\d{4}-\d{2}-\d{2}$/.test(d)));
     const availabilityByLocation = availabilityData.availabilityByLocation || {};
     const availabilityTypeByLocation = availabilityData.availabilityTypeByLocation || {}; // "recurring" or "daily"
     const videoSchedule = availabilityData.videoSchedule || null; // Video call availability (province-wide)
@@ -597,6 +599,7 @@ export async function GET(req: NextRequest) {
         date.setUTCDate(date.getUTCDate() + 1)
       ) {
         const dateStr = date.toISOString().split("T")[0];
+        if (outOfOfficeSet.has(dateStr)) continue;
         const dailyEntry = dailyAvailabilityMap.get(dateStr);
 
         // Only process days that have daily availability entries
@@ -701,6 +704,10 @@ export async function GET(req: NextRequest) {
       date.setUTCDate(date.getUTCDate() + 1)
     ) {
       const dateStr = date.toISOString().split("T")[0];
+      if (outOfOfficeSet.has(dateStr)) {
+        days.push({ date: dateStr, slots: [] });
+        continue;
+      }
       // Use getUTCDay() to get day of week in UTC, avoiding timezone shifts
       // CRITICAL: Must use getUTCDay() not getDay() to avoid timezone issues
       const weekday = date.getUTCDay(); // 0 = Sunday, 6 = Saturday

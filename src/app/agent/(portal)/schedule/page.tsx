@@ -11,6 +11,7 @@ import { downloadClientInfo } from "@/lib/downloadClientInfo";
 import { AddAvailabilityModal } from "./components/AddAvailabilityModal";
 import { CalendarSyncModal } from "./components/CalendarSyncModal";
 import { CreateEventModal } from "./components/CreateEventModal";
+import { OutOfOfficeModal } from "./components/OutOfOfficeModal";
 
 type Specialist = {
   id: string;
@@ -58,6 +59,7 @@ export default function SchedulePage() {
   const [viewingExternalAppointment, setViewingExternalAppointment] = useState<any | null>(null);
   const [showAddAvailabilityModal, setShowAddAvailabilityModal] = useState(false);
   const [showCalendarSyncModal, setShowCalendarSyncModal] = useState(false);
+  const [showOutOfOfficeModal, setShowOutOfOfficeModal] = useState(false);
   const [showCreateEventModal, setShowCreateEventModal] = useState(false);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<{
     date: Date;
@@ -1092,6 +1094,12 @@ export default function SchedulePage() {
             Calendar sync
           </button>
           <button 
+            onClick={() => setShowOutOfOfficeModal(true)}
+            className="px-3 py-1.5 md:px-6 md:py-2 text-xs md:text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-gray-700"
+          >
+            Set out of office
+          </button>
+          <button 
             onClick={() => setShowAddAvailabilityModal(true)}
             className="px-3 py-1.5 md:px-6 md:py-2 text-xs md:text-sm bg-neutral-700 text-white rounded-lg hover:bg-neutral-800 transition-colors"
           >
@@ -1569,6 +1577,11 @@ export default function SchedulePage() {
       <CalendarSyncModal
         isOpen={showCalendarSyncModal}
         onClose={() => setShowCalendarSyncModal(false)}
+      />
+
+      <OutOfOfficeModal
+        isOpen={showOutOfOfficeModal}
+        onClose={() => setShowOutOfOfficeModal(false)}
       />
 
       {/* Calendar Sync Success Modal */}
