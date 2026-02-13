@@ -247,6 +247,7 @@ function SearchResults() {
     profile_picture_url: string | null;
     job_title: string | null;
     funeral_home: string | null;
+    first_business_name?: string | null;
     agent_city: string | null;
     agent_province: string | null;
     business_address: string | null;
@@ -254,6 +255,7 @@ function SearchResults() {
     business_city: string | null;
     business_province: string | null;
     business_zip: string | null;
+    officeLocations?: Array<{ city: string | null; associated_firm?: string | null }>;
   } | null>(null);
   const [dayTimeSlots, setDayTimeSlots] = useState<{ time: string; startsAt: string; endsAt: string; available: boolean }[]>([]);
 
