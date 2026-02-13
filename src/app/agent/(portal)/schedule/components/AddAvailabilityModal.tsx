@@ -438,9 +438,27 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
                       </div>
                     )}
 
-                    {/* Office Location + Appointment Length on one row, black outline */}
-                    <div className="grid grid-cols-2 gap-4 mb-4">
-                      {meetingType === "in-person" && locations.length > 0 && (
+                    {/* Video: Appointment Length above Weekly Availability */}
+                    {meetingType === "video" && (
+                      <div className="mb-4">
+                        <Label className="text-gray-700 font-medium">Appointment Length</Label>
+                        <select
+                          value={appointmentLength}
+                          onChange={(e) => setAppointmentLength(e.target.value)}
+                          className="w-full px-4 py-2.5 border-2 border-black rounded-xl focus:outline-none focus:ring-2 focus:ring-neutral-800 focus:ring-offset-0 mt-1.5 bg-white text-gray-900 text-sm"
+                        >
+                          <option value="15">15 minutes</option>
+                          <option value="30">30 minutes</option>
+                          <option value="45">45 minutes</option>
+                          <option value="60">60 minutes</option>
+                          <option value="90">90 minutes</option>
+                        </select>
+                      </div>
+                    )}
+
+                    {/* In-person: Office Location + Appointment Length on one row, black outline */}
+                    {meetingType === "in-person" && locations.length > 0 && (
+                      <div className="grid grid-cols-2 gap-4 mb-4">
                         <div>
                           <Label className="text-gray-700 font-medium">Office Location</Label>
                           <div className="relative mt-1.5">
@@ -458,22 +476,22 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
                             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                           </div>
                         </div>
-                      )}
-                      <div className={meetingType === "video" ? "col-span-2" : ""}>
-                        <Label className="text-gray-700 font-medium">Appointment Length</Label>
-                        <select
-                          value={appointmentLength}
-                          onChange={(e) => setAppointmentLength(e.target.value)}
-                          className="w-full px-4 py-2.5 border-2 border-black rounded-xl focus:outline-none focus:ring-2 focus:ring-neutral-800 focus:ring-offset-0 mt-1.5 bg-white text-gray-900 text-sm"
-                        >
-                          <option value="15">15 minutes</option>
-                          <option value="30">30 minutes</option>
-                          <option value="45">45 minutes</option>
-                          <option value="60">60 minutes</option>
-                          <option value="90">90 minutes</option>
-                        </select>
+                        <div>
+                          <Label className="text-gray-700 font-medium">Appointment Length</Label>
+                          <select
+                            value={appointmentLength}
+                            onChange={(e) => setAppointmentLength(e.target.value)}
+                            className="w-full px-4 py-2.5 border-2 border-black rounded-xl focus:outline-none focus:ring-2 focus:ring-neutral-800 focus:ring-offset-0 mt-1.5 bg-white text-gray-900 text-sm"
+                          >
+                            <option value="15">15 minutes</option>
+                            <option value="30">30 minutes</option>
+                            <option value="45">45 minutes</option>
+                            <option value="60">60 minutes</option>
+                            <option value="90">90 minutes</option>
+                          </select>
+                        </div>
                       </div>
-                    </div>
+                    )}
 
                     {/* Weekly Availability - 2-column grid so all 7 days visible without scrolling */}
                     <div>
