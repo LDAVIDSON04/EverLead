@@ -1,0 +1,63 @@
+{
+  "name": "soradin-agent-portal",
+  "version": "1.0.0",
+  "description": "Soradin Agent Portal - desktop app",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder",
+    "build:mac": "electron-builder --mac",
+    "build:win": "electron-builder --win",
+    "prepare-icon": "node prepare-icon.js",
+    "start:packaged": "open dist/mac-arm64/Soradin.app 2>/dev/null || open dist/Soradin.app",
+    "build:mac:run": "npm run build:mac && (open dist/mac-arm64/Soradin.app 2>/dev/null || open dist/Soradin.app)"
+  },
+  "author": "Soradin",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^26.7.0",
+    "sharp": "^0.33.2"
+  },
+  "build": {
+    "appId": "com.soradin.agent-portal",
+    "productName": "Soradin",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "icon.png",
+      "welcome.html",
+      "welcome-logo.png",
+      "login.html",
+      "create-account.html",
+      "create-account.js",
+      "auth-config.example.json"
+    ],
+    "icon": "icon.png",
+    "mac": {
+      "category": "public.app-category.business",
+      "icon": "icon.png",
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "extendInfo": {
+        "CFBundleDisplayName": "Soradin",
+        "CFBundleName": "Soradin"
+      }
+    },
+    "win": {
+      "icon": "icon.png",
+      "target": [
+        "nsis"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}

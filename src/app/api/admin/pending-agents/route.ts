@@ -24,7 +24,26 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Get emails from auth.users
+    const agentIds = (agents || []).map((a: any) => a.id);
+    const { data: officeLocationsRows } = agentIds.length > 0
+      ? await supabaseAdmin
+          .from("office_locations")
+          .select("agent_id, name, street_address, city, province, postal_code")
+          .in("agent_id", agentIds)
+          .order("display_order", { ascending: true })
+      : { data: [] as any[] };
+    const officesByAgentId: Record<string, { name: string; street_address: string | null; city: string; province: string; postal_code: string | null }[]> = {};
+    (officeLocationsRows || []).forEach((row: any) => {
+      if (!officesByAgentId[row.agent_id]) officesByAgentId[row.agent_id] = [];
+      officesByAgentId[row.agent_id].push({
+        name: row.name || "",
+        street_address: row.street_address ?? null,
+        city: row.city || "",
+        province: row.province || "",
+        postal_code: row.postal_code ?? null,
+      });
+    });
+
     const agentsWithEmail = await Promise.all(
       (agents || []).map(async (agent: any) => {
         try {
@@ -32,12 +51,14 @@ export async function GET(req: NextRequest) {
           return {
             ...agent,
             email: authUser?.user?.email || null,
+            office_locations: officesByAgentId[agent.id] || [],
           };
         } catch (err) {
           console.error(`Error fetching email for agent ${agent.id}:`, err);
           return {
             ...agent,
             email: null,
+            office_locations: officesByAgentId[agent.id] || [],
           };
         }
       })

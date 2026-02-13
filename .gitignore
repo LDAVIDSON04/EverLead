@@ -2,6 +2,8 @@
 
 # dependencies
 /node_modules
+/electron/node_modules
+/electron/dist
 /.pnp
 .pnp.*
 .yarn/*
@@ -32,6 +34,9 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+
+# Electron app auth (copy from auth-config.example.json and fill in)
+electron/auth-config.json
 
 # vercel
 .vercel

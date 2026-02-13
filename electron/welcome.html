@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome - Soradin</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0a0a0a;
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    .logo {
+      position: absolute;
+      top: 40px;
+      left: 40px;
+      width: 96px;
+      height: 96px;
+      object-fit: contain;
+    }
+    .center {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 32px;
+    }
+    h1 {
+      font-size: 2.25rem;
+      font-weight: 600;
+      text-align: center;
+      margin-bottom: 56px;
+      max-width: 360px;
+      line-height: 1.25;
+      letter-spacing: -0.02em;
+    }
+    .actions {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      width: 100%;
+      max-width: 300px;
+    }
+    a.button {
+      display: block;
+      width: 100%;
+      padding: 16px 28px;
+      text-align: center;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 1rem;
+      letter-spacing: 0.01em;
+      border-radius: 12px;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    a.button:active { transform: scale(0.98); }
+    a.button.primary {
+      background: #fff;
+      color: #000;
+      box-shadow: 0 2px 12px rgba(255,255,255,0.15);
+    }
+    a.button.primary:hover {
+      box-shadow: 0 4px 20px rgba(255,255,255,0.2);
+    }
+    a.button.secondary {
+      background: rgba(255,255,255,0.08);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    a.button.secondary:hover {
+      background: rgba(255,255,255,0.12);
+      border-color: rgba(255,255,255,0.3);
+    }
+  </style>
+</head>
+<body>
+  <img src="welcome-logo.png" alt="Soradin" class="logo" />
+  <div class="center">
+    <h1>Welcome to Soradin for providers</h1>
+    <div class="actions">
+      <a href="create-account.html" class="button primary">Create account</a>
+      <a href="login.html" class="button secondary">Log in</a>
+    </div>
+  </div>
+</body>
+</html>
