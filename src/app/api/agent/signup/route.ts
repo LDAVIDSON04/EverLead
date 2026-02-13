@@ -267,6 +267,15 @@ export async function POST(req: NextRequest) {
 
     // Build metadata object with all additional fields
     const metadata: any = metadataFromBody || profileData.metadata || {};
+    // Always persist home address from signup so Settings shows street + postal code (not just city/province)
+    if (address) {
+      metadata.address = {
+        street: address.street,
+        city: address.city,
+        province: address.province,
+        postalCode: address.postalCode,
+      };
+    }
     
     // Certificates/Licenses
     if (certificates_licenses) metadata.certificates_licenses = certificates_licenses;
