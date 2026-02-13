@@ -63,7 +63,7 @@ export default function CreateAccountContinuePage() {
   const [preNeedOther, setPreNeedOther] = useState(false);
   const [preNeedOtherSpecify, setPreNeedOtherSpecify] = useState("");
   const [officeLocations, setOfficeLocations] = useState<OfficeLocation[]>([]);
-  const [showAddLocation, setShowAddLocation] = useState(true);
+  const [showAddLocation, setShowAddLocation] = useState(false);
   const [newLocation, setNewLocation] = useState<OfficeLocation>({
     name: "",
     street_address: "",
@@ -189,6 +189,7 @@ export default function CreateAccountContinuePage() {
       postal_code: "",
       associated_firm: "",
     });
+    setShowAddLocation(false);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -506,95 +507,6 @@ export default function CreateAccountContinuePage() {
               </div>
               <div className="space-y-3 border-t pt-6">
                 <label className="block text-sm text-gray-700 font-medium">Office Locations <span className="text-red-600">*</span></label>
-                <div className="mb-4 p-4 border border-gray-300 rounded-lg bg-gray-50 space-y-3">
-                  <h4 className="font-medium text-sm text-gray-700">New Office Location</h4>
-                  <input
-                    type="text"
-                    value={newLocation.name}
-                    onChange={(e) => setNewLocation({ ...newLocation, name: e.target.value })}
-                    placeholder="Office name *"
-                    className={inputClassName}
-                    required
-                  />
-                  {showFuneral && (
-                    <div className="space-y-1">
-                      <label className="block text-sm text-gray-700">Associated business / firm <span className="text-red-600">*</span></label>
-                      {businessNames.filter((n) => n.trim()).length > 0 ? (
-                        <select
-                          value={newLocation.associated_firm ?? ""}
-                          onChange={(e) => setNewLocation({ ...newLocation, associated_firm: e.target.value })}
-                          className={inputClassName}
-                          required
-                        >
-                          <option value="">Select firm</option>
-                          {businessNames.filter((n) => n.trim()).map((name) => (
-                            <option key={name} value={name.trim()}>{name.trim()}</option>
-                          ))}
-                        </select>
-                      ) : (
-                        <input
-                          type="text"
-                          value={newLocation.associated_firm ?? ""}
-                          onChange={(e) => setNewLocation({ ...newLocation, associated_firm: e.target.value })}
-                          className={inputClassName}
-                          placeholder="Business or firm name"
-                          required
-                        />
-                      )}
-                    </div>
-                  )}
-                  <input
-                    type="text"
-                    value={newLocation.street_address}
-                    onChange={(e) => setNewLocation({ ...newLocation, street_address: e.target.value })}
-                    placeholder="Street address *"
-                    className={inputClassName}
-                    required
-                  />
-                  <div className="grid grid-cols-3 gap-3">
-                    <input
-                      type="text"
-                      value={newLocation.city}
-                      onChange={(e) => setNewLocation({ ...newLocation, city: e.target.value })}
-                      placeholder="City *"
-                      className={inputClassName}
-                      required
-                    />
-                    <select
-                      value={newLocation.province}
-                      onChange={(e) => setNewLocation({ ...newLocation, province: e.target.value })}
-                      className={inputClassName}
-                      required
-                    >
-                      {PROVINCES.map((p) => (
-                        <option key={p} value={p}>{p}</option>
-                      ))}
-                    </select>
-                    <input
-                      type="text"
-                      value={newLocation.postal_code}
-                      onChange={(e) => setNewLocation({ ...newLocation, postal_code: e.target.value })}
-                      placeholder="Postal code *"
-                      className={inputClassName}
-                      required
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={addOfficeLocation}
-                    className="px-4 py-2 bg-neutral-700 text-white rounded-md text-sm hover:bg-neutral-800"
-                  >
-                    Save
-                  </button>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setNewLocation({ name: "", street_address: "", city: "", province: "BC", postal_code: "", associated_firm: "" })}
-                  className="mb-4 flex items-center gap-2 px-4 py-2 bg-neutral-700 text-white rounded-md text-sm hover:bg-neutral-800 transition-colors"
-                >
-                  <Plus className="w-4 h-4" />
-                  Add Location
-                </button>
                 {officeLocations.map((loc, index) => (
                   <div key={index} className="mb-3 p-3 border border-gray-300 rounded-lg flex justify-between items-start">
                     <div>
@@ -612,6 +524,100 @@ export default function CreateAccountContinuePage() {
                     </button>
                   </div>
                 ))}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setNewLocation({ name: "", street_address: "", city: "", province: "BC", postal_code: "", associated_firm: "" });
+                    setShowAddLocation(true);
+                  }}
+                  className="mb-4 flex items-center gap-2 px-4 py-2 bg-neutral-700 text-white rounded-md text-sm hover:bg-neutral-800 transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Location
+                </button>
+                {showAddLocation && (
+                  <div className="mb-4 p-4 border border-gray-300 rounded-lg bg-gray-50 space-y-3">
+                    <h4 className="font-medium text-sm text-gray-700">New Office Location</h4>
+                    <input
+                      type="text"
+                      value={newLocation.name}
+                      onChange={(e) => setNewLocation({ ...newLocation, name: e.target.value })}
+                      placeholder="Office name *"
+                      className={inputClassName}
+                      required
+                    />
+                    {showFuneral && (
+                      <div className="space-y-1">
+                        <label className="block text-sm text-gray-700">Associated business / firm <span className="text-red-600">*</span></label>
+                        {businessNames.filter((n) => n.trim()).length > 0 ? (
+                          <select
+                            value={newLocation.associated_firm ?? ""}
+                            onChange={(e) => setNewLocation({ ...newLocation, associated_firm: e.target.value })}
+                            className={inputClassName}
+                            required
+                          >
+                            <option value="">Select firm</option>
+                            {businessNames.filter((n) => n.trim()).map((name) => (
+                              <option key={name} value={name.trim()}>{name.trim()}</option>
+                            ))}
+                          </select>
+                        ) : (
+                          <input
+                            type="text"
+                            value={newLocation.associated_firm ?? ""}
+                            onChange={(e) => setNewLocation({ ...newLocation, associated_firm: e.target.value })}
+                            className={inputClassName}
+                            placeholder="Business or firm name"
+                            required
+                          />
+                        )}
+                      </div>
+                    )}
+                    <input
+                      type="text"
+                      value={newLocation.street_address}
+                      onChange={(e) => setNewLocation({ ...newLocation, street_address: e.target.value })}
+                      placeholder="Street address *"
+                      className={inputClassName}
+                      required
+                    />
+                    <div className="grid grid-cols-3 gap-3">
+                      <input
+                        type="text"
+                        value={newLocation.city}
+                        onChange={(e) => setNewLocation({ ...newLocation, city: e.target.value })}
+                        placeholder="City *"
+                        className={inputClassName}
+                        required
+                      />
+                      <select
+                        value={newLocation.province}
+                        onChange={(e) => setNewLocation({ ...newLocation, province: e.target.value })}
+                        className={inputClassName}
+                        required
+                      >
+                        {PROVINCES.map((p) => (
+                          <option key={p} value={p}>{p}</option>
+                        ))}
+                      </select>
+                      <input
+                        type="text"
+                        value={newLocation.postal_code}
+                        onChange={(e) => setNewLocation({ ...newLocation, postal_code: e.target.value })}
+                        placeholder="Postal code *"
+                        className={inputClassName}
+                        required
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={addOfficeLocation}
+                      className="px-4 py-2 bg-neutral-700 text-white rounded-md text-sm hover:bg-neutral-800"
+                    >
+                      Save
+                    </button>
+                  </div>
+                )}
               </div>
             </>
           )}
@@ -687,68 +693,6 @@ export default function CreateAccountContinuePage() {
               </div>
               <div className="space-y-3 border-t pt-6">
                 <label className="block text-sm text-gray-700 font-medium">Office Locations <span className="text-red-600">*</span></label>
-                <div className="mb-4 p-4 border border-gray-300 rounded-lg bg-gray-50 space-y-3">
-                  <h4 className="font-medium text-sm text-gray-700">New Office Location</h4>
-                  <input
-                    type="text"
-                    value={newLocation.name}
-                    onChange={(e) => setNewLocation({ ...newLocation, name: e.target.value })}
-                    placeholder="Office name *"
-                    className={inputClassName}
-                    required
-                  />
-                  <input
-                    type="text"
-                    value={newLocation.street_address}
-                    onChange={(e) => setNewLocation({ ...newLocation, street_address: e.target.value })}
-                    placeholder="Street address *"
-                    className={inputClassName}
-                    required
-                  />
-                  <div className="grid grid-cols-3 gap-3">
-                    <input
-                      type="text"
-                      value={newLocation.city}
-                      onChange={(e) => setNewLocation({ ...newLocation, city: e.target.value })}
-                      placeholder="City *"
-                      className={inputClassName}
-                      required
-                    />
-                    <select
-                      value={newLocation.province}
-                      onChange={(e) => setNewLocation({ ...newLocation, province: e.target.value })}
-                      className={inputClassName}
-                      required
-                    >
-                      {PROVINCES.map((p) => (
-                        <option key={p} value={p}>{p}</option>
-                      ))}
-                    </select>
-                    <input
-                      type="text"
-                      value={newLocation.postal_code}
-                      onChange={(e) => setNewLocation({ ...newLocation, postal_code: e.target.value })}
-                      placeholder="Postal code *"
-                      className={inputClassName}
-                      required
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={addOfficeLocation}
-                    className="px-4 py-2 bg-neutral-700 text-white rounded-md text-sm hover:bg-neutral-800"
-                  >
-                    Save
-                  </button>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setNewLocation({ name: "", street_address: "", city: "", province: "BC", postal_code: "", associated_firm: "" })}
-                  className="mb-4 flex items-center gap-2 px-4 py-2 bg-neutral-700 text-white rounded-md text-sm hover:bg-neutral-800 transition-colors"
-                >
-                  <Plus className="w-4 h-4" />
-                  Add Location
-                </button>
                 {officeLocations.map((loc, index) => (
                   <div key={index} className="mb-3 p-3 border border-gray-300 rounded-lg flex justify-between items-start">
                     <div>
@@ -763,6 +707,73 @@ export default function CreateAccountContinuePage() {
                     </button>
                   </div>
                 ))}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setNewLocation({ name: "", street_address: "", city: "", province: "BC", postal_code: "", associated_firm: "" });
+                    setShowAddLocation(true);
+                  }}
+                  className="mb-4 flex items-center gap-2 px-4 py-2 bg-neutral-700 text-white rounded-md text-sm hover:bg-neutral-800 transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Location
+                </button>
+                {showAddLocation && (
+                  <div className="mb-4 p-4 border border-gray-300 rounded-lg bg-gray-50 space-y-3">
+                    <h4 className="font-medium text-sm text-gray-700">New Office Location</h4>
+                    <input
+                      type="text"
+                      value={newLocation.name}
+                      onChange={(e) => setNewLocation({ ...newLocation, name: e.target.value })}
+                      placeholder="Office name *"
+                      className={inputClassName}
+                      required
+                    />
+                    <input
+                      type="text"
+                      value={newLocation.street_address}
+                      onChange={(e) => setNewLocation({ ...newLocation, street_address: e.target.value })}
+                      placeholder="Street address *"
+                      className={inputClassName}
+                      required
+                    />
+                    <div className="grid grid-cols-3 gap-3">
+                      <input
+                        type="text"
+                        value={newLocation.city}
+                        onChange={(e) => setNewLocation({ ...newLocation, city: e.target.value })}
+                        placeholder="City *"
+                        className={inputClassName}
+                        required
+                      />
+                      <select
+                        value={newLocation.province}
+                        onChange={(e) => setNewLocation({ ...newLocation, province: e.target.value })}
+                        className={inputClassName}
+                        required
+                      >
+                        {PROVINCES.map((p) => (
+                          <option key={p} value={p}>{p}</option>
+                        ))}
+                      </select>
+                      <input
+                        type="text"
+                        value={newLocation.postal_code}
+                        onChange={(e) => setNewLocation({ ...newLocation, postal_code: e.target.value })}
+                        placeholder="Postal code *"
+                        className={inputClassName}
+                        required
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={addOfficeLocation}
+                      className="px-4 py-2 bg-neutral-700 text-white rounded-md text-sm hover:bg-neutral-800"
+                    >
+                      Save
+                    </button>
+                  </div>
+                )}
               </div>
             </>
           )}
@@ -853,68 +864,6 @@ export default function CreateAccountContinuePage() {
               </div>
               <div className="space-y-3 border-t pt-6">
                 <label className="block text-sm text-gray-700 font-medium">Office Locations <span className="text-red-600">*</span></label>
-                <div className="mb-4 p-4 border border-gray-300 rounded-lg bg-gray-50 space-y-3">
-                  <h4 className="font-medium text-sm text-gray-700">New Office Location</h4>
-                  <input
-                    type="text"
-                    value={newLocation.name}
-                    onChange={(e) => setNewLocation({ ...newLocation, name: e.target.value })}
-                    placeholder="Office name *"
-                    className={inputClassName}
-                    required
-                  />
-                  <input
-                    type="text"
-                    value={newLocation.street_address}
-                    onChange={(e) => setNewLocation({ ...newLocation, street_address: e.target.value })}
-                    placeholder="Street address *"
-                    className={inputClassName}
-                    required
-                  />
-                  <div className="grid grid-cols-3 gap-3">
-                    <input
-                      type="text"
-                      value={newLocation.city}
-                      onChange={(e) => setNewLocation({ ...newLocation, city: e.target.value })}
-                      placeholder="City *"
-                      className={inputClassName}
-                      required
-                    />
-                    <select
-                      value={newLocation.province}
-                      onChange={(e) => setNewLocation({ ...newLocation, province: e.target.value })}
-                      className={inputClassName}
-                      required
-                    >
-                      {PROVINCES.map((p) => (
-                        <option key={p} value={p}>{p}</option>
-                      ))}
-                    </select>
-                    <input
-                      type="text"
-                      value={newLocation.postal_code}
-                      onChange={(e) => setNewLocation({ ...newLocation, postal_code: e.target.value })}
-                      placeholder="Postal code *"
-                      className={inputClassName}
-                      required
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={addOfficeLocation}
-                    className="px-4 py-2 bg-neutral-700 text-white rounded-md text-sm hover:bg-neutral-800"
-                  >
-                    Save
-                  </button>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setNewLocation({ name: "", street_address: "", city: "", province: "BC", postal_code: "", associated_firm: "" })}
-                  className="mb-4 flex items-center gap-2 px-4 py-2 bg-neutral-700 text-white rounded-md text-sm hover:bg-neutral-800 transition-colors"
-                >
-                  <Plus className="w-4 h-4" />
-                  Add Location
-                </button>
                 {officeLocations.map((loc, index) => (
                   <div key={index} className="mb-3 p-3 border border-gray-300 rounded-lg flex justify-between items-start">
                     <div>
@@ -929,6 +878,73 @@ export default function CreateAccountContinuePage() {
                     </button>
                   </div>
                 ))}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setNewLocation({ name: "", street_address: "", city: "", province: "BC", postal_code: "", associated_firm: "" });
+                    setShowAddLocation(true);
+                  }}
+                  className="mb-4 flex items-center gap-2 px-4 py-2 bg-neutral-700 text-white rounded-md text-sm hover:bg-neutral-800 transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Location
+                </button>
+                {showAddLocation && (
+                  <div className="mb-4 p-4 border border-gray-300 rounded-lg bg-gray-50 space-y-3">
+                    <h4 className="font-medium text-sm text-gray-700">New Office Location</h4>
+                    <input
+                      type="text"
+                      value={newLocation.name}
+                      onChange={(e) => setNewLocation({ ...newLocation, name: e.target.value })}
+                      placeholder="Office name *"
+                      className={inputClassName}
+                      required
+                    />
+                    <input
+                      type="text"
+                      value={newLocation.street_address}
+                      onChange={(e) => setNewLocation({ ...newLocation, street_address: e.target.value })}
+                      placeholder="Street address *"
+                      className={inputClassName}
+                      required
+                    />
+                    <div className="grid grid-cols-3 gap-3">
+                      <input
+                        type="text"
+                        value={newLocation.city}
+                        onChange={(e) => setNewLocation({ ...newLocation, city: e.target.value })}
+                        placeholder="City *"
+                        className={inputClassName}
+                        required
+                      />
+                      <select
+                        value={newLocation.province}
+                        onChange={(e) => setNewLocation({ ...newLocation, province: e.target.value })}
+                        className={inputClassName}
+                        required
+                      >
+                        {PROVINCES.map((p) => (
+                          <option key={p} value={p}>{p}</option>
+                        ))}
+                      </select>
+                      <input
+                        type="text"
+                        value={newLocation.postal_code}
+                        onChange={(e) => setNewLocation({ ...newLocation, postal_code: e.target.value })}
+                        placeholder="Postal code *"
+                        className={inputClassName}
+                        required
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={addOfficeLocation}
+                      className="px-4 py-2 bg-neutral-700 text-white rounded-md text-sm hover:bg-neutral-800"
+                    >
+                      Save
+                    </button>
+                  </div>
+                )}
               </div>
             </>
           )}
@@ -1008,68 +1024,6 @@ export default function CreateAccountContinuePage() {
               </div>
               <div className="space-y-3 border-t pt-6">
                 <label className="block text-sm text-gray-700 font-medium">Office Locations <span className="text-red-600">*</span></label>
-                <div className="mb-4 p-4 border border-gray-300 rounded-lg bg-gray-50 space-y-3">
-                  <h4 className="font-medium text-sm text-gray-700">New Office Location</h4>
-                  <input
-                    type="text"
-                    value={newLocation.name}
-                    onChange={(e) => setNewLocation({ ...newLocation, name: e.target.value })}
-                    placeholder="Office name *"
-                    className={inputClassName}
-                    required
-                  />
-                  <input
-                    type="text"
-                    value={newLocation.street_address}
-                    onChange={(e) => setNewLocation({ ...newLocation, street_address: e.target.value })}
-                    placeholder="Street address *"
-                    className={inputClassName}
-                    required
-                  />
-                  <div className="grid grid-cols-3 gap-3">
-                    <input
-                      type="text"
-                      value={newLocation.city}
-                      onChange={(e) => setNewLocation({ ...newLocation, city: e.target.value })}
-                      placeholder="City *"
-                      className={inputClassName}
-                      required
-                    />
-                    <select
-                      value={newLocation.province}
-                      onChange={(e) => setNewLocation({ ...newLocation, province: e.target.value })}
-                      className={inputClassName}
-                      required
-                    >
-                      {PROVINCES.map((p) => (
-                        <option key={p} value={p}>{p}</option>
-                      ))}
-                    </select>
-                    <input
-                      type="text"
-                      value={newLocation.postal_code}
-                      onChange={(e) => setNewLocation({ ...newLocation, postal_code: e.target.value })}
-                      placeholder="Postal code *"
-                      className={inputClassName}
-                      required
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={addOfficeLocation}
-                    className="px-4 py-2 bg-neutral-700 text-white rounded-md text-sm hover:bg-neutral-800"
-                  >
-                    Save
-                  </button>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setNewLocation({ name: "", street_address: "", city: "", province: "BC", postal_code: "", associated_firm: "" })}
-                  className="mb-4 flex items-center gap-2 px-4 py-2 bg-neutral-700 text-white rounded-md text-sm hover:bg-neutral-800 transition-colors"
-                >
-                  <Plus className="w-4 h-4" />
-                  Add Location
-                </button>
                 {officeLocations.map((loc, index) => (
                   <div key={index} className="mb-3 p-3 border border-gray-300 rounded-lg flex justify-between items-start">
                     <div>
@@ -1084,6 +1038,73 @@ export default function CreateAccountContinuePage() {
                     </button>
                   </div>
                 ))}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setNewLocation({ name: "", street_address: "", city: "", province: "BC", postal_code: "", associated_firm: "" });
+                    setShowAddLocation(true);
+                  }}
+                  className="mb-4 flex items-center gap-2 px-4 py-2 bg-neutral-700 text-white rounded-md text-sm hover:bg-neutral-800 transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Location
+                </button>
+                {showAddLocation && (
+                  <div className="mb-4 p-4 border border-gray-300 rounded-lg bg-gray-50 space-y-3">
+                    <h4 className="font-medium text-sm text-gray-700">New Office Location</h4>
+                    <input
+                      type="text"
+                      value={newLocation.name}
+                      onChange={(e) => setNewLocation({ ...newLocation, name: e.target.value })}
+                      placeholder="Office name *"
+                      className={inputClassName}
+                      required
+                    />
+                    <input
+                      type="text"
+                      value={newLocation.street_address}
+                      onChange={(e) => setNewLocation({ ...newLocation, street_address: e.target.value })}
+                      placeholder="Street address *"
+                      className={inputClassName}
+                      required
+                    />
+                    <div className="grid grid-cols-3 gap-3">
+                      <input
+                        type="text"
+                        value={newLocation.city}
+                        onChange={(e) => setNewLocation({ ...newLocation, city: e.target.value })}
+                        placeholder="City *"
+                        className={inputClassName}
+                        required
+                      />
+                      <select
+                        value={newLocation.province}
+                        onChange={(e) => setNewLocation({ ...newLocation, province: e.target.value })}
+                        className={inputClassName}
+                        required
+                      >
+                        {PROVINCES.map((p) => (
+                          <option key={p} value={p}>{p}</option>
+                        ))}
+                      </select>
+                      <input
+                        type="text"
+                        value={newLocation.postal_code}
+                        onChange={(e) => setNewLocation({ ...newLocation, postal_code: e.target.value })}
+                        placeholder="Postal code *"
+                        className={inputClassName}
+                        required
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={addOfficeLocation}
+                      className="px-4 py-2 bg-neutral-700 text-white rounded-md text-sm hover:bg-neutral-800"
+                    >
+                      Save
+                    </button>
+                  </div>
+                )}
               </div>
             </>
           )}
@@ -1154,68 +1175,6 @@ export default function CreateAccountContinuePage() {
               </div>
               <div className="space-y-3 border-t pt-6">
                 <label className="block text-sm text-gray-700 font-medium">Office Locations <span className="text-red-600">*</span></label>
-                <div className="mb-4 p-4 border border-gray-300 rounded-lg bg-gray-50 space-y-3">
-                  <h4 className="font-medium text-sm text-gray-700">New Office Location</h4>
-                  <input
-                    type="text"
-                    value={newLocation.name}
-                    onChange={(e) => setNewLocation({ ...newLocation, name: e.target.value })}
-                    placeholder="Office name *"
-                    className={inputClassName}
-                    required
-                  />
-                  <input
-                    type="text"
-                    value={newLocation.street_address}
-                    onChange={(e) => setNewLocation({ ...newLocation, street_address: e.target.value })}
-                    placeholder="Street address *"
-                    className={inputClassName}
-                    required
-                  />
-                  <div className="grid grid-cols-3 gap-3">
-                    <input
-                      type="text"
-                      value={newLocation.city}
-                      onChange={(e) => setNewLocation({ ...newLocation, city: e.target.value })}
-                      placeholder="City *"
-                      className={inputClassName}
-                      required
-                    />
-                    <select
-                      value={newLocation.province}
-                      onChange={(e) => setNewLocation({ ...newLocation, province: e.target.value })}
-                      className={inputClassName}
-                      required
-                    >
-                      {PROVINCES.map((p) => (
-                        <option key={p} value={p}>{p}</option>
-                      ))}
-                    </select>
-                    <input
-                      type="text"
-                      value={newLocation.postal_code}
-                      onChange={(e) => setNewLocation({ ...newLocation, postal_code: e.target.value })}
-                      placeholder="Postal code *"
-                      className={inputClassName}
-                      required
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={addOfficeLocation}
-                    className="px-4 py-2 bg-neutral-700 text-white rounded-md text-sm hover:bg-neutral-800"
-                  >
-                    Save
-                  </button>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setNewLocation({ name: "", street_address: "", city: "", province: "BC", postal_code: "", associated_firm: "" })}
-                  className="mb-4 flex items-center gap-2 px-4 py-2 bg-neutral-700 text-white rounded-md text-sm hover:bg-neutral-800 transition-colors"
-                >
-                  <Plus className="w-4 h-4" />
-                  Add Location
-                </button>
                 {officeLocations.map((loc, index) => (
                   <div key={index} className="mb-3 p-3 border border-gray-300 rounded-lg flex justify-between items-start">
                     <div>
@@ -1230,6 +1189,73 @@ export default function CreateAccountContinuePage() {
                     </button>
                   </div>
                 ))}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setNewLocation({ name: "", street_address: "", city: "", province: "BC", postal_code: "", associated_firm: "" });
+                    setShowAddLocation(true);
+                  }}
+                  className="mb-4 flex items-center gap-2 px-4 py-2 bg-neutral-700 text-white rounded-md text-sm hover:bg-neutral-800 transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Location
+                </button>
+                {showAddLocation && (
+                  <div className="mb-4 p-4 border border-gray-300 rounded-lg bg-gray-50 space-y-3">
+                    <h4 className="font-medium text-sm text-gray-700">New Office Location</h4>
+                    <input
+                      type="text"
+                      value={newLocation.name}
+                      onChange={(e) => setNewLocation({ ...newLocation, name: e.target.value })}
+                      placeholder="Office name *"
+                      className={inputClassName}
+                      required
+                    />
+                    <input
+                      type="text"
+                      value={newLocation.street_address}
+                      onChange={(e) => setNewLocation({ ...newLocation, street_address: e.target.value })}
+                      placeholder="Street address *"
+                      className={inputClassName}
+                      required
+                    />
+                    <div className="grid grid-cols-3 gap-3">
+                      <input
+                        type="text"
+                        value={newLocation.city}
+                        onChange={(e) => setNewLocation({ ...newLocation, city: e.target.value })}
+                        placeholder="City *"
+                        className={inputClassName}
+                        required
+                      />
+                      <select
+                        value={newLocation.province}
+                        onChange={(e) => setNewLocation({ ...newLocation, province: e.target.value })}
+                        className={inputClassName}
+                        required
+                      >
+                        {PROVINCES.map((p) => (
+                          <option key={p} value={p}>{p}</option>
+                        ))}
+                      </select>
+                      <input
+                        type="text"
+                        value={newLocation.postal_code}
+                        onChange={(e) => setNewLocation({ ...newLocation, postal_code: e.target.value })}
+                        placeholder="Postal code *"
+                        className={inputClassName}
+                        required
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={addOfficeLocation}
+                      className="px-4 py-2 bg-neutral-700 text-white rounded-md text-sm hover:bg-neutral-800"
+                    >
+                      Save
+                    </button>
+                  </div>
+                )}
               </div>
             </>
           )}
