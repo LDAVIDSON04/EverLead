@@ -577,9 +577,11 @@ export async function GET(req: NextRequest) {
         location = lead.city;
       }
       
-      // If no location found, it will be null and will display as "N/A"
-      
+      // Video calls (Soradin bookings with no office) should show "Video" instead of "N/A"
       const isAgentCreatedEvent = lead?.email?.includes("@soradin.internal");
+      if (!location && !apt.office_location_id && !isAgentCreatedEvent && apt.lead_id) {
+        location = "Video";
+      }
 
       const result = {
         id: apt.id,
