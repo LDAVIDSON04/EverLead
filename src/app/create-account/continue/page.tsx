@@ -357,19 +357,9 @@ export default function CreateAccountContinuePage() {
           {/* Business Name: multiple for funeral, single for others */}
           {showFuneral ? (
             <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <label className="text-sm text-gray-700">
-                  Business/ Firm Name(s) <span className="text-red-600">*</span>
-                </label>
-                <button
-                  type="button"
-                  onClick={() => setBusinessNames((prev) => [...prev, ""])}
-                  className="flex items-center gap-2 px-4 py-2 bg-neutral-700 text-white rounded-md text-sm hover:bg-neutral-800 transition-colors"
-                >
-                  <Plus className="w-4 h-4" />
-                  Add business name
-                </button>
-              </div>
+              <label className="block text-sm text-gray-700">
+                Business/ Firm Name(s) <span className="text-red-600">*</span>
+              </label>
               {businessNames.map((name, index) => (
                 <div key={index} className="flex gap-2 items-center">
                   <input
@@ -397,6 +387,14 @@ export default function CreateAccountContinuePage() {
                   )}
                 </div>
               ))}
+              <button
+                type="button"
+                onClick={() => setBusinessNames((prev) => [...prev, ""])}
+                className="flex items-center gap-2 px-4 py-2 bg-neutral-700 text-white rounded-md text-sm hover:bg-neutral-800 transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                Add business name
+              </button>
             </div>
           ) : (
             <div className="space-y-2">
