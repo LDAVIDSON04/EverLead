@@ -354,10 +354,10 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-6">
-      <div className="bg-white rounded-2xl w-full max-w-6xl max-h-[90vh] shadow-2xl border border-gray-100 flex flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between px-10 py-6 border-b border-gray-100 flex-shrink-0">
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-start justify-center z-50 p-6 pt-8 overflow-y-auto">
+      <div className="bg-white rounded-2xl w-full max-w-6xl max-h-[calc(100vh-4rem)] shadow-2xl border border-gray-100 flex flex-col flex-shrink-0">
+        {/* Header - tighter to content */}
+        <div className="flex items-center justify-between px-10 py-4 border-b border-gray-100 flex-shrink-0">
           <h2 className="text-2xl font-semibold text-gray-900 tracking-tight">Add availability</h2>
           <button
             onClick={onClose}
@@ -369,7 +369,7 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
 
         {/* Content - scrollable middle, fixed appointment length + actions at bottom */}
         <div className="flex flex-col flex-1 min-h-0">
-          <div className="p-10 overflow-y-auto flex-1 min-h-0">
+          <div className="px-10 py-5 overflow-y-auto flex-1 min-h-0">
             {/* Save Message */}
             {saveMessage && (
               <div className={`mb-4 p-3 rounded-lg ${
@@ -388,8 +388,8 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
             ) : (
               <>
                 {/* Meeting type toggle - always show when not loading */}
-                <div className="mb-8">
-                  <Label className="mb-3 block text-gray-700 font-medium">Meeting type</Label>
+                <div className="mb-4">
+                  <Label className="mb-2 block text-gray-700 font-medium">Meeting type</Label>
                   <div className="flex rounded-xl border border-gray-200 p-1 bg-gray-50/80">
                     <button
                       type="button"
@@ -431,7 +431,7 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
                 ) : (
                   <>
                     {meetingType === "video" && (
-                      <div className="mb-8 p-5 rounded-xl bg-emerald-50/80 border border-emerald-200/80">
+                      <div className="mb-4 p-4 rounded-xl bg-emerald-50/80 border border-emerald-200/80">
                         <p className="text-sm text-emerald-800">
                           Add video meeting availability to open your client base to the entire province and receive more booked appointments.
                         </p>
@@ -440,9 +440,9 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
 
                     {/* Office Location - only when in-person and we have locations */}
                     {meetingType === "in-person" && locations.length > 0 && (
-                      <div className="mb-8">
+                      <div className="mb-4">
                         <Label className="text-gray-700 font-medium">Office Location</Label>
-                        <div className="relative mt-2">
+                        <div className="relative mt-1.5">
                           <select
                             value={selectedLocation}
                             onChange={(e) => setSelectedLocation(e.target.value)}
@@ -461,12 +461,12 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
 
                     {/* Weekly Availability - 2-column grid so all 7 days visible without scrolling */}
                     <div>
-                      <Label className="mb-4 block text-gray-700 font-medium">Weekly Availability</Label>
-                      <div className="grid grid-cols-2 gap-4">
+                      <Label className="mb-2 block text-gray-700 font-medium">Weekly Availability</Label>
+                      <div className="grid grid-cols-2 gap-2">
                         {days.map((day) => {
                           const dayData = recurringSchedule[day as keyof typeof recurringSchedule];
                           return (
-                            <div key={day} className="flex items-center gap-4 p-4 border border-gray-200 rounded-xl bg-gray-50/50 hover:bg-gray-50 transition-colors">
+                            <div key={day} className="flex items-center gap-3 p-2.5 border border-gray-200 rounded-lg bg-gray-50/50 hover:bg-gray-50 transition-colors">
                               <input
                                 type="checkbox"
                                 checked={dayData.enabled}
@@ -480,7 +480,7 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
                               />
                               <div className="w-24 flex-shrink-0 capitalize text-sm font-medium text-gray-700">{day}</div>
                               {dayData.enabled ? (
-                                <div className="flex items-center gap-2 min-w-0 flex-1">
+                                <div className="flex items-center gap-1.5 min-w-0 flex-1">
                                   <Input
                                     type="time"
                                     value={dayData.start}
@@ -493,9 +493,9 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
                                         [day]: { ...dayData, start: newValue },
                                       });
                                     }}
-                                    className="w-32 min-w-0 py-2.5 rounded-lg border-gray-200"
+                                    className="w-28 min-w-0 py-2 rounded-lg border-gray-200 text-sm"
                                   />
-                                  <span className="text-gray-500 text-sm flex-shrink-0">to</span>
+                                  <span className="text-gray-500 text-xs flex-shrink-0">to</span>
                                   <Input
                                     type="time"
                                     value={dayData.end}
@@ -508,7 +508,7 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
                                         [day]: { ...dayData, end: newValue },
                                       });
                                     }}
-                                    className="w-32 min-w-0 py-2.5 rounded-lg border-gray-200"
+                                    className="w-28 min-w-0 py-2 rounded-lg border-gray-200 text-sm"
                                   />
                                 </div>
                               ) : (
@@ -527,13 +527,13 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
 
           {/* Footer: Appointment length + actions (when content is shown) */}
           {!loading && (locations.length > 0 || meetingType === "video") && (
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 px-10 py-6 border-t border-gray-100 bg-gray-50/30 flex-shrink-0">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 px-10 py-4 border-t border-gray-100 bg-gray-50/30 flex-shrink-0">
               <div className="sm:min-w-[220px]">
                 <Label className="text-gray-700 font-medium">Appointment Length</Label>
                 <select
                   value={appointmentLength}
                   onChange={(e) => setAppointmentLength(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-neutral-800 focus:border-transparent mt-2 bg-white text-gray-900"
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-neutral-800 focus:border-transparent mt-1.5 bg-white text-gray-900 text-sm"
                 >
                   <option value="15">15 minutes</option>
                   <option value="30">30 minutes</option>
