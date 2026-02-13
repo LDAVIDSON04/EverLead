@@ -2,6 +2,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { requireAdmin } from "@/lib/requireAdmin";
 
 export const dynamic = "force-dynamic";
 
@@ -20,7 +21,10 @@ type LeadRow = {
   winning_agent_id: string | null;
 };
 
-export async function GET(_req: NextRequest) {
+export async function GET(req: NextRequest) {
+  const admin = await requireAdmin(req.headers.get("authorization"));
+  if (!admin.ok) return admin.response;
+
   try {
     // 1) Get all leads (you don't have that many yet; this is fine for MVP)
     const { data: leads, error: leadsError } = await supabaseAdmin

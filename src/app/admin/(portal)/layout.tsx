@@ -4,6 +4,7 @@ import { ReactNode, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { supabaseClient } from '@/lib/supabaseClient';
+import { getAdminAuthHeaders } from '@/lib/adminAuth';
 import { CheckCircle, Users, Calendar, DollarSign, User, XCircle, FileText, AlertCircle } from 'lucide-react';
 
 type AdminLayoutProps = {
@@ -62,8 +63,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   useEffect(() => {
     async function loadPendingCounts() {
       try {
-        // Load pending agents count (includes both profile and bio approvals)
-        const agentsRes = await fetch("/api/admin/pending-agents");
+        const headers = await getAdminAuthHeaders();
+        const agentsRes = await fetch("/api/admin/pending-agents", { headers });
         if (agentsRes.ok) {
           const agentsData = await agentsRes.json();
           setPendingAgentCount(agentsData?.length || 0);

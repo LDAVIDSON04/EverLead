@@ -1,7 +1,7 @@
 // API route to fetch agent email from auth.users (admin only)
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { cookies } from "next/headers";
+import { requireAdmin } from "@/lib/requireAdmin";
 
 export const dynamic = "force-dynamic";
 
@@ -9,6 +9,9 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const admin = await requireAdmin(req.headers.get("authorization"));
+  if (!admin.ok) return admin.response;
+
   try {
     const { id: agentId } = await params;
 

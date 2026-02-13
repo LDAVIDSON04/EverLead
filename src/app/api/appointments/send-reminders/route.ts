@@ -6,6 +6,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { requireCronSecret } from "@/lib/requireCronSecret";
 import { DateTime } from "luxon";
 import {
   sendConsumerVideoReminderSMS,
@@ -31,19 +32,10 @@ function getAppointmentType(appointment: any): "video" | "in-person" {
 }
 
 export async function GET(req: NextRequest) {
-  try {
-    // Optional: Check for CRON_SECRET if set (for extra security)
-    // Note: Vercel Cron doesn't automatically send custom headers, so if CRON_SECRET is set,
-    // you'd need to configure it in Vercel Cron settings or remove this check
-    const authHeader = req.headers.get("authorization");
-    const cronSecret = process.env.CRON_SECRET;
-    
-    // Only enforce secret if it's explicitly set AND a header is provided
-    // This allows Vercel Cron to work by default, but adds security if you configure it
-    if (cronSecret && authHeader && authHeader !== `Bearer ${cronSecret}`) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  const unauthorized = requireCronSecret(req.headers.get("authorization"));
+  if (unauthorized) return unauthorized;
 
+  try {
     const now = DateTime.now().setZone("utc");
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.soradin.com";
 

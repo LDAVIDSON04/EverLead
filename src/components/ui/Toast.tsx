@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Check, X, AlertCircle, Info } from "lucide-react";
+import { escapeHtml } from "@/lib/escapeHtml";
 
 type ToastType = "success" | "error" | "info";
 
@@ -97,7 +98,7 @@ export function showToast(message: string, type: ToastType = "success", duration
   toastDiv.className = `flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg border-2 text-white min-w-[300px] max-w-md transform transition-all duration-300 translate-x-0 opacity-100 ${colors[type]}`;
   toastDiv.innerHTML = `
     <div class="flex-shrink-0">${iconSvg}</div>
-    <p class="flex-1 text-sm font-medium">${message}</p>
+    <p class="flex-1 text-sm font-medium">${escapeHtml(message)}</p>
     <button class="flex-shrink-0 hover:opacity-80 transition-opacity" onclick="this.parentElement.remove()">
       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
     </button>

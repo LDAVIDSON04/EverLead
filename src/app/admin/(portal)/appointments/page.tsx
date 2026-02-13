@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabaseClient } from "@/lib/supabaseClient";
+import { getAdminAuthHeaders } from "@/lib/adminAuth";
 import { useRequireRole } from "@/lib/hooks/useRequireRole";
 import { Calendar, DollarSign, Eye, XCircle, X, Search } from "lucide-react";
 
@@ -218,8 +219,10 @@ export default function AdminAppointmentsPage() {
     setError(null);
 
     try {
+      const headers = await getAdminAuthHeaders();
       const response = await fetch(`/api/admin/appointments/${appointmentToRefund.id}/refund`, {
         method: "POST",
+        headers,
       });
 
       const data = await response.json();

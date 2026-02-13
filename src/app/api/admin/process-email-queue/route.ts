@@ -4,12 +4,13 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { processEmailQueue } from "@/lib/emailQueue";
+import { requireAdmin } from "@/lib/requireAdmin";
 
 export async function POST(req: NextRequest) {
+  const admin = await requireAdmin(req.headers.get("authorization"));
+  if (!admin.ok) return admin.response;
+
   try {
-    // Optional: Add admin authentication check here
-    // For now, this can be called by Vercel Cron or manually
-    
     console.log("📬 Processing email queue...");
     await processEmailQueue();
     

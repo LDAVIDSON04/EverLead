@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { supabaseClient } from "@/lib/supabaseClient";
+import { getAdminAuthHeaders } from "@/lib/adminAuth";
 import { Check, X, AlertCircle, Download, Eye, Clock, FileText, User, Building, MapPin, Mail, Phone } from "lucide-react";
 
 type OfficeLocationDisplay = {
@@ -68,7 +69,8 @@ export default function AgentApprovalPage() {
       setLoading(true);
       setError(null);
 
-      const res = await fetch("/api/admin/pending-agents");
+      const authHeaders = await getAdminAuthHeaders();
+      const res = await fetch("/api/admin/pending-agents", { headers: authHeaders });
       if (!res.ok) {
         throw new Error("Failed to fetch pending agents");
       }
@@ -95,14 +97,11 @@ export default function AgentApprovalPage() {
         throw new Error("You must be logged in to approve agents.");
       }
 
+      const authHeaders = await getAdminAuthHeaders();
       const res = await fetch("/api/admin/approve-agent", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          agentId: id,
-          action: "approve",
-          adminUserId: user.id,
-        }),
+        headers: { ...authHeaders, "Content-Type": "application/json" },
+        body: JSON.stringify({ agentId: id, action: "approve" }),
       });
 
       if (!res.ok) {
@@ -141,15 +140,11 @@ export default function AgentApprovalPage() {
         throw new Error("You must be logged in to decline agents.");
       }
 
+      const authHeaders = await getAdminAuthHeaders();
       const res = await fetch("/api/admin/approve-agent", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          agentId: id,
-          action: "decline",
-          notes: reason || undefined,
-          adminUserId: user.id,
-        }),
+        headers: { ...authHeaders, "Content-Type": "application/json" },
+        body: JSON.stringify({ agentId: id, action: "decline", notes: reason || undefined }),
       });
 
       if (!res.ok) {
@@ -199,14 +194,14 @@ export default function AgentApprovalPage() {
         throw new Error("You must be logged in to request information.");
       }
 
+      const authHeaders = await getAdminAuthHeaders();
       const res = await fetch("/api/admin/approve-agent", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { ...authHeaders, "Content-Type": "application/json" },
         body: JSON.stringify({
           agentId: selectedAgent.id,
           action: "request-info",
           notes: requestInfoText.trim(),
-          adminUserId: user.id,
         }),
       });
 

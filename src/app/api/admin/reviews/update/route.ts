@@ -1,6 +1,7 @@
 // Admin API endpoint to update reviews and associated lead names
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { requireAdmin } from "@/lib/requireAdmin";
 import { z } from "zod";
 
 export const dynamic = "force-dynamic";
@@ -11,10 +12,12 @@ const updateReviewSchema = z.object({
   reviewText: z.string().optional(),
   leadFirstName: z.string().optional(),
   leadLastName: z.string().optional(),
-  adminUserId: z.string().uuid().optional(),
 });
 
 export async function POST(req: NextRequest) {
+  const admin = await requireAdmin(req.headers.get("authorization"));
+  if (!admin.ok) return admin.response;
+
   try {
     const body = await req.json();
     const validation = updateReviewSchema.safeParse(body);
@@ -26,23 +29,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { reviewId, reviewText, leadFirstName, leadLastName, adminUserId } = validation.data;
-
-    // Verify admin (if adminUserId provided)
-    if (adminUserId) {
-      const { data: adminProfile } = await supabaseAdmin
-        .from("profiles")
-        .select("role")
-        .eq("id", adminUserId)
-        .maybeSingle();
-
-      if (!adminProfile || adminProfile.role !== "admin") {
-        return NextResponse.json(
-          { error: "Forbidden - Admin access required" },
-          { status: 403 }
-        );
-      }
-    }
+    const { reviewId, reviewText, leadFirstName, leadLastName } = validation.data;
 
     // Get the review to find the lead_id
     const { data: review, error: reviewError } = await supabaseAdmin

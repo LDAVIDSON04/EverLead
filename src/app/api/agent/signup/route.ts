@@ -3,8 +3,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { checkBotId } from 'botid/server';
+import { checkRateLimit } from "@/lib/rateLimit";
 
 export async function POST(req: NextRequest) {
+  const rateLimitRes = checkRateLimit(req, "signup", 10);
+  if (rateLimitRes) return rateLimitRes;
+
   // Check for bots
   const verification = await checkBotId();
   if (verification.isBot) {

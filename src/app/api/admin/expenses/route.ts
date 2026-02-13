@@ -1,6 +1,7 @@
 // src/app/api/admin/expenses/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { requireAdmin } from "@/lib/requireAdmin";
 
 export const dynamic = "force-dynamic";
 
@@ -13,7 +14,10 @@ type Expense = {
   created_at: string;
 };
 
-export async function GET(_req: NextRequest) {
+export async function GET(req: NextRequest) {
+  const admin = await requireAdmin(req.headers.get("authorization"));
+  if (!admin.ok) return admin.response;
+
   try {
     const { data: expenses, error } = await supabaseAdmin
       .from("marketing_expenses")

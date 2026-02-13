@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { requireAdmin } from "@/lib/requireAdmin";
 import { createClient } from "@supabase/supabase-js";
 
 /** Black logo as base64 data URI so it always displays in emails (no external image load). */
@@ -236,23 +237,12 @@ async function sendApprovalEmail(email: string, fullName: string | null, approve
 }
 
 export async function POST(req: NextRequest) {
+  const admin = await requireAdmin(req.headers.get("authorization"));
+  if (!admin.ok) return admin.response;
+
   try {
-    // Get admin user ID from request body (sent by frontend)
     const body = await req.json();
-    const { agentId, action, notes, adminUserId } = body;
-
-    // Verify admin (using adminUserId from frontend)
-    if (adminUserId) {
-      const { data: adminProfile } = await supabaseAdmin
-        .from("profiles")
-        .select("role")
-        .eq("id", adminUserId)
-        .maybeSingle();
-
-      if (!adminProfile || adminProfile.role !== "admin") {
-        return NextResponse.json({ error: "Forbidden - Admin access required" }, { status: 403 });
-      }
-    }
+    const { agentId, action, notes } = body;
 
     if (!agentId || !action || !["approve", "decline", "request-info"].includes(action)) {
       return NextResponse.json(
@@ -299,7 +289,7 @@ export async function POST(req: NextRequest) {
       // Approve everything at once
       updateData.approval_status = "approved";
       updateData.approved_at = new Date().toISOString();
-      updateData.approved_by = adminUserId || null;
+      updateData.approved_by = admin.userId;
       
       // Also approve bio if it exists
       if (agentProfile.ai_generated_bio) {

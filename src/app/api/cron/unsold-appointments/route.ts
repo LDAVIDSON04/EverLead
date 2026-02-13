@@ -2,17 +2,12 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { headers } from 'next/headers';
+import { requireCronSecret } from '@/lib/requireCronSecret';
 
 export async function GET() {
-  // Verify this is a cron request (Vercel adds a header or use CRON_SECRET)
-  const authHeader = process.env.CRON_SECRET;
   const headersList = await headers();
-  const requestSecret = headersList.get('authorization');
-  
-  // Only enforce CRON_SECRET if it's explicitly set (for manual testing)
-  if (authHeader && requestSecret !== `Bearer ${authHeader}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const unauthorized = requireCronSecret(headersList.get('authorization'));
+  if (unauthorized) return unauthorized;
 
   if (!supabaseAdmin) {
     return NextResponse.json(

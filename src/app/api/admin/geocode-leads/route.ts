@@ -2,9 +2,13 @@
 // This should be run by admin to backfill coordinates for existing leads
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { requireAdmin } from "@/lib/requireAdmin";
 import { geocodeLocation } from "@/lib/geocoding";
 
 export async function POST(req: NextRequest) {
+  const admin = await requireAdmin(req.headers.get("authorization"));
+  if (!admin.ok) return admin.response;
+
   try {
     // Get all leads without coordinates
     const { data: leads, error: leadsError } = await supabaseAdmin

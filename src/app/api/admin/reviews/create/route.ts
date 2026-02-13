@@ -1,6 +1,7 @@
 // Admin API endpoint to create reviews
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { requireAdmin } from "@/lib/requireAdmin";
 import { z } from "zod";
 
 export const dynamic = "force-dynamic";
@@ -12,10 +13,13 @@ const createReviewSchema = z.object({
   appointmentId: z.string().uuid().optional(),
   rating: z.number().int().min(1).max(5),
   reviewText: z.string().optional(),
-  adminUserId: z.string().uuid().optional(), // For logging who created it
 });
 
 export async function POST(req: NextRequest) {
+  const adminResult = await requireAdmin(req.headers.get("authorization"));
+  if (!adminResult.ok) return adminResult.response;
+  const admin = adminResult;
+
   try {
     const body = await req.json();
     const validation = createReviewSchema.safeParse(body);
@@ -27,23 +31,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { agentId, leadId, appointmentId, rating, reviewText, adminUserId } = validation.data;
-
-    // Verify admin (if adminUserId provided)
-    if (adminUserId) {
-      const { data: adminProfile } = await supabaseAdmin
-        .from("profiles")
-        .select("role")
-        .eq("id", adminUserId)
-        .maybeSingle();
-
-      if (!adminProfile || adminProfile.role !== "admin") {
-        return NextResponse.json(
-          { error: "Forbidden - Admin access required" },
-          { status: 403 }
-        );
-      }
-    }
+    const { agentId, leadId, appointmentId, rating, reviewText } = validation.data;
 
     // Verify agent exists
     const { data: agent, error: agentError } = await supabaseAdmin
@@ -165,7 +153,7 @@ export async function POST(req: NextRequest) {
     console.log(`✅ Admin created review for agent ${agentId} (${agent.full_name}):`, {
       reviewId: newReview.id,
       rating,
-      adminUserId,
+      adminUserId: admin.userId,
     });
 
     return NextResponse.json({

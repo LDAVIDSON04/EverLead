@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabaseClient } from "@/lib/supabaseClient";
+import { getAdminAuthHeaders } from "@/lib/adminAuth";
 
 type DeclinedPayment = {
   id: string;
@@ -47,7 +48,8 @@ export default function DeclinedPaymentsPage() {
   useEffect(() => {
     async function loadDeclinedPayments() {
       try {
-        const res = await fetch("/api/admin/declined-payments");
+        const headers = await getAdminAuthHeaders();
+        const res = await fetch("/api/admin/declined-payments", { headers });
         if (!res.ok) {
           throw new Error("Failed to fetch declined payments");
         }

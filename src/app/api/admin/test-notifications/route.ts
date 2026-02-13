@@ -3,9 +3,13 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { requireAdmin } from "@/lib/requireAdmin";
 import { isWithinRadius, calculateDistance } from "@/lib/distance";
 
 export async function GET(req: NextRequest) {
+  const admin = await requireAdmin(req.headers.get("authorization"));
+  if (!admin.ok) return admin.response;
+
   try {
     if (!supabaseAdmin) {
       return NextResponse.json(

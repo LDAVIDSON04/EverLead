@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabaseClient } from "@/lib/supabaseClient";
+import { getAdminAuthHeaders } from "@/lib/adminAuth";
 import { useRequireRole } from "@/lib/hooks/useRequireRole";
 import { Search, Calendar, Eye, UserX, User, Building, MapPin, Mail, Phone, Clock, CalendarCheck, X } from "lucide-react";
 import Image from "next/image";
@@ -66,9 +67,10 @@ export default function AdminSpecialistsPage() {
         let emailsFromAuth: Record<string, string | null> = {};
         if (agentIds.length > 0) {
           try {
+            const authHeaders = await getAdminAuthHeaders();
             const emailResponse = await fetch("/api/admin/agents/emails", {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
+              headers: { ...authHeaders, "Content-Type": "application/json" },
               body: JSON.stringify({ agentIds }),
             });
             if (emailResponse.ok) {

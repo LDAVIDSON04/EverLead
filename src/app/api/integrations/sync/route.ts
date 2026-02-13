@@ -15,18 +15,13 @@ import type { CalendarConnection } from "@/lib/calendarProviders/types";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-// Optional: Add authentication/authorization check for cron jobs
-// Vercel Cron sends a header you can verify
-const CRON_SECRET = process.env.CRON_SECRET;
+import { requireCronSecret } from "@/lib/requireCronSecret";
 
 export async function GET(req: NextRequest) {
-  try {
-    // Optional: Verify this is a legitimate cron request
-    const authHeader = req.headers.get("authorization");
-    if (CRON_SECRET && authHeader !== `Bearer ${CRON_SECRET}`) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  const unauthorized = requireCronSecret(req.headers.get("authorization"));
+  if (unauthorized) return unauthorized;
 
+  try {
     // Calculate time window (next 30 days)
     const now = new Date();
     const timeMin = now.toISOString();

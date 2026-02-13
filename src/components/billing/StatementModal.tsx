@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { MonthlyStatement } from "./MonthlyStatement";
 import { Download, X } from "lucide-react";
+import { escapeHtml } from "@/lib/escapeHtml";
 
 interface StatementData {
   year: number;
@@ -59,7 +60,7 @@ export function StatementModal({ open, onClose, data, loading }: StatementModalP
       <!DOCTYPE html>
       <html>
         <head>
-          <title>Monthly Statement - ${data.monthName} ${data.year}</title>
+          <title>Monthly Statement - ${escapeHtml(data.monthName)} ${data.year}</title>
           <style>
             body { font-family: Arial, sans-serif; margin: 0; padding: 40px; background: white; }
             .statement-container { max-width: 800px; margin: 0 auto; }
@@ -108,22 +109,22 @@ export function StatementModal({ open, onClose, data, loading }: StatementModalP
                 </div>
                 <div class="statement-title">
                   <h2>MONTHLY STATEMENT</h2>
-                  <p>${data.monthName} ${data.year}</p>
+                  <p>${escapeHtml(data.monthName)} ${data.year}</p>
                 </div>
               </div>
               
               <div class="info-grid">
                 <div class="info-section">
                   <h3>ACCOUNT INFORMATION</h3>
-                  <div class="info-row"><span>Account Holder:</span><span>${data.agentName}</span></div>
-                  <div class="info-row"><span>Account Number:</span><span>${data.accountNumber}</span></div>
+                  <div class="info-row"><span>Account Holder:</span><span>${escapeHtml(data.agentName)}</span></div>
+                  <div class="info-row"><span>Account Number:</span><span>${escapeHtml(data.accountNumber)}</span></div>
                   <div class="info-row"><span>Account Type:</span><span>Business Account</span></div>
                 </div>
                 <div class="info-section">
                   <h3>STATEMENT PERIOD</h3>
-                  <div class="info-row"><span>From:</span><span>${data.statementPeriod.from}</span></div>
-                  <div class="info-row"><span>To:</span><span>${data.statementPeriod.to}</span></div>
-                  <div class="info-row"><span>Statement Date:</span><span>${data.statementPeriod.statementDate}</span></div>
+                  <div class="info-row"><span>From:</span><span>${escapeHtml(data.statementPeriod.from)}</span></div>
+                  <div class="info-row"><span>To:</span><span>${escapeHtml(data.statementPeriod.to)}</span></div>
+                  <div class="info-row"><span>Statement Date:</span><span>${escapeHtml(data.statementPeriod.statementDate)}</span></div>
                 </div>
               </div>
               
@@ -141,10 +142,10 @@ export function StatementModal({ open, onClose, data, loading }: StatementModalP
                   <tbody>
                     ${data.transactions.map(t => `
                       <tr>
-                        <td>${t.date}</td>
-                        <td>${t.description}</td>
-                        <td>${t.quantity}</td>
-                        <td>$${t.paid}</td>
+                        <td>${escapeHtml(t.date)}</td>
+                        <td>${escapeHtml(t.description)}</td>
+                        <td>${escapeHtml(t.quantity)}</td>
+                        <td>$${escapeHtml(t.paid)}</td>
                       </tr>
                     `).join('')}
                   </tbody>
@@ -155,7 +156,7 @@ export function StatementModal({ open, onClose, data, loading }: StatementModalP
                 <h3>STATEMENT SUMMARY</h3>
                 <div class="summary-row">
                   <span>Total Balance Paid:</span>
-                  <span>$${data.total}</span>
+                  <span>$${escapeHtml(data.total)}</span>
                 </div>
               </div>
               

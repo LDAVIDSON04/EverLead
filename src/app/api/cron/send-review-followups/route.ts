@@ -1,22 +1,15 @@
 // Cron job to send review follow-up emails 24 hours after appointments
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { requireCronSecret } from "@/lib/requireCronSecret";
 import { sendReviewFollowUpEmail } from "@/lib/emails";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 export async function GET(req: NextRequest) {
-  // Verify this is a cron request (you can add authentication here)
-  const authHeader = req.headers.get("authorization");
-  const cronSecret = process.env.CRON_SECRET;
-  
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json(
-      { error: "Unauthorized" },
-      { status: 401 }
-    );
-  }
+  const unauthorized = requireCronSecret(req.headers.get("authorization"));
+  if (unauthorized) return unauthorized;
 
   try {
     // Get appointments that were completed 24 hours ago (confirmed_at is 24 hours in the past)

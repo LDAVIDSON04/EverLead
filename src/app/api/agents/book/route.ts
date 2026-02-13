@@ -5,6 +5,8 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { checkRateLimit } from "@/lib/rateLimit";
+import { z } from "zod";
 import { getLeadPriceFromUrgency } from "@/lib/leads/pricing";
 import { chargeAgentForAppointment } from "@/lib/chargeAgentForAppointment";
 import { sendPaymentDeclineEmail } from "@/lib/emails";
@@ -31,20 +33,41 @@ function getWhiteLogoDataUri(): string {
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
+const bookBodySchema = z.object({
+  agentId: z.string().uuid(),
+  startsAt: z.string().min(1),
+  endsAt: z.string().min(1).optional(),
+  firstName: z.string().min(1).max(120).trim(),
+  lastName: z.string().min(1).max(120).trim(),
+  email: z.string().email().max(320),
+  phone: z.string().max(30).optional(),
+  city: z.string().max(120).optional(),
+  province: z.string().max(60).optional(),
+  serviceType: z.string().max(120).optional(),
+  notes: z.string().max(2000).optional(),
+  officeLocationId: z.string().uuid().optional().nullable(),
+  rescheduleAppointmentId: z.string().uuid().optional(),
+  appointmentType: z.enum(["in-person", "video"]).optional(),
+});
+
 export async function POST(req: NextRequest) {
+  const rateLimitRes = checkRateLimit(req, "book", 15);
+  if (rateLimitRes) return rateLimitRes;
+
   try {
-    console.log("Booking API called");
     const body = await req.json();
-    console.log("Booking request body:", { 
-      agentId: body.agentId, 
-      startsAt: body.startsAt,
-      firstName: body.firstName,
-      lastName: body.lastName,
-      email: body.email 
-    });
+    const parse = bookBodySchema.safeParse(body);
+    if (!parse.success) {
+      const msg = parse.error.issues.map((i) => i.message).join("; ");
+      return NextResponse.json(
+        { error: "Invalid request", details: msg },
+        { status: 400 }
+      );
+    }
     const {
       agentId,
-      startsAt, // ISO timestamp in UTC
+      startsAt,
+      endsAt: endsAtInput,
       firstName,
       lastName,
       email,
@@ -53,18 +76,10 @@ export async function POST(req: NextRequest) {
       province,
       serviceType,
       notes,
-      officeLocationId, // ID of the office location where appointment is booked
-      rescheduleAppointmentId, // ID of appointment being rescheduled
-      appointmentType, // "in-person" | "video"
-    } = body;
-
-    // Validate required fields (phone is optional for now)
-    if (!agentId || !startsAt || !firstName || !lastName || !email) {
-      return NextResponse.json(
-        { error: "Missing required fields: agentId, startsAt, firstName, lastName, email" },
-        { status: 400 }
-      );
-    }
+      officeLocationId,
+      rescheduleAppointmentId,
+      appointmentType,
+    } = parse.data;
 
     // Validate agent exists and is approved
     const { data: agent, error: agentError } = await supabaseAdmin
@@ -91,7 +106,7 @@ export async function POST(req: NextRequest) {
 
     // Parse the time slot
     const slotStart = new Date(startsAt);
-    const slotEnd = new Date(body.endsAt || new Date(slotStart.getTime() + 30 * 60 * 1000)); // Default 30 min
+    const slotEnd = new Date(endsAtInput || new Date(slotStart.getTime() + 30 * 60 * 1000)); // Default 30 min
 
     if (isNaN(slotStart.getTime())) {
       return NextResponse.json(
