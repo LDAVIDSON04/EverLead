@@ -26,6 +26,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const pathname = usePathname();
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [userName, setUserName] = useState<string>('');
+  const [userEmail, setUserEmail] = useState<string>('');
   const [pendingAgentCount, setPendingAgentCount] = useState<number>(0);
 
   useEffect(() => {
@@ -50,6 +51,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         }
 
         setUserName(profile.full_name || 'Admin');
+        setUserEmail(user.email ?? '');
         setCheckingAuth(false);
       } catch (error) {
         console.error('Error checking auth:', error);
@@ -148,7 +150,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             </div>
             <div className="flex-1">
               <p className="text-sm text-white">{userName || 'Admin User'}</p>
-              <p className="text-xs text-neutral-400">admin@soradin.com</p>
+              <p className="text-xs text-neutral-400 truncate" title={userEmail}>{userEmail || '—'}</p>
             </div>
           </div>
 
