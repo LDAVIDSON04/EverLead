@@ -38,7 +38,6 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
     const now = new Date();
     return { year: now.getFullYear(), month: now.getMonth() };
   });
-  const [selectedDates, setSelectedDates] = useState<Set<string>>(new Set());
   const [rangeStart, setRangeStart] = useState<string | null>(null);
   const [rangeEnd, setRangeEnd] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -48,8 +47,6 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
   useEffect(() => {
     if (!isOpen) return;
     setError(null);
-    setRangeStart(null);
-    setRangeEnd(null);
     const fetchDates = async () => {
       setLoading(true);
       try {
@@ -66,7 +63,15 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
           return;
         }
         const data = await res.json();
-        setSelectedDates(new Set((data.dates || []).filter((d: unknown) => typeof d === "string")));
+        const dates = (data.dates || []).filter((d: unknown) => typeof d === "string") as string[];
+        if (dates.length > 0) {
+          const sorted = [...dates].sort();
+          setRangeStart(sorted[0]);
+          setRangeEnd(sorted[sorted.length - 1]);
+        } else {
+          setRangeStart(null);
+          setRangeEnd(null);
+        }
       } catch (e) {
         console.error(e);
         setError("Failed to load dates");
@@ -89,45 +94,75 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
   for (let d = 1; d <= daysInMonth; d++) cells.push(d);
   while (cells.length < rows * 7) cells.push(null);
 
+  // Display set: the single range (start through end)
+  const displaySet = (() => {
+    if (!rangeStart) return new Set<string>();
+    if (!rangeEnd) return new Set([rangeStart]);
+    const [s, e] = rangeStart <= rangeEnd ? [rangeStart, rangeEnd] : [rangeEnd, rangeStart];
+    return new Set(datesInRange(s, e));
+  })();
+
   const handleDateClick = (year: number, month: number, day: number) => {
-    const d = new Date(year, month, day);
-    const key = toYYYYMMDD(d);
+    const key = toYYYYMMDD(new Date(year, month, day));
 
     if (rangeStart === null) {
-      if (selectedDates.has(key)) {
-        setSelectedDates((prev) => {
-          const next = new Set(prev);
-          next.delete(key);
-          return next;
-        });
-      } else {
-        setRangeStart(key);
-        setRangeEnd(null);
-      }
-      return;
-    }
-    // rangeStart is set, waiting for end date
-    if (selectedDates.has(key)) {
-      setSelectedDates((prev) => {
-        const next = new Set(prev);
-        next.delete(key);
-        return next;
-      });
-      setRangeStart(null);
+      setRangeStart(key);
       setRangeEnd(null);
       return;
     }
-    const start = rangeStart;
-    const end = key;
-    const [s, e] = start <= end ? [start, end] : [end, start];
-    const toAdd = datesInRange(s, e);
-    setSelectedDates((prev) => {
-      const next = new Set(prev);
-      toAdd.forEach((date) => next.add(date));
-      return next;
-    });
-    setRangeStart(null);
-    setRangeEnd(null);
+
+    if (rangeEnd === null) {
+      setRangeEnd(key);
+      return;
+    }
+
+    // Both start and end set — adjust range (Expedia-style)
+    const start = rangeStart <= rangeEnd ? rangeStart : rangeEnd;
+    const end = rangeStart <= rangeEnd ? rangeEnd : rangeStart;
+
+    if (key < start) {
+      setRangeStart(key);
+      setRangeEnd(end);
+    } else if (key > end) {
+      setRangeStart(start);
+      setRangeEnd(key);
+    } else if (key > start && key < end) {
+      // Inside range: shorten from left or right (first half = new start, second half = new end)
+      const arr = datesInRange(start, end);
+      const mid = Math.floor((arr.length - 1) / 2);
+      const keyIndex = arr.indexOf(key);
+      if (keyIndex <= mid) {
+        setRangeStart(key);
+        setRangeEnd(end);
+      } else {
+        setRangeStart(start);
+        setRangeEnd(key);
+      }
+    } else if (key === start && key === end) {
+      // Single day selected — clear
+      setRangeStart(null);
+      setRangeEnd(null);
+    } else if (key === start) {
+      // Shorten from left: new start = next day in range
+      const arr = datesInRange(start, end);
+      if (arr.length <= 1) {
+        setRangeStart(null);
+        setRangeEnd(null);
+      } else {
+        setRangeStart(arr[1]);
+        setRangeEnd(end);
+      }
+    } else if (key === end) {
+      // Shorten from right: new end = previous day in range
+      const arr = datesInRange(start, end);
+      if (arr.length <= 1) {
+        setRangeStart(null);
+        setRangeEnd(null);
+      } else {
+        setRangeStart(start);
+        setRangeEnd(arr[arr.length - 2]);
+      }
+    }
   };
 
   const handleSave = async () => {
@@ -139,7 +174,14 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
         setError("Not signed in");
         return;
       }
-      const dates = Array.from(selectedDates).sort();
+      const dates = rangeStart
+        ? rangeEnd
+          ? datesInRange(
+              rangeStart <= rangeEnd ? rangeStart : rangeEnd,
+              rangeStart <= rangeEnd ? rangeEnd : rangeStart
+            )
+          : [rangeStart]
+        : [];
       const res = await fetch("/api/agent/out-of-office", {
         method: "POST",
         headers: {
@@ -194,11 +236,8 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
           </button>
         </div>
         <p className="px-6 pt-3 text-sm text-gray-600">
-          Click a start date, then an end date to set a range (e.g. Monday then Thursday = Mon–Thu). Click a selected date to remove it.
+          Select days you&apos;re out of office or on vacation. Those days won&apos;t show as available for booking.
         </p>
-        {rangeStart && !rangeEnd && (
-          <p className="px-6 text-xs text-gray-500">Start: {rangeStart} — now click end date</p>
-        )}
         <div className="p-6">
           <div className="flex items-center justify-between mb-4">
             <button
@@ -234,8 +273,8 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
                     return <div key={`empty-${idx}`} />;
                   }
                   const dateStr = toYYYYMMDD(new Date(yearMonth.year, yearMonth.month, day));
-                  const isSelected = selectedDates.has(dateStr);
-                  const isRangeStart = dateStr === rangeStart && !rangeEnd;
+                  const isSelected = displaySet.has(dateStr);
+                  const isStartOnly = rangeStart === dateStr && !rangeEnd;
                   return (
                     <button
                       key={dateStr}
@@ -244,7 +283,7 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
                       className={`w-10 h-10 rounded-lg text-sm font-medium transition-colors ${
                         isSelected
                           ? "bg-neutral-800 text-white hover:bg-neutral-700"
-                          : isRangeStart
+                          : isStartOnly
                           ? "bg-neutral-600 text-white ring-2 ring-neutral-800 ring-offset-1"
                           : "bg-gray-50 text-gray-900 hover:bg-gray-100"
                       }`}
