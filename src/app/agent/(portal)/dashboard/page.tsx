@@ -252,9 +252,9 @@ export default function AgentDashboardPage() {
           setCalendarAppointments(appointmentsByDate);
         }
 
-        // Number of Meetings: last calendar week (Mon–Sun) by starts_at in agent timezone, actual counts
-        const lastWeekStart = now.minus({ weeks: 1 }).startOf("week");
-        const lastWeekEnd = lastWeekStart.plus({ days: 6 }).endOf("day");
+        // Number of Meetings: this calendar week (Mon–Sun) by starts_at in agent timezone, actual counts
+        const thisWeekStart = now.startOf("week");
+        const thisWeekEnd = thisWeekStart.plus({ days: 6 }).endOf("day");
         const dayCounts: Record<string, number> = {
           Mon: 0,
           Tue: 0,
@@ -267,7 +267,7 @@ export default function AgentDashboardPage() {
           soradinOnly.forEach((apt: any) => {
             if (!apt.starts_at) return;
             const localStart = DateTime.fromISO(apt.starts_at, { zone: "utc" }).setZone(agentTimezone);
-            if (localStart < lastWeekStart || localStart > lastWeekEnd) return;
+            if (localStart < thisWeekStart || localStart > thisWeekEnd) return;
             const weekday = localStart.weekday; // 1 = Monday, 7 = Sunday
             const dayNames = ["", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
             const dayName = dayNames[weekday];
@@ -535,7 +535,7 @@ export default function AgentDashboardPage() {
             <div className="bg-white rounded-xl border border-gray-200 p-5">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm text-[#1a3a2e] font-medium">Number of Meetings</h3>
-                <button className="text-xs text-gray-500 hover:text-gray-700">Last week</button>
+                <span className="text-xs text-gray-600">This week</span>
               </div>
               
               <div className="h-48 flex items-end justify-between gap-3 border-l-2 border-b-2 border-gray-200 pl-2 pb-2">
