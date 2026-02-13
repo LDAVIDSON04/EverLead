@@ -535,7 +535,7 @@ export default function CreateAccountContinuePage() {
                   <Plus className="w-4 h-4" />
                   Add Location
                 </button>
-                {showAddLocation && (
+                {(showAddLocation || officeLocations.length === 0) && (
                   <div className="mb-4 p-4 border border-gray-300 rounded-lg bg-gray-50 space-y-3">
                     <h4 className="font-medium text-sm text-gray-700">New Office Location</h4>
                     <input
@@ -718,7 +718,7 @@ export default function CreateAccountContinuePage() {
                   <Plus className="w-4 h-4" />
                   Add Location
                 </button>
-                {showAddLocation && (
+                {(showAddLocation || officeLocations.length === 0) && (
                   <div className="mb-4 p-4 border border-gray-300 rounded-lg bg-gray-50 space-y-3">
                     <h4 className="font-medium text-sm text-gray-700">New Office Location</h4>
                     <input
@@ -889,7 +889,7 @@ export default function CreateAccountContinuePage() {
                   <Plus className="w-4 h-4" />
                   Add Location
                 </button>
-                {showAddLocation && (
+                {(showAddLocation || officeLocations.length === 0) && (
                   <div className="mb-4 p-4 border border-gray-300 rounded-lg bg-gray-50 space-y-3">
                     <h4 className="font-medium text-sm text-gray-700">New Office Location</h4>
                     <input
@@ -1049,7 +1049,7 @@ export default function CreateAccountContinuePage() {
                   <Plus className="w-4 h-4" />
                   Add Location
                 </button>
-                {showAddLocation && (
+                {(showAddLocation || officeLocations.length === 0) && (
                   <div className="mb-4 p-4 border border-gray-300 rounded-lg bg-gray-50 space-y-3">
                     <h4 className="font-medium text-sm text-gray-700">New Office Location</h4>
                     <input
@@ -1200,7 +1200,7 @@ export default function CreateAccountContinuePage() {
                   <Plus className="w-4 h-4" />
                   Add Location
                 </button>
-                {showAddLocation && (
+                {(showAddLocation || officeLocations.length === 0) && (
                   <div className="mb-4 p-4 border border-gray-300 rounded-lg bg-gray-50 space-y-3">
                     <h4 className="font-medium text-sm text-gray-700">New Office Location</h4>
                     <input
