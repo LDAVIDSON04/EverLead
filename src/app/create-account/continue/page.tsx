@@ -393,7 +393,7 @@ export default function CreateAccountContinuePage() {
                 className="flex items-center gap-2 px-4 py-2 bg-neutral-700 text-white rounded-md text-sm hover:bg-neutral-800 transition-colors"
               >
                 <Plus className="w-4 h-4" />
-                Add business name
+                Add business / firm name
               </button>
             </div>
           ) : (
