@@ -868,22 +868,22 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
                 </div>
               </div>
 
-              {/* Step 2: Add Availability */}
+              {/* Step 2: Add Payment Method */}
               <div className={`relative flex items-start gap-4 p-5 rounded-xl border-2 transition-all shadow-sm ${
-                onboardingStatus.hasAvailability 
+                onboardingStatus.hasPaymentMethod 
                   ? 'bg-[#f0f7f4] border-[#1a3a2e]/30 shadow-[#1a3a2e]/10' 
                   : !onboardingStatus.hasProfilePicture
                   ? 'bg-gray-50 border-gray-200 opacity-60'
                   : 'bg-white border-gray-200 hover:border-gray-300'
               }`}>
                 <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center font-bold text-sm shadow-md transition-all ${
-                  onboardingStatus.hasAvailability 
+                  onboardingStatus.hasPaymentMethod 
                     ? 'bg-[#1a3a2e] text-white shadow-[#1a3a2e]/30' 
                     : !onboardingStatus.hasProfilePicture
                     ? 'bg-gray-200 text-gray-400'
                     : 'bg-gray-300 text-gray-600'
                 }`}>
-                  {onboardingStatus.hasAvailability ? (
+                  {onboardingStatus.hasPaymentMethod ? (
                     <Check size={24} className="text-white" />
                   ) : !onboardingStatus.hasProfilePicture ? (
                     <Lock size={20} className="text-gray-400" />
@@ -894,26 +894,26 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-2">
                     <div className={`font-bold text-base ${!onboardingStatus.hasProfilePicture ? 'text-gray-400' : 'text-gray-900'}`}>
-                      Add Availability
+                      Add Payment Method
                     </div>
-                    {onboardingStatus.hasAvailability && (
+                    {onboardingStatus.hasPaymentMethod && (
                       <span className="text-xs font-semibold text-[#1a3a2e] bg-[#1a3a2e]/15 px-3 py-1 rounded-full">Complete</span>
                     )}
                   </div>
                   <div className={`text-sm mb-3 ${!onboardingStatus.hasProfilePicture ? 'text-gray-400' : 'text-gray-600'}`}>
                     {!onboardingStatus.hasProfilePicture 
                       ? 'Complete Step 1 first' 
-                      : 'Set your schedule and availability'}
+                      : 'Required to receive appointments'}
                   </div>
-                  {!onboardingStatus.hasAvailability && onboardingStatus.hasProfilePicture && (
+                  {!onboardingStatus.hasPaymentMethod && onboardingStatus.hasProfilePicture && (
                     <button
                       onClick={() => {
                         setShowOnboarding(false);
-                        router.push('/agent/schedule?openAvailability=true');
+                        router.push('/agent/billing');
                       }}
                       className="px-5 py-2.5 bg-[#1a3a2e] text-white text-sm font-semibold rounded-lg hover:bg-[#0f2a20] transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                     >
-                      Add Availability
+                      Add Payment
                     </button>
                   )}
                   {!onboardingStatus.hasProfilePicture && (
@@ -927,24 +927,24 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
                 </div>
               </div>
 
-              {/* Step 3: Add Payment Method */}
+              {/* Step 3: Add Availability */}
               <div className={`relative flex items-start gap-4 p-5 rounded-xl border-2 transition-all shadow-sm ${
-                onboardingStatus.hasPaymentMethod 
+                onboardingStatus.hasAvailability 
                   ? 'bg-[#f0f7f4] border-[#1a3a2e]/30 shadow-[#1a3a2e]/10' 
-                  : !onboardingStatus.hasAvailability || !onboardingStatus.hasProfilePicture
+                  : !onboardingStatus.hasPaymentMethod || !onboardingStatus.hasProfilePicture
                   ? 'bg-gray-50 border-gray-200 opacity-60'
                   : 'bg-white border-gray-200 hover:border-gray-300'
               }`}>
                 <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center font-bold text-sm shadow-md transition-all ${
-                  onboardingStatus.hasPaymentMethod 
+                  onboardingStatus.hasAvailability 
                     ? 'bg-[#1a3a2e] text-white shadow-[#1a3a2e]/30' 
-                    : !onboardingStatus.hasAvailability || !onboardingStatus.hasProfilePicture
+                    : !onboardingStatus.hasPaymentMethod || !onboardingStatus.hasProfilePicture
                     ? 'bg-gray-200 text-gray-400'
                     : 'bg-gray-300 text-gray-600'
                 }`}>
-                  {onboardingStatus.hasPaymentMethod ? (
+                  {onboardingStatus.hasAvailability ? (
                     <Check size={24} className="text-white" />
-                  ) : !onboardingStatus.hasAvailability || !onboardingStatus.hasProfilePicture ? (
+                  ) : !onboardingStatus.hasPaymentMethod || !onboardingStatus.hasProfilePicture ? (
                     <Lock size={20} className="text-gray-400" />
                   ) : (
                     <span className="text-base">3</span>
@@ -952,30 +952,30 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-2">
-                    <div className={`font-bold text-base ${!onboardingStatus.hasAvailability || !onboardingStatus.hasProfilePicture ? 'text-gray-400' : 'text-gray-900'}`}>
-                      Add Payment Method
+                    <div className={`font-bold text-base ${!onboardingStatus.hasPaymentMethod || !onboardingStatus.hasProfilePicture ? 'text-gray-400' : 'text-gray-900'}`}>
+                      Add Availability
                     </div>
-                    {onboardingStatus.hasPaymentMethod && (
+                    {onboardingStatus.hasAvailability && (
                       <span className="text-xs font-semibold text-[#1a3a2e] bg-[#1a3a2e]/15 px-3 py-1 rounded-full">Complete</span>
                     )}
                   </div>
-                  <div className={`text-sm mb-3 ${!onboardingStatus.hasAvailability || !onboardingStatus.hasProfilePicture ? 'text-gray-400' : 'text-gray-600'}`}>
-                    {!onboardingStatus.hasAvailability || !onboardingStatus.hasProfilePicture
+                  <div className={`text-sm mb-3 ${!onboardingStatus.hasPaymentMethod || !onboardingStatus.hasProfilePicture ? 'text-gray-400' : 'text-gray-600'}`}>
+                    {!onboardingStatus.hasPaymentMethod || !onboardingStatus.hasProfilePicture
                       ? 'Complete previous steps first' 
-                      : 'Required to receive appointments'}
+                      : 'Set your schedule and availability'}
                   </div>
-                  {!onboardingStatus.hasPaymentMethod && onboardingStatus.hasAvailability && onboardingStatus.hasProfilePicture && (
+                  {!onboardingStatus.hasAvailability && onboardingStatus.hasPaymentMethod && onboardingStatus.hasProfilePicture && (
                     <button
                       onClick={() => {
                         setShowOnboarding(false);
-                        router.push('/agent/billing');
+                        router.push('/agent/schedule?openAvailability=true');
                       }}
                       className="px-5 py-2.5 bg-[#1a3a2e] text-white text-sm font-semibold rounded-lg hover:bg-[#0f2a20] transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                     >
-                      Add Payment
+                      Add Availability
                     </button>
                   )}
-                  {(!onboardingStatus.hasAvailability || !onboardingStatus.hasProfilePicture) && (
+                  {(!onboardingStatus.hasPaymentMethod || !onboardingStatus.hasProfilePicture) && (
                     <button
                       disabled
                       className="px-5 py-2.5 bg-gray-300 text-gray-500 text-sm font-semibold rounded-lg cursor-not-allowed"
