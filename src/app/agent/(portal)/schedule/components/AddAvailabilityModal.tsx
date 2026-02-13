@@ -396,7 +396,7 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
                       onClick={() => setMeetingType("video")}
                       className={`flex-1 flex items-center justify-center gap-2.5 py-3 px-5 rounded-lg text-sm font-medium transition-all ${
                         meetingType === "video"
-                          ? "bg-white text-gray-900 shadow-sm border border-gray-200/80"
+                          ? "bg-black text-white"
                           : "text-gray-600 hover:text-gray-900"
                       }`}
                     >
@@ -408,7 +408,7 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
                       onClick={() => setMeetingType("in-person")}
                       className={`flex-1 flex items-center justify-center gap-2.5 py-3 px-5 rounded-lg text-sm font-medium transition-all ${
                         meetingType === "in-person"
-                          ? "bg-white text-gray-900 shadow-sm border border-gray-200/80"
+                          ? "bg-black text-white"
                           : "text-gray-600 hover:text-gray-900"
                       }`}
                     >
