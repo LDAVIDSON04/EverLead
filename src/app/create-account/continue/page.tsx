@@ -516,20 +516,24 @@ export default function CreateAccountContinuePage() {
                     className={inputClassName}
                     required
                   />
-                  {showFuneral && businessNames.filter((n) => n.trim()).length > 0 && (
+                  {showFuneral && (
                     <div className="space-y-1">
                       <label className="block text-sm text-gray-700">Associated business / firm <span className="text-red-600">*</span></label>
-                      <select
-                        value={newLocation.associated_firm ?? ""}
-                        onChange={(e) => setNewLocation({ ...newLocation, associated_firm: e.target.value })}
-                        className={inputClassName}
-                        required
-                      >
-                        <option value="">Select firm</option>
-                        {businessNames.filter((n) => n.trim()).map((name) => (
-                          <option key={name} value={name.trim()}>{name.trim()}</option>
-                        ))}
-                      </select>
+                      {businessNames.filter((n) => n.trim()).length > 0 ? (
+                        <select
+                          value={newLocation.associated_firm ?? ""}
+                          onChange={(e) => setNewLocation({ ...newLocation, associated_firm: e.target.value })}
+                          className={inputClassName}
+                          required
+                        >
+                          <option value="">Select firm</option>
+                          {businessNames.filter((n) => n.trim()).map((name) => (
+                            <option key={name} value={name.trim()}>{name.trim()}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <p className="text-sm text-amber-700">Add at least one Business/ Firm Name above first.</p>
+                      )}
                     </div>
                   )}
                   <input
@@ -571,12 +575,19 @@ export default function CreateAccountContinuePage() {
                   <button
                     type="button"
                     onClick={addOfficeLocation}
-                    className="flex items-center gap-2 px-4 py-2 bg-neutral-700 text-white rounded-md text-sm hover:bg-neutral-800 transition-colors"
+                    className="px-4 py-2 bg-neutral-700 text-white rounded-md text-sm hover:bg-neutral-800"
                   >
-                    <Plus className="w-4 h-4" />
-                    Add Location
+                    Save
                   </button>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => setNewLocation({ name: "", street_address: "", city: "", province: "BC", postal_code: "", associated_firm: "" })}
+                  className="mb-4 flex items-center gap-2 px-4 py-2 bg-neutral-700 text-white rounded-md text-sm hover:bg-neutral-800 transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Location
+                </button>
                 {officeLocations.map((loc, index) => (
                   <div key={index} className="mb-3 p-3 border border-gray-300 rounded-lg flex justify-between items-start">
                     <div>
@@ -718,12 +729,19 @@ export default function CreateAccountContinuePage() {
                   <button
                     type="button"
                     onClick={addOfficeLocation}
-                    className="flex items-center gap-2 px-4 py-2 bg-neutral-700 text-white rounded-md text-sm hover:bg-neutral-800 transition-colors"
+                    className="px-4 py-2 bg-neutral-700 text-white rounded-md text-sm hover:bg-neutral-800"
                   >
-                    <Plus className="w-4 h-4" />
-                    Add Location
+                    Save
                   </button>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => setNewLocation({ name: "", street_address: "", city: "", province: "BC", postal_code: "", associated_firm: "" })}
+                  className="mb-4 flex items-center gap-2 px-4 py-2 bg-neutral-700 text-white rounded-md text-sm hover:bg-neutral-800 transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Location
+                </button>
                 {officeLocations.map((loc, index) => (
                   <div key={index} className="mb-3 p-3 border border-gray-300 rounded-lg flex justify-between items-start">
                     <div>
@@ -877,12 +895,19 @@ export default function CreateAccountContinuePage() {
                   <button
                     type="button"
                     onClick={addOfficeLocation}
-                    className="flex items-center gap-2 px-4 py-2 bg-neutral-700 text-white rounded-md text-sm hover:bg-neutral-800 transition-colors"
+                    className="px-4 py-2 bg-neutral-700 text-white rounded-md text-sm hover:bg-neutral-800"
                   >
-                    <Plus className="w-4 h-4" />
-                    Add Location
+                    Save
                   </button>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => setNewLocation({ name: "", street_address: "", city: "", province: "BC", postal_code: "", associated_firm: "" })}
+                  className="mb-4 flex items-center gap-2 px-4 py-2 bg-neutral-700 text-white rounded-md text-sm hover:bg-neutral-800 transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Location
+                </button>
                 {officeLocations.map((loc, index) => (
                   <div key={index} className="mb-3 p-3 border border-gray-300 rounded-lg flex justify-between items-start">
                     <div>
@@ -1025,12 +1050,19 @@ export default function CreateAccountContinuePage() {
                   <button
                     type="button"
                     onClick={addOfficeLocation}
-                    className="flex items-center gap-2 px-4 py-2 bg-neutral-700 text-white rounded-md text-sm hover:bg-neutral-800 transition-colors"
+                    className="px-4 py-2 bg-neutral-700 text-white rounded-md text-sm hover:bg-neutral-800"
                   >
-                    <Plus className="w-4 h-4" />
-                    Add Location
+                    Save
                   </button>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => setNewLocation({ name: "", street_address: "", city: "", province: "BC", postal_code: "", associated_firm: "" })}
+                  className="mb-4 flex items-center gap-2 px-4 py-2 bg-neutral-700 text-white rounded-md text-sm hover:bg-neutral-800 transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Location
+                </button>
                 {officeLocations.map((loc, index) => (
                   <div key={index} className="mb-3 p-3 border border-gray-300 rounded-lg flex justify-between items-start">
                     <div>
@@ -1164,12 +1196,19 @@ export default function CreateAccountContinuePage() {
                   <button
                     type="button"
                     onClick={addOfficeLocation}
-                    className="flex items-center gap-2 px-4 py-2 bg-neutral-700 text-white rounded-md text-sm hover:bg-neutral-800 transition-colors"
+                    className="px-4 py-2 bg-neutral-700 text-white rounded-md text-sm hover:bg-neutral-800"
                   >
-                    <Plus className="w-4 h-4" />
-                    Add Location
+                    Save
                   </button>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => setNewLocation({ name: "", street_address: "", city: "", province: "BC", postal_code: "", associated_firm: "" })}
+                  className="mb-4 flex items-center gap-2 px-4 py-2 bg-neutral-700 text-white rounded-md text-sm hover:bg-neutral-800 transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Location
+                </button>
                 {officeLocations.map((loc, index) => (
                   <div key={index} className="mb-3 p-3 border border-gray-300 rounded-lg flex justify-between items-start">
                     <div>
