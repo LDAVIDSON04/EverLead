@@ -172,10 +172,10 @@ export default function CreateAccountContinuePage() {
       setError("Please fill in office name, street address, city, province, and postal code.");
       return;
     }
-    if (showFuneral && businessNames.some((n) => n.trim())) {
+    if (showFuneral) {
       const chosen = (newLocation.associated_firm || "").trim();
       if (!chosen) {
-        setError("Please select an Associated business / firm for this office location.");
+        setError("Please enter or select an Associated business / firm for this office location.");
         return;
       }
     }
@@ -532,7 +532,14 @@ export default function CreateAccountContinuePage() {
                           ))}
                         </select>
                       ) : (
-                        <p className="text-sm text-amber-700">Add at least one Business/ Firm Name above first.</p>
+                        <input
+                          type="text"
+                          value={newLocation.associated_firm ?? ""}
+                          onChange={(e) => setNewLocation({ ...newLocation, associated_firm: e.target.value })}
+                          className={inputClassName}
+                          placeholder="Business or firm name"
+                          required
+                        />
                       )}
                     </div>
                   )}
