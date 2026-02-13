@@ -42,14 +42,14 @@ const protectedRoutes = [
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.soradin.com'),
-  title: "Soradin - Thoughtful funeral pre-planning, made simple",
-  description: "Soradin removes friction by giving families a simple way to view an agent's availability and book a meeting directly online in just a few minutes.",
+  title: "Estate planning made simple - Soradin",
+  description: "Making life's most important planning decisions clear, accessible, and easy",
   alternates: {
     canonical: 'https://www.soradin.com/',
   },
   openGraph: {
-    title: "Soradin - Thoughtful funeral pre-planning, made simple",
-    description: "Soradin removes friction by giving families a simple way to view an agent's availability and book a meeting directly online in just a few minutes.",
+    title: "Estate planning made simple - Soradin",
+    description: "Making life's most important planning decisions clear, accessible, and easy",
     images: [
       {
         url: '/Soradin.png',
@@ -63,8 +63,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary',
-    title: "Soradin - Thoughtful funeral pre-planning, made simple",
-    description: "Soradin removes friction by giving families a simple way to view an agent's availability and book a meeting directly online in just a few minutes.",
+    title: "Estate planning made simple - Soradin",
+    description: "Making life's most important planning decisions clear, accessible, and easy",
     images: ['/Soradin.png'],
   },
 };
@@ -97,7 +97,7 @@ export default function RootLayout({
       "width": 1024,
       "height": 1024
     },
-    "description": "Soradin removes friction by giving families a simple way to view an agent's availability and book a meeting directly online in just a few minutes.",
+    "description": "Making life's most important planning decisions clear, accessible, and easy",
     "email": "support@soradin.com",
     "sameAs": [
       "https://www.facebook.com/profile.php?id=61583953961107"
