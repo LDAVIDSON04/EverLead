@@ -95,7 +95,9 @@ export default function CreateAccountNextPage() {
     const metadata: Record<string, unknown> = {
       agent_role: step2.selectedRole || "",
       specialty: step2.selectedRole ? (specialtyFromRole[step2.selectedRole] ?? "Funeral Planner") : "",
-      business_name: (step2.businessName || "").trim(),
+      business_name: step2.selectedRole === "funeral-planner" && Array.isArray(step2.businessNames)
+        ? step2.businessNames.map((n: string) => (n || "").trim()).filter(Boolean).join(", ")
+        : (step2.businessName || "").trim(),
       bio: {
         years_of_experience: String(yearsOfExperience).trim(),
         practice_philosophy_help: howYouHelp.trim(),
@@ -104,6 +106,9 @@ export default function CreateAccountNextPage() {
     };
 
     if (step2.selectedRole === "funeral-planner") {
+      if (Array.isArray(step2.businessNames)) {
+        metadata.business_names = step2.businessNames.map((n: string) => (n || "").trim()).filter(Boolean);
+      }
       metadata.licensed_or_employed_funeral = step2.licensedOrEmployedFuneral === "yes";
       metadata.regulator_name = (step2.regulatorName || "").trim();
       metadata.pre_need_purple_shield = step2.preNeedPurpleShield === true;

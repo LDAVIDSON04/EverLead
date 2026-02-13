@@ -4,6 +4,14 @@ import { useState, useEffect } from "react";
 import { supabaseClient } from "@/lib/supabaseClient";
 import { Check, X, AlertCircle, Download, Eye, Clock, FileText, User, Building, MapPin, Mail, Phone } from "lucide-react";
 
+type OfficeLocationDisplay = {
+  name: string;
+  street_address: string | null;
+  city: string;
+  province: string;
+  postal_code: string | null;
+};
+
 type PendingAgent = {
   id: string;
   full_name: string | null;
@@ -21,6 +29,7 @@ type PendingAgent = {
   bio_approval_status: string | null;
   bio_last_updated: string | null;
   metadata: any;
+  office_locations?: OfficeLocationDisplay[];
 };
 
 type Specialist = {
@@ -679,10 +688,22 @@ export default function AgentApprovalPage() {
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-neutral-500 mb-1">Business / Firm Name</p>
+                    <p className="text-xs text-neutral-500 mb-1">Business / Firm Name{((selectedAgent.metadata as any)?.business_names?.length > 1) ? "s" : ""}</p>
                     <p className="text-sm text-neutral-900 flex items-center gap-2">
                       <Building className="w-4 h-4" />
-                      {selectedAgent.funeral_home || (selectedAgent.metadata as any)?.business_name || 'N/A'}
+                      {(() => {
+                        const names = (selectedAgent.metadata as any)?.business_names;
+                        if (Array.isArray(names) && names.length > 0) {
+                          return (
+                            <span className="flex flex-col gap-0.5">
+                              {names.map((n: string, i: number) => (
+                                <span key={i}>{n || "—"}</span>
+                              ))}
+                            </span>
+                          );
+                        }
+                        return selectedAgent.funeral_home || (selectedAgent.metadata as any)?.business_name || "N/A";
+                      })()}
                     </p>
                   </div>
                   {selectedAgent.job_title && (
@@ -709,17 +730,15 @@ export default function AgentApprovalPage() {
                 </div>
               </div>
 
-              {/* Role-specific credentials (all create-account info including license numbers) */}
+              {/* Role-specific credentials (all create-account fields for approval) */}
               {(() => {
                 const metadata = selectedAgent.metadata || {};
                 const role = (metadata.agent_role || '').toLowerCase().trim();
                 const isInsurance = role === 'insurance-broker' || role === 'financial_insurance_agent';
                 const isFinancial = role === 'financial-advisor' || role === 'financial_insurance_agent';
-                const hasAny = role === 'funeral-planner' && (metadata.trustage_enroller_number != null || metadata.trustage_enroller_number_value || metadata.trustage_enrollee_number || metadata.llqp_license != null || metadata.llqp_quebec)
-                  || role === 'lawyer' && (metadata.law_society_name || metadata.authorized_provinces || metadata.law_society_license_number)
-                  || isInsurance && (metadata.licensed_in_canada != null || metadata.license_number || metadata.regulatory_body || metadata.brokerage_mga || metadata.eo_coverage != null || metadata.licensing_province != null || metadata.additional_provinces != null)
-                  || isFinancial && (metadata.regulatory_organization || metadata.registered_provinces || metadata.license_registration_number || metadata.eo_insurance_confirmed != null);
-                if (!hasAny) return null;
+                const hasRole = role === 'funeral-planner' || role === 'lawyer' || isInsurance || isFinancial;
+                if (!hasRole) return null;
+                const na = (v: unknown) => (v !== undefined && v !== null && v !== '' ? String(v) : 'N/A');
                 return (
                   <div>
                     <h3 className="text-lg font-semibold text-black mb-4 flex items-center gap-2">
@@ -730,85 +749,91 @@ export default function AgentApprovalPage() {
                       {role === 'funeral-planner' && (
                         <>
                           <div>
-                            <p className="text-xs text-neutral-500 mb-1">TruStage Enroller Number</p>
+                            <p className="text-xs text-neutral-500 mb-1">Licensed or employed by licensed funeral establishment</p>
                             <p className="text-sm text-neutral-900">
-                              {metadata.trustage_enroller_number === true || metadata.trustage_enroller_number === 'yes' ? 'Yes' : 'No'}
+                              {metadata.licensed_or_employed_funeral === true || metadata.licensed_or_employed_funeral === 'yes' ? 'Yes' : (metadata.licensed_or_employed_funeral === false || metadata.licensed_or_employed_funeral === 'no' ? 'No' : 'N/A')}
                             </p>
                           </div>
-                          {(metadata.trustage_enroller_number === true || metadata.trustage_enroller_number === 'yes') && (metadata.trustage_enroller_number_value || metadata.trustage_enrollee_number) && (
-                            <div>
-                              <p className="text-xs text-neutral-500 mb-1">TruStage Enrolee Number</p>
-                              <p className="text-sm text-neutral-900">{metadata.trustage_enroller_number_value || metadata.trustage_enrollee_number}</p>
-                            </div>
+                          <div>
+                            <p className="text-xs text-neutral-500 mb-1">Regulator name</p>
+                            <p className="text-sm text-neutral-900">{na(metadata.regulator_name)}</p>
+                          </div>
+                          <div className="col-span-2">
+                            <p className="text-xs text-neutral-500 mb-1">Pre-need products sold</p>
+                            <p className="text-sm text-neutral-900">
+                              {[
+                                metadata.pre_need_purple_shield === true || metadata.pre_need_purple_shield === 'yes' ? 'Purple Shield' : null,
+                                metadata.pre_need_trustage === true || metadata.pre_need_trustage === 'yes' ? 'Trustage' : null,
+                                (metadata.pre_need_other === true || metadata.pre_need_other === 'yes') && metadata.pre_need_other_specify ? `Other: ${metadata.pre_need_other_specify}` : (metadata.pre_need_other === true || metadata.pre_need_other === 'yes' ? 'Other' : null),
+                              ].filter(Boolean).join(', ') || 'N/A'}
+                            </p>
+                          </div>
+                          {(metadata.trustage_enroller_number != null || metadata.llqp_license != null) && (
+                            <>
+                              <div>
+                                <p className="text-xs text-neutral-500 mb-1">TruStage Enroller Number (legacy)</p>
+                                <p className="text-sm text-neutral-900">
+                                  {metadata.trustage_enroller_number === true || metadata.trustage_enroller_number === 'yes' ? 'Yes' : 'No'}
+                                </p>
+                              </div>
+                              {(metadata.trustage_enroller_number === true || metadata.trustage_enroller_number === 'yes') && (metadata.trustage_enroller_number_value || metadata.trustage_enrollee_number) && (
+                                <div>
+                                  <p className="text-xs text-neutral-500 mb-1">TruStage Enrolee Number</p>
+                                  <p className="text-sm text-neutral-900">{metadata.trustage_enroller_number_value || metadata.trustage_enrollee_number}</p>
+                                </div>
+                              )}
+                              <div>
+                                <p className="text-xs text-neutral-500 mb-1">LLQP License (legacy)</p>
+                                <p className="text-sm text-neutral-900">
+                                  {metadata.llqp_license === true || metadata.llqp_license === 'yes' ? 'Yes' : 'No'}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-xs text-neutral-500 mb-1">LLQP Valid in Quebec (legacy)</p>
+                                <p className="text-sm text-neutral-900 capitalize">{metadata.llqp_quebec || 'N/A'}</p>
+                              </div>
+                            </>
                           )}
-                          <div>
-                            <p className="text-xs text-neutral-500 mb-1">LLQP License</p>
-                            <p className="text-sm text-neutral-900">
-                              {metadata.llqp_license === true || metadata.llqp_license === 'yes' ? 'Yes' : 'No'}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-neutral-500 mb-1">LLQP Valid in Quebec</p>
-                            <p className="text-sm text-neutral-900 capitalize">
-                              {metadata.llqp_quebec || 'N/A'}
-                            </p>
-                          </div>
                         </>
                       )}
-                      {(role === 'lawyer') && (
+                      {role === 'lawyer' && (
                         <>
-                          {metadata.law_society_license_number && (
-                            <div>
-                              <p className="text-xs text-neutral-500 mb-1">License / Member Number</p>
-                              <p className="text-sm text-neutral-900">{metadata.law_society_license_number}</p>
-                            </div>
-                          )}
-                          {metadata.law_society_name && (
-                            <div>
-                              <p className="text-xs text-neutral-500 mb-1">Law Society Name</p>
-                              <p className="text-sm text-neutral-900">{metadata.law_society_name}</p>
-                            </div>
-                          )}
-                          {metadata.authorized_provinces && (
-                            <div>
-                              <p className="text-xs text-neutral-500 mb-1">Authorized Provinces</p>
-                              <p className="text-sm text-neutral-900">{metadata.authorized_provinces}</p>
-                            </div>
-                          )}
+                          <div>
+                            <p className="text-xs text-neutral-500 mb-1">License / Member Number</p>
+                            <p className="text-sm text-neutral-900">{na(metadata.law_society_license_number)}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-neutral-500 mb-1">Law Society Name</p>
+                            <p className="text-sm text-neutral-900">{na(metadata.law_society_name)}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-neutral-500 mb-1">Authorized Provinces</p>
+                            <p className="text-sm text-neutral-900">{na(metadata.authorized_provinces)}</p>
+                          </div>
                         </>
                       )}
                       {isInsurance && (
                         <>
-                          {metadata.licensed_in_canada != null && (
-                            <div>
-                              <p className="text-xs text-neutral-500 mb-1">Licensed in Canada</p>
-                              <p className="text-sm text-neutral-900">{metadata.licensed_in_canada === true ? 'Yes' : 'No'}</p>
-                            </div>
-                          )}
-                          {metadata.license_number && (
-                            <div>
-                              <p className="text-xs text-neutral-500 mb-1">License Number</p>
-                              <p className="text-sm text-neutral-900">{metadata.license_number}</p>
-                            </div>
-                          )}
-                          {metadata.regulatory_body && (
-                            <div>
-                              <p className="text-xs text-neutral-500 mb-1">Regulatory Body</p>
-                              <p className="text-sm text-neutral-900">{metadata.regulatory_body}</p>
-                            </div>
-                          )}
-                          {metadata.brokerage_mga && (
-                            <div className="col-span-2">
-                              <p className="text-xs text-neutral-500 mb-1">Brokerage / MGA / Sponsoring Organization</p>
-                              <p className="text-sm text-neutral-900">{metadata.brokerage_mga}</p>
-                            </div>
-                          )}
-                          {metadata.eo_coverage != null && (
-                            <div>
-                              <p className="text-xs text-neutral-500 mb-1">E&amp;O Coverage</p>
-                              <p className="text-sm text-neutral-900">{metadata.eo_coverage === true ? 'Yes' : 'No'}</p>
-                            </div>
-                          )}
+                          <div>
+                            <p className="text-xs text-neutral-500 mb-1">Licensed in Canada</p>
+                            <p className="text-sm text-neutral-900">{metadata.licensed_in_canada === true || metadata.licensed_in_canada === 'yes' ? 'Yes' : (metadata.licensed_in_canada === false || metadata.licensed_in_canada === 'no' ? 'No' : 'N/A')}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-neutral-500 mb-1">License Number</p>
+                            <p className="text-sm text-neutral-900">{na(metadata.license_number)}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-neutral-500 mb-1">Regulatory Body</p>
+                            <p className="text-sm text-neutral-900">{na(metadata.regulatory_body)}</p>
+                          </div>
+                          <div className="col-span-2">
+                            <p className="text-xs text-neutral-500 mb-1">Brokerage / MGA / Sponsoring Organization</p>
+                            <p className="text-sm text-neutral-900">{na(metadata.brokerage_mga)}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-neutral-500 mb-1">E&amp;O Coverage</p>
+                            <p className="text-sm text-neutral-900">{metadata.eo_coverage === true || metadata.eo_coverage === 'yes' ? 'Yes' : (metadata.eo_coverage === false || metadata.eo_coverage === 'no' ? 'No' : 'N/A')}</p>
+                          </div>
                           {metadata.licensing_province != null && (
                             <div>
                               <p className="text-xs text-neutral-500 mb-1">Licensing Province</p>
@@ -817,46 +842,56 @@ export default function AgentApprovalPage() {
                           )}
                           {(metadata.has_multiple_provinces === true || metadata.has_multiple_provinces === 'yes') && (
                             <div>
-                              <p className="text-xs text-neutral-500 mb-1">Multiple Provinces</p>
-                              <p className="text-sm text-neutral-900">Yes</p>
-                            </div>
-                          )}
-                          {metadata.additional_provinces && (
-                            <div className="col-span-2">
                               <p className="text-xs text-neutral-500 mb-1">Additional Provinces</p>
-                              <p className="text-sm text-neutral-900">{metadata.additional_provinces}</p>
+                              <p className="text-sm text-neutral-900">{na(metadata.additional_provinces)}</p>
                             </div>
                           )}
                         </>
                       )}
                       {isFinancial && (
                         <>
-                          {metadata.regulatory_organization && (
-                            <div>
-                              <p className="text-xs text-neutral-500 mb-1">Regulatory Organization</p>
-                              <p className="text-sm text-neutral-900">{metadata.regulatory_organization}</p>
-                            </div>
-                          )}
-                          {metadata.license_registration_number && (
-                            <div>
-                              <p className="text-xs text-neutral-500 mb-1">License / Registration Number</p>
-                              <p className="text-sm text-neutral-900">{metadata.license_registration_number}</p>
-                            </div>
-                          )}
-                          {metadata.registered_provinces && (
-                            <div>
-                              <p className="text-xs text-neutral-500 mb-1">Registered Provinces</p>
-                              <p className="text-sm text-neutral-900">{metadata.registered_provinces}</p>
-                            </div>
-                          )}
-                          {metadata.eo_insurance_confirmed != null && (
-                            <div>
-                              <p className="text-xs text-neutral-500 mb-1">E&amp;O / Professional Liability Coverage</p>
-                              <p className="text-sm text-neutral-900">{metadata.eo_insurance_confirmed === true ? 'Yes' : 'No'}</p>
-                            </div>
-                          )}
+                          <div>
+                            <p className="text-xs text-neutral-500 mb-1">Regulatory Organization</p>
+                            <p className="text-sm text-neutral-900">{na(metadata.regulatory_organization)}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-neutral-500 mb-1">License / Registration Number</p>
+                            <p className="text-sm text-neutral-900">{na(metadata.license_registration_number)}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-neutral-500 mb-1">Registered Provinces</p>
+                            <p className="text-sm text-neutral-900">{na(metadata.registered_provinces)}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-neutral-500 mb-1">E&amp;O / Professional Liability Coverage</p>
+                            <p className="text-sm text-neutral-900">{metadata.eo_insurance_confirmed === true || metadata.eo_insurance_confirmed === 'yes' ? 'Yes' : (metadata.eo_insurance_confirmed === false || metadata.eo_insurance_confirmed === 'no' ? 'No' : 'N/A')}</p>
+                          </div>
                         </>
                       )}
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Office Locations (create-account) */}
+              {(() => {
+                const offices = (selectedAgent as PendingAgent).office_locations;
+                if (!offices || offices.length === 0) return null;
+                return (
+                  <div>
+                    <h3 className="text-lg font-semibold text-black mb-4 flex items-center gap-2">
+                      <MapPin className="w-5 h-5" />
+                      Office Locations
+                    </h3>
+                    <div className="space-y-3">
+                      {offices.map((loc, idx) => (
+                        <div key={idx} className="p-3 border border-gray-200 rounded-lg bg-gray-50">
+                          <p className="font-medium text-neutral-900">{loc.name}</p>
+                          <p className="text-sm text-neutral-600">
+                            {[loc.street_address, loc.city, loc.province, loc.postal_code].filter(Boolean).join(', ')}
+                          </p>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 );

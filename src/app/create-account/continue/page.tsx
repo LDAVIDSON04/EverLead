@@ -50,6 +50,7 @@ export default function CreateAccountContinuePage() {
   const [step1Industry, setStep1Industry] = useState<string>("");
   const [selectedRole, setSelectedRole] = useState<Role>("");
   const [businessName, setBusinessName] = useState("");
+  const [businessNames, setBusinessNames] = useState<string[]>([""]); // funeral only: multiple firm names
   const [professionalTitle, setProfessionalTitle] = useState("");
 
   const [licensedOrEmployedFuneral, setLicensedOrEmployedFuneral] = useState("");
@@ -120,6 +121,8 @@ export default function CreateAccountContinuePage() {
       const s2 = draft.step2;
       if (s2) {
         if (s2.businessName != null) setBusinessName(s2.businessName);
+        if (Array.isArray(s2.businessNames) && s2.businessNames.length > 0) setBusinessNames(s2.businessNames);
+        else if (s2.businessName != null && industry === "funeral_planner") setBusinessNames([s2.businessName]);
         if (s2.professionalTitle != null) setProfessionalTitle(s2.professionalTitle);
         if (Array.isArray(s2.officeLocations) && s2.officeLocations.length > 0) setOfficeLocations(s2.officeLocations);
         if (s2.licensedOrEmployedFuneral != null) setLicensedOrEmployedFuneral(s2.licensedOrEmployedFuneral);
@@ -186,7 +189,13 @@ export default function CreateAccountContinuePage() {
       setError("Please complete Step 1 and select your industry.");
       return;
     }
-    if (!businessName.trim() || !professionalTitle.trim()) {
+    if (showFuneral) {
+      const names = businessNames.map((n) => n.trim()).filter(Boolean);
+      if (names.length === 0 || !professionalTitle.trim()) {
+        setError("Please enter at least one Business/ Firm Name and your Professional Title.");
+        return;
+      }
+    } else if (!businessName.trim() || !professionalTitle.trim()) {
       setError("Please enter your Business/ Firm Name and Professional Title.");
       return;
     }
@@ -248,6 +257,7 @@ export default function CreateAccountContinuePage() {
     step1Industry,
     selectedRole,
     businessName,
+    businessNames: showFuneral ? businessNames : undefined,
     professionalTitle,
     licensedOrEmployedFuneral,
     regulatorName,
@@ -333,20 +343,65 @@ export default function CreateAccountContinuePage() {
             </div>
           )}
           <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Business Name */}
-          <div className="space-y-2">
-            <label htmlFor="businessName" className="text-sm text-gray-700">
-              Business/ Firm Name <span className="text-red-600">*</span>
-            </label>
-            <input
-              id="businessName"
-              type="text"
-              value={businessName}
-              onChange={(e) => setBusinessName(e.target.value)}
-              className={inputClassName}
-              required
-            />
-          </div>
+          {/* Business Name: multiple for funeral, single for others */}
+          {showFuneral ? (
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <label className="text-sm text-gray-700">
+                  Business/ Firm Name(s) <span className="text-red-600">*</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setBusinessNames((prev) => [...prev, ""])}
+                  className="flex items-center gap-2 px-4 py-2 bg-neutral-700 text-white rounded-md text-sm hover:bg-neutral-800 transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add business name
+                </button>
+              </div>
+              {businessNames.map((name, index) => (
+                <div key={index} className="flex gap-2 items-center">
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) =>
+                      setBusinessNames((prev) => {
+                        const next = [...prev];
+                        next[index] = e.target.value;
+                        return next;
+                      })
+                    }
+                    className={inputClassName}
+                    placeholder="Business or firm name"
+                  />
+                  {businessNames.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => setBusinessNames((prev) => prev.filter((_, i) => i !== index))}
+                      className="p-2 text-red-600 hover:bg-red-50 rounded"
+                      aria-label="Remove"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <label htmlFor="businessName" className="text-sm text-gray-700">
+                Business/ Firm Name <span className="text-red-600">*</span>
+              </label>
+              <input
+                id="businessName"
+                type="text"
+                value={businessName}
+                onChange={(e) => setBusinessName(e.target.value)}
+                className={inputClassName}
+                required
+              />
+            </div>
+          )}
 
           {/* Professional Title */}
           <div className="space-y-2">
