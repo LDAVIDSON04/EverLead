@@ -738,6 +738,8 @@ function SearchResults() {
             business_city: (metadata as any)?.business_city || null,
             business_province: (metadata as any)?.business_province || null,
             business_zip: (metadata as any)?.business_zip || null,
+            first_business_name: appointment.agent?.first_business_name ?? undefined,
+            officeLocations: appointment.agent?.officeLocations ?? undefined,
           });
         }
       } catch (err) {
@@ -934,6 +936,8 @@ function SearchResults() {
             business_city: (metadata as any)?.business_city || null,
             business_province: (metadata as any)?.business_province || null,
             business_zip: (metadata as any)?.business_zip || null,
+            first_business_name: appointment.agent?.first_business_name ?? undefined,
+            officeLocations: appointment.agent?.officeLocations ?? undefined,
           });
         }
       } catch (err) {
