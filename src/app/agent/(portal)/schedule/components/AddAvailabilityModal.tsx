@@ -438,26 +438,42 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
                       </div>
                     )}
 
-                    {/* Office Location - only when in-person and we have locations */}
-                    {meetingType === "in-person" && locations.length > 0 && (
-                      <div className="mb-4">
-                        <Label className="text-gray-700 font-medium">Office Location</Label>
-                        <div className="relative mt-1.5">
-                          <select
-                            value={selectedLocation}
-                            onChange={(e) => setSelectedLocation(e.target.value)}
-                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-neutral-800 focus:border-transparent appearance-none bg-white text-gray-900"
-                          >
-                            {locations.map((loc) => (
-                              <option key={loc} value={loc}>
-                                {loc}
-                              </option>
-                            ))}
-                          </select>
-                          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                    {/* Office Location + Appointment Length on one row, black outline */}
+                    <div className="grid grid-cols-2 gap-4 mb-4">
+                      {meetingType === "in-person" && locations.length > 0 && (
+                        <div>
+                          <Label className="text-gray-700 font-medium">Office Location</Label>
+                          <div className="relative mt-1.5">
+                            <select
+                              value={selectedLocation}
+                              onChange={(e) => setSelectedLocation(e.target.value)}
+                              className="w-full px-4 py-2.5 border-2 border-black rounded-xl focus:outline-none focus:ring-2 focus:ring-neutral-800 focus:ring-offset-0 appearance-none bg-white text-gray-900 text-sm"
+                            >
+                              {locations.map((loc) => (
+                                <option key={loc} value={loc}>
+                                  {loc}
+                                </option>
+                              ))}
+                            </select>
+                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                          </div>
                         </div>
+                      )}
+                      <div className={meetingType === "video" ? "col-span-2" : ""}>
+                        <Label className="text-gray-700 font-medium">Appointment Length</Label>
+                        <select
+                          value={appointmentLength}
+                          onChange={(e) => setAppointmentLength(e.target.value)}
+                          className="w-full px-4 py-2.5 border-2 border-black rounded-xl focus:outline-none focus:ring-2 focus:ring-neutral-800 focus:ring-offset-0 mt-1.5 bg-white text-gray-900 text-sm"
+                        >
+                          <option value="15">15 minutes</option>
+                          <option value="30">30 minutes</option>
+                          <option value="45">45 minutes</option>
+                          <option value="60">60 minutes</option>
+                          <option value="90">90 minutes</option>
+                        </select>
                       </div>
-                    )}
+                    </div>
 
                     {/* Weekly Availability - 2-column grid so all 7 days visible without scrolling */}
                     <div>
@@ -525,23 +541,9 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
             )}
           </div>
 
-          {/* Footer: Appointment length + actions (when content is shown) */}
+          {/* Footer: actions only (when content is shown) */}
           {!loading && (locations.length > 0 || meetingType === "video") && (
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 px-10 py-4 border-t border-gray-100 bg-gray-50/30 flex-shrink-0">
-              <div className="sm:min-w-[220px]">
-                <Label className="text-gray-700 font-medium">Appointment Length</Label>
-                <select
-                  value={appointmentLength}
-                  onChange={(e) => setAppointmentLength(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-neutral-800 focus:border-transparent mt-1.5 bg-white text-gray-900 text-sm"
-                >
-                  <option value="15">15 minutes</option>
-                  <option value="30">30 minutes</option>
-                  <option value="45">45 minutes</option>
-                  <option value="60">60 minutes</option>
-                  <option value="90">90 minutes</option>
-                </select>
-              </div>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-4 px-10 py-4 border-t border-gray-100 bg-gray-50/30 flex-shrink-0">
               <div className="flex gap-3 justify-end sm:justify-end">
                 <button
                   onClick={onClose}
