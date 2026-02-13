@@ -1857,43 +1857,47 @@ function SearchResults() {
                 : specialistName;
               const agentId = agent?.id || appointment.id;
               
-              // Find office location that matches the search location (includes associated_firm for in-person firm display)
-              let matchingOfficeLocation: { street_address: string | null; city: string | null; province: string | null; postal_code: string | null; associated_firm?: string | null } | null = null;
-              if (agent?.officeLocations && agent.officeLocations.length > 0 && searchLocation) {
+              // Find office location that matches the search location; otherwise use first office so we show one firm + one address (not all locations)
+              type OfficeLoc = { street_address: string | null; city: string | null; province: string | null; postal_code: string | null; associated_firm?: string | null };
+              let displayOfficeLocation: OfficeLoc | null = null;
+              if (agent?.officeLocations && agent.officeLocations.length > 0) {
                 const normalizeLocation = (loc: string | null | undefined): string => {
                   if (!loc) return '';
                   let normalized = loc.split(',').map(s => s.trim())[0];
                   normalized = normalized.replace(/\s+office$/i, '').trim();
                   return normalized.toLowerCase();
                 };
-                
-                const searchCity = normalizeLocation(decodeURIComponent(searchLocation.replace(/\+/g, ' ')));
-                matchingOfficeLocation = agent.officeLocations.find((loc: any) => 
-                  normalizeLocation(loc.city) === searchCity
-                ) || null;
+                if (searchLocation) {
+                  const searchCity = normalizeLocation(decodeURIComponent(searchLocation.replace(/\+/g, ' ')));
+                  const matching = agent.officeLocations.find((loc: any) =>
+                    normalizeLocation(loc.city) === searchCity
+                  );
+                  displayOfficeLocation = (matching as OfficeLoc) || (agent.officeLocations[0] as OfficeLoc);
+                } else {
+                  displayOfficeLocation = agent.officeLocations[0] as OfficeLoc;
+                }
               }
+              // In-person: show only the firm for the office we're displaying (matching or first). Never show all firms.
               const displayFirmName = displayMode === "video"
                 ? (agent?.first_business_name || agent?.funeral_home)
-                : (matchingOfficeLocation?.associated_firm || agent?.funeral_home);
+                : (displayOfficeLocation?.associated_firm || agent?.first_business_name || agent?.funeral_home);
               
-              // Use matching office location, or fall back to first office location, or business address
-              const displayAddress = matchingOfficeLocation 
-                ? (matchingOfficeLocation.street_address && matchingOfficeLocation.city && matchingOfficeLocation.province && matchingOfficeLocation.postal_code
-                    ? `${matchingOfficeLocation.street_address}, ${matchingOfficeLocation.city}, ${matchingOfficeLocation.province} ${matchingOfficeLocation.postal_code}`
-                    : matchingOfficeLocation.street_address && matchingOfficeLocation.city && matchingOfficeLocation.province
-                    ? `${matchingOfficeLocation.street_address}, ${matchingOfficeLocation.city}, ${matchingOfficeLocation.province}`
-                    : matchingOfficeLocation.city && matchingOfficeLocation.province
-                    ? `${matchingOfficeLocation.city}, ${matchingOfficeLocation.province}`
-                    : matchingOfficeLocation.city || null)
-                : (agent?.officeLocations && agent.officeLocations.length > 0
-                    ? (agent.officeLocations[0].street_address && agent.officeLocations[0].city && agent.officeLocations[0].province && agent.officeLocations[0].postal_code
-                        ? `${agent.officeLocations[0].street_address}, ${agent.officeLocations[0].city}, ${agent.officeLocations[0].province} ${agent.officeLocations[0].postal_code}`
-                        : agent.officeLocations[0].city && agent.officeLocations[0].province
-                        ? `${agent.officeLocations[0].city}, ${agent.officeLocations[0].province}`
-                        : null)
-                    : (agent?.business_street && agent?.business_city && agent?.business_province && agent?.business_zip
-                        ? `${agent.business_street}, ${agent.business_city}, ${agent.business_province} ${agent.business_zip}`
-                        : agent?.business_address || null));
+              // Address for the same office we're showing (so location + address match)
+              const displayAddress = displayOfficeLocation 
+                ? (displayOfficeLocation.street_address && displayOfficeLocation.city && displayOfficeLocation.province && displayOfficeLocation.postal_code
+                    ? `${displayOfficeLocation.street_address}, ${displayOfficeLocation.city}, ${displayOfficeLocation.province} ${displayOfficeLocation.postal_code}`
+                    : displayOfficeLocation.street_address && displayOfficeLocation.city && displayOfficeLocation.province
+                    ? `${displayOfficeLocation.street_address}, ${displayOfficeLocation.city}, ${displayOfficeLocation.province}`
+                    : displayOfficeLocation.city && displayOfficeLocation.province
+                    ? `${displayOfficeLocation.city}, ${displayOfficeLocation.province}`
+                    : displayOfficeLocation.city || null)
+                : (agent?.business_street && agent?.business_city && agent?.business_province && agent?.business_zip
+                    ? `${agent.business_street}, ${agent.business_city}, ${agent.business_province} ${agent.business_zip}`
+                    : agent?.business_address || null);
+              // Location line: show the office city we're displaying (so it matches the address below), not the search city when different
+              const displayLocationLabel = displayOfficeLocation?.city && displayOfficeLocation?.province
+                ? `${displayOfficeLocation.city}, ${displayOfficeLocation.province}`
+                : (searchLocation ? decodeURIComponent(searchLocation.replace(/\+/g, ' ')) : location ? decodeURIComponent(location.replace(/\+/g, ' ')) : 'Location not specified');
               
               return (
                 <div key={`${appointment.id}-${searchLocation}`} className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
@@ -1943,7 +1947,7 @@ function SearchResults() {
                             <div className="flex items-center gap-1">
                               <MapPin className="w-4 h-4 text-gray-500 flex-shrink-0" />
                               <span className="text-gray-600 text-sm">
-                                {searchLocation ? decodeURIComponent(searchLocation.replace(/\+/g, ' ')) : location ? decodeURIComponent(location.replace(/\+/g, ' ')) : 'Location not specified'}
+                                {displayLocationLabel}
                               </span>
                             </div>
                             {displayAddress && (
@@ -2163,7 +2167,7 @@ function SearchResults() {
                             <div className="flex items-center gap-1">
                               <MapPin className="w-3 h-3 text-gray-500 flex-shrink-0" />
                               <span className="text-gray-600 text-sm">
-                                {searchLocation ? decodeURIComponent(searchLocation.replace(/\+/g, ' ')) : location ? decodeURIComponent(location.replace(/\+/g, ' ')) : 'Location not specified'}
+                                {displayLocationLabel}
                               </span>
                             </div>
                             {displayAddress && (
