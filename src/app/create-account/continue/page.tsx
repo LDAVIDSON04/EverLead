@@ -56,6 +56,7 @@ export default function CreateAccountContinuePage() {
   const [regulatorName, setRegulatorName] = useState("");
   const [preNeedPurpleShield, setPreNeedPurpleShield] = useState(false);
   const [preNeedTrustage, setPreNeedTrustage] = useState(false);
+  const [preNeedFuneralPlansCanada, setPreNeedFuneralPlansCanada] = useState(false);
   const [preNeedOther, setPreNeedOther] = useState(false);
   const [preNeedOtherSpecify, setPreNeedOtherSpecify] = useState("");
   const [officeLocations, setOfficeLocations] = useState<OfficeLocation[]>([]);
@@ -125,6 +126,7 @@ export default function CreateAccountContinuePage() {
         if (s2.regulatorName != null) setRegulatorName(s2.regulatorName);
         if (s2.preNeedPurpleShield != null) setPreNeedPurpleShield(!!s2.preNeedPurpleShield);
         if (s2.preNeedTrustage != null) setPreNeedTrustage(!!s2.preNeedTrustage);
+        if (s2.preNeedFuneralPlansCanada != null) setPreNeedFuneralPlansCanada(!!s2.preNeedFuneralPlansCanada);
         if (s2.preNeedOther != null) setPreNeedOther(!!s2.preNeedOther);
         if (s2.preNeedOtherSpecify != null) setPreNeedOtherSpecify(s2.preNeedOtherSpecify);
         if (s2.isLicensed != null) setIsLicensed(s2.isLicensed);
@@ -200,12 +202,12 @@ export default function CreateAccountContinuePage() {
         setError("Please answer whether you are licensed or employed by a funeral establishment.");
         return;
       }
-      if (!preNeedPurpleShield && !preNeedTrustage && !preNeedOther) {
-        setError("Please select at least one pre-need product you sell (Purple Shield, Trustage, or other).");
+      if (!preNeedPurpleShield && !preNeedTrustage && !preNeedFuneralPlansCanada && !preNeedOther) {
+        setError("Please select at least one option (Purple Shield, Trustage, Funeral Plans Canada, or other).");
         return;
       }
       if (preNeedOther && !preNeedOtherSpecify.trim()) {
-        setError("Please specify which other pre-need products you sell.");
+        setError("Please specify.");
         return;
       }
     }
@@ -251,6 +253,7 @@ export default function CreateAccountContinuePage() {
     regulatorName,
     preNeedPurpleShield,
     preNeedTrustage,
+    preNeedFuneralPlansCanada,
     preNeedOther,
     preNeedOtherSpecify,
     officeLocations,
@@ -386,7 +389,7 @@ export default function CreateAccountContinuePage() {
               </div>
               <div className="space-y-3">
                 <label className="text-sm text-gray-700">
-                  Do you sell pre-need products for: <span className="text-red-600">*</span>
+                  Are you an enroller or agent for: <span className="text-red-600">*</span>
                 </label>
                 <div className="flex flex-col gap-2">
                   <label className="flex items-center gap-2 cursor-pointer">
@@ -410,6 +413,15 @@ export default function CreateAccountContinuePage() {
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="checkbox"
+                      checked={preNeedFuneralPlansCanada}
+                      onChange={(e) => setPreNeedFuneralPlansCanada(e.target.checked)}
+                      className="w-4 h-4 border-2 border-gray-300 rounded"
+                    />
+                    <span className="text-sm text-gray-700">Funeral Plans Canada</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
                       checked={preNeedOther}
                       onChange={(e) => setPreNeedOther(e.target.checked)}
                       className="w-4 h-4 border-2 border-gray-300 rounded"
@@ -424,7 +436,7 @@ export default function CreateAccountContinuePage() {
                       value={preNeedOtherSpecify}
                       onChange={(e) => setPreNeedOtherSpecify(e.target.value)}
                       className={inputClassName}
-                      placeholder="Specify which other pre-need products you have"
+                      placeholder="Please specify"
                     />
                   </div>
                 )}

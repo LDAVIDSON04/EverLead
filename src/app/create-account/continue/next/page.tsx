@@ -108,6 +108,7 @@ export default function CreateAccountNextPage() {
       metadata.regulator_name = (step2.regulatorName || "").trim();
       metadata.pre_need_purple_shield = step2.preNeedPurpleShield === true;
       metadata.pre_need_trustage = step2.preNeedTrustage === true;
+      metadata.pre_need_funeral_plans_canada = step2.preNeedFuneralPlansCanada === true;
       metadata.pre_need_other = step2.preNeedOther === true;
       metadata.pre_need_other_specify = (step2.preNeedOtherSpecify || "").trim();
     }
