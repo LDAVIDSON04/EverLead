@@ -168,8 +168,8 @@ export default function CreateAccountContinuePage() {
   };
 
   const addOfficeLocation = () => {
-    if (!newLocation.name.trim() || !newLocation.city.trim() || !newLocation.province) {
-      setError("Please fill in at least office name, city, and province.");
+    if (!newLocation.name.trim() || !newLocation.street_address.trim() || !newLocation.city.trim() || !newLocation.province || !newLocation.postal_code.trim()) {
+      setError("Please fill in office name, street address, city, province, and postal code.");
       return;
     }
     if (showFuneral && businessNames.some((n) => n.trim())) {
@@ -528,6 +528,7 @@ export default function CreateAccountContinuePage() {
                       onChange={(e) => setNewLocation({ ...newLocation, name: e.target.value })}
                       placeholder="Office name *"
                       className={inputClassName}
+                      required
                     />
                     {showFuneral && businessNames.filter((n) => n.trim()).length > 0 && (
                       <div className="space-y-1">
@@ -549,8 +550,9 @@ export default function CreateAccountContinuePage() {
                       type="text"
                       value={newLocation.street_address}
                       onChange={(e) => setNewLocation({ ...newLocation, street_address: e.target.value })}
-                      placeholder="Street address"
+                      placeholder="Street address *"
                       className={inputClassName}
+                      required
                     />
                     <div className="grid grid-cols-3 gap-3">
                       <input
@@ -559,11 +561,13 @@ export default function CreateAccountContinuePage() {
                         onChange={(e) => setNewLocation({ ...newLocation, city: e.target.value })}
                         placeholder="City *"
                         className={inputClassName}
+                        required
                       />
                       <select
                         value={newLocation.province}
                         onChange={(e) => setNewLocation({ ...newLocation, province: e.target.value })}
                         className={inputClassName}
+                        required
                       >
                         {PROVINCES.map((p) => (
                           <option key={p} value={p}>{p}</option>
@@ -573,8 +577,9 @@ export default function CreateAccountContinuePage() {
                         type="text"
                         value={newLocation.postal_code}
                         onChange={(e) => setNewLocation({ ...newLocation, postal_code: e.target.value })}
-                        placeholder="Postal code"
+                        placeholder="Postal code *"
                         className={inputClassName}
+                        required
                       />
                     </div>
                     <div className="flex gap-2">
@@ -705,13 +710,15 @@ export default function CreateAccountContinuePage() {
                       onChange={(e) => setNewLocation({ ...newLocation, name: e.target.value })}
                       placeholder="Office name *"
                       className={inputClassName}
+                      required
                     />
                     <input
                       type="text"
                       value={newLocation.street_address}
                       onChange={(e) => setNewLocation({ ...newLocation, street_address: e.target.value })}
-                      placeholder="Street address"
+                      placeholder="Street address *"
                       className={inputClassName}
+                      required
                     />
                     <div className="grid grid-cols-3 gap-3">
                       <input
@@ -720,11 +727,13 @@ export default function CreateAccountContinuePage() {
                         onChange={(e) => setNewLocation({ ...newLocation, city: e.target.value })}
                         placeholder="City *"
                         className={inputClassName}
+                        required
                       />
                       <select
                         value={newLocation.province}
                         onChange={(e) => setNewLocation({ ...newLocation, province: e.target.value })}
                         className={inputClassName}
+                        required
                       >
                         {PROVINCES.map((p) => (
                           <option key={p} value={p}>{p}</option>
@@ -734,8 +743,9 @@ export default function CreateAccountContinuePage() {
                         type="text"
                         value={newLocation.postal_code}
                         onChange={(e) => setNewLocation({ ...newLocation, postal_code: e.target.value })}
-                        placeholder="Postal code"
+                        placeholder="Postal code *"
                         className={inputClassName}
+                        required
                       />
                     </div>
                     <div className="flex gap-2">
@@ -878,13 +888,15 @@ export default function CreateAccountContinuePage() {
                       onChange={(e) => setNewLocation({ ...newLocation, name: e.target.value })}
                       placeholder="Office name *"
                       className={inputClassName}
+                      required
                     />
                     <input
                       type="text"
                       value={newLocation.street_address}
                       onChange={(e) => setNewLocation({ ...newLocation, street_address: e.target.value })}
-                      placeholder="Street address"
+                      placeholder="Street address *"
                       className={inputClassName}
+                      required
                     />
                     <div className="grid grid-cols-3 gap-3">
                       <input
@@ -893,11 +905,13 @@ export default function CreateAccountContinuePage() {
                         onChange={(e) => setNewLocation({ ...newLocation, city: e.target.value })}
                         placeholder="City *"
                         className={inputClassName}
+                        required
                       />
                       <select
                         value={newLocation.province}
                         onChange={(e) => setNewLocation({ ...newLocation, province: e.target.value })}
                         className={inputClassName}
+                        required
                       >
                         {PROVINCES.map((p) => (
                           <option key={p} value={p}>{p}</option>
@@ -907,8 +921,9 @@ export default function CreateAccountContinuePage() {
                         type="text"
                         value={newLocation.postal_code}
                         onChange={(e) => setNewLocation({ ...newLocation, postal_code: e.target.value })}
-                        placeholder="Postal code"
+                        placeholder="Postal code *"
                         className={inputClassName}
+                        required
                       />
                     </div>
                     <div className="flex gap-2">
@@ -1040,13 +1055,15 @@ export default function CreateAccountContinuePage() {
                       onChange={(e) => setNewLocation({ ...newLocation, name: e.target.value })}
                       placeholder="Office name *"
                       className={inputClassName}
+                      required
                     />
                     <input
                       type="text"
                       value={newLocation.street_address}
                       onChange={(e) => setNewLocation({ ...newLocation, street_address: e.target.value })}
-                      placeholder="Street address"
+                      placeholder="Street address *"
                       className={inputClassName}
+                      required
                     />
                     <div className="grid grid-cols-3 gap-3">
                       <input
@@ -1055,11 +1072,13 @@ export default function CreateAccountContinuePage() {
                         onChange={(e) => setNewLocation({ ...newLocation, city: e.target.value })}
                         placeholder="City *"
                         className={inputClassName}
+                        required
                       />
                       <select
                         value={newLocation.province}
                         onChange={(e) => setNewLocation({ ...newLocation, province: e.target.value })}
                         className={inputClassName}
+                        required
                       >
                         {PROVINCES.map((p) => (
                           <option key={p} value={p}>{p}</option>
@@ -1069,8 +1088,9 @@ export default function CreateAccountContinuePage() {
                         type="text"
                         value={newLocation.postal_code}
                         onChange={(e) => setNewLocation({ ...newLocation, postal_code: e.target.value })}
-                        placeholder="Postal code"
+                        placeholder="Postal code *"
                         className={inputClassName}
+                        required
                       />
                     </div>
                     <div className="flex gap-2">
@@ -1193,13 +1213,15 @@ export default function CreateAccountContinuePage() {
                       onChange={(e) => setNewLocation({ ...newLocation, name: e.target.value })}
                       placeholder="Office name *"
                       className={inputClassName}
+                      required
                     />
                     <input
                       type="text"
                       value={newLocation.street_address}
                       onChange={(e) => setNewLocation({ ...newLocation, street_address: e.target.value })}
-                      placeholder="Street address"
+                      placeholder="Street address *"
                       className={inputClassName}
+                      required
                     />
                     <div className="grid grid-cols-3 gap-3">
                       <input
@@ -1208,11 +1230,13 @@ export default function CreateAccountContinuePage() {
                         onChange={(e) => setNewLocation({ ...newLocation, city: e.target.value })}
                         placeholder="City *"
                         className={inputClassName}
+                        required
                       />
                       <select
                         value={newLocation.province}
                         onChange={(e) => setNewLocation({ ...newLocation, province: e.target.value })}
                         className={inputClassName}
+                        required
                       >
                         {PROVINCES.map((p) => (
                           <option key={p} value={p}>{p}</option>
@@ -1222,8 +1246,9 @@ export default function CreateAccountContinuePage() {
                         type="text"
                         value={newLocation.postal_code}
                         onChange={(e) => setNewLocation({ ...newLocation, postal_code: e.target.value })}
-                        placeholder="Postal code"
+                        placeholder="Postal code *"
                         className={inputClassName}
+                        required
                       />
                     </div>
                     <div className="flex gap-2">
