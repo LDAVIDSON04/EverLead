@@ -459,14 +459,14 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
                       </div>
                     )}
 
-                    {/* Weekly Availability - scrollable list of days */}
+                    {/* Weekly Availability - 2-column grid so all 7 days visible without scrolling */}
                     <div>
                       <Label className="mb-3 block">Weekly Availability</Label>
-                      <div className="space-y-2 overflow-y-auto max-h-[280px] pr-2">
+                      <div className="grid grid-cols-2 gap-2">
                         {days.map((day) => {
                           const dayData = recurringSchedule[day as keyof typeof recurringSchedule];
                           return (
-                            <div key={day} className="flex items-center gap-4 p-3 border border-gray-200 rounded-lg bg-white">
+                            <div key={day} className="flex items-center gap-2 sm:gap-3 p-2.5 border border-gray-200 rounded-lg bg-white">
                               <input
                                 type="checkbox"
                                 checked={dayData.enabled}
@@ -476,11 +476,11 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
                                     [day]: { ...dayData, enabled: e.target.checked },
                                   });
                                 }}
-                                className="w-4 h-4 accent-neutral-800"
+                                className="w-4 h-4 flex-shrink-0 accent-neutral-800"
                               />
-                              <div className="w-24 capitalize">{day}</div>
+                              <div className="w-20 flex-shrink-0 capitalize text-sm">{day}</div>
                               {dayData.enabled ? (
-                                <div className="flex items-center gap-2 flex-1">
+                                <div className="flex items-center gap-1.5 min-w-0 flex-1">
                                   <Input
                                     type="time"
                                     value={dayData.start}
@@ -493,9 +493,9 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
                                         [day]: { ...dayData, start: newValue },
                                       });
                                     }}
-                                    className="w-32"
+                                    className="w-28 min-w-0"
                                   />
-                                  <span className="text-gray-500">to</span>
+                                  <span className="text-gray-500 text-xs flex-shrink-0">to</span>
                                   <Input
                                     type="time"
                                     value={dayData.end}
@@ -508,7 +508,7 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
                                         [day]: { ...dayData, end: newValue },
                                       });
                                     }}
-                                    className="w-32"
+                                    className="w-28 min-w-0"
                                   />
                                 </div>
                               ) : (
