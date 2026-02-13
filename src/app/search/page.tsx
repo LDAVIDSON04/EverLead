@@ -50,7 +50,9 @@ type Appointment = {
       street_address: string | null;
       province: string | null;
       postal_code: string | null;
+      associated_firm?: string | null;
     }>;
+    first_business_name?: string | null;
   } | null;
 };
 
@@ -1317,8 +1319,8 @@ function SearchResults() {
                      selectedAppointment.service_type || 
                      'Pre-need Planning Specialist'}
                   </p>
-                  {selectedAppointment.agent?.funeral_home && (
-                    <p className="text-gray-500 text-xs mb-2">{selectedAppointment.agent.funeral_home}</p>
+                  {(selectedAppointment.agent?.first_business_name || selectedAppointment.agent?.funeral_home) && (
+                    <p className="text-gray-500 text-xs mb-2">{selectedAppointment.agent?.first_business_name || selectedAppointment.agent?.funeral_home}</p>
                   )}
                   
                   {(Number(selectedAppointment.agent?.rating) || 0) > 0 && (Number(selectedAppointment.agent?.reviewCount) || 0) > 0 && (
@@ -1849,8 +1851,8 @@ function SearchResults() {
                 : specialistName;
               const agentId = agent?.id || appointment.id;
               
-              // Find office location that matches the search location
-              let matchingOfficeLocation: { street_address: string | null; city: string | null; province: string | null; postal_code: string | null } | null = null;
+              // Find office location that matches the search location (includes associated_firm for in-person firm display)
+              let matchingOfficeLocation: { street_address: string | null; city: string | null; province: string | null; postal_code: string | null; associated_firm?: string | null } | null = null;
               if (agent?.officeLocations && agent.officeLocations.length > 0 && searchLocation) {
                 const normalizeLocation = (loc: string | null | undefined): string => {
                   if (!loc) return '';
@@ -1864,6 +1866,9 @@ function SearchResults() {
                   normalizeLocation(loc.city) === searchCity
                 ) || null;
               }
+              const displayFirmName = displayMode === "video"
+                ? (agent?.first_business_name || agent?.funeral_home)
+                : (matchingOfficeLocation?.associated_firm || agent?.funeral_home);
               
               // Use matching office location, or fall back to first office location, or business address
               const displayAddress = matchingOfficeLocation 
@@ -1917,8 +1922,8 @@ function SearchResults() {
                             <p className="text-gray-600 mt-1">
                               {agent?.job_title || appointment.service_type || 'Pre-need Planning Specialist'}
                             </p>
-                            {agent?.funeral_home && (
-                              <p className="text-gray-500 text-sm mt-1">{agent.funeral_home}</p>
+                            {displayFirmName && (
+                              <p className="text-gray-500 text-sm mt-1">{displayFirmName}</p>
                             )}
                           </div>
                         </div>
@@ -2139,8 +2144,8 @@ function SearchResults() {
                         <p className="text-gray-600 text-sm leading-tight mb-1">
                           {agent?.job_title || appointment.service_type || 'Pre-need Planning Specialist'}
                         </p>
-                        {agent?.funeral_home && (
-                          <p className="text-gray-500 text-sm leading-tight">{agent.funeral_home}</p>
+                        {displayFirmName && (
+                          <p className="text-gray-500 text-sm leading-tight">{displayFirmName}</p>
                         )}
                       </div>
                     </div>
@@ -2365,7 +2370,15 @@ function SearchResults() {
     </div>
               
               {/* Agent Profile Card */}
-              {selectedAgentInfo && (
+              {selectedAgentInfo && (() => {
+                const modalFirmName = effectiveBookingMode === "video"
+                  ? (selectedAgentInfo.first_business_name || selectedAgentInfo.funeral_home)
+                  : (() => {
+                      const norm = (s: string | null | undefined) => (!s ? "" : String(s).split(",").map((x) => x.trim())[0].replace(/\s+office$/i, "").trim().toLowerCase());
+                      const match = searchLocation && selectedAgentInfo.officeLocations?.find((loc: any) => norm(loc.city) === norm(decodeURIComponent(searchLocation.replace(/\+/g, " "))));
+                      return match?.associated_firm || selectedAgentInfo.funeral_home;
+                    })();
+                return (
                 <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
                   <div className="flex items-center gap-4">
                     {selectedAgentInfo.profile_picture_url ? (
@@ -2391,8 +2404,8 @@ function SearchResults() {
                       {selectedAgentInfo.job_title && (
                         <p className="text-gray-700 font-medium text-sm mb-1">{selectedAgentInfo.job_title}</p>
                       )}
-                      {selectedAgentInfo.funeral_home && (
-                        <p className="text-gray-600 text-sm mb-2">{selectedAgentInfo.funeral_home}</p>
+                      {modalFirmName && (
+                        <p className="text-gray-600 text-sm mb-2">{modalFirmName}</p>
                       )}
                       {/* Location & address - only for in-person; for video show "Video call" */}
                       {effectiveBookingMode !== "video" ? (
@@ -2439,7 +2452,8 @@ function SearchResults() {
                     </div>
                   </div>
                 </div>
-              )}
+                );
+              })()}
             </div>
 
             {/* Content */}

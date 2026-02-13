@@ -531,6 +531,7 @@ export async function POST(req: NextRequest) {
                 city: loc.city,
                 province: loc.province,
                 postal_code: loc.postal_code || null,
+                associated_firm: loc.associated_firm || null,
               }));
 
               const { error: locationsError } = await supabaseAdmin
@@ -641,6 +642,7 @@ export async function POST(req: NextRequest) {
           city: loc.city,
           province: loc.province,
           postal_code: loc.postal_code || null,
+          associated_firm: loc.associated_firm || null,
         }));
 
         const { error: locationsError } = await supabaseAdmin

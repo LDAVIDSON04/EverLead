@@ -16,6 +16,8 @@ type AgentSearchResult = {
   last_name: string | null;
   profile_picture_url: string | null;
   funeral_home: string | null;
+  /** First business/firm name (for video/online display). */
+  first_business_name?: string | null;
   job_title: string | null;
   agent_city: string | null;
   agent_province: string | null;
@@ -141,7 +143,7 @@ export async function GET(req: NextRequest) {
     const agentIds = (profiles || []).map((p: any) => p.id);
     const { data: allOfficeLocations } = await supabaseAdmin
       .from("office_locations")
-      .select("id, agent_id, name, city, street_address, province, postal_code")
+      .select("id, agent_id, name, city, street_address, province, postal_code, associated_firm")
       .in("agent_id", agentIds.length > 0 ? agentIds : ['00000000-0000-0000-0000-000000000000']); // Dummy ID if no agents
 
     // Filter agents who are approved (both profile AND bio) and have availability configured
@@ -245,6 +247,9 @@ export async function GET(req: NextRequest) {
             });
           }
           
+          const businessNames = (metadata as any)?.business_names;
+          const firstBusinessName = (Array.isArray(businessNames) && businessNames[0]) ? String(businessNames[0]).trim() : (profile.funeral_home || null);
+
           return {
             id: profile.id,
             full_name: profile.full_name,
@@ -252,6 +257,7 @@ export async function GET(req: NextRequest) {
             last_name: profile.last_name,
             profile_picture_url: profile.profile_picture_url,
             funeral_home: profile.funeral_home,
+            first_business_name: firstBusinessName || profile.funeral_home || null,
             job_title: profile.job_title,
             agent_city: profile.agent_city,
             agent_province: profile.agent_province,
@@ -267,7 +273,7 @@ export async function GET(req: NextRequest) {
             availabilityLocations: allLocationCities, // Include office locations
             availabilityByLocation: availabilityByLocation,
             officeLocationCities: officeLocationCities, // Store separately for reference
-            officeLocations: agentOfficeLocations, // Store full office location data
+            officeLocations: agentOfficeLocations, // Store full office location data (includes associated_firm)
             videoSchedule: videoSchedule && typeof videoSchedule === "object" ? videoSchedule : null,
             agent_role: (metadata as any)?.agent_role || null,
           };

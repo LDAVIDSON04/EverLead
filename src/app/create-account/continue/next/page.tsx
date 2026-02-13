@@ -137,12 +137,13 @@ export default function CreateAccountNextPage() {
     }
 
     const office_locations = Array.isArray(step2.officeLocations)
-      ? step2.officeLocations.map((loc: { name?: string; street_address?: string; city?: string; province?: string; postal_code?: string }) => ({
+      ? step2.officeLocations.map((loc: { name?: string; street_address?: string; city?: string; province?: string; postal_code?: string; associated_firm?: string }) => ({
           name: loc.name || "",
           street_address: loc.street_address || null,
           city: loc.city || "",
           province: loc.province || "",
           postal_code: loc.postal_code || null,
+          associated_firm: loc.associated_firm || null,
         }))
       : [];
 

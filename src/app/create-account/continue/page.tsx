@@ -13,6 +13,8 @@ interface OfficeLocation {
   city: string;
   province: string;
   postal_code: string;
+  /** For funeral planners: business/firm name associated with this office. */
+  associated_firm?: string;
 }
 
 const PROVINCES = ["AB", "BC", "MB", "NB", "NL", "NS", "NT", "NU", "ON", "PE", "QC", "SK", "YT"];
@@ -68,6 +70,7 @@ export default function CreateAccountContinuePage() {
     city: "",
     province: "BC",
     postal_code: "",
+    associated_firm: "",
   });
 
   const [isLicensed, setIsLicensed] = useState("");
@@ -169,6 +172,13 @@ export default function CreateAccountContinuePage() {
       setError("Please fill in at least office name, city, and province.");
       return;
     }
+    if (showFuneral && businessNames.some((n) => n.trim())) {
+      const chosen = (newLocation.associated_firm || "").trim();
+      if (!chosen) {
+        setError("Please select an Associated business / firm for this office location.");
+        return;
+      }
+    }
     setError(null);
     setOfficeLocations((prev) => [...prev, { ...newLocation }]);
     setNewLocation({
@@ -177,6 +187,7 @@ export default function CreateAccountContinuePage() {
       city: "",
       province: "BC",
       postal_code: "",
+      associated_firm: "",
     });
     setShowAddLocation(false);
   };
@@ -518,6 +529,22 @@ export default function CreateAccountContinuePage() {
                       placeholder="Office name *"
                       className={inputClassName}
                     />
+                    {showFuneral && businessNames.filter((n) => n.trim()).length > 0 && (
+                      <div className="space-y-1">
+                        <label className="block text-sm text-gray-700">Associated business / firm <span className="text-red-600">*</span></label>
+                        <select
+                          value={newLocation.associated_firm ?? ""}
+                          onChange={(e) => setNewLocation({ ...newLocation, associated_firm: e.target.value })}
+                          className={inputClassName}
+                          required
+                        >
+                          <option value="">Select firm</option>
+                          {businessNames.filter((n) => n.trim()).map((name) => (
+                            <option key={name} value={name.trim()}>{name.trim()}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
                     <input
                       type="text"
                       value={newLocation.street_address}
@@ -558,7 +585,7 @@ export default function CreateAccountContinuePage() {
                         type="button"
                         onClick={() => {
                           setShowAddLocation(false);
-                          setNewLocation({ name: "", street_address: "", city: "", province: "BC", postal_code: "" });
+                          setNewLocation({ name: "", street_address: "", city: "", province: "BC", postal_code: "", associated_firm: "" });
                         }}
                         className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md text-sm hover:bg-gray-300"
                       >
@@ -571,6 +598,9 @@ export default function CreateAccountContinuePage() {
                   <div key={index} className="mb-3 p-3 border border-gray-300 rounded-lg flex justify-between items-start">
                     <div>
                       <div className="font-medium text-gray-900">{loc.name}</div>
+                      {showFuneral && (loc as OfficeLocation).associated_firm && (
+                        <div className="text-sm text-gray-500">{(loc as OfficeLocation).associated_firm}</div>
+                      )}
                       <div className="text-sm text-gray-600">
                         {loc.street_address && `${loc.street_address}, `}
                         {loc.city}, {loc.province} {loc.postal_code}
@@ -716,7 +746,7 @@ export default function CreateAccountContinuePage() {
                         type="button"
                         onClick={() => {
                           setShowAddLocation(false);
-                          setNewLocation({ name: "", street_address: "", city: "", province: "BC", postal_code: "" });
+                          setNewLocation({ name: "", street_address: "", city: "", province: "BC", postal_code: "", associated_firm: "" });
                         }}
                         className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md text-sm hover:bg-gray-300"
                       >
@@ -889,7 +919,7 @@ export default function CreateAccountContinuePage() {
                         type="button"
                         onClick={() => {
                           setShowAddLocation(false);
-                          setNewLocation({ name: "", street_address: "", city: "", province: "BC", postal_code: "" });
+                          setNewLocation({ name: "", street_address: "", city: "", province: "BC", postal_code: "", associated_firm: "" });
                         }}
                         className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md text-sm hover:bg-gray-300"
                       >
@@ -1051,7 +1081,7 @@ export default function CreateAccountContinuePage() {
                         type="button"
                         onClick={() => {
                           setShowAddLocation(false);
-                          setNewLocation({ name: "", street_address: "", city: "", province: "BC", postal_code: "" });
+                          setNewLocation({ name: "", street_address: "", city: "", province: "BC", postal_code: "", associated_firm: "" });
                         }}
                         className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md text-sm hover:bg-gray-300"
                       >
@@ -1204,7 +1234,7 @@ export default function CreateAccountContinuePage() {
                         type="button"
                         onClick={() => {
                           setShowAddLocation(false);
-                          setNewLocation({ name: "", street_address: "", city: "", province: "BC", postal_code: "" });
+                          setNewLocation({ name: "", street_address: "", city: "", province: "BC", postal_code: "", associated_firm: "" });
                         }}
                         className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md text-sm hover:bg-gray-300"
                       >
