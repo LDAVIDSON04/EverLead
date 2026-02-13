@@ -545,7 +545,7 @@ export default function CreateAccountContinuePage() {
                             className={inputClassName}
                             required
                           >
-                            <option value="">Select firm</option>
+                            <option value="">Select business / firm name</option>
                             {businessNames.filter((n) => n.trim()).map((name) => (
                               <option key={name} value={name.trim()}>{name.trim()}</option>
                             ))}
