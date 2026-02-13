@@ -51,12 +51,11 @@ export async function POST(request: NextRequest) {
     }
 
     let stripeCustomerId = (profile?.metadata as any)?.stripe_customer_id;
-    let customer: { id: string; deleted?: boolean };
 
     if (stripeCustomerId) {
       try {
-        customer = await stripe.customers.retrieve(stripeCustomerId) as { id: string; deleted?: boolean };
-        if (customer.deleted) {
+        const existing = await stripe.customers.retrieve(stripeCustomerId);
+        if ("deleted" in existing && existing.deleted) {
           stripeCustomerId = null;
         }
       } catch {
@@ -65,13 +64,13 @@ export async function POST(request: NextRequest) {
     }
 
     if (!stripeCustomerId) {
-      customer = await stripe.customers.create({
+      const newCustomer = await stripe.customers.create({
         email: agentEmail,
         metadata: {
           supabase_user_id: agentId,
         },
       });
-      stripeCustomerId = customer.id;
+      stripeCustomerId = newCustomer.id;
 
       const { error: updateProfileError } = await supabaseAdmin
         .from("profiles")
