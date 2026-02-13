@@ -40,10 +40,10 @@ export async function GET(
 
     const userId = user.id;
 
-    // Verify user is an agent
+    // Verify user is an agent and get metadata for stripe_customer_id
     const { data: profile, error: profileError } = await supabaseAdmin
       .from("profiles")
-      .select("id, role")
+      .select("id, role, metadata")
       .eq("id", userId)
       .eq("role", "agent")
       .single();
@@ -163,29 +163,19 @@ export async function GET(
         ? `${agentProfile.first_name} ${agentProfile.last_name}`
         : "Agent");
 
-    // Get payment method for account number display
-    const { data: { user: authUser } } = await supabaseAdmin.auth.admin.getUserById(userId);
+    // Get payment method for account number display. SECURITY: Use only profile.stripe_customer_id.
     let accountNumber = "N/A";
-    
-    if (authUser?.email) {
-      // Try to get Stripe customer and payment method
+    const stripeCustomerId = (profile?.metadata as any)?.stripe_customer_id;
+    if (stripeCustomerId) {
       try {
         const stripe = (await import("@/lib/stripe")).stripe;
-        const customers = await stripe.customers.list({
-          email: authUser.email,
+        const paymentMethods = await stripe.paymentMethods.list({
+          customer: stripeCustomerId,
+          type: "card",
           limit: 1,
         });
-        
-        if (customers.data.length > 0) {
-          const paymentMethods = await stripe.paymentMethods.list({
-            customer: customers.data[0].id,
-            type: 'card',
-            limit: 1,
-          });
-          
-          if (paymentMethods.data.length > 0) {
-            accountNumber = `****-****-${paymentMethods.data[0].card?.last4 || "****"}`;
-          }
+        if (paymentMethods.data.length > 0) {
+          accountNumber = `****-****-${paymentMethods.data[0].card?.last4 || "****"}`;
         }
       } catch (e) {
         console.error("Error fetching payment method:", e);

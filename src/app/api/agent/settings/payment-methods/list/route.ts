@@ -4,6 +4,7 @@ import { supabaseServer } from "@/lib/supabaseServer";
 import { stripe } from "@/lib/stripe";
 
 // GET: List payment methods for the current agent
+// SECURITY: Uses only this agent's profile.stripe_customer_id. Never looks up by email.
 export async function GET(request: NextRequest) {
   try {
     // Get authenticated user from Authorization header
@@ -25,40 +26,43 @@ export async function GET(request: NextRequest) {
 
     const agentId = user.id;
 
-    // Get agent's email to find Stripe customer
-    let agentEmail: string | null = null;
+    // SECURITY: Use only this agent's profile.stripe_customer_id. Never look up by email.
+    const { data: profile, error: profileError } = await supabaseAdmin
+      .from("profiles")
+      .select("metadata")
+      .eq("id", agentId)
+      .maybeSingle();
+
+    if (profileError || !profile) {
+      return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+    }
+
+    const stripeCustomerId = (profile.metadata as any)?.stripe_customer_id;
+    if (!stripeCustomerId) {
+      return NextResponse.json({ paymentMethods: [], customerId: null });
+    }
+
+    let customer: { id: string; deleted?: boolean; invoice_settings?: { default_payment_method?: string } };
     try {
-      const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(agentId);
-      agentEmail = authUser?.user?.email || null;
-    } catch (authError) {
-      console.error("Error fetching agent email:", authError);
-      return NextResponse.json({ error: "Failed to fetch agent information" }, { status: 500 });
+      customer = await stripe.customers.retrieve(stripeCustomerId) as typeof customer;
+      if (customer.deleted) {
+        return NextResponse.json({ paymentMethods: [], customerId: null });
+      }
+    } catch {
+      return NextResponse.json({ paymentMethods: [], customerId: null });
     }
 
-    if (!agentEmail) {
-      return NextResponse.json({ error: "Agent email not found" }, { status: 404 });
-    }
-
-    // Find Stripe customer
-    const customers = await stripe.customers.list({
-      email: agentEmail,
-      limit: 1,
-    });
-
-    if (customers.data.length === 0) {
-      return NextResponse.json({ paymentMethods: [] });
-    }
-
-    const customer = customers.data[0];
-
-    // Get payment methods
     const paymentMethods = await stripe.paymentMethods.list({
-      customer: customer.id,
-      type: 'card',
+      customer: stripeCustomerId,
+      type: "card",
     });
 
-    // Format payment methods for frontend
-    const formattedPaymentMethods = paymentMethods.data.map((pm: any) => ({
+    // Defense-in-depth: only expose cards that belong to this agent's Stripe customer
+    const ownPaymentMethods = paymentMethods.data.filter(
+      (pm: any) => pm.customer === stripeCustomerId
+    );
+
+    const formattedPaymentMethods = ownPaymentMethods.map((pm: any) => ({
       id: pm.id,
       type: pm.type,
       card: {
@@ -72,7 +76,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       paymentMethods: formattedPaymentMethods,
-      customerId: customer.id,
+      customerId: stripeCustomerId,
     });
   } catch (err: any) {
     console.error("Error in GET /api/agent/settings/payment-methods/list:", err);

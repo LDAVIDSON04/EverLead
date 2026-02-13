@@ -32,59 +32,20 @@ export async function chargeAgentForAppointment(
       return { success: false, error: "Agent profile not found" };
     }
 
-    let stripeCustomerId = (profile.metadata as any)?.stripe_customer_id;
-    let agentEmail: string | null = profile.email || null;
-    
-    console.log("🔍 [chargeAgentForAppointment] Stripe customer ID:", stripeCustomerId ? "Found" : "NOT FOUND", {
-      agentId,
-      hasMetadata: !!profile.metadata,
-      stripeCustomerId: stripeCustomerId || "MISSING",
-      hasEmail: !!agentEmail,
-    });
-
-    // If no customer ID in metadata, try to find or create one by email
+    // SECURITY: Use only this agent's profile.stripe_customer_id. Never look up or create by email.
+    const stripeCustomerId = (profile.metadata as any)?.stripe_customer_id;
     if (!stripeCustomerId) {
-      console.log("⚠️ [chargeAgentForAppointment] No customer ID in metadata, attempting to find by email...");
-      
-      // Get agent's email if not already fetched
-      if (!agentEmail) {
-        try {
-          const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(agentId);
-          agentEmail = authUser?.user?.email || null;
-        } catch (authError) {
-          console.error("❌ [chargeAgentForAppointment] Error fetching agent email:", authError);
-          return { success: false, error: "Failed to fetch agent email" };
-        }
+      console.error("❌ [chargeAgentForAppointment] No stripe_customer_id on profile. Agent must add payment method in Billing.");
+      return { success: false, error: "No payment method on file. Please add a payment method in Billing." };
+    }
 
-        if (!agentEmail) {
-          console.error("❌ [chargeAgentForAppointment] Agent email not found");
-          return { success: false, error: "Agent email not found" };
-        }
-      }
-
-      // Try to find existing Stripe customer by email
-      const customers = await stripe.customers.list({
-        email: agentEmail,
-        limit: 1,
-      });
-
-      if (customers.data.length > 0) {
-        stripeCustomerId = customers.data[0].id;
-        console.log("✅ [chargeAgentForAppointment] Found existing Stripe customer by email:", stripeCustomerId);
-        
-        // Save the customer ID to profile metadata for future use
-        await supabaseAdmin
-          .from("profiles")
-          .update({
-            metadata: {
-              ...(profile.metadata || {}),
-              stripe_customer_id: stripeCustomerId,
-            },
-          })
-          .eq("id", agentId);
-      } else {
-        console.error("❌ [chargeAgentForAppointment] No Stripe customer found for email:", agentEmail);
-        return { success: false, error: "No Stripe customer found. Please add a payment method." };
+    let agentEmail: string | null = profile.email || null;
+    if (!agentEmail) {
+      try {
+        const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(agentId);
+        agentEmail = authUser?.user?.email || null;
+      } catch {
+        // Non-fatal for charge; receipt_email is optional
       }
     }
 
@@ -95,18 +56,21 @@ export async function chargeAgentForAppointment(
       type: 'card',
     });
 
-    console.log("🔍 [chargeAgentForAppointment] Payment methods found:", paymentMethods.data.length);
+    // Defense-in-depth: only charge a card that belongs to this agent's Stripe customer
+    const ownPaymentMethods = paymentMethods.data.filter((pm: any) => pm.customer === stripeCustomerId);
 
-    if (paymentMethods.data.length === 0) {
+    console.log("🔍 [chargeAgentForAppointment] Payment methods found:", ownPaymentMethods.length);
+
+    if (ownPaymentMethods.length === 0) {
       console.error("❌ [chargeAgentForAppointment] No payment methods found for customer:", stripeCustomerId);
       return { success: false, error: "No payment method found. Please add a payment method." };
     }
 
     // Use the first payment method (or could use default if set)
-    const paymentMethodId = paymentMethods.data[0].id;
+    const paymentMethodId = ownPaymentMethods[0].id;
     console.log("💳 [chargeAgentForAppointment] Using payment method:", paymentMethodId, {
-      brand: paymentMethods.data[0].card?.brand,
-      last4: paymentMethods.data[0].card?.last4,
+      brand: ownPaymentMethods[0].card?.brand,
+      last4: ownPaymentMethods[0].card?.last4,
     });
 
     // Create and confirm payment intent with off_session: true for saved cards

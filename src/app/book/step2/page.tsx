@@ -44,6 +44,8 @@ function BookingStep2Content() {
 
   const [selectedOfficeLocation, setSelectedOfficeLocation] = useState<string>("");
   const [officeLocationId, setOfficeLocationId] = useState<string | null>(null);
+  /** Firm name for the selected office only (so we show the correct firm for the location being booked) */
+  const [selectedOfficeFirmName, setSelectedOfficeFirmName] = useState<string | null>(null);
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(true);
@@ -68,10 +70,10 @@ function BookingStep2Content() {
           setAgentInfo(data);
         }
 
-        // Load office locations and find the matching one
+        // Load office locations (include associated_firm so we show only the firm for this location)
         const { data: officeLocations } = await supabaseClient
           .from("office_locations")
-          .select("id, name, city, street_address, province, postal_code")
+          .select("id, name, city, street_address, province, postal_code, associated_firm")
           .eq("agent_id", agentId)
           .order("city", { ascending: true });
 
@@ -112,7 +114,8 @@ function BookingStep2Content() {
           if (matchingLocation) {
             // Store the office_location_id
             setOfficeLocationId(matchingLocation.id);
-            
+            // Firm name for this office only (so card shows the correct firm for the city being booked)
+            setSelectedOfficeFirmName(matchingLocation.associated_firm?.trim() || null);
             // Set display name - prioritize street address over name
             const locationDisplay = matchingLocation.street_address 
               ? `${matchingLocation.street_address}, ${matchingLocation.city}, ${matchingLocation.province}${matchingLocation.postal_code ? ` ${matchingLocation.postal_code}` : ''}`
@@ -339,9 +342,9 @@ function BookingStep2Content() {
                   ? `${agentInfo.first_name} ${agentInfo.last_name}`
                   : "Pre-need Specialist")}
               </h2>
-              {agentInfo.funeral_home && (
+              {(selectedOfficeFirmName || agentInfo.funeral_home) && (
                 <p className="text-gray-700 text-sm font-medium mb-0.5">
-                  {agentInfo.funeral_home}
+                  {selectedOfficeFirmName ?? agentInfo.funeral_home}
                 </p>
               )}
               <p className="text-gray-600 text-sm mb-3">

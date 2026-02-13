@@ -32,36 +32,25 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: "paymentMethodId is required" }, { status: 400 });
     }
 
-    // Get agent's email to find Stripe customer
-    let agentEmail: string | null = null;
-    try {
-      const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(agentId);
-      agentEmail = authUser?.user?.email || null;
-    } catch (authError) {
-      console.error("Error fetching agent email:", authError);
-      return NextResponse.json({ error: "Failed to fetch agent information" }, { status: 500 });
+    // SECURITY: Use only this agent's profile.stripe_customer_id.
+    const { data: profile, error: profileError } = await supabaseAdmin
+      .from("profiles")
+      .select("metadata")
+      .eq("id", agentId)
+      .maybeSingle();
+
+    if (profileError || !profile) {
+      return NextResponse.json({ error: "Profile not found" }, { status: 404 });
     }
 
-    if (!agentEmail) {
-      return NextResponse.json({ error: "Agent email not found" }, { status: 404 });
+    const stripeCustomerId = (profile.metadata as any)?.stripe_customer_id;
+    if (!stripeCustomerId) {
+      return NextResponse.json({ error: "No payment method on file" }, { status: 404 });
     }
 
-    // Find Stripe customer
-    const customers = await stripe.customers.list({
-      email: agentEmail,
-      limit: 1,
-    });
-
-    if (customers.data.length === 0) {
-      return NextResponse.json({ error: "Stripe customer not found" }, { status: 404 });
-    }
-
-    const customer = customers.data[0];
-
-    // Get all payment methods for this customer
     const paymentMethods = await stripe.paymentMethods.list({
-      customer: customer.id,
-      type: 'card',
+      customer: stripeCustomerId,
+      type: "card",
     });
 
     // If this is the only payment method and no new one is provided, block removal
@@ -81,7 +70,7 @@ export async function DELETE(request: NextRequest) {
         const newPaymentMethod = await stripe.paymentMethods.retrieve(newPaymentMethodId);
         
         // Verify the new payment method belongs to this customer
-        if (newPaymentMethod.customer !== customer.id) {
+        if (newPaymentMethod.customer !== stripeCustomerId) {
           return NextResponse.json(
             { error: "The new payment method does not belong to your account" },
             { status: 400 }
@@ -91,7 +80,7 @@ export async function DELETE(request: NextRequest) {
         // Attach the new payment method to the customer if not already attached
         if (!newPaymentMethod.customer) {
           await stripe.paymentMethods.attach(newPaymentMethodId, {
-            customer: customer.id,
+            customer: stripeCustomerId,
           });
         }
       } catch (stripeError: any) {
@@ -112,7 +101,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    if (paymentMethodToDelete.customer !== customer.id) {
+    if (paymentMethodToDelete.customer !== stripeCustomerId) {
       return NextResponse.json(
         { error: "Payment method does not belong to your account" },
         { status: 403 }

@@ -34,6 +34,8 @@ type AgentSearchResult = {
   officeLocationCities?: string[];
   videoSchedule?: Record<string, { enabled: boolean; start: string; end: string }> | null;
   agent_role?: string | null;
+  /** From profile.metadata; used only for payment check. Never resolve Stripe by email. */
+  stripe_customer_id?: string | null;
 };
 
 // Agent has set video availability if videoSchedule exists and at least one day is enabled
@@ -276,6 +278,7 @@ export async function GET(req: NextRequest) {
             officeLocations: agentOfficeLocations, // Store full office location data (includes associated_firm)
             videoSchedule: videoSchedule && typeof videoSchedule === "object" ? videoSchedule : null,
             agent_role: (metadata as any)?.agent_role || null,
+            stripe_customer_id: (metadata as any)?.stripe_customer_id || null,
           };
         } catch (err) {
           console.error(`[AGENT SEARCH] Error mapping agent ${profile.id}:`, err);
@@ -286,63 +289,29 @@ export async function GET(req: NextRequest) {
 
     console.log(`[AGENT SEARCH] ${agentsWithAvailability.length} agents with availability configured`);
 
-    // Filter out agents without payment methods
-    // Agents must have a valid payment method to appear in search results
+    // Filter out agents without payment methods.
+    // SECURITY: Use only profile.stripe_customer_id. Never look up Stripe by email.
     const agentsWithPaymentMethods = await Promise.all(
       agentsWithAvailability.map(async (agent) => {
+        const stripeCustomerId = agent.stripe_customer_id || null;
+        if (!stripeCustomerId) {
+          console.log(`[AGENT SEARCH] Agent ${agent.id} (${agent.full_name || "unnamed"}) has no stripe_customer_id - excluding from results`);
+          return null;
+        }
         try {
-          // Get agent's email from auth.users to check Stripe customer
-          let agentEmail: string | null = null;
-          try {
-            const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(agent.id);
-            agentEmail = authUser?.user?.email || null;
-          } catch (authError) {
-            console.error(`[AGENT SEARCH] Error fetching email for agent ${agent.id}:`, authError);
-            return null;
-          }
-
-          if (!agentEmail) {
-            console.log(`[AGENT SEARCH] Agent ${agent.id} has no email - excluding from results`);
-            return null;
-          }
-
-          // Check if agent has a payment method via Stripe
-          let hasPaymentMethod = false;
-          try {
-            const customers = await stripe.customers.list({
-              email: agentEmail,
-              limit: 1,
-            });
-
-            if (customers.data.length > 0) {
-              const customer = customers.data[0];
-              // Check if customer has payment methods
-              const paymentMethods = await stripe.paymentMethods.list({
-                customer: customer.id,
-                type: 'card',
-              });
-
-              hasPaymentMethod = paymentMethods.data.length > 0;
-            }
-          } catch (stripeError: any) {
-            console.error(`[AGENT SEARCH] Error checking Stripe payment methods for agent ${agent.id}:`, stripeError);
-            // If Stripe check fails, exclude agent (safer default)
-            hasPaymentMethod = false;
-          }
-
+          const paymentMethods = await stripe.paymentMethods.list({
+            customer: stripeCustomerId,
+            type: "card",
+            limit: 1,
+          });
+          const hasPaymentMethod = paymentMethods.data.length > 0;
           if (!hasPaymentMethod) {
-            console.log(`[AGENT SEARCH] Agent ${agent.id} (${agent.full_name || 'unnamed'}) has no payment method - excluding from results`);
+            console.log(`[AGENT SEARCH] Agent ${agent.id} (${agent.full_name || "unnamed"}) has no payment method - excluding from results`);
             return null;
           }
-          
-          // Debug log for the specific agent we're looking for
-          if (agent.id === 'f7f6aeca-1059-4ae8-ae93-a059ad583b8f') {
-            console.log(`[AGENT SEARCH] ✅ Agent ${agent.id} passed payment method check`);
-          }
-
           return agent;
-        } catch (error: any) {
-          console.error(`[AGENT SEARCH] Error processing payment method check for agent ${agent.id}:`, error);
+        } catch (stripeError: any) {
+          console.error(`[AGENT SEARCH] Error checking Stripe for agent ${agent.id}:`, stripeError);
           return null;
         }
       })

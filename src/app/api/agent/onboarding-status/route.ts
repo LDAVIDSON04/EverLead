@@ -125,82 +125,28 @@ export async function GET(request: NextRequest) {
     
     console.log(`[ONBOARDING-STATUS] Agent ${agentId}: Final hasAvailability: ${hasAvailability}`);
 
-    // Check for payment method via Stripe
-    // First, check if we have stripe_customer_id in metadata
+    // SECURITY: Check payment method only via this agent's profile.stripe_customer_id.
+    // Never look up by email (would risk marking another agent's card as this agent's).
     let hasPaymentMethod = false;
-    let stripeCustomerId = (metadata as any)?.stripe_customer_id;
-    
-    // Use auth user email (which is always set) instead of profile.email (which can be null)
-    const emailToUse = agentEmail || profile.email;
-    
-    console.log(`[ONBOARDING-STATUS] Agent ${agentId}: Checking payment method. Auth user email: ${agentEmail}, Profile email: ${profile.email}, Email to use: ${emailToUse}, Stripe Customer ID in metadata: ${stripeCustomerId || 'NOT FOUND'}`);
-    
-    try {
-      // Always try email lookup first to ensure we get the most up-to-date customer
-      if (emailToUse) {
-        const customers = await stripe.customers.list({
-          email: emailToUse,
-          limit: 1,
-        });
+    const stripeCustomerId = (metadata as any)?.stripe_customer_id;
 
-        if (customers.data.length > 0) {
-          const customer = customers.data[0];
-          stripeCustomerId = customer.id;
-          
-          console.log(`[ONBOARDING-STATUS] Agent ${agentId}: Found Stripe customer by email: ${stripeCustomerId}`);
-          
-          // Update metadata if we found a customer ID that wasn't stored
-          if (!(metadata as any)?.stripe_customer_id && stripeCustomerId) {
-            try {
-              await supabaseAdmin
-                .from("profiles")
-                .update({
-                  metadata: {
-                    ...metadata,
-                    stripe_customer_id: stripeCustomerId,
-                  },
-                })
-                .eq("id", agentId);
-              console.log(`[ONBOARDING-STATUS] Agent ${agentId}: Saved Stripe customer ID to metadata`);
-            } catch (updateError) {
-              console.error("Error updating stripe_customer_id in metadata:", updateError);
-              // Non-fatal, continue
-            }
-          }
-          
-          // Check if customer has payment methods
+    if (stripeCustomerId) {
+      try {
+        const customer = await stripe.customers.retrieve(stripeCustomerId);
+        if (!(customer as any).deleted) {
           const paymentMethods = await stripe.paymentMethods.list({
-            customer: customer.id,
-            type: 'card',
+            customer: stripeCustomerId,
+            type: "card",
             limit: 1,
           });
-
           hasPaymentMethod = paymentMethods.data.length > 0;
-          console.log(`[ONBOARDING-STATUS] Agent ${agentId}: Payment methods found by email lookup: ${paymentMethods.data.length}, hasPaymentMethod: ${hasPaymentMethod}`);
-        } else {
-          console.log(`[ONBOARDING-STATUS] Agent ${agentId}: No Stripe customer found by email: ${emailToUse}`);
         }
+      } catch {
+        hasPaymentMethod = false;
       }
-      
-      // If email lookup didn't find anything, try using stored stripe_customer_id
-      if (!hasPaymentMethod && stripeCustomerId) {
-        console.log(`[ONBOARDING-STATUS] Agent ${agentId}: Trying stored Stripe customer ID: ${stripeCustomerId}`);
-        const paymentMethods = await stripe.paymentMethods.list({
-          customer: stripeCustomerId,
-          type: 'card',
-          limit: 1,
-        });
-
-        hasPaymentMethod = paymentMethods.data.length > 0;
-        console.log(`[ONBOARDING-STATUS] Agent ${agentId}: Payment methods found by stored ID: ${paymentMethods.data.length}, hasPaymentMethod: ${hasPaymentMethod}`);
-      }
-    } catch (stripeError: any) {
-      console.error(`[ONBOARDING-STATUS] Agent ${agentId}: Error checking Stripe payment methods:`, stripeError);
-      // If Stripe check fails, assume no payment method (safer default)
-      hasPaymentMethod = false;
     }
-    
-    console.log(`[ONBOARDING-STATUS] Agent ${agentId}: Final hasPaymentMethod: ${hasPaymentMethod}`);
+
+    console.log(`[ONBOARDING-STATUS] Agent ${agentId}: hasPaymentMethod: ${hasPaymentMethod} (stripe_customer_id: ${stripeCustomerId ? "set" : "not set"})`);
 
     // Check if all 3 steps are complete: profile picture + availability + payment method
     console.log(`[ONBOARDING-STATUS] Agent ${agentId}: Evaluating onboarding status. hasProfilePicture: ${hasProfilePicture}, hasPaymentMethod: ${hasPaymentMethod}, hasAvailability: ${hasAvailability}`);
