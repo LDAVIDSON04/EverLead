@@ -518,6 +518,8 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
                                   <Input
                                     type="time"
                                     value={dayData.start}
+                                    onClick={(e) => (e.target as HTMLInputElement).showPicker?.()}
+                                    onFocus={(e) => (e.target as HTMLInputElement).showPicker?.()}
                                     onChange={(e) => {
                                       const newValue = e.target.value;
                                       const timeRegex = /^([0-1][0-9]|2[0-3]):[0-5][0-9]$/;
@@ -527,12 +529,14 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
                                         [day]: { ...dayData, start: newValue },
                                       });
                                     }}
-                                    className="w-28 min-w-0 py-2 rounded-lg border-gray-200 text-sm"
+                                    className="w-28 min-w-0 py-2 rounded-lg border-gray-200 text-sm cursor-pointer"
                                   />
                                   <span className="text-gray-500 text-xs flex-shrink-0">to</span>
                                   <Input
                                     type="time"
                                     value={dayData.end}
+                                    onClick={(e) => (e.target as HTMLInputElement).showPicker?.()}
+                                    onFocus={(e) => (e.target as HTMLInputElement).showPicker?.()}
                                     onChange={(e) => {
                                       const newValue = e.target.value;
                                       const timeRegex = /^([0-1][0-9]|2[0-3]):[0-5][0-9]$/;
@@ -542,7 +546,7 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
                                         [day]: { ...dayData, end: newValue },
                                       });
                                     }}
-                                    className="w-28 min-w-0 py-2 rounded-lg border-gray-200 text-sm"
+                                    className="w-28 min-w-0 py-2 rounded-lg border-gray-200 text-sm cursor-pointer"
                                   />
                                 </div>
                               ) : (
