@@ -75,6 +75,7 @@ export default function SchedulePage() {
   const calendarScrollRef = useRef<HTMLDivElement>(null);
   const [showSyncSuccessModal, setShowSyncSuccessModal] = useState(false);
   const [syncProvider, setSyncProvider] = useState<"google" | "microsoft" | null>(null);
+  const [outOfOfficeDates, setOutOfOfficeDates] = useState<Set<string>>(new Set());
 
   // Detect if we're on desktop
   useEffect(() => {
@@ -169,6 +170,13 @@ export default function SchedulePage() {
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
+  const toDateKey = (date: Date) => {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
   };
 
   // Get day-based color for appointments (0 = Sunday, 1 = Monday, etc.)
@@ -276,7 +284,7 @@ export default function SchedulePage() {
           return;
         }
 
-        const [profileResult, specialistRes, appointmentsData] = await Promise.all([
+        const [profileResult, specialistRes, appointmentsData, oooRes] = await Promise.all([
           supabaseClient
             .from("profiles")
             .select("full_name, metadata, agent_province")
@@ -286,6 +294,9 @@ export default function SchedulePage() {
             headers: { Authorization: `Bearer ${session.access_token}` },
           }),
           fetchAppointments(session.access_token),
+          fetch("/api/agent/out-of-office", {
+            headers: { Authorization: `Bearer ${session.access_token}` },
+          }),
         ]);
 
         const profileData = profileResult.data;
@@ -341,6 +352,11 @@ export default function SchedulePage() {
         if (specialistRes.ok) {
           specialistData = await specialistRes.json();
           setSpecialist(specialistData);
+        }
+
+        if (oooRes.ok) {
+          const oooData = await oooRes.json();
+          setOutOfOfficeDates(new Set((oooData.dates || []).filter((d: unknown) => typeof d === "string")));
         }
 
         if (specialistData?.id) {
@@ -1125,13 +1141,21 @@ export default function SchedulePage() {
               {weekDays.map((day, index) => {
                 const date = weekDates[index];
                 const today = isToday(date);
+                const dateKey = toDateKey(date);
+                const isOOO = outOfOfficeDates.has(dateKey);
                 return (
-                  <div key={`${day}-${index}`} className="flex-1 min-w-[100px] px-2 py-3">
+                  <div
+                    key={`${day}-${index}`}
+                    className={`flex-1 min-w-[100px] px-2 py-3 ${isOOO ? "bg-gray-100" : ""}`}
+                  >
                     <div className="flex flex-col items-center gap-0.5">
-                      <span className={`text-xs text-gray-700 ${today ? 'font-semibold' : ''}`}>{day}</span>
-                      <span className={`text-xs text-gray-500 ${today ? 'font-medium' : ''}`}>
-                        {date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      <span className={`text-xs ${isOOO ? "text-gray-500" : "text-gray-700"} ${today ? "font-semibold" : ""}`}>{day}</span>
+                      <span className={`text-xs ${isOOO ? "text-gray-400" : "text-gray-500"} ${today ? "font-medium" : ""}`}>
+                        {date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                       </span>
+                      {isOOO && (
+                        <span className="text-[10px] text-gray-500 font-medium mt-0.5">Out of office</span>
+                      )}
                     </div>
                   </div>
                 );
@@ -1151,6 +1175,7 @@ export default function SchedulePage() {
                       {hour === 12 ? '12 PM' : hour > 12 ? `${hour - 12} PM` : `${hour} AM`}
                     </div>
                     {weekDays.map((day, dayIndex) => {
+                      const dayOOO = outOfOfficeDates.has(toDateKey(weekDates[dayIndex]));
                       // Find appointments that start in this hour for this day
                       const cellAppointments = weekAppointments.filter((apt: any) => {
                         const matches = apt.day === dayIndex && apt.hour === hour;
@@ -1172,14 +1197,18 @@ export default function SchedulePage() {
                       return (
                         <div
                           key={`${day}-${hour}`}
-                          className="flex-1 min-w-[50px] md:min-w-[100px] border-l border-gray-200 relative"
+                          className={`flex-1 min-w-[50px] md:min-w-[100px] border-l border-gray-200 relative ${dayOOO ? "bg-gray-100" : ""}`}
                           style={{ height: isDesktop ? '65px' : '55px', overflow: 'visible' }}
                         >
                           {cellAppointments.length === 0 ? (
                             <div
-                              className="absolute inset-0 cursor-pointer hover:bg-gray-50 transition-colors"
-                              onClick={() => handleEmptyBlockClick(weekDates[dayIndex], hour, 0)}
-                            />
+                              className={`absolute inset-0 cursor-pointer transition-colors ${dayOOO ? "" : "hover:bg-gray-50"}`}
+                              onClick={() => !dayOOO && handleEmptyBlockClick(weekDates[dayIndex], hour, 0)}
+                            >
+                              {dayOOO && hour === weekHours[0] && (
+                                <span className="text-[10px] text-gray-500 font-medium px-1">Out of office</span>
+                              )}
+                            </div>
                           ) : (
                             cellAppointments.map((apt: any) => {
                             // Calculate top offset within this hour (based on minutes)
@@ -1302,19 +1331,24 @@ export default function SchedulePage() {
         )}
 
         {/* Day View */}
-        {view === 'day' && (
-          <div className="inline-block min-w-full">
+        {view === 'day' && (() => {
+          const dayOOO = outOfOfficeDates.has(toDateKey(dayDate));
+          return (
+          <div className={`inline-block min-w-full ${dayOOO ? "bg-gray-50" : ""}`}>
             {/* Day Header */}
-            <div className="flex sticky top-0 bg-white z-20 border-b border-gray-200 shadow-sm">
+            <div className={`flex sticky top-0 z-20 border-b border-gray-200 shadow-sm ${dayOOO ? "bg-gray-100" : "bg-white"}`}>
               <div className="w-20 flex-shrink-0"></div>
               <div className="flex-1 px-2 py-3">
                 <div className="flex flex-col items-center gap-0.5">
-                  <span className={`text-xs text-gray-700 ${isToday(dayDate) ? 'font-semibold' : ''}`}>
-                    {dayDate.toLocaleDateString('en-US', { weekday: 'long' })}
+                  <span className={`text-xs ${dayOOO ? "text-gray-500" : "text-gray-700"} ${isToday(dayDate) ? "font-semibold" : ""}`}>
+                    {dayDate.toLocaleDateString("en-US", { weekday: "long" })}
                   </span>
-                  <span className={`text-xs text-gray-500 ${isToday(dayDate) ? 'font-medium' : ''}`}>
-                    {dayDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  <span className={`text-xs ${dayOOO ? "text-gray-400" : "text-gray-500"} ${isToday(dayDate) ? "font-medium" : ""}`}>
+                    {dayDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                   </span>
+                  {dayOOO && (
+                    <span className="text-[10px] text-gray-500 font-medium mt-0.5">Out of office</span>
+                  )}
                 </div>
               </div>
             </div>
@@ -1338,8 +1372,8 @@ export default function SchedulePage() {
                     >
                       {cellAppointments.length === 0 ? (
                         <div
-                          className="absolute inset-0 cursor-pointer hover:bg-gray-50 transition-colors"
-                          onClick={() => handleEmptyBlockClick(dayDate, hour, 0)}
+                          className={`absolute inset-0 cursor-pointer transition-colors ${dayOOO ? "" : "hover:bg-gray-50"}`}
+                          onClick={() => !dayOOO && handleEmptyBlockClick(dayDate, hour, 0)}
                         />
                       ) : (
                         cellAppointments.map((apt: any) => {
@@ -1434,7 +1468,8 @@ export default function SchedulePage() {
               })}
             </div>
           </div>
-        )}
+        );
+        })()}
 
         {/* Month View */}
         {view === 'month' && (
@@ -1582,6 +1617,20 @@ export default function SchedulePage() {
       <OutOfOfficeModal
         isOpen={showOutOfOfficeModal}
         onClose={() => setShowOutOfOfficeModal(false)}
+        onSaved={async () => {
+          try {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session?.access_token) {
+              const res = await fetch("/api/agent/out-of-office", {
+                headers: { Authorization: `Bearer ${session.access_token}` },
+              });
+              if (res.ok) {
+                const data = await res.json();
+                setOutOfOfficeDates(new Set((data.dates || []).filter((d: unknown) => typeof d === "string")));
+              }
+            }
+          } catch (_e) {}
+        }}
       />
 
       {/* Calendar Sync Success Modal */}
