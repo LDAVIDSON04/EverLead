@@ -378,18 +378,69 @@ export default function AgentDashboardPage() {
       {/* Main Content */}
       <div className="p-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Left 2 Columns */}
-          <div className="col-span-1 md:col-span-2 space-y-6">
-            {/* Welcome Section */}
-            <div className="bg-gradient-to-r from-[#1a3a2e] to-[#0f2e1c] rounded-2xl px-6 h-[220px] flex items-center">
-              <div>
-                <h2 className="text-2xl mb-2 text-white">
-                  Welcome back, <span className="text-gray-100">{userFirstName || 'Agent'}</span>
-                </h2>
-                <p className="text-neutral-100">Have a nice day at work</p>
+          {/* Row 1: Welcome and Schedule Calendar side-by-side, same height */}
+          <div className="col-span-1 md:col-span-2 min-h-0 flex h-full">
+            <div className="w-full h-full min-h-0 flex flex-col">
+              <div className="flex-1 min-h-0 bg-gradient-to-r from-[#1a3a2e] to-[#0f2e1c] rounded-2xl px-6 flex items-center">
+                <div>
+                  <h2 className="text-2xl mb-2 text-white">
+                    Welcome back, <span className="text-gray-100">{userFirstName || 'Agent'}</span>
+                  </h2>
+                  <p className="text-neutral-100">Have a nice day at work</p>
+                </div>
               </div>
             </div>
-            
+          </div>
+          <div className="hidden md:block col-span-1 min-h-0 self-stretch">
+            <div className="h-full min-h-0 bg-white rounded-xl border border-gray-200 p-5">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm text-[#1a3a2e] font-medium">Schedule Calendar</h3>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-600">
+                    {today.toLocaleDateString('en-US', { month: 'short' })}
+                  </span>
+                </div>
+              </div>
+              <div className="grid grid-cols-7 gap-2">
+                {weekDays.map((day, idx) => {
+                  const isToday = idx === currentDay - 1;
+                  return (
+                    <div key={day} className="text-center">
+                      <div className="text-xs text-gray-500 mb-2">{day}</div>
+                      <div className={`w-full aspect-square rounded-lg flex flex-col items-center justify-center text-sm ${
+                        isToday ? 'bg-[#1a3a2e] text-white' : 'bg-gray-50 text-gray-900'
+                      }`}>
+                        <div>{calendarDates[idx]}</div>
+                        {(() => {
+                          const dateKey = currentWeekDateStrings[idx];
+                          const appointmentCount = dateKey ? (calendarAppointments[dateKey] || 0) : 0;
+                          if (appointmentCount > 0) {
+                            const dotsToShow = Math.min(appointmentCount, 3);
+                            return (
+                              <div className="flex gap-0.5 mt-1">
+                                {Array.from({ length: dotsToShow }).map((_, i) => (
+                                  <span
+                                    key={i}
+                                    className={`w-1 h-1 rounded-full ${
+                                      isToday ? "bg-white" : "bg-[#1a3a2e]/70"
+                                    }`}
+                                  />
+                                ))}
+                              </div>
+                            );
+                          }
+                          return null;
+                        })()}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Row 2: Left content */}
+          <div className="col-span-1 md:col-span-2 space-y-6">
             {/* Weekly Reports */}
             <div>
               <div className="flex items-center justify-between mb-4">
@@ -481,56 +532,8 @@ export default function AgentDashboardPage() {
             </div>
           </div>
           
-          {/* Right Column - Hidden on mobile */}
+          {/* Right Column - Hidden on mobile (Number of Meetings + Availability; Schedule Calendar is in row 1 above) */}
           <div className="hidden md:block space-y-6">
-            {/* Schedule Calendar - dark green title and today highlight (this page only) */}
-            <div className="bg-white rounded-xl border border-gray-200 p-5">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm text-[#1a3a2e] font-medium">Schedule Calendar</h3>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-600">
-                    {today.toLocaleDateString('en-US', { month: 'short' })}
-                  </span>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-7 gap-2">
-                {weekDays.map((day, idx) => {
-                  const isToday = idx === currentDay - 1;
-                  return (
-                    <div key={day} className="text-center">
-                      <div className="text-xs text-gray-500 mb-2">{day}</div>
-                      <div className={`w-full aspect-square rounded-lg flex flex-col items-center justify-center text-sm ${
-                        isToday ? 'bg-[#1a3a2e] text-white' : 'bg-gray-50 text-gray-900'
-                      }`}>
-                        <div>{calendarDates[idx]}</div>
-                        {(() => {
-                          const dateKey = currentWeekDateStrings[idx];
-                          const appointmentCount = dateKey ? (calendarAppointments[dateKey] || 0) : 0;
-                          if (appointmentCount > 0) {
-                            const dotsToShow = Math.min(appointmentCount, 3);
-                            return (
-                              <div className="flex gap-0.5 mt-1">
-                                {Array.from({ length: dotsToShow }).map((_, i) => (
-                                  <span
-                                    key={i}
-                                    className={`w-1 h-1 rounded-full ${
-                                      isToday ? "bg-white" : "bg-[#1a3a2e]/70"
-                                    }`}
-                                  />
-                                ))}
-                              </div>
-                            );
-                          }
-                          return null;
-                        })()}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-            
             {/* Number of Meetings Chart - dark green title and bars (this page only) */}
             <div className="bg-white rounded-xl border border-gray-200 p-5">
               <div className="flex items-center justify-between mb-4">
