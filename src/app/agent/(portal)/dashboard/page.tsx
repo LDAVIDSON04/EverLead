@@ -380,7 +380,7 @@ export default function AgentDashboardPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Left 2 Columns */}
           <div className="col-span-1 md:col-span-2 space-y-6">
-            {/* Welcome Section - dark green (this page only); height matches Schedule Calendar card */
+            {/* Welcome Section */}
             <div className="bg-gradient-to-r from-[#1a3a2e] to-[#0f2e1c] rounded-2xl px-6 h-[220px] flex items-center">
               <div>
                 <h2 className="text-2xl mb-2 text-white">
