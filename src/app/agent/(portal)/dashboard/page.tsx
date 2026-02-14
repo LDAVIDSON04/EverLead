@@ -380,8 +380,8 @@ export default function AgentDashboardPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Left 2 Columns */}
           <div className="col-span-1 md:col-span-2 space-y-6">
-            {/* Welcome Section - dark green (this page only) */}
-            <div className="bg-gradient-to-r from-[#1a3a2e] to-[#0f2e1c] rounded-2xl px-6 py-16 min-h-[180px] flex items-center">
+            {/* Welcome Section - dark green (this page only); height matches Schedule Calendar card */
+            <div className="bg-gradient-to-r from-[#1a3a2e] to-[#0f2e1c] rounded-2xl px-6 h-[220px] flex items-center">
               <div>
                 <h2 className="text-2xl mb-2 text-white">
                   Welcome back, <span className="text-gray-100">{userFirstName || 'Agent'}</span>
