@@ -2408,41 +2408,34 @@ function ProfileBioSection() {
       setSaving(true);
       setSaveMessage(null);
 
-      const { data: { user } } = await supabaseClient.auth.getUser();
-      if (!user) {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session?.access_token) {
         throw new Error('Not authenticated');
       }
 
-      const { data: profile } = await supabaseClient
-        .from('profiles')
-        .select('metadata')
-        .eq('id', user.id)
-        .single();
+      const res = await fetch('/api/agent/settings/bio', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          bioData,
+          aiGeneratedBio: generatedBio ?? '',
+        }),
+      });
 
-      const metadata = profile?.metadata || {};
-      metadata.bio = bioData;
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || data.details || 'Failed to save bio');
+      }
 
-      const { error } = await supabaseClient
-        .from('profiles')
-        .update({ metadata })
-        .eq('id', user.id);
+      setSaveMessage({ type: 'success', text: data.message || 'Bio saved. Your updates will appear on your public profile and in "Learn more about" views.' });
 
-      if (error) throw error;
-
-      // Save current (possibly edited) bio text to ai_generated_bio
-      const { error: bioError } = await supabaseClient
-        .from('profiles')
-        .update({ ai_generated_bio: generatedBio ?? '' })
-        .eq('id', user.id);
-
-      if (bioError) throw bioError;
-
-      setSaveMessage({ type: 'success', text: 'Bio information and bio preview saved successfully!' });
-
-      // Reload to get updated status
+      // Reload so UI shows the saved values
       await loadBioData();
     } catch (err: any) {
-      setSaveMessage({ type: 'error', text: err.message || 'Failed to save bio information' });
+      setSaveMessage({ type: 'error', text: err.message || 'Failed to save bio' });
     } finally {
       setSaving(false);
     }
