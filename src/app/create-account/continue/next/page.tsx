@@ -266,7 +266,6 @@ export default function CreateAccountNextPage() {
               onChange={(e) => setProfileBio(e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black resize-y min-h-[200px]"
               rows={8}
-              placeholder="e.g. I am a funeral planner at [Organization] in [City], with over 10 years of experience helping families with pre-arrangement and end-of-life planning. I focus on clear, compassionate communication so families can make informed decisions without pressure. Families often appreciate my patience and willingness to answer questions at their own pace."
               required
             />
           </div>
@@ -288,7 +287,7 @@ export default function CreateAccountNextPage() {
                 )}
               </span>
               <span className="text-sm select-none">
-                I confirm the above bio is accurate and in my own words <span className="text-red-600">*</span>
+                I have entered all info accurately <span className="text-red-600">*</span>
               </span>
             </label>
           </div>
