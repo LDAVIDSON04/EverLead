@@ -2509,7 +2509,7 @@ function ProfileBioSection() {
     <div className="bg-white rounded-lg border border-gray-200 p-6">
       <div className="mb-6">
         <h2 className="text-xl mb-2">Profile Bio</h2>
-        <p className="text-gray-600 text-sm">Fill out structured information to generate your professional bio</p>
+        <p className="text-gray-600 text-sm">Your profile bio is shown to families on your public profile and in &quot;Learn more about you&quot;. You can write and edit it below, or use the fields underneath to generate one.</p>
       </div>
 
       {saveMessage && (
@@ -2521,16 +2521,16 @@ function ProfileBioSection() {
       )}
 
 
-      {/* Generated Bio Preview (editable) */}
+      {/* Profile bio (self-written or generated); shows bio from account creation and is editable */}
       <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-        <h3 className="text-sm font-semibold text-gray-900 mb-2">Generated Bio Preview</h3>
-        <p className="text-xs text-gray-500 mb-2">You can edit this text and save to update your public bio.</p>
+        <h3 className="text-sm font-semibold text-gray-900 mb-2">Your profile bio</h3>
+        <p className="text-xs text-gray-500 mb-2">This is the bio shown to families. It may be the one you wrote when creating your account—edit it anytime and click Save to update.</p>
         <Textarea
           value={generatedBio ?? ''}
           onChange={(e) => setGeneratedBio(e.target.value || null)}
           className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed min-h-[180px]"
           rows={8}
-          placeholder="Generate a bio using the button below, or paste and edit your own..."
+          placeholder="Write or paste your bio here, or use the fields below to generate one..."
         />
         <div className="mt-4 flex justify-end">
           <button
