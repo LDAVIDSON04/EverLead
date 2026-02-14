@@ -370,6 +370,19 @@ export async function POST(req: NextRequest) {
     // Store metadata
     profileData.metadata = metadata;
 
+    // Ensure home address from create-account Step 1 is always in metadata so agent Settings shows it
+    if (address && address.street && address.city && address.province && address.postalCode) {
+      profileData.metadata = {
+        ...(profileData.metadata || {}),
+        address: {
+          street: address.street,
+          city: address.city,
+          province: address.province,
+          postalCode: address.postalCode,
+        },
+      };
+    }
+
     // Custom profile bio from create-account Step 3 (agent writes their own bio)
     if (profile_bio && typeof profile_bio === "string" && profile_bio.trim()) {
       profileData.ai_generated_bio = profile_bio.trim();
@@ -492,7 +505,20 @@ export async function POST(req: NextRequest) {
           }
           
           updateData.metadata = metadata;
-          
+
+          // Ensure home address from create-account Step 1 is always in metadata for agent Settings
+          if (address && address.street && address.city && address.province && address.postalCode) {
+            updateData.metadata = {
+              ...(updateData.metadata || {}),
+              address: {
+                street: address.street,
+                city: address.city,
+                province: address.province,
+                postalCode: address.postalCode,
+              },
+            };
+          }
+
           // Add job_title if provided
           if (job_title) {
             updateData.job_title = job_title;
