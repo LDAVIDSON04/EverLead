@@ -352,6 +352,8 @@ export default function AgentLandingPage() {
                   className="w-full h-auto max-w-4xl"
                   quality={100}
                   priority
+                  unoptimized
+                  fetchPriority="high"
                   style={{ 
                     imageRendering: '-webkit-optimize-contrast', 
                     transform: 'scale(3) translateX(15%) translateY(1cm)'
