@@ -2441,8 +2441,8 @@ function ProfileBioSection() {
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-6">
       <div className="mb-6">
-        <h2 className="text-xl mb-2">Profile Bio</h2>
-        <p className="text-gray-600 text-sm">Your profile bio is shown to families on your public profile and in &quot;Learn more about you&quot;. Edit it below and click Save to update.</p>
+        <h2 className="text-xl font-semibold text-gray-900 mb-1">Profile Bio</h2>
+        <p className="text-gray-500 text-sm">Edit your bio below. It appears on your public profile and in search.</p>
       </div>
 
       {saveMessage && (
@@ -2453,23 +2453,19 @@ function ProfileBioSection() {
         </div>
       )}
 
-
-      {/* Profile bio (self-written or generated); shows bio from account creation and is editable */}
-      <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-        <h3 className="text-sm font-semibold text-gray-900 mb-2">Your profile bio</h3>
-        <p className="text-xs text-gray-500 mb-2">This is the bio shown to families. It may be the one you wrote when creating your account—edit it anytime and click Save to update.</p>
+      <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
         <Textarea
           value={generatedBio ?? ''}
           onChange={(e) => setGeneratedBio(e.target.value || null)}
-          className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed min-h-[180px]"
-          rows={8}
-          placeholder="Write or paste your bio here..."
+          className="w-full text-gray-900 placeholder:text-gray-400 border-0 rounded-none focus:ring-0 focus:ring-offset-0 min-h-[220px] resize-y text-sm leading-relaxed"
+          rows={10}
+          placeholder="Write your profile bio..."
         />
-        <div className="mt-4 flex justify-end">
+        <div className="px-4 py-3 bg-gray-50 border-t border-gray-200 flex justify-end">
           <button
             onClick={handleSave}
             disabled={saving}
-            className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-5 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {saving ? 'Saving...' : 'Save'}
           </button>
