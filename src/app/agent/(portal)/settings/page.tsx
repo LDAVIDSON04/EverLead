@@ -2429,21 +2429,16 @@ function ProfileBioSection() {
 
       if (error) throw error;
 
-      // Auto-generate bio after saving
-      const res = await fetch('/api/agents/generate-bio', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ agentId: user.id }),
-      });
+      // Save current (possibly edited) bio text to ai_generated_bio
+      const { error: bioError } = await supabaseClient
+        .from('profiles')
+        .update({ ai_generated_bio: generatedBio ?? '' })
+        .eq('id', user.id);
 
-      if (res.ok) {
-        const data = await res.json();
-        setGeneratedBio(data.bio);
-        setSaveMessage({ type: 'success', text: 'Bio information saved and updated successfully!' });
-      } else {
-        setSaveMessage({ type: 'success', text: 'Bio information saved successfully!' });
-      }
-      
+      if (bioError) throw bioError;
+
+      setSaveMessage({ type: 'success', text: 'Bio information and bio preview saved successfully!' });
+
       // Reload to get updated status
       await loadBioData();
     } catch (err: any) {
@@ -2533,22 +2528,18 @@ function ProfileBioSection() {
       )}
 
 
-      {/* Generated Bio Preview */}
-      {generatedBio && (
-        <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-          <h3 className="text-sm font-semibold text-gray-900 mb-2">Generated Bio Preview</h3>
-          <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
-            {generatedBio
-              .replace(/^\*\*About the Specialist\*\*\s*/i, '')
-              .replace(/^About the Specialist\s*/i, '')
-              .replace(/^##\s*About the Specialist\s*/i, '')
-              .replace(/^#\s*About the Specialist\s*/i, '')
-              .replace(/^\*\*About\*\*\s*/i, '')
-              .replace(/^About\s*/i, '')
-              .trim()}
-          </p>
-        </div>
-      )}
+      {/* Generated Bio Preview (editable) */}
+      <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+        <h3 className="text-sm font-semibold text-gray-900 mb-2">Generated Bio Preview</h3>
+        <p className="text-xs text-gray-500 mb-2">You can edit this text and save to update your public bio.</p>
+        <Textarea
+          value={generatedBio ?? ''}
+          onChange={(e) => setGeneratedBio(e.target.value || null)}
+          className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed min-h-[180px]"
+          rows={8}
+          placeholder="Generate a bio using the button below, or paste and edit your own..."
+        />
+      </div>
 
       {/* Years of Experience */}
       <div className="mb-6">
