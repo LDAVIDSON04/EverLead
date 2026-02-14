@@ -177,6 +177,7 @@ export default function AgentLandingPage() {
         // Fetch profile - use API route that bypasses RLS to avoid circular dependency issues
         let profile: { role: string; approval_status?: string } | null = null;
         let profileError: any = null;
+        let profileNotFound = false; // true when no profile exists (no account created via create-account)
 
         try {
           // First try direct query (works for most users)
@@ -188,8 +189,11 @@ export default function AgentLandingPage() {
 
           if (!profileErr && profileData) {
             profile = profileData;
+          } else if (!profileErr && !profileData) {
+            // No row: profile does not exist (they never completed create-account)
+            profileNotFound = true;
           } else {
-            // If direct query fails (e.g., RLS issue), use API route that bypasses RLS
+            // Direct query failed (e.g. RLS), try API fallback
             console.log("Direct profile query failed, using API fallback:", profileErr);
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (session?.access_token) {
@@ -203,8 +207,12 @@ export default function AgentLandingPage() {
                 const apiData = await apiResponse.json();
                 profile = apiData.profile;
               } else {
-                const apiError = await apiResponse.json();
-                profileError = new Error(apiError.error || "Failed to fetch profile");
+                if (apiResponse.status === 404) {
+                  profileNotFound = true;
+                } else {
+                  const apiError = await apiResponse.json().catch(() => ({}));
+                  profileError = new Error(apiError.error || "Failed to fetch profile");
+                }
               }
             } else {
               profileError = profileErr || new Error("No session token available");
@@ -216,24 +224,15 @@ export default function AgentLandingPage() {
         }
 
         if (profileError || !profile) {
-          console.error("Profile fetch failed:", profileError);
-          console.error("User ID:", data.user.id);
-          console.error("User email:", data.user.email);
-          
-          let errorMsg = `Failed to load profile. `;
-          if (profileError?.message) {
-            errorMsg += profileError.message;
-          } else if (typeof profileError === 'object' && 'error' in profileError) {
-            errorMsg += (profileError as any).error || 'Profile not found';
-          } else {
-            errorMsg += 'Profile not found in database.';
+          if (profileNotFound) {
+            // No profile = no account. Only create-account creates profiles; do not show "pending approval".
+            await supabaseClient.auth.signOut();
+            setError("No account found for this email. Please create an account first.");
+            setSubmitting(false);
+            return;
           }
-          
-          errorMsg += `\n\nYour User ID: ${data.user.id}\nYour Email: ${data.user.email}\n\n`;
-          errorMsg += `To fix: Run this SQL in Supabase SQL Editor:\n`;
-          errorMsg += `INSERT INTO profiles (id, role, full_name, email) VALUES ('${data.user.id}', 'admin', 'Admin User', '${data.user.email}') ON CONFLICT (id) DO UPDATE SET role = 'admin';`;
-          
-          setError(errorMsg);
+          console.error("Profile fetch failed:", profileError);
+          setError(profileError?.message || "We couldn't load your account. Please try again or contact support.");
           setSubmitting(false);
           return;
         }
