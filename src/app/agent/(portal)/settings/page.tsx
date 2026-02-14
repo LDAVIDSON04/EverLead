@@ -2359,13 +2359,7 @@ function SecuritySection() {
 function ProfileBioSection() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [generating, setGenerating] = useState(false);
   const [saveMessage, setSaveMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
-  const [bioData, setBioData] = useState({
-    years_of_experience: '',
-    practice_philosophy_help: '',
-    practice_philosophy_appreciate: '',
-  });
   const [generatedBio, setGeneratedBio] = useState<string | null>(null);
 
   useEffect(() => {
@@ -2385,15 +2379,6 @@ function ProfileBioSection() {
         .single();
 
       if (profile) {
-        const metadata = profile.metadata || {};
-        const bio = metadata.bio || {};
-        
-        setBioData({
-          years_of_experience: bio.years_of_experience || '',
-          practice_philosophy_help: bio.practice_philosophy_help || '',
-          practice_philosophy_appreciate: bio.practice_philosophy_appreciate || '',
-        });
-
         setGeneratedBio(profile.ai_generated_bio);
       }
     } catch (err) {
@@ -2420,7 +2405,6 @@ function ProfileBioSection() {
           Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
-          bioData,
           aiGeneratedBio: generatedBio ?? '',
         }),
       });
@@ -2441,57 +2425,6 @@ function ProfileBioSection() {
     }
   }
 
-  async function handleGenerateBio() {
-    try {
-      setGenerating(true);
-      setSaveMessage(null);
-
-      const { data: { user } } = await supabaseClient.auth.getUser();
-      if (!user) {
-        throw new Error('Not authenticated');
-      }
-
-      // First save the bio data
-      const { data: profile } = await supabaseClient
-        .from('profiles')
-        .select('metadata')
-        .eq('id', user.id)
-        .single();
-
-      const metadata = profile?.metadata || {};
-      metadata.bio = bioData;
-
-      await supabaseClient
-        .from('profiles')
-        .update({ metadata })
-        .eq('id', user.id);
-
-      // Then generate the bio
-      const res = await fetch('/api/agents/generate-bio', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ agentId: user.id }),
-      });
-
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.error || 'Failed to generate bio');
-      }
-
-      const data = await res.json();
-      setGeneratedBio(data.bio);
-      setSaveMessage({ type: 'success', text: 'Bio generated successfully!' });
-      
-      // Reload to get updated status
-      await loadBioData();
-    } catch (err: any) {
-      setSaveMessage({ type: 'error', text: err.message || 'Failed to generate bio' });
-    } finally {
-      setGenerating(false);
-    }
-  }
-
-
   if (loading) {
     return (
       <div className="bg-white rounded-lg border border-gray-200 p-6">
@@ -2509,7 +2442,7 @@ function ProfileBioSection() {
     <div className="bg-white rounded-lg border border-gray-200 p-6">
       <div className="mb-6">
         <h2 className="text-xl mb-2">Profile Bio</h2>
-        <p className="text-gray-600 text-sm">Your profile bio is shown to families on your public profile and in &quot;Learn more about you&quot;. You can write and edit it below, or use the fields underneath to generate one.</p>
+        <p className="text-gray-600 text-sm">Your profile bio is shown to families on your public profile and in &quot;Learn more about you&quot;. Edit it below and click Save to update.</p>
       </div>
 
       {saveMessage && (
@@ -2530,7 +2463,7 @@ function ProfileBioSection() {
           onChange={(e) => setGeneratedBio(e.target.value || null)}
           className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed min-h-[180px]"
           rows={8}
-          placeholder="Write or paste your bio here, or use the fields below to generate one..."
+          placeholder="Write or paste your bio here..."
         />
         <div className="mt-4 flex justify-end">
           <button
@@ -2541,80 +2474,6 @@ function ProfileBioSection() {
             {saving ? 'Saving...' : 'Save'}
           </button>
         </div>
-      </div>
-
-      {/* Years of Experience */}
-      <div className="mb-6">
-        <Label htmlFor="yearsOfExperience">Years of Experience *</Label>
-        <Select
-          value={bioData.years_of_experience}
-          onValueChange={(value) => setBioData({ ...bioData, years_of_experience: value })}
-          className="mt-1"
-        >
-          <option value="">Select...</option>
-          {Array.from({ length: 50 }, (_, i) => i + 1).map(year => (
-            <option key={year} value={year}>{year} year{year > 1 ? 's' : ''}</option>
-          ))}
-        </Select>
-      </div>
-
-      {/* Practice Philosophy */}
-      <div className="mb-6">
-        <Label htmlFor="practicePhilosophyHelp">How do you typically help families? (200 chars max) *</Label>
-        <Textarea
-          id="practicePhilosophyHelp"
-          value={bioData.practice_philosophy_help}
-          onChange={(e) => {
-            if (e.target.value.length <= 200) {
-              setBioData({ ...bioData, practice_philosophy_help: e.target.value });
-            }
-          }}
-          className="mt-1"
-          rows={3}
-          maxLength={200}
-          placeholder="Describe your approach to helping families..."
-        />
-        <p className="text-xs text-gray-500 mt-1">{bioData.practice_philosophy_help.length}/200 characters</p>
-      </div>
-
-      <div className="mb-6">
-        <Label htmlFor="practicePhilosophyAppreciate">What do families appreciate most about your approach? (200 chars max) *</Label>
-        <Textarea
-          id="practicePhilosophyAppreciate"
-          value={bioData.practice_philosophy_appreciate}
-          onChange={(e) => {
-            if (e.target.value.length <= 200) {
-              setBioData({ ...bioData, practice_philosophy_appreciate: e.target.value });
-            }
-          }}
-          className="mt-1"
-          rows={3}
-          maxLength={200}
-          placeholder="What families value about working with you..."
-        />
-        <p className="text-xs text-gray-500 mt-1">{bioData.practice_philosophy_appreciate.length}/200 characters</p>
-      </div>
-
-
-      {/* Action Buttons */}
-      <div className="flex gap-3 justify-end">
-        <button
-          onClick={handleGenerateBio}
-          disabled={generating || !bioData.years_of_experience || !bioData.practice_philosophy_help || !bioData.practice_philosophy_appreciate}
-          className="px-6 py-2 bg-neutral-800 text-white rounded-lg hover:bg-neutral-900 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-        >
-          {generating ? (
-            <>
-              <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-              Generating...
-            </>
-          ) : (
-            <>
-              <RefreshCw className="w-4 h-4" />
-              Generate Bio
-            </>
-          )}
-        </button>
       </div>
     </div>
   );
