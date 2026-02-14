@@ -2539,6 +2539,15 @@ function ProfileBioSection() {
           rows={8}
           placeholder="Generate a bio using the button below, or paste and edit your own..."
         />
+        <div className="mt-4 flex justify-end">
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {saving ? 'Saving...' : 'Save'}
+          </button>
+        </div>
       </div>
 
       {/* Years of Experience */}
@@ -2596,13 +2605,6 @@ function ProfileBioSection() {
 
       {/* Action Buttons */}
       <div className="flex gap-3 justify-end">
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {saving ? 'Saving...' : 'Save Information'}
-        </button>
         <button
           onClick={handleGenerateBio}
           disabled={generating || !bioData.years_of_experience || !bioData.practice_philosophy_help || !bioData.practice_philosophy_appreciate}
