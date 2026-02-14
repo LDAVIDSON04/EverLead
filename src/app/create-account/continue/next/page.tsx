@@ -11,9 +11,7 @@ const CREATE_ACCOUNT_DRAFT_KEY = "createAccountDraft";
 
 export default function CreateAccountNextPage() {
   const router = useRouter();
-  const [yearsOfExperience, setYearsOfExperience] = useState("");
-  const [howYouHelp, setHowYouHelp] = useState("");
-  const [whatFamiliesAppreciate, setWhatFamiliesAppreciate] = useState("");
+  const [profileBio, setProfileBio] = useState("");
   const [hasAnsweredAccurately, setHasAnsweredAccurately] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -39,8 +37,12 @@ export default function CreateAccountNextPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    if (!profileBio.trim()) {
+      setError("Please write your profile bio.");
+      return;
+    }
     if (!hasAnsweredAccurately) {
-      setError("Please confirm you have answered all questions accurately.");
+      setError("Please confirm you have answered accurately.");
       return;
     }
 
@@ -98,11 +100,7 @@ export default function CreateAccountNextPage() {
       business_name: step2.selectedRole === "funeral-planner" && Array.isArray(step2.businessNames)
         ? step2.businessNames.map((n: string) => (n || "").trim()).filter(Boolean).join(", ")
         : (step2.businessName || "").trim(),
-      bio: {
-        years_of_experience: String(yearsOfExperience).trim(),
-        practice_philosophy_help: howYouHelp.trim(),
-        practice_philosophy_appreciate: whatFamiliesAppreciate.trim(),
-      },
+      bio: { custom_bio: true },
     };
 
     if (step2.selectedRole === "funeral-planner") {
@@ -159,6 +157,7 @@ export default function CreateAccountNextPage() {
       job_title: (step2.professionalTitle || "").trim(),
       metadata,
       office_locations: office_locations.filter((loc: { name: string; city: string }) => loc.name && loc.city),
+      profile_bio: profileBio.trim(),
     };
 
     setSubmitting(true);
@@ -243,66 +242,33 @@ export default function CreateAccountNextPage() {
           </div>
         )}
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Years of Experience */}
-          <div>
-            <label htmlFor="years" className="block text-sm mb-2">
-              Years of experience <span className="text-red-600">*</span>
-            </label>
-            <input
-              id="years"
-              type="number"
-              value={yearsOfExperience}
-              onChange={(e) => setYearsOfExperience(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
-              min={0}
-              required
-            />
+          {/* Guidance */}
+          <div className="p-4 bg-gray-50 border border-gray-200 rounded-md text-sm text-gray-700">
+            <p className="font-medium text-gray-900 mb-2">Your profile bio appears on your public profile and when families click &quot;Learn more about you&quot; on search.</p>
+            <p className="mb-2">Consider including:</p>
+            <ul className="list-disc list-inside space-y-1 ml-1">
+              <li>Your role and organization</li>
+              <li>Location and years of experience</li>
+              <li>How you help families</li>
+              <li>What sets your approach apart</li>
+            </ul>
+            <p className="mt-2">Two or three short paragraphs work well. You can edit this later in Settings.</p>
           </div>
 
-          {/* How do you typically help families */}
+          {/* Profile bio */}
           <div>
-            <label htmlFor="help" className="block text-sm mb-2">
-              How do you typically help families? (200 chars max) <span className="text-red-600">*</span>
+            <label htmlFor="profile-bio" className="block text-sm mb-2">
+              Your profile bio <span className="text-red-600">*</span>
             </label>
             <textarea
-              id="help"
-              value={howYouHelp}
-              onChange={(e) => {
-                if (e.target.value.length <= 200) {
-                  setHowYouHelp(e.target.value);
-                }
-              }}
-              className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black resize-none"
-              rows={2}
-              maxLength={200}
+              id="profile-bio"
+              value={profileBio}
+              onChange={(e) => setProfileBio(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black resize-y min-h-[200px]"
+              rows={8}
+              placeholder="e.g. I am a funeral planner at [Organization] in [City], with over 10 years of experience helping families with pre-arrangement and end-of-life planning. I focus on clear, compassionate communication so families can make informed decisions without pressure. Families often appreciate my patience and willingness to answer questions at their own pace."
               required
             />
-            <div className="text-xs text-gray-500 mt-1 text-right">
-              {howYouHelp.length}/200
-            </div>
-          </div>
-
-          {/* What do families appreciate most */}
-          <div>
-            <label htmlFor="appreciate" className="block text-sm mb-2">
-              What do families appreciate most about your approach? (200 chars max) <span className="text-red-600">*</span>
-            </label>
-            <textarea
-              id="appreciate"
-              value={whatFamiliesAppreciate}
-              onChange={(e) => {
-                if (e.target.value.length <= 200) {
-                  setWhatFamiliesAppreciate(e.target.value);
-                }
-              }}
-              className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black resize-none"
-              rows={2}
-              maxLength={200}
-              required
-            />
-            <div className="text-xs text-gray-500 mt-1 text-right">
-              {whatFamiliesAppreciate.length}/200
-            </div>
           </div>
 
           {/* Checkbox */}
@@ -322,7 +288,7 @@ export default function CreateAccountNextPage() {
                 )}
               </span>
               <span className="text-sm select-none">
-                I have answered all questions accurately <span className="text-red-600">*</span>
+                I confirm the above bio is accurate and in my own words <span className="text-red-600">*</span>
               </span>
             </label>
           </div>

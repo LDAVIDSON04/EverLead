@@ -45,6 +45,7 @@ export async function POST(req: NextRequest) {
           business_zip,
           metadata: metadataFromBody,
           office_locations,
+          profile_bio,
         } = body;
 
     console.log("Agent signup request received:", { email, full_name, hasPassword: !!password });
@@ -369,6 +370,11 @@ export async function POST(req: NextRequest) {
     // Store metadata
     profileData.metadata = metadata;
 
+    // Custom profile bio from create-account Step 3 (agent writes their own bio)
+    if (profile_bio && typeof profile_bio === "string" && profile_bio.trim()) {
+      profileData.ai_generated_bio = profile_bio.trim();
+    }
+
     console.log("Attempting to create profile:", { userId, email, full_name });
 
     const { data: profileDataResult, error: profileError } = await supabaseAdmin
@@ -460,6 +466,11 @@ export async function POST(req: NextRequest) {
           // Merge metadata from body if provided (contains bio, license_number, etc.)
           if (metadataFromBody && typeof metadataFromBody === 'object') {
             Object.assign(metadata, metadataFromBody);
+          }
+
+          // Custom profile bio from create-account Step 3
+          if (profile_bio && typeof profile_bio === "string" && profile_bio.trim()) {
+            updateData.ai_generated_bio = profile_bio.trim();
           }
           
           // Business address fields
@@ -556,19 +567,17 @@ export async function POST(req: NextRequest) {
             }
           }
 
-          // Generate bio automatically if bio data is provided
-          if (metadataFromBody?.bio && metadataFromBody.bio.years_of_experience && metadataFromBody.bio.practice_philosophy_help && metadataFromBody.bio.practice_philosophy_appreciate) {
+          // Generate bio only if no custom profile_bio was provided (legacy: structured bio from old Step 3)
+          const hasCustomBio = profile_bio && typeof profile_bio === "string" && profile_bio.trim().length > 0;
+          if (!hasCustomBio && metadataFromBody?.bio && metadataFromBody.bio.years_of_experience && metadataFromBody.bio.practice_philosophy_help && metadataFromBody.bio.practice_philosophy_appreciate) {
             try {
-              // Use internal API call - construct the full URL from request
               const requestUrl = new URL(req.url);
               const baseUrl = `${requestUrl.protocol}//${requestUrl.host}`;
-              
               const bioRes = await fetch(`${baseUrl}/api/agents/generate-bio`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ agentId: userId }),
               });
-
               if (bioRes.ok) {
                 console.log(`✅ Bio generated automatically for agent ${userId}`);
               } else {
@@ -577,7 +586,6 @@ export async function POST(req: NextRequest) {
               }
             } catch (bioErr: any) {
               console.error("Error generating bio during signup:", bioErr);
-              // Don't fail the signup if bio generation fails - agent can generate it later
             }
           }
 
@@ -667,19 +675,17 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Generate bio automatically if bio data is provided
-    if (metadataFromBody?.bio && metadataFromBody.bio.years_of_experience && metadataFromBody.bio.practice_philosophy_help && metadataFromBody.bio.practice_philosophy_appreciate) {
+    // Generate bio only if no custom profile_bio was provided (legacy: structured bio from old Step 3)
+    const hasCustomBio = profile_bio && typeof profile_bio === "string" && profile_bio.trim().length > 0;
+    if (!hasCustomBio && metadataFromBody?.bio && metadataFromBody.bio.years_of_experience && metadataFromBody.bio.practice_philosophy_help && metadataFromBody.bio.practice_philosophy_appreciate) {
       try {
-        // Use internal API call - construct the full URL from request
         const requestUrl = new URL(req.url);
         const baseUrl = `${requestUrl.protocol}//${requestUrl.host}`;
-        
         const bioRes = await fetch(`${baseUrl}/api/agents/generate-bio`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ agentId: userId }),
         });
-
         if (bioRes.ok) {
           console.log(`✅ Bio generated automatically for agent ${userId}`);
         } else {
@@ -688,7 +694,6 @@ export async function POST(req: NextRequest) {
         }
       } catch (bioErr: any) {
         console.error("Error generating bio during signup:", bioErr);
-        // Don't fail the signup if bio generation fails - agent can generate it later
       }
     }
 
