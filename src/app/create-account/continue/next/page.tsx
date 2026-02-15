@@ -4,14 +4,18 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { Check } from "lucide-react";
+import { Check, RefreshCw } from "lucide-react";
 import { Footer } from "@/app/learn-more-about-starting/components/Footer";
 
 const CREATE_ACCOUNT_DRAFT_KEY = "createAccountDraft";
 
 export default function CreateAccountNextPage() {
   const router = useRouter();
+  const [yearsOfExperience, setYearsOfExperience] = useState("");
+  const [howYouHelp, setHowYouHelp] = useState("");
+  const [whatFamiliesAppreciate, setWhatFamiliesAppreciate] = useState("");
   const [profileBio, setProfileBio] = useState("");
+  const [generating, setGenerating] = useState(false);
   const [hasAnsweredAccurately, setHasAnsweredAccurately] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -33,6 +37,61 @@ export default function CreateAccountNextPage() {
       router.replace("/create-account");
     }
   }, [mounted, router]);
+
+  const handleGenerateBio = async () => {
+    setError(null);
+    if (!yearsOfExperience || !howYouHelp.trim() || !whatFamiliesAppreciate.trim()) {
+      setError("Please fill in years of experience and both questions before generating.");
+      return;
+    }
+    let draft: { step1?: any; step2?: any } = {};
+    try {
+      const raw = typeof window !== "undefined" ? sessionStorage.getItem(CREATE_ACCOUNT_DRAFT_KEY) : null;
+      if (!raw) {
+        setError("Session expired. Please start from step 1.");
+        return;
+      }
+      draft = JSON.parse(raw);
+    } catch {
+      setError("Session expired. Please start from step 1.");
+      return;
+    }
+    const step1 = draft.step1;
+    const step2 = draft.step2;
+    const fullName = [step1?.firstName, step1?.lastName].filter(Boolean).join(" ").trim();
+    const location = step1?.city && step1?.province ? `${step1.city}, ${step1.province}` : (step1?.city || step1?.province || "");
+    const businessName = step2?.selectedRole === "funeral-planner" && Array.isArray(step2?.businessNames)
+      ? step2.businessNames.map((n: string) => (n || "").trim()).filter(Boolean).join(", ")
+      : (step2?.businessName || "").trim();
+    setGenerating(true);
+    try {
+      const res = await fetch("/api/agents/generate-bio-preview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          yearsOfExperience: String(yearsOfExperience).trim(),
+          practicePhilosophyHelp: howYouHelp.trim(),
+          practicePhilosophyAppreciate: whatFamiliesAppreciate.trim(),
+          fullName: fullName || undefined,
+          jobTitle: (step2?.professionalTitle || "").trim() || undefined,
+          businessName: businessName || undefined,
+          location: location || undefined,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error || "Failed to generate bio. Please try again.");
+        return;
+      }
+      if (data.bio) {
+        setProfileBio(data.bio);
+      }
+    } catch {
+      setError("Failed to generate bio. Please try again.");
+    } finally {
+      setGenerating(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -100,7 +159,11 @@ export default function CreateAccountNextPage() {
       business_name: step2.selectedRole === "funeral-planner" && Array.isArray(step2.businessNames)
         ? step2.businessNames.map((n: string) => (n || "").trim()).filter(Boolean).join(", ")
         : (step2.businessName || "").trim(),
-      bio: { custom_bio: true },
+      bio: {
+        years_of_experience: String(yearsOfExperience).trim(),
+        practice_philosophy_help: howYouHelp.trim(),
+        practice_philosophy_appreciate: whatFamiliesAppreciate.trim(),
+      },
     };
 
     if (step2.selectedRole === "funeral-planner") {
@@ -234,46 +297,107 @@ export default function CreateAccountNextPage() {
           </div>
         </div>
 
-        <h2 className="text-xl font-semibold text-black mb-3">Step 3: Profile Bio</h2>
+        <h2 className="text-xl font-semibold text-gray-900 mb-1">Step 3: Profile Bio</h2>
+        <p className="text-gray-500 text-sm mb-6">Answer the questions below, generate your bio, then edit if you like. What you save is what appears on your profile.</p>
 
         {error && (
-          <div className="p-4 bg-red-50 border border-red-200 rounded-md text-sm text-red-700">
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
             {error}
           </div>
         )}
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Guidance */}
-          <div className="p-4 bg-gray-50 border border-gray-200 rounded-md text-sm text-gray-700">
-            <p className="font-medium text-gray-900 mb-2">Your profile bio appears on your public profile and when families click &quot;Learn more about you&quot; on search.</p>
-            <p className="mb-2">Consider including:</p>
-            <ul className="list-disc list-inside space-y-1 ml-1">
-              <li>Your role and organization</li>
-              <li>Location and years of experience</li>
-              <li>How you help families</li>
-              <li>What sets your approach apart</li>
-            </ul>
-            <p className="mt-2">Two or three short paragraphs work well. You can edit this later in Settings.</p>
+          {/* Questions card */}
+          <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+            <h3 className="text-sm font-semibold text-gray-900 mb-4">About you</h3>
+            <div className="space-y-5">
+              <div>
+                <label htmlFor="years" className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Years of experience <span className="text-red-500">*</span>
+                </label>
+                <select
+                  id="years"
+                  value={yearsOfExperience}
+                  onChange={(e) => setYearsOfExperience(e.target.value)}
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                >
+                  <option value="">Select…</option>
+                  {Array.from({ length: 50 }, (_, i) => i + 1).map((y) => (
+                    <option key={y} value={y}>{y} year{y > 1 ? "s" : ""}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label htmlFor="help" className="block text-sm font-medium text-gray-700 mb-1.5">
+                  How do you typically help families? (200 chars max) <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  id="help"
+                  value={howYouHelp}
+                  onChange={(e) => { if (e.target.value.length <= 200) setHowYouHelp(e.target.value); }}
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent resize-none"
+                  rows={2}
+                  maxLength={200}
+                  placeholder="Describe your approach to helping families…"
+                />
+                <p className="text-xs text-gray-500 mt-1 text-right">{howYouHelp.length}/200</p>
+              </div>
+              <div>
+                <label htmlFor="appreciate" className="block text-sm font-medium text-gray-700 mb-1.5">
+                  What do families appreciate most about your approach? (200 chars max) <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  id="appreciate"
+                  value={whatFamiliesAppreciate}
+                  onChange={(e) => { if (e.target.value.length <= 200) setWhatFamiliesAppreciate(e.target.value); }}
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent resize-none"
+                  rows={2}
+                  maxLength={200}
+                  placeholder="What families value about working with you…"
+                />
+                <p className="text-xs text-gray-500 mt-1 text-right">{whatFamiliesAppreciate.length}/200</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={handleGenerateBio}
+              disabled={generating || !yearsOfExperience || !howYouHelp.trim() || !whatFamiliesAppreciate.trim()}
+              className="mt-4 flex items-center gap-2 px-4 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {generating ? (
+                <>
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  Generating…
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="w-4 h-4" />
+                  Generate Bio
+                </>
+              )}
+            </button>
           </div>
 
-          {/* Profile bio */}
-          <div>
-            <label htmlFor="profile-bio" className="block text-sm mb-2">
-              Your profile bio <span className="text-red-600">*</span>
+          {/* Bio preview / editable box */}
+          <div className="rounded-xl border border-gray-200 bg-gray-50/50 p-6 shadow-sm">
+            <label htmlFor="profile-bio" className="block text-sm font-semibold text-gray-900 mb-2">
+              Your profile bio <span className="text-red-500">*</span>
             </label>
+            <p className="text-xs text-gray-500 mb-3">Generated text appears here. Edit it if you like—what you see here is what gets saved to your profile and &quot;Learn more about you&quot;.</p>
             <textarea
               id="profile-bio"
               value={profileBio}
               onChange={(e) => setProfileBio(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black resize-y min-h-[200px]"
+              className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent resize-y min-h-[200px] text-sm leading-relaxed"
               rows={8}
+              placeholder="Click “Generate Bio” above, or write your own."
               required
             />
           </div>
 
           {/* Checkbox */}
-          <div className="flex items-start gap-3 pt-2">
+          <div className="flex items-start gap-3">
             <label className="flex items-start gap-3 cursor-pointer">
-              <span className={`relative flex h-4 w-4 shrink-0 items-center justify-center rounded border-2 mt-1 transition-colors ${hasAnsweredAccurately ? "border-black bg-black" : "border-gray-300 bg-white"}`}>
+              <span className={`relative flex h-4 w-4 shrink-0 items-center justify-center rounded border-2 mt-0.5 transition-colors ${hasAnsweredAccurately ? "border-gray-900 bg-gray-900" : "border-gray-300 bg-white"}`}>
                 <input
                   id="accurate"
                   type="checkbox"
@@ -286,25 +410,23 @@ export default function CreateAccountNextPage() {
                   <Check className="h-3 w-3 text-white stroke-[3]" strokeWidth={3} />
                 )}
               </span>
-              <span className="text-sm select-none">
-                I have entered all info accurately <span className="text-red-600">*</span>
+              <span className="text-sm text-gray-700 select-none">
+                I have entered all info accurately <span className="text-red-500">*</span>
               </span>
             </label>
           </div>
 
-          {/* Submit Button */}
           <button
             type="submit"
             disabled={submitting}
-            className="w-full bg-black text-white py-4 rounded-md font-medium hover:bg-gray-900 transition-colors mt-8 disabled:opacity-60 disabled:cursor-not-allowed"
+            className="w-full bg-gray-900 text-white py-3.5 rounded-lg font-medium hover:bg-gray-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {submitting ? "Submitting…" : "Submit for approval"}
           </button>
 
-          {/* Log in link */}
-          <div className="text-center text-sm mt-8 mb-20">
+          <div className="text-center text-sm text-gray-500 pt-2 pb-20">
             Already have an account?{" "}
-            <Link href="/agent" className="underline text-black hover:text-gray-700">
+            <Link href="/agent" className="text-gray-900 underline hover:no-underline">
               Log in
             </Link>
           </div>
