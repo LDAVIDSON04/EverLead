@@ -26,6 +26,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Agent not found' }, { status: 404 });
     }
 
+    // Never overwrite an existing bio — agent may have edited it in Settings; that should stick
+    const existingBio = typeof profile.ai_generated_bio === 'string' ? profile.ai_generated_bio.trim() : '';
+    if (existingBio) {
+      return NextResponse.json({ bio: profile.ai_generated_bio, status: 'approved' });
+    }
+
     // Type assertion for TypeScript
     const profileWithAudit = profile as typeof profile & { bio_audit_log?: any[] };
 
