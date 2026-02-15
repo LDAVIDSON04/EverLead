@@ -607,17 +607,19 @@ export default function CreateAccountContinuePage() {
                     </button>
                   </div>
                 )}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setNewLocation({ name: "", street_address: "", city: "", province: "BC", postal_code: "", associated_firm: "" });
-                    setShowAddLocation(true);
-                  }}
-                  className="mb-4 flex items-center gap-2 px-4 py-2 bg-neutral-700 text-white rounded-md text-sm hover:bg-neutral-800 transition-colors"
-                >
-                  <Plus className="w-4 h-4" />
-                  Add Location
-                </button>
+                {officeLocations.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNewLocation({ name: "", street_address: "", city: "", province: "BC", postal_code: "", associated_firm: "" });
+                      setShowAddLocation(true);
+                    }}
+                    className="mb-4 flex items-center gap-2 px-4 py-2 bg-neutral-700 text-white rounded-md text-sm hover:bg-neutral-800 transition-colors"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add Location
+                  </button>
+                )}
               </div>
             </>
           )}
@@ -763,17 +765,19 @@ export default function CreateAccountContinuePage() {
                     </button>
                   </div>
                 )}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setNewLocation({ name: "", street_address: "", city: "", province: "BC", postal_code: "", associated_firm: "" });
-                    setShowAddLocation(true);
-                  }}
-                  className="mb-4 flex items-center gap-2 px-4 py-2 bg-neutral-700 text-white rounded-md text-sm hover:bg-neutral-800 transition-colors"
-                >
-                  <Plus className="w-4 h-4" />
-                  Add Location
-                </button>
+                {officeLocations.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNewLocation({ name: "", street_address: "", city: "", province: "BC", postal_code: "", associated_firm: "" });
+                      setShowAddLocation(true);
+                    }}
+                    className="mb-4 flex items-center gap-2 px-4 py-2 bg-neutral-700 text-white rounded-md text-sm hover:bg-neutral-800 transition-colors"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add Location
+                  </button>
+                )}
               </div>
             </>
           )}
@@ -934,17 +938,19 @@ export default function CreateAccountContinuePage() {
                     </button>
                   </div>
                 )}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setNewLocation({ name: "", street_address: "", city: "", province: "BC", postal_code: "", associated_firm: "" });
-                    setShowAddLocation(true);
-                  }}
-                  className="mb-4 flex items-center gap-2 px-4 py-2 bg-neutral-700 text-white rounded-md text-sm hover:bg-neutral-800 transition-colors"
-                >
-                  <Plus className="w-4 h-4" />
-                  Add Location
-                </button>
+                {officeLocations.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNewLocation({ name: "", street_address: "", city: "", province: "BC", postal_code: "", associated_firm: "" });
+                      setShowAddLocation(true);
+                    }}
+                    className="mb-4 flex items-center gap-2 px-4 py-2 bg-neutral-700 text-white rounded-md text-sm hover:bg-neutral-800 transition-colors"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add Location
+                  </button>
+                )}
               </div>
             </>
           )}
@@ -1094,17 +1100,19 @@ export default function CreateAccountContinuePage() {
                     </button>
                   </div>
                 )}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setNewLocation({ name: "", street_address: "", city: "", province: "BC", postal_code: "", associated_firm: "" });
-                    setShowAddLocation(true);
-                  }}
-                  className="mb-4 flex items-center gap-2 px-4 py-2 bg-neutral-700 text-white rounded-md text-sm hover:bg-neutral-800 transition-colors"
-                >
-                  <Plus className="w-4 h-4" />
-                  Add Location
-                </button>
+                {officeLocations.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNewLocation({ name: "", street_address: "", city: "", province: "BC", postal_code: "", associated_firm: "" });
+                      setShowAddLocation(true);
+                    }}
+                    className="mb-4 flex items-center gap-2 px-4 py-2 bg-neutral-700 text-white rounded-md text-sm hover:bg-neutral-800 transition-colors"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add Location
+                  </button>
+                )}
               </div>
             </>
           )}
@@ -1245,17 +1253,19 @@ export default function CreateAccountContinuePage() {
                     </button>
                   </div>
                 )}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setNewLocation({ name: "", street_address: "", city: "", province: "BC", postal_code: "", associated_firm: "" });
-                    setShowAddLocation(true);
-                  }}
-                  className="mb-4 flex items-center gap-2 px-4 py-2 bg-neutral-700 text-white rounded-md text-sm hover:bg-neutral-800 transition-colors"
-                >
-                  <Plus className="w-4 h-4" />
-                  Add Location
-                </button>
+                {officeLocations.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNewLocation({ name: "", street_address: "", city: "", province: "BC", postal_code: "", associated_firm: "" });
+                      setShowAddLocation(true);
+                    }}
+                    className="mb-4 flex items-center gap-2 px-4 py-2 bg-neutral-700 text-white rounded-md text-sm hover:bg-neutral-800 transition-colors"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add Location
+                  </button>
+                )}
               </div>
             </>
           )}
