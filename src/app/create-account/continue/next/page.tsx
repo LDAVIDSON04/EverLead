@@ -346,7 +346,7 @@ export default function CreateAccountNextPage() {
                   value={yearsOfExperience}
                   onChange={(e) => setYearsOfExperience(e.target.value)}
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-                  placeholder="e.g. 5 or 5 years"
+                  placeholder="Enter years of experience"
                 />
               </div>
               <div>
