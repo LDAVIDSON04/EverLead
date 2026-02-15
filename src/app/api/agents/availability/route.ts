@@ -89,8 +89,28 @@ export async function GET(req: NextRequest) {
     const metadata = profile.metadata || {};
     const availabilityData = metadata.availability || {};
     const locations = availabilityData.locations || [];
-    const outOfOfficeDates = (metadata.outOfOfficeDates as string[]) || [];
-    const outOfOfficeSet = new Set(outOfOfficeDates.filter((d) => typeof d === "string" && /^\d{4}-\d{2}-\d{2}$/.test(d)));
+    const outOfOfficeEntries = (metadata.outOfOfficeEntries as Array<{ date: string; allDay: boolean; startTime?: string; endTime?: string }>) || [];
+    const legacyOutOfOfficeDates = (metadata.outOfOfficeDates as string[]) || [];
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    const timeRegex = /^\d{1,2}:\d{2}$/;
+    const outOfOfficeSet = new Set<string>();
+    const outOfOfficePartialByDate: Record<string, { startM: number; endM: number }> = {};
+    if (outOfOfficeEntries.length > 0) {
+      for (const e of outOfOfficeEntries) {
+        if (!e?.date || !dateRegex.test(e.date)) continue;
+        if (e.allDay === true) {
+          outOfOfficeSet.add(e.date);
+        } else if (e.startTime && e.endTime && timeRegex.test(e.startTime) && timeRegex.test(e.endTime)) {
+          const [sh, sm] = e.startTime.split(":").map(Number);
+          const [eh, em] = e.endTime.split(":").map(Number);
+          const startM = (sh ?? 0) * 60 + (sm ?? 0);
+          const endM = (eh ?? 0) * 60 + (em ?? 0);
+          if (startM < endM) outOfOfficePartialByDate[e.date] = { startM, endM };
+        }
+      }
+    } else {
+      legacyOutOfOfficeDates.filter((d) => typeof d === "string" && dateRegex.test(d)).forEach((d) => outOfOfficeSet.add(d));
+    }
     const availabilityByLocation = availabilityData.availabilityByLocation || {};
     const availabilityTypeByLocation = availabilityData.availabilityTypeByLocation || {}; // "recurring" or "daily"
     const videoSchedule = availabilityData.videoSchedule || null; // Video call availability (province-wide)
@@ -663,8 +683,13 @@ export async function GET(req: NextRequest) {
           const slotHour = localStart.hour;
 
           const hasConflictResult = hasConflict(slotStart, slotEnd, dateStr, slotHour);
-          
-          if (!hasConflictResult) {
+
+          const partialOOO = outOfOfficePartialByDate[dateStr];
+          const slotInOOORange = partialOOO
+            ? currentTimeMinutes < partialOOO.endM && currentTimeMinutes + appointmentLength > partialOOO.startM
+            : false;
+
+          if (!hasConflictResult && !slotInOOORange) {
             slots.push({
               startsAt: slotStartUTC, // Use already-validated UTC string
               endsAt: slotEndUTC,     // Use already-validated UTC string
@@ -869,8 +894,13 @@ export async function GET(req: NextRequest) {
         
         // Check for conflicts with existing appointments - this MUST block booked slots immediately
         const hasConflictResult = hasConflict(slotStart, slotEnd, dateStr, slotHour);
-        
-        if (!hasConflictResult) {
+
+        const partialOOO = outOfOfficePartialByDate[dateStr];
+        const slotInOOORange = partialOOO
+          ? currentTimeMinutes < partialOOO.endM && currentTimeMinutes + appointmentLength > partialOOO.startM
+          : false;
+
+        if (!hasConflictResult && !slotInOOORange) {
           slots.push({
             startsAt: slotStartUTC, // Use already-validated UTC string
             endsAt: slotEndUTC,     // Use already-validated UTC string

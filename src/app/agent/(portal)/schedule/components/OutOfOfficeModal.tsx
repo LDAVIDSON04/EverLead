@@ -6,6 +6,13 @@ import { supabaseClient } from "@/lib/supabaseClient";
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
+const TIME_OPTIONS: string[] = [];
+for (let h = 0; h < 24; h++) {
+  for (const m of [0, 30]) {
+    TIME_OPTIONS.push(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
+  }
+}
+
 function toYYYYMMDD(d: Date): string {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");
@@ -40,6 +47,9 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
   });
   const [rangeStart, setRangeStart] = useState<string | null>(null);
   const [rangeEnd, setRangeEnd] = useState<string | null>(null);
+  const [allDay, setAllDay] = useState(true);
+  const [startTime, setStartTime] = useState("09:00");
+  const [endTime, setEndTime] = useState("17:00");
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -64,6 +74,7 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
         }
         const data = await res.json();
         const dates = (data.dates || []).filter((d: unknown) => typeof d === "string") as string[];
+        const entries = (data.entries || []) as Array<{ date: string; allDay: boolean; startTime?: string; endTime?: string }>;
         if (dates.length > 0) {
           const sorted = [...dates].sort();
           setRangeStart(sorted[0]);
@@ -71,6 +82,16 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
         } else {
           setRangeStart(null);
           setRangeEnd(null);
+        }
+        const firstPartial = entries.find((e) => e.allDay === false && e.startTime && e.endTime);
+        if (firstPartial) {
+          setAllDay(false);
+          setStartTime(firstPartial.startTime ?? "09:00");
+          setEndTime(firstPartial.endTime ?? "17:00");
+        } else {
+          setAllDay(true);
+          setStartTime("09:00");
+          setEndTime("17:00");
         }
       } catch (e) {
         console.error(e);
@@ -166,6 +187,28 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
   };
 
   const handleSave = async () => {
+    const dates = rangeStart
+      ? rangeEnd
+        ? datesInRange(
+            rangeStart <= rangeEnd ? rangeStart : rangeEnd,
+            rangeStart <= rangeEnd ? rangeEnd : rangeStart
+          )
+        : [rangeStart]
+      : [];
+    if (dates.length === 0) {
+      setError("Select at least one day.");
+      return;
+    }
+    if (!allDay) {
+      const [sh, sm] = startTime.split(":").map(Number);
+      const [eh, em] = endTime.split(":").map(Number);
+      const startM = (sh ?? 0) * 60 + (sm ?? 0);
+      const endM = (eh ?? 0) * 60 + (em ?? 0);
+      if (startM >= endM) {
+        setError("End time must be after start time.");
+        return;
+      }
+    }
     setSaving(true);
     setError(null);
     try {
@@ -174,21 +217,18 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
         setError("Not signed in");
         return;
       }
-      const dates = rangeStart
-        ? rangeEnd
-          ? datesInRange(
-              rangeStart <= rangeEnd ? rangeStart : rangeEnd,
-              rangeStart <= rangeEnd ? rangeEnd : rangeStart
-            )
-          : [rangeStart]
-        : [];
+      const entries = dates.map((date) =>
+        allDay
+          ? { date, allDay: true }
+          : { date, allDay: false, startTime, endTime }
+      );
       const res = await fetch("/api/agent/out-of-office", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({ dates }),
+        body: JSON.stringify({ entries }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -293,6 +333,59 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
                   );
                 })}
               </div>
+
+              <div className="mt-6 pt-4 border-t border-gray-100 space-y-4">
+                <p className="text-sm font-medium text-gray-700">Time</p>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setAllDay(true)}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      allDay ? "bg-neutral-800 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
+                  >
+                    All day
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAllDay(false)}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      !allDay ? "bg-neutral-800 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
+                  >
+                    Specific times
+                  </button>
+                </div>
+                {!allDay && (
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">From</label>
+                      <select
+                        value={startTime}
+                        onChange={(e) => setStartTime(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900"
+                      >
+                        {TIME_OPTIONS.map((t) => (
+                          <option key={t} value={t}>{t}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">To</label>
+                      <select
+                        value={endTime}
+                        onChange={(e) => setEndTime(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900"
+                      >
+                        {TIME_OPTIONS.map((t) => (
+                          <option key={t} value={t}>{t}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {error && (
                 <p className="mt-3 text-sm text-red-600">{error}</p>
               )}
