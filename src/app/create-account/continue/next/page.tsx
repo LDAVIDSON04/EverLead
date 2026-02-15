@@ -415,17 +415,14 @@ export default function CreateAccountNextPage() {
               placeholder="Click “Generate Bio” above, or write your own."
               required
             />
-            <div className="mt-3 flex items-center gap-3">
+            <div className="mt-3">
               <button
                 type="button"
                 onClick={handleSaveBio}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors"
+                className="px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors"
               >
                 {saved ? "Saved" : "Save"}
               </button>
-              {saved && (
-                <span className="text-sm text-green-600">Your bio has been saved.</span>
-              )}
             </div>
           </div>
 
