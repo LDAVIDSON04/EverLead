@@ -6,12 +6,7 @@ import { supabaseClient } from "@/lib/supabaseClient";
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-const TIME_OPTIONS: string[] = [];
-for (let h = 0; h < 24; h++) {
-  for (const m of [0, 30]) {
-    TIME_OPTIONS.push(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
-  }
-}
+const TIME_REGEX = /^([0-1][0-9]|2[0-3]):[0-5][0-9]$/;
 
 function toYYYYMMDD(d: Date): string {
   const y = d.getFullYear();
@@ -357,30 +352,37 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
                   </button>
                 </div>
                 {!allDay && (
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <div>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <div className="min-w-0">
                       <label className="block text-xs text-gray-500 mb-1">From</label>
-                      <select
+                      <input
+                        type="time"
                         value={startTime}
-                        onChange={(e) => setStartTime(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900"
-                      >
-                        {TIME_OPTIONS.map((t) => (
-                          <option key={t} value={t}>{t}</option>
-                        ))}
-                      </select>
+                        onClick={(e) => (e.target as HTMLInputElement).showPicker?.()}
+                        onFocus={(e) => (e.target as HTMLInputElement).showPicker?.()}
+                        onChange={(e) => {
+                          const newValue = e.target.value;
+                          if (!TIME_REGEX.test(newValue)) return;
+                          setStartTime(newValue);
+                        }}
+                        className="w-full min-w-0 max-w-[8rem] px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-800 focus:border-transparent text-sm text-gray-900 cursor-pointer"
+                      />
                     </div>
-                    <div>
+                    <span className="text-gray-500 text-xs self-end pb-2.5">to</span>
+                    <div className="min-w-0">
                       <label className="block text-xs text-gray-500 mb-1">To</label>
-                      <select
+                      <input
+                        type="time"
                         value={endTime}
-                        onChange={(e) => setEndTime(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900"
-                      >
-                        {TIME_OPTIONS.map((t) => (
-                          <option key={t} value={t}>{t}</option>
-                        ))}
-                      </select>
+                        onClick={(e) => (e.target as HTMLInputElement).showPicker?.()}
+                        onFocus={(e) => (e.target as HTMLInputElement).showPicker?.()}
+                        onChange={(e) => {
+                          const newValue = e.target.value;
+                          if (!TIME_REGEX.test(newValue)) return;
+                          setEndTime(newValue);
+                        }}
+                        className="w-full min-w-0 max-w-[8rem] px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-800 focus:border-transparent text-sm text-gray-900 cursor-pointer"
+                      />
                     </div>
                   </div>
                 )}
