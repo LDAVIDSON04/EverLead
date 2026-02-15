@@ -2372,15 +2372,17 @@ function ProfileBioSection() {
       const { data: { user } } = await supabaseClient.auth.getUser();
       if (!user) return;
 
-      const { data: profile } = await supabaseClient
+      const { data: profile, error } = await supabaseClient
         .from('profiles')
         .select('metadata, ai_generated_bio')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
-      if (profile) {
-        setGeneratedBio(profile.ai_generated_bio);
+      if (error) {
+        console.error('Error loading bio data:', error);
+        return;
       }
+      setGeneratedBio(profile?.ai_generated_bio ?? null);
     } catch (err) {
       console.error('Error loading bio data:', err);
     } finally {
@@ -2405,7 +2407,7 @@ function ProfileBioSection() {
           Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
-          aiGeneratedBio: generatedBio ?? '',
+          aiGeneratedBio: (generatedBio ?? '').trim(),
         }),
       });
 
@@ -2414,7 +2416,7 @@ function ProfileBioSection() {
         throw new Error(data.error || data.details || 'Failed to save bio');
       }
 
-      setSaveMessage({ type: 'success', text: data.message || 'Bio saved. Your updates will appear on your public profile and in "Learn more about" views.' });
+      setSaveMessage({ type: 'success', text: data.message || 'Bio saved. Your updates will appear on your public profile and in "Learn more about".' });
 
       // Reload so UI shows the saved values
       await loadBioData();

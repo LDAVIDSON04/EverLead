@@ -27,6 +27,14 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { bioData, aiGeneratedBio } = body;
 
+    // Persist exactly what the agent edited: trimmed string (empty string if cleared)
+    const bioText =
+      typeof aiGeneratedBio === "string"
+        ? aiGeneratedBio.trim()
+        : aiGeneratedBio === null || aiGeneratedBio === undefined
+          ? ""
+          : String(aiGeneratedBio).trim();
+
     // Get existing metadata so we only overwrite metadata.bio
     const { data: existingProfile, error: fetchError } = await supabaseAdmin
       .from("profiles")
@@ -49,7 +57,7 @@ export async function POST(request: NextRequest) {
       .from("profiles")
       .update({
         metadata,
-        ai_generated_bio: typeof aiGeneratedBio === "string" ? aiGeneratedBio : (aiGeneratedBio === null || aiGeneratedBio === undefined ? "" : String(aiGeneratedBio)),
+        ai_generated_bio: bioText,
       })
       .eq("id", user.id);
 
@@ -60,7 +68,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: "Bio saved. Your updates will appear on your public profile and in \"Learn more about\" views.",
+      message: "Bio saved. Your updates will appear on your public profile and in \"Learn more about\".",
     });
   } catch (err: unknown) {
     console.error("Error in POST /api/agent/settings/bio:", err);
