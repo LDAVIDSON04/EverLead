@@ -20,6 +20,7 @@ export default function CreateAccountNextPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -32,11 +33,36 @@ export default function CreateAccountNextPage() {
       const draft = raw ? JSON.parse(raw) : null;
       if (!draft?.step1 || !draft?.step2) {
         router.replace("/create-account");
+        return;
+      }
+      if (draft?.step3) {
+        const s = draft.step3;
+        if (s.yearsOfExperience != null) setYearsOfExperience(String(s.yearsOfExperience));
+        if (s.howYouHelp != null) setHowYouHelp(String(s.howYouHelp));
+        if (s.whatFamiliesAppreciate != null) setWhatFamiliesAppreciate(String(s.whatFamiliesAppreciate));
+        if (s.profileBio != null) setProfileBio(String(s.profileBio));
       }
     } catch {
       router.replace("/create-account");
     }
   }, [mounted, router]);
+
+  const handleSaveBio = () => {
+    if (typeof window === "undefined") return;
+    try {
+      const raw = sessionStorage.getItem(CREATE_ACCOUNT_DRAFT_KEY);
+      const draft = raw ? JSON.parse(raw) : { step1: null, step2: null };
+      draft.step3 = {
+        yearsOfExperience,
+        howYouHelp,
+        whatFamiliesAppreciate,
+        profileBio,
+      };
+      sessionStorage.setItem(CREATE_ACCOUNT_DRAFT_KEY, JSON.stringify(draft));
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (_) {}
+  };
 
   const handleGenerateBio = async () => {
     setError(null);
@@ -314,17 +340,14 @@ export default function CreateAccountNextPage() {
                 <label htmlFor="years" className="block text-sm font-medium text-gray-700 mb-1.5">
                   Years of experience <span className="text-red-500">*</span>
                 </label>
-                <select
+                <input
                   id="years"
+                  type="text"
                   value={yearsOfExperience}
                   onChange={(e) => setYearsOfExperience(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-                >
-                  <option value="">Select…</option>
-                  {Array.from({ length: 50 }, (_, i) => i + 1).map((y) => (
-                    <option key={y} value={y}>{y} year{y > 1 ? "s" : ""}</option>
-                  ))}
-                </select>
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                  placeholder="e.g. 5 or 5 years"
+                />
               </div>
               <div>
                 <label htmlFor="help" className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -392,6 +415,18 @@ export default function CreateAccountNextPage() {
               placeholder="Click “Generate Bio” above, or write your own."
               required
             />
+            <div className="mt-3 flex items-center gap-3">
+              <button
+                type="button"
+                onClick={handleSaveBio}
+                className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors"
+              >
+                {saved ? "Saved" : "Save"}
+              </button>
+              {saved && (
+                <span className="text-sm text-green-600">Your bio has been saved.</span>
+              )}
+            </div>
           </div>
 
           {/* Checkbox */}
