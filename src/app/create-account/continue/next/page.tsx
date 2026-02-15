@@ -21,7 +21,7 @@ export default function CreateAccountNextPage() {
   const [error, setError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [savePop, setSavePop] = useState(false);
+  const [showSaveSuccess, setShowSaveSuccess] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -62,8 +62,8 @@ export default function CreateAccountNextPage() {
       };
       sessionStorage.setItem(CREATE_ACCOUNT_DRAFT_KEY, JSON.stringify(draft));
       setSaved(true);
-      setSavePop(true);
-      setTimeout(() => setSavePop(false), 350);
+      setShowSaveSuccess(true);
+      setTimeout(() => setShowSaveSuccess(false), 3000);
     } catch (_) {}
   };
 
@@ -418,14 +418,19 @@ export default function CreateAccountNextPage() {
               placeholder="Click “Generate Bio” above, or write your own."
               required
             />
-            <div className="mt-3">
+            <div className="mt-3 flex flex-col gap-2">
               <button
                 type="button"
                 onClick={handleSaveBio}
-                className={`px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-transform duration-300 ease-out ${savePop ? "scale-110" : "scale-100"}`}
+                className="w-fit px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors"
               >
                 {saved ? "Saved" : "Save"}
               </button>
+              {showSaveSuccess && (
+                <p className="text-sm font-medium text-green-600">
+                  The bio has been successfully saved.
+                </p>
+              )}
             </div>
           </div>
 
