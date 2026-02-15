@@ -76,6 +76,28 @@ export default function SchedulePage() {
   const [showSyncSuccessModal, setShowSyncSuccessModal] = useState(false);
   const [syncProvider, setSyncProvider] = useState<"google" | "microsoft" | null>(null);
   const [outOfOfficeDates, setOutOfOfficeDates] = useState<Set<string>>(new Set());
+  type OutOfOfficeEntry = { date: string; allDay: boolean; startTime?: string; endTime?: string };
+  const [outOfOfficeEntries, setOutOfOfficeEntries] = useState<OutOfOfficeEntry[]>([]);
+
+  const isHourOutOfOffice = (dateKey: string, hour: number): boolean => {
+    const entry = outOfOfficeEntries.find((e) => e.date === dateKey);
+    if (!entry) return false;
+    if (entry.allDay) return true;
+    const startTime = entry.startTime ?? "00:00";
+    const endTime = entry.endTime ?? "23:59";
+    const [sh, sm] = startTime.split(":").map(Number);
+    const [eh, em] = endTime.split(":").map(Number);
+    const startM = (sh ?? 0) * 60 + (sm ?? 0);
+    const endM = (eh ?? 0) * 60 + (em ?? 0);
+    const slotStartM = hour * 60;
+    const slotEndM = (hour + 1) * 60;
+    return slotStartM < endM && slotEndM > startM;
+  };
+
+  const isDateAllDayOutOfOffice = (dateKey: string): boolean => {
+    const entry = outOfOfficeEntries.find((e) => e.date === dateKey);
+    return !!entry?.allDay;
+  };
 
   // Detect if we're on desktop
   useEffect(() => {
@@ -356,7 +378,10 @@ export default function SchedulePage() {
 
         if (oooRes.ok) {
           const oooData = await oooRes.json();
-          setOutOfOfficeDates(new Set((oooData.dates || []).filter((d: unknown) => typeof d === "string")));
+          const dates = (oooData.dates || []).filter((d: unknown) => typeof d === "string");
+          setOutOfOfficeDates(new Set(dates));
+          const entries = Array.isArray(oooData.entries) ? oooData.entries : dates.map((d: string) => ({ date: d, allDay: true }));
+          setOutOfOfficeEntries(entries);
         }
 
         if (specialistData?.id) {
@@ -1142,18 +1167,18 @@ export default function SchedulePage() {
                 const date = weekDates[index];
                 const today = isToday(date);
                 const dateKey = toDateKey(date);
-                const isOOO = outOfOfficeDates.has(dateKey);
+                const allDayOOO = isDateAllDayOutOfOffice(dateKey);
                 return (
                   <div
                     key={`${day}-${index}`}
-                    className={`flex-1 min-w-[100px] px-2 py-3 ${isOOO ? "bg-gray-100" : ""}`}
+                    className={`flex-1 min-w-[100px] px-2 py-3 ${allDayOOO ? "bg-gray-100" : ""}`}
                   >
                     <div className="flex flex-col items-center gap-0.5">
-                      <span className={`text-xs ${isOOO ? "text-gray-500" : "text-gray-700"} ${today ? "font-semibold" : ""}`}>{day}</span>
-                      <span className={`text-xs ${isOOO ? "text-gray-400" : "text-gray-500"} ${today ? "font-medium" : ""}`}>
+                      <span className={`text-xs ${allDayOOO ? "text-gray-500" : "text-gray-700"} ${today ? "font-semibold" : ""}`}>{day}</span>
+                      <span className={`text-xs ${allDayOOO ? "text-gray-400" : "text-gray-500"} ${today ? "font-medium" : ""}`}>
                         {date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                       </span>
-                      {isOOO && (
+                      {allDayOOO && (
                         <span className="text-[10px] text-gray-500 font-medium mt-0.5">Out of office</span>
                       )}
                     </div>
@@ -1175,7 +1200,9 @@ export default function SchedulePage() {
                       {hour === 12 ? '12 PM' : hour > 12 ? `${hour - 12} PM` : `${hour} AM`}
                     </div>
                     {weekDays.map((day, dayIndex) => {
-                      const dayOOO = outOfOfficeDates.has(toDateKey(weekDates[dayIndex]));
+                      const dateKey = toDateKey(weekDates[dayIndex]);
+                      const hourOOO = isHourOutOfOffice(dateKey, hour);
+                      const isFirstOOOHourOfDay = hourOOO && (hour === 0 || !isHourOutOfOffice(dateKey, hour - 1));
                       // Find appointments that start in this hour for this day
                       const cellAppointments = weekAppointments.filter((apt: any) => {
                         const matches = apt.day === dayIndex && apt.hour === hour;
@@ -1197,15 +1224,15 @@ export default function SchedulePage() {
                       return (
                         <div
                           key={`${day}-${hour}`}
-                          className={`flex-1 min-w-[50px] md:min-w-[100px] border-l border-gray-200 relative ${dayOOO ? "bg-gray-100" : ""}`}
+                          className={`flex-1 min-w-[50px] md:min-w-[100px] border-l border-gray-200 relative ${hourOOO ? "bg-gray-100" : ""}`}
                           style={{ height: isDesktop ? '65px' : '55px', overflow: 'visible' }}
                         >
                           {cellAppointments.length === 0 ? (
                             <div
-                              className={`absolute inset-0 cursor-pointer transition-colors ${dayOOO ? "" : "hover:bg-gray-50"}`}
-                              onClick={() => !dayOOO && handleEmptyBlockClick(weekDates[dayIndex], hour, 0)}
+                              className={`absolute inset-0 cursor-pointer transition-colors ${hourOOO ? "" : "hover:bg-gray-50"}`}
+                              onClick={() => !hourOOO && handleEmptyBlockClick(weekDates[dayIndex], hour, 0)}
                             >
-                              {dayOOO && hour === weekHours[0] && (
+                              {isFirstOOOHourOfDay && (
                                 <span className="text-[10px] text-gray-500 font-medium px-1">Out of office</span>
                               )}
                             </div>
@@ -1332,21 +1359,22 @@ export default function SchedulePage() {
 
         {/* Day View */}
         {view === 'day' && (() => {
-          const dayOOO = outOfOfficeDates.has(toDateKey(dayDate));
+          const dayDateKey = toDateKey(dayDate);
+          const allDayOOO = isDateAllDayOutOfOffice(dayDateKey);
           return (
-          <div className={`inline-block min-w-full ${dayOOO ? "bg-gray-50" : ""}`}>
+          <div className={`inline-block min-w-full ${allDayOOO ? "bg-gray-50" : ""}`}>
             {/* Day Header */}
-            <div className={`flex sticky top-0 z-20 border-b border-gray-200 shadow-sm ${dayOOO ? "bg-gray-100" : "bg-white"}`}>
+            <div className={`flex sticky top-0 z-20 border-b border-gray-200 shadow-sm ${allDayOOO ? "bg-gray-100" : "bg-white"}`}>
               <div className="w-20 flex-shrink-0"></div>
               <div className="flex-1 px-2 py-3">
                 <div className="flex flex-col items-center gap-0.5">
-                  <span className={`text-xs ${dayOOO ? "text-gray-500" : "text-gray-700"} ${isToday(dayDate) ? "font-semibold" : ""}`}>
+                  <span className={`text-xs ${allDayOOO ? "text-gray-500" : "text-gray-700"} ${isToday(dayDate) ? "font-semibold" : ""}`}>
                     {dayDate.toLocaleDateString("en-US", { weekday: "long" })}
                   </span>
-                  <span className={`text-xs ${dayOOO ? "text-gray-400" : "text-gray-500"} ${isToday(dayDate) ? "font-medium" : ""}`}>
+                  <span className={`text-xs ${allDayOOO ? "text-gray-400" : "text-gray-500"} ${isToday(dayDate) ? "font-medium" : ""}`}>
                     {dayDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                   </span>
-                  {dayOOO && (
+                  {allDayOOO && (
                     <span className="text-[10px] text-gray-500 font-medium mt-0.5">Out of office</span>
                   )}
                 </div>
@@ -1358,11 +1386,13 @@ export default function SchedulePage() {
               {dayHours.map((hour) => {
                 const cellAppointments = dayAppointments.filter((apt: any) => apt.hour === hour);
                 const dayIndex = dayDate.getDay();
+                const hourOOO = isHourOutOfOffice(dayDateKey, hour);
+                const isFirstOOOHourOfDay = hourOOO && (hour === 0 || !isHourOutOfOffice(dayDateKey, hour - 1));
 
                 return (
                     <div 
                       key={hour} 
-                      className={`flex ${hour === dayHours[dayHours.length - 1] ? '' : 'border-t'} border-gray-200`} 
+                      className={`flex ${hour === dayHours[dayHours.length - 1] ? '' : 'border-t'} border-gray-200 ${hourOOO ? "bg-gray-100" : ""}`} 
                       style={{ overflow: 'visible', position: 'relative', height: isDesktop ? '65px' : '55px' }}>
                     <div className="w-12 md:w-20 flex-shrink-0 pr-1 md:pr-3 pt-1 md:pt-1.5 text-[10px] md:text-xs text-gray-500 text-right">
                       {hour === 12 ? '12 PM' : hour > 12 ? `${hour - 12} PM` : `${hour} AM`}
@@ -1372,9 +1402,13 @@ export default function SchedulePage() {
                     >
                       {cellAppointments.length === 0 ? (
                         <div
-                          className={`absolute inset-0 cursor-pointer transition-colors ${dayOOO ? "" : "hover:bg-gray-50"}`}
-                          onClick={() => !dayOOO && handleEmptyBlockClick(dayDate, hour, 0)}
-                        />
+                          className={`absolute inset-0 cursor-pointer transition-colors ${hourOOO ? "" : "hover:bg-gray-50"}`}
+                          onClick={() => !hourOOO && handleEmptyBlockClick(dayDate, hour, 0)}
+                        >
+                          {isFirstOOOHourOfDay && (
+                            <span className="text-[10px] text-gray-500 font-medium px-1">Out of office</span>
+                          )}
+                        </div>
                       ) : (
                         cellAppointments.map((apt: any) => {
                             // Hour cells are 55px on mobile, 65px on desktop (smaller to fit 8am-4pm)
@@ -1626,7 +1660,10 @@ export default function SchedulePage() {
               });
               if (res.ok) {
                 const data = await res.json();
-                setOutOfOfficeDates(new Set((data.dates || []).filter((d: unknown) => typeof d === "string")));
+                const dates = (data.dates || []).filter((d: unknown) => typeof d === "string");
+                setOutOfOfficeDates(new Set(dates));
+                const entries = Array.isArray(data.entries) ? data.entries : dates.map((d: string) => ({ date: d, allDay: true }));
+                setOutOfOfficeEntries(entries);
               }
             }
           } catch (_e) {}
