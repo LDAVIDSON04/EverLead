@@ -21,6 +21,7 @@ export default function CreateAccountNextPage() {
   const [error, setError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [savePop, setSavePop] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -41,6 +42,7 @@ export default function CreateAccountNextPage() {
         if (s.howYouHelp != null) setHowYouHelp(String(s.howYouHelp));
         if (s.whatFamiliesAppreciate != null) setWhatFamiliesAppreciate(String(s.whatFamiliesAppreciate));
         if (s.profileBio != null) setProfileBio(String(s.profileBio));
+        setSaved(true);
       }
     } catch {
       router.replace("/create-account");
@@ -60,7 +62,8 @@ export default function CreateAccountNextPage() {
       };
       sessionStorage.setItem(CREATE_ACCOUNT_DRAFT_KEY, JSON.stringify(draft));
       setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
+      setSavePop(true);
+      setTimeout(() => setSavePop(false), 350);
     } catch (_) {}
   };
 
@@ -419,7 +422,7 @@ export default function CreateAccountNextPage() {
               <button
                 type="button"
                 onClick={handleSaveBio}
-                className="px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors"
+                className={`px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-transform duration-300 ease-out ${savePop ? "scale-110" : "scale-100"}`}
               >
                 {saved ? "Saved" : "Save"}
               </button>
@@ -448,9 +451,12 @@ export default function CreateAccountNextPage() {
             </label>
           </div>
 
+          {!saved && (
+            <p className="text-sm text-amber-700">Save your bio above before submitting.</p>
+          )}
           <button
             type="submit"
-            disabled={submitting}
+            disabled={submitting || !saved}
             className="w-full bg-gray-900 text-white py-3.5 rounded-lg font-medium hover:bg-gray-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {submitting ? "Submitting…" : "Submit for approval"}
