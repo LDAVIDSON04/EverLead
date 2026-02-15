@@ -24,8 +24,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = await request.json();
-    const { bioData, aiGeneratedBio } = body;
+    let body: { bioData?: unknown; aiGeneratedBio?: unknown };
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+    }
+    const { bioData, aiGeneratedBio } = body ?? {};
 
     // Persist exactly what the agent edited: trimmed string (empty string if cleared)
     const bioText =
@@ -62,7 +67,7 @@ export async function POST(request: NextRequest) {
       .eq("id", user.id);
 
     if (updateError) {
-      console.error("Error saving bio:", updateError);
+      console.error("Error saving bio:", updateError.message, "userId:", user.id);
       return NextResponse.json({ error: "Failed to save bio", details: updateError.message }, { status: 500 });
     }
 

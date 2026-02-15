@@ -2395,16 +2395,24 @@ function ProfileBioSection() {
       setSaving(true);
       setSaveMessage(null);
 
-      const { data: { session } } = await supabaseClient.auth.getSession();
-      if (!session?.access_token) {
-        throw new Error('Not authenticated');
+      const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
+      let accessToken = session?.access_token;
+      if (!accessToken) {
+        const { data: { session: refreshed }, error: refreshError } = await supabaseClient.auth.refreshSession();
+        accessToken = refreshed?.access_token;
+        if (!accessToken) {
+          throw new Error(refreshError?.message || sessionError?.message || 'Not authenticated. Please log in again.');
+        }
+      } else {
+        const { data: { session: refreshed } } = await supabaseClient.auth.refreshSession();
+        if (refreshed?.access_token) accessToken = refreshed.access_token;
       }
 
       const res = await fetch('/api/agent/settings/bio', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${session.access_token}`,
+          Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({
           aiGeneratedBio: (generatedBio ?? '').trim(),
@@ -2420,8 +2428,15 @@ function ProfileBioSection() {
 
       // Reload so UI shows the saved values
       await loadBioData();
-    } catch (err: any) {
-      setSaveMessage({ type: 'error', text: err.message || 'Failed to save bio' });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to save bio';
+      const isNetworkError = message === 'Failed to fetch' || message.includes('NetworkError');
+      setSaveMessage({
+        type: 'error',
+        text: isNetworkError
+          ? 'Could not reach the server. Please check your connection and try again.'
+          : message,
+      });
     } finally {
       setSaving(false);
     }
