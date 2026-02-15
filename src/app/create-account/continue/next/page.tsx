@@ -21,7 +21,6 @@ export default function CreateAccountNextPage() {
   const [error, setError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [showSaveSuccess, setShowSaveSuccess] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -62,8 +61,6 @@ export default function CreateAccountNextPage() {
       };
       sessionStorage.setItem(CREATE_ACCOUNT_DRAFT_KEY, JSON.stringify(draft));
       setSaved(true);
-      setShowSaveSuccess(true);
-      setTimeout(() => setShowSaveSuccess(false), 3000);
     } catch (_) {}
   };
 
@@ -426,7 +423,7 @@ export default function CreateAccountNextPage() {
               >
                 {saved ? "Saved" : "Save"}
               </button>
-              {showSaveSuccess && (
+              {saved && (
                 <p className="text-sm font-medium text-green-600">
                   The bio has been successfully saved.
                 </p>
