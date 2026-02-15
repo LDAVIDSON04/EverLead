@@ -1271,6 +1271,9 @@ export default function CreateAccountContinuePage() {
           )}
 
           {/* Back and Continue buttons - Back saves current form to draft so it's there when they return */}
+          {(showFuneral || showLawyer || showInsurance || showFinancial) && officeLocations.length === 0 && (
+            <p className="mt-4 text-sm text-amber-700">Save at least one office location to continue.</p>
+          )}
           <div className="flex gap-3 mt-4">
             <button
               type="button"
@@ -1281,7 +1284,8 @@ export default function CreateAccountContinuePage() {
             </button>
             <button
               type="submit"
-              className="flex-1 bg-black hover:bg-gray-800 text-white font-medium py-3 px-4 rounded-md transition-colors"
+              disabled={(showFuneral || showLawyer || showInsurance || showFinancial) && officeLocations.length === 0}
+              className="flex-1 bg-black hover:bg-gray-800 text-white font-medium py-3 px-4 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Continue
             </button>
