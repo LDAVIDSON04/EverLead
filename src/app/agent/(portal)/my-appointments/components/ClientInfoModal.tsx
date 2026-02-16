@@ -139,6 +139,12 @@ export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId, onEdit
     return String(value);
   };
 
+  const getDateOfBirthFromNotes = (notes: string | null | undefined): string | null => {
+    if (!notes || typeof notes !== 'string') return null;
+    const match = notes.match(/Date of Birth:\s*([^\s|]+)/i);
+    return match ? match[1].trim() : null;
+  };
+
   const formatDate = (dateString: string | null, timezone?: string): string => {
     if (!dateString) return 'Not provided';
     try {
@@ -336,6 +342,12 @@ export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId, onEdit
                   <div>
                     <label className="text-sm font-medium text-gray-500">Phone</label>
                     <p className="text-gray-900">{formatField('', leadData.phone)}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Date of birth</label>
+                    <p className="text-gray-900">
+                      {formatField('', getDateOfBirthFromNotes(leadData.additional_notes))}
+                    </p>
                   </div>
                 </div>
               </div>
