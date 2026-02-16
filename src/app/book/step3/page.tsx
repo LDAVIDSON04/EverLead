@@ -45,7 +45,7 @@ const BOOKING_QUESTIONS: Record<
     ],
   },
   financial: {
-    question: "What would you like help organizing for the future?",
+    question: "What would you like help with?",
     subtext: "Help us understand your needs so we can better prepare for your appointment.",
     multi: true,
     options: [
