@@ -306,6 +306,25 @@ async function processExternalEvent(
 ): Promise<void> {
   const isSoradinCreated = !!event.appointmentId;
 
+  // If this event was created by Soradin (has appointmentId), don't re-import if the appointment was deleted
+  if (event.appointmentId) {
+    const { data: appointment } = await supabaseAdmin
+      .from("appointments")
+      .select("id")
+      .eq("id", event.appointmentId)
+      .maybeSingle();
+    if (!appointment) {
+      console.log(`Skipping re-import of Soradin event ${event.providerEventId} (appointment ${event.appointmentId} was deleted)`);
+      await supabaseAdmin
+        .from("external_events")
+        .delete()
+        .eq("specialist_id", connection.specialist_id)
+        .eq("provider", connection.provider)
+        .eq("provider_event_id", event.providerEventId);
+      return;
+    }
+  }
+
   // Upsert external_events record
   const upsertData: any = {
     specialist_id: connection.specialist_id,

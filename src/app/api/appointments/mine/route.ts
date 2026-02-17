@@ -703,6 +703,17 @@ export async function GET(req: NextRequest) {
           });
           return false;
         }
+
+        // Skip orphaned external events: appointment_id set but that appointment was deleted
+        // So we never show deleted Soradin events that came back as "external" after sync
+        if (evt.appointment_id && !appointmentIds.has(evt.appointment_id)) {
+          console.log(`⏭️ Skipping orphaned external event (deleted appointment):`, {
+            externalEventId: evt.id,
+            appointmentId: evt.appointment_id,
+            starts_at: evt.starts_at
+          });
+          return false;
+        }
         
         // Require starts_at but don't filter by year - past events should remain visible
         if (!evt.starts_at) {

@@ -630,17 +630,18 @@ export async function syncAgentAppointmentToMicrosoftCalendar(
 
 /**
  * Deletes external calendar events for a cancelled appointment (agent_id/lead_id schema)
+ * Removes ALL rows for this appointment (is_soradin_created true and false) so deleted
+ * events never reappear as "external" duplicates after sync.
  * @param appointmentId - The appointment ID to delete events for
  */
 export async function deleteExternalEventsForAgentAppointment(
   appointmentId: string
 ): Promise<void> {
-  // Find external events linked to this appointment
+  // Find ALL external events linked to this appointment (any is_soradin_created)
   const { data: externalEvents, error: fetchError } = await supabaseAdmin
     .from("external_events")
     .select("*")
-    .eq("appointment_id", appointmentId)
-    .eq("is_soradin_created", true);
+    .eq("appointment_id", appointmentId);
 
   if (fetchError) {
     console.error("Error loading external events:", fetchError);
@@ -665,13 +666,10 @@ export async function deleteExternalEventsForAgentAppointment(
 
       if (connectionError || !connection) {
         console.warn(
-          `Calendar connection not found for event ${event.id}, marking as cancelled`
+          `Calendar connection not found for event ${event.id}, removing from DB`
         );
-        // Mark as cancelled in DB
-        await supabaseAdmin
-          .from("external_events")
-          .update({ status: "cancelled" })
-          .eq("id", event.id);
+        // Always remove row so sync cannot revive it
+        await supabaseAdmin.from("external_events").delete().eq("id", event.id);
         continue;
       }
 
@@ -693,11 +691,8 @@ export async function deleteExternalEventsForAgentAppointment(
         `Error deleting external event ${event.id} from ${event.provider}:`,
         error
       );
-      // Mark as cancelled in DB even if deletion fails
-      await supabaseAdmin
-        .from("external_events")
-        .update({ status: "cancelled" })
-        .eq("id", event.id);
+      // Always remove our row so sync cannot re-show this event; provider may still have it until next manual delete/sync
+      await supabaseAdmin.from("external_events").delete().eq("id", event.id);
     }
   }
 }
