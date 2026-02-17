@@ -544,11 +544,6 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
                 <p className="mt-3 text-sm text-red-600">{error}</p>
               )}
 
-              {!loading && displaySet.size === 0 && (
-                <p className="mt-3 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-                  No days selected. Click &quot;Save&quot; to clear all out of office, or select days above to set new dates.
-                </p>
-              )}
             </>
           )}
         </div>
