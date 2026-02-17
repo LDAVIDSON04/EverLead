@@ -113,6 +113,7 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
 
       const res = await fetch("/api/agent/settings/availability", {
         headers: { Authorization: `Bearer ${session.access_token}` },
+        cache: "no-store",
       });
 
       if (!res.ok) throw new Error("Failed to load locations");
@@ -290,22 +291,26 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
         return;
       }
 
-      // In-person: update availability for selected location
-      const updatedAvailabilityByLocation = {
-        ...(currentData.availabilityByLocation || availabilityByLocation),
-        [normalizedLocation]: recurringSchedule,
-      };
-
+      // In-person: use recurringSchedule for the SELECTED location (key in payload must match API locations e.g. "Penticton, BC")
+      const existingByLocation = currentData.availabilityByLocation || availabilityByLocation;
       const completeAvailabilityByLocation: Record<string, any> = {};
       const allLocations = currentData.locations || locations;
       allLocations.forEach((loc: string) => {
-        completeAvailabilityByLocation[loc] = updatedAvailabilityByLocation[loc] || defaultSchedule;
+        const locNormalized = normalizeLocation(loc);
+        const isSelectedLocation = loc === selectedLocation || locNormalized === normalizedLocation;
+        completeAvailabilityByLocation[loc] = isSelectedLocation
+          ? recurringSchedule
+          : (existingByLocation[loc] || defaultSchedule);
       });
 
-      const updatedTypeByLocation = {
-        ...(currentData.availabilityTypeByLocation || {}),
-        [normalizedLocation]: "recurring" as const,
-      };
+      const existingTypeByLocation = currentData.availabilityTypeByLocation || {};
+      const updatedTypeByLocation: Record<string, "recurring" | "daily"> = { ...existingTypeByLocation };
+      allLocations.forEach((loc: string) => {
+        const locNormalized = normalizeLocation(loc);
+        if (loc === selectedLocation || locNormalized === normalizedLocation) {
+          updatedTypeByLocation[loc] = "recurring";
+        }
+      });
 
       await fetch("/api/agent/settings/availability", {
         method: "POST",
