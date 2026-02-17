@@ -559,7 +559,6 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
                       return;
                     }
                     onSaved?.();
-                    onClose();
                   } catch (e) {
                     console.error(e);
                     setError("Failed to clear");
