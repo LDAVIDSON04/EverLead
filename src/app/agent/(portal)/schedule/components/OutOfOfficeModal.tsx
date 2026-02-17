@@ -29,6 +29,10 @@ function datesInRange(start: string, end: string): string[] {
   return out;
 }
 
+type DaySettings = { allDay: boolean; startTime: string; endTime: string };
+
+const defaultDaySettings = (): DaySettings => ({ allDay: true, startTime: "09:00", endTime: "17:00" });
+
 type Props = {
   isOpen: boolean;
   onClose: () => void;
@@ -45,6 +49,7 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
   const [allDay, setAllDay] = useState(true);
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("17:00");
+  const [entryByDate, setEntryByDate] = useState<Record<string, DaySettings>>({});
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -74,16 +79,23 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
           const sorted = [...dates].sort();
           setRangeStart(sorted[0]);
           setRangeEnd(sorted[sorted.length - 1]);
+          const byDate: Record<string, DaySettings> = {};
+          for (const e of entries) {
+            byDate[e.date] = {
+              allDay: e.allDay,
+              startTime: e.startTime ?? "09:00",
+              endTime: e.endTime ?? "17:00",
+            };
+          }
+          setEntryByDate(byDate);
+          const first = entries[0];
+          setAllDay(first.allDay);
+          setStartTime(first.startTime ?? "09:00");
+          setEndTime(first.endTime ?? "17:00");
         } else {
           setRangeStart(null);
           setRangeEnd(null);
-        }
-        const firstPartial = entries.find((e) => e.allDay === false && e.startTime && e.endTime);
-        if (firstPartial) {
-          setAllDay(false);
-          setStartTime(firstPartial.startTime ?? "09:00");
-          setEndTime(firstPartial.endTime ?? "17:00");
-        } else {
+          setEntryByDate({});
           setAllDay(true);
           setStartTime("09:00");
           setEndTime("17:00");
@@ -98,6 +110,27 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
     fetchDates();
   }, [isOpen]);
 
+  // Display set: selected range of dates
+  const displaySet = (() => {
+    if (!rangeStart) return new Set<string>();
+    if (!rangeEnd) return new Set([rangeStart]);
+    const [s, e] = rangeStart <= rangeEnd ? [rangeStart, rangeEnd] : [rangeEnd, rangeStart];
+    return new Set(datesInRange(s, e));
+  })();
+
+  // When selected range changes, ensure every selected date has an entry (default to global time)
+  useEffect(() => {
+    if (displaySet.size === 0) return;
+    setEntryByDate((prev) => {
+      let next = { ...prev };
+      const defaultSettings: DaySettings = { allDay, startTime, endTime };
+      for (const date of displaySet) {
+        if (!next[date]) next[date] = { ...defaultSettings };
+      }
+      return next;
+    });
+  }, [rangeStart, rangeEnd]);
+
   const firstOfMonth = new Date(yearMonth.year, yearMonth.month, 1);
   const lastOfMonth = new Date(yearMonth.year, yearMonth.month + 1, 0);
   const startPad = firstOfMonth.getDay();
@@ -109,14 +142,6 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
   for (let i = 0; i < startPad; i++) cells.push(null);
   for (let d = 1; d <= daysInMonth; d++) cells.push(d);
   while (cells.length < rows * 7) cells.push(null);
-
-  // Display set: the single range (start through end)
-  const displaySet = (() => {
-    if (!rangeStart) return new Set<string>();
-    if (!rangeEnd) return new Set([rangeStart]);
-    const [s, e] = rangeStart <= rangeEnd ? [rangeStart, rangeEnd] : [rangeEnd, rangeStart];
-    return new Set(datesInRange(s, e));
-  })();
 
   const handleDateClick = (year: number, month: number, day: number) => {
     const key = toYYYYMMDD(new Date(year, month, day));
@@ -181,24 +206,39 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
     }
   };
 
+  const applyGlobalToAllSelected = () => {
+    const next: Record<string, DaySettings> = {};
+    const def: DaySettings = { allDay, startTime, endTime };
+    for (const date of displaySet) {
+      next[date] = { ...def };
+    }
+    setEntryByDate((prev) => ({ ...prev, ...next }));
+  };
+
+  // When only one day is selected, keep its entry in sync with the global time controls
+  const soleSelectedDate = rangeStart && (!rangeEnd || rangeStart === rangeEnd) ? rangeStart : null;
+  useEffect(() => {
+    if (!soleSelectedDate) return;
+    setEntryByDate((prev) => ({
+      ...prev,
+      [soleSelectedDate]: { allDay, startTime, endTime },
+    }));
+  }, [soleSelectedDate, allDay, startTime, endTime]);
+
   const handleSave = async () => {
-    const dates = rangeStart
-      ? rangeEnd
-        ? datesInRange(
-            rangeStart <= rangeEnd ? rangeStart : rangeEnd,
-            rangeStart <= rangeEnd ? rangeEnd : rangeStart
-          )
-        : [rangeStart]
-      : [];
-    // Allow empty: saving with no selection clears all out-of-office
-    if (!allDay) {
-      const [sh, sm] = startTime.split(":").map(Number);
-      const [eh, em] = endTime.split(":").map(Number);
-      const startM = (sh ?? 0) * 60 + (sm ?? 0);
-      const endM = (eh ?? 0) * 60 + (em ?? 0);
-      if (startM >= endM) {
-        setError("End time must be after start time.");
-        return;
+    const dates = [...displaySet].sort();
+    // Validate per-day times
+    for (const date of dates) {
+      const entry = entryByDate[date] ?? defaultDaySettings();
+      if (!entry.allDay) {
+        const [sh, sm] = entry.startTime.split(":").map(Number);
+        const [eh, em] = entry.endTime.split(":").map(Number);
+        const startM = (sh ?? 0) * 60 + (sm ?? 0);
+        const endM = (eh ?? 0) * 60 + (em ?? 0);
+        if (startM >= endM) {
+          setError(`End time must be after start time for ${date}.`);
+          return;
+        }
       }
     }
     setSaving(true);
@@ -209,11 +249,12 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
         setError("Not signed in");
         return;
       }
-      const entries = dates.map((date) =>
-        allDay
+      const entries = dates.map((date) => {
+        const entry = entryByDate[date] ?? defaultDaySettings();
+        return entry.allDay
           ? { date, allDay: true }
-          : { date, allDay: false, startTime, endTime }
-      );
+          : { date, allDay: false, startTime: entry.startTime, endTime: entry.endTime };
+      });
       const res = await fetch("/api/agent/out-of-office", {
         method: "POST",
         headers: {
@@ -328,60 +369,155 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
 
               <div className="mt-6 pt-4 border-t border-gray-100 space-y-4">
                 <p className="text-sm font-medium text-gray-700">Time</p>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setAllDay(true)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      allDay ? "bg-neutral-800 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    }`}
-                  >
-                    All day
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setAllDay(false)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      !allDay ? "bg-neutral-800 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    }`}
-                  >
-                    Specific times
-                  </button>
-                </div>
-                {!allDay && (
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <div className="min-w-0">
-                      <label className="block text-xs text-gray-500 mb-1">From</label>
-                      <input
-                        type="time"
-                        value={startTime}
-                        onClick={(e) => (e.target as HTMLInputElement).showPicker?.()}
-                        onFocus={(e) => (e.target as HTMLInputElement).showPicker?.()}
-                        onChange={(e) => {
-                          const newValue = e.target.value;
-                          if (!TIME_REGEX.test(newValue)) return;
-                          setStartTime(newValue);
-                        }}
-                        className="w-full min-w-0 max-w-[8rem] px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-800 focus:border-transparent text-sm text-gray-900 cursor-pointer"
-                      />
+                {displaySet.size > 0 && (
+                  <>
+                    <div className="space-y-2">
+                      <p className="text-xs text-gray-500">Apply same time to all selected days</p>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setAllDay(true)}
+                          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                            allDay ? "bg-neutral-800 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                          }`}
+                        >
+                          All day
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setAllDay(false)}
+                          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                            !allDay ? "bg-neutral-800 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                          }`}
+                        >
+                          Specific times
+                        </button>
+                      </div>
+                      {!allDay && (
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <div className="min-w-0">
+                            <label className="block text-xs text-gray-500 mb-1">From</label>
+                            <input
+                              type="time"
+                              value={startTime}
+                              onClick={(e) => (e.target as HTMLInputElement).showPicker?.()}
+                              onFocus={(e) => (e.target as HTMLInputElement).showPicker?.()}
+                              onChange={(e) => {
+                                const newValue = e.target.value;
+                                if (!TIME_REGEX.test(newValue)) return;
+                                setStartTime(newValue);
+                              }}
+                              className="w-full min-w-0 max-w-[8rem] px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-800 focus:border-transparent text-sm text-gray-900 cursor-pointer"
+                            />
+                          </div>
+                          <span className="text-gray-500 text-xs self-end pb-2.5">to</span>
+                          <div className="min-w-0">
+                            <label className="block text-xs text-gray-500 mb-1">To</label>
+                            <input
+                              type="time"
+                              value={endTime}
+                              onClick={(e) => (e.target as HTMLInputElement).showPicker?.()}
+                              onFocus={(e) => (e.target as HTMLInputElement).showPicker?.()}
+                              onChange={(e) => {
+                                const newValue = e.target.value;
+                                if (!TIME_REGEX.test(newValue)) return;
+                                setEndTime(newValue);
+                              }}
+                              className="w-full min-w-0 max-w-[8rem] px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-800 focus:border-transparent text-sm text-gray-900 cursor-pointer"
+                            />
+                          </div>
+                        </div>
+                      )}
+                      <button
+                        type="button"
+                        onClick={applyGlobalToAllSelected}
+                        className="text-sm text-neutral-600 hover:text-neutral-800 underline"
+                      >
+                        Apply to all selected days
+                      </button>
                     </div>
-                    <span className="text-gray-500 text-xs self-end pb-2.5">to</span>
-                    <div className="min-w-0">
-                      <label className="block text-xs text-gray-500 mb-1">To</label>
-                      <input
-                        type="time"
-                        value={endTime}
-                        onClick={(e) => (e.target as HTMLInputElement).showPicker?.()}
-                        onFocus={(e) => (e.target as HTMLInputElement).showPicker?.()}
-                        onChange={(e) => {
-                          const newValue = e.target.value;
-                          if (!TIME_REGEX.test(newValue)) return;
-                          setEndTime(newValue);
-                        }}
-                        className="w-full min-w-0 max-w-[8rem] px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-800 focus:border-transparent text-sm text-gray-900 cursor-pointer"
-                      />
-                    </div>
-                  </div>
+                    {displaySet.size > 1 && (
+                      <div className="space-y-2 pt-2 border-t border-gray-100">
+                        <p className="text-xs text-gray-500">Or set a different time for each day</p>
+                        <div className="max-h-48 overflow-y-auto space-y-2 pr-1">
+                          {[...displaySet].sort().map((dateStr) => {
+                            const entry = entryByDate[dateStr] ?? defaultDaySettings();
+                            const dateLabel = (() => {
+                              const [y, m, d] = dateStr.split("-").map(Number);
+                              const dObj = new Date(y, m - 1, d);
+                              return dObj.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+                            })();
+                            return (
+                              <div key={dateStr} className="flex flex-wrap items-center gap-2 py-1.5 border-b border-gray-50 last:border-0">
+                                <span className="text-sm font-medium text-gray-700 w-28 shrink-0">{dateLabel}</span>
+                                <div className="flex gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setEntryByDate((prev) => ({
+                                        ...prev,
+                                        [dateStr]: { ...entry, allDay: true },
+                                      }))
+                                    }
+                                    className={`px-2 py-1 rounded text-xs font-medium ${
+                                      entry.allDay ? "bg-neutral-800 text-white" : "bg-gray-100 text-gray-600"
+                                    }`}
+                                  >
+                                    All day
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setEntryByDate((prev) => ({
+                                        ...prev,
+                                        [dateStr]: { ...entry, allDay: false },
+                                      }))
+                                    }
+                                    className={`px-2 py-1 rounded text-xs font-medium ${
+                                      !entry.allDay ? "bg-neutral-800 text-white" : "bg-gray-100 text-gray-600"
+                                    }`}
+                                  >
+                                    Specific
+                                  </button>
+                                </div>
+                                {!entry.allDay && (
+                                  <>
+                                    <input
+                                      type="time"
+                                      value={entry.startTime}
+                                      onChange={(e) => {
+                                        const v = e.target.value;
+                                        if (!TIME_REGEX.test(v)) return;
+                                        setEntryByDate((prev) => ({
+                                          ...prev,
+                                          [dateStr]: { ...prev[dateStr]!, startTime: v },
+                                        }));
+                                      }}
+                                      className="w-24 px-2 py-1 border border-gray-300 rounded text-sm"
+                                    />
+                                    <span className="text-gray-400 text-xs">to</span>
+                                    <input
+                                      type="time"
+                                      value={entry.endTime}
+                                      onChange={(e) => {
+                                        const v = e.target.value;
+                                        if (!TIME_REGEX.test(v)) return;
+                                        setEntryByDate((prev) => ({
+                                          ...prev,
+                                          [dateStr]: { ...prev[dateStr]!, endTime: v },
+                                        }));
+                                      }}
+                                      className="w-24 px-2 py-1 border border-gray-300 rounded text-sm"
+                                    />
+                                  </>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
 
