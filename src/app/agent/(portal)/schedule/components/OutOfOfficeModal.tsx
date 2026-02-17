@@ -470,7 +470,7 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
                         Apply to all selected days
                       </button>
                     </div>
-                    {displaySet.size > 1 && (
+                    {displaySet.size > 1 && !allDay && (
                       <div className="space-y-2 pt-2 border-t border-gray-100">
                         <p className="text-xs text-gray-500">Or set a different time for each day</p>
                         <div className="max-h-64 overflow-y-auto space-y-2 pr-1">
