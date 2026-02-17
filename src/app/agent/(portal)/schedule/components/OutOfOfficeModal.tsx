@@ -190,9 +190,10 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
     };
   }, [isOpen]);
 
-  const handleDateClick = (year: number, month: number, day: number) => {
+  const handleDateClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     if (didDragRef.current) return;
-    const key = getDateKey(year, month, day);
+    const key = (e.currentTarget as HTMLButtonElement).getAttribute("data-date");
+    if (!key || !/^\d{4}-\d{2}-\d{2}$/.test(key)) return;
 
     if (rangeStart === null) {
       setRangeStart(key);
@@ -390,9 +391,10 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
                     <button
                       key={dateStr}
                       type="button"
+                      data-date={dateStr}
                       onMouseDown={(e) => handleDateMouseDown(e, yearMonth.year, yearMonth.month, day)}
                       onMouseEnter={() => handleDateMouseEnter(yearMonth.year, yearMonth.month, day)}
-                      onClick={() => handleDateClick(yearMonth.year, yearMonth.month, day)}
+                      onClick={handleDateClick}
                       className={`w-10 h-10 rounded-lg text-sm font-medium transition-colors select-none touch-none ${
                         isSelected
                           ? "bg-neutral-800 text-white hover:bg-neutral-700"
