@@ -55,6 +55,7 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
   const [error, setError] = useState<string | null>(null);
   const dragStartRef = useRef<string | null>(null);
   const didDragRef = useRef(false);
+  const dragDelayTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [dragStartForDisplay, setDragStartForDisplay] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -153,31 +154,45 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
   const getDateKey = (year: number, month: number, day: number) =>
     toYYYYMMDD(new Date(year, month, day));
 
+  const DRAG_DELAY_MS = 200;
+
   const handleDateMouseDown = (e: React.MouseEvent, year: number, month: number, day: number) => {
     e.preventDefault();
     e.stopPropagation();
+    if (dragDelayTimeoutRef.current) {
+      clearTimeout(dragDelayTimeoutRef.current);
+      dragDelayTimeoutRef.current = null;
+    }
     const key = getDateKey(year, month, day);
     dragStartRef.current = key;
     didDragRef.current = false;
-    setIsDragging(true);
     setDragStartForDisplay(key);
-    if (typeof document !== "undefined") document.body.style.overflow = "hidden";
+    dragDelayTimeoutRef.current = setTimeout(() => {
+      dragDelayTimeoutRef.current = null;
+      setIsDragging(true);
+      if (typeof document !== "undefined") document.body.style.overflow = "hidden";
+    }, DRAG_DELAY_MS);
   };
 
   const handleDateMouseEnter = (year: number, month: number, day: number) => {
     if (dragStartRef.current === null) return;
     const key = getDateKey(year, month, day);
+    if (key === dragStartRef.current) return;
     didDragRef.current = true;
     setDragStartForDisplay(null);
     const start = dragStartRef.current;
-    const [s, e] = start <= key ? [start, key] : [key, start];
+    const [s, end] = start <= key ? [start, key] : [key, start];
     setRangeStart(s);
-    setRangeEnd(e);
+    setRangeEnd(end);
   };
 
   useEffect(() => {
     if (!isOpen) return;
     const onMouseUp = () => {
+      if (dragDelayTimeoutRef.current) {
+        clearTimeout(dragDelayTimeoutRef.current);
+        dragDelayTimeoutRef.current = null;
+      }
       dragStartRef.current = null;
       setDragStartForDisplay(null);
       setIsDragging(false);
@@ -186,13 +201,14 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
     document.addEventListener("mouseup", onMouseUp);
     return () => {
       document.removeEventListener("mouseup", onMouseUp);
+      if (dragDelayTimeoutRef.current) clearTimeout(dragDelayTimeoutRef.current);
       if (typeof document !== "undefined") document.body.style.overflow = "";
     };
   }, [isOpen]);
 
   const handleDateClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     if (didDragRef.current) return;
-    const key = (e.currentTarget as HTMLButtonElement).getAttribute("data-date");
+    const key = e.currentTarget.getAttribute("data-date");
     if (!key || !/^\d{4}-\d{2}-\d{2}$/.test(key)) return;
 
     if (rangeStart === null) {
