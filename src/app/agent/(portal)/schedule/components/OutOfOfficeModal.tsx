@@ -55,6 +55,7 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
   const [error, setError] = useState<string | null>(null);
   const dragStartRef = useRef<string | null>(null);
   const didDragRef = useRef(false);
+  const [dragStartForDisplay, setDragStartForDisplay] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -112,12 +113,15 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
     fetchDates();
   }, [isOpen]);
 
-  // Display set: selected range of dates
+  // Display set: selected range of dates (include drag-start cell so it shades immediately on press)
   const displaySet = (() => {
-    if (!rangeStart) return new Set<string>();
-    if (!rangeEnd) return new Set([rangeStart]);
-    const [s, e] = rangeStart <= rangeEnd ? [rangeStart, rangeEnd] : [rangeEnd, rangeStart];
-    return new Set(datesInRange(s, e));
+    if (rangeStart && rangeEnd) {
+      const [s, e] = rangeStart <= rangeEnd ? [rangeStart, rangeEnd] : [rangeEnd, rangeStart];
+      return new Set(datesInRange(s, e));
+    }
+    if (rangeStart) return new Set([rangeStart]);
+    if (dragStartForDisplay) return new Set([dragStartForDisplay]);
+    return new Set<string>();
   })();
 
   // When selected range changes, ensure every selected date has an entry (default to global time)
@@ -148,17 +152,19 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
   const getDateKey = (year: number, month: number, day: number) =>
     toYYYYMMDD(new Date(year, month, day));
 
-  const handleDateMouseDown = (year: number, month: number, day: number) => {
+  const handleDateMouseDown = (e: React.MouseEvent, year: number, month: number, day: number) => {
+    e.preventDefault();
     const key = getDateKey(year, month, day);
     dragStartRef.current = key;
     didDragRef.current = false;
-    // Don't set range here — click handler will set it for a simple click, mouseenter will set it when dragging
+    setDragStartForDisplay(key);
   };
 
   const handleDateMouseEnter = (year: number, month: number, day: number) => {
     if (dragStartRef.current === null) return;
     const key = getDateKey(year, month, day);
     didDragRef.current = true;
+    setDragStartForDisplay(null);
     const start = dragStartRef.current;
     const [s, e] = start <= key ? [start, key] : [key, start];
     setRangeStart(s);
@@ -169,6 +175,7 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
     if (!isOpen) return;
     const onMouseUp = () => {
       dragStartRef.current = null;
+      setDragStartForDisplay(null);
     };
     document.addEventListener("mouseup", onMouseUp);
     return () => document.removeEventListener("mouseup", onMouseUp);
@@ -370,19 +377,16 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
                   }
                   const dateStr = toYYYYMMDD(new Date(yearMonth.year, yearMonth.month, day));
                   const isSelected = displaySet.has(dateStr);
-                  const isStartOnly = rangeStart === dateStr && !rangeEnd;
                   return (
                     <button
                       key={dateStr}
                       type="button"
-                      onMouseDown={() => handleDateMouseDown(yearMonth.year, yearMonth.month, day)}
+                      onMouseDown={(e) => handleDateMouseDown(e, yearMonth.year, yearMonth.month, day)}
                       onMouseEnter={() => handleDateMouseEnter(yearMonth.year, yearMonth.month, day)}
                       onClick={() => handleDateClick(yearMonth.year, yearMonth.month, day)}
-                      className={`w-10 h-10 rounded-lg text-sm font-medium transition-colors select-none ${
+                      className={`w-10 h-10 rounded-lg text-sm font-medium transition-colors select-none touch-none ${
                         isSelected
                           ? "bg-neutral-800 text-white hover:bg-neutral-700"
-                          : isStartOnly
-                          ? "bg-neutral-600 text-white ring-2 ring-neutral-800 ring-offset-1"
                           : "bg-gray-50 text-gray-900 hover:bg-gray-100"
                       }`}
                     >
