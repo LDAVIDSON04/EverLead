@@ -152,8 +152,7 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
     const key = getDateKey(year, month, day);
     dragStartRef.current = key;
     didDragRef.current = false;
-    setRangeStart(key);
-    setRangeEnd(key);
+    // Don't set range here — click handler will set it for a simple click, mouseenter will set it when dragging
   };
 
   const handleDateMouseEnter = (year: number, month: number, day: number) => {
