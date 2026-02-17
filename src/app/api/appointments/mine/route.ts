@@ -284,7 +284,7 @@ export async function GET(req: NextRequest) {
     try {
       const result = await supabaseServer
         .from("external_events")
-        .select("id, starts_at, ends_at, status, provider, is_soradin_created, appointment_id, title, location")
+        .select("id, starts_at, ends_at, status, provider, provider_event_id, is_soradin_created, appointment_id, title, location")
         .eq("specialist_id", userId) // specialist_id in external_events = agent_id (user ID)
         .eq("status", "confirmed") // Only show confirmed events
         .eq("is_soradin_created", false) // Only fetch EXTERNAL events - Soradin-created ones are duplicates of appointments table
@@ -313,7 +313,7 @@ export async function GET(req: NextRequest) {
         console.log("Title or location column not found, fetching external events without them");
           const result = await supabaseServer
             .from("external_events")
-            .select("id, starts_at, ends_at, status, provider, is_soradin_created, appointment_id")
+            .select("id, starts_at, ends_at, status, provider, provider_event_id, is_soradin_created, appointment_id")
             .eq("specialist_id", userId)
             .eq("status", "confirmed")
             .eq("is_soradin_created", false) // Only fetch EXTERNAL events - Soradin-created ones are duplicates of appointments table
@@ -673,6 +673,22 @@ export async function GET(req: NextRequest) {
     // Create a set of appointment IDs that exist in the appointments table
     // This prevents external events linked to Soradin appointments from showing as external
     const appointmentIds = new Set((appointments || []).map((apt: any) => apt.id));
+
+    // Blocklist: event IDs the user deleted — never show these again (sync may have re-imported them)
+    let deletedEventBlocklist = new Set<string>();
+    try {
+      const { data: blocklistRows } = await supabaseServer
+        .from("deleted_external_event_sync_blocklist")
+        .select("provider, provider_event_id")
+        .eq("specialist_id", userId);
+      if (blocklistRows?.length) {
+        deletedEventBlocklist = new Set(
+          blocklistRows.map((r: any) => `${r.provider}:${r.provider_event_id}`)
+        );
+      }
+    } catch (_) {
+      // Non-fatal; continue without blocklist filter
+    }
     
     // Create a set of appointment start times (from confirmed_at) to filter out duplicates
     // Match external events to appointments by start time (within 1 minute tolerance)
@@ -712,6 +728,11 @@ export async function GET(req: NextRequest) {
             appointmentId: evt.appointment_id,
             starts_at: evt.starts_at
           });
+          return false;
+        }
+
+        // Skip events the user deleted (blocklist) — they must never reappear
+        if (evt.provider_event_id && deletedEventBlocklist.has(`${evt.provider}:${evt.provider_event_id}`)) {
           return false;
         }
         

@@ -4,6 +4,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { isEventBlocklistedAndRemove } from "@/lib/calendarSyncAgent";
 import { fetchMicrosoftCalendarEvents } from "@/lib/calendarProviders/microsoft";
 import type { CalendarConnection } from "@/lib/calendarProviders/types";
 
@@ -304,6 +305,16 @@ async function processExternalEvent(
     appointmentId?: string;
   }
 ): Promise<void> {
+  const blocklisted = await isEventBlocklistedAndRemove(
+    connection.specialist_id,
+    connection.provider,
+    event.providerEventId
+  );
+  if (blocklisted) {
+    console.log(`Skipping blocklisted event ${event.providerEventId} (user deleted it)`);
+    return;
+  }
+
   const isSoradinCreated = !!event.appointmentId;
 
   // If this event was created by Soradin (has appointmentId), don't re-import if the appointment was deleted

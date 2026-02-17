@@ -10,6 +10,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { fetchGoogleCalendarEvents } from "@/lib/calendarProviders/google";
 import { fetchMicrosoftCalendarEvents } from "@/lib/calendarProviders/microsoft";
 import { renewExpiredWebhooks, isWebhookExpiredOrExpiring } from "@/lib/calendarWebhooks";
+import { isEventBlocklistedAndRemove } from "@/lib/calendarSyncAgent";
 import type { CalendarConnection } from "@/lib/calendarProviders/types";
 
 export const dynamic = "force-dynamic";
@@ -225,6 +226,17 @@ async function processExternalEvent(
     title?: string | null;
   }
 ): Promise<void> {
+  // Never re-import an event the user deleted (blocklist)
+  const blocklisted = await isEventBlocklistedAndRemove(
+    connection.specialist_id,
+    connection.provider,
+    event.providerEventId
+  );
+  if (blocklisted) {
+    console.log(`Skipping blocklisted event ${event.providerEventId} (user deleted it)`);
+    return;
+  }
+
   const isSoradinCreated = !!event.appointmentId;
 
   // If this event was created by Soradin (has appointmentId), don't re-import if the appointment was deleted

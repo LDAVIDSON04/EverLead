@@ -629,9 +629,65 @@ export async function syncAgentAppointmentToMicrosoftCalendar(
 }
 
 /**
+ * Returns true if this event is in the blocklist (user deleted it). If so, we remove any
+ * existing external_events row so it never shows again. Call before upserting in sync/webhooks.
+ */
+export async function isEventBlocklistedAndRemove(
+  specialistId: string,
+  provider: string,
+  providerEventId: string
+): Promise<boolean> {
+  const { data: row, error: checkError } = await supabaseAdmin
+    .from("deleted_external_event_sync_blocklist")
+    .select("specialist_id")
+    .eq("specialist_id", specialistId)
+    .eq("provider", provider)
+    .eq("provider_event_id", providerEventId)
+    .maybeSingle();
+
+  if (checkError || row) {
+    if (row) {
+      await supabaseAdmin
+        .from("external_events")
+        .delete()
+        .eq("specialist_id", specialistId)
+        .eq("provider", provider)
+        .eq("provider_event_id", providerEventId);
+    }
+    return !!row;
+  }
+  return false;
+}
+
+/**
+ * Record (specialist_id, provider, provider_event_id) in the blocklist so sync
+ * never re-imports this event and the schedule API never shows it again.
+ */
+async function addToDeletedEventBlocklist(
+  specialistId: string,
+  provider: string,
+  providerEventId: string
+): Promise<void> {
+  const { error } = await supabaseAdmin
+    .from("deleted_external_event_sync_blocklist")
+    .upsert(
+      {
+        specialist_id: specialistId,
+        provider,
+        provider_event_id: providerEventId,
+      },
+      { onConflict: "specialist_id,provider,provider_event_id" }
+    );
+  if (error) {
+    console.warn("Failed to add to deleted-event blocklist (non-fatal):", error);
+  }
+}
+
+/**
  * Deletes external calendar events for a cancelled appointment (agent_id/lead_id schema)
  * Removes ALL rows for this appointment (is_soradin_created true and false) so deleted
  * events never reappear as "external" duplicates after sync.
+ * Also adds each to the blocklist so sync never re-imports them.
  * @param appointmentId - The appointment ID to delete events for
  */
 export async function deleteExternalEventsForAgentAppointment(
@@ -656,6 +712,13 @@ export async function deleteExternalEventsForAgentAppointment(
 
   // Load calendar connections for each event
   for (const event of externalEvents) {
+    // Blocklist first so sync never re-imports this event even if provider delete fails
+    await addToDeletedEventBlocklist(
+      event.specialist_id,
+      event.provider,
+      event.provider_event_id
+    );
+
     try {
       const { data: connection, error: connectionError } = await supabaseAdmin
         .from("calendar_connections")
@@ -668,7 +731,6 @@ export async function deleteExternalEventsForAgentAppointment(
         console.warn(
           `Calendar connection not found for event ${event.id}, removing from DB`
         );
-        // Always remove row so sync cannot revive it
         await supabaseAdmin.from("external_events").delete().eq("id", event.id);
         continue;
       }
@@ -683,7 +745,6 @@ export async function deleteExternalEventsForAgentAppointment(
         );
       }
 
-      // Delete or mark as cancelled in our DB
       await supabaseAdmin.from("external_events").delete().eq("id", event.id);
       console.log(`✅ Deleted external event ${event.id} from ${event.provider} calendar`);
     } catch (error: any) {
@@ -691,7 +752,6 @@ export async function deleteExternalEventsForAgentAppointment(
         `Error deleting external event ${event.id} from ${event.provider}:`,
         error
       );
-      // Always remove our row so sync cannot re-show this event; provider may still have it until next manual delete/sync
       await supabaseAdmin.from("external_events").delete().eq("id", event.id);
     }
   }
@@ -890,6 +950,12 @@ export async function deleteSingleExternalEvent(
   if (event.specialist_id !== specialistId) {
     throw new Error("Not allowed to delete this event");
   }
+
+  await addToDeletedEventBlocklist(
+    event.specialist_id,
+    event.provider,
+    event.provider_event_id
+  );
 
   const { data: connection, error: connectionError } = await supabaseAdmin
     .from("calendar_connections")
