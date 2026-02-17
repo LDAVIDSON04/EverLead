@@ -12,11 +12,15 @@ export async function GET(req: NextRequest) {
     const userName = req.nextUrl.searchParams.get("userName");
     const userId = req.nextUrl.searchParams.get("userId");
 
-    // Appointment rooms: role is determined only by identity, never by client (prevents customer from passing role=host)
+    // Appointment rooms: role from identity (Agent | = host). Fallback: client sent role=host and not Customer = host (so agent link works if identity is lost)
     const isAppointmentRoom = typeof name === "string" && name.startsWith("appointment-");
     const isAgentIdentity = typeof userName === "string" && userName.startsWith("Agent | ");
+    const isCustomerIdentity = typeof userName === "string" && userName.startsWith("Customer | ");
     if (isAppointmentRoom) {
-      role = isAgentIdentity ? "host" : "guest";
+      if (isAgentIdentity) role = "host";
+      else if (isCustomerIdentity) role = "guest";
+      else if (role === "host") role = "host"; // keep host when client sent it (e.g. agent link with identity lost)
+      else role = "guest";
     }
 
     // For appointment rooms: compute token expiry = 90 min after scheduled start (privacy: link not valid forever)
