@@ -190,10 +190,7 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
           )
         : [rangeStart]
       : [];
-    if (dates.length === 0) {
-      setError("Select at least one day.");
-      return;
-    }
+    // Allow empty: saving with no selection clears all out-of-office
     if (!allDay) {
       const [sh, sm] = startTime.split(":").map(Number);
       const [eh, em] = endTime.split(":").map(Number);
@@ -271,7 +268,7 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
           </button>
         </div>
         <p className="px-6 pt-3 text-sm text-gray-600">
-          Select days you&apos;re out of office or on vacation. Those days won&apos;t show as available for booking.
+          Select days you&apos;re out of office or on vacation. Those days won&apos;t show as available for booking. Save with no days selected to clear all.
         </p>
         <div className="p-6">
           <div className="flex items-center justify-between mb-4">
@@ -391,25 +388,77 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
               {error && (
                 <p className="mt-3 text-sm text-red-600">{error}</p>
               )}
+
+              {!loading && displaySet.size === 0 && (
+                <p className="mt-3 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                  No days selected. Click &quot;Save&quot; to clear all out of office, or select days above to set new dates.
+                </p>
+              )}
             </>
           )}
         </div>
-        <div className="flex gap-3 justify-end px-6 py-4 border-t border-gray-100">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-2 border border-gray-200 rounded-xl text-gray-700 hover:bg-gray-50 text-sm font-medium"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={saving || loading}
-            className="px-4 py-2 bg-neutral-800 text-white rounded-xl hover:bg-neutral-700 text-sm font-medium disabled:opacity-50"
-          >
-            {saving ? "Saving…" : "Save"}
-          </button>
+        <div className="flex gap-3 justify-between px-6 py-4 border-t border-gray-100">
+          <div>
+            {!loading && displaySet.size > 0 && (
+              <button
+                type="button"
+                onClick={async () => {
+                  setRangeStart(null);
+                  setRangeEnd(null);
+                  setError(null);
+                  setSaving(true);
+                  try {
+                    const { data: { session } } = await supabaseClient.auth.getSession();
+                    if (!session?.access_token) {
+                      setError("Not signed in");
+                      return;
+                    }
+                    const res = await fetch("/api/agent/out-of-office", {
+                      method: "POST",
+                      headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${session.access_token}`,
+                      },
+                      body: JSON.stringify({ entries: [] }),
+                    });
+                    if (!res.ok) {
+                      const data = await res.json().catch(() => ({}));
+                      setError(data.error || "Failed to clear");
+                      return;
+                    }
+                    onSaved?.();
+                    onClose();
+                  } catch (e) {
+                    console.error(e);
+                    setError("Failed to clear");
+                  } finally {
+                    setSaving(false);
+                  }
+                }}
+                disabled={saving}
+                className="px-4 py-2 text-red-600 hover:bg-red-50 border border-red-200 rounded-xl text-sm font-medium disabled:opacity-50"
+              >
+                {saving ? "Clearing…" : "Clear all out of office"}
+              </button>
+            )}
+          </div>
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 border border-gray-200 rounded-xl text-gray-700 hover:bg-gray-50 text-sm font-medium"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={saving || loading}
+              className="px-4 py-2 bg-neutral-800 text-white rounded-xl hover:bg-neutral-700 text-sm font-medium disabled:opacity-50"
+            >
+              {saving ? "Saving…" : "Save"}
+            </button>
+          </div>
         </div>
       </div>
     </div>
