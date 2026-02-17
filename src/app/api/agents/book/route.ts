@@ -281,8 +281,13 @@ export async function POST(req: NextRequest) {
 
     if (existingLead) {
       leadId = existingLead.id;
-      // Update the lead's information (city, province, phone, service_type, additional_notes) if provided
+      // Update the lead's information so the schedule shows the name of the person booking this time
       const updateData: any = {};
+      if (firstName?.trim()) updateData.first_name = firstName.trim();
+      if (lastName?.trim()) updateData.last_name = lastName.trim();
+      if (firstName?.trim() || lastName?.trim()) {
+        updateData.full_name = `${(firstName || "").trim()} ${(lastName || "").trim()}`.trim();
+      }
       if (city && city.trim()) updateData.city = city.trim();
       if (province && province.trim()) updateData.province = province.trim();
       if (phone && phone.trim()) updateData.phone = phone.trim();
