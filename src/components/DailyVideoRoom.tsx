@@ -88,14 +88,30 @@ export function DailyVideoRoom({ roomName, identity, role }: DailyVideoRoomProps
     );
   }
 
+  // Redirect to Daily in the same tab so the call runs on Daily's domain (no iframe
+  // camera/mic or blank-screen issues). Same pattern as "Join with Teams" / Zoom links.
   return (
-    <div className="fixed inset-0 w-full h-full bg-gray-900">
-      <iframe
-        src={roomUrl}
-        allow="camera; microphone; fullscreen; display-capture"
-        className="w-full h-full border-0"
-        title="Video call"
-      />
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-900 text-white px-4">
+      <div className="animate-spin rounded-full h-10 w-10 border-2 border-white border-t-transparent mb-4" />
+      <p className="text-gray-400 mb-2">Taking you to your video call…</p>
+      <a
+        href={roomUrl}
+        className="text-emerald-400 underline hover:no-underline"
+        onClick={(e) => {
+          e.preventDefault();
+          window.location.href = roomUrl!;
+        }}
+      >
+        Click here if you’re not redirected
+      </a>
+      <RedirectToRoom url={roomUrl} />
     </div>
   );
+}
+
+function RedirectToRoom({ url }: { url: string }) {
+  useEffect(() => {
+    window.location.href = url;
+  }, [url]);
+  return null;
 }
