@@ -54,6 +54,7 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
   const [error, setError] = useState<string | null>(null);
   const dragStartRef = useRef<string | null>(null);
   const didDragRef = useRef(false);
+  const isDraggingRef = useRef(false);
   const dragDelayTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [dragStartForDisplay, setDragStartForDisplay] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -162,6 +163,7 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
     setDragStartForDisplay(key);
     dragDelayTimeoutRef.current = setTimeout(() => {
       dragDelayTimeoutRef.current = null;
+      isDraggingRef.current = true;
       setIsDragging(true);
       if (typeof document !== "undefined") document.body.style.overflow = "hidden";
     }, DRAG_DELAY_MS);
@@ -169,6 +171,7 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
 
   const handleDateMouseEnter = (year: number, month: number, day: number) => {
     if (dragStartRef.current === null) return;
+    if (!isDraggingRef.current) return;
     const key = getDateKey(year, month, day);
     if (key === dragStartRef.current) return;
     didDragRef.current = true;
@@ -185,6 +188,7 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
         clearTimeout(dragDelayTimeoutRef.current);
         dragDelayTimeoutRef.current = null;
       }
+      isDraggingRef.current = false;
       dragStartRef.current = null;
       setDragStartForDisplay(null);
       setIsDragging(false);
