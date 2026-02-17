@@ -1,6 +1,6 @@
 'use client';
 
-import { X } from 'lucide-react';
+import { X, AlertTriangle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { supabaseClient } from '@/lib/supabaseClient';
 import { DateTime } from 'luxon';
@@ -73,6 +73,7 @@ export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId, onEdit
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   useEffect(() => {
     if (isOpen && leadId) {
       loadLeadData();
@@ -208,27 +209,27 @@ export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId, onEdit
   const isAgentEvent = leadData?.email?.includes('@soradin.internal') || false;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col border border-gray-100">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-2xl font-semibold text-gray-900">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
+          <h2 className="text-xl font-semibold tracking-tight text-gray-900">
             {isAgentEvent ? 'Event Details' : 'Client Information'}
           </h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 -m-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
             aria-label="Close"
           >
-            <X className="w-5 h-5 text-gray-600" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-6 text-gray-700">
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-neutral-700"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-2 border-gray-200 border-t-gray-700"></div>
             </div>
           ) : error ? (
             <div className="text-center py-12">
@@ -239,7 +240,7 @@ export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId, onEdit
             <div className="space-y-6">
               {/* Event Title */}
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Event Title</h3>
+                <h3 className="text-xs font-medium uppercase tracking-wide text-gray-400 mb-2">Event Title</h3>
                 <div>
                   <p className="text-gray-900">{leadData.full_name || 'Untitled Event'}</p>
                 </div>
@@ -247,7 +248,7 @@ export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId, onEdit
 
               {/* Date & Time */}
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Date & Time</h3>
+                <h3 className="text-xs font-medium uppercase tracking-wide text-gray-400 mb-2">Date & Time</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="text-sm font-medium text-gray-500">Date</label>
@@ -291,7 +292,7 @@ export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId, onEdit
 
               {/* Location */}
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Location</h3>
+                <h3 className="text-xs font-medium uppercase tracking-wide text-gray-400 mb-2">Location</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* For agent-created events, only show the location text the agent entered, not office address */}
                   {leadData.city && leadData.city !== 'Internal' ? (
@@ -313,7 +314,7 @@ export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId, onEdit
 
               {/* Description */}
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Description</h3>
+                <h3 className="text-xs font-medium uppercase tracking-wide text-gray-400 mb-2">Description</h3>
                 <div>
                   <p className="text-gray-900">
                     {(() => {
@@ -508,7 +509,7 @@ export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId, onEdit
         </div>
 
         {/* Footer */}
-        <div className="border-t border-gray-200 p-6 flex justify-between items-center">
+        <div className="border-t border-gray-100 px-6 py-4 flex justify-between items-center bg-gray-50/50">
           <div className="flex gap-3">
             {isAgentEvent && appointmentId && leadId && onEdit && (
               <button
@@ -516,16 +517,58 @@ export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId, onEdit
                   onEdit(appointmentId, leadId);
                   onClose();
                 }}
-                className="px-4 py-2 text-white bg-neutral-700 rounded-lg hover:bg-neutral-800 transition-colors"
+                className="px-5 py-2.5 text-sm font-medium text-white bg-gray-900 rounded-xl hover:bg-gray-800 transition-colors shadow-sm"
               >
                 Edit Event
               </button>
             )}
             {isAgentEvent && appointmentId && onDelete && (
               <button
+                onClick={() => setShowDeleteConfirm(true)}
+                disabled={deleting}
+                className="px-5 py-2.5 text-sm font-medium text-red-600 bg-red-50 rounded-xl hover:bg-red-100 transition-colors disabled:opacity-50"
+              >
+                {deleting ? "Deleting…" : "Delete Event"}
+              </button>
+            )}
+          </div>
+          <button
+            onClick={onClose}
+            className="px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-colors"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+
+      {/* Delete confirmation modal */}
+      {showDeleteConfirm && (
+        <div className="absolute inset-0 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setShowDeleteConfirm(false)}>
+          <div
+            className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 max-w-sm w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                <AlertTriangle className="w-5 h-5 text-red-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-lg font-semibold text-gray-900">Delete event?</h3>
+                <p className="mt-1 text-sm text-gray-500">This cannot be undone.</p>
+              </div>
+            </div>
+            <div className="mt-6 flex gap-3 justify-end">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
                 onClick={async () => {
-                  if (!confirm("Delete this event? This cannot be undone.")) return;
+                  if (!appointmentId || !onDelete) return;
                   setDeleting(true);
+                  setShowDeleteConfirm(false);
                   try {
                     await onDelete(appointmentId);
                     onClose();
@@ -536,20 +579,14 @@ export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId, onEdit
                   }
                 }}
                 disabled={deleting}
-                className="px-4 py-2 text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors disabled:opacity-50"
+                className="px-4 py-2.5 text-sm font-medium text-white bg-red-600 rounded-xl hover:bg-red-700 transition-colors disabled:opacity-50"
               >
-                {deleting ? "Deleting…" : "Delete Event"}
+                Delete
               </button>
-            )}
+            </div>
           </div>
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-          >
-            Close
-          </button>
         </div>
-      </div>
+      )}
     </div>
   );
 }
