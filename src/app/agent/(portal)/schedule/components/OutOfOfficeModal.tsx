@@ -44,8 +44,7 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
     const now = new Date();
     return { year: now.getFullYear(), month: now.getMonth() };
   });
-  const [rangeStart, setRangeStart] = useState<string | null>(null);
-  const [rangeEnd, setRangeEnd] = useState<string | null>(null);
+  const [selectedDates, setSelectedDates] = useState<string[]>([]);
   const [allDay, setAllDay] = useState(true);
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("17:00");
@@ -82,8 +81,7 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
         const entries = (data.entries || []) as Array<{ date: string; allDay: boolean; startTime?: string; endTime?: string }>;
         if (dates.length > 0) {
           const sorted = [...dates].sort();
-          setRangeStart(sorted[0]);
-          setRangeEnd(sorted[sorted.length - 1]);
+          setSelectedDates(sorted);
           const byDate: Record<string, DaySettings> = {};
           for (const e of entries) {
             byDate[e.date] = {
@@ -98,8 +96,7 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
           setStartTime(first.startTime ?? "09:00");
           setEndTime(first.endTime ?? "17:00");
         } else {
-          setRangeStart(null);
-          setRangeEnd(null);
+          setSelectedDates([]);
           setEntryByDate({});
           setAllDay(true);
           setStartTime("09:00");
@@ -115,18 +112,14 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
     fetchDates();
   }, [isOpen]);
 
-  // Display set: selected range of dates (include drag-start cell so it shades immediately on press)
+  // Display set: individual clicks = exact dates only; drag = full range. Include drag-start cell while pressing.
   const displaySet = (() => {
-    if (rangeStart && rangeEnd) {
-      const [s, e] = rangeStart <= rangeEnd ? [rangeStart, rangeEnd] : [rangeEnd, rangeStart];
-      return new Set(datesInRange(s, e));
-    }
-    if (rangeStart) return new Set([rangeStart]);
-    if (dragStartForDisplay) return new Set([dragStartForDisplay]);
-    return new Set<string>();
+    const base = new Set(selectedDates);
+    if (dragStartForDisplay) base.add(dragStartForDisplay);
+    return base;
   })();
 
-  // When selected range changes, ensure every selected date has an entry (skip during drag to avoid layout jump)
+  // When selected dates change, ensure every selected date has an entry (skip during drag to avoid layout jump)
   useEffect(() => {
     if (isDragging || displaySet.size === 0) return;
     setEntryByDate((prev) => {
@@ -137,7 +130,7 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
       }
       return next;
     });
-  }, [rangeStart, rangeEnd, isDragging]);
+  }, [selectedDates, isDragging, dragStartForDisplay]);
 
   const firstOfMonth = new Date(yearMonth.year, yearMonth.month, 1);
   const lastOfMonth = new Date(yearMonth.year, yearMonth.month + 1, 0);
@@ -182,8 +175,7 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
     setDragStartForDisplay(null);
     const start = dragStartRef.current;
     const [s, end] = start <= key ? [start, key] : [key, start];
-    setRangeStart(s);
-    setRangeEnd(end);
+    setSelectedDates(datesInRange(s, end));
   };
 
   useEffect(() => {
@@ -211,68 +203,19 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
     const key = e.currentTarget.getAttribute("data-date");
     if (!key || !/^\d{4}-\d{2}-\d{2}$/.test(key)) return;
 
-    if (rangeStart === null) {
-      setRangeStart(key);
-      setRangeEnd(null);
-      return;
-    }
-
-    if (rangeEnd === null) {
-      setRangeEnd(key);
-      return;
-    }
-
-    // Both start and end set — adjust range (Expedia-style)
-    const start = rangeStart <= rangeEnd ? rangeStart : rangeEnd;
-    const end = rangeStart <= rangeEnd ? rangeEnd : rangeStart;
-
-    if (key < start) {
-      setRangeStart(key);
-      setRangeEnd(end);
-    } else if (key > end) {
-      setRangeStart(start);
-      setRangeEnd(key);
-    } else if (key > start && key < end) {
-      // Inside range: shorten from left or right (first half = new start, second half = new end)
-      const arr = datesInRange(start, end);
-      const mid = Math.floor((arr.length - 1) / 2);
-      const keyIndex = arr.indexOf(key);
-      if (keyIndex <= mid) {
-        setRangeStart(key);
-        setRangeEnd(end);
+    setSelectedDates((prev) => {
+      const set = new Set(prev);
+      if (set.has(key)) {
+        set.delete(key);
       } else {
-        setRangeStart(start);
-        setRangeEnd(key);
+        set.add(key);
       }
-    } else if (key === start && key === end) {
-      // Single day selected — clear
-      setRangeStart(null);
-      setRangeEnd(null);
-    } else if (key === start) {
-      // Shorten from left: new start = next day in range
-      const arr = datesInRange(start, end);
-      if (arr.length <= 1) {
-        setRangeStart(null);
-        setRangeEnd(null);
-      } else {
-        setRangeStart(arr[1]);
-        setRangeEnd(end);
-      }
-    } else if (key === end) {
-      // Shorten from right: new end = previous day in range
-      const arr = datesInRange(start, end);
-      if (arr.length <= 1) {
-        setRangeStart(null);
-        setRangeEnd(null);
-      } else {
-        setRangeStart(start);
-        setRangeEnd(arr[arr.length - 2]);
-      }
-    }
+      return [...set].sort();
+    });
   };
 
   // When only one day is selected, keep its entry in sync with the global time controls
-  const soleSelectedDate = rangeStart && (!rangeEnd || rangeStart === rangeEnd) ? rangeStart : null;
+  const soleSelectedDate = selectedDates.length === 1 ? selectedDates[0] : null;
   useEffect(() => {
     if (!soleSelectedDate) return;
     setEntryByDate((prev) => ({
@@ -587,8 +530,7 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
               <button
                 type="button"
                 onClick={async () => {
-                  setRangeStart(null);
-                  setRangeEnd(null);
+                  setSelectedDates([]);
                   setError(null);
                   setSaving(true);
                   try {
