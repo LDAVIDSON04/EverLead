@@ -56,6 +56,8 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
   const didDragRef = useRef(false);
   const isDraggingRef = useRef(false);
   const dragDelayTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const setSelectedDatesRef = useRef(setSelectedDates);
+  setSelectedDatesRef.current = setSelectedDates;
   const [dragStartForDisplay, setDragStartForDisplay] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -184,6 +186,8 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
   useEffect(() => {
     if (!isOpen) return;
     const onMouseUp = () => {
+      const clickedKey = dragStartRef.current;
+      const wasDrag = didDragRef.current;
       if (dragDelayTimeoutRef.current) {
         clearTimeout(dragDelayTimeoutRef.current);
         dragDelayTimeoutRef.current = null;
@@ -193,6 +197,15 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
       setDragStartForDisplay(null);
       setIsDragging(false);
       if (typeof document !== "undefined") document.body.style.overflow = "";
+
+      if (clickedKey && !wasDrag && /^\d{4}-\d{2}-\d{2}$/.test(clickedKey)) {
+        setSelectedDatesRef.current((prev) => {
+          const set = new Set(prev);
+          if (set.has(clickedKey)) set.delete(clickedKey);
+          else set.add(clickedKey);
+          return [...set].sort();
+        });
+      }
     };
     document.addEventListener("mouseup", onMouseUp);
     return () => {
@@ -203,19 +216,8 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
   }, [isOpen]);
 
   const handleDateClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    if (didDragRef.current) return;
-    const key = e.currentTarget.getAttribute("data-date");
-    if (!key || !/^\d{4}-\d{2}-\d{2}$/.test(key)) return;
-
-    setSelectedDates((prev) => {
-      const set = new Set(prev);
-      if (set.has(key)) {
-        set.delete(key);
-      } else {
-        set.add(key);
-      }
-      return [...set].sort();
-    });
+    e.preventDefault();
+    e.stopPropagation();
   };
 
   // When only one day is selected, keep its entry in sync with the global time controls
