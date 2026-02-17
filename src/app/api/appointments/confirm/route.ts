@@ -98,6 +98,7 @@ export async function POST(req: NextRequest) {
         agent_id: agentId,
         status: "booked",
         price_cents: finalPriceCents,
+        cached_lead_full_name: leadData?.full_name?.trim() || null, // Freeze name as entered so it never changes
         updated_at: new Date().toISOString(),
       })
       .eq("id", appointmentId)

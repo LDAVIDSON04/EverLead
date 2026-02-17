@@ -168,6 +168,7 @@ export async function POST(req: NextRequest) {
     }
     
     appointmentData.lead_id = systemLead.id;
+    appointmentData.cached_lead_full_name = title || null;
 
     const { data: appointment, error: insertError } = await supabaseAdmin
       .from("appointments")

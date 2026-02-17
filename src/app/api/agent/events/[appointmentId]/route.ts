@@ -172,13 +172,14 @@ export async function PUT(
       );
     }
 
-    // Update the appointment
+    // Update the appointment (and cached name so display stays correct)
     const { error: updateAppointmentError } = await supabaseAdmin
       .from("appointments")
       .update({
         confirmed_at: startsAt,
         requested_date: requestedDate,
         requested_window: requestedWindow,
+        cached_lead_full_name: title || null,
       })
       .eq("id", appointmentId);
 

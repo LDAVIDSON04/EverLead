@@ -281,13 +281,10 @@ export async function POST(req: NextRequest) {
 
     if (existingLead) {
       leadId = existingLead.id;
-      // Update the lead's information so the schedule shows the name of the person booking this time
+      // Update the lead's non-name fields only. Do NOT overwrite first_name/last_name/full_name:
+      // other appointments may use this lead and must keep showing the name the family originally entered.
+      // This booking's name is stored on the appointment as cached_lead_full_name.
       const updateData: any = {};
-      if (firstName?.trim()) updateData.first_name = firstName.trim();
-      if (lastName?.trim()) updateData.last_name = lastName.trim();
-      if (firstName?.trim() || lastName?.trim()) {
-        updateData.full_name = `${(firstName || "").trim()} ${(lastName || "").trim()}`.trim();
-      }
       if (city && city.trim()) updateData.city = city.trim();
       if (province && province.trim()) updateData.province = province.trim();
       if (phone && phone.trim()) updateData.phone = phone.trim();
@@ -416,6 +413,7 @@ export async function POST(req: NextRequest) {
     
     const appointmentData: any = {
       lead_id: leadId,
+      cached_lead_full_name: `${(firstName || "").trim()} ${(lastName || "").trim()}`.trim() || null, // Freeze name as entered so it never changes if lead is reused
       agent_id: agentId,
       requested_date: requestedDate,
       requested_window: requestedWindow,

@@ -119,6 +119,7 @@ export async function GET(req: NextRequest) {
         `
         id,
         lead_id,
+        cached_lead_full_name,
         requested_date,
         requested_window,
         status,
@@ -198,10 +199,13 @@ export async function GET(req: NextRequest) {
     }
     
     if (result.error) {
-      // Check if error is due to missing notes column
-      if (result.error.code === '42703' && result.error.message?.includes('notes')) {
-        // Notes column doesn't exist - this is fine, we'll continue without it
-        hasNotesColumn = false;
+      // Check if error is due to missing notes or cached_lead_full_name column
+      const missingColumn = result.error.code === '42703' && (
+        result.error.message?.includes('notes') ||
+        result.error.message?.includes('cached_lead_full_name')
+      );
+      if (missingColumn) {
+        hasNotesColumn = !result.error.message?.includes('notes');
         const resultWithoutNotes = await supabaseServer
           .from("appointments")
           .select(
@@ -426,7 +430,16 @@ export async function GET(req: NextRequest) {
         ? parseInt(agentProfile.metadata.availability.appointmentLength, 10) 
         : 60; // Default to 60 minutes
       
-      const lead = Array.isArray(apt.leads) ? apt.leads[0] : apt.leads;
+      // Always resolve the lead that belongs to THIS appointment (by lead_id) so we never show another lead's name
+      const lead = (() => {
+        const raw = apt.leads;
+        if (!raw) return null;
+        if (Array.isArray(raw)) {
+          const match = raw.find((l: any) => l?.id === apt.lead_id);
+          return match ?? raw[0] ?? null;
+        }
+        return raw?.id === apt.lead_id ? raw : null;
+      })();
       const isAgentEvent = lead?.email?.includes('@soradin.internal');
       
       if (lead?.additional_notes) {
@@ -528,19 +541,17 @@ export async function GET(req: NextRequest) {
         return null;
       }
       
-      // Get family name and location from lead (lead already defined above)
-      // Get family name
-      // Check if this is an agent-created event by looking for system lead pattern
+      // Get family name: prefer cached value (set when appointment was created/confirmed) so it never changes if lead is reused/updated
       let familyName: string;
+      const cachedName = apt.cached_lead_full_name?.trim();
       if (lead?.email?.includes('@soradin.internal') && lead?.first_name === 'System' && lead?.last_name === 'Event') {
-        // This is an agent-created event - use full_name which contains the title
-        familyName = lead?.full_name || "Event";
+        familyName = cachedName || lead?.full_name || "Event";
       } else if (apt.notes && apt.notes.includes('Internal event:')) {
-        // Fallback: try to extract from notes if available
         const notesMatch = apt.notes.match(/^Internal event:\s*(.+?)(?:\s*\||$)/i);
-        familyName = notesMatch ? notesMatch[1].trim() : apt.notes.split('|')[0].trim() || "Event";
+        familyName = cachedName || (notesMatch ? notesMatch[1].trim() : apt.notes.split('|')[0].trim() || "Event");
       } else {
-        familyName = lead?.full_name || 
+        familyName = cachedName ||
+          lead?.full_name ||
           (lead?.first_name && lead?.last_name ? `${lead.first_name} ${lead.last_name}` : null) ||
           "Client";
       }
