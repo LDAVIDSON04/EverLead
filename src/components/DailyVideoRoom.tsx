@@ -30,7 +30,7 @@ export function DailyVideoRoom({ roomName, identity, role }: DailyVideoRoomProps
           params.set("userName", identity);
         }
 
-        const res = await fetch(`/api/daily/room?${params.toString()}`);
+        const res = await fetch(`/api/daily/room?${params.toString()}`, { cache: "no-store" });
         const data = await res.json();
 
         if (!mounted) return;

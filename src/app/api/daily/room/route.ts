@@ -114,9 +114,32 @@ export async function GET(req: NextRequest) {
 
       const room = await createRes.json();
 
-      // Guest (customer/family): do NOT issue a token — they join without one and "knock";
-      // Daily shows waiting room until host (agent) admits them.
+      // Guest (customer/family): issue a meeting token so they join directly (no knock / "Locked by host")
       if (role === "guest") {
+        const guestProperties: Record<string, unknown> = {
+          room_name: safeName,
+          is_owner: false,
+          enable_screenshare: true,
+          start_video_off: false,
+          start_audio_off: false,
+        };
+        if (userName) guestProperties.user_name = userName;
+        if (userId) guestProperties.user_id = userId;
+        if (tokenExpiryUnix !== null) {
+          guestProperties.exp = tokenExpiryUnix;
+          guestProperties.eject_at_token_exp = true;
+        }
+        const guestTokenRes = await fetch(`${DAILY_API_BASE}/meeting-tokens`, {
+          method: "POST",
+          headers,
+          body: JSON.stringify({ properties: guestProperties }),
+        });
+        if (guestTokenRes.ok) {
+          const guestTokenData = await guestTokenRes.json();
+          const guestUrl = `${room.url}?t=${guestTokenData.token}${userName ? `&userName=${encodeURIComponent(userName)}` : ""}`;
+          return NextResponse.json({ url: guestUrl, name: room.name });
+        }
+        // Fallback: room URL without token (guest will need to knock)
         const guestUrl = userName ? `${room.url}?userName=${encodeURIComponent(userName)}` : room.url;
         return NextResponse.json({ url: guestUrl, name: room.name });
       }
@@ -172,8 +195,31 @@ export async function GET(req: NextRequest) {
 
     const room = await res.json();
 
-    // Guest (customer): no token — they knock and host admits (waiting room)
+    // Guest (customer): issue meeting token so they join directly
     if (role === "guest") {
+      const guestProperties: Record<string, unknown> = {
+        room_name: safeName,
+        is_owner: false,
+        enable_screenshare: true,
+        start_video_off: false,
+        start_audio_off: false,
+      };
+      if (userName) guestProperties.user_name = userName;
+      if (userId) guestProperties.user_id = userId;
+      if (tokenExpiryUnix !== null) {
+        guestProperties.exp = tokenExpiryUnix;
+        guestProperties.eject_at_token_exp = true;
+      }
+      const guestTokenRes = await fetch(`${DAILY_API_BASE}/meeting-tokens`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ properties: guestProperties }),
+      });
+      if (guestTokenRes.ok) {
+        const guestTokenData = await guestTokenRes.json();
+        const guestUrl = `${room.url}?t=${guestTokenData.token}${userName ? `&userName=${encodeURIComponent(userName)}` : ""}`;
+        return NextResponse.json({ url: guestUrl, name: room.name });
+      }
       const guestUrl = userName ? `${room.url}?userName=${encodeURIComponent(userName)}` : room.url;
       return NextResponse.json({ url: guestUrl, name: room.name });
     }

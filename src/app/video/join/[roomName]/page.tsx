@@ -10,9 +10,23 @@ interface PageProps {
   searchParams: Promise<{ identity?: string; role?: string }>;
 }
 
+function pickParam(params: Record<string, string | string[] | undefined>, ...keyNames: string[]): string | undefined {
+  for (const key of keyNames) {
+    const v = params[key];
+    if (v != null) return Array.isArray(v) ? v[0] : v;
+  }
+  const want = keyNames.map((k) => k.toLowerCase());
+  for (const [k, v] of Object.entries(params)) {
+    if (v != null && want.includes(k.toLowerCase())) return Array.isArray(v) ? v[0] : v;
+  }
+  return undefined;
+}
+
 export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
   const { roomName } = await params;
-  const { identity } = await searchParams;
+  const raw = await searchParams;
+  const paramsObj = (raw && typeof raw === "object" ? raw : {}) as Record<string, string | string[] | undefined>;
+  const identity = pickParam(paramsObj, "identity", "Identity");
   
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.soradin.com";
   const displayName = identity || "Participant";
@@ -46,13 +60,16 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
 
 export default async function VideoJoinPage({ params, searchParams }: PageProps) {
   const { roomName } = await params;
-  const { identity, role } = await searchParams;
+  const raw = await searchParams;
+  const paramsObj = (raw && typeof raw === "object" ? raw : {}) as Record<string, string | string[] | undefined>;
+  const identity = pickParam(paramsObj, "identity", "Identity");
+  const role = pickParam(paramsObj, "role", "Role");
   
   if (!roomName) {
     notFound();
   }
   
-  // Redirect to the actual video room, forwarding identity and role so agent joins as host
+  // Redirect to the actual video room, forwarding identity and role (lowercase so room page and API get them)
   const query = new URLSearchParams();
   if (identity) query.set("identity", identity);
   if (role) query.set("role", role);

@@ -3,12 +3,22 @@
 import { useParams, useSearchParams } from "next/navigation";
 import { DailyVideoRoom } from "@/components/DailyVideoRoom";
 
+function getParamCaseInsensitive(searchParams: URLSearchParams, keyLower: string): string | null {
+  const want = keyLower.toLowerCase();
+  let value: string | null = searchParams.get(keyLower);
+  if (value != null) return value;
+  searchParams.forEach((v, k) => {
+    if (k.toLowerCase() === want) value = v;
+  });
+  return value;
+}
+
 export default function VideoRoomPage() {
   const params = useParams();
   const searchParams = useSearchParams();
   const roomName = params?.roomName as string;
-  const identity = searchParams?.get("identity") || undefined;
-  const role = (searchParams?.get("role") as "host" | "guest") || undefined;
+  const identity = getParamCaseInsensitive(searchParams, "identity") || undefined;
+  const role = (getParamCaseInsensitive(searchParams, "role") as "host" | "guest") || undefined;
 
   if (!roomName) {
     return (
