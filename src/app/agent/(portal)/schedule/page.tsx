@@ -57,6 +57,7 @@ export default function SchedulePage() {
   const [viewingLeadId, setViewingLeadId] = useState<string | null>(null);
   const [viewingAppointmentId, setViewingAppointmentId] = useState<string | null>(null);
   const [viewingExternalAppointment, setViewingExternalAppointment] = useState<any | null>(null);
+  const [deletingExternalEvent, setDeletingExternalEvent] = useState(false);
   const [showAddAvailabilityModal, setShowAddAvailabilityModal] = useState(false);
   const [showCalendarSyncModal, setShowCalendarSyncModal] = useState(false);
   const [showOutOfOfficeModal, setShowOutOfOfficeModal] = useState(false);
@@ -1844,10 +1845,39 @@ export default function SchedulePage() {
                 </span>
               </div>
             </div>
-            <div className="mt-6 pt-4 border-t border-gray-200">
+            <div className="mt-6 pt-4 border-t border-gray-200 flex gap-3">
+              <button
+                onClick={async () => {
+                  if (!viewingExternalAppointment?.id) return;
+                  setDeletingExternalEvent(true);
+                  try {
+                    const { data: { session } } = await supabaseClient.auth.getSession();
+                    if (!session?.access_token) throw new Error("Not signed in");
+                    const res = await fetch(`/api/agent/external-events/${encodeURIComponent(viewingExternalAppointment.id)}`, {
+                      method: "DELETE",
+                      headers: { Authorization: `Bearer ${session.access_token}` },
+                    });
+                    if (!res.ok) {
+                      const data = await res.json().catch(() => ({}));
+                      throw new Error(data.error || "Failed to delete event");
+                    }
+                    setViewingExternalAppointment(null);
+                    await fetchAppointments(session.access_token);
+                  } catch (e) {
+                    console.error(e);
+                    alert(e instanceof Error ? e.message : "Failed to delete event");
+                  } finally {
+                    setDeletingExternalEvent(false);
+                  }
+                }}
+                disabled={deletingExternalEvent}
+                className="flex-1 px-4 py-2 text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors disabled:opacity-50 font-medium"
+              >
+                {deletingExternalEvent ? "Deleting…" : "Delete event"}
+              </button>
               <button
                 onClick={() => setViewingExternalAppointment(null)}
-                className="w-full px-4 py-2 bg-neutral-800 text-white rounded-lg hover:bg-neutral-900 transition-colors"
+                className="flex-1 px-4 py-2 bg-neutral-800 text-white rounded-lg hover:bg-neutral-900 transition-colors"
               >
                 Close
               </button>

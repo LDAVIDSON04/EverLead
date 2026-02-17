@@ -867,3 +867,58 @@ async function deleteFromMicrosoftCalendar(
 
   console.log(`✅ Successfully deleted event ${event.provider_event_id} from Microsoft Calendar`);
 }
+
+/**
+ * Deletes a single external event by row id (for agent "delete from schedule").
+ * Removes from Google/Microsoft calendar when possible, then always removes our row
+ * so the event never reappears on sync.
+ */
+export async function deleteSingleExternalEvent(
+  externalEventId: string,
+  specialistId: string
+): Promise<void> {
+  const { data: event, error: fetchError } = await supabaseAdmin
+    .from("external_events")
+    .select("*")
+    .eq("id", externalEventId)
+    .single();
+
+  if (fetchError || !event) {
+    throw new Error("External event not found");
+  }
+
+  if (event.specialist_id !== specialistId) {
+    throw new Error("Not allowed to delete this event");
+  }
+
+  const { data: connection, error: connectionError } = await supabaseAdmin
+    .from("calendar_connections")
+    .select("*")
+    .eq("specialist_id", event.specialist_id)
+    .eq("provider", event.provider)
+    .single();
+
+  try {
+    if (!connectionError && connection) {
+      if (event.provider === "google") {
+        await deleteFromGoogleCalendar(event, connection as CalendarConnection);
+      } else if (event.provider === "microsoft") {
+        await deleteFromMicrosoftCalendar(event, connection as CalendarConnection);
+      }
+    }
+  } catch (err: any) {
+    console.error("Error deleting from provider calendar (will still remove from our DB):", err);
+  }
+
+  const { error: deleteError } = await supabaseAdmin
+    .from("external_events")
+    .delete()
+    .eq("id", externalEventId);
+
+  if (deleteError) {
+    console.error("Error deleting external_events row:", deleteError);
+    throw new Error("Failed to remove event from schedule");
+  }
+
+  console.log(`✅ Deleted external event ${externalEventId} from schedule and provider`);
+}
