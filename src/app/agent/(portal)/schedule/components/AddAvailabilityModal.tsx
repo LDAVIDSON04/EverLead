@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabaseClient } from "@/lib/supabaseClient";
 import { X, ChevronDown, Video, MapPin } from "lucide-react";
 
@@ -86,24 +86,42 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
   const [recurringSchedule, setRecurringSchedule] = useState<typeof defaultSchedule>(getDefaultScheduleCopy);
   // Video schedule stored separately when meeting type is video
   const [videoSchedule, setVideoSchedule] = useState<typeof defaultSchedule | null>(null);
+  const previousMeetingTypeRef = useRef<MeetingType>("in-person");
 
   useEffect(() => {
     if (isOpen) {
       loadLocations();
       setMeetingType("in-person");
+      previousMeetingTypeRef.current = "in-person";
       // Do NOT reset recurringSchedule here – loadLocations will set it from API so saved state shows correctly
     }
   }, [isOpen]);
 
-  // When switching to video, show video schedule (or default)
+  // When user switches between In person and Video: persist current tab's schedule into its bucket, then show the other tab's schedule (so nothing is lost)
   useEffect(() => {
-    if (meetingType !== "video") return;
-    if (videoSchedule) {
-      setRecurringSchedule(videoSchedule);
+    const previous = previousMeetingTypeRef.current;
+    if (previous === meetingType) return;
+
+    if (meetingType === "video") {
+      // Switching to video: save current (in-person) schedule into availabilityByLocation, then show video schedule
+      if (selectedLocation) {
+        setAvailabilityByLocation((prev) => ({
+          ...prev,
+          [selectedLocation]: { ...recurringSchedule },
+        }));
+      }
+      setRecurringSchedule(videoSchedule ? { ...videoSchedule } : getDefaultScheduleCopy());
     } else {
-      setRecurringSchedule(getDefaultScheduleCopy());
+      // Switching to in-person: save current (video) schedule into videoSchedule, then show in-person schedule
+      setVideoSchedule({ ...recurringSchedule });
+      if (selectedLocation && availabilityByLocation[selectedLocation]) {
+        setRecurringSchedule(mergeScheduleWithDefaults(availabilityByLocation[selectedLocation]));
+      } else if (selectedLocation) {
+        setRecurringSchedule(getDefaultScheduleCopy());
+      }
     }
-  }, [meetingType]); // eslint-disable-line react-hooks/exhaustive-deps -- only when meetingType changes to video
+    previousMeetingTypeRef.current = meetingType;
+  }, [meetingType]); // eslint-disable-line react-hooks/exhaustive-deps -- only run on meetingType change; we intentionally read current state when switching
 
   async function loadLocations() {
     try {
