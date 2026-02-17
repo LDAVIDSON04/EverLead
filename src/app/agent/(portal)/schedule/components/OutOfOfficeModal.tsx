@@ -238,15 +238,6 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
     }
   };
 
-  const applyGlobalToAllSelected = () => {
-    const next: Record<string, DaySettings> = {};
-    const def: DaySettings = { allDay, startTime, endTime };
-    for (const date of displaySet) {
-      next[date] = { ...def };
-    }
-    setEntryByDate((prev) => ({ ...prev, ...next }));
-  };
-
   // When only one day is selected, keep its entry in sync with the global time controls
   const soleSelectedDate = rangeStart && (!rangeEnd || rangeStart === rangeEnd) ? rangeStart : null;
   useEffect(() => {
@@ -403,155 +394,149 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
 
               <div className="mt-6 pt-4 border-t border-gray-100 space-y-4">
                 <p className="text-sm font-medium text-gray-700">Time</p>
-                {displaySet.size > 0 && (
-                  <>
-                    <div className="space-y-2">
-                      <p className="text-xs text-gray-500">Apply same time to all selected days</p>
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setAllDay(true)}
-                          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                            allDay ? "bg-neutral-800 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                          }`}
-                        >
-                          All day
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setAllDay(false)}
-                          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                            !allDay ? "bg-neutral-800 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                          }`}
-                        >
-                          Specific times
-                        </button>
-                      </div>
-                      {!allDay && (
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <div className="min-w-0">
-                            <label className="block text-xs text-gray-500 mb-1">From</label>
-                            <input
-                              type="time"
-                              value={startTime}
-                              onClick={(e) => (e.target as HTMLInputElement).showPicker?.()}
-                              onFocus={(e) => (e.target as HTMLInputElement).showPicker?.()}
-                              onChange={(e) => {
-                                const newValue = e.target.value;
-                                if (!TIME_REGEX.test(newValue)) return;
-                                setStartTime(newValue);
-                              }}
-                              className="w-full min-w-0 max-w-[8rem] px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-800 focus:border-transparent text-sm text-gray-900 cursor-pointer"
-                            />
-                          </div>
-                          <span className="text-gray-500 text-xs self-end pb-2.5">to</span>
-                          <div className="min-w-0">
-                            <label className="block text-xs text-gray-500 mb-1">To</label>
-                            <input
-                              type="time"
-                              value={endTime}
-                              onClick={(e) => (e.target as HTMLInputElement).showPicker?.()}
-                              onFocus={(e) => (e.target as HTMLInputElement).showPicker?.()}
-                              onChange={(e) => {
-                                const newValue = e.target.value;
-                                if (!TIME_REGEX.test(newValue)) return;
-                                setEndTime(newValue);
-                              }}
-                              className="w-full min-w-0 max-w-[8rem] px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-800 focus:border-transparent text-sm text-gray-900 cursor-pointer"
-                            />
-                          </div>
-                        </div>
-                      )}
+                {displaySet.size === 1 && (
+                  <div className="space-y-3">
+                    <p className="text-xs text-gray-500">Set time for this day</p>
+                    <div className="flex gap-2">
                       <button
                         type="button"
-                        onClick={applyGlobalToAllSelected}
-                        className="text-sm text-neutral-600 hover:text-neutral-800 underline"
+                        onClick={() => setAllDay(true)}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                          allDay ? "bg-neutral-800 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        }`}
                       >
-                        Apply to all selected days
+                        All day
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setAllDay(false)}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                          !allDay ? "bg-neutral-800 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        }`}
+                      >
+                        Specific times
                       </button>
                     </div>
-                    {displaySet.size > 1 && !allDay && (
-                      <div className="space-y-2 pt-2 border-t border-gray-100">
-                        <p className="text-xs text-gray-500">Or set a different time for each day</p>
-                        <div className="max-h-64 overflow-y-auto space-y-2 pr-1">
-                          {[...displaySet].sort().map((dateStr) => {
-                            const entry = entryByDate[dateStr] ?? defaultDaySettings();
-                            const dateLabel = (() => {
-                              const [y, m, d] = dateStr.split("-").map(Number);
-                              const dObj = new Date(y, m - 1, d);
-                              return dObj.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
-                            })();
-                            return (
-                              <div key={dateStr} className="flex flex-wrap items-center gap-2 py-1.5 border-b border-gray-50 last:border-0">
-                                <span className="text-sm font-medium text-gray-700 w-28 shrink-0">{dateLabel}</span>
-                                <div className="flex gap-2">
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      setEntryByDate((prev) => ({
-                                        ...prev,
-                                        [dateStr]: { ...entry, allDay: true },
-                                      }))
-                                    }
-                                    className={`px-2 py-1 rounded text-xs font-medium ${
-                                      entry.allDay ? "bg-neutral-800 text-white" : "bg-gray-100 text-gray-600"
-                                    }`}
-                                  >
-                                    All day
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      setEntryByDate((prev) => ({
-                                        ...prev,
-                                        [dateStr]: { ...entry, allDay: false },
-                                      }))
-                                    }
-                                    className={`px-2 py-1 rounded text-xs font-medium ${
-                                      !entry.allDay ? "bg-neutral-800 text-white" : "bg-gray-100 text-gray-600"
-                                    }`}
-                                  >
-                                    Specific
-                                  </button>
-                                </div>
-                                {!entry.allDay && (
-                                  <>
-                                    <input
-                                      type="time"
-                                      value={entry.startTime}
-                                      onChange={(e) => {
-                                        const v = e.target.value;
-                                        if (!TIME_REGEX.test(v)) return;
-                                        setEntryByDate((prev) => ({
-                                          ...prev,
-                                          [dateStr]: { ...prev[dateStr]!, startTime: v },
-                                        }));
-                                      }}
-                                      className="w-24 px-2 py-1 border border-gray-300 rounded text-sm"
-                                    />
-                                    <span className="text-gray-400 text-xs">to</span>
-                                    <input
-                                      type="time"
-                                      value={entry.endTime}
-                                      onChange={(e) => {
-                                        const v = e.target.value;
-                                        if (!TIME_REGEX.test(v)) return;
-                                        setEntryByDate((prev) => ({
-                                          ...prev,
-                                          [dateStr]: { ...prev[dateStr]!, endTime: v },
-                                        }));
-                                      }}
-                                      className="w-24 px-2 py-1 border border-gray-300 rounded text-sm"
-                                    />
-                                  </>
-                                )}
-                              </div>
-                            );
-                          })}
+                    {!allDay && (
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <div className="min-w-0">
+                          <label className="block text-xs text-gray-500 mb-1">From</label>
+                          <input
+                            type="time"
+                            value={startTime}
+                            onClick={(e) => (e.target as HTMLInputElement).showPicker?.()}
+                            onFocus={(e) => (e.target as HTMLInputElement).showPicker?.()}
+                            onChange={(e) => {
+                              const newValue = e.target.value;
+                              if (!TIME_REGEX.test(newValue)) return;
+                              setStartTime(newValue);
+                            }}
+                            className="w-full min-w-0 max-w-[8rem] px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-800 focus:border-transparent text-sm text-gray-900 cursor-pointer"
+                          />
+                        </div>
+                        <span className="text-gray-500 text-xs self-end pb-2.5">to</span>
+                        <div className="min-w-0">
+                          <label className="block text-xs text-gray-500 mb-1">To</label>
+                          <input
+                            type="time"
+                            value={endTime}
+                            onClick={(e) => (e.target as HTMLInputElement).showPicker?.()}
+                            onFocus={(e) => (e.target as HTMLInputElement).showPicker?.()}
+                            onChange={(e) => {
+                              const newValue = e.target.value;
+                              if (!TIME_REGEX.test(newValue)) return;
+                              setEndTime(newValue);
+                            }}
+                            className="w-full min-w-0 max-w-[8rem] px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-800 focus:border-transparent text-sm text-gray-900 cursor-pointer"
+                          />
                         </div>
                       </div>
                     )}
-                  </>
+                  </div>
+                )}
+                {displaySet.size > 1 && (
+                  <div className="space-y-3">
+                    <p className="text-xs text-gray-500">Set time for each selected day</p>
+                    <div className="max-h-64 overflow-y-auto space-y-2 pr-1">
+                      {[...displaySet].sort().map((dateStr) => {
+                        const entry = entryByDate[dateStr] ?? defaultDaySettings();
+                        const dateLabel = (() => {
+                          const [y, m, d] = dateStr.split("-").map(Number);
+                          const dObj = new Date(y, m - 1, d);
+                          return dObj.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+                        })();
+                        return (
+                          <div
+                            key={dateStr}
+                            className="flex flex-wrap items-center gap-3 py-3 px-3 rounded-xl bg-gray-50/80 border border-gray-100"
+                          >
+                            <span className="text-sm font-medium text-gray-800 w-32 shrink-0">{dateLabel}</span>
+                            <div className="flex gap-2">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setEntryByDate((prev) => ({
+                                    ...prev,
+                                    [dateStr]: { ...entry, allDay: true },
+                                  }))
+                                }
+                                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                                  entry.allDay ? "bg-neutral-800 text-white" : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-100"
+                                }`}
+                              >
+                                All day
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setEntryByDate((prev) => ({
+                                    ...prev,
+                                    [dateStr]: { ...entry, allDay: false },
+                                  }))
+                                }
+                                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                                  !entry.allDay ? "bg-neutral-800 text-white" : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-100"
+                                }`}
+                              >
+                                Specific times
+                              </button>
+                            </div>
+                            {!entry.allDay && (
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <input
+                                  type="time"
+                                  value={entry.startTime}
+                                  onChange={(e) => {
+                                    const v = e.target.value;
+                                    if (!TIME_REGEX.test(v)) return;
+                                    setEntryByDate((prev) => ({
+                                      ...prev,
+                                      [dateStr]: { ...prev[dateStr]!, startTime: v },
+                                    }));
+                                  }}
+                                  className="w-24 px-2.5 py-1.5 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-neutral-800 focus:border-transparent"
+                                />
+                                <span className="text-gray-400 text-sm">to</span>
+                                <input
+                                  type="time"
+                                  value={entry.endTime}
+                                  onChange={(e) => {
+                                    const v = e.target.value;
+                                    if (!TIME_REGEX.test(v)) return;
+                                    setEntryByDate((prev) => ({
+                                      ...prev,
+                                      [dateStr]: { ...prev[dateStr]!, endTime: v },
+                                    }));
+                                  }}
+                                  className="w-24 px-2.5 py-1.5 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-neutral-800 focus:border-transparent"
+                                />
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
                 )}
               </div>
 
