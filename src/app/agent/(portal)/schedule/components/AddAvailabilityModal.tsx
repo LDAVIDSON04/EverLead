@@ -52,6 +52,24 @@ function getDefaultScheduleCopy() {
   };
 }
 
+// Merge saved schedule with defaults so every day has { enabled, start, end } and saved state is preserved
+function mergeScheduleWithDefaults(existing: Record<string, { enabled?: boolean; start?: string; end?: string }> | null | undefined): typeof defaultSchedule {
+  const merged = getDefaultScheduleCopy();
+  if (!existing || typeof existing !== "object") return merged;
+  days.forEach((day) => {
+    const key = day as keyof typeof defaultSchedule;
+    const saved = existing[key];
+    if (saved && typeof saved === "object") {
+      merged[key] = {
+        enabled: typeof saved.enabled === "boolean" ? saved.enabled : defaultSchedule[key].enabled,
+        start: typeof saved.start === "string" ? saved.start : defaultSchedule[key].start,
+        end: typeof saved.end === "string" ? saved.end : defaultSchedule[key].end,
+      };
+    }
+  });
+  return merged;
+}
+
 type MeetingType = "video" | "in-person";
 
 export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilityModalProps) {
@@ -73,7 +91,7 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
     if (isOpen) {
       loadLocations();
       setMeetingType("in-person");
-      setRecurringSchedule(getDefaultScheduleCopy());
+      // Do NOT reset recurringSchedule here – loadLocations will set it from API so saved state shows correctly
     }
   }, [isOpen]);
 
@@ -107,42 +125,23 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
       
       if (data.locations && data.locations.length > 0) {
         setSelectedLocation(data.locations[0]);
-        // Load existing schedule for selected location if it exists
+        // Load existing schedule for selected location – merge with defaults so all 7 days exist and saved enabled/start/end are preserved
         const existingSchedule = data.availabilityByLocation?.[data.locations[0]];
-        if (existingSchedule) {
-          // Validate loaded schedule before setting it
-          const validatedSchedule = { ...existingSchedule };
-          let hasInvalidTimes = false;
-          
-          days.forEach((day) => {
-            const dayData = existingSchedule[day as keyof typeof existingSchedule];
-            if (dayData && dayData.enabled) {
-              // Validate time format
-              const timeRegex = /^([0-1][0-9]|2[0-3]):[0-5][0-9]$/;
-              if (!timeRegex.test(dayData.start) || !timeRegex.test(dayData.end)) {
-                console.error(`⚠️ [AVAILABILITY LOAD] Invalid time format for ${day}:`, dayData);
-                hasInvalidTimes = true;
-                // Reset to default if invalid
-                validatedSchedule[day as keyof typeof validatedSchedule] = defaultSchedule[day as keyof typeof defaultSchedule];
-              } else {
-                // Check for obviously wrong times (e.g., 1 AM start)
-                const [startHour] = dayData.start.split(":").map(Number);
-                if (startHour < 5 || startHour >= 23) {
-                  console.warn(`⚠️ [AVAILABILITY LOAD] Unusual start time for ${day} in ${data.locations[0]}: ${dayData.start} (likely incorrect)`);
-                }
-              }
+        const merged = mergeScheduleWithDefaults(existingSchedule);
+        // Fix any invalid time formats in place (only for enabled days)
+        days.forEach((day) => {
+          const key = day as keyof typeof defaultSchedule;
+          const dayData = merged[key];
+          if (dayData.enabled) {
+            const timeRegex = /^([0-1][0-9]|2[0-3]):[0-5][0-9]$/;
+            if (!timeRegex.test(dayData.start) || !timeRegex.test(dayData.end)) {
+              merged[key] = { ...defaultSchedule[key] };
             }
-          });
-          
-          if (hasInvalidTimes) {
-            console.error("🚨 [AVAILABILITY LOAD] Invalid times detected - resetting to defaults");
-            setRecurringSchedule(getDefaultScheduleCopy());
-          } else {
-            setRecurringSchedule(validatedSchedule);
           }
-        } else {
-          setRecurringSchedule(getDefaultScheduleCopy());
-        }
+        });
+        setRecurringSchedule(merged);
+      } else {
+        setRecurringSchedule(getDefaultScheduleCopy());
       }
     } catch (err) {
       console.error("Error loading locations:", err);
@@ -151,11 +150,11 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
     }
   }
 
-  // Update recurring schedule when location changes (in-person only)
+  // Update recurring schedule when location changes (in-person only) – merge with defaults so all days show correctly
   useEffect(() => {
     if (meetingType !== "in-person") return;
     if (selectedLocation && availabilityByLocation[selectedLocation]) {
-      setRecurringSchedule(availabilityByLocation[selectedLocation]);
+      setRecurringSchedule(mergeScheduleWithDefaults(availabilityByLocation[selectedLocation]));
     } else if (selectedLocation) {
       setRecurringSchedule(getDefaultScheduleCopy());
     }

@@ -57,21 +57,29 @@ export async function GET(request: NextRequest) {
     
     const validLocations = Array.from(allLocationsSet);
 
+    // Normalize city for matching: primary name (before comma), trimmed, lowercase
+    const normalizeCityForMatch = (name: string): string => {
+      if (!name || typeof name !== "string") return "";
+      const primary = name.split(",").map((s) => s.trim())[0] || name.trim();
+      return primary.toLowerCase();
+    };
+
     // Include availability data for all valid locations (both office locations and manually added)
-    // Also check case-insensitive matches to handle variations in city names
+    // Match by exact key, then case-insensitive, then primary name (e.g. "Penticton, BC" matches stored "Penticton")
     const validAvailabilityByLocation: Record<string, any> = {};
     validLocations.forEach((city: string) => {
-      // Try exact match first
       if (existingAvailabilityByLocation[city]) {
         validAvailabilityByLocation[city] = existingAvailabilityByLocation[city];
-      } else {
-        // Try case-insensitive match
-        const matchingKey = Object.keys(existingAvailabilityByLocation).find(
-          key => key.toLowerCase() === city.toLowerCase()
-        );
-        if (matchingKey) {
-          validAvailabilityByLocation[city] = existingAvailabilityByLocation[matchingKey];
-        }
+        return;
+      }
+      const cityNorm = normalizeCityForMatch(city);
+      const matchingKey = Object.keys(existingAvailabilityByLocation).find((key) => {
+        if (key.toLowerCase() === city.toLowerCase()) return true;
+        if (normalizeCityForMatch(key) === cityNorm) return true;
+        return false;
+      });
+      if (matchingKey) {
+        validAvailabilityByLocation[city] = existingAvailabilityByLocation[matchingKey];
       }
     });
 
@@ -241,60 +249,63 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // CRITICAL: Only include cities from office locations
-    // This ensures no typos are saved
+    // CRITICAL: Only include cities from office locations; normalize keys so "Penticton" matches "Penticton, BC"
     const allCitiesSet = new Set<string>();
-    
-    // Only add office location cities (agents can't add arbitrary locations)
-    officeLocationCities.forEach(city => allCitiesSet.add(city));
-
+    officeLocationCities.forEach((city) => allCitiesSet.add(city));
     const validLocations = Array.from(allCitiesSet);
-
-    // Include ALL availability data (filter by valid locations for safety)
-    // Also validate time ranges to catch obvious errors
-    const filteredAvailabilityByLocation: Record<string, any> = {};
     const validLocationsSet = new Set(validLocations);
+
+    const normalizeCityForMatch = (name: string): string => {
+      if (!name || typeof name !== "string") return "";
+      const primary = name.split(",").map((s) => s.trim())[0] || name.trim();
+      return primary.toLowerCase();
+    };
+
+    // For each requested city key, find canonical office city (exact, case-insensitive, or primary name) so save/load keys align
+    const getCanonicalCity = (requestedCity: string): string | null => {
+      if (validLocationsSet.has(requestedCity)) return requestedCity;
+      const requestedNorm = normalizeCityForMatch(requestedCity);
+      const canonical = validLocations.find(
+        (c) => c.toLowerCase() === requestedCity.toLowerCase() || normalizeCityForMatch(c) === requestedNorm
+      );
+      return canonical ?? null;
+    };
+
+    const filteredAvailabilityByLocation: Record<string, any> = {};
     const invalidTimeWarnings: string[] = [];
-    
-    Object.keys(availabilityByLocation || {}).forEach((city) => {
-      if (validLocationsSet.has(city)) {
-        const citySchedule = availabilityByLocation[city];
-        const validatedSchedule: Record<string, any> = {};
-        
-        // Validate each day's schedule
-        Object.keys(citySchedule).forEach((dayName) => {
-          const daySchedule = citySchedule[dayName];
-          if (daySchedule && daySchedule.enabled) {
-            // Parse start and end times
-            const [startHour, startMin] = (daySchedule.start || "09:00").split(":").map(Number);
-            const [endHour, endMin] = (daySchedule.end || "17:00").split(":").map(Number);
-            
-            // Validate times are reasonable (start between 5 AM and 11 PM, end after start)
-            if (!isNaN(startHour) && !isNaN(startMin) && !isNaN(endHour) && !isNaN(endMin)) {
-              const startMinutes = startHour * 60 + startMin;
-              const endMinutes = endHour * 60 + endMin;
-              
-              // Check for obviously wrong times (e.g., start time before 5 AM or after 11 PM)
-              if (startHour < 5 || startHour >= 23) {
-                invalidTimeWarnings.push(`${city} ${dayName}: Start time ${daySchedule.start} seems unusual (before 5 AM or after 11 PM). Please verify this is correct.`);
-              }
-              
-              // Check that end is after start
-              if (endMinutes <= startMinutes) {
-                invalidTimeWarnings.push(`${city} ${dayName}: End time (${daySchedule.end}) must be after start time (${daySchedule.start})`);
-              }
-              
-              // Check for very long hours (> 14 hours is likely wrong)
-              if (endMinutes - startMinutes > 14 * 60) {
-                invalidTimeWarnings.push(`${city} ${dayName}: Availability window is over 14 hours (${daySchedule.start} - ${daySchedule.end}). Please verify this is correct.`);
-              }
+
+    Object.keys(availabilityByLocation || {}).forEach((requestedCity) => {
+      const canonicalCity = getCanonicalCity(requestedCity);
+      if (!canonicalCity) return;
+
+      const citySchedule = availabilityByLocation[requestedCity];
+      if (!citySchedule || typeof citySchedule !== "object") return;
+
+      const validatedSchedule: Record<string, any> = {};
+      Object.keys(citySchedule).forEach((dayName) => {
+        const daySchedule = citySchedule[dayName];
+        if (daySchedule && daySchedule.enabled) {
+          const [startHour, startMin] = (daySchedule.start || "09:00").split(":").map(Number);
+          const [endHour, endMin] = (daySchedule.end || "17:00").split(":").map(Number);
+          if (!isNaN(startHour) && !isNaN(startMin) && !isNaN(endHour) && !isNaN(endMin)) {
+            const startMinutes = startHour * 60 + startMin;
+            const endMinutes = endHour * 60 + endMin;
+            if (startHour < 5 || startHour >= 23) {
+              invalidTimeWarnings.push(`${canonicalCity} ${dayName}: Start time ${daySchedule.start} seems unusual.`);
+            }
+            if (endMinutes <= startMinutes) {
+              invalidTimeWarnings.push(`${canonicalCity} ${dayName}: End time must be after start time`);
+            }
+            if (endMinutes - startMinutes > 14 * 60) {
+              invalidTimeWarnings.push(`${canonicalCity} ${dayName}: Availability window over 14 hours`);
             }
           }
-          validatedSchedule[dayName] = daySchedule;
-        });
-        
-        filteredAvailabilityByLocation[city] = validatedSchedule;
-      }
+        }
+        validatedSchedule[dayName] = daySchedule;
+      });
+
+      // Store under canonical key so GET (which returns office cities) always finds it
+      filteredAvailabilityByLocation[canonicalCity] = validatedSchedule;
     });
     
     // Log warnings but don't block saving (agents might have valid reasons for unusual hours)
