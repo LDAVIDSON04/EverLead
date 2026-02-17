@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import { supabaseClient } from "@/lib/supabaseClient";
 
@@ -53,6 +53,8 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const dragStartRef = useRef<string | null>(null);
+  const didDragRef = useRef(false);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -143,8 +145,39 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
   for (let d = 1; d <= daysInMonth; d++) cells.push(d);
   while (cells.length < rows * 7) cells.push(null);
 
+  const getDateKey = (year: number, month: number, day: number) =>
+    toYYYYMMDD(new Date(year, month, day));
+
+  const handleDateMouseDown = (year: number, month: number, day: number) => {
+    const key = getDateKey(year, month, day);
+    dragStartRef.current = key;
+    didDragRef.current = false;
+    setRangeStart(key);
+    setRangeEnd(key);
+  };
+
+  const handleDateMouseEnter = (year: number, month: number, day: number) => {
+    if (dragStartRef.current === null) return;
+    const key = getDateKey(year, month, day);
+    didDragRef.current = true;
+    const start = dragStartRef.current;
+    const [s, e] = start <= key ? [start, key] : [key, start];
+    setRangeStart(s);
+    setRangeEnd(e);
+  };
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const onMouseUp = () => {
+      dragStartRef.current = null;
+    };
+    document.addEventListener("mouseup", onMouseUp);
+    return () => document.removeEventListener("mouseup", onMouseUp);
+  }, [isOpen]);
+
   const handleDateClick = (year: number, month: number, day: number) => {
-    const key = toYYYYMMDD(new Date(year, month, day));
+    if (didDragRef.current) return;
+    const key = getDateKey(year, month, day);
 
     if (rangeStart === null) {
       setRangeStart(key);
@@ -297,8 +330,8 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-xl border border-gray-100 w-full max-w-md flex flex-col">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+      <div className="bg-white rounded-2xl shadow-xl border border-gray-100 w-full max-w-2xl max-h-[90vh] flex flex-col">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
           <h2 className="text-xl font-semibold text-gray-900">Set out of office</h2>
           <button
             type="button"
@@ -308,10 +341,10 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
             <X className="w-5 h-5" />
           </button>
         </div>
-        <p className="px-6 pt-3 text-sm text-gray-600">
-          Select days you&apos;re out of office or on vacation. Those days won&apos;t show as available for booking. Save with no days selected to clear all.
+        <p className="px-6 pt-3 text-sm text-gray-600 shrink-0">
+          Select days you&apos;re out of office or on vacation. Those days won&apos;t show as available for booking. Click and drag from start to end date, or click individual days. Save with no days selected to clear all.
         </p>
-        <div className="p-6">
+        <div className="p-6 flex-1 min-h-0 overflow-y-auto">
           <div className="flex items-center justify-between mb-4">
             <button
               type="button"
@@ -352,8 +385,10 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
                     <button
                       key={dateStr}
                       type="button"
+                      onMouseDown={() => handleDateMouseDown(yearMonth.year, yearMonth.month, day)}
+                      onMouseEnter={() => handleDateMouseEnter(yearMonth.year, yearMonth.month, day)}
                       onClick={() => handleDateClick(yearMonth.year, yearMonth.month, day)}
-                      className={`w-10 h-10 rounded-lg text-sm font-medium transition-colors ${
+                      className={`w-10 h-10 rounded-lg text-sm font-medium transition-colors select-none ${
                         isSelected
                           ? "bg-neutral-800 text-white hover:bg-neutral-700"
                           : isStartOnly
@@ -439,7 +474,7 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
                     {displaySet.size > 1 && (
                       <div className="space-y-2 pt-2 border-t border-gray-100">
                         <p className="text-xs text-gray-500">Or set a different time for each day</p>
-                        <div className="max-h-48 overflow-y-auto space-y-2 pr-1">
+                        <div className="max-h-64 overflow-y-auto space-y-2 pr-1">
                           {[...displaySet].sort().map((dateStr) => {
                             const entry = entryByDate[dateStr] ?? defaultDaySettings();
                             const dateLabel = (() => {
@@ -533,7 +568,7 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
             </>
           )}
         </div>
-        <div className="flex gap-3 justify-between px-6 py-4 border-t border-gray-100">
+        <div className="flex gap-3 justify-between px-6 py-4 border-t border-gray-100 shrink-0">
           <div>
             {!loading && displaySet.size > 0 && (
               <button
