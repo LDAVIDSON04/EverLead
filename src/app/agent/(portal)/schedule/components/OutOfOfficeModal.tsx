@@ -56,6 +56,7 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
   const dragStartRef = useRef<string | null>(null);
   const didDragRef = useRef(false);
   const [dragStartForDisplay, setDragStartForDisplay] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -124,9 +125,9 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
     return new Set<string>();
   })();
 
-  // When selected range changes, ensure every selected date has an entry (default to global time)
+  // When selected range changes, ensure every selected date has an entry (skip during drag to avoid layout jump)
   useEffect(() => {
-    if (displaySet.size === 0) return;
+    if (isDragging || displaySet.size === 0) return;
     setEntryByDate((prev) => {
       let next = { ...prev };
       const defaultSettings: DaySettings = { allDay, startTime, endTime };
@@ -135,7 +136,7 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
       }
       return next;
     });
-  }, [rangeStart, rangeEnd]);
+  }, [rangeStart, rangeEnd, isDragging]);
 
   const firstOfMonth = new Date(yearMonth.year, yearMonth.month, 1);
   const lastOfMonth = new Date(yearMonth.year, yearMonth.month + 1, 0);
@@ -154,10 +155,13 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
 
   const handleDateMouseDown = (e: React.MouseEvent, year: number, month: number, day: number) => {
     e.preventDefault();
+    e.stopPropagation();
     const key = getDateKey(year, month, day);
     dragStartRef.current = key;
     didDragRef.current = false;
+    setIsDragging(true);
     setDragStartForDisplay(key);
+    if (typeof document !== "undefined") document.body.style.overflow = "hidden";
   };
 
   const handleDateMouseEnter = (year: number, month: number, day: number) => {
@@ -176,9 +180,14 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
     const onMouseUp = () => {
       dragStartRef.current = null;
       setDragStartForDisplay(null);
+      setIsDragging(false);
+      if (typeof document !== "undefined") document.body.style.overflow = "";
     };
     document.addEventListener("mouseup", onMouseUp);
-    return () => document.removeEventListener("mouseup", onMouseUp);
+    return () => {
+      document.removeEventListener("mouseup", onMouseUp);
+      if (typeof document !== "undefined") document.body.style.overflow = "";
+    };
   }, [isOpen]);
 
   const handleDateClick = (year: number, month: number, day: number) => {
@@ -396,9 +405,12 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
                 })}
               </div>
 
-              <div className="mt-6 pt-4 border-t border-gray-100 space-y-4">
+              <div className="mt-6 pt-4 border-t border-gray-100 space-y-4 min-h-[120px]">
                 <p className="text-sm font-medium text-gray-700">Time</p>
-                {displaySet.size === 1 && (
+                {isDragging && (
+                  <p className="text-sm text-gray-500 py-6">Release to set times for selected days</p>
+                )}
+                {!isDragging && displaySet.size === 1 && (
                   <div className="space-y-3">
                     <p className="text-xs text-gray-500">Set time for this day</p>
                     <div className="flex gap-2">
@@ -458,7 +470,7 @@ export function OutOfOfficeModal({ isOpen, onClose, onSaved }: Props) {
                     )}
                   </div>
                 )}
-                {displaySet.size > 1 && (
+                {!isDragging && displaySet.size > 1 && (
                   <div className="space-y-3">
                     <p className="text-xs text-gray-500">Set time for each selected day</p>
                     <div className="max-h-64 overflow-y-auto space-y-2 pr-1">
