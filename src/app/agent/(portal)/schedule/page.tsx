@@ -208,7 +208,7 @@ export default function SchedulePage() {
       'bg-cyan-200',      // Monday - cyan
       'bg-orange-200',    // Tuesday - orange
       'bg-amber-200',     // Wednesday - amber
-      'bg-neutral-200',   // Thursday - emerald/green
+      'bg-green-200',     // Thursday - light green
       'bg-purple-200',    // Friday - purple
       'bg-pink-200',      // Saturday - pink
     ];
