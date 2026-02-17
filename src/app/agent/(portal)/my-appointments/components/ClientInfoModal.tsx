@@ -12,6 +12,7 @@ interface ClientInfoModalProps {
   leadId: string | null;
   appointmentId: string | null;
   onEdit?: (appointmentId: string, leadId: string) => void;
+  onDelete?: (appointmentId: string) => Promise<void>;
 }
 
 interface LeadData {
@@ -65,12 +66,13 @@ interface AppointmentData {
   } | null;
 }
 
-export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId, onEdit }: ClientInfoModalProps) {
+export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId, onEdit, onDelete }: ClientInfoModalProps) {
   const [leadData, setLeadData] = useState<LeadData | null>(null);
   const [officeLocation, setOfficeLocation] = useState<OfficeLocation | null>(null);
   const [appointmentData, setAppointmentData] = useState<AppointmentData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
   useEffect(() => {
     if (isOpen && leadId) {
       loadLeadData();
@@ -507,19 +509,39 @@ export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId, onEdit
 
         {/* Footer */}
         <div className="border-t border-gray-200 p-6 flex justify-between items-center">
-          {isAgentEvent && appointmentId && leadId && onEdit ? (
-            <button
-              onClick={() => {
-                onEdit(appointmentId, leadId);
-                onClose();
-              }}
-              className="px-4 py-2 text-white bg-neutral-700 rounded-lg hover:bg-neutral-800 transition-colors"
-            >
-              Edit Event
-            </button>
-          ) : (
-            <div></div>
-          )}
+          <div className="flex gap-3">
+            {isAgentEvent && appointmentId && leadId && onEdit && (
+              <button
+                onClick={() => {
+                  onEdit(appointmentId, leadId);
+                  onClose();
+                }}
+                className="px-4 py-2 text-white bg-neutral-700 rounded-lg hover:bg-neutral-800 transition-colors"
+              >
+                Edit Event
+              </button>
+            )}
+            {isAgentEvent && appointmentId && onDelete && (
+              <button
+                onClick={async () => {
+                  if (!confirm("Delete this event? This cannot be undone.")) return;
+                  setDeleting(true);
+                  try {
+                    await onDelete(appointmentId);
+                    onClose();
+                  } catch (e) {
+                    setError("Failed to delete event.");
+                  } finally {
+                    setDeleting(false);
+                  }
+                }}
+                disabled={deleting}
+                className="px-4 py-2 text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors disabled:opacity-50"
+              >
+                {deleting ? "Deleting…" : "Delete Event"}
+              </button>
+            )}
+          </div>
           <button
             onClick={onClose}
             className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"

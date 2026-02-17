@@ -227,3 +227,96 @@ export async function PUT(
   }
 }
 
+export async function DELETE(
+  req: NextRequest,
+  context: { params: Promise<{ appointmentId: string }> }
+) {
+  try {
+    const { appointmentId } = await context.params;
+
+    if (!appointmentId) {
+      return NextResponse.json(
+        { error: "Missing appointment ID" },
+        { status: 400 }
+      );
+    }
+
+    const authHeader = req.headers.get("authorization");
+    if (!authHeader) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+
+    if (authError || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { data: profile, error: profileError } = await supabaseAdmin
+      .from("profiles")
+      .select("id, role")
+      .eq("id", user.id)
+      .single();
+
+    if (profileError || !profile || profile.role !== "agent") {
+      return NextResponse.json({ error: "Agent not found" }, { status: 404 });
+    }
+
+    const { data: appointment, error: appointmentError } = await supabaseAdmin
+      .from("appointments")
+      .select("id, agent_id, lead_id")
+      .eq("id", appointmentId)
+      .eq("agent_id", profile.id)
+      .single();
+
+    if (appointmentError || !appointment) {
+      return NextResponse.json(
+        { error: "Appointment not found or access denied" },
+        { status: 404 }
+      );
+    }
+
+    const { data: lead, error: leadError } = await supabaseAdmin
+      .from("leads")
+      .select("id, email")
+      .eq("id", appointment.lead_id)
+      .single();
+
+    if (leadError || !lead || !lead.email?.includes("@soradin.internal")) {
+      return NextResponse.json(
+        { error: "Only agent-created events can be deleted" },
+        { status: 403 }
+      );
+    }
+
+    try {
+      const { deleteExternalEventsForAgentAppointment } = await import("@/lib/calendarSyncAgent");
+      await deleteExternalEventsForAgentAppointment(appointmentId);
+    } catch (syncErr) {
+      console.error("Error deleting from external calendars (non-fatal):", syncErr);
+    }
+
+    const { error: deleteError } = await supabaseAdmin
+      .from("appointments")
+      .delete()
+      .eq("id", appointmentId);
+
+    if (deleteError) {
+      console.error("Error deleting appointment:", deleteError);
+      return NextResponse.json(
+        { error: "Failed to delete event", details: deleteError.message },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    console.error("Error in delete event API:", error);
+    return NextResponse.json(
+      { error: "Internal server error", details: error.message },
+      { status: 500 }
+    );
+  }
+}
+

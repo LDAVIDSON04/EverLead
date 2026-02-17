@@ -1767,6 +1767,19 @@ export default function SchedulePage() {
           setEditingEvent({ appointmentId, leadId });
           setShowCreateEventModal(true);
         }}
+        onDelete={async (appointmentId) => {
+          const { data: { session } } = await supabaseClient.auth.getSession();
+          if (!session?.access_token) throw new Error("Not signed in");
+          const res = await fetch(`/api/agent/events/${appointmentId}`, {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${session.access_token}` },
+          });
+          if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            throw new Error(data.error || "Failed to delete event");
+          }
+          await fetchAppointments(session.access_token);
+        }}
       />
 
       {/* External Appointment Modal */}
