@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
       const match = appointments.find((apt: { confirmed_at: string | null }) => {
         if (!apt.confirmed_at) return false;
         const aptStart = DateTime.fromISO(apt.confirmed_at, { zone: "utc" });
-        return !aptStart.invalid && aptStart >= startUtc && aptStart <= endUtc;
+        return aptStart.isValid && aptStart >= startUtc && aptStart <= endUtc;
       });
 
       if (match) {
