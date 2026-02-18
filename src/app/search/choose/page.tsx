@@ -76,44 +76,6 @@ function SearchChooseContent() {
         <div className="space-y-5 sm:space-y-6">
           <button
             type="button"
-            onClick={() => handleCardClick("video")}
-            onMouseEnter={() => setHoveredCard("video")}
-            onMouseLeave={() => setHoveredCard(null)}
-            className="w-full text-left bg-white rounded-2xl p-8 sm:p-10 lg:p-12 shadow-md hover:shadow-xl border border-gray-200/60 hover:border-[#1A1A1A]/40 transition-all duration-300 group relative overflow-hidden"
-          >
-            {/* Subtle gradient overlay on hover */}
-            <div className="absolute inset-0 bg-gradient-to-br from-[#1A1A1A]/0 to-[#1A1A1A]/0 group-hover:from-[#1A1A1A]/5 group-hover:to-transparent transition-all duration-300 pointer-events-none" />
-            
-            <div className="relative flex items-start gap-6 sm:gap-8 lg:gap-10">
-              <div className="w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28 rounded-2xl bg-gradient-to-br from-[#1A1A1A]/10 to-[#1A1A1A]/5 flex items-center justify-center flex-shrink-0 group-hover:from-[#1A1A1A]/20 group-hover:to-[#1A1A1A]/10 transition-all duration-300 group-hover:scale-110 shadow-sm overflow-hidden">
-                <Image
-                  src="/video-call-icon.png"
-                  alt="Video call"
-                  width={112}
-                  height={112}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-start justify-between gap-4 mb-3">
-                  <h2 className="text-2xl sm:text-3xl lg:text-4xl font-semibold text-gray-900 group-hover:text-[#1A1A1A] transition-colors duration-200">
-                    Video Call
-                  </h2>
-                  <ArrowRight 
-                    className={`w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-gray-400 group-hover:text-[#1A1A1A] transition-all duration-300 flex-shrink-0 mt-1 ${
-                      hoveredCard === "video" ? "translate-x-1" : ""
-                    }`}
-                  />
-                </div>
-                <p className="text-gray-600 leading-relaxed text-base sm:text-lg lg:text-xl">
-                  Secure, private, and from the comfort of your home. No downloads required.
-                </p>
-              </div>
-            </div>
-          </button>
-
-          <button
-            type="button"
             onClick={() => handleCardClick("in-person")}
             onMouseEnter={() => setHoveredCard("in-person")}
             onMouseLeave={() => setHoveredCard(null)}
@@ -145,6 +107,44 @@ function SearchChooseContent() {
                 </div>
                 <p className="text-gray-600 leading-relaxed text-base sm:text-lg lg:text-xl">
                   Meet with a specialist at their office in your area
+                </p>
+              </div>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleCardClick("video")}
+            onMouseEnter={() => setHoveredCard("video")}
+            onMouseLeave={() => setHoveredCard(null)}
+            className="w-full text-left bg-white rounded-2xl p-8 sm:p-10 lg:p-12 shadow-md hover:shadow-xl border border-gray-200/60 hover:border-[#1A1A1A]/40 transition-all duration-300 group relative overflow-hidden"
+          >
+            {/* Subtle gradient overlay on hover */}
+            <div className="absolute inset-0 bg-gradient-to-br from-[#1A1A1A]/0 to-[#1A1A1A]/0 group-hover:from-[#1A1A1A]/5 group-hover:to-transparent transition-all duration-300 pointer-events-none" />
+            
+            <div className="relative flex items-start gap-6 sm:gap-8 lg:gap-10">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28 rounded-2xl bg-gradient-to-br from-[#1A1A1A]/10 to-[#1A1A1A]/5 flex items-center justify-center flex-shrink-0 group-hover:from-[#1A1A1A]/20 group-hover:to-[#1A1A1A]/10 transition-all duration-300 group-hover:scale-110 shadow-sm overflow-hidden">
+                <Image
+                  src="/video-call-icon.png"
+                  alt="Video call"
+                  width={112}
+                  height={112}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-start justify-between gap-4 mb-3">
+                  <h2 className="text-2xl sm:text-3xl lg:text-4xl font-semibold text-gray-900 group-hover:text-[#1A1A1A] transition-colors duration-200">
+                    Video Call
+                  </h2>
+                  <ArrowRight 
+                    className={`w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-gray-400 group-hover:text-[#1A1A1A] transition-all duration-300 flex-shrink-0 mt-1 ${
+                      hoveredCard === "video" ? "translate-x-1" : ""
+                    }`}
+                  />
+                </div>
+                <p className="text-gray-600 leading-relaxed text-base sm:text-lg lg:text-xl">
+                  Secure, private, and from the comfort of your home. No downloads required.
                 </p>
               </div>
             </div>
