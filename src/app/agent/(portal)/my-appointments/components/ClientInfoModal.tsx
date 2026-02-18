@@ -11,6 +11,8 @@ interface ClientInfoModalProps {
   onClose: () => void;
   leadId: string | null;
   appointmentId: string | null;
+  /** When set, show this name (from this booking) instead of lead full_name so agents see exactly what the customer entered */
+  displayNameOverride?: string | null;
   onEdit?: (appointmentId: string, leadId: string) => void;
   onDelete?: (appointmentId: string) => Promise<void>;
 }
@@ -66,7 +68,7 @@ interface AppointmentData {
   } | null;
 }
 
-export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId, onEdit, onDelete }: ClientInfoModalProps) {
+export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId, displayNameOverride, onEdit, onDelete }: ClientInfoModalProps) {
   const [leadData, setLeadData] = useState<LeadData | null>(null);
   const [officeLocation, setOfficeLocation] = useState<OfficeLocation | null>(null);
   const [appointmentData, setAppointmentData] = useState<AppointmentData | null>(null);
@@ -242,7 +244,7 @@ export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId, onEdit
               <div>
                 <h3 className="text-xs font-medium uppercase tracking-wide text-gray-400 mb-2">Event Title</h3>
                 <div>
-                  <p className="text-gray-900">{leadData.full_name || 'Untitled Event'}</p>
+                  <p className="text-gray-900">{(displayNameOverride && displayNameOverride.trim()) || leadData.full_name || 'Untitled Event'}</p>
                 </div>
               </div>
 
@@ -330,13 +332,13 @@ export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId, onEdit
           ) : leadData ? (
             // Full view for regular client appointments
             <div className="space-y-6">
-              {/* Personal Information */}
+              {/* Personal Information - use displayNameOverride when set so agents see exactly what the customer entered for this booking */}
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Personal Information</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="text-sm font-medium text-gray-500">Full Name</label>
-                    <p className="text-gray-900">{formatField('', leadData.full_name)}</p>
+                    <p className="text-gray-900">{formatField('', (displayNameOverride && displayNameOverride.trim()) ? displayNameOverride.trim() : leadData.full_name)}</p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-500">Email</label>

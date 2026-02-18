@@ -79,8 +79,6 @@ export default function SchedulePage() {
   const [outOfOfficeDates, setOutOfOfficeDates] = useState<Set<string>>(new Set());
   type OutOfOfficeEntry = { date: string; allDay: boolean; startTime?: string; endTime?: string };
   const [outOfOfficeEntries, setOutOfOfficeEntries] = useState<OutOfOfficeEntry[]>([]);
-  const [fixNamesLoading, setFixNamesLoading] = useState(false);
-  const [fixNamesMessage, setFixNamesMessage] = useState<string | null>(null);
 
   const isHourOutOfOffice = (dateKey: string, hour: number): boolean => {
     const entry = outOfOfficeEntries.find((e) => e.date === dateKey);
@@ -1149,45 +1147,8 @@ export default function SchedulePage() {
           >
             Set out of office
           </button>
-          <button
-            onClick={async () => {
-              setFixNamesMessage(null);
-              setFixNamesLoading(true);
-              try {
-                const { data: { session } } = await supabaseClient.auth.getSession();
-                if (!session?.access_token) {
-                  setFixNamesMessage("Not signed in.");
-                  return;
-                }
-                const res = await fetch("/api/agent/fix-schedule-names", {
-                  method: "POST",
-                  headers: { Authorization: `Bearer ${session.access_token}` },
-                });
-                const data = await res.json().catch(() => ({}));
-                if (!res.ok) {
-                  setFixNamesMessage(data.error || "Request failed.");
-                  return;
-                }
-                setFixNamesMessage(data.message ?? `Updated ${data.updated ?? 0} name(s).`);
-                await fetchAppointments(session.access_token);
-              } catch (e) {
-                setFixNamesMessage(e instanceof Error ? e.message : "Failed");
-              } finally {
-                setFixNamesLoading(false);
-              }
-            }}
-            disabled={fixNamesLoading}
-            className="px-3 py-1.5 md:px-6 md:py-2 text-xs md:text-sm border border-amber-300 rounded-lg hover:bg-amber-50 transition-colors text-amber-800 disabled:opacity-50"
-          >
-            {fixNamesLoading ? "Fixing…" : "Fix display names"}
-          </button>
         </div>
       </div>
-      {fixNamesMessage && (
-        <p className="text-sm text-center text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1 mt-1">
-          {fixNamesMessage}
-        </p>
-      )}
 
       {/* Calendar Views */}
       <div 
@@ -1794,7 +1755,7 @@ export default function SchedulePage() {
         />
       )}
 
-      {/* Client Info Modal */}
+      {/* Client Info Modal - displayNameOverride shows the name the customer entered for this booking (from cached_lead_full_name) */}
       <ClientInfoModal
         isOpen={viewingLeadId !== null}
         onClose={() => {
@@ -1803,6 +1764,7 @@ export default function SchedulePage() {
         }}
         leadId={viewingLeadId}
         appointmentId={viewingAppointmentId}
+        displayNameOverride={viewingAppointmentId ? (appointments.find((a) => a.id === viewingAppointmentId)?.family_name ?? null) : null}
         onEdit={(appointmentId, leadId) => {
           setEditingEvent({ appointmentId, leadId });
           setShowCreateEventModal(true);
