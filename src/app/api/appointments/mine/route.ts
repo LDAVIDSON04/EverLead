@@ -212,6 +212,7 @@ export async function GET(req: NextRequest) {
             `
             id,
             lead_id,
+            cached_lead_full_name,
             requested_date,
             requested_window,
             status,
@@ -541,17 +542,18 @@ export async function GET(req: NextRequest) {
         return null;
       }
       
-      // Get family name: prefer cached value (set when appointment was created/confirmed) so it never changes if lead is reused/updated
+      // ALWAYS use cached_lead_full_name when set (Table Editor or set at booking). Customer-entered name must show as entered.
+      const cachedName = apt.cached_lead_full_name != null ? String(apt.cached_lead_full_name).trim() : "";
       let familyName: string;
-      const cachedName = apt.cached_lead_full_name?.trim();
-      if (lead?.email?.includes('@soradin.internal') && lead?.first_name === 'System' && lead?.last_name === 'Event') {
-        familyName = cachedName || lead?.full_name || "Event";
+      if (cachedName) {
+        familyName = cachedName;
+      } else if (lead?.email?.includes('@soradin.internal') && lead?.first_name === 'System' && lead?.last_name === 'Event') {
+        familyName = lead?.full_name || "Event";
       } else if (apt.notes && apt.notes.includes('Internal event:')) {
         const notesMatch = apt.notes.match(/^Internal event:\s*(.+?)(?:\s*\||$)/i);
-        familyName = cachedName || (notesMatch ? notesMatch[1].trim() : apt.notes.split('|')[0].trim() || "Event");
+        familyName = notesMatch ? notesMatch[1].trim() : apt.notes.split('|')[0].trim() || "Event";
       } else {
-        familyName = cachedName ||
-          lead?.full_name ||
+        familyName = lead?.full_name ||
           (lead?.first_name && lead?.last_name ? `${lead.first_name} ${lead.last_name}` : null) ||
           "Client";
       }
