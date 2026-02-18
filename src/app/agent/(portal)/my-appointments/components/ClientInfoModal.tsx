@@ -150,6 +150,15 @@ export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId, displa
     return match ? match[1].trim() : null;
   };
 
+  /** Notes with Date of Birth line removed so it only shows in Personal Information at the top */
+  const notesWithoutDateOfBirth = (notes: string | null | undefined): string => {
+    if (!notes || typeof notes !== 'string') return '';
+    return notes
+      .replace(/\n?Date of Birth:\s*[^\n]+/gi, '')
+      .replace(/^\s*\n+|\n+\s*$/g, '')
+      .trim();
+  };
+
   const formatDate = (dateString: string | null, timezone?: string): string => {
     if (!dateString) return 'Not provided';
     try {
@@ -494,10 +503,10 @@ export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId, displa
                     <label className="text-sm font-medium text-gray-500">Service Type</label>
                     <p className="text-gray-900 whitespace-pre-wrap">{formatField('', leadData.service_type)}</p>
                   </div>
-                  {leadData.additional_notes && (
+                  {leadData.additional_notes && notesWithoutDateOfBirth(leadData.additional_notes) && (
                     <div className="md:col-span-2">
                       <label className="text-sm font-medium text-gray-500">Booking notes</label>
-                      <p className="text-gray-900 whitespace-pre-wrap mt-1">{leadData.additional_notes}</p>
+                      <p className="text-gray-900 whitespace-pre-wrap mt-1">{notesWithoutDateOfBirth(leadData.additional_notes)}</p>
                     </div>
                   )}
                 </div>
