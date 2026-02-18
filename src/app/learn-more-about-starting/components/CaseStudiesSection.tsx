@@ -1,7 +1,5 @@
 "use client";
 
-import Link from "next/link";
-
 export function CaseStudiesSection() {
   const caseStudies = [
     {
@@ -99,14 +97,9 @@ export function CaseStudiesSection() {
               </div>
               <div className="p-6 bg-white border-t-4 border-black">
                 <h3 className="text-black mb-3">{study.title}</h3>
-                <p className="text-gray-600 text-sm mb-4">
+                <p className="text-gray-600 text-sm">
                   {study.description}
                 </p>
-                <Link href="/create-account">
-                  <button className="text-[#1A1A1A] hover:underline group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
-                    Learn more →
-                  </button>
-                </Link>
               </div>
             </div>
           ))}
