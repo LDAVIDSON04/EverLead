@@ -206,9 +206,8 @@ export default function AvailabilityPage() {
         if (!session?.access_token) return;
 
         const res = await fetch("/api/agent/settings/availability", {
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-          },
+          headers: { Authorization: `Bearer ${session.access_token}` },
+          cache: "no-store",
         });
         if (!res.ok) throw new Error("Failed to load availability");
 

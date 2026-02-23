@@ -3,6 +3,36 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { supabaseServer } from "@/lib/supabaseServer";
 import { PROVINCE_TO_TIMEZONE } from "@/lib/timezone";
 
+const DEFAULT_SCHEDULE_DAY = { enabled: true, start: "09:00", end: "17:00" };
+const DEFAULT_SCHEDULE_DAY_OFF = { enabled: false, start: "10:00", end: "14:00" };
+const SCHEDULE_DAY_KEYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"] as const;
+const DEFAULT_SCHEDULE: Record<string, { enabled: boolean; start: string; end: string }> = {
+  monday: { ...DEFAULT_SCHEDULE_DAY },
+  tuesday: { ...DEFAULT_SCHEDULE_DAY },
+  wednesday: { ...DEFAULT_SCHEDULE_DAY },
+  thursday: { ...DEFAULT_SCHEDULE_DAY },
+  friday: { ...DEFAULT_SCHEDULE_DAY },
+  saturday: { ...DEFAULT_SCHEDULE_DAY_OFF },
+  sunday: { ...DEFAULT_SCHEDULE_DAY_OFF },
+};
+
+/** Merge stored schedule with defaults so all 7 days have explicit enabled/start/end (preserves enabled: false). */
+function mergeScheduleWithDefaults(
+  stored: Record<string, { enabled?: boolean; start?: string; end?: string }> | null | undefined
+): Record<string, { enabled: boolean; start: string; end: string }> {
+  const out: Record<string, { enabled: boolean; start: string; end: string }> = {};
+  for (const day of SCHEDULE_DAY_KEYS) {
+    const d = stored?.[day];
+    const def = DEFAULT_SCHEDULE[day];
+    out[day] = {
+      enabled: typeof d?.enabled === "boolean" ? d.enabled : def.enabled,
+      start: typeof d?.start === "string" ? d.start : def.start,
+      end: typeof d?.end === "string" ? d.end : def.end,
+    };
+  }
+  return out;
+}
+
 export async function GET(request: NextRequest) {
   try {
     // Get authenticated user from Authorization header
@@ -66,35 +96,42 @@ export async function GET(request: NextRequest) {
 
     // Include availability data for all valid locations (both office locations and manually added)
     // Match by exact key, then case-insensitive, then primary name (e.g. "Penticton, BC" matches stored "Penticton")
+    // Always merge with defaults so all 7 days have explicit enabled (unchecked days stay disabled when re-opening modal)
     const validAvailabilityByLocation: Record<string, any> = {};
     validLocations.forEach((city: string) => {
+      let raw: Record<string, { enabled?: boolean; start?: string; end?: string }> | undefined;
       if (existingAvailabilityByLocation[city]) {
-        validAvailabilityByLocation[city] = existingAvailabilityByLocation[city];
-        return;
+        raw = existingAvailabilityByLocation[city];
+      } else {
+        const cityNorm = normalizeCityForMatch(city);
+        const matchingKey = Object.keys(existingAvailabilityByLocation).find((key) => {
+          if (key.toLowerCase() === city.toLowerCase()) return true;
+          if (normalizeCityForMatch(key) === cityNorm) return true;
+          return false;
+        });
+        if (matchingKey) raw = existingAvailabilityByLocation[matchingKey];
       }
-      const cityNorm = normalizeCityForMatch(city);
-      const matchingKey = Object.keys(existingAvailabilityByLocation).find((key) => {
-        if (key.toLowerCase() === city.toLowerCase()) return true;
-        if (normalizeCityForMatch(key) === cityNorm) return true;
-        return false;
-      });
-      if (matchingKey) {
-        validAvailabilityByLocation[city] = existingAvailabilityByLocation[matchingKey];
-      }
+      validAvailabilityByLocation[city] = mergeScheduleWithDefaults(raw);
     });
 
     // Get availability type per location (which type is active: "recurring" or "daily")
     const availabilityTypeByLocation = availabilityData.availabilityTypeByLocation || {};
-    // Video call availability (province-wide) - same schedule format as one location
-    const videoSchedule = availabilityData.videoSchedule || null;
+    // Video call availability (province-wide) - merge with defaults so all 7 days have explicit enabled
+    const rawVideoSchedule = availabilityData.videoSchedule;
+    const videoSchedule =
+      rawVideoSchedule && typeof rawVideoSchedule === "object" && Object.keys(rawVideoSchedule).length > 0
+        ? mergeScheduleWithDefaults(rawVideoSchedule)
+        : null;
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       locations: validLocations,
       availabilityByLocation: validAvailabilityByLocation,
       appointmentLength: availabilityData.appointmentLength || "30",
       availabilityTypeByLocation, // e.g., { "Kelowna": "recurring", "Penticton": "daily" }
       videoSchedule,
     });
+    response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate");
+    return response;
   } catch (err: any) {
     console.error("Error in GET /api/agent/settings/availability:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
@@ -274,6 +311,8 @@ export async function POST(request: NextRequest) {
     const filteredAvailabilityByLocation: Record<string, any> = {};
     const invalidTimeWarnings: string[] = [];
 
+    // Persist all 7 days per location so unchecked days (enabled: false) are never lost
+    const defaultDayOff = { enabled: false, start: "09:00", end: "17:00" };
     Object.keys(availabilityByLocation || {}).forEach((requestedCity) => {
       const canonicalCity = getCanonicalCity(requestedCity);
       if (!canonicalCity) return;
@@ -282,16 +321,24 @@ export async function POST(request: NextRequest) {
       if (!citySchedule || typeof citySchedule !== "object") return;
 
       const validatedSchedule: Record<string, any> = {};
-      Object.keys(citySchedule).forEach((dayName) => {
+      for (const dayName of validDayNames) {
         const daySchedule = citySchedule[dayName];
-        if (daySchedule && daySchedule.enabled) {
-          const [startHour, startMin] = (daySchedule.start || "09:00").split(":").map(Number);
-          const [endHour, endMin] = (daySchedule.end || "17:00").split(":").map(Number);
+        const dayData = daySchedule && typeof daySchedule === "object"
+          ? {
+              enabled: typeof daySchedule.enabled === "boolean" ? daySchedule.enabled : defaultDayOff.enabled,
+              start: typeof daySchedule.start === "string" ? daySchedule.start : "09:00",
+              end: typeof daySchedule.end === "string" ? daySchedule.end : "17:00",
+            }
+          : { ...defaultDayOff };
+
+        if (dayData.enabled) {
+          const [startHour, startMin] = (dayData.start || "09:00").split(":").map(Number);
+          const [endHour, endMin] = (dayData.end || "17:00").split(":").map(Number);
           if (!isNaN(startHour) && !isNaN(startMin) && !isNaN(endHour) && !isNaN(endMin)) {
             const startMinutes = startHour * 60 + startMin;
             const endMinutes = endHour * 60 + endMin;
             if (startHour < 5 || startHour >= 23) {
-              invalidTimeWarnings.push(`${canonicalCity} ${dayName}: Start time ${daySchedule.start} seems unusual.`);
+              invalidTimeWarnings.push(`${canonicalCity} ${dayName}: Start time ${dayData.start} seems unusual.`);
             }
             if (endMinutes <= startMinutes) {
               invalidTimeWarnings.push(`${canonicalCity} ${dayName}: End time must be after start time`);
@@ -301,8 +348,8 @@ export async function POST(request: NextRequest) {
             }
           }
         }
-        validatedSchedule[dayName] = daySchedule;
-      });
+        validatedSchedule[dayName] = dayData;
+      }
 
       // Store under canonical key so GET (which returns office cities) always finds it
       filteredAvailabilityByLocation[canonicalCity] = validatedSchedule;

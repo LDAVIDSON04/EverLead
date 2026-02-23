@@ -269,9 +269,10 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
         }
       }
 
-      // Get current availability data
+      // Get current availability data (no-store so we never overwrite with stale cached data)
       const res = await fetch("/api/agent/settings/availability", {
         headers: { Authorization: `Bearer ${session.access_token}` },
+        cache: "no-store",
       });
       const currentData = await res.ok ? await res.json() : {};
 
@@ -330,7 +331,7 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
         }
       });
 
-      await fetch("/api/agent/settings/availability", {
+      const saveRes = await fetch("/api/agent/settings/availability", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -343,6 +344,11 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
           availabilityTypeByLocation: updatedTypeByLocation,
         }),
       });
+
+      if (!saveRes.ok) {
+        const errData = await saveRes.json().catch(() => ({}));
+        throw new Error(errData.error || "Failed to save availability");
+      }
 
       const enabledDays = days.filter(day => recurringSchedule[day as keyof typeof recurringSchedule].enabled);
       let successMessage = "Availability saved successfully!";
