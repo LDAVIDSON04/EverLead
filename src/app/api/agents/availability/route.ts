@@ -130,6 +130,34 @@ export async function GET(req: NextRequest) {
       return NextResponse.json([]);
     }
 
+    // Levenshtein distance for fuzzy city matching (e.g. "Penticton" vs "Pentiction")
+    const editDistance = (a: string, b: string): number => {
+      const na = a.toLowerCase();
+      const nb = b.toLowerCase();
+      if (na.length === 0) return nb.length;
+      if (nb.length === 0) return na.length;
+      const matrix: number[][] = [];
+      for (let i = 0; i <= nb.length; i++) matrix[i] = [i];
+      for (let j = 0; j <= na.length; j++) matrix[0][j] = j;
+      for (let i = 1; i <= nb.length; i++) {
+        for (let j = 1; j <= na.length; j++) {
+          if (nb[i - 1] === na[j - 1]) matrix[i][j] = matrix[i - 1][j - 1];
+          else matrix[i][j] = 1 + Math.min(matrix[i - 1][j - 1], matrix[i][j - 1], matrix[i - 1][j]);
+        }
+      }
+      return matrix[nb.length][na.length];
+    };
+    const fuzzyMatchLocationKey = (requested: string, keys: string[]): string | undefined => {
+      const norm = requested.toLowerCase().trim();
+      const exact = keys.find(k => k.toLowerCase().trim() === norm);
+      if (exact) return exact;
+      // Allow single-character typo (e.g. Penticton vs Pentiction)
+      return keys.find(k => {
+        const keyNorm = k.toLowerCase().trim();
+        return Math.abs(keyNorm.length - norm.length) <= 1 && editDistance(keyNorm, norm) <= 2;
+      });
+    };
+
     // Helper to strip province/state suffix (e.g., "Vaughan, ON" -> "Vaughan")
     const stripProvinceSuffix = (loc: string): string => {
       // Remove common province/state suffixes like ", BC", ", AB", ", ON", etc.
@@ -178,15 +206,13 @@ export async function GET(req: NextRequest) {
     // Determine which type is active for this location (skip when using video schedule)
     let locationType: "recurring" | "daily" = "recurring"; // Default to recurring
     if (!useVideoSchedule) {
+      const typeKeys = Object.keys(availabilityTypeByLocation);
       if (selectedLocation && availabilityTypeByLocation[selectedLocation]) {
         locationType = availabilityTypeByLocation[selectedLocation] as "recurring" | "daily";
-      } else if (selectedLocation) {
-        const normalizedSelected = selectedLocation.toLowerCase().trim();
-        const matchingLocationKey = Object.keys(availabilityTypeByLocation).find(
-          loc => loc.toLowerCase().trim() === normalizedSelected
-        );
-        if (matchingLocationKey) {
-          locationType = availabilityTypeByLocation[matchingLocationKey] as "recurring" | "daily";
+      } else if (selectedLocation && typeKeys.length > 0) {
+        const matchingTypeKey = fuzzyMatchLocationKey(selectedLocation, typeKeys);
+        if (matchingTypeKey) {
+          locationType = availabilityTypeByLocation[matchingTypeKey] as "recurring" | "daily";
         }
       }
 
@@ -195,10 +221,8 @@ export async function GET(req: NextRequest) {
         if (availabilityByLocation[selectedLocation]) {
           locationSchedule = availabilityByLocation[selectedLocation];
         } else {
-          const normalizedSelected = selectedLocation.toLowerCase().trim();
-          const matchingLocation = Object.keys(availabilityByLocation).find(
-            loc => loc.toLowerCase().trim() === normalizedSelected
-          );
+          const availKeys = Object.keys(availabilityByLocation);
+          const matchingLocation = fuzzyMatchLocationKey(selectedLocation, availKeys);
           if (matchingLocation) {
             locationSchedule = availabilityByLocation[matchingLocation];
             selectedLocation = matchingLocation;
