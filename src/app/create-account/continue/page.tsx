@@ -41,7 +41,6 @@ type Role =
   | "lawyer"
   | "insurance-broker"
   | "financial-advisor"
-  | "financial_insurance_agent"
   | "";
 
 const inputClassName =
@@ -116,7 +115,6 @@ export default function CreateAccountContinuePage() {
         estate_lawyer: "lawyer",
         financial_advisor: "financial-advisor",
         insurance_broker: "insurance-broker",
-        financial_insurance_agent: "financial_insurance_agent",
       };
       setSelectedRole(roleMap[industry] || "");
 
@@ -157,11 +155,10 @@ export default function CreateAccountContinuePage() {
 
   const showFuneral = step1Industry === "funeral_planner";
   const showLawyer = step1Industry === "estate_lawyer";
-  const showFinancial = step1Industry === "financial_advisor" || step1Industry === "financial_insurance_agent";
-  const showInsurance = step1Industry === "insurance_broker" || step1Industry === "financial_insurance_agent";
+  const showFinancial = step1Industry === "financial_advisor";
+  const showInsurance = step1Industry === "insurance_broker";
   const showInsuranceOnly = step1Industry === "insurance_broker";
   const showFinancialOnly = step1Industry === "financial_advisor";
-  const showFinancialAndInsurance = step1Industry === "financial_insurance_agent";
 
   const removeOfficeLocation = (index: number) => {
     setOfficeLocations((prev) => prev.filter((_, i) => i !== index));
@@ -243,12 +240,7 @@ export default function CreateAccountContinuePage() {
         return;
       }
     }
-    if (showFinancialAndInsurance) {
-      if (!isRegistered || !regulatoryOrganization.trim() || !registrationLicenseNumber.trim() || !eoCoverageInsurance) {
-        setError("Please complete all fields for Financial & Insurance advisor.");
-        return;
-      }
-    } else if (showFinancial) {
+    if (showFinancial) {
       if (!isRegistered || !regulatoryOrganization.trim() || !registrationLicenseNumber.trim() || !eoInsuranceConfirmed) {
         setError("Please complete all fields for your role and confirm E&O coverage.");
         return;
@@ -860,168 +852,6 @@ export default function CreateAccountContinuePage() {
                         onChange={(e) => setEoCoverageInsurance(e.target.value)}
                         className="w-4 h-4 border-2 border-gray-300"
                         required={showInsuranceOnly}
-                      />
-                      <span className="text-sm text-gray-700 capitalize">{v}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-              <div className="space-y-3 border-t pt-6">
-                <label className="block text-sm text-gray-700 font-medium">Office Locations <span className="text-red-600">*</span></label>
-                {officeLocations.map((loc, index) => (
-                  <div key={index} className="mb-3 p-3 border border-gray-300 rounded-lg flex justify-between items-start">
-                    <div>
-                      <div className="font-medium text-gray-900">{loc.name}</div>
-                      <div className="text-sm text-gray-600">
-                        {loc.street_address && `${loc.street_address}, `}
-                        {loc.city}, {loc.province} {loc.postal_code}
-                      </div>
-                    </div>
-                    <button type="button" onClick={() => removeOfficeLocation(index)} className="p-1 text-gray-500 hover:text-red-600 shrink-0" aria-label="Remove location">
-                      <X className="w-5 h-5" />
-                    </button>
-                  </div>
-                ))}
-                {(showAddLocation || officeLocations.length === 0) && (
-                  <div className="mb-4 p-4 border border-gray-300 rounded-lg bg-gray-50 space-y-3">
-                    <h4 className="font-medium text-sm text-gray-700">New Office Location</h4>
-                    <input
-                      type="text"
-                      value={newLocation.name}
-                      onChange={(e) => setNewLocation({ ...newLocation, name: e.target.value })}
-                      placeholder="Office name *"
-                      className={inputClassName}
-                      required
-                    />
-                    <input
-                      type="text"
-                      value={newLocation.street_address}
-                      onChange={(e) => setNewLocation({ ...newLocation, street_address: e.target.value })}
-                      placeholder="Street address *"
-                      className={inputClassName}
-                      required
-                    />
-                    <div className="grid grid-cols-3 gap-3">
-                      <input
-                        type="text"
-                        value={newLocation.city}
-                        onChange={(e) => setNewLocation({ ...newLocation, city: e.target.value })}
-                        placeholder="City *"
-                        className={inputClassName}
-                        required
-                      />
-                      <select
-                        value={newLocation.province}
-                        onChange={(e) => setNewLocation({ ...newLocation, province: e.target.value })}
-                        className={inputClassName}
-                        required
-                      >
-                        {PROVINCES.map((p) => (
-                          <option key={p} value={p}>{p}</option>
-                        ))}
-                      </select>
-                      <input
-                        type="text"
-                        value={newLocation.postal_code}
-                        onChange={(e) => setNewLocation({ ...newLocation, postal_code: e.target.value })}
-                        placeholder="Postal code *"
-                        className={inputClassName}
-                        required
-                      />
-                    </div>
-                    <button
-                      type="button"
-                      onClick={addOfficeLocation}
-                      className="px-4 py-2 bg-neutral-700 text-white rounded-md text-sm hover:bg-neutral-800"
-                    >
-                      Save
-                    </button>
-                  </div>
-                )}
-                {officeLocations.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setNewLocation({ name: "", street_address: "", city: "", province: "BC", postal_code: "", associated_firm: "" });
-                      setShowAddLocation(true);
-                    }}
-                    className="mb-4 flex items-center gap-2 px-4 py-2 bg-neutral-700 text-white rounded-md text-sm hover:bg-neutral-800 transition-colors"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Add Location
-                  </button>
-                )}
-              </div>
-            </>
-          )}
-
-          {/* Financial & Insurance advisor (simplified) */}
-          {showFinancialAndInsurance && (
-            <>
-              <div className="space-y-3">
-                <label className="text-sm text-gray-700">
-                  Are you licensed to provide regulated financial or insurance services? <span className="text-red-600">*</span>
-                </label>
-                <div className="flex gap-6">
-                  {["yes", "no"].map((v) => (
-                    <label key={v} className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="isRegisteredDual"
-                        value={v}
-                        checked={isRegistered === v}
-                        onChange={(e) => setIsRegistered(e.target.value)}
-                        className="w-4 h-4 border-2 border-gray-300"
-                        required={showFinancialAndInsurance}
-                      />
-                      <span className="text-sm text-gray-700 capitalize">{v}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="regulatoryOrganizationDual" className="text-sm text-gray-700">
-                  Primary regulatory body <span className="text-red-600">*</span>
-                </label>
-                <input
-                  id="regulatoryOrganizationDual"
-                  type="text"
-                  value={regulatoryOrganization}
-                  onChange={(e) => setRegulatoryOrganization(e.target.value)}
-                  className={inputClassName}
-                  placeholder="e.g. IIROC / CIRO, MFDA / CIRO, Provincial Insurance Council"
-                  required={showFinancialAndInsurance}
-                />
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="registrationLicenseNumberDual" className="text-sm text-gray-700">
-                  License / Registration number <span className="text-red-600">*</span>
-                </label>
-                <input
-                  id="registrationLicenseNumberDual"
-                  type="text"
-                  value={registrationLicenseNumber}
-                  onChange={(e) => setRegistrationLicenseNumber(e.target.value)}
-                  className={inputClassName}
-                  placeholder="e.g. registration or license number"
-                  required={showFinancialAndInsurance}
-                />
-              </div>
-              <div className="space-y-3">
-                <label className="text-sm text-gray-700">
-                  Do you maintain active Errors &amp; Omissions (E&O) insurance? <span className="text-red-600">*</span>
-                </label>
-                <div className="flex gap-6">
-                  {["yes", "no"].map((v) => (
-                    <label key={v} className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="eoCoverageInsuranceDual"
-                        value={v}
-                        checked={eoCoverageInsurance === v}
-                        onChange={(e) => setEoCoverageInsurance(e.target.value)}
-                        className="w-4 h-4 border-2 border-gray-300"
-                        required={showFinancialAndInsurance}
                       />
                       <span className="text-sm text-gray-700 capitalize">{v}</span>
                     </label>

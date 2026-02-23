@@ -13,7 +13,6 @@ const INDUSTRIES = [
   { value: "estate_lawyer", label: "Estate Lawyer" },
   { value: "financial_advisor", label: "Financial Advisor" },
   { value: "insurance_broker", label: "Insurance Broker" },
-  { value: "financial_insurance_agent", label: "Financial & Insurance advisor" },
 ];
 
 const PROVINCES = [
