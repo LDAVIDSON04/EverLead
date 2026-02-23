@@ -403,9 +403,9 @@ export async function POST(req: NextRequest) {
       slotStartTime: slotStart.getTime(),
     });
     
-    // Price per appointment - currently FREE for all agents (will charge later)
-    const pricePerAppointment = 0;
-    const priceCents = Math.round(pricePerAppointment * 100);
+    // Price per appointment - agents are charged when a booking is confirmed
+    const pricePerAppointment = 19.99;
+    const priceCents = Math.round(pricePerAppointment * 100); // 1999 cents
     
     // CRITICAL: For video appointments, office_location_id must be null
     // This ensures the ClientInfoModal correctly shows "Meeting link" instead of "Meeting Location"

@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     }
 
     const agentId = user.id;
-    const pricePerAppointment = 0.50; // $0.50 minimum (Stripe)
+    const pricePerAppointment = 19.99;
 
     // Get agent's timezone from profile
     let agentTimezone = "America/Vancouver"; // Default
