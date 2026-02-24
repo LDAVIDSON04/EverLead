@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import { supabaseClient } from '@/lib/supabaseClient';
-import { Home, Calendar, File, Mail, User, XCircle, Upload, X, Settings, CreditCard, Menu, Lock, Check, AlertTriangle } from 'lucide-react';
+import { Home, Calendar, File, Mail, User, XCircle, Upload, X, Settings, CreditCard, Menu, Lock, Check, AlertTriangle, Loader2 } from 'lucide-react';
 import { usePrefetchOnHover } from '@/lib/hooks/usePrefetch';
 
 type AgentLayoutProps = {
@@ -264,17 +264,18 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
 
     async function checkApproval() {
       try {
-        const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
-        
+        // getSession() is faster (memory) than getUser() (can hit server)
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        const user = session?.user;
+
         if (!mounted) return;
-        
-        // Only redirect if we're CERTAIN there's no user
-        if (userError || !user) {
+
+        if (!user) {
           router.replace('/agent');
           return;
         }
 
-        // Fetch profile with all necessary fields
+        // Single profile fetch for auth + display
         const { data: profile, error: profileError } = await supabaseClient
           .from('profiles')
           .select('role, full_name, first_name, last_name, profile_picture_url, email, phone, funeral_home, job_title, approval_status, metadata')
@@ -318,11 +319,6 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
         }
         
         setCheckingAuth(false);
-        
-        // After auth check, ensure profile data is loaded
-        if (mounted) {
-          loadProfileData();
-        }
 
         // Check onboarding status for agents (non-blocking, async) - only if profile exists and is approved
         if (profile && profile.role === 'agent' && profile.approval_status === 'approved' && mounted) {
@@ -510,14 +506,6 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
       setOnboardingLoading(false);
     }
   };
-
-  if (checkingAuth) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-sm text-gray-600">Loading...</p>
-      </div>
-    );
-  }
 
   if (approvalStatus && approvalStatus !== 'approved') {
     return (
@@ -749,9 +737,18 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
         </div>
       )}
 
-      {/* Main Content */}
+      {/* Main Content - show shell immediately; loading in content area while auth completes */}
       <div className="flex-1 overflow-auto md:ml-0 pt-16 md:pt-0">
-        {children}
+        {checkingAuth ? (
+          <div className="flex items-center justify-center min-h-[320px]">
+            <div className="flex flex-col items-center gap-3">
+              <Loader2 className="w-8 h-8 text-gray-400 animate-spin" />
+              <p className="text-sm text-gray-500">Loading…</p>
+            </div>
+          </div>
+        ) : (
+          children
+        )}
       </div>
 
       {/* Paused Account Modal */}

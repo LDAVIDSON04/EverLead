@@ -367,8 +367,34 @@ export default function AgentDashboardPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <p className="text-sm text-gray-600">Loading...</p>
+      <div className="flex-1 overflow-auto bg-gray-50">
+        <div className="p-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="col-span-1 md:col-span-2 min-h-0 flex h-full">
+              <div className="w-full h-32 md:h-40 bg-gray-200 rounded-2xl animate-pulse" />
+            </div>
+            <div className="hidden md:block col-span-1 h-40">
+              <div className="h-full bg-gray-200 rounded-xl animate-pulse" />
+            </div>
+            <div className="col-span-1 md:col-span-2 space-y-6">
+              <div>
+                <div className="h-5 w-32 bg-gray-200 rounded animate-pulse mb-4" />
+                <div className="h-24 bg-gray-200 rounded-xl animate-pulse" />
+              </div>
+              <div className="bg-white rounded-xl border border-gray-200 p-6">
+                <div className="h-6 w-48 bg-gray-200 rounded animate-pulse mb-4" />
+                <div className="space-y-3">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="h-12 bg-gray-100 rounded-lg animate-pulse" />
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="hidden md:block space-y-6">
+              <div className="h-48 bg-gray-200 rounded-xl animate-pulse" />
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
