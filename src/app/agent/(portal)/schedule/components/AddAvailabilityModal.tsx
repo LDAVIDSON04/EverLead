@@ -317,16 +317,19 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
         return;
       }
 
-      // In-person: use recurringSchedule for the SELECTED location (key in payload must match API locations e.g. "Penticton, BC")
+      // In-person: use recurringSchedule for the SELECTED location; others from current data (merge with defaults so all 7 days + enabled flags persist)
       const existingByLocation = currentData.availabilityByLocation || availabilityByLocation;
       const completeAvailabilityByLocation: Record<string, any> = {};
       const allLocations = currentData.locations || locations;
       allLocations.forEach((loc: string) => {
         const locNormalized = normalizeLocation(loc);
         const isSelectedLocation = loc === selectedLocation || locNormalized === normalizedLocation;
-        completeAvailabilityByLocation[loc] = isSelectedLocation
-          ? recurringSchedule
-          : (existingByLocation[loc] || defaultSchedule);
+        if (isSelectedLocation) {
+          completeAvailabilityByLocation[loc] = { ...recurringSchedule };
+        } else {
+          const existing = existingByLocation[loc];
+          completeAvailabilityByLocation[loc] = mergeScheduleWithDefaults(existing);
+        }
       });
 
       const existingTypeByLocation = currentData.availabilityTypeByLocation || {};

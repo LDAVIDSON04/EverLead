@@ -279,62 +279,65 @@ export async function GET(req: NextRequest) {
       appointments = result.data;
     }
 
-    // Also fetch external calendar events (booked by coworkers/front desk)
-    // These should appear in the agent's schedule alongside Soradin appointments
-    // Fetch all events (past and future) so agents can see their full calendar history like Google Calendar
-    // Try to fetch with title and location columns, but handle gracefully if columns don't exist yet
+    // External calendar events: ONLY show if the agent has connected/synced a calendar.
+    // New or re-created accounts must not see any external events until they sync (no leftover data from before).
     let externalEvents: any[] | null = null;
     let externalEventsError: any = null;
-    
-    try {
-      const result = await supabaseServer
-        .from("external_events")
-        .select("id, starts_at, ends_at, status, provider, provider_event_id, is_soradin_created, appointment_id, title, location")
-        .eq("specialist_id", userId) // specialist_id in external_events = agent_id (user ID)
-        .eq("status", "confirmed") // Only show confirmed events
-        .eq("is_soradin_created", false) // Only fetch EXTERNAL events - Soradin-created ones are duplicates of appointments table
-        // Removed date filter - fetch all events so past appointments are visible when navigating to previous weeks/days
-        .order("starts_at", { ascending: true });
-      
-      externalEvents = result.data;
-      externalEventsError = result.error;
-      
-      // Log ALL external events with dates to help debug
-      if (externalEvents && externalEvents.length > 0) {
-        console.log(`📅 [APPOINTMENTS API] All ${externalEvents.length} external events:`, 
-          externalEvents.map((evt: any) => ({
-            id: evt.id,
-            starts_at: evt.starts_at,
-            date: evt.starts_at ? new Date(evt.starts_at).toISOString().split('T')[0] : 'N/A',
-            title: evt.title || 'N/A',
-            status: evt.status,
-            is_soradin_created: evt.is_soradin_created
-          }))
-        );
-      }
-    } catch (err: any) {
-      // If title or location column doesn't exist, try without them
-      if (err?.code === '42703' || err?.message?.includes('does not exist')) {
-        console.log("Title or location column not found, fetching external events without them");
+
+    const { data: calendarConnections } = await supabaseServer
+      .from("calendar_connections")
+      .select("id")
+      .eq("specialist_id", userId);
+
+    const hasSyncedCalendar = Array.isArray(calendarConnections) && calendarConnections.length > 0;
+
+    if (hasSyncedCalendar) {
+      try {
+        const result = await supabaseServer
+          .from("external_events")
+          .select("id, starts_at, ends_at, status, provider, provider_event_id, is_soradin_created, appointment_id, title, location")
+          .eq("specialist_id", userId)
+          .eq("status", "confirmed")
+          .eq("is_soradin_created", false)
+          .order("starts_at", { ascending: true });
+
+        externalEvents = result.data;
+        externalEventsError = result.error;
+
+        if (externalEvents && externalEvents.length > 0) {
+          console.log(`📅 [APPOINTMENTS API] All ${externalEvents.length} external events (calendar synced):`, 
+            externalEvents.map((evt: any) => ({
+              id: evt.id,
+              starts_at: evt.starts_at,
+              date: evt.starts_at ? new Date(evt.starts_at).toISOString().split('T')[0] : 'N/A',
+              title: evt.title || 'N/A',
+              status: evt.status,
+              is_soradin_created: evt.is_soradin_created
+            }))
+          );
+        }
+      } catch (err: any) {
+        if (err?.code === '42703' || err?.message?.includes('does not exist')) {
           const result = await supabaseServer
             .from("external_events")
             .select("id, starts_at, ends_at, status, provider, provider_event_id, is_soradin_created, appointment_id")
             .eq("specialist_id", userId)
             .eq("status", "confirmed")
-            .eq("is_soradin_created", false) // Only fetch EXTERNAL events - Soradin-created ones are duplicates of appointments table
-            // Removed date filter - fetch all events so past appointments are visible when navigating to previous weeks/days
+            .eq("is_soradin_created", false)
             .order("starts_at", { ascending: true });
-        
-        externalEvents = result.data;
-        externalEventsError = result.error;
-      } else {
-        externalEventsError = err;
+
+          externalEvents = result.data;
+          externalEventsError = result.error;
+        } else {
+          externalEventsError = err;
+        }
       }
+    } else {
+      externalEvents = [];
     }
 
     if (externalEventsError) {
       console.error("Error fetching external events:", externalEventsError);
-      // Don't fail the request if external events fail to load
     }
 
     if (appointmentsError) {
