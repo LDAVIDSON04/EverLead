@@ -44,13 +44,24 @@ function normalizeLocationSchedule(
   for (const day of SCHEDULE_DAY_KEYS) {
     const d = raw?.[day] ?? raw?.[day.charAt(0).toUpperCase() + day.slice(1)] ?? raw?.[day.toUpperCase()];
     const def = DEFAULT_SCHEDULE[day];
-    const start = typeof d?.start === "string" && /^\d{1,2}:\d{2}$/.test(d.start) ? d.start : def.start;
-    const end = typeof d?.end === "string" && /^\d{1,2}:\d{2}$/.test(d.end) ? d.end : def.end;
-    out[day] = {
-      enabled: typeof d?.enabled === "boolean" ? d.enabled : def.enabled,
-      start,
-      end,
-    };
+    let start = typeof d?.start === "string" && /^\d{1,2}:\d{2}$/.test(d.start) ? d.start : def.start;
+    let end = typeof d?.end === "string" && /^\d{1,2}:\d{2}$/.test(d.end) ? d.end : def.end;
+    const enabled = typeof d?.enabled === "boolean" ? d.enabled : def.enabled;
+
+    // If day is enabled but window is suspiciously small (< 2 hours), treat as corrupt/legacy and use full-day default so marketplace shows proper availability
+    if (enabled) {
+      const [sh, sm] = start.split(":").map(Number);
+      const [eh, em] = end.split(":").map(Number);
+      const startM = (sh ?? 0) * 60 + (sm ?? 0);
+      const endM = (eh ?? 0) * 60 + (em ?? 0);
+      const spanMinutes = endM - startM;
+      if (spanMinutes < 120 || endM <= startM) {
+        start = def.start;
+        end = def.end;
+      }
+    }
+
+    out[day] = { enabled, start, end };
   }
   return out;
 }
@@ -183,6 +194,11 @@ export async function GET(req: NextRequest) {
       const norm = requested.toLowerCase().trim();
       const exact = keys.find(k => k.toLowerCase().trim() === norm);
       if (exact) return exact;
+      // Match by primary name (e.g. "Vaughan" matches "Vaughan, ON")
+      const primaryOf = (s: string) => s.split(",").map((x: string) => x.trim())[0]?.toLowerCase() || s.toLowerCase();
+      const requestedPrimary = primaryOf(requested);
+      const byPrimary = keys.find(k => primaryOf(k) === requestedPrimary);
+      if (byPrimary) return byPrimary;
       // Allow single-character typo (e.g. Penticton vs Pentiction)
       return keys.find(k => {
         const keyNorm = k.toLowerCase().trim();
