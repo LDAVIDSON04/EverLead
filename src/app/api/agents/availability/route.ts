@@ -36,7 +36,7 @@ const DEFAULT_SCHEDULE: Record<string, { enabled: boolean; start: string; end: s
   sunday: { ...DEFAULT_DAY_OFF },
 };
 
-/** Normalize schedule so all 7 days exist with valid { enabled, start, end }. Uses agent-set values when present and valid. */
+/** Normalize schedule: all 7 days with valid { enabled, start, end }. ONLY use what the agent stored — no default availability. Missing day = disabled (no slots). */
 function normalizeLocationSchedule(
   raw: Record<string, { enabled?: boolean; start?: string; end?: string }> | null | undefined
 ): Record<string, { enabled: boolean; start: string; end: string }> {
@@ -44,23 +44,11 @@ function normalizeLocationSchedule(
   for (const day of SCHEDULE_DAY_KEYS) {
     const d = raw?.[day] ?? raw?.[day.charAt(0).toUpperCase() + day.slice(1)] ?? raw?.[day.toUpperCase()];
     const def = DEFAULT_SCHEDULE[day];
-    let start = typeof d?.start === "string" && /^\d{1,2}:\d{2}$/.test(d.start) ? d.start : def.start;
-    let end = typeof d?.end === "string" && /^\d{1,2}:\d{2}$/.test(d.end) ? d.end : def.end;
-    const enabled = typeof d?.enabled === "boolean" ? d.enabled : def.enabled;
-
-    // If day is enabled but window is suspiciously small (< 2 hours), treat as corrupt/legacy and use full-day default so marketplace shows proper availability
-    if (enabled) {
-      const [sh, sm] = start.split(":").map(Number);
-      const [eh, em] = end.split(":").map(Number);
-      const startM = (sh ?? 0) * 60 + (sm ?? 0);
-      const endM = (eh ?? 0) * 60 + (em ?? 0);
-      const spanMinutes = endM - startM;
-      if (spanMinutes < 120 || endM <= startM) {
-        start = def.start;
-        end = def.end;
-      }
-    }
-
+    // Only show slots for what the agent actually set. No default availability.
+    const hasData = d && typeof d === "object";
+    const enabled = hasData && typeof d.enabled === "boolean" ? d.enabled : false;
+    const start = hasData && typeof d.start === "string" && /^\d{1,2}:\d{2}$/.test(d.start) ? d.start : def.start;
+    const end = hasData && typeof d.end === "string" && /^\d{1,2}:\d{2}$/.test(d.end) ? d.end : def.end;
     out[day] = { enabled, start, end };
   }
   return out;
