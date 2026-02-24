@@ -124,13 +124,16 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
     previousMeetingTypeRef.current = meetingType;
   }, [meetingType]); // eslint-disable-line react-hooks/exhaustive-deps -- only run on meetingType change; we intentionally read current state when switching
 
-  async function loadLocations() {
+  async function loadLocations(silent = false) {
+    // Block the location-change effect from overwriting until we've finished loading (avoids stale/default flash)
+    justLoadedRef.current = true;
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (!session?.access_token) return;
 
-      const res = await fetch("/api/agent/settings/availability", {
+      const url = `/api/agent/settings/availability?_=${Date.now()}`;
+      const res = await fetch(url, {
         headers: { Authorization: `Bearer ${session.access_token}` },
         cache: "no-store",
       });
@@ -142,13 +145,12 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
       setAvailabilityByLocation(data.availabilityByLocation || {});
       setAppointmentLength(data.appointmentLength || "30");
       setVideoSchedule(data.videoSchedule && typeof data.videoSchedule === "object" ? data.videoSchedule : null);
-      
+
       if (data.locations && data.locations.length > 0) {
-        setSelectedLocation(data.locations[0]);
-        // Load existing schedule for selected location – merge with defaults so all 7 days exist and saved enabled/start/end are preserved
-        const existingSchedule = data.availabilityByLocation?.[data.locations[0]];
+        const firstLocation = data.locations[0];
+        setSelectedLocation(firstLocation);
+        const existingSchedule = data.availabilityByLocation?.[firstLocation];
         const merged = mergeScheduleWithDefaults(existingSchedule);
-        // Fix any invalid time formats in place (only for enabled days)
         days.forEach((day) => {
           const key = day as keyof typeof defaultSchedule;
           const dayData = merged[key];
@@ -163,11 +165,10 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
       } else {
         setRecurringSchedule(getDefaultScheduleCopy());
       }
-      justLoadedRef.current = true;
     } catch (err) {
-      console.error("Error loading locations:", err);
+      if (!silent) console.error("Error loading locations:", err);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }
 
@@ -284,7 +285,8 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
       const currentData = await res.ok ? await res.json() : {};
 
       if (meetingType === "video") {
-        // Save video schedule only (API merges with existing in-person data)
+        // Save video schedule only (API merges with existing in-person data). Send full 7-day merged schedule.
+        const videoPayload = mergeScheduleWithDefaults(recurringSchedule);
         const videoRes = await fetch("/api/agent/settings/availability", {
           method: "POST",
           headers: {
@@ -296,7 +298,7 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
             availabilityByLocation: currentData.availabilityByLocation || availabilityByLocation,
             appointmentLength: appointmentLength || currentData.appointmentLength || "30",
             availabilityTypeByLocation: currentData.availabilityTypeByLocation || {},
-            videoSchedule: recurringSchedule,
+            videoSchedule: videoPayload,
           }),
         });
         if (!videoRes.ok) {
@@ -312,6 +314,7 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
           : "Video call availability settings have been saved.";
         setSaveMessage({ type: "success", text: successMessage });
         onSave?.(successMessage);
+        await loadLocations(true);
         setTimeout(() => { setSaveMessage(null); onClose(); }, 500);
         setSaving(false);
         return;
@@ -324,12 +327,9 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
       allLocations.forEach((loc: string) => {
         const locNormalized = normalizeLocation(loc);
         const isSelectedLocation = loc === selectedLocation || locNormalized === normalizedLocation;
-        if (isSelectedLocation) {
-          completeAvailabilityByLocation[loc] = { ...recurringSchedule };
-        } else {
-          const existing = existingByLocation[loc];
-          completeAvailabilityByLocation[loc] = mergeScheduleWithDefaults(existing);
-        }
+        completeAvailabilityByLocation[loc] = isSelectedLocation
+          ? mergeScheduleWithDefaults(recurringSchedule)
+          : mergeScheduleWithDefaults(existingByLocation[loc]);
       });
 
       const existingTypeByLocation = currentData.availabilityTypeByLocation || {};
@@ -368,14 +368,13 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
       } else {
         successMessage = `Availability settings for ${selectedLocation} have been saved.`;
       }
-      
-      // Show success message in modal briefly
+
       setSaveMessage({ type: "success", text: successMessage });
-      
-      // Call onSave callback with message
       onSave?.(successMessage);
-      
-      // Close modal after a short delay
+
+      // Reload from server so state matches what was saved (no spinner; keeps success message visible)
+      await loadLocations(true);
+
       setTimeout(() => {
         setSaveMessage(null);
         onClose();
