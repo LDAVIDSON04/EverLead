@@ -23,6 +23,38 @@ const querySchema = z.object({
   location: z.string().optional(), // Optional location to filter schedule
 });
 
+const SCHEDULE_DAY_KEYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"] as const;
+const DEFAULT_DAY = { enabled: true, start: "09:00", end: "17:00" };
+const DEFAULT_DAY_OFF = { enabled: false, start: "10:00", end: "14:00" };
+const DEFAULT_SCHEDULE: Record<string, { enabled: boolean; start: string; end: string }> = {
+  monday: { ...DEFAULT_DAY },
+  tuesday: { ...DEFAULT_DAY },
+  wednesday: { ...DEFAULT_DAY },
+  thursday: { ...DEFAULT_DAY },
+  friday: { ...DEFAULT_DAY },
+  saturday: { ...DEFAULT_DAY_OFF },
+  sunday: { ...DEFAULT_DAY_OFF },
+};
+
+/** Normalize schedule so all 7 days exist with valid { enabled, start, end }. Uses agent-set values when present and valid. */
+function normalizeLocationSchedule(
+  raw: Record<string, { enabled?: boolean; start?: string; end?: string }> | null | undefined
+): Record<string, { enabled: boolean; start: string; end: string }> {
+  const out: Record<string, { enabled: boolean; start: string; end: string }> = {};
+  for (const day of SCHEDULE_DAY_KEYS) {
+    const d = raw?.[day] ?? raw?.[day.charAt(0).toUpperCase() + day.slice(1)] ?? raw?.[day.toUpperCase()];
+    const def = DEFAULT_SCHEDULE[day];
+    const start = typeof d?.start === "string" && /^\d{1,2}:\d{2}$/.test(d.start) ? d.start : def.start;
+    const end = typeof d?.end === "string" && /^\d{1,2}:\d{2}$/.test(d.end) ? d.end : def.end;
+    out[day] = {
+      enabled: typeof d?.enabled === "boolean" ? d.enabled : def.enabled,
+      start,
+      end,
+    };
+  }
+  return out;
+}
+
 type AvailabilityDay = {
   date: string; // YYYY-MM-DD
   slots: { startsAt: string; endsAt: string }[]; // ISO timestamps in UTC
@@ -255,14 +287,17 @@ export async function GET(req: NextRequest) {
         return NextResponse.json([]);
       }
     }
+
+    // Normalize so we always have exactly 7 days with valid start/end (lowercase keys). Uses agent-set values when present.
+    locationSchedule = normalizeLocationSchedule(locationSchedule);
     
-    console.log("🔍 [AVAILABILITY API] Location matching result:", {
+    console.log("🔍 [AVAILABILITY API] Location matching result (normalized schedule):", {
       agentId,
       requestedLocation: location,
       selectedLocation,
       useVideoSchedule,
       locationScheduleKeys: Object.keys(locationSchedule),
-      hasSchedule: Object.keys(locationSchedule).length > 0,
+      scheduleByDay: locationSchedule,
       appointmentLength,
     });
     
@@ -773,21 +808,8 @@ export async function GET(req: NextRequest) {
         });
       }
 
-      // Get schedule for this day - try multiple variations to handle different formats
-      let daySchedule = locationSchedule[dayName]; // Try lowercase first (e.g., "thursday")
-      if (!daySchedule) {
-        // Try capitalized version (e.g., "Thursday")
-        const capitalizedDay = dayName.charAt(0).toUpperCase() + dayName.slice(1);
-        daySchedule = locationSchedule[capitalizedDay];
-      }
-      if (!daySchedule) {
-        // Try all lowercase with first letter capitalized (e.g., "Thursday")
-        daySchedule = locationSchedule[dayName.charAt(0).toUpperCase() + dayName.slice(1).toLowerCase()];
-      }
-      if (!daySchedule) {
-        // Try all uppercase (e.g., "THURSDAY")
-        daySchedule = locationSchedule[dayName.toUpperCase()];
-      }
+      // Schedule is normalized to lowercase keys (monday, tuesday, ...); dayName is already lowercase
+      const daySchedule = locationSchedule[dayName];
       
       // Debug: Log what we're looking for and what we found
       if (dateStr === "2026-01-01" || dateStr === "2026-01-02") {
