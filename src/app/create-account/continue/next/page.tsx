@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { Check, RefreshCw } from "lucide-react";
+import { Check, RefreshCw, Loader2 } from "lucide-react";
 import { Footer } from "@/app/learn-more-about-starting/components/Footer";
 
 const CREATE_ACCOUNT_DRAFT_KEY = "createAccountDraft";
@@ -278,7 +278,28 @@ export default function CreateAccountNextPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="min-h-screen bg-white flex flex-col relative">
+      {/* Submitting overlay - prevents freeze feeling, clear feedback */}
+      {submitting && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-white/90 backdrop-blur-sm cursor-wait"
+          aria-live="polite"
+          aria-busy="true"
+        >
+          <div className="flex flex-col items-center gap-5 max-w-sm mx-4">
+            <div className="w-14 h-14 rounded-full border-4 border-gray-200 border-t-gray-900 flex items-center justify-center">
+              <Loader2 className="w-7 h-7 text-gray-900 animate-spin" />
+            </div>
+            <p className="text-gray-800 font-medium text-center">
+              Creating your account…
+            </p>
+            <p className="text-gray-500 text-sm text-center">
+              This usually takes a few seconds.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Header - compact so title block sits higher */}
       <div className="px-8 pt-2 pb-0">
         <Link href="/" className="flex items-center gap-2">
@@ -459,9 +480,16 @@ export default function CreateAccountNextPage() {
           <button
             type="submit"
             disabled={submitting || !saved}
-            className="w-full bg-gray-900 text-white py-3.5 rounded-lg font-medium hover:bg-gray-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            className="w-full bg-gray-900 text-white py-3.5 rounded-lg font-medium hover:bg-gray-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 min-h-[48px]"
           >
-            {submitting ? "Submitting…" : "Submit for approval"}
+            {submitting ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin shrink-0" />
+                Creating account…
+              </>
+            ) : (
+              "Submit for approval"
+            )}
           </button>
 
           <div className="text-center text-sm text-gray-500 pt-2 pb-20">
