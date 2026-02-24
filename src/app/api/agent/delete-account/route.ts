@@ -51,18 +51,39 @@ export async function POST(request: NextRequest) {
 
     // Delete all related data in the correct order (respecting foreign key constraints)
     // Note: Appointments will cascade delete due to ON DELETE CASCADE on agent_id
-    
-    // 1. Delete calendar connections (if any)
+    // Tables calendar_connections, daily_availability, external_events use specialist_id (= agent user id)
+
+    // 1. Delete calendar connections (table uses specialist_id, not agent_id)
     try {
       await supabaseAdmin
         .from('calendar_connections')
         .delete()
-        .eq('agent_id', agentId);
+        .eq('specialist_id', agentId);
     } catch (err) {
       console.warn('Error deleting calendar connections (may not exist):', err);
     }
 
-    // 2. Delete office locations
+    // 2. Delete external events (Google/Microsoft calendar events we imported) so they don't appear for a new account
+    try {
+      await supabaseAdmin
+        .from('external_events')
+        .delete()
+        .eq('specialist_id', agentId);
+    } catch (err) {
+      console.warn('Error deleting external events (may not exist):', err);
+    }
+
+    // 3. Delete deleted-event blocklist for this specialist
+    try {
+      await supabaseAdmin
+        .from('deleted_external_event_sync_blocklist')
+        .delete()
+        .eq('specialist_id', agentId);
+    } catch (err) {
+      console.warn('Error deleting blocklist (may not exist):', err);
+    }
+
+    // 4. Delete office locations
     try {
       await supabaseAdmin
         .from('office_locations')
@@ -72,17 +93,17 @@ export async function POST(request: NextRequest) {
       console.warn('Error deleting office locations (may not exist):', err);
     }
 
-    // 3. Delete daily availability
+    // 5. Delete daily availability (table uses specialist_id)
     try {
       await supabaseAdmin
         .from('daily_availability')
         .delete()
-        .eq('agent_id', agentId);
+        .eq('specialist_id', agentId);
     } catch (err) {
       console.warn('Error deleting daily availability (may not exist):', err);
     }
 
-    // 4. Update leads that were assigned to this agent (set assigned_agent_id to null)
+    // 6. Update leads that were assigned to this agent (set assigned_agent_id to null)
     // We don't delete leads as they may be needed for business records
     try {
       await supabaseAdmin
@@ -93,7 +114,7 @@ export async function POST(request: NextRequest) {
       console.warn('Error updating leads:', err);
     }
 
-    // 5. Delete the profile (this will cascade delete appointments due to foreign key constraint)
+    // 7. Delete the profile (this will cascade delete appointments due to foreign key constraint)
     const { error: deleteProfileError } = await supabaseAdmin
       .from('profiles')
       .delete()
@@ -107,7 +128,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 6. Delete the auth user
+    // 8. Delete the auth user
     // Note: This requires admin privileges and may need to be done via Supabase Admin API
     // For now, we'll rely on the profile deletion and let the user know they need to contact support
     // to fully remove their auth account, or we can use supabaseAdmin.auth.admin.deleteUser()

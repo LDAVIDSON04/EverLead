@@ -87,6 +87,7 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
   // Video schedule stored separately when meeting type is video
   const [videoSchedule, setVideoSchedule] = useState<typeof defaultSchedule | null>(null);
   const previousMeetingTypeRef = useRef<MeetingType>("in-person");
+  const justLoadedRef = useRef(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -162,6 +163,7 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
       } else {
         setRecurringSchedule(getDefaultScheduleCopy());
       }
+      justLoadedRef.current = true;
     } catch (err) {
       console.error("Error loading locations:", err);
     } finally {
@@ -170,8 +172,13 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
   }
 
   // Update recurring schedule when location changes (in-person only) – merge with defaults so all days show correctly
+  // Skip the first run after load so we don't overwrite saved data with stale or default state
   useEffect(() => {
     if (meetingType !== "in-person") return;
+    if (justLoadedRef.current) {
+      justLoadedRef.current = false;
+      return;
+    }
     if (selectedLocation && availabilityByLocation[selectedLocation]) {
       setRecurringSchedule(mergeScheduleWithDefaults(availabilityByLocation[selectedLocation]));
     } else if (selectedLocation) {
