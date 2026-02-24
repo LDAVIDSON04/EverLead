@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabaseClient } from "@/lib/supabaseClient";
 import { useRequireRole } from "@/lib/hooks/useRequireRole";
+import { useAgentPortalAuth } from "@/app/agent/(portal)/AgentPortalContext";
 import { Calendar, Clock, User, X, ChevronLeft, ChevronRight, MapPin, Video } from "lucide-react";
 import { DateTime } from "luxon";
 import { ClientInfoModal } from "../my-appointments/components/ClientInfoModal";
@@ -39,6 +40,7 @@ export default function SchedulePage() {
   useRequireRole("agent");
   const router = useRouter();
   const searchParams = useSearchParams();
+  const portalAuth = useAgentPortalAuth();
 
   const [specialist, setSpecialist] = useState<Specialist | null>(null);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -294,31 +296,34 @@ export default function SchedulePage() {
         setLoading(true);
         setError(null);
 
-        const [sessionResult, userResult] = await Promise.all([
-          supabaseClient.auth.getSession(),
-          supabaseClient.auth.getUser(),
-        ]);
-
-        const { data: { session } } = sessionResult;
-        const { data: { user } } = userResult;
-
-        if (!session?.access_token || !user) {
-          router.push("/agent");
-          return;
+        // Use portal context when available (skip auth round-trip); otherwise getSession() only (faster than getUser)
+        let userId: string;
+        let accessToken: string;
+        if (portalAuth.userId && portalAuth.accessToken) {
+          userId = portalAuth.userId;
+          accessToken = portalAuth.accessToken;
+        } else {
+          const { data: { session } } = await supabaseClient.auth.getSession();
+          if (!session?.user || !session.access_token) {
+            router.push("/agent");
+            return;
+          }
+          userId = session.user.id;
+          accessToken = session.access_token;
         }
 
         const [profileResult, specialistRes, appointmentsData, oooRes] = await Promise.all([
           supabaseClient
             .from("profiles")
             .select("full_name, metadata, agent_province")
-            .eq("id", user.id)
+            .eq("id", userId)
             .maybeSingle(),
           fetch("/api/specialists/me", {
-            headers: { Authorization: `Bearer ${session.access_token}` },
+            headers: { Authorization: `Bearer ${accessToken}` },
           }),
-          fetchAppointments(session.access_token),
+          fetchAppointments(accessToken),
           fetch("/api/agent/out-of-office", {
-            headers: { Authorization: `Bearer ${session.access_token}` },
+            headers: { Authorization: `Bearer ${accessToken}` },
           }),
         ]);
 
@@ -387,7 +392,7 @@ export default function SchedulePage() {
 
         if (specialistData?.id) {
           Promise.all([
-            checkCalendarConnections(specialistData.id, session.access_token),
+            checkCalendarConnections(specialistData.id, accessToken),
             loadIcsUrl(specialistData.id),
           ]).catch(err => console.error("Error loading calendar data:", err));
         } else {
@@ -1055,28 +1060,8 @@ export default function SchedulePage() {
 
   if (loading) {
     return (
-      <div className="w-full h-screen flex flex-col bg-white relative overflow-hidden px-8 pt-[56px] md:pt-8 pb-0">
-        <div className="mb-4 md:mb-8 flex-shrink-0">
-          <div className="h-8 w-48 bg-gray-200 rounded animate-pulse mb-4" />
-          <div className="flex items-center gap-2 mb-4">
-            <div className="h-9 w-16 bg-gray-200 rounded animate-pulse" />
-            <div className="h-9 w-24 bg-gray-200 rounded animate-pulse" />
-            <div className="h-9 w-20 bg-gray-200 rounded animate-pulse" />
-          </div>
-          <div className="flex gap-2">
-            <div className="h-9 w-28 bg-gray-200 rounded animate-pulse" />
-            <div className="h-9 w-28 bg-gray-200 rounded animate-pulse" />
-            <div className="h-9 w-24 bg-gray-200 rounded animate-pulse" />
-          </div>
-        </div>
-        <div className="flex-1 min-h-0 flex flex-col">
-          <div className="h-12 bg-gray-100 rounded-lg animate-pulse mb-2" />
-          <div className="flex-1 grid grid-cols-7 gap-px bg-gray-200 rounded-lg overflow-hidden">
-            {Array.from({ length: 7 }).map((_, i) => (
-              <div key={i} className="bg-gray-50 animate-pulse" />
-            ))}
-          </div>
-        </div>
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <p className="text-gray-500">Loading...</p>
       </div>
     );
   }

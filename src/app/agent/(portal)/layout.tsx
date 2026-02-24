@@ -7,6 +7,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { supabaseClient } from '@/lib/supabaseClient';
 import { Home, Calendar, File, Mail, User, XCircle, Upload, X, Settings, CreditCard, Menu, Lock, Check, AlertTriangle, Loader2 } from 'lucide-react';
 import { usePrefetchOnHover } from '@/lib/hooks/usePrefetch';
+import { AgentPortalProvider } from './AgentPortalContext';
 
 type AgentLayoutProps = {
   children: ReactNode;
@@ -94,6 +95,7 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
   const [isPaused, setIsPaused] = useState(false);
   const [showPausedModal, setShowPausedModal] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [portalAuth, setPortalAuth] = useState<{ userId: string | null; accessToken: string | null }>({ userId: null, accessToken: null });
 
   useEffect(() => {
     let mounted = true;
@@ -317,7 +319,8 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
             setShowPausedModal(true);
           }
         }
-        
+
+        setPortalAuth({ userId: user.id, accessToken: session.access_token ?? null });
         setCheckingAuth(false);
 
         // Check onboarding status for agents (non-blocking, async) - only if profile exists and is approved
@@ -534,6 +537,7 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
   }
 
   return (
+    <AgentPortalProvider value={portalAuth}>
     <div className="flex h-screen bg-gray-50">
       {/* Sidebar - Hidden on mobile */}
       <div className="hidden md:flex w-64 bg-black flex-col">
@@ -1076,5 +1080,6 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
         </div>
       )}
     </div>
+    </AgentPortalProvider>
   );
 }

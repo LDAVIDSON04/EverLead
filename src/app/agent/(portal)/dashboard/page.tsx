@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabaseClient } from "@/lib/supabaseClient";
+import { useAgentPortalAuth } from "@/app/agent/(portal)/AgentPortalContext";
 import { Calendar, ChevronLeft, ChevronRight, Phone, Mail as MailIcon, Users, Plus, MoreHorizontal, ArrowUpDown, AlertCircle, Check, User, Clock } from "lucide-react";
 
 type Stats = {
@@ -27,6 +28,7 @@ type Appointment = {
 
 export default function AgentDashboardPage() {
   const router = useRouter();
+  const portalAuth = useAgentPortalAuth();
   const [stats, setStats] = useState<Stats>({
     available: 0,
     myLeads: 0,
@@ -76,26 +78,29 @@ export default function AgentDashboardPage() {
     async function loadDashboard() {
       setLoading(true);
       try {
-        // Get user and session in parallel
-        const [userResult, sessionResult] = await Promise.all([
-          supabaseClient.auth.getUser(),
-          supabaseClient.auth.getSession(),
-        ]);
-
-        const { data: { user } } = userResult;
-        const { data: { session } } = sessionResult;
-
-        if (!user || !session?.access_token) {
-          router.push("/agent");
-          return;
+        // Use portal context when available (skip auth round-trip); otherwise getSession() only (faster than getUser)
+        let agentId: string;
+        let accessToken: string;
+        if (portalAuth.userId && portalAuth.accessToken) {
+          agentId = portalAuth.userId;
+          accessToken = portalAuth.accessToken;
+        } else {
+          const { data: { session } } = await supabaseClient.auth.getSession();
+          if (!session?.user || !session.access_token) {
+            router.push("/agent");
+            return;
+          }
+          agentId = session.user.id;
+          accessToken = session.access_token;
         }
 
-        const agentId = user.id;
         setUserId(agentId);
 
         // Fetch dashboard API and profile (with metadata) in parallel
         const [dashboardRes, profileResult] = await Promise.all([
-          fetch(`/api/agent/dashboard?agentId=${agentId}`),
+          fetch(`/api/agent/dashboard?agentId=${agentId}`, {
+            headers: { Authorization: `Bearer ${accessToken}` },
+          }),
           supabaseClient
             .from("profiles")
             .select("full_name, first_name, last_name, metadata, agent_province")
@@ -166,7 +171,7 @@ export default function AgentDashboardPage() {
         const currentWeekEnd = now.endOf('week'); // Sunday of this week
         
         const appointmentsRes = await fetch("/api/appointments/mine", {
-          headers: { Authorization: `Bearer ${session.access_token}` },
+          headers: { Authorization: `Bearer ${accessToken}` },
         });
 
         if (!appointmentsRes.ok) {
@@ -367,34 +372,8 @@ export default function AgentDashboardPage() {
 
   if (loading) {
     return (
-      <div className="flex-1 overflow-auto bg-gray-50">
-        <div className="p-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="col-span-1 md:col-span-2 min-h-0 flex h-full">
-              <div className="w-full h-32 md:h-40 bg-gray-200 rounded-2xl animate-pulse" />
-            </div>
-            <div className="hidden md:block col-span-1 h-40">
-              <div className="h-full bg-gray-200 rounded-xl animate-pulse" />
-            </div>
-            <div className="col-span-1 md:col-span-2 space-y-6">
-              <div>
-                <div className="h-5 w-32 bg-gray-200 rounded animate-pulse mb-4" />
-                <div className="h-24 bg-gray-200 rounded-xl animate-pulse" />
-              </div>
-              <div className="bg-white rounded-xl border border-gray-200 p-6">
-                <div className="h-6 w-48 bg-gray-200 rounded animate-pulse mb-4" />
-                <div className="space-y-3">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="h-12 bg-gray-100 rounded-lg animate-pulse" />
-                  ))}
-                </div>
-              </div>
-            </div>
-            <div className="hidden md:block space-y-6">
-              <div className="h-48 bg-gray-200 rounded-xl animate-pulse" />
-            </div>
-          </div>
-        </div>
+      <div className="flex items-center justify-center h-full">
+        <p className="text-sm text-gray-600">Loading...</p>
       </div>
     );
   }
