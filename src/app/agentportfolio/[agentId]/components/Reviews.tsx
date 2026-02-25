@@ -63,7 +63,7 @@ export function Reviews({ agentId, reviewCount }: ReviewsProps) {
         <div className="flex items-center justify-between mb-4">
           <h3>Reviews & Testimonials</h3>
         </div>
-        <p className="text-gray-600">This agent has no reviews.</p>
+        <p className="text-gray-600">This professional has no reviews.</p>
       </div>
     );
   }

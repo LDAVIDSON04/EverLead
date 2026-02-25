@@ -2786,7 +2786,7 @@ function SearchResults() {
                         )}
                       </div>
                       {portfolioAgentData.reviewCount === 0 ? (
-                        <p className="text-gray-600">This agent has no reviews.</p>
+                        <p className="text-gray-600">This professional has no reviews.</p>
                       ) : (() => {
                         // Sort ALL reviews by rating (highest first), then by date (most recent first)
                         // Prioritize reviews with comments, but include all reviews
