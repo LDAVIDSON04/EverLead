@@ -642,7 +642,7 @@ export default function CreateAccountContinuePage() {
               </div>
               <div className="space-y-2">
                 <label htmlFor="lawSocietyLicenseNumber" className="text-sm text-gray-700">
-                  License / member number please. <span className="text-red-600">*</span>
+                  License / member number. <span className="text-red-600">*</span>
                 </label>
                 <input
                   id="lawSocietyLicenseNumber"
@@ -669,7 +669,7 @@ export default function CreateAccountContinuePage() {
               </div>
               <div className="space-y-2">
                 <label htmlFor="authorizedProvinces" className="text-sm text-gray-700">
-                  Province(s) you are authorized to practice in <span className="text-red-600">*</span>
+                  Province you are authorized to practice in <span className="text-red-600">*</span>
                 </label>
                 <select
                   id="authorizedProvinces"
