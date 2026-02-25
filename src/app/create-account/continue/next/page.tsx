@@ -295,7 +295,7 @@ export default function CreateAccountNextPage() {
               <Loader2 className="w-7 h-7 text-gray-900 animate-spin" />
             </div>
             <p className="text-gray-800 font-medium text-center">
-              Creating your account…
+              Submitting for approval…
             </p>
             <p className="text-gray-500 text-sm text-center">
               This usually takes a few seconds.
@@ -489,7 +489,7 @@ export default function CreateAccountNextPage() {
             {submitting ? (
               <>
                 <Loader2 className="w-5 h-5 animate-spin shrink-0" />
-                Creating account…
+                Submitting for approval…
               </>
             ) : (
               "Submit for approval"
