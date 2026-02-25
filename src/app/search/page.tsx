@@ -1761,7 +1761,7 @@ function SearchResults() {
           const displayAvailability = showingVideoFallback && videoFallbackAppointments.length > 0 ? videoFallbackAvailability : agentAvailability;
           const showEmptyState = displayAppointments.length === 0;
           return loading ? (
-          <div className="text-center py-12">
+          <div className="text-center py-12 min-h-[320px] flex flex-col items-center justify-center" aria-busy="true">
             <p className="text-gray-600">Loading appointments...</p>
           </div>
         ) : showEmptyState ? (
@@ -1781,7 +1781,7 @@ function SearchResults() {
             </div>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-4 min-h-[200px]">
             {showingVideoFallback && videoFallbackAppointments.length > 0 && (
               <div className="bg-gradient-to-br from-neutral-50 to-white border border-neutral-200 rounded-2xl p-8 mb-6 shadow-sm">
                 <div className="flex items-start gap-3">

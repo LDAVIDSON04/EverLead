@@ -1060,8 +1060,11 @@ export default function SchedulePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <p className="text-gray-500">Loading...</p>
+      <div className="w-full h-screen flex flex-col bg-white relative overflow-hidden px-8 pt-[56px] md:pt-8 pb-0">
+        <div className="mb-4 md:mb-8 flex-shrink-0 h-[120px] bg-white" aria-hidden />
+        <div className="flex-1 min-h-0 flex items-center justify-center">
+          <p className="text-gray-500">Loading...</p>
+        </div>
       </div>
     );
   }
