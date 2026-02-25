@@ -87,6 +87,7 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
   // Video schedule stored separately when meeting type is video
   const [videoSchedule, setVideoSchedule] = useState<typeof defaultSchedule | null>(null);
   const previousMeetingTypeRef = useRef<MeetingType>("in-person");
+  const previousLocationRef = useRef<string>("");
   const justLoadedRef = useRef(false);
 
   useEffect(() => {
@@ -149,6 +150,7 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
       if (data.locations && data.locations.length > 0) {
         const firstLocation = data.locations[0];
         setSelectedLocation(firstLocation);
+        previousLocationRef.current = firstLocation;
         const existingSchedule = data.availabilityByLocation?.[firstLocation];
         const merged = mergeScheduleWithDefaults(existingSchedule);
         days.forEach((day) => {
@@ -172,20 +174,30 @@ export function AddAvailabilityModal({ isOpen, onClose, onSave }: AddAvailabilit
     }
   }
 
-  // Update recurring schedule when location changes (in-person only) – merge with defaults so all days show correctly
-  // Skip the first run after load so we don't overwrite saved data with stale or default state
+  // When user switches office location: persist current location's schedule into availabilityByLocation, then load the new location's schedule (same as video/in-person – nothing is lost)
   useEffect(() => {
     if (meetingType !== "in-person") return;
     if (justLoadedRef.current) {
       justLoadedRef.current = false;
+      previousLocationRef.current = selectedLocation;
       return;
     }
-    if (selectedLocation && availabilityByLocation[selectedLocation]) {
-      setRecurringSchedule(mergeScheduleWithDefaults(availabilityByLocation[selectedLocation]));
-    } else if (selectedLocation) {
-      setRecurringSchedule(getDefaultScheduleCopy());
+    const previousLocation = previousLocationRef.current;
+    if (previousLocation !== selectedLocation) {
+      if (previousLocation) {
+        setAvailabilityByLocation((prev) => ({
+          ...prev,
+          [previousLocation]: { ...recurringSchedule },
+        }));
+      }
+      if (selectedLocation && availabilityByLocation[selectedLocation]) {
+        setRecurringSchedule(mergeScheduleWithDefaults(availabilityByLocation[selectedLocation]));
+      } else if (selectedLocation) {
+        setRecurringSchedule(getDefaultScheduleCopy());
+      }
+      previousLocationRef.current = selectedLocation;
     }
-  }, [meetingType, selectedLocation, availabilityByLocation]);
+  }, [meetingType, selectedLocation, availabilityByLocation]); // eslint-disable-line react-hooks/exhaustive-deps -- we intentionally use current recurringSchedule when persisting on location change
 
   const handleSave = async () => {
     if (meetingType === "in-person" && !selectedLocation) return;
