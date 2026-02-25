@@ -451,17 +451,6 @@ export default function ArticlePage() {
           </div>
         </div>
 
-        {/* Have more questions? */}
-        <div className="bg-gray-50 rounded-lg p-6 mb-12">
-          <h2 className="text-xl font-semibold text-[#1A1A1A] mb-3">Have more questions?</h2>
-          <p className="text-gray-700 leading-relaxed">
-            Learn how to make changes to your Soradin account, how to update your information, or what to do if your account is locked. 
-            <Link href={`/help/${categorySlug}`} className="text-[#1A1A1A] hover:underline ml-1">
-              Browse more articles in {categoryTitle}
-            </Link>
-          </p>
-        </div>
-
         {/* Related Articles */}
         {article.relatedArticles && article.relatedArticles.length > 0 && (
           <div className="mb-12">
