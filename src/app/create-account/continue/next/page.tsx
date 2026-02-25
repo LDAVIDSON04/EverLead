@@ -64,6 +64,9 @@ export default function CreateAccountNextPage() {
     } catch (_) {}
   };
 
+  // Require Save before Submit: clear saved when user edits any bio-related field
+  const markUnsaved = () => setSaved(false);
+
   const handleGenerateBio = async () => {
     setError(null);
     if (!yearsOfExperience || !howYouHelp.trim() || !whatFamiliesAppreciate.trim()) {
@@ -111,6 +114,7 @@ export default function CreateAccountNextPage() {
       }
       if (data.bio) {
         setProfileBio(data.bio);
+        setSaved(false);
       }
     } catch {
       setError("Failed to generate bio. Please try again.");
@@ -365,7 +369,7 @@ export default function CreateAccountNextPage() {
                   id="years"
                   type="text"
                   value={yearsOfExperience}
-                  onChange={(e) => setYearsOfExperience(e.target.value)}
+                  onChange={(e) => { setYearsOfExperience(e.target.value); markUnsaved(); }}
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                   placeholder="Enter years of experience"
                 />
@@ -377,7 +381,7 @@ export default function CreateAccountNextPage() {
                 <textarea
                   id="help"
                   value={howYouHelp}
-                  onChange={(e) => { if (e.target.value.length <= 200) setHowYouHelp(e.target.value); }}
+                  onChange={(e) => { if (e.target.value.length <= 200) { setHowYouHelp(e.target.value); markUnsaved(); } }}
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent resize-none"
                   rows={2}
                   maxLength={200}
@@ -392,7 +396,7 @@ export default function CreateAccountNextPage() {
                 <textarea
                   id="appreciate"
                   value={whatFamiliesAppreciate}
-                  onChange={(e) => { if (e.target.value.length <= 200) setWhatFamiliesAppreciate(e.target.value); }}
+                  onChange={(e) => { if (e.target.value.length <= 200) { setWhatFamiliesAppreciate(e.target.value); markUnsaved(); } }}
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent resize-none"
                   rows={2}
                   maxLength={200}
@@ -430,7 +434,7 @@ export default function CreateAccountNextPage() {
             <textarea
               id="profile-bio"
               value={profileBio}
-              onChange={(e) => setProfileBio(e.target.value)}
+              onChange={(e) => { setProfileBio(e.target.value); markUnsaved(); }}
               className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent resize-y min-h-[200px] text-sm leading-relaxed"
               rows={8}
               placeholder="Click “Generate Bio” above, or write your own."
