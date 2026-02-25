@@ -238,7 +238,7 @@ export async function syncAgentAppointmentToGoogleCalendar(
     (lead?.first_name && lead?.last_name ? `${lead.first_name} ${lead.last_name}` : "Soradin client");
   
   const summary = `Soradin appointment with ${familyName}`;
-  const description = `Funeral planning appointment scheduled through Soradin.`;
+  const description = `Appointment scheduled through Soradin.`;
 
   // Build Google Calendar event
   // IMPORTANT: Use agent's timezone, not UTC, so Google Calendar displays the correct local time
@@ -535,7 +535,7 @@ export async function syncAgentAppointmentToMicrosoftCalendar(
     (lead?.first_name && lead?.last_name ? `${lead.first_name} ${lead.last_name}` : "Soradin client");
   
   const subject = `Soradin appointment with ${familyName}`;
-  const body = `Funeral planning appointment scheduled through Soradin.`;
+  const body = `Appointment scheduled through Soradin.`;
 
   // Build Microsoft Calendar event
   // IMPORTANT: Use agent's timezone, not UTC, so Microsoft Calendar displays the correct local time

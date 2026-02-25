@@ -121,7 +121,7 @@ async function syncToGoogleCalendar(
     : appointment.families;
   const familyName = familiesData?.full_name || "Soradin client";
   const summary = `Soradin appointment with ${familyName}`;
-  const description = `Funeral planning appointment scheduled through Soradin.`;
+  const description = `Appointment scheduled through Soradin.`;
 
   // Build Google Calendar event
   const event = {
@@ -218,7 +218,7 @@ async function syncToMicrosoftCalendar(
   const subject = `Soradin appointment with ${familyName}`;
   const body = {
     contentType: "HTML",
-    content: `<p>Funeral planning appointment scheduled through Soradin.</p>`,
+    content: `<p>Appointment scheduled through Soradin.</p>`,
   };
 
   // Build Microsoft Graph Calendar event
