@@ -97,9 +97,11 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [portalAuth, setPortalAuth] = useState<{ userId: string | null; accessToken: string | null }>({ userId: null, accessToken: null });
   const [avatarImageLoaded, setAvatarImageLoaded] = useState(false);
+  const [avatarImageError, setAvatarImageError] = useState(false);
 
   useEffect(() => {
     setAvatarImageLoaded(false);
+    setAvatarImageError(false);
   }, [profilePictureUrl]);
 
   useEffect(() => {
@@ -602,25 +604,21 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
         {/* User Profile */}
         <div className="px-4 pb-6">
           <div className="flex items-center gap-3 px-3 py-3 mb-2">
-            {profilePictureUrl ? (
+            {profilePictureUrl && !avatarImageError ? (
               <div className="relative w-10 h-10 shrink-0">
-                <div className={`absolute inset-0 w-10 h-10 rounded-full border-2 border-white/20 bg-white/10 transition-opacity duration-200 ${avatarImageLoaded ? 'opacity-0' : 'opacity-100'}`} />
+                <div className={`absolute inset-0 w-10 h-10 rounded-full border-2 border-white/20 bg-white/10 flex items-center justify-center transition-opacity duration-200 ${avatarImageLoaded ? 'opacity-0' : 'opacity-100'}`}>
+                  <span className="text-white/50 text-xs font-semibold">
+                    {userFirstName?.[0]?.toUpperCase() || ''}{userLastName?.[0]?.toUpperCase() || ''}
+                  </span>
+                </div>
                 <img
                   src={profilePictureUrl}
                   alt={`${userFirstName} ${userLastName}`}
                   className={`absolute inset-0 w-10 h-10 rounded-full object-cover border-2 border-white/20 transition-opacity duration-200 ${avatarImageLoaded ? 'opacity-100' : 'opacity-0'}`}
                   onLoad={() => setAvatarImageLoaded(true)}
-                  onError={(e) => {
+                  onError={() => {
+                    setAvatarImageError(true);
                     setAvatarImageLoaded(false);
-                    console.error("Error loading profile picture in nav:", profilePictureUrl);
-                    (e.target as HTMLImageElement).style.display = 'none';
-                    const parent = (e.target as HTMLImageElement).parentElement;
-                    if (parent && !parent.querySelector('.fallback-avatar')) {
-                      const fallback = document.createElement('div');
-                      fallback.className = 'fallback-avatar w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-400 rounded-full flex items-center justify-center border-2 border-white/20';
-                      fallback.innerHTML = `<span class="text-white text-xs font-semibold">${userFirstName?.[0]?.toUpperCase() || 'A'}${userLastName?.[0]?.toUpperCase() || ''}</span>`;
-                      parent.appendChild(fallback);
-                    }
                   }}
                 />
               </div>
@@ -719,14 +717,22 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
             {/* User Profile */}
             <div className="absolute bottom-0 left-0 right-0 px-4 pb-4 border-t border-white/10 pt-4">
               <div className="flex items-center gap-3 px-3 py-3 mb-2">
-                {profilePictureUrl ? (
+                {profilePictureUrl && !avatarImageError ? (
                   <div className="relative w-10 h-10 shrink-0">
-                    <div className={`absolute inset-0 w-10 h-10 rounded-full border-2 border-white/20 bg-white/10 transition-opacity duration-200 ${avatarImageLoaded ? 'opacity-0' : 'opacity-100'}`} />
+                    <div className={`absolute inset-0 w-10 h-10 rounded-full border-2 border-white/20 bg-white/10 flex items-center justify-center transition-opacity duration-200 ${avatarImageLoaded ? 'opacity-0' : 'opacity-100'}`}>
+                      <span className="text-white/50 text-xs font-semibold">
+                        {userFirstName?.[0]?.toUpperCase() || ''}{userLastName?.[0]?.toUpperCase() || ''}
+                      </span>
+                    </div>
                     <img
                       src={profilePictureUrl}
                       alt={`${userFirstName} ${userLastName}`}
                       className={`absolute inset-0 w-10 h-10 rounded-full object-cover border-2 border-white/20 transition-opacity duration-200 ${avatarImageLoaded ? 'opacity-100' : 'opacity-0'}`}
                       onLoad={() => setAvatarImageLoaded(true)}
+                      onError={() => {
+                        setAvatarImageError(true);
+                        setAvatarImageLoaded(false);
+                      }}
                     />
                   </div>
                 ) : (
