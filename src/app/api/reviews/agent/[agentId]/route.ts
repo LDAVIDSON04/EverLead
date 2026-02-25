@@ -19,7 +19,7 @@ export async function GET(
       );
     }
 
-    // Fetch reviews for this agent
+    // Fetch reviews for this agent; prefer reviewer_display_name (set at submit), then appointment cached name, then lead
     const { data: reviews, error: reviewsError } = await supabaseAdmin
       .from("reviews")
       .select(`
@@ -27,10 +27,14 @@ export async function GET(
         rating,
         review_text,
         created_at,
+        reviewer_display_name,
         leads (
           first_name,
           last_name,
           full_name
+        ),
+        appointments (
+          cached_lead_full_name
         )
       `)
       .eq("agent_id", agentId)
@@ -50,19 +54,26 @@ export async function GET(
       ? reviews!.reduce((sum: number, review: any) => sum + review.rating, 0) / totalReviews
       : 0;
 
-    // Format reviews for frontend
+    // Format reviews for frontend: use stored reviewer_display_name when set, else appointment cached name, else lead name
     const formattedReviews = (reviews || []).map((review: any) => {
+      const stored = review.reviewer_display_name?.trim();
+      if (stored) {
+        return { displayName: stored, review };
+      }
+      const appointment = Array.isArray(review.appointments) ? review.appointments[0] : review.appointments;
+      const cachedName = appointment?.cached_lead_full_name?.trim();
       const lead = Array.isArray(review.leads) ? review.leads[0] : review.leads;
-      const reviewerName = lead?.full_name || 
+      const leadName = lead?.full_name ||
         (lead?.first_name && lead?.last_name
           ? `${lead.first_name} ${lead.last_name}`
-          : "Anonymous");
-      
-      // Extract first name and last initial for privacy
-      const nameParts = reviewerName.split(" ");
+          : null);
+      const reviewerName = cachedName || leadName || "Anonymous";
+      const nameParts = reviewerName.split(" ").filter(Boolean);
       const displayName = nameParts.length > 1
         ? `${nameParts[0]} ${nameParts[nameParts.length - 1][0]}.`
         : nameParts[0] || "Anonymous";
+      return { displayName, review };
+    }).map(({ displayName, review }: { displayName: string; review: any }) => {
 
       // Format date
       const reviewDate = new Date(review.created_at);
@@ -76,7 +87,7 @@ export async function GET(
         rating: review.rating,
         date: formattedDate,
         comment: review.review_text || null,
-        verified: true, // All reviews are verified (from actual appointments)
+        verified: true,
       };
     });
 

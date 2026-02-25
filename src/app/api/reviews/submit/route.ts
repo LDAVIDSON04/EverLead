@@ -37,7 +37,8 @@ export async function POST(req: NextRequest) {
         agent_id,
         lead_id,
         status,
-        confirmed_at
+        confirmed_at,
+        cached_lead_full_name
       `)
       .eq("id", appointmentId)
       .single();
@@ -92,6 +93,28 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    // Resolve reviewer display name (First L.) from appointment or lead so we store it and it never changes
+    let reviewerDisplayName: string | null = null;
+    const cachedName = (appointment as any)?.cached_lead_full_name?.trim();
+    if (cachedName) {
+      const parts = cachedName.split(" ").filter(Boolean);
+      reviewerDisplayName = parts.length > 1
+        ? `${parts[0]} ${parts[parts.length - 1][0]}.`
+        : parts[0] || null;
+    }
+    if (!reviewerDisplayName && appointment.lead_id) {
+      const { data: lead } = await supabaseAdmin
+        .from("leads")
+        .select("first_name, last_name, full_name")
+        .eq("id", appointment.lead_id)
+        .single();
+      const fullName = lead?.full_name || (lead?.first_name && lead?.last_name ? `${lead.first_name} ${lead.last_name}` : null);
+      if (fullName) {
+        const parts = fullName.trim().split(" ").filter(Boolean);
+        reviewerDisplayName = parts.length > 1 ? `${parts[0]} ${parts[parts.length - 1][0]}.` : parts[0] || null;
+      }
+    }
+
     // Create new review
     const { data: newReview, error: reviewError } = await supabaseAdmin
       .from("reviews")
@@ -101,6 +124,7 @@ export async function POST(req: NextRequest) {
         appointment_id: appointmentId,
         rating,
         review_text: reviewText || null,
+        reviewer_display_name: reviewerDisplayName,
       })
       .select()
       .single();
