@@ -136,7 +136,7 @@ export function Footer() {
                   Privacy
                 </Link>
                 {" "}
-                <Image src="/ssl-certificate.svg" alt="SSL certificate" width={18} height={18} className="inline-block opacity-40 align-middle" aria-hidden />
+                <Image src="/ssl-certificate.png" alt="SSL certificate" width={26} height={26} className="inline-block align-middle" aria-hidden />
               </p>
             </div>
           </div>
