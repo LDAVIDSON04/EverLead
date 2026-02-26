@@ -7,7 +7,7 @@ import { User, MapPin, Calendar, FileText, MessageSquare } from 'lucide-react';
 export default function HelpPage() {
   const categories = [
     { id: 1, title: 'Finding a Provider', icon: MapPin, articles: 5 },
-    { id: 2, title: 'Appointments', icon: Calendar, articles: 7 },
+    { id: 2, title: 'Appointments', icon: Calendar, articles: 6 },
     { id: 3, title: 'Privacy', icon: FileText, articles: 4 },
     { id: 4, title: 'Reviews', icon: MessageSquare, articles: 3 }
   ];

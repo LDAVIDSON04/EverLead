@@ -43,8 +43,7 @@ const categoryData: Record<string, {
       { id: '3', title: 'What happens after I book an appointment?', slug: 'what-happens-after-booking' },
       { id: '8', title: 'Can I book appointments for family members?', slug: 'can-i-book-for-family-members' },
       { id: '11', title: 'Are appointments free?', slug: 'are-appointments-free' },
-      { id: '13', title: 'How do I receive appointment reminders?', slug: 'how-do-i-receive-reminders' },
-      { id: '17', title: 'What is the cancellation policy?', slug: 'what-is-cancellation-policy' }
+      { id: '13', title: 'How do I receive appointment reminders?', slug: 'how-do-i-receive-reminders' }
     ]
   },
   'privacy': {

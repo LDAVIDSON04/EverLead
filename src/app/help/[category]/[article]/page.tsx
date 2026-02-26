@@ -217,7 +217,7 @@ Simply log in, navigate to your appointment, and choose the option to cancel or 
 Soradin encourages early notice when possible so providers can offer the time to another family.`,
       relatedArticles: [
         { title: 'How do I book an appointment?', slug: 'how-do-i-book-an-appointment' },
-        { title: 'What is the cancellation policy?', slug: 'what-is-cancellation-policy' }
+        { title: 'What happens after I book an appointment?', slug: 'what-happens-after-booking' }
       ]
     },
     'what-happens-after-booking': {
@@ -263,17 +263,6 @@ You may receive email reminders before your appointment, and in some cases calen
 These reminders are designed to reduce stress and ensure you never miss a scheduled conversation.`,
       relatedArticles: [
         { title: 'What happens after I book an appointment?', slug: 'what-happens-after-booking' }
-      ]
-    },
-    'what-is-cancellation-policy': {
-      title: 'What is the cancellation policy?',
-      content: `Soradin understands that plans can change.
-
-Most providers ask for reasonable notice if you need to cancel or reschedule. Specific cancellation expectations may vary and are often listed on the provider's profile.
-
-If you are unsure, you can always reach out to the provider directly or contact Soradin support for guidance.`,
-      relatedArticles: [
-        { title: 'How do I cancel or reschedule an appointment?', slug: 'how-do-i-cancel-or-reschedule' }
       ]
     }
   },
