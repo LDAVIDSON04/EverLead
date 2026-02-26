@@ -43,6 +43,7 @@ export async function POST(
         status,
         requested_date,
         office_location_id,
+        cached_lead_full_name,
         leads (
           id,
           first_name,
@@ -181,14 +182,15 @@ export async function POST(
         .maybeSingle();
       const agentName = agentProfile?.full_name || null;
 
-      // Get lead data (robust to shape)
+      // Get lead data (robust to shape); use booking name (cached_lead_full_name) when available
       let lead = Array.isArray(appointment.leads) ? appointment.leads[0] : appointment.leads;
-      let consumerName = lead?.full_name || 
+      let consumerName = appointment.cached_lead_full_name?.trim() ||
+        lead?.full_name ||
         (lead?.first_name && lead?.last_name
           ? [lead?.first_name, lead?.last_name].filter(Boolean).join(' ')
           : null);
       let consumerEmail = lead?.email || null;
-      
+
       // Fallback: if lead relation missing email, fetch from leads table
       if (!consumerEmail && appointment.lead_id) {
         try {
@@ -198,10 +200,12 @@ export async function POST(
             .eq("id", appointment.lead_id)
             .maybeSingle();
           if (fallbackLead) {
-            consumerName = fallbackLead.full_name || 
-              (fallbackLead.first_name && fallbackLead.last_name
-                ? [fallbackLead.first_name, fallbackLead.last_name].filter(Boolean).join(' ')
-                : consumerName);
+            if (!consumerName) {
+              consumerName = fallbackLead.full_name ||
+                (fallbackLead.first_name && fallbackLead.last_name
+                  ? [fallbackLead.first_name, fallbackLead.last_name].filter(Boolean).join(' ')
+                  : null);
+            }
             consumerEmail = fallbackLead.email || consumerEmail;
           }
         } catch (e) {

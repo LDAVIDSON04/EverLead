@@ -1074,9 +1074,11 @@ export async function POST(req: NextRequest) {
 
       const leadPhone = leadDataForSMS?.phone;
       const leadProvince = leadDataForSMS?.province;
-      const consumerName = leadDataForSMS?.full_name || 
-        (leadDataForSMS?.first_name && leadDataForSMS?.last_name 
-          ? `${leadDataForSMS.first_name} ${leadDataForSMS.last_name}` 
+      // Use booking name (cached_lead_full_name) for SMS so "meeting with X" shows the name from this booking
+      const consumerName = appointment.cached_lead_full_name?.trim() ||
+        leadDataForSMS?.full_name ||
+        (leadDataForSMS?.first_name && leadDataForSMS?.last_name
+          ? `${leadDataForSMS.first_name} ${leadDataForSMS.last_name}`
           : "Client");
 
       const customerIdentitySms = `Customer | ${consumerName}`;

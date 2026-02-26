@@ -60,7 +60,8 @@ export async function GET(req: NextRequest) {
         status,
         office_location_id,
         reminder_1h_sent_at,
-        reminder_10m_sent_at
+        reminder_10m_sent_at,
+        cached_lead_full_name
       `)
       .eq("status", "confirmed")
       .gte("confirmed_at", videoReminderWindowEnd) // Start of earliest window (in-person)
@@ -131,7 +132,9 @@ export async function GET(req: NextRequest) {
           continue;
         }
 
-        const consumerName = lead.full_name || 
+        // Use booking name (cached_lead_full_name) so "meeting with X" matches the name from the booking
+        const consumerName = appointment.cached_lead_full_name?.trim() ||
+          lead.full_name ||
           (lead.first_name && lead.last_name ? `${lead.first_name} ${lead.last_name}` : "Client");
         const agentName = agent.full_name || 
           (agent.first_name && agent.last_name ? `${agent.first_name} ${agent.last_name}` : "Agent");

@@ -41,6 +41,7 @@ export async function POST(req: NextRequest) {
         requested_date,
         requested_window,
         status,
+        cached_lead_full_name,
         leads (
           first_name,
           last_name,
@@ -94,9 +95,10 @@ export async function POST(req: NextRequest) {
       // Don't fail the cancellation if sync deletion fails
     }
 
-    // Get lead data for emails
+    // Get lead data for emails/SMS; use booking name (cached_lead_full_name) when available
     const lead = Array.isArray(appointment.leads) ? appointment.leads[0] : appointment.leads;
-    const consumerName = lead?.full_name || 
+    const consumerName = appointment.cached_lead_full_name?.trim() ||
+      lead?.full_name ||
       (lead?.first_name && lead?.last_name
         ? [lead?.first_name, lead?.last_name].filter(Boolean).join(' ')
         : null);
