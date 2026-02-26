@@ -774,8 +774,8 @@ export default function BookAgentPage() {
 
         {/* Success Modal */}
         {showModal && successMessage && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-900">Success</h3>
                 <button
@@ -789,6 +789,32 @@ export default function BookAgentPage() {
                 </button>
               </div>
               <p className="text-gray-600 mb-4">{successMessage}</p>
+              {/* Cross-sell: book with lawyer, financial advisor, insurance (this flow is funeral-only) */}
+              <div className="mb-4 p-3 bg-gray-50 rounded-lg text-left">
+                <p className="text-sm font-medium text-gray-900 mb-2">Would you also like to meet with:</p>
+                <div className="space-y-2">
+                  {[
+                    { label: "Lawyer", q: "Estate lawyer" },
+                    { label: "Financial advisor", q: "Financial advisor" },
+                    { label: "Insurance broker", q: "Life insurance" },
+                  ].map(({ label, q }) => {
+                    const params = new URLSearchParams();
+                    params.set("q", q);
+                    params.set("mode", "in-person");
+                    if (agentInfo?.agent_city) params.set("location", agentInfo.agent_city);
+                    return (
+                      <Link
+                        key={q}
+                        href={`/search?${params.toString()}`}
+                        className="block w-full bg-white border border-gray-200 text-gray-800 py-2 px-3 rounded-lg font-medium hover:bg-gray-100 text-center text-sm"
+                        onClick={() => { setShowModal(false); setSuccessMessage(null); }}
+                      >
+                        {label}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
               <button
                 onClick={() => {
                   setShowModal(false);

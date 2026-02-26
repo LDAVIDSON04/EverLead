@@ -353,9 +353,14 @@ function BookingStep3Content() {
       }
 
       const data = await res.json();
-      
-      // Navigate to success page
-      router.push(`/book/success?appointmentId=${data.appointment?.id || ""}&email=${encodeURIComponent(email)}`);
+      const profession = getBookingProfession(agentInfo?.metadata?.agent_role);
+      const successParams = new URLSearchParams();
+      successParams.set("appointmentId", data.appointment?.id || "");
+      successParams.set("email", email);
+      if (searchedCity) successParams.set("location", searchedCity);
+      if (mode) successParams.set("mode", mode);
+      successParams.set("profession", profession);
+      router.push(`/book/success?${successParams.toString()}`);
     } catch (err: any) {
       console.error("Error booking appointment:", err);
       setError(err.message || "Failed to book appointment");
