@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Instagram, Facebook } from "lucide-react";
+import { Instagram, Facebook, Lock } from "lucide-react";
 
 export function Footer() {
   return (
@@ -135,10 +135,8 @@ export function Footer() {
                 <Link href="/privacy" className="hover:text-white/60 transition-colors underline">
                   Privacy
                 </Link>
-                {" · "}
-                <Link href="/ssl" className="hover:text-white/60 transition-colors underline">
-                  SSL Certificate
-                </Link>
+                {" "}
+                <Lock className="inline-block w-4 h-4 text-white/40 align-middle" aria-label="SSL secured" />
               </p>
             </div>
           </div>
