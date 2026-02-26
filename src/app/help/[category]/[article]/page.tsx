@@ -432,7 +432,6 @@ export default function ArticlePage() {
       {/* Article Content */}
       <article className="max-w-4xl mx-auto px-6 py-12">
         <h1 className="text-4xl font-bold text-[#1A1A1A] mb-4">{article.title}</h1>
-        <p className="text-gray-500 text-sm mb-8">Updated over a year ago</p>
         
         <div className="prose prose-lg max-w-none mb-12">
           <div className="text-[#1A1A1A] leading-relaxed whitespace-pre-line">
