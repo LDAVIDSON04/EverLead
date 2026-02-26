@@ -3010,6 +3010,10 @@ function SearchResults() {
                   <Link href="/privacy" className="hover:text-white/60 transition-colors underline">
                     Privacy
                   </Link>
+                  {" · "}
+                  <Link href="/ssl" className="hover:text-white/60 transition-colors underline">
+                    SSL Certificate
+                  </Link>
                 </p>
               </div>
             </div>
