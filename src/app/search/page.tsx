@@ -3010,8 +3010,6 @@ function SearchResults() {
                   <Link href="/privacy" className="hover:text-white/60 transition-colors underline">
                     Privacy
                   </Link>
-                  {" "}
-                  <Image src="/ssl-certificate.png" alt="SSL certificate" width={132} height={132} className="inline-block align-middle" aria-hidden />
                 </p>
               </div>
             </div>
