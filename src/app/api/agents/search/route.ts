@@ -85,17 +85,35 @@ function queryToAgentRole(query: string): string | null {
   return null;
 }
 
-// Keywords that indicate an agent belongs to a role (for specialty/job_title when agent_role is missing or wrong)
+// Map stored metadata.agent_role values to canonical role (so we only show agents whose registered profession matches)
+const STORED_ROLE_TO_CANONICAL: Record<string, string> = {
+  "funeral-planner": "funeral-planner",
+  "funeral_planner": "funeral-planner",
+  "lawyer": "lawyer",
+  "estate_lawyer": "lawyer",
+  "financial-advisor": "financial-advisor",
+  "financial_advisor": "financial-advisor",
+  "financial_insurance_agent": "financial-advisor",
+  "insurance-broker": "insurance-broker",
+  "insurance_broker": "insurance-broker",
+};
+
+// Keywords for legacy agents without agent_role (only used when agent_role is missing)
 const ROLE_KEYWORDS: Record<string, string[]> = {
   "funeral-planner": ["funeral", "pre need", "pre-need", "pre planner", "funeral director", "funeral planning", "funeral services", "advanced planning"],
   "lawyer": ["lawyer", "estate", "wills", "legal"],
   "insurance-broker": ["insurance", "life insurance", "broker"],
-  "financial-advisor": ["financial", "financial advisor", "financial planner", "advisor", "planner"],
+  "financial-advisor": ["financial", "financial advisor", "financial planner"],
 };
 
 function agentMatchesProfession(agent: AgentSearchResult, requiredRole: string): boolean {
-  const role = (agent.agent_role || '').toLowerCase().trim().replace(/\s+/g, '-');
-  if (role === requiredRole) return true;
+  const raw = (agent.agent_role || '').toLowerCase().trim().replace(/\s+/g, '_');
+  const storedCanonical = raw ? (STORED_ROLE_TO_CANONICAL[raw] ?? raw.replace(/_/g, '-')) : null;
+  // If agent has a stored role, require exact match – never show e.g. funeral planners for "Financial advisor"
+  if (storedCanonical) {
+    return storedCanonical === requiredRole;
+  }
+  // Legacy: no agent_role – allow keyword match only for specialty/job_title
   const specialty = (agent.specialty || '').toLowerCase();
   const jobTitle = (agent.job_title || '').toLowerCase();
   const combined = `${specialty} ${jobTitle}`;

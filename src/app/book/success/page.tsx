@@ -10,8 +10,8 @@ import Script from "next/script";
 // Profession slug (from step3) -> display label and search "q" value for /search
 const OTHER_PROFESSIONS: { slug: "funeral" | "lawyer" | "financial" | "insurance"; label: string; searchQ: string }[] = [
   { slug: "funeral", label: "Funeral / pre-need specialist", searchQ: "Pre-need planning" },
-  { slug: "lawyer", label: "Lawyer", searchQ: "Estate lawyer" },
-  { slug: "financial", label: "Financial advisor", searchQ: "Financial advisor" },
+  { slug: "lawyer", label: "Estate Lawyer", searchQ: "Estate lawyer" },
+  { slug: "financial", label: "Financial Advisor", searchQ: "Financial advisor" },
   { slug: "insurance", label: "Insurance broker", searchQ: "Life insurance" },
 ];
 
@@ -100,21 +100,12 @@ function BookingSuccessContent() {
           </div>
         )}
         
-        <div className="space-y-3">
-          <Link
-            href="/search"
-            className="block w-full bg-neutral-800 text-white py-3 px-6 rounded-lg font-semibold hover:bg-neutral-900 transition-colors"
-          >
-            Book Another Appointment
-          </Link>
-          
-          <Link
-            href="/"
-            className="block w-full border border-gray-300 text-gray-700 py-3 px-6 rounded-lg font-medium hover:bg-gray-50 transition-colors"
-          >
-            Return to Home
-          </Link>
-        </div>
+        <Link
+          href="/"
+          className="block w-full border border-gray-300 text-gray-700 py-3 px-6 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+        >
+          Return to Home
+        </Link>
       </div>
     </div>
   );

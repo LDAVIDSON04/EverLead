@@ -794,8 +794,8 @@ export default function BookAgentPage() {
                 <p className="text-sm font-medium text-gray-900 mb-2">Would you also like to meet with:</p>
                 <div className="space-y-2">
                   {[
-                    { label: "Lawyer", q: "Estate lawyer" },
-                    { label: "Financial advisor", q: "Financial advisor" },
+                    { label: "Estate Lawyer", q: "Estate lawyer" },
+                    { label: "Financial Advisor", q: "Financial advisor" },
                     { label: "Insurance broker", q: "Life insurance" },
                   ].map(({ label, q }) => {
                     const params = new URLSearchParams();
