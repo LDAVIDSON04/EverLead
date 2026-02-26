@@ -3011,7 +3011,7 @@ function SearchResults() {
                     Privacy
                   </Link>
                   {" "}
-                  <Image src="/ssl-certificate.png" alt="SSL certificate" width={26} height={26} className="inline-block align-middle" aria-hidden />
+                  <Image src="/ssl-certificate.png" alt="SSL certificate" width={44} height={44} className="inline-block align-middle" aria-hidden />
                 </p>
               </div>
             </div>
