@@ -7,7 +7,7 @@ import Link from "next/link";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import { Suspense, useState, useEffect, useMemo, useCallback } from "react";
-import { Search, Star, MapPin, Calendar, Clock, Stethoscope, Video, SlidersHorizontal, ChevronRight, X, ArrowLeft, Shield, ExternalLink, Menu, Instagram, Facebook, Lock } from "lucide-react";
+import { Search, Star, MapPin, Calendar, Clock, Stethoscope, Video, SlidersHorizontal, ChevronRight, X, ArrowLeft, Shield, ExternalLink, Menu, Instagram, Facebook } from "lucide-react";
 import { supabaseClient } from "@/lib/supabaseClient";
 // Removed static imports - now using dynamic imports below
 import { TrustHighlights } from "@/app/agent/[agentId]/components/TrustHighlights";
@@ -3011,7 +3011,7 @@ function SearchResults() {
                     Privacy
                   </Link>
                   {" "}
-                  <Lock className="inline-block w-4 h-4 text-white/40 align-middle" aria-label="SSL secured" />
+                  <Image src="/ssl-certificate.svg" alt="SSL certificate" width={18} height={18} className="inline-block opacity-40 align-middle" aria-hidden />
                 </p>
               </div>
             </div>

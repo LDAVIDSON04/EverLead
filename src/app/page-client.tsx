@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search, MapPin, Star, Calendar, Check, ChevronDown, Heart, Facebook, Instagram, Menu, X, ChevronRight, Lock } from "lucide-react";
+import { Search, MapPin, Star, Calendar, Check, ChevronDown, Heart, Facebook, Instagram, Menu, X, ChevronRight } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 // Major BC cities for the "Find professionals near you" section (12 cities max)
 const majorBCCities = [
@@ -1014,7 +1014,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                     Privacy
                   </Link>
                   {" "}
-                  <Lock className="inline-block w-4 h-4 text-white/40 align-middle" aria-label="SSL secured" />
+                  <Image src="/ssl-certificate.svg" alt="SSL certificate" width={18} height={18} className="inline-block opacity-40 align-middle" aria-hidden />
                 </p>
               </div>
             </div>
