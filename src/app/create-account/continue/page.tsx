@@ -229,19 +229,19 @@ export default function CreateAccountContinuePage() {
       }
     }
     if (showLawyer) {
-      if (!isLicensed || !lawSocietyLicenseNumber.trim() || !lawSocietyName.trim() || !authorizedProvinces) {
+      if (!isLicensed || !lawSocietyName.trim() || !authorizedProvinces) {
         setError("Please complete all fields for your role.");
         return;
       }
     }
     if (showInsurance) {
-      if (!isLicensedInsurance || !insuranceLicenseNumber.trim() || !regulatoryBody.trim() || !brokerageMga.trim() || !eoCoverageInsurance) {
+      if (!isLicensedInsurance || !regulatoryBody.trim() || !brokerageMga.trim() || !eoCoverageInsurance) {
         setError("Please complete all fields for your role.");
         return;
       }
     }
     if (showFinancial) {
-      if (!isRegistered || !regulatoryOrganization.trim() || !registrationLicenseNumber.trim() || !eoInsuranceConfirmed) {
+      if (!isRegistered || !regulatoryOrganization.trim() || !eoInsuranceConfirmed) {
         setError("Please complete all fields for your role and confirm E&O coverage.");
         return;
       }
@@ -641,20 +641,6 @@ export default function CreateAccountContinuePage() {
                 </div>
               </div>
               <div className="space-y-2">
-                <label htmlFor="lawSocietyLicenseNumber" className="text-sm text-gray-700">
-                  License / member number. <span className="text-red-600">*</span>
-                </label>
-                <input
-                  id="lawSocietyLicenseNumber"
-                  type="text"
-                  value={lawSocietyLicenseNumber}
-                  onChange={(e) => setLawSocietyLicenseNumber(e.target.value)}
-                  className={inputClassName}
-                  placeholder="e.g. member or license number"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
                 <label htmlFor="lawSocietyName" className="text-sm text-gray-700">
                   Law society name <span className="text-red-600">*</span>
                 </label>
@@ -797,19 +783,6 @@ export default function CreateAccountContinuePage() {
                     </label>
                   ))}
                 </div>
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="insuranceLicenseNumber" className="text-sm text-gray-700">
-                  License number <span className="text-red-600">*</span>
-                </label>
-                <input
-                  id="insuranceLicenseNumber"
-                  type="text"
-                  value={insuranceLicenseNumber}
-                  onChange={(e) => setInsuranceLicenseNumber(e.target.value)}
-                  className={inputClassName}
-                  required
-                />
               </div>
               <div className="space-y-2">
                 <label htmlFor="regulatoryBody" className="text-sm text-gray-700">
@@ -981,20 +954,6 @@ export default function CreateAccountContinuePage() {
                   value={regulatoryOrganization}
                   onChange={(e) => setRegulatoryOrganization(e.target.value)}
                   className={inputClassName}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="registrationLicenseNumber" className="text-sm text-gray-700">
-                  License / Registration number <span className="text-red-600">*</span>
-                </label>
-                <input
-                  id="registrationLicenseNumber"
-                  type="text"
-                  value={registrationLicenseNumber}
-                  onChange={(e) => setRegistrationLicenseNumber(e.target.value)}
-                  className={inputClassName}
-                  placeholder="e.g. registration or license number"
                   required
                 />
               </div>
