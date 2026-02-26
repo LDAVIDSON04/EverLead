@@ -251,7 +251,7 @@ export default function AgentApprovalPage() {
     if (meta.specialty && typeof meta.specialty === 'string') return meta.specialty;
     const role = meta.agent_role;
     if (role === 'lawyer') return 'Lawyer';
-    if (role === 'insurance-broker') return 'Insurance Broker';
+    if (role === 'insurance-broker') return 'Insurance Agent';
     if (role === 'financial-advisor') return 'Financial Advisor';
     return 'Funeral Planner';
   };

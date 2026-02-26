@@ -61,7 +61,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
     "Estate Lawyers",
     "Financial Planners",
     "Tax Advisors",
-    "Insurance Brokers",
+    "Insurance Agents",
   ];
   const [currentTextIndex, setCurrentTextIndex] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
@@ -100,7 +100,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
   const specialtySuggestions = [
     "Funeral Pre Planner",
     "Estate Lawyer",
-    "Life Insurance Broker",
+    "Insurance Agent",
     "Financial Planner",
   ];
 

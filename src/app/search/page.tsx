@@ -94,7 +94,7 @@ type AvailabilityDay = {
 const SERVICE_SUGGESTIONS = [
   "Pre-need planning",
   "Estate lawyer",
-  "Life insurance",
+  "Insurance agent",
   "Financial advisor",
 ];
 

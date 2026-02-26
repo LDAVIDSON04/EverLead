@@ -178,7 +178,7 @@ export default function CreateAccountNextPage() {
     const specialtyFromRole: Record<string, string> = {
       "funeral-planner": "Funeral Planner",
       "lawyer": "Lawyer",
-      "insurance-broker": "Insurance Broker",
+      "insurance-broker": "Insurance Agent",
       "financial-advisor": "Financial Advisor",
       "financial_insurance_agent": "Financial & Insurance advisor",
     };

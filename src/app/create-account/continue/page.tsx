@@ -760,7 +760,7 @@ export default function CreateAccountContinuePage() {
             </>
           )}
 
-          {/* Insurance Broker only */}
+          {/* Insurance Agent only */}
           {showInsuranceOnly && (
             <>
               <div className="space-y-3">

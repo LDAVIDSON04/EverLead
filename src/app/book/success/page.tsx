@@ -11,7 +11,7 @@ const OTHER_PROFESSIONS: { slug: "funeral" | "lawyer" | "financial" | "insurance
   { slug: "funeral", label: "Funeral / pre-need specialist", searchQ: "Pre-need planning" },
   { slug: "lawyer", label: "Estate Lawyer", searchQ: "Estate lawyer" },
   { slug: "financial", label: "Financial Advisor", searchQ: "Financial advisor" },
-  { slug: "insurance", label: "Insurance broker", searchQ: "Insurance broker" },
+  { slug: "insurance", label: "Insurance Agent", searchQ: "Insurance agent" },
 ];
 
 function buildSearchUrl(

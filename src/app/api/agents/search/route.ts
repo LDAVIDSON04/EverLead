@@ -65,6 +65,7 @@ const QUERY_TO_AGENT_ROLE: Record<string, string> = {
   "insurance": "insurance-broker",
   "life insurance": "insurance-broker",
   "insurance broker": "insurance-broker",
+  "insurance agent": "insurance-broker",
   "life insurance broker": "insurance-broker",
   "financial": "financial-advisor",
   "financial advisor": "financial-advisor",

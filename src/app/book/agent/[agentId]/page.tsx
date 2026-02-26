@@ -796,7 +796,7 @@ export default function BookAgentPage() {
                   {[
                     { label: "Estate Lawyer", q: "Estate lawyer" },
                     { label: "Financial Advisor", q: "Financial advisor" },
-                    { label: "Insurance broker", q: "Insurance broker" },
+                    { label: "Insurance Agent", q: "Insurance agent" },
                   ].map(({ label, q }) => {
                     const params = new URLSearchParams();
                     params.set("q", q);
