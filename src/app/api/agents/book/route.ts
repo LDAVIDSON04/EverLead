@@ -595,7 +595,9 @@ export async function POST(req: NextRequest) {
         .single();
       
       const familyEmail = leadData?.email;
-      const familyName = leadData?.full_name || 
+      // Use the name from this booking (cached_lead_full_name) for the agent email "With" field
+      const familyName = appointment.cached_lead_full_name?.trim() ||
+        leadData?.full_name ||
         (leadData?.first_name && leadData?.last_name ? `${leadData.first_name} ${leadData.last_name}` : "Family");
       
       // Build location address from office location if available, otherwise from lead data
