@@ -3,7 +3,6 @@
 import { Suspense, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import { CheckCircle } from "lucide-react";
 import Script from "next/script";
 
@@ -12,7 +11,7 @@ const OTHER_PROFESSIONS: { slug: "funeral" | "lawyer" | "financial" | "insurance
   { slug: "funeral", label: "Funeral / pre-need specialist", searchQ: "Pre-need planning" },
   { slug: "lawyer", label: "Estate Lawyer", searchQ: "Estate lawyer" },
   { slug: "financial", label: "Financial Advisor", searchQ: "Financial advisor" },
-  { slug: "insurance", label: "Insurance broker", searchQ: "Life insurance" },
+  { slug: "insurance", label: "Insurance broker", searchQ: "Insurance broker" },
 ];
 
 function buildSearchUrl(
@@ -60,52 +59,54 @@ function BookingSuccessContent() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center px-4 py-8">
-      <div className="max-w-md w-full text-center">
-        <div className="mb-6 flex justify-center">
-          <div className="w-16 h-16 bg-neutral-100 rounded-full flex items-center justify-center">
-            <CheckCircle className="w-10 h-10 text-neutral-800" />
+    <div className="min-h-screen bg-[#FAF9F6] flex items-center justify-center px-4 py-10">
+      <div className="max-w-md w-full">
+        <div className="bg-white rounded-2xl shadow-lg border border-[#1A1A1A]/10 overflow-hidden">
+          <div className="pt-10 pb-6 px-8 text-center">
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-[#1A1A1A] text-white mb-6 shadow-md">
+              <CheckCircle className="w-12 h-12" strokeWidth={2} />
+            </div>
+            <h1 className="text-2xl md:text-3xl font-bold text-[#1A1A1A] mb-2 tracking-tight">
+              Appointment Confirmed!
+            </h1>
+            <p className="text-[#1A1A1A]/70 text-base mb-6">
+              Your appointment has been successfully booked.
+              {email && (
+                <span className="block mt-2 text-sm text-[#1A1A1A]/60">
+                  A confirmation email has been sent to <strong className="text-[#1A1A1A]/80">{email}</strong>.
+                </span>
+              )}
+            </p>
+          </div>
+
+          {otherProfessions.length > 0 && (
+            <div className="px-6 pb-6">
+              <p className="text-sm font-semibold text-[#1A1A1A] mb-3 px-1">
+                Would you also like to meet with:
+              </p>
+              <div className="space-y-2">
+                {otherProfessions.map((p) => (
+                  <Link
+                    key={p.slug}
+                    href={buildSearchUrl(p.searchQ, location || null, mode || null)}
+                    className="block w-full bg-[#FAF9F6] border-2 border-[#1A1A1A]/15 text-[#1A1A1A] py-3 px-4 rounded-xl font-semibold hover:bg-[#1A1A1A] hover:text-white hover:border-[#1A1A1A] transition-all duration-200 text-center"
+                  >
+                    {p.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="px-6 pb-8 pt-2">
+            <Link
+              href="/"
+              className="block w-full bg-[#1A1A1A] text-white py-3.5 px-6 rounded-xl font-semibold hover:bg-[#1A1A1A]/90 transition-colors text-center shadow-sm"
+            >
+              Return to Home
+            </Link>
           </div>
         </div>
-        
-        <h1 className="text-2xl font-semibold text-gray-900 mb-2">
-          Appointment Confirmed!
-        </h1>
-        
-        <p className="text-gray-600 mb-6">
-          Your appointment has been successfully booked.
-          {email && (
-            <span className="block mt-2">
-              A confirmation email has been sent to <strong>{email}</strong>.
-            </span>
-          )}
-        </p>
-
-        {otherProfessions.length > 0 && (
-          <div className="mb-6 p-4 bg-gray-50 rounded-lg text-left">
-            <p className="text-sm font-medium text-gray-900 mb-3">
-              Would you also like to meet with:
-            </p>
-            <div className="space-y-2">
-              {otherProfessions.map((p) => (
-                <Link
-                  key={p.slug}
-                  href={buildSearchUrl(p.searchQ, location || null, mode || null)}
-                  className="block w-full bg-white border border-gray-200 text-gray-800 py-2.5 px-4 rounded-lg font-medium hover:bg-gray-100 hover:border-gray-300 transition-colors text-center"
-                >
-                  {p.label}
-                </Link>
-              ))}
-            </div>
-          </div>
-        )}
-        
-        <Link
-          href="/"
-          className="block w-full border border-gray-300 text-gray-700 py-3 px-6 rounded-lg font-medium hover:bg-gray-50 transition-colors"
-        >
-          Return to Home
-        </Link>
       </div>
     </div>
   );
@@ -131,8 +132,8 @@ export default function BookingSuccessPage() {
         }}
       />
       <Suspense fallback={
-        <div className="min-h-screen bg-white flex items-center justify-center">
-          <p className="text-gray-600">Loading...</p>
+        <div className="min-h-screen bg-[#FAF9F6] flex items-center justify-center">
+          <p className="text-[#1A1A1A]/60">Loading...</p>
         </div>
       }>
         <BookingSuccessContent />
