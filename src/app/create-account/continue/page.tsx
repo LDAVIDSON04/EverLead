@@ -241,8 +241,12 @@ export default function CreateAccountContinuePage() {
       }
     }
     if (showFinancial) {
-      if (!isRegistered || !regulatoryOrganization.trim() || !eoInsuranceConfirmed) {
+      if (!isRegistered || !eoInsuranceConfirmed) {
         setError("Please complete all fields for your role and confirm E&O coverage.");
+        return;
+      }
+      if (isRegistered === "yes" && !regulatoryOrganization.trim()) {
+        setError("Please enter your regulatory organization name.");
         return;
       }
     }
@@ -932,7 +936,11 @@ export default function CreateAccountContinuePage() {
                         name="isRegistered"
                         value={v}
                         checked={isRegistered === v}
-                        onChange={(e) => setIsRegistered(e.target.value)}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setIsRegistered(val);
+                          if (val === "no") setRegulatoryOrganization("");
+                        }}
                         className="w-4 h-4 border-2 border-gray-300"
                         required={showFinancialOnly}
                       />
@@ -941,19 +949,21 @@ export default function CreateAccountContinuePage() {
                   ))}
                 </div>
               </div>
-              <div className="space-y-2">
-                <label htmlFor="regulatoryOrganization" className="text-sm text-gray-700">
-                  Regulatory organization name <span className="text-red-600">*</span>
-                </label>
-                <input
-                  id="regulatoryOrganization"
-                  type="text"
-                  value={regulatoryOrganization}
-                  onChange={(e) => setRegulatoryOrganization(e.target.value)}
-                  className={inputClassName}
-                  required
-                />
-              </div>
+              {isRegistered === "yes" && (
+                <div className="space-y-2">
+                  <label htmlFor="regulatoryOrganization" className="text-sm text-gray-700">
+                    Regulatory organization name <span className="text-red-600">*</span>
+                  </label>
+                  <input
+                    id="regulatoryOrganization"
+                    type="text"
+                    value={regulatoryOrganization}
+                    onChange={(e) => setRegulatoryOrganization(e.target.value)}
+                    className={inputClassName}
+                    required
+                  />
+                </div>
+              )}
               <div className="space-y-2">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
