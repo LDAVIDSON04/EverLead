@@ -62,6 +62,7 @@ export default function FilesPage() {
             requested_date,
             requested_window,
             status,
+            cached_lead_full_name,
             leads (
               id,
               full_name,
@@ -104,7 +105,8 @@ export default function FilesPage() {
         // TODO: Replace with actual file data from storage/database
         const fileData: FileData[] = transformed.map((apt: any) => {
           const lead = Array.isArray(apt.leads) ? apt.leads[0] : apt.leads;
-          const clientName = lead?.full_name || 'Client';
+          // Use booking name (cached_lead_full_name) so each file shows the name from that appointment
+          const clientName = apt.cached_lead_full_name?.trim() || lead?.full_name || 'Client';
           const date = new Date(apt.requested_date);
           const formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
           
