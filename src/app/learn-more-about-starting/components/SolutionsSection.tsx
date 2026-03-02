@@ -23,7 +23,7 @@ export function SolutionsSection() {
               Reach families on Soradin
             </h3>
             <p className="text-base md:text-lg text-[#1A1A1A]/70 leading-relaxed mb-6 md:mb-8 max-w-lg">
-              Reach thousands of families looking to plan for end of life. We open the market so that you can grow your client base to across your province.
+              Reach thousands of families looking to plan for end of life. We open the market so that you can grow your client base to across your province. There are no fees to be listed on our platform
             </p>
             <Link
               href="/create-account"
