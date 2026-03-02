@@ -2,13 +2,12 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { Search, User, MapPin, Calendar, FileText, MessageSquare, Info, Globe, ChevronDown, UserCircle, CalendarCheck, Shield, Star, Building2, Settings, Play, TrendingUp, DollarSign, BarChart3 } from 'lucide-react';
+import { Search, User, MapPin, Calendar, FileText, MessageSquare, Info, Globe, ChevronDown, UserCircle, CalendarCheck, Star, Building2, Settings, Play, TrendingUp, DollarSign, BarChart3 } from 'lucide-react';
 
 export default function ProviderHelpPage() {
   const categories = [
     { id: 1, title: 'Getting Started', icon: Play, articles: 7 },
     { id: 2, title: 'Managing Appointments', icon: CalendarCheck, articles: 11 },
-    { id: 3, title: 'Advisor Solutions', icon: Shield, articles: 15 },
     { id: 4, title: 'Settings', icon: Settings, articles: 14 },
     { id: 5, title: 'Account and Billing', icon: DollarSign, articles: 6 },
     { id: 6, title: 'Performance and Reporting', icon: BarChart3, articles: 4 }

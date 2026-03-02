@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useParams } from 'next/navigation';
-import { Play, CalendarCheck, Shield, Settings, MessageSquare, DollarSign, BarChart3, Info, ChevronRight } from 'lucide-react';
+import { Play, CalendarCheck, Settings, MessageSquare, DollarSign, BarChart3, Info, ChevronRight } from 'lucide-react';
 
 const categoryData: Record<string, {
   title: string;
@@ -38,27 +38,6 @@ const categoryData: Record<string, {
       { id: '9', title: 'How do I manage appointment reminders?', slug: 'how-do-i-manage-appointment-reminders' },
       { id: '10', title: 'What information do I see about each appointment?', slug: 'what-information-about-each-appointment' },
       { id: '11', title: 'How do I export my appointment data?', slug: 'how-do-i-export-my-appointment-data' }
-    ]
-  },
-  'advisor-solutions': {
-    title: 'Advisor Solutions',
-    icon: Shield,
-    articles: [
-      { id: '1', title: 'What features are available to agents?', slug: 'what-features-available' },
-      { id: '2', title: 'How do I track my performance?', slug: 'how-do-i-track-performance' },
-      { id: '3', title: 'How do I optimize my profile for visibility?', slug: 'how-do-i-optimize-profile' },
-      { id: '4', title: 'How do I manage my bio?', slug: 'how-do-i-manage-bio' },
-      { id: '5', title: 'How do I showcase my specialties?', slug: 'how-do-i-showcase-specialties' },
-      { id: '6', title: 'How do I add office locations?', slug: 'how-do-i-add-office-locations' },
-      { id: '7', title: 'How do I manage my practice information?', slug: 'how-do-i-manage-practice' },
-      { id: '8', title: 'How do I set my service areas?', slug: 'how-do-i-set-service-areas' },
-      { id: '9', title: 'How do I integrate with my existing systems?', slug: 'how-do-i-integrate-systems' },
-      { id: '10', title: 'How do I set my pricing?', slug: 'how-do-i-set-pricing' },
-      { id: '11', title: 'How do I manage my services?', slug: 'how-do-i-manage-services' },
-      { id: '12', title: 'How do I update my credentials?', slug: 'how-do-i-update-credentials' },
-      { id: '13', title: 'How do I manage my professional information?', slug: 'how-do-i-manage-professional-info' },
-      { id: '14', title: 'How do I optimize for search results?', slug: 'how-do-i-optimize-search' },
-      { id: '15', title: 'How do I manage my account settings?', slug: 'how-do-i-manage-account-settings' }
     ]
   },
   'settings': {
