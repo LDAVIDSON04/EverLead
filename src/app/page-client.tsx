@@ -236,8 +236,8 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
               <Link href="/about" className="text-[#1A1A1A] hover:text-[#1A1A1A] transition-colors text-lg font-medium">
                 About Us
               </Link>
-              <Link href="/help" className="text-[#1A1A1A] hover:text-[#1A1A1A] transition-colors text-lg font-medium">
-                Help
+              <Link href="/blog" className="text-[#1A1A1A] hover:text-[#1A1A1A] transition-colors text-lg font-medium">
+                Blog
               </Link>
               <Link href="/learn-more-about-starting" className="text-[#1A1A1A] hover:text-[#1A1A1A] transition-colors text-lg font-medium">
                 List Your Specialty With Soradin
@@ -949,8 +949,8 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                 <h4 className="mb-6 text-lg font-medium">Have questions?</h4>
                 <ul className="space-y-3">
                   <li>
-                    <Link href="/help" className="text-white/60 hover:text-white transition-colors">
-                      Help
+                    <Link href="/blog" className="text-white/60 hover:text-white transition-colors">
+                      Blog
                     </Link>
                   </li>
                 </ul>

@@ -1887,11 +1887,11 @@ function SearchResults() {
                         <div className="flex-1 min-w-0">
                           <div>
                             <h3 className="text-xl text-gray-900 font-semibold">{agentName}</h3>
-                            <p className="text-gray-600 mt-1">
+                            <p className="text-black mt-1">
                               {agent?.job_title || appointment.service_type || 'Pre-need Planning Specialist'}
                             </p>
                             {displayFirmName && (
-                              <p className="text-gray-500 text-sm mt-1">{displayFirmName}</p>
+                              <p className="text-black text-sm mt-1">{displayFirmName}</p>
                             )}
                           </div>
                         </div>
@@ -1903,15 +1903,15 @@ function SearchResults() {
                         {displayMode !== "video" ? (
                           <>
                             <div className="flex items-center gap-1">
-                              <MapPin className="w-4 h-4 text-gray-500 flex-shrink-0" />
-                              <span className="text-gray-600 text-sm">
+                              <MapPin className="w-4 h-4 text-gray-600 flex-shrink-0" />
+                              <span className="text-black text-sm">
                                 {displayLocationLabel}
                               </span>
                             </div>
                             {displayAddress && (
                               <div className="flex items-start gap-1">
-                                <MapPin className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
-                                <span className="text-gray-500 text-xs">
+                                <MapPin className="w-4 h-4 text-gray-600 mt-0.5 flex-shrink-0" />
+                                <span className="text-black text-xs">
                                   {displayAddress}
                                 </span>
                               </div>
@@ -1923,8 +1923,8 @@ function SearchResults() {
                         {agent && (Number(agent.rating) || 0) > 0 && (Number(agent.reviewCount) || 0) > 0 && (
                           <div className="flex items-center gap-1">
                             <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                            <span className="text-gray-900 text-sm">{(Number(agent.rating) || 0).toFixed(1)}</span>
-                            <span className="text-gray-500 text-sm">· {Number(agent.reviewCount) || 0} {(Number(agent.reviewCount) || 0) === 1 ? 'review' : 'reviews'}</span>
+                            <span className="text-black text-sm">{(Number(agent.rating) || 0).toFixed(1)}</span>
+                            <span className="text-black text-sm">· {Number(agent.reviewCount) || 0} {(Number(agent.reviewCount) || 0) === 1 ? 'review' : 'reviews'}</span>
                           </div>
                         )}
 
@@ -2109,11 +2109,11 @@ function SearchResults() {
                       {/* Mobile: Name, job title, and company to the right of picture - wrapping around */}
                       <div className="flex-1 min-w-0">
                         <h3 className="text-xl text-gray-900 font-semibold leading-tight mb-1">{agentName}</h3>
-                        <p className="text-gray-600 text-sm leading-tight mb-1">
+                        <p className="text-black text-sm leading-tight mb-1">
                           {agent?.job_title || appointment.service_type || 'Pre-need Planning Specialist'}
                         </p>
                         {displayFirmName && (
-                          <p className="text-gray-500 text-sm leading-tight">{displayFirmName}</p>
+                          <p className="text-black text-sm leading-tight">{displayFirmName}</p>
                         )}
                       </div>
                     </div>
@@ -2123,15 +2123,15 @@ function SearchResults() {
                         {displayMode !== "video" ? (
                           <>
                             <div className="flex items-center gap-1">
-                              <MapPin className="w-3 h-3 text-gray-500 flex-shrink-0" />
-                              <span className="text-gray-600 text-sm">
+                              <MapPin className="w-3 h-3 text-gray-600 flex-shrink-0" />
+                              <span className="text-black text-sm">
                                 {displayLocationLabel}
                               </span>
                             </div>
                             {displayAddress && (
                               <div className="flex items-start gap-1">
-                                <MapPin className="w-3 h-3 text-gray-400 mt-0.5 flex-shrink-0" />
-                                <span className="text-gray-500 text-xs">
+                                <MapPin className="w-3 h-3 text-gray-600 mt-0.5 flex-shrink-0" />
+                                <span className="text-black text-xs">
                                   {displayAddress}
                                 </span>
                               </div>
@@ -2143,8 +2143,8 @@ function SearchResults() {
                         {agent && (Number(agent.rating) || 0) > 0 && (Number(agent.reviewCount) || 0) > 0 && (
                           <div className="flex items-center gap-1">
                             <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                            <span className="text-gray-900 text-sm">{(Number(agent.rating) || 0).toFixed(1)}</span>
-                            <span className="text-gray-500 text-sm">· {Number(agent.reviewCount) || 0} {(Number(agent.reviewCount) || 0) === 1 ? 'review' : 'reviews'}</span>
+                            <span className="text-black text-sm">{(Number(agent.rating) || 0).toFixed(1)}</span>
+                            <span className="text-black text-sm">· {Number(agent.reviewCount) || 0} {(Number(agent.reviewCount) || 0) === 1 ? 'review' : 'reviews'}</span>
                           </div>
                         )}
 
