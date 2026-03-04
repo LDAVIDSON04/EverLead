@@ -9,7 +9,7 @@ const TRUNCATE_LENGTH = 200;
 /** Canonical public agent profile (no tab nav). Use this for all agent name links. */
 const AGENT_PROFILE_PATH = "/agentportfolio";
 
-type PostWithAuthor = {
+export type PostWithAuthor = {
   id: string;
   author_id: string;
   title: string;

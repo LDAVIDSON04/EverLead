@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { BlogPostCard } from "./BlogPostCard";
+import { BlogPostCard, type PostWithAuthor } from "./BlogPostCard";
 
 export default async function BlogPage() {
   if (!supabaseAdmin) {
@@ -49,7 +49,7 @@ export default async function BlogPage() {
     });
   }
 
-  const postsWithAuthor = list.map((p: any) => ({
+  const postsWithAuthor: PostWithAuthor[] = list.map((p: any) => ({
     ...p,
     author: profilesMap[p.author_id] ?? null,
   }));
