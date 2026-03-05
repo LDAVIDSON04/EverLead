@@ -114,7 +114,7 @@ export async function GET(req: NextRequest) {
         const [leadResult, agentResult] = await Promise.all([
           supabaseAdmin
             .from("leads")
-            .select("phone, full_name, first_name, last_name, province")
+            .select("phone, full_name, first_name, last_name, province, email")
             .eq("id", appointment.lead_id)
             .single(),
           supabaseAdmin
@@ -131,6 +131,10 @@ export async function GET(req: NextRequest) {
           console.warn(`Missing lead or agent data for appointment ${appointment.id}`);
           continue;
         }
+
+        // Skip all reminders for agent-created events (event added by agent to their schedule; lead is system placeholder)
+        const isAgentCreatedEvent = lead.email?.includes("@soradin.internal") === true;
+        if (isAgentCreatedEvent) continue;
 
         // Use booking name (cached_lead_full_name) so "meeting with X" matches the name from the booking
         const consumerName = appointment.cached_lead_full_name?.trim() ||
