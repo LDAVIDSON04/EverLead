@@ -3,6 +3,9 @@ import Image from "next/image";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { BlogPostCard, type PostWithAuthor } from "./BlogPostCard";
 
+// Always fetch fresh posts so newly published posts show without redeploy
+export const dynamic = "force-dynamic";
+
 export default async function BlogPage() {
   if (!supabaseAdmin) {
     return (
