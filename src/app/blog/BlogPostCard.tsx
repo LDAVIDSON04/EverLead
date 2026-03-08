@@ -67,7 +67,7 @@ export function BlogPostCard({ post }: { post: PostWithAuthor }) {
               <p className="text-sm text-black">
                 {[
                   post.author?.job_title,
-                  post.author?.funeral_home,
+                  post.author?.funeral_home?.split(",")[0]?.trim() || post.author?.funeral_home,
                   [post.author?.agent_city, post.author?.agent_province].filter(Boolean).join(", "),
                 ].filter(Boolean).join(" · ") || "—"}
               </p>
