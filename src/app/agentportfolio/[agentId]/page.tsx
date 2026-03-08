@@ -6,7 +6,7 @@ import { supabaseClient } from "@/lib/supabaseClient";
 import Link from "next/link";
 import { ArrowLeft, Calendar } from "lucide-react";
 import { AgentHeader } from "./components/AgentHeader";
-import { TrustHighlights } from "./components/TrustHighlights";
+import { TrustHighlights } from "@/app/agent/[agentId]/components/TrustHighlights";
 import { AboutSection } from "./components/AboutSection";
 import { OfficeLocations } from "./components/OfficeLocations";
 import { Reviews } from "./components/Reviews";
@@ -195,7 +195,7 @@ function AgentProfileContent() {
               summary={agentData.summary} 
               fullBio={agentData.fullBio} 
             />
-            <TrustHighlights agentId={agentId} />
+            <TrustHighlights rating={agentData.rating} reviewCount={agentData.reviewCount} />
           </div>
 
           {/* Right Column - Sticky Booking Panel (5 columns) */}
