@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { Check, Shield, Award, FileCheck, Star, Clock } from 'lucide-react';
+import { Check, Shield, Award, FileCheck, Star } from 'lucide-react';
 
 interface TrustHighlightsProps {
   agentId: string;
@@ -54,7 +54,6 @@ export function TrustHighlights({ agentId }: TrustHighlightsProps) {
       case 'award': return <Award {...iconProps} />;
       case 'file': return <FileCheck {...iconProps} />;
       case 'star': return <Star className="w-8 h-8" style={{ color: '#EAB308' }} fill="#EAB308" />;
-      case 'clock': return <Clock {...iconProps} />;
       default: return <Check {...iconProps} />;
     }
   };
@@ -63,13 +62,6 @@ export function TrustHighlights({ agentId }: TrustHighlightsProps) {
     return (
       <div id="highlights" className="py-8">
         <div className="space-y-6">
-          <div className="flex items-start gap-4">
-            <div className="flex-shrink-0">{getIcon('clock')}</div>
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-1">Excellent response time</h3>
-              <p className="text-gray-600 text-sm">Loading...</p>
-            </div>
-          </div>
           <div className="flex items-start gap-4">
             <div className="flex-shrink-0">{getIcon('shield')}</div>
             <div>
@@ -90,13 +82,6 @@ export function TrustHighlights({ agentId }: TrustHighlightsProps) {
           description: `${stats.fiveStarPercentage}% of users give this specialist 5 stars`
         }]
       : []),
-    { 
-      icon: 'clock' as const, 
-      title: 'Excellent response time', 
-      description: stats.responseTimePercentage > 0
-        ? `${stats.responseTimePercentage}% of inquiries answered within 2 hours`
-        : 'Response time data not available'
-    },
     { 
       icon: 'shield' as const, 
       title: 'Verified by Soradin', 

@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Shield, Award, FileCheck, Star, Clock } from 'lucide-react';
+import { Check, Shield, Award, FileCheck, Star } from 'lucide-react';
 
 interface TrustHighlightsProps {
   rating?: number;
@@ -21,11 +21,6 @@ export function TrustHighlights({ rating = 0, reviewCount = 0 }: TrustHighlights
     ...(reviewCount > 0
       ? [{ icon: 'star' as const, title: 'Highly recommended', description: getRecommendedDescription() }]
       : []),
-    { 
-      icon: 'clock' as const, 
-      title: 'Excellent response time', 
-      description: '100% of inquiries answered within 2 hours' 
-    },
     { 
       icon: 'shield' as const, 
       title: 'Verified by Soradin', 
@@ -50,7 +45,6 @@ export function TrustHighlights({ rating = 0, reviewCount = 0 }: TrustHighlights
       case 'award': return <Award {...iconProps} />;
       case 'file': return <FileCheck {...iconProps} />;
       case 'star': return <Star className="w-8 h-8" style={{ color: '#EAB308' }} fill="#EAB308" />;
-      case 'clock': return <Clock {...iconProps} />;
       default: return <Check {...iconProps} />;
     }
   };
