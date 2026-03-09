@@ -298,6 +298,13 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                     </h2>
                     <div className="w-full max-w-sm flex flex-col gap-4">
                       <Link 
+                        href="/blog" 
+                        className="px-6 py-4 bg-white border-2 border-[#1A1A1A] text-[#1A1A1A] rounded-xl hover:bg-[#FAF9F6] transition-all text-center text-base font-medium"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Blog
+                      </Link>
+                      <Link 
                         href="/learn-more-about-starting" 
                         className="px-6 py-4 bg-[#1A1A1A] text-white rounded-xl hover:bg-[#1A1A1A]/90 transition-all shadow-sm text-center text-base font-medium"
                         onClick={() => setMobileMenuOpen(false)}
