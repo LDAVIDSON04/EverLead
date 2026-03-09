@@ -252,7 +252,7 @@ async function handleEventChange(channelId: string | null, resourceUri: string |
 }
 
 /**
- * Process and store an external event
+ * Process and store an external event (includes title/location from Google so UI shows real event name)
  */
 async function processExternalEvent(
   connection: CalendarConnection,
@@ -263,6 +263,8 @@ async function processExternalEvent(
     isAllDay: boolean;
     status: "confirmed" | "cancelled";
     appointmentId?: string;
+    title?: string | null;
+    location?: string | null;
   }
 ): Promise<void> {
   const blocklisted = await isEventBlocklistedAndRemove(
@@ -296,7 +298,7 @@ async function processExternalEvent(
     }
   }
 
-  // Upsert external_events record
+  // Upsert external_events record (include title/location so schedule shows real event name)
   const upsertData: any = {
     specialist_id: connection.specialist_id,
     provider: connection.provider,
@@ -308,6 +310,12 @@ async function processExternalEvent(
     is_soradin_created: isSoradinCreated,
     appointment_id: event.appointmentId || null,
   };
+  if (event.title != null && String(event.title).trim() !== "") {
+    upsertData.title = event.title.trim();
+  }
+  if (event.location != null && String(event.location).trim() !== "") {
+    upsertData.location = event.location.trim();
+  }
 
   const { error: upsertError } = await supabaseAdmin
     .from("external_events")
