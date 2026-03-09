@@ -634,39 +634,14 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // Fetch review counts for all agents and sort by review count (highest first)
-    const filteredAgentIds = filtered.map(a => a.id);
-    let reviewCountsMap: Record<string, number> = {};
-    
-    if (filteredAgentIds.length > 0) {
-      const { data: reviews } = await supabaseAdmin
-        .from("reviews")
-        .select("agent_id")
-        .in("agent_id", filteredAgentIds);
-      
-      // Count reviews per agent
-      (reviews || []).forEach((review: any) => {
-        reviewCountsMap[review.agent_id] = (reviewCountsMap[review.agent_id] || 0) + 1;
-      });
+    // Randomize order so no single agent is always first
+    const shuffled = [...filtered];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
-    
-    // Sort by review count (highest first), then by name
-    const sorted = filtered.sort((a, b) => {
-      const aReviews = reviewCountsMap[a.id] || 0;
-      const bReviews = reviewCountsMap[b.id] || 0;
-      
-      // First sort by review count (descending)
-      if (bReviews !== aReviews) {
-        return bReviews - aReviews;
-      }
-      
-      // If same review count, sort alphabetically by name
-      const aName = a.full_name || '';
-      const bName = b.full_name || '';
-      return aName.localeCompare(bName);
-    });
 
-    return NextResponse.json({ agents: sorted });
+    return NextResponse.json({ agents: shuffled });
   } catch (error: any) {
     console.error("Error in /api/agents/search:", error);
     return NextResponse.json(
