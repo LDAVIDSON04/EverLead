@@ -201,9 +201,17 @@ async function syncConnection(
       // Continue with other events even if one fails
     }
   }
-  
-  // Also trigger an immediate sync after processing to ensure availability is updated
-  // This ensures that even if webhooks fail, polling will catch changes quickly
+
+  // Remove events in the sync window that are no longer returned by the provider
+  // (e.g. set to "Show as: Free" in Google, or deleted) so they stop blocking slots
+  const syncedIds = externalEvents.map((e) => e.providerEventId);
+  await removeEventsNoLongerReturned(
+    connection.specialist_id,
+    connection.provider,
+    timeMin,
+    timeMax,
+    syncedIds
+  );
 
   // Clean up old events outside the sync window (optional)
   // This keeps the external_events table from growing indefinitely
@@ -449,6 +457,37 @@ async function processExternalEvent(
 /**
  * Cleans up old external events outside the sync window
  */
+/**
+ * Removes from external_events any events in the sync window that were not in the
+ * latest fetch (e.g. set to "Show as: Free" in Google, or deleted). Stops them blocking slots.
+ */
+async function removeEventsNoLongerReturned(
+  specialistId: string,
+  provider: string,
+  timeMin: string,
+  timeMax: string,
+  syncedProviderEventIds: string[]
+): Promise<void> {
+  if (syncedProviderEventIds.length === 0) return;
+  const set = new Set(syncedProviderEventIds);
+  const { data: inWindow } = await supabaseServer
+    .from("external_events")
+    .select("id, provider_event_id")
+    .eq("specialist_id", specialistId)
+    .eq("provider", provider)
+    .gte("starts_at", timeMin)
+    .lte("ends_at", timeMax);
+  const toDelete = (inWindow || []).filter((row) => !set.has(row.provider_event_id)).map((row) => row.id);
+  if (toDelete.length === 0) return;
+  const { error } = await supabaseServer
+    .from("external_events")
+    .delete()
+    .in("id", toDelete);
+  if (error) {
+    console.error("Error removing events no longer returned by provider:", error);
+  }
+}
+
 async function cleanupOldEvents(
   specialistId: string,
   provider: string,

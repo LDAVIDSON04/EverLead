@@ -12,6 +12,8 @@ import {
   localTimeToUTC,
   CanadianTimezone,
 } from "@/lib/timezone";
+import { fetchGoogleCalendarFreebusy, type GoogleBusyWindow } from "@/lib/calendarProviders/google";
+import type { CalendarConnection } from "@/lib/calendarProviders/types";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -25,6 +27,42 @@ const querySchema = z.object({
 
 const SCHEDULE_DAY_KEYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"] as const;
 const DEFAULT_DAY = { enabled: true, start: "09:00", end: "17:00" };
+
+/**
+ * Universal rule: we only block when the calendar says "busy" (see sync – we skip
+ * Google "Show as: Free" / transparent events). So availability windows should be
+ * marked "Show as: Free" in Google and they won't sync → won't block.
+ *
+ * Optional fallback for tools (e.g. Calendly) that create availability blocks as
+ * "busy": generic titles that often mean "availability window" not a real meeting.
+ * Agents can also set metadata.calendar.nonBlockingEventTitles in their profile
+ * for their own event names (no hardcoding per person).
+ */
+const GENERIC_AVAILABILITY_TITLE_PATTERNS = [
+  "available",
+  "available for appointments",
+  "office hours",
+  "bookable",
+  "availability",
+  "open for bookings",
+  "available for bookings",
+] as const;
+
+function isAvailabilityWindowTitle(
+  title: string | null | undefined,
+  customNonBlockingTitles: string[] = []
+): boolean {
+  if (title == null || typeof title !== "string") return false;
+  const normalized = title.trim().toLowerCase();
+  const matches = (p: string) =>
+    normalized === p ||
+    normalized.startsWith(p + " ") ||
+    normalized.endsWith(" " + p) ||
+    normalized.includes(p);
+  if (GENERIC_AVAILABILITY_TITLE_PATTERNS.some((p) => matches(p))) return true;
+  const customLower = customNonBlockingTitles.map((t) => (t && String(t).trim().toLowerCase())).filter(Boolean);
+  return customLower.some((p) => matches(p));
+}
 const DEFAULT_DAY_OFF = { enabled: false, start: "10:00", end: "14:00" };
 const DEFAULT_SCHEDULE: Record<string, { enabled: boolean; start: string; end: string }> = {
   monday: { ...DEFAULT_DAY },
@@ -119,7 +157,8 @@ export async function GET(req: NextRequest) {
 
     const metadata = profile.metadata || {};
     const availabilityData = metadata.availability || {};
-    const locations = availabilityData.locations || [];
+    // Normalize locations: trim whitespace so "Victoria " matches "Victoria"
+    const locations = (availabilityData.locations || []).map((l: string) => (typeof l === "string" ? l.trim() : String(l))).filter(Boolean);
     const outOfOfficeEntries = (metadata.outOfOfficeEntries as Array<{ date: string; allDay: boolean; startTime?: string; endTime?: string }>) || [];
     const legacyOutOfOfficeDates = (metadata.outOfOfficeDates as string[]) || [];
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
@@ -142,8 +181,19 @@ export async function GET(req: NextRequest) {
     } else {
       legacyOutOfOfficeDates.filter((d) => typeof d === "string" && dateRegex.test(d)).forEach((d) => outOfOfficeSet.add(d));
     }
-    const availabilityByLocation = availabilityData.availabilityByLocation || {};
-    const availabilityTypeByLocation = availabilityData.availabilityTypeByLocation || {}; // "recurring" or "daily"
+    const availabilityByLocationRaw = availabilityData.availabilityByLocation || {};
+    const availabilityTypeByLocationRaw = availabilityData.availabilityTypeByLocation || {}; // "recurring" or "daily"
+    // Build trimmed-key maps so "Victoria " and "Victoria" both resolve to the same schedule
+    const availabilityByLocation: Record<string, any> = {};
+    for (const [key, value] of Object.entries(availabilityByLocationRaw)) {
+      const trimmedKey = (key as string).trim();
+      if (trimmedKey && !availabilityByLocation[trimmedKey]) availabilityByLocation[trimmedKey] = value;
+    }
+    const availabilityTypeByLocation: Record<string, string> = {};
+    for (const [key, value] of Object.entries(availabilityTypeByLocationRaw)) {
+      const trimmedKey = (key as string).trim();
+      if (trimmedKey && !availabilityTypeByLocation[trimmedKey]) availabilityTypeByLocation[trimmedKey] = value as string;
+    }
     const videoSchedule = availabilityData.videoSchedule || null; // Video call availability (province-wide)
     const appointmentLength = parseInt(availabilityData.appointmentLength || "30", 10);
     
@@ -349,13 +399,42 @@ export async function GET(req: NextRequest) {
     // We'll fetch a wider range and filter in code to ensure we catch all overlapping events
     const rangeStart = `${startDate}T00:00:00Z`;
     const rangeEnd = `${endDate}T23:59:59Z`;
-    
+
+    // Google: use Freebusy API at request time so blocking follows Google's busy/free (opaque vs transparent).
+    // When agent has a Google connection we never use DB-synced Google events for blocking (they may include
+    // "Show as: Free" or Calendly availability blocks); we only use Freebusy busy windows for Google.
+    let googleBusyWindows: GoogleBusyWindow[] = [];
+    let hasGoogleConnection = false;
+    const { data: googleConnectionRow } = await supabaseAdmin
+      .from("calendar_connections")
+      .select("id, specialist_id, provider, external_calendar_id, access_token, refresh_token, expires_at, sync_enabled")
+      .eq("specialist_id", agentId)
+      .eq("provider", "google")
+      .limit(1)
+      .maybeSingle();
+    if (googleConnectionRow) {
+      hasGoogleConnection = true;
+      const connection = googleConnectionRow as unknown as CalendarConnection;
+      try {
+        googleBusyWindows = await fetchGoogleCalendarFreebusy(connection, rangeStart, rangeEnd);
+        console.log("📅 [Google Freebusy] Result:", {
+          agentId,
+          hasConnection: true,
+          busyWindowsCount: googleBusyWindows.length,
+          rangeStart,
+          rangeEnd,
+        });
+      } catch (e) {
+        console.warn("Google Freebusy fetch failed; Google blocking from DB will still be skipped:", e);
+      }
+    }
+
     // Fetch events that start before the range ends (could overlap)
-    // IMPORTANT: Only select location if the column exists (graceful degradation)
-    // We'll try to select location, but if it doesn't exist, we'll select without it
+    // title: used to skip blocking for "availability window" events (e.g. Calendly/Google set availability)
+    // provider: when using Google Freebusy we only use external_events for Microsoft
     let externalEventsQuery = supabaseAdmin
       .from("external_events")
-      .select("id, starts_at, ends_at, status, is_soradin_created")
+      .select("id, starts_at, ends_at, status, is_soradin_created, title, provider")
       .eq("specialist_id", agentId) // specialist_id in external_events = agent_id (user ID)
       .eq("status", "confirmed") // Only block confirmed events
       .eq("is_soradin_created", false) // Only block external events (not Soradin-created)
@@ -392,7 +471,9 @@ export async function GET(req: NextRequest) {
         ...evt,
         starts_at: startsAt,
         ends_at: endsAt,
-        location: evt.location || null, // Will be null if column doesn't exist
+        location: evt.location || null,
+        title: evt.title ?? null,
+        provider: evt.provider ?? null,
       };
     }).filter((evt: any) => {
       const evtStart = new Date(evt.starts_at);
@@ -421,6 +502,10 @@ export async function GET(req: NextRequest) {
       })),
     });
 
+    // When agent has Google connected, never use DB Google events for blocking (only Freebusy + Microsoft from DB)
+    const effectiveExternalEventsCount = hasGoogleConnection
+      ? (externalEvents || []).filter((evt: any) => evt.provider !== "google").length
+      : externalEvents?.length ?? 0;
     console.log("📅 Loaded external events for conflict detection:", {
       agentId,
       startDate,
@@ -429,12 +514,16 @@ export async function GET(req: NextRequest) {
       rangeEnd,
       count: externalEvents?.length || 0,
       rawCount: externalEventsRaw?.length || 0,
+      hasGoogleConnection,
+      googleBusyWindowsCount: googleBusyWindows?.length ?? 0,
+      effectiveExternalEventsCount,
       externalEvents: externalEvents?.map((evt: any) => ({
         id: evt.id,
         startsAt: evt.starts_at,
         endsAt: evt.ends_at,
         status: evt.status,
         isSoradinCreated: evt.is_soradin_created,
+        provider: evt.provider,
       })),
       queryDetails: {
         specialistId: agentId,
@@ -468,6 +557,12 @@ export async function GET(req: NextRequest) {
       selectedLocation,
       usingFallback: !metadata?.timezone && !availabilityData?.timezone,
     });
+
+    // Per-agent: event titles that mean "availability window" (don't block). Set in profile metadata.calendar.nonBlockingEventTitles
+    const rawNonBlocking = (metadata?.calendar as { nonBlockingEventTitles?: unknown })?.nonBlockingEventTitles;
+    const customNonBlockingTitles: string[] = Array.isArray(rawNonBlocking)
+      ? rawNonBlocking.filter((t): t is string => typeof t === "string" && t.trim().length > 0)
+      : [];
 
     // Helper to check if a time slot conflicts with an appointment or external event
     // SIMPLE LOGIC: Only block if we have confirmed_at and it matches the slot time
@@ -527,12 +622,23 @@ export async function GET(req: NextRequest) {
         
         if (appointmentConflict) return true;
       }
+
+      // Google: when we have Freebusy data, use it for blocking (only opaque events are "busy")
+      if (googleBusyWindows && googleBusyWindows.length > 0) {
+        const overlapsGoogleBusy = googleBusyWindows.some((w) => {
+          const wStart = new Date(w.start).getTime();
+          const wEnd = new Date(w.end).getTime();
+          return slotStartTime < wEnd && slotEndTime > wStart;
+        });
+        if (overlapsGoogleBusy) return true;
+      }
       
-      // Check if this slot conflicts with any external calendar event
-      // IMPORTANT: Only block if the external event location matches the requested location
-      // This allows location-aware blocking (e.g., Penticton event only blocks Penticton slots)
-      if (externalEvents && externalEvents.length > 0) {
-        const externalEventConflict = externalEvents.some((evt: any) => {
+      // External events: when agent has Google connection, use only Microsoft (and others) from DB; Google blocking comes from Freebusy only
+      const effectiveExternalEvents = hasGoogleConnection
+        ? (externalEvents || []).filter((evt: any) => evt.provider !== "google")
+        : externalEvents || [];
+      if (effectiveExternalEvents.length > 0) {
+        const externalEventConflict = effectiveExternalEvents.some((evt: any) => {
           // Skip if this is a Soradin-created event (shouldn't block)
           if (evt.is_soradin_created) {
             return false;
@@ -571,6 +677,11 @@ export async function GET(req: NextRequest) {
             }
           }
           // If evt.location is null, block all locations (backward compatibility for events without location)
+
+          // Don't block for "availability window" events (generic patterns + agent's metadata.calendar.nonBlockingEventTitles)
+          if (isAvailabilityWindowTitle(evt.title, customNonBlockingTitles)) {
+            return false;
+          }
           
           const evtStart = new Date(evt.starts_at);
           const evtEnd = new Date(evt.ends_at);
@@ -592,6 +703,8 @@ export async function GET(req: NextRequest) {
               evtStartTime,
               evtEndTime,
               externalEventId: evt.id,
+              evtTitle: evt.title ?? "(no title)",
+              isAvailabilityTitle: isAvailabilityWindowTitle(evt.title, customNonBlockingTitles),
               isSoradinCreated: evt.is_soradin_created,
               status: evt.status,
               evtLocation: evt.location,
