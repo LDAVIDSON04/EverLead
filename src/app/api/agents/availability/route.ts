@@ -502,10 +502,7 @@ export async function GET(req: NextRequest) {
       })),
     });
 
-    // When agent has Google connected, never use DB Google events for blocking (only Freebusy + Microsoft from DB)
-    const effectiveExternalEventsCount = hasGoogleConnection
-      ? (externalEvents || []).filter((evt: any) => evt.provider !== "google").length
-      : externalEvents?.length ?? 0;
+    const effectiveExternalEventsCount = externalEvents?.length ?? 0;
     console.log("📅 Loaded external events for conflict detection:", {
       agentId,
       startDate,
@@ -633,10 +630,9 @@ export async function GET(req: NextRequest) {
         if (overlapsGoogleBusy) return true;
       }
       
-      // External events: when agent has Google connection, use only Microsoft (and others) from DB; Google blocking comes from Freebusy only
-      const effectiveExternalEvents = hasGoogleConnection
-        ? (externalEvents || []).filter((evt: any) => evt.provider !== "google")
-        : externalEvents || [];
+      // External events: use all (Google + Microsoft). Sync only stores opaque events for Google
+      // so DB has real meetings; Freebusy is primary for Google but DB backs up when Freebusy fails.
+      const effectiveExternalEvents = externalEvents || [];
       if (effectiveExternalEvents.length > 0) {
         const externalEventConflict = effectiveExternalEvents.some((evt: any) => {
           // Skip if this is a Soradin-created event (shouldn't block)
