@@ -208,12 +208,8 @@ export async function GET(req: NextRequest) {
             return false;
           }
           
-          // Check if onboarding is completed - agents must complete all 3 steps before appearing in marketplace
-          const onboardingCompleted = (metadata as any)?.onboarding_completed === true;
-          if (!onboardingCompleted) {
-            console.log(`[AGENT SEARCH] Agent ${profile.id} (${profile.full_name || 'unnamed'}) has not completed onboarding - excluding from results`);
-            return false;
-          }
+          // Allow agents with profile picture to show; payment is required later. Agents without
+          // availability set will show in results but families will see no bookable time slots.
           
           // Debug log for the specific agent we're looking for
           if (profile.id === 'f7f6aeca-1059-4ae8-ae93-a059ad583b8f') {
@@ -271,6 +267,13 @@ export async function GET(req: NextRequest) {
           const businessNames = (metadata as any)?.business_names;
           const firstBusinessName = (Array.isArray(businessNames) && businessNames[0]) ? String(businessNames[0]).trim() : (profile.funeral_home || null);
 
+          const hasVideo = hasVideoAvailability({
+            videoSchedule: videoSchedule && typeof videoSchedule === "object" ? videoSchedule : null,
+          } as AgentSearchResult);
+          const hasInPersonSchedule =
+            Object.keys(availabilityByLocation || {}).length > 0;
+          const hasAvailability = hasVideo || hasInPersonSchedule;
+
           return {
             id: profile.id,
             full_name: profile.full_name,
@@ -289,7 +292,7 @@ export async function GET(req: NextRequest) {
             business_city: (metadata as any)?.business_city || null,
             business_province: (metadata as any)?.business_province || null,
             business_zip: (metadata as any)?.business_zip || null,
-            hasAvailability: true,
+            hasAvailability,
             // Include availability data for location filtering
             availabilityLocations: allLocationCities, // Include office locations
             availabilityByLocation: availabilityByLocation,
@@ -306,7 +309,7 @@ export async function GET(req: NextRequest) {
       })
       .filter((agent: AgentSearchResult | null): agent is AgentSearchResult => agent !== null);
 
-    console.log(`[AGENT SEARCH] ${agentsWithAvailability.length} agents with availability configured`);
+    console.log(`[AGENT SEARCH] ${agentsWithAvailability.length} agents with profile picture and not paused`);
 
     // Filter out agents without payment methods.
     // SECURITY: Use only profile.stripe_customer_id. Never look up Stripe by email.
