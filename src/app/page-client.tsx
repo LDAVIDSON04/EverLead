@@ -949,8 +949,8 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
                 <h4 className="mb-6 text-lg font-medium">Have questions?</h4>
                 <ul className="space-y-3">
                   <li>
-                    <Link href="/blog" className="text-white/60 hover:text-white transition-colors">
-                      Blog
+                    <Link href="/help" className="text-white/60 hover:text-white transition-colors">
+                      Help
                     </Link>
                   </li>
                 </ul>
