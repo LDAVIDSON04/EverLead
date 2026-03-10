@@ -40,6 +40,7 @@ export default function AgentBlogPage() {
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [guidelinesOpen, setGuidelinesOpen] = useState(false);
   const [profilePic, setProfilePic] = useState<string | null>(null);
   const [profileName, setProfileName] = useState<string>("");
 
@@ -294,8 +295,14 @@ export default function AgentBlogPage() {
         </div>
       </div>
 
-      <p className="text-gray-500 text-sm mb-4">
-        Submissions need approval before they appear on the public blog.
+      <p className="text-sm mb-4">
+        <button
+          type="button"
+          onClick={() => setGuidelinesOpen(true)}
+          className="text-black underline hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-0 focus:ring-[#0A66C2] rounded"
+        >
+          Soradin Blog Community Guidelines
+        </button>
       </p>
 
       {/* Feed of posts - text above image, see more for long */}
@@ -316,6 +323,91 @@ export default function AgentBlogPage() {
             />
           ))}
         </ul>
+      )}
+
+      {/* Blog Community Guidelines modal */}
+      {guidelinesOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <button
+            type="button"
+            aria-label="Close"
+            onClick={() => setGuidelinesOpen(false)}
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+          />
+          <div className="relative rounded-2xl bg-white shadow-xl max-w-2xl w-full max-h-[85vh] flex flex-col border border-gray-200">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-900">Soradin Blog Community Guidelines</h2>
+              <button
+                type="button"
+                onClick={() => setGuidelinesOpen(false)}
+                className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                aria-label="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-4 overflow-y-auto text-sm text-gray-700 space-y-4">
+              <p>
+                The Soradin blog is designed to educate families about estate planning and end-of-life preparation. Articles should help people better understand the services professionals provide and the decisions involved in planning ahead.
+              </p>
+              <p>
+                To maintain a helpful and trustworthy resource for families, all posts must follow the guidelines below. Posts are reviewed before being published.
+              </p>
+              <h3 className="font-semibold text-gray-900 pt-2">Content Purpose</h3>
+              <p>
+                Blog posts should focus on education, insight, and guidance related to your professional expertise.
+              </p>
+              <p className="font-medium text-gray-800">Good examples include:</p>
+              <ul className="list-disc pl-5 space-y-1">
+                <li>Explaining how life insurance fits into estate planning</li>
+                <li>What families should know before meeting an estate lawyer</li>
+                <li>How funeral pre-planning works</li>
+                <li>Common mistakes people make when planning their estate</li>
+                <li>Financial considerations families should prepare for later in life</li>
+              </ul>
+              <p>
+                Posts should help families learn and understand, not serve as advertisements.
+              </p>
+              <h3 className="font-semibold text-gray-900 pt-2">What You Should Not Include</h3>
+              <p>
+                To maintain fairness and quality across the platform, posts must not include:
+              </p>
+              <ul className="list-disc pl-5 space-y-1">
+                <li>Direct contact information such as phone numbers, personal email addresses, or office addresses</li>
+                <li>Requests for readers to call, email, or contact you directly</li>
+                <li>Sales language such as &quot;book with me,&quot; &quot;contact me today,&quot; or promotional offers</li>
+                <li>External booking links or websites directing users away from Soradin</li>
+                <li>Misleading, exaggerated, or unverified claims about services or results</li>
+                <li>Content unrelated to estate planning or end-of-life preparation</li>
+              </ul>
+              <p>
+                Families should always connect with professionals through the Soradin platform, where appointments can be booked securely.
+              </p>
+              <h3 className="font-semibold text-gray-900 pt-2">Professional Conduct</h3>
+              <p>
+                All posts should maintain a professional tone and reflect the standards of your profession.
+              </p>
+              <p className="font-medium text-gray-800">Content must not include:</p>
+              <ul className="list-disc pl-5 space-y-1">
+                <li>Offensive or inappropriate language</li>
+                <li>Disparaging remarks about other professionals or companies</li>
+                <li>Political or unrelated content</li>
+                <li>Confidential client information</li>
+              </ul>
+              <h3 className="font-semibold text-gray-900 pt-2">Approval Process</h3>
+              <p>
+                All blog submissions are reviewed by Soradin before appearing publicly. Posts that do not follow these guidelines may be edited, rejected, or removed.
+              </p>
+              <p>
+                Repeated violations may result in loss of blogging privileges.
+              </p>
+              <h3 className="font-semibold text-gray-900 pt-2">Goal of the Soradin Blog</h3>
+              <p>
+                The Soradin blog exists to help families understand estate planning and make informed decisions. By sharing your knowledge, you help build trust with families while demonstrating your expertise within your profession.
+              </p>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Delete confirmation modal */}
