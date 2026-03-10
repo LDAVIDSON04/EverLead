@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { Check, RefreshCw, Loader2 } from "lucide-react";
+import { Check, RefreshCw, Loader2, X } from "lucide-react";
 import { Footer } from "@/app/learn-more-about-starting/components/Footer";
 
 const CREATE_ACCOUNT_DRAFT_KEY = "createAccountDraft";
@@ -16,7 +16,8 @@ export default function CreateAccountNextPage() {
   const [whatFamiliesAppreciate, setWhatFamiliesAppreciate] = useState("");
   const [profileBio, setProfileBio] = useState("");
   const [generating, setGenerating] = useState(false);
-  const [hasAnsweredAccurately, setHasAnsweredAccurately] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [termsOpen, setTermsOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -130,8 +131,8 @@ export default function CreateAccountNextPage() {
       setError("Please write your profile bio.");
       return;
     }
-    if (!hasAnsweredAccurately) {
-      setError("Please confirm you have answered accurately.");
+    if (!agreedToTerms) {
+      setError("Please agree to the terms and conditions.");
       return;
     }
 
@@ -456,26 +457,37 @@ export default function CreateAccountNextPage() {
             </div>
           </div>
 
-          {/* Checkbox */}
-          <div className="flex items-start gap-3">
-            <label className="flex items-start gap-3 cursor-pointer">
-              <span className={`relative flex h-4 w-4 shrink-0 items-center justify-center rounded border-2 mt-0.5 transition-colors ${hasAnsweredAccurately ? "border-gray-900 bg-gray-900" : "border-gray-300 bg-white"}`}>
-                <input
-                  id="accurate"
-                  type="checkbox"
-                  checked={hasAnsweredAccurately}
-                  onChange={(e) => setHasAnsweredAccurately(e.target.checked)}
-                  className="absolute inset-0 cursor-pointer opacity-0"
-                  required
-                />
-                {hasAnsweredAccurately && (
-                  <Check className="h-3 w-3 text-white stroke-[3]" strokeWidth={3} />
-                )}
-              </span>
-              <span className="text-sm text-gray-700 select-none">
-                I have entered all info accurately <span className="text-red-500">*</span>
-              </span>
-            </label>
+          {/* Terms and conditions */}
+          <div className="space-y-2">
+            <div className="flex items-start gap-3">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <span className={`relative flex h-4 w-4 shrink-0 items-center justify-center rounded border-2 mt-0.5 transition-colors ${agreedToTerms ? "border-gray-900 bg-gray-900" : "border-gray-300 bg-white"}`}>
+                  <input
+                    id="terms"
+                    type="checkbox"
+                    checked={agreedToTerms}
+                    onChange={(e) => setAgreedToTerms(e.target.checked)}
+                    className="absolute inset-0 cursor-pointer opacity-0"
+                    required
+                  />
+                  {agreedToTerms && (
+                    <Check className="h-3 w-3 text-white stroke-[3]" strokeWidth={3} />
+                  )}
+                </span>
+                <span className="text-sm text-black select-none">
+                  I agree to terms and conditions <span className="text-red-500">*</span>
+                </span>
+              </label>
+            </div>
+            <p className="text-sm text-black">
+              <button
+                type="button"
+                onClick={() => setTermsOpen(true)}
+                className="underline hover:no-underline focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-1 rounded"
+              >
+                Terms and Conditions
+              </button>
+            </p>
           </div>
 
           {!saved && (
@@ -504,6 +516,152 @@ export default function CreateAccountNextPage() {
           </div>
         </form>
       </div>
+
+      {/* Terms and Conditions modal */}
+      {termsOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <button
+            type="button"
+            aria-label="Close"
+            onClick={() => setTermsOpen(false)}
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+          />
+          <div className="relative rounded-2xl bg-white shadow-xl max-w-2xl w-full max-h-[85vh] flex flex-col border border-gray-200">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 shrink-0">
+              <h2 className="text-lg font-semibold text-black">Terms and Conditions</h2>
+              <button
+                type="button"
+                onClick={() => setTermsOpen(false)}
+                className="p-2 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-black"
+                aria-label="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-4 overflow-y-auto text-sm text-black space-y-4">
+              <p className="text-center text-gray-600">Effective Date: January 4, 2026</p>
+              <p>
+                Welcome to Soradin. These Terms of Service (&quot;Terms&quot;) govern your access to and use of the Soradin website, platform, and any related services (collectively, the &quot;Platform&quot;).
+              </p>
+              <p>
+                By accessing or using Soradin, you agree to these Terms. If you do not agree, please do not use the Platform.
+              </p>
+              <section>
+                <h3 className="font-semibold text-black mb-2">1. What Soradin Is</h3>
+                <p className="mb-2">
+                  Soradin is a planning and appointment platform designed to help individuals and families discover information, explore planning options, and connect with independent professionals.
+                </p>
+                <p className="mb-2">
+                  The Platform currently focuses on pre-need funeral planning and is designed to expand into related areas of future planning, including estate planning, financial advising, and insurance services.
+                </p>
+                <p>Soradin is a technology platform. We do not provide professional, legal, financial, insurance, or funeral services ourselves.</p>
+              </section>
+              <section>
+                <h3 className="font-semibold text-black mb-2">2. Who Can Use Soradin</h3>
+                <p className="mb-2">You must be at least 18 years old to use the Platform.</p>
+                <p className="mb-2">By using Soradin, you confirm that:</p>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li>You are legally able to enter into these Terms</li>
+                  <li>Any information you provide is accurate and truthful</li>
+                  <li>You will use the Platform in good faith</li>
+                </ul>
+              </section>
+              <section>
+                <h3 className="font-semibold text-black mb-2">3. Role of Professionals on Soradin</h3>
+                <p className="mb-2">
+                  Professionals listed on Soradin are independent third parties. They are not employees, partners, agents, or representatives of Soradin.
+                </p>
+                <p className="mb-2">Each professional is solely responsible for:</p>
+                <ul className="list-disc pl-5 space-y-1 mb-2">
+                  <li>Their qualifications, licenses, and certifications</li>
+                  <li>The services they provide</li>
+                  <li>Compliance with all applicable laws and professional standards</li>
+                </ul>
+                <p>Soradin does not guarantee the availability, quality, or outcome of services offered by professionals on the Platform.</p>
+              </section>
+              <section>
+                <h3 className="font-semibold text-black mb-2">4. How Appointments Work</h3>
+                <p className="mb-2">Soradin allows users to request or book appointments with professionals through the Platform.</p>
+                <ul className="list-disc pl-5 space-y-1 mb-2">
+                  <li>Appointment availability is set by professionals</li>
+                  <li>Appointments may be free or paid, depending on the service</li>
+                  <li>Payments, if applicable, are processed through third-party providers such as Stripe</li>
+                </ul>
+                <p>Soradin does not control how professionals conduct appointments or the content of any advice or services provided.</p>
+              </section>
+              <section>
+                <h3 className="font-semibold text-black mb-2">5. Payments and Billing</h3>
+                <p className="mb-2">When payments are required:</p>
+                <ul className="list-disc pl-5 space-y-1 mb-2">
+                  <li>All transactions are processed by third-party payment providers</li>
+                  <li>Soradin does not store full payment credentials</li>
+                  <li>Fees, billing terms, and refund policies will be clearly disclosed where applicable</li>
+                </ul>
+                <p>Soradin is not responsible for disputes related to services rendered by professionals.</p>
+              </section>
+              <section>
+                <h3 className="font-semibold text-black mb-2">6. Platform Use and Conduct</h3>
+                <p className="mb-2">You agree to use Soradin respectfully and lawfully.</p>
+                <p className="mb-2">You may not:</p>
+                <ul className="list-disc pl-5 space-y-1 mb-2">
+                  <li>Misrepresent your identity or intentions</li>
+                  <li>Provide false or misleading information</li>
+                  <li>Attempt to interfere with the Platform&apos;s security or functionality</li>
+                  <li>Scrape, copy, or misuse Platform content or data</li>
+                  <li>Use Soradin for unlawful, abusive, or fraudulent purposes</li>
+                </ul>
+                <p>Soradin may suspend or terminate access if these Terms are violated.</p>
+              </section>
+              <section>
+                <h3 className="font-semibold text-black mb-2">7. Information and Decision-Making</h3>
+                <p className="mb-2">Soradin provides access to information intended to support understanding and informed decision-making. However:</p>
+                <ul className="list-disc pl-5 space-y-1 mb-2">
+                  <li>Information on the Platform is not professional advice</li>
+                  <li>Planning decisions are personal and context-specific</li>
+                  <li>Users are encouraged to ask questions and seek clarification directly from professionals</li>
+                </ul>
+                <p>Ultimate responsibility for decisions made rests with the user and the professional they choose to work with.</p>
+              </section>
+              <section>
+                <h3 className="font-semibold text-black mb-2">8. Platform Availability and Limitations</h3>
+                <p className="mb-2">We work hard to keep Soradin reliable and accessible, but the Platform may occasionally experience interruptions, delays, or technical issues.</p>
+                <p className="mb-2">Soradin does not guarantee:</p>
+                <ul className="list-disc pl-5 space-y-1 mb-2">
+                  <li>Continuous or error-free access</li>
+                  <li>That the Platform will meet every user&apos;s expectations</li>
+                  <li>That all information on the Platform is complete or up to date at all times</li>
+                </ul>
+                <p>Use of the Platform involves inherent risks associated with online services.</p>
+              </section>
+              <section>
+                <h3 className="font-semibold text-black mb-2">9. Intellectual Property</h3>
+                <p className="mb-2">All content, design, branding, software, and materials on Soradin are owned by Soradin Inc. or its licensors.</p>
+                <p>You may not copy, reproduce, distribute, or create derivative works from the Platform without written permission.</p>
+              </section>
+              <section>
+                <h3 className="font-semibold text-black mb-2">10. Limitation of Liability</h3>
+                <p className="mb-2">To the fullest extent permitted by law, Soradin is not liable for indirect, incidental, or consequential damages arising from use of the Platform.</p>
+                <p>Soradin&apos;s total liability for any claim shall not exceed the amount paid by you to Soradin, if any, in the twelve months preceding the claim.</p>
+              </section>
+              <section>
+                <h3 className="font-semibold text-black mb-2">11. Changes to These Terms</h3>
+                <p className="mb-2">Soradin may update these Terms as the Platform evolves. Updates will be posted on this page with a revised effective date.</p>
+                <p>Continued use of the Platform constitutes acceptance of the updated Terms.</p>
+              </section>
+              <section>
+                <h3 className="font-semibold text-black mb-2">12. Governing Law</h3>
+                <p>These Terms are governed by the laws of the Province of Ontario, Canada, without regard to conflict-of-law principles.</p>
+              </section>
+              <section>
+                <h3 className="font-semibold text-black mb-2">13. Contact</h3>
+                <p className="mb-1">Questions about these Terms can be directed to:</p>
+                <p className="mb-1">Email: <a href="mailto:support@soradin.com" className="text-black underline hover:no-underline">support@soradin.com</a></p>
+                <p>Company: Soradin Inc.</p>
+              </section>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>
