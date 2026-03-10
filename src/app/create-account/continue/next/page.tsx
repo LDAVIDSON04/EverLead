@@ -544,117 +544,137 @@ export default function CreateAccountNextPage() {
                 Welcome to Soradin. These Terms of Service (&quot;Terms&quot;) govern your access to and use of the Soradin website, platform, and any related services (collectively, the &quot;Platform&quot;).
               </p>
               <p>
-                By accessing or using Soradin, you agree to these Terms. If you do not agree, please do not use the Platform.
+                By accessing or using Soradin, you agree to these Terms. If you do not agree with these Terms, please do not use the Platform.
               </p>
               <section>
-                <h3 className="font-semibold text-black mb-2">1. What Soradin Is</h3>
-                <p className="mb-2">
-                  Soradin is a planning and appointment platform designed to help individuals and families discover information, explore planning options, and connect with independent professionals.
-                </p>
-                <p className="mb-2">
-                  The Platform currently focuses on pre-need funeral planning and is designed to expand into related areas of future planning, including estate planning, financial advising, and insurance services.
-                </p>
-                <p>Soradin is a technology platform. We do not provide professional, legal, financial, insurance, or funeral services ourselves.</p>
+                <h3 className="font-semibold text-black mb-2">1. About Soradin</h3>
+                <p className="mb-2">Soradin is a technology platform designed to help individuals and families learn about estate planning and connect with professionals who provide related services.</p>
+                <p className="mb-2">The Platform allows users to discover information, explore planning options, and schedule meetings with professionals involved in estate planning, including but not limited to:</p>
+                <ul className="list-disc pl-5 space-y-1 mb-2">
+                  <li>Estate lawyers</li>
+                  <li>Financial advisors</li>
+                  <li>Funeral pre-planning professionals</li>
+                  <li>Insurance advisors</li>
+                </ul>
+                <p className="mb-2">Soradin provides educational resources and scheduling tools to facilitate connections between users and professionals.</p>
+                <p>Soradin does not provide legal, financial, insurance, funeral, or other professional services. All services are provided directly by the professionals listed on the Platform.</p>
               </section>
               <section>
-                <h3 className="font-semibold text-black mb-2">2. Who Can Use Soradin</h3>
-                <p className="mb-2">You must be at least 18 years old to use the Platform.</p>
-                <p className="mb-2">By using Soradin, you confirm that:</p>
+                <h3 className="font-semibold text-black mb-2">2. Eligibility</h3>
+                <p className="mb-2">To use the Platform, you must be at least 18 years of age.</p>
+                <p className="mb-2">By using Soradin, you represent and warrant that:</p>
                 <ul className="list-disc pl-5 space-y-1">
-                  <li>You are legally able to enter into these Terms</li>
-                  <li>Any information you provide is accurate and truthful</li>
-                  <li>You will use the Platform in good faith</li>
+                  <li>You are legally capable of entering into these Terms</li>
+                  <li>The information you provide is accurate and truthful</li>
+                  <li>You will use the Platform in accordance with applicable laws and regulations</li>
                 </ul>
               </section>
               <section>
-                <h3 className="font-semibold text-black mb-2">3. Role of Professionals on Soradin</h3>
-                <p className="mb-2">
-                  Professionals listed on Soradin are independent third parties. They are not employees, partners, agents, or representatives of Soradin.
-                </p>
-                <p className="mb-2">Each professional is solely responsible for:</p>
+                <h3 className="font-semibold text-black mb-2">3. Users and Professionals</h3>
+                <p className="mb-2">Soradin may be used by both individuals seeking information or services (&quot;Users&quot;) and professionals offering services (&quot;Professionals&quot;).</p>
+                <p className="mb-2">Professionals using the Platform may include lawyers, financial advisors, insurance professionals, funeral planning professionals, or other specialists involved in estate planning.</p>
+                <p className="mb-2">Professionals are responsible for ensuring that they:</p>
                 <ul className="list-disc pl-5 space-y-1 mb-2">
-                  <li>Their qualifications, licenses, and certifications</li>
-                  <li>The services they provide</li>
-                  <li>Compliance with all applicable laws and professional standards</li>
+                  <li>Hold all required licenses or certifications</li>
+                  <li>Comply with applicable laws and professional regulations</li>
+                  <li>Provide accurate information about their qualifications and services</li>
                 </ul>
-                <p>Soradin does not guarantee the availability, quality, or outcome of services offered by professionals on the Platform.</p>
+                <p>Soradin does not independently verify all professional credentials and does not guarantee the quality, legality, or outcome of services provided by professionals.</p>
               </section>
               <section>
-                <h3 className="font-semibold text-black mb-2">4. How Appointments Work</h3>
-                <p className="mb-2">Soradin allows users to request or book appointments with professionals through the Platform.</p>
+                <h3 className="font-semibold text-black mb-2">4. Professional Independence</h3>
+                <p className="mb-2">Professionals listed on the Platform operate independently.</p>
+                <p className="mb-2">Professionals are not employees, agents, partners, or representatives of Soradin.</p>
+                <p>Any advice, services, or recommendations provided by a professional are solely the responsibility of that professional.</p>
+              </section>
+              <section>
+                <h3 className="font-semibold text-black mb-2">5. Appointments and Scheduling</h3>
+                <p className="mb-2">Soradin allows Users to view professional profiles and schedule appointments with Professionals through the Platform.</p>
+                <p className="mb-2">Professionals control their own:</p>
                 <ul className="list-disc pl-5 space-y-1 mb-2">
-                  <li>Appointment availability is set by professionals</li>
-                  <li>Appointments may be free or paid, depending on the service</li>
-                  <li>Payments, if applicable, are processed through third-party providers such as Stripe</li>
+                  <li>Availability</li>
+                  <li>Services offered</li>
+                  <li>Appointment scheduling</li>
                 </ul>
-                <p>Soradin does not control how professionals conduct appointments or the content of any advice or services provided.</p>
+                <p>Soradin provides the technology that enables scheduling but does not participate in the professional services provided during or after appointments.</p>
               </section>
               <section>
-                <h3 className="font-semibold text-black mb-2">5. Payments and Billing</h3>
-                <p className="mb-2">When payments are required:</p>
+                <h3 className="font-semibold text-black mb-2">6. Payments</h3>
+                <p className="mb-2">Some services offered by Professionals may involve fees.</p>
+                <p className="mb-2">Where payments are processed through the Platform:</p>
                 <ul className="list-disc pl-5 space-y-1 mb-2">
-                  <li>All transactions are processed by third-party payment providers</li>
-                  <li>Soradin does not store full payment credentials</li>
-                  <li>Fees, billing terms, and refund policies will be clearly disclosed where applicable</li>
+                  <li>Payments may be handled by third-party payment processors such as Stripe</li>
+                  <li>Soradin does not store full payment card information</li>
+                  <li>Pricing and refund policies are determined by the Professional providing the service unless otherwise specified</li>
                 </ul>
-                <p>Soradin is not responsible for disputes related to services rendered by professionals.</p>
+                <p>Soradin is not responsible for disputes between Users and Professionals regarding services provided.</p>
               </section>
               <section>
-                <h3 className="font-semibold text-black mb-2">6. Platform Use and Conduct</h3>
-                <p className="mb-2">You agree to use Soradin respectfully and lawfully.</p>
+                <h3 className="font-semibold text-black mb-2">7. Educational Content</h3>
+                <p className="mb-2">Soradin may provide articles, blog posts, guides, or other informational content intended to help users better understand estate planning topics.</p>
+                <p className="mb-2">All content provided on the Platform is for informational and educational purposes only and should not be considered legal, financial, insurance, or professional advice.</p>
+                <p>Users should consult qualified professionals before making decisions related to estate planning or financial matters.</p>
+              </section>
+              <section>
+                <h3 className="font-semibold text-black mb-2">8. Professional Content and Blog Contributions</h3>
+                <p className="mb-2">Professionals may have the ability to submit articles or educational content for publication on the Platform.</p>
+                <p className="mb-2">All submitted content is subject to review and approval by Soradin before publication.</p>
+                <p className="mb-2">Content must be educational in nature and relevant to estate planning topics. Soradin may remove or refuse to publish content that:</p>
+                <ul className="list-disc pl-5 space-y-1 mb-2">
+                  <li>Is promotional or misleading</li>
+                  <li>Violates professional standards</li>
+                  <li>Includes inappropriate or unrelated material</li>
+                </ul>
+                <p>Soradin reserves the right to edit or remove content at its discretion.</p>
+              </section>
+              <section>
+                <h3 className="font-semibold text-black mb-2">9. Platform Use</h3>
+                <p className="mb-2">You agree to use the Platform responsibly and lawfully.</p>
                 <p className="mb-2">You may not:</p>
                 <ul className="list-disc pl-5 space-y-1 mb-2">
-                  <li>Misrepresent your identity or intentions</li>
                   <li>Provide false or misleading information</li>
-                  <li>Attempt to interfere with the Platform&apos;s security or functionality</li>
-                  <li>Scrape, copy, or misuse Platform content or data</li>
-                  <li>Use Soradin for unlawful, abusive, or fraudulent purposes</li>
+                  <li>Misrepresent your identity or credentials</li>
+                  <li>Attempt to interfere with the Platform&apos;s functionality or security</li>
+                  <li>Copy, scrape, or misuse Platform content or data</li>
+                  <li>Use the Platform for unlawful, fraudulent, or abusive purposes</li>
                 </ul>
-                <p>Soradin may suspend or terminate access if these Terms are violated.</p>
+                <p>Soradin reserves the right to suspend or terminate access to the Platform if these Terms are violated.</p>
               </section>
               <section>
-                <h3 className="font-semibold text-black mb-2">7. Information and Decision-Making</h3>
-                <p className="mb-2">Soradin provides access to information intended to support understanding and informed decision-making. However:</p>
+                <h3 className="font-semibold text-black mb-2">10. Platform Availability</h3>
+                <p className="mb-2">Soradin works to keep the Platform accessible and reliable, but availability cannot be guaranteed.</p>
+                <p className="mb-2">The Platform may occasionally experience:</p>
                 <ul className="list-disc pl-5 space-y-1 mb-2">
-                  <li>Information on the Platform is not professional advice</li>
-                  <li>Planning decisions are personal and context-specific</li>
-                  <li>Users are encouraged to ask questions and seek clarification directly from professionals</li>
+                  <li>Maintenance or updates</li>
+                  <li>Technical interruptions</li>
+                  <li>Temporary outages</li>
                 </ul>
-                <p>Ultimate responsibility for decisions made rests with the user and the professional they choose to work with.</p>
+                <p>Soradin does not guarantee uninterrupted or error-free operation.</p>
               </section>
               <section>
-                <h3 className="font-semibold text-black mb-2">8. Platform Availability and Limitations</h3>
-                <p className="mb-2">We work hard to keep Soradin reliable and accessible, but the Platform may occasionally experience interruptions, delays, or technical issues.</p>
-                <p className="mb-2">Soradin does not guarantee:</p>
-                <ul className="list-disc pl-5 space-y-1 mb-2">
-                  <li>Continuous or error-free access</li>
-                  <li>That the Platform will meet every user&apos;s expectations</li>
-                  <li>That all information on the Platform is complete or up to date at all times</li>
-                </ul>
-                <p>Use of the Platform involves inherent risks associated with online services.</p>
+                <h3 className="font-semibold text-black mb-2">11. Intellectual Property</h3>
+                <p className="mb-2">All content, branding, software, and materials associated with Soradin are owned by Soradin Inc. or its licensors.</p>
+                <p>You may not copy, reproduce, distribute, modify, or create derivative works from the Platform without prior written permission from Soradin.</p>
               </section>
               <section>
-                <h3 className="font-semibold text-black mb-2">9. Intellectual Property</h3>
-                <p className="mb-2">All content, design, branding, software, and materials on Soradin are owned by Soradin Inc. or its licensors.</p>
-                <p>You may not copy, reproduce, distribute, or create derivative works from the Platform without written permission.</p>
+                <h3 className="font-semibold text-black mb-2">12. Limitation of Liability</h3>
+                <p className="mb-2">To the fullest extent permitted by law, Soradin shall not be liable for indirect, incidental, consequential, or special damages arising from the use of the Platform.</p>
+                <p>Soradin&apos;s total liability for any claim relating to the Platform shall not exceed the amount paid by you to Soradin, if any, in the twelve months preceding the claim.</p>
               </section>
               <section>
-                <h3 className="font-semibold text-black mb-2">10. Limitation of Liability</h3>
-                <p className="mb-2">To the fullest extent permitted by law, Soradin is not liable for indirect, incidental, or consequential damages arising from use of the Platform.</p>
-                <p>Soradin&apos;s total liability for any claim shall not exceed the amount paid by you to Soradin, if any, in the twelve months preceding the claim.</p>
+                <h3 className="font-semibold text-black mb-2">13. Changes to These Terms</h3>
+                <p className="mb-2">Soradin may update these Terms as the Platform evolves.</p>
+                <p className="mb-2">Updated Terms will be posted on this page with a revised effective date.</p>
+                <p>Continued use of the Platform after updates constitutes acceptance of the revised Terms.</p>
               </section>
               <section>
-                <h3 className="font-semibold text-black mb-2">11. Changes to These Terms</h3>
-                <p className="mb-2">Soradin may update these Terms as the Platform evolves. Updates will be posted on this page with a revised effective date.</p>
-                <p>Continued use of the Platform constitutes acceptance of the updated Terms.</p>
+                <h3 className="font-semibold text-black mb-2">14. Governing Law</h3>
+                <p className="mb-2">These Terms are governed by and interpreted in accordance with the laws of the Province of British Columbia and the laws of Canada applicable therein, without regard to conflict of law principles.</p>
+                <p>Any disputes arising from these Terms or the use of the Platform shall be subject to the exclusive jurisdiction of the courts located in British Columbia, Canada.</p>
               </section>
               <section>
-                <h3 className="font-semibold text-black mb-2">12. Governing Law</h3>
-                <p>These Terms are governed by the laws of the Province of Ontario, Canada, without regard to conflict-of-law principles.</p>
-              </section>
-              <section>
-                <h3 className="font-semibold text-black mb-2">13. Contact</h3>
-                <p className="mb-1">Questions about these Terms can be directed to:</p>
+                <h3 className="font-semibold text-black mb-2">15. Contact</h3>
+                <p className="mb-1">If you have questions about these Terms, please contact:</p>
                 <p className="mb-1">Email: <a href="mailto:support@soradin.com" className="text-black underline hover:no-underline">support@soradin.com</a></p>
                 <p>Company: Soradin Inc.</p>
               </section>
