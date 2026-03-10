@@ -3,7 +3,6 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { stripe } from "@/lib/stripe";
 import { cityToProvince } from "@/lib/cities";
 
 export const dynamic = "force-dynamic";
@@ -311,43 +310,9 @@ export async function GET(req: NextRequest) {
 
     console.log(`[AGENT SEARCH] ${agentsWithAvailability.length} agents with profile picture and not paused`);
 
-    // Filter out agents without payment methods.
-    // SECURITY: Use only profile.stripe_customer_id. Never look up Stripe by email.
-    const agentsWithPaymentMethods = await Promise.all(
-      agentsWithAvailability.map(async (agent) => {
-        const stripeCustomerId = agent.stripe_customer_id || null;
-        if (!stripeCustomerId) {
-          console.log(`[AGENT SEARCH] Agent ${agent.id} (${agent.full_name || "unnamed"}) has no stripe_customer_id - excluding from results`);
-          return null;
-        }
-        try {
-          const paymentMethods = await stripe.paymentMethods.list({
-            customer: stripeCustomerId,
-            type: "card",
-            limit: 1,
-          });
-          const hasPaymentMethod = paymentMethods.data.length > 0;
-          if (!hasPaymentMethod) {
-            console.log(`[AGENT SEARCH] Agent ${agent.id} (${agent.full_name || "unnamed"}) has no payment method - excluding from results`);
-            return null;
-          }
-          return agent;
-        } catch (stripeError: any) {
-          console.error(`[AGENT SEARCH] Error checking Stripe for agent ${agent.id}:`, stripeError);
-          return null;
-        }
-      })
-    );
-
-    // Filter out null results
-    const agentsWithPayment = agentsWithPaymentMethods.filter(
-      (agent): agent is AgentSearchResult => agent !== null
-    );
-
-    console.log(`[AGENT SEARCH] ${agentsWithPayment.length} agents with payment methods`);
-
-    // Apply filters
-    let filtered = agentsWithPayment;
+    // Pre-launch: payment method not required for marketplace listing. Re-enable at public launch.
+    // Apply filters (location, query, etc.)
+    let filtered = agentsWithAvailability;
 
     if (location) {
       const locationLower = location.toLowerCase().trim();
