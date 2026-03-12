@@ -27,8 +27,8 @@ export function CaseStudiesSection() {
     },
     {
       category: "Booking Efficiency",
-      title: "Turn availability into confirmed appointments",
-      description: "Soradin simplifies the booking process by displaying only real, bookable appointment slots. Organizations see higher confirmation rates and fewer scheduling conflicts, helping teams operate more efficiently.",
+      title: "Turn availability into confirmed meetings",
+      description: "Set your real-time availability and allow families to book consultations in just a few clicks. Soradin removes the back-and-forth scheduling so you can focus on meeting with clients instead of managing appointment requests.",
       bgColor: "bg-[#7DDFC3]",
       illustration: (
         <div className="relative w-full h-full flex items-center justify-center p-4">
