@@ -16,7 +16,7 @@ export function HeroSection() {
               Client growth you can count on
             </h1>
             <p className="text-lg text-gray-700 mb-6 md:mb-8 max-w-md">
-              Connect with individuals and families who are actively preparing for end-of-life decisions. Manage bookings, availability, and communication in one professional platform.
+              Connect with individuals and families actively planning their future. Manage bookings, availability, and client communication in one professional platform.
             </p>
             <Link href="/create-account" className="mb-0 md:mb-6">
               <Button className="bg-[#1A1A1A] hover:bg-[#1A1A1A]/90 text-white px-8 py-6">
