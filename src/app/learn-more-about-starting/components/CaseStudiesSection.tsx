@@ -51,8 +51,8 @@ export function CaseStudiesSection() {
     },
     {
       category: "Accessibility & Continuity",
-      title: "Make in-person care easier to access",
-      description: "Soradin helps organizations maintain near-term availability while improving access to in-person consultations. With verified specialists and structured scheduling, families can confidently book the care they need.",
+      title: "Grow your practice across the province",
+      description: "Soradin helps professionals expand their reach beyond their local network. Families across British Columbia can discover your services, learn about your expertise, and schedule meetings directly through the platform.",
       bgColor: "bg-[#FFE87C]",
       illustration: (
         <div className="relative w-full h-full flex items-center justify-center p-4">
