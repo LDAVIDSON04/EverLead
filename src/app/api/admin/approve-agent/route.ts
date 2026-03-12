@@ -242,7 +242,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { agentId, action, notes } = body;
+    const { agentId, action, notes, ai_generated_bio: editedBio } = body;
 
     if (!agentId || !action || !["approve", "decline", "request-info"].includes(action)) {
       return NextResponse.json(
@@ -291,8 +291,12 @@ export async function POST(req: NextRequest) {
       updateData.approved_at = new Date().toISOString();
       updateData.approved_by = admin.userId;
       
-      // Also approve bio if it exists
-      if (agentProfile.ai_generated_bio) {
+      // Admin may edit bio before approving (saved without notifying agent)
+      if (editedBio !== undefined && editedBio !== null) {
+        updateData.ai_generated_bio = typeof editedBio === "string" ? editedBio : String(editedBio);
+      }
+      // Also approve bio if it exists (or was just set)
+      if (updateData.ai_generated_bio !== undefined || agentProfile.ai_generated_bio) {
         updateData.bio_approval_status = "approved";
         updateData.bio_last_updated = new Date().toISOString();
       }

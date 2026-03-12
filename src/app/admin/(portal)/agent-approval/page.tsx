@@ -57,12 +57,18 @@ export default function AgentApprovalPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<{ message: string; type: 'approve' | 'decline' | 'needs-info' } | null>(null);
   const [selectedAgent, setSelectedAgent] = useState<PendingAgent | null>(null);
+  const [editedBio, setEditedBio] = useState("");
   const [showRequestInfoModal, setShowRequestInfoModal] = useState(false);
   const [requestInfoText, setRequestInfoText] = useState("");
 
   useEffect(() => {
     loadPendingAgents();
   }, []);
+
+  useEffect(() => {
+    if (selectedAgent) setEditedBio(selectedAgent.ai_generated_bio ?? "");
+    else setEditedBio("");
+  }, [selectedAgent]);
 
   async function loadPendingAgents() {
     try {
@@ -85,7 +91,7 @@ export default function AgentApprovalPage() {
     }
   }
 
-  async function handleApprove(id: string) {
+  async function handleApprove(id: string, bioOverride?: string | null) {
     if (processing) return;
 
     try {
@@ -98,10 +104,12 @@ export default function AgentApprovalPage() {
       }
 
       const authHeaders = await getAdminAuthHeaders();
+      const body: { agentId: string; action: string; ai_generated_bio?: string } = { agentId: id, action: "approve" };
+      if (bioOverride !== undefined && bioOverride !== null) body.ai_generated_bio = bioOverride;
       const res = await fetch("/api/admin/approve-agent", {
         method: "POST",
         headers: { ...authHeaders, "Content-Type": "application/json" },
-        body: JSON.stringify({ agentId: id, action: "approve" }),
+        body: JSON.stringify(body),
       });
 
       if (!res.ok) {
@@ -892,22 +900,23 @@ export default function AgentApprovalPage() {
                 );
               })()}
 
-              {/* Profile Bio */}
-              {selectedAgent.ai_generated_bio && (
-                <div>
-                  <h3 className="text-lg font-semibold text-black mb-4">Profile Bio</h3>
-                  <div className="bg-neutral-50 rounded-lg p-4">
-                    <p className="text-sm text-neutral-700 whitespace-pre-wrap leading-relaxed">
-                      {selectedAgent.ai_generated_bio}
-                    </p>
-                  </div>
-                </div>
-              )}
+              {/* Profile Bio (editable by admin; saved on approve without notifying agent) */}
+              <div>
+                <h3 className="text-lg font-semibold text-black mb-4">Profile Bio</h3>
+                <textarea
+                  value={editedBio}
+                  onChange={(e) => setEditedBio(e.target.value)}
+                  placeholder="Agent’s profile bio (you can edit before approving)"
+                  className="w-full min-h-[140px] px-3 py-2 border border-neutral-300 rounded-lg text-sm text-neutral-700 bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-neutral-700 focus:border-transparent resize-y"
+                  spellCheck={true}
+                />
+                <p className="mt-1 text-xs text-neutral-500">Edits are saved when you click Approve. The agent is not notified.</p>
+              </div>
 
               {/* Actions */}
               <div className="flex gap-3 pt-4 border-t border-neutral-200">
                 <button
-                  onClick={() => handleApprove(selectedAgent.id)}
+                  onClick={() => handleApprove(selectedAgent.id, editedBio)}
                   disabled={processing === selectedAgent.id}
                   className="flex-1 px-4 py-2 bg-neutral-700 text-white rounded-md hover:bg-neutral-800 text-sm flex items-center justify-center gap-2 disabled:opacity-50"
                 >
