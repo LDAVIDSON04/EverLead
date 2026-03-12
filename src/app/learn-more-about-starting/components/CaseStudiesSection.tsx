@@ -78,12 +78,9 @@ export function CaseStudiesSection() {
     <section className="bg-white py-20">
       <div className="max-w-7xl mx-auto px-6">
         <div className="mb-12">
-          <h2 className="text-4xl md:text-5xl text-black mb-3">
-            Why Agents choose Soradin
+          <h2 className="text-4xl md:text-5xl text-black">
+            Why professionals choose Soradin
           </h2>
-          <p className="text-gray-600">
-            Built to support high-trust scheduling at scale.
-          </p>
         </div>
         
         <div className="grid md:grid-cols-3 gap-6">
