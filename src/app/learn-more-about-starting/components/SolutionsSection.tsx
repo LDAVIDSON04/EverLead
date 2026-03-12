@@ -11,7 +11,7 @@ export function SolutionsSection() {
         <div className="mb-12">
           <p className="text-sm uppercase tracking-wider text-gray-600 mb-4">Our solutions</p>
           <h2 className="text-4xl md:text-5xl text-black max-w-4xl">
-            How Soradin Helps Families Plan Ahead
+            How Soradin Helps Professionals Grow
           </h2>
         </div>
 
