@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { supabaseClient } from "@/lib/supabaseClient";
 import { getAdminAuthHeaders } from "@/lib/adminAuth";
 import { useRequireRole } from "@/lib/hooks/useRequireRole";
-import { Search, Calendar, Eye, UserX, User, Building, MapPin, Mail, Phone, Clock, CalendarCheck, X } from "lucide-react";
+import { Search, Calendar, Eye, UserX, User, Building, MapPin, Mail, Phone, Clock, CalendarCheck, X, FileText, Loader2 } from "lucide-react";
 import Image from "next/image";
 
 type OfficeLocation = {
@@ -33,6 +33,7 @@ type SpecialistRow = {
   metadata: any;
   office_locations: OfficeLocation[];
   profile_picture_url: string | null;
+  ai_generated_bio: string | null;
 };
 
 export default function AdminSpecialistsPage() {
@@ -44,6 +45,48 @@ export default function AdminSpecialistsPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "suspended">("all");
   const [selectedSpecialist, setSelectedSpecialist] = useState<SpecialistRow | null>(null);
+  const [editedBio, setEditedBio] = useState("");
+  const [bioSaving, setBioSaving] = useState(false);
+  const [bioSaveError, setBioSaveError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (selectedSpecialist) {
+      setEditedBio(selectedSpecialist.ai_generated_bio ?? "");
+      setBioSaveError(null);
+    } else {
+      setEditedBio("");
+    }
+  }, [selectedSpecialist]);
+
+  async function saveBio() {
+    if (!selectedSpecialist || bioSaving) return;
+    setBioSaveError(null);
+    setBioSaving(true);
+    try {
+      const authHeaders = await getAdminAuthHeaders();
+      const res = await fetch(`/api/admin/agents/${selectedSpecialist.id}/bio`, {
+        method: "PATCH",
+        headers: { ...authHeaders, "Content-Type": "application/json" },
+        body: JSON.stringify({ ai_generated_bio: editedBio }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to save bio");
+      }
+      setSpecialists((prev) =>
+        prev.map((s) =>
+          s.id === selectedSpecialist.id ? { ...s, ai_generated_bio: editedBio || null } : s
+        )
+      );
+      setSelectedSpecialist((prev) =>
+        prev && prev.id === selectedSpecialist.id ? { ...prev, ai_generated_bio: editedBio || null } : prev
+      );
+    } catch (err: any) {
+      setBioSaveError(err.message || "Failed to save bio");
+    } finally {
+      setBioSaving(false);
+    }
+  }
 
   useEffect(() => {
     async function load() {
@@ -53,7 +96,7 @@ export default function AdminSpecialistsPage() {
         // Get only approved agents from profiles table (only agents visible to families)
         const { data: profilesData, error: profilesError } = await supabaseClient
           .from("profiles")
-          .select("id, full_name, email, phone, funeral_home, agent_city, agent_province, approval_status, created_at, metadata, profile_picture_url")
+          .select("id, full_name, email, phone, funeral_home, agent_city, agent_province, approval_status, created_at, metadata, profile_picture_url, ai_generated_bio")
           .eq("role", "agent")
           .eq("approval_status", "approved")
           .order("created_at", { ascending: false });
@@ -188,6 +231,7 @@ export default function AdminSpecialistsPage() {
             metadata: metadata,
             office_locations: officeLocations,
             profile_picture_url: profile.profile_picture_url || null,
+            ai_generated_bio: profile.ai_generated_bio ?? null,
           };
         });
 
@@ -462,6 +506,34 @@ export default function AdminSpecialistsPage() {
                       <p className="text-sm text-neutral-900">{selectedSpecialist.specialty}</p>
                     </div>
                   )}
+                </div>
+              </div>
+
+              {/* Profile Bio (editable; agent is not notified) */}
+              <div>
+                <h3 className="text-lg font-semibold text-black mb-4 flex items-center gap-2">
+                  <FileText className="w-5 h-5" />
+                  Profile Bio
+                </h3>
+                <textarea
+                  value={editedBio}
+                  onChange={(e) => setEditedBio(e.target.value)}
+                  placeholder="Agent’s profile bio (edits are saved without notifying the agent)"
+                  className="w-full min-h-[140px] px-3 py-2 border border-neutral-300 rounded-lg text-sm text-neutral-700 bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-neutral-700 focus:border-transparent resize-y"
+                  spellCheck={true}
+                />
+                <p className="mt-1 text-xs text-neutral-500">Edits are saved without notifying the agent.</p>
+                {bioSaveError && <p className="mt-2 text-sm text-red-600">{bioSaveError}</p>}
+                <div className="mt-2">
+                  <button
+                    type="button"
+                    onClick={saveBio}
+                    disabled={bioSaving}
+                    className="px-4 py-2 bg-neutral-700 text-white rounded-md hover:bg-neutral-800 text-sm font-medium disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {bioSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                    {bioSaving ? "Saving…" : "Save bio"}
+                  </button>
                 </div>
               </div>
 
