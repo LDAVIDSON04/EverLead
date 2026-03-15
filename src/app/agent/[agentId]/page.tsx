@@ -13,6 +13,7 @@ import { OfficeLocations } from "./components/OfficeLocations";
 import { Reviews } from "./components/Reviews";
 import { FAQs } from "./components/FAQs";
 import { BookingPanel } from "./components/BookingPanel";
+import { getAgentAvatarUrl } from "@/lib/utils";
 
 export default function AgentProfilePage() {
   const params = useParams();
@@ -181,7 +182,7 @@ export default function AgentProfilePage() {
               location={location}
               rating={agentData.rating}
               reviewCount={agentData.reviewCount}
-              imageUrl={agentData.profile_picture_url || ""}
+              imageUrl={getAgentAvatarUrl(agentData.profile_picture_url)}
               verified={agentData.verified}
             />
             <AboutSection 

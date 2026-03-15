@@ -7,7 +7,7 @@ import Image from "next/image";
 import { Star, MapPin, Calendar, ArrowLeft, Info, Lock } from "lucide-react";
 import { supabaseClient } from "@/lib/supabaseClient";
 import { DateTime } from "luxon";
-import { formatTimeWithTimezone } from "@/lib/utils";
+import { formatTimeWithTimezone, getAgentAvatarUrl } from "@/lib/utils";
 
 function BookingStep2Content() {
   const router = useRouter();
@@ -323,19 +323,11 @@ function BookingStep2Content() {
         {/* Booking Summary Card */}
         <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6 mb-8">
           <div className="flex items-start gap-4">
-            {agentInfo.profile_picture_url ? (
-              <img
-                src={agentInfo.profile_picture_url}
-                alt={agentInfo.full_name || "Agent"}
-                className="w-16 h-16 rounded-full object-cover flex-shrink-0"
-              />
-            ) : (
-              <div className="w-16 h-16 bg-neutral-800 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-white text-2xl">
-                  {agentInfo.first_name?.[0]?.toUpperCase() || agentInfo.full_name?.[0]?.toUpperCase() || "A"}
-                </span>
-              </div>
-            )}
+            <img
+              src={getAgentAvatarUrl(agentInfo.profile_picture_url)}
+              alt={agentInfo.full_name || "Agent"}
+              className="w-16 h-16 rounded-full object-cover flex-shrink-0"
+            />
             <div className="flex-1">
               <h2 className="text-lg font-semibold text-gray-900 mb-1">
                 {agentInfo.full_name || (agentInfo.first_name && agentInfo.last_name 

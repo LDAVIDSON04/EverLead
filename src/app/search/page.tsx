@@ -9,6 +9,7 @@ import dynamic from "next/dynamic";
 import { Suspense, useState, useEffect, useMemo, useCallback } from "react";
 import { Search, Star, MapPin, Calendar, Clock, Stethoscope, Video, SlidersHorizontal, ChevronRight, X, ArrowLeft, Shield, ExternalLink, Menu, Instagram, Facebook } from "lucide-react";
 import { supabaseClient } from "@/lib/supabaseClient";
+import { getAgentAvatarUrl, DEFAULT_AGENT_AVATAR_URL } from "@/lib/utils";
 // Removed static imports - now using dynamic imports below
 import { TrustHighlights } from "@/app/agent/[agentId]/components/TrustHighlights";
 import { DateTime } from 'luxon';
@@ -1252,25 +1253,20 @@ function SearchResults() {
             {/* Agent Info */}
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-start gap-4">
-                {selectedAppointment.agent?.profile_picture_url ? (
-                  <img
-                    src={selectedAppointment.agent.profile_picture_url}
-                    alt={selectedAppointment.agent.full_name || "Agent"}
-                    className="w-16 h-16 rounded-full object-cover flex-shrink-0"
-                    width={64}
-                    height={64}
-                    loading="lazy"
-                  />
-                ) : (
-                <div className={`w-16 h-16 ${avatarColors[selectedAppointmentIndex % avatarColors.length]} rounded-full flex items-center justify-center flex-shrink-0`}>
-                  <span className="text-white text-2xl">
-                      {selectedAppointment.agent?.full_name?.[0]?.toUpperCase() ||
-                       selectedAppointment.leads?.first_name?.[0]?.toUpperCase() ||
-                       'A'}
-                  </span>
-                </div>
-                )}
-                
+                {(() => {
+                  const avatarUrl = getAgentAvatarUrl(selectedAppointment.agent?.profile_picture_url);
+                  const alt = selectedAppointment.agent?.full_name || "Agent";
+                  return (
+                    <div className="flex-shrink-0 w-16 h-16 rounded-full overflow-hidden bg-neutral-200 outline-none">
+                      {avatarUrl === DEFAULT_AGENT_AVATAR_URL ? (
+                        <div className="w-full h-full bg-neutral-200 bg-cover bg-center rounded-full" style={{ backgroundImage: `url(${avatarUrl})` }} role="img" aria-label={alt} />
+                      ) : (
+                        <img src={avatarUrl} alt={alt} className="w-full h-full object-cover" width={64} height={64} loading="lazy" />
+                      )}
+                    </div>
+                  );
+                })()}
+
                 <div className="flex-1">
                   <h3 className="text-black mb-1 text-lg font-semibold">
                     {selectedAppointment.agent?.full_name ||
@@ -1865,23 +1861,19 @@ function SearchResults() {
                     <div className="flex-shrink-0 w-[30%] min-w-0">
                       {/* Top row: Profile pic with name/title/company to the right */}
                       <div className="flex gap-4 mb-2">
-                        {/* Agent Avatar */}
-                        <div className="flex-shrink-0">
-                          {agent?.profile_picture_url ? (
-                            <img
-                              src={agent.profile_picture_url}
-                              alt={agentName}
-                              className="w-16 h-16 rounded-full object-cover"
-                              width={64}
-                              height={64}
-                              loading="lazy"
-                            />
-                          ) : (
-                          <div className={`w-16 h-16 ${avatarColors[index % avatarColors.length]} rounded-full flex items-center justify-center`}>
-                              <span className="text-white text-2xl">{agentName[0]?.toUpperCase() || 'A'}</span>
-                          </div>
-                          )}
-                        </div>
+                        {/* Agent Avatar - default uses bg-image so no transparent checkerboard */}
+                        {(() => {
+                          const avatarUrl = getAgentAvatarUrl(agent?.profile_picture_url);
+                          return (
+                            <div className="flex-shrink-0 w-16 h-16 rounded-full overflow-hidden bg-neutral-200 outline-none">
+                              {avatarUrl === DEFAULT_AGENT_AVATAR_URL ? (
+                                <div className="w-full h-full bg-neutral-200 bg-cover bg-center rounded-full" style={{ backgroundImage: `url(${avatarUrl})` }} role="img" aria-label={agentName} />
+                              ) : (
+                                <img src={avatarUrl} alt={agentName} className="w-full h-full object-cover" width={64} height={64} loading="lazy" />
+                              )}
+                            </div>
+                          );
+                        })()}
 
                         {/* Name, title, company to the right of pic */}
                         <div className="flex-1 min-w-0">
@@ -2088,23 +2080,19 @@ function SearchResults() {
                   {/* Mobile: Picture with text wrapping around */}
                   <div className="md:hidden">
                     <div className="flex gap-4 items-start">
-                      {/* Agent Avatar - Mobile: picture only */}
-                      <div className="flex-shrink-0">
-                        {agent?.profile_picture_url ? (
-                          <img
-                            src={agent.profile_picture_url}
-                            alt={agentName}
-                            className="w-16 h-16 rounded-full object-cover"
-                            width={64}
-                            height={64}
-                            loading="lazy"
-                          />
-                        ) : (
-                        <div className={`w-16 h-16 ${avatarColors[index % avatarColors.length]} rounded-full flex items-center justify-center`}>
-                            <span className="text-white text-2xl">{agentName[0]?.toUpperCase() || 'A'}</span>
-                        </div>
-                        )}
-                      </div>
+                      {/* Agent Avatar - Mobile: default uses bg-image so no transparent checkerboard */}
+                      {(() => {
+                        const avatarUrl = getAgentAvatarUrl(agent?.profile_picture_url);
+                        return (
+                          <div className="flex-shrink-0 w-16 h-16 rounded-full overflow-hidden bg-neutral-200 outline-none">
+                            {avatarUrl === DEFAULT_AGENT_AVATAR_URL ? (
+                              <div className="w-full h-full bg-neutral-200 bg-cover bg-center rounded-full" style={{ backgroundImage: `url(${avatarUrl})` }} role="img" aria-label={agentName} />
+                            ) : (
+                              <img src={avatarUrl} alt={agentName} className="w-full h-full object-cover" width={64} height={64} loading="lazy" />
+                            )}
+                          </div>
+                        );
+                      })()}
 
                       {/* Mobile: Name, job title, and company to the right of picture - wrapping around */}
                       <div className="flex-1 min-w-0">
@@ -2351,22 +2339,19 @@ function SearchResults() {
                 return (
                 <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
                   <div className="flex items-center gap-4">
-                    {selectedAgentInfo.profile_picture_url ? (
-                      <Image
-                        src={selectedAgentInfo.profile_picture_url}
-                        alt={selectedAgentInfo.full_name || "Agent"}
-                        width={80}
-                        height={80}
-                        className="rounded-full object-cover border-2 border-neutral-600"
-                        unoptimized
-                      />
-                    ) : (
-                      <div className="w-20 h-20 bg-neutral-100 rounded-full flex items-center justify-center border-2 border-neutral-600">
-                        <span className="text-neutral-700 text-2xl font-semibold">
-                          {(selectedAgentInfo.full_name || "A")[0].toUpperCase()}
-                        </span>
-                      </div>
-                    )}
+                    {(() => {
+                      const avatarUrl = getAgentAvatarUrl(selectedAgentInfo.profile_picture_url);
+                      const alt = selectedAgentInfo.full_name || "Agent";
+                      return (
+                        <div className="flex-shrink-0 w-20 h-20 rounded-full overflow-hidden bg-neutral-200 border-2 border-neutral-600 outline-none">
+                          {avatarUrl === DEFAULT_AGENT_AVATAR_URL ? (
+                            <div className="w-full h-full bg-neutral-200 bg-cover bg-center rounded-full" style={{ backgroundImage: `url(${avatarUrl})` }} role="img" aria-label={alt} />
+                          ) : (
+                            <img src={avatarUrl} alt={alt} className="w-full h-full object-cover" width={80} height={80} />
+                          )}
+                        </div>
+                      );
+                    })()}
                     <div className="flex-1">
                       <h3 className="text-xl font-bold text-black mb-1">
                         {selectedAgentInfo.full_name || "Agent"}
@@ -2709,24 +2694,19 @@ function SearchResults() {
                       {/* Agent Header */}
                       <div className="mb-6">
                         <div className="flex gap-6 pb-6">
-                          <div className="flex-shrink-0">
-                            {portfolioAgentData.profile_picture_url ? (
-                              <img
-                                src={portfolioAgentData.profile_picture_url}
-                                alt={portfolioAgentData.full_name || "Agent"}
-                                className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
-                                width={96}
-                                height={96}
-                                loading="lazy"
-                              />
-                            ) : (
-                              <div className="w-24 h-24 rounded-full bg-[#1a4d2e] flex items-center justify-center border-4 border-white shadow-lg">
-                                <span className="text-white text-3xl font-semibold">
-                                  {(portfolioAgentData.full_name || "A")[0].toUpperCase()}
-                                </span>
+                          {(() => {
+                            const avatarUrl = getAgentAvatarUrl(portfolioAgentData.profile_picture_url);
+                            const alt = portfolioAgentData.full_name || "Agent";
+                            return (
+                              <div className="flex-shrink-0 w-24 h-24 rounded-full overflow-hidden bg-neutral-200 border-4 border-white shadow-lg outline-none">
+                                {avatarUrl === DEFAULT_AGENT_AVATAR_URL ? (
+                                  <div className="w-full h-full bg-neutral-200 bg-cover bg-center rounded-full" style={{ backgroundImage: `url(${avatarUrl})` }} role="img" aria-label={alt} />
+                                ) : (
+                                  <img src={avatarUrl} alt={alt} className="w-full h-full object-cover" width={96} height={96} loading="lazy" />
+                                )}
                               </div>
-                            )}
-                          </div>
+                            );
+                          })()}
                           <div className="flex-1">
                             <h1 className="mb-1">{portfolioAgentData.full_name || "Agent"}</h1>
                             <p className="text-gray-600 mb-2">{portfolioAgentData.specialty || portfolioAgentData.job_title || "Pre-need Planning Specialist"}</p>

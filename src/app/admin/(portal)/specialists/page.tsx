@@ -6,6 +6,7 @@ import { getAdminAuthHeaders } from "@/lib/adminAuth";
 import { useRequireRole } from "@/lib/hooks/useRequireRole";
 import { Search, Calendar, Eye, UserX, User, Building, MapPin, Mail, Phone, Clock, CalendarCheck, X, FileText, Loader2 } from "lucide-react";
 import Image from "next/image";
+import { getAgentAvatarUrl } from "@/lib/utils";
 
 type OfficeLocation = {
   id: string;
@@ -429,19 +430,17 @@ export default function AdminSpecialistsPage() {
                   Agent Information
                 </h3>
                 {/* Profile Picture */}
-                {selectedSpecialist.profile_picture_url && (
-                  <div className="mb-4">
-                    <p className="text-xs text-neutral-500 mb-2">Profile Picture</p>
-                    <div className="relative w-24 h-24 rounded-full overflow-hidden border-2 border-neutral-200">
-                      <Image
-                        src={selectedSpecialist.profile_picture_url}
-                        alt={selectedSpecialist.display_name || 'Agent'}
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
+                <div className="mb-4">
+                  <p className="text-xs text-neutral-500 mb-2">Profile Picture</p>
+                  <div className="relative w-24 h-24 rounded-full overflow-hidden border-2 border-neutral-200">
+                    <Image
+                      src={getAgentAvatarUrl(selectedSpecialist.profile_picture_url)}
+                      alt={selectedSpecialist.display_name || 'Agent'}
+                      fill
+                      className="object-cover"
+                    />
                   </div>
-                )}
+                </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-xs text-neutral-500 mb-1">Full Name</p>

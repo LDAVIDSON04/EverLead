@@ -2,6 +2,17 @@ import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { DateTime } from "luxon";
 
+/** Default avatar shown for agents who haven't set a profile picture (marketplace, profiles, booking). */
+export const DEFAULT_AGENT_AVATAR_URL = "/default-agent-avatar.png";
+
+/**
+ * Returns the URL to display for an agent's profile picture.
+ * Use when showing agent avatars so agents without a photo still appear (e.g. on marketplace).
+ */
+export function getAgentAvatarUrl(profilePictureUrl: string | null | undefined): string {
+  return profilePictureUrl?.trim() || DEFAULT_AGENT_AVATAR_URL;
+}
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }

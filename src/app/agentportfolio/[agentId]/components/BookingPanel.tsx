@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { supabaseClient } from '@/lib/supabaseClient';
 import { DateTime } from 'luxon';
 import Image from 'next/image';
+import { getAgentAvatarUrl } from '@/lib/utils';
 
 interface DayAvailability {
   dayOfWeek: string;
@@ -659,22 +660,14 @@ export function BookingPanel({ agentId }: BookingPanelProps) {
               {agentInfo && (
                 <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
                   <div className="flex items-center gap-4">
-                    {agentInfo.profile_picture_url ? (
-                      <Image
-                        src={agentInfo.profile_picture_url}
-                        alt={agentInfo.full_name || "Agent"}
-                        width={80}
-                        height={80}
-                        className="rounded-full object-cover border-2 border-neutral-600"
-                        unoptimized
-                      />
-                    ) : (
-                      <div className="w-20 h-20 bg-neutral-100 rounded-full flex items-center justify-center border-2 border-neutral-600">
-                        <span className="text-neutral-700 text-2xl font-semibold">
-                          {(agentInfo.full_name || "A")[0].toUpperCase()}
-                        </span>
-                      </div>
-                    )}
+                    <Image
+                      src={getAgentAvatarUrl(agentInfo.profile_picture_url)}
+                      alt={agentInfo.full_name || "Agent"}
+                      width={80}
+                      height={80}
+                      className="rounded-full object-cover border-2 border-neutral-600"
+                      unoptimized
+                    />
                     <div className="flex-1">
                       <h3 className="text-xl font-bold text-black mb-1">
                         {agentInfo.full_name || "Agent"}

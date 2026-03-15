@@ -3,6 +3,7 @@
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Star } from "lucide-react";
+import { getAgentAvatarUrl } from "@/lib/utils";
 
 function ReviewContent() {
   const searchParams = useSearchParams();
@@ -137,19 +138,11 @@ function ReviewContent() {
           <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
             <div className="flex items-center gap-4">
               {/* Agent Photo */}
-              {appointmentData.agentPhoto ? (
-                <img
-                  src={appointmentData.agentPhoto}
-                  alt={appointmentData.agentName}
-                  className="w-16 h-16 rounded-full object-cover flex-shrink-0"
-                />
-              ) : (
-                <div className="w-16 h-16 rounded-full bg-neutral-800 flex items-center justify-center flex-shrink-0">
-                  <span className="text-white text-2xl font-semibold">
-                    {appointmentData.agentName[0]?.toUpperCase() || 'A'}
-                  </span>
-                </div>
-              )}
+              <img
+                src={getAgentAvatarUrl(appointmentData.agentPhoto)}
+                alt={appointmentData.agentName}
+                className="w-16 h-16 rounded-full object-cover flex-shrink-0"
+              />
               
               {/* Agent Info */}
               <div className="flex-1 min-w-0">

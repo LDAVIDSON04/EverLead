@@ -146,8 +146,7 @@ export async function GET(req: NextRequest) {
     const { data: profiles, error } = await supabaseAdmin
       .from("profiles")
       .select("id, full_name, first_name, last_name, profile_picture_url, funeral_home, job_title, agent_city, agent_province, metadata, approval_status, ai_generated_bio, bio_approval_status")
-      .eq("role", "agent")
-      .not("profile_picture_url", "is", null); // Require profile picture
+      .eq("role", "agent");
 
     if (error) {
       console.error("Error fetching agents:", error);
@@ -174,12 +173,6 @@ export async function GET(req: NextRequest) {
           // When admin approves, both profile and bio are approved together
           if (profile.approval_status !== "approved") {
             console.log(`[AGENT SEARCH] Agent ${profile.id} (${profile.full_name || 'unnamed'}) not approved: ${profile.approval_status}`);
-            return false;
-          }
-          
-          // Require profile picture
-          if (!profile.profile_picture_url) {
-            console.log(`[AGENT SEARCH] Agent ${profile.id} (${profile.full_name || 'unnamed'}) missing profile picture`);
             return false;
           }
           

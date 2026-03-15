@@ -6,6 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowLeft, Calendar, Clock, X } from "lucide-react";
 import { supabaseClient } from "@/lib/supabaseClient";
+import { getAgentAvatarUrl } from "@/lib/utils";
 
 type AvailabilityDay = {
   date: string;
@@ -155,21 +156,13 @@ function SelectTimeContent() {
         {agentInfo && (
           <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
             <div className="flex items-center gap-4">
-              {agentInfo.profile_picture_url ? (
-                <Image
-                  src={agentInfo.profile_picture_url}
-                  alt={agentInfo.full_name || "Agent"}
-                  width={64}
-                  height={64}
-                  className="rounded-full object-cover"
-                />
-              ) : (
-                <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center">
-                  <span className="text-gray-400 text-xl">
-                    {(agentInfo.full_name || "A")[0].toUpperCase()}
-                  </span>
-                </div>
-              )}
+              <Image
+                src={getAgentAvatarUrl(agentInfo.profile_picture_url)}
+                alt={agentInfo.full_name || "Agent"}
+                width={64}
+                height={64}
+                className="rounded-full object-cover"
+              />
               <div className="flex-1">
                 <h2 className="text-xl font-semibold text-black">
                   {agentInfo.full_name || "Agent"}

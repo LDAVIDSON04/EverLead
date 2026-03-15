@@ -31,19 +31,11 @@ export function AgentHeader({
     <div className="mb-6">
       <div className="flex gap-6 pb-6">
         <div className="flex-shrink-0">
-          {imageUrl ? (
-            <img
-              src={imageUrl}
-              alt={name}
-              className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
-            />
-          ) : (
-            <div className="w-24 h-24 rounded-full bg-[#1a4d2e] flex items-center justify-center border-4 border-white shadow-lg">
-              <span className="text-white text-3xl font-semibold">
-                {name[0]?.toUpperCase() || 'A'}
-              </span>
-            </div>
-          )}
+          <img
+            src={imageUrl}
+            alt={name}
+            className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
+          />
         </div>
         <div className="flex-1">
           <h1 className="mb-1">{name}</h1>

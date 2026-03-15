@@ -7,6 +7,7 @@ import Image from "next/image";
 import { Calendar, Clock, MapPin, X, Star } from "lucide-react";
 import { supabaseClient } from "@/lib/supabaseClient";
 import { DateTime } from "luxon";
+import { getAgentAvatarUrl } from "@/lib/utils";
 
 type AppointmentData = {
   id: string;
@@ -501,19 +502,13 @@ function CancelAppointmentContent() {
         {appointmentData.agent && (
           <div className="mb-6 pb-6 border-b border-gray-200">
             <div className="flex items-center gap-4">
-              {appointmentData.agent.profile_picture_url ? (
-                <Image
-                  src={appointmentData.agent.profile_picture_url}
-                  alt={appointmentData.agent.full_name || "Agent"}
-                  width={80}
-                  height={80}
-                  className="rounded-full object-cover"
-                />
-              ) : (
-                <div className="w-20 h-20 rounded-full bg-[#1A1A1A] flex items-center justify-center text-white text-2xl font-semibold">
-                  {(appointmentData.agent.full_name || "A")[0].toUpperCase()}
-                </div>
-              )}
+              <Image
+                src={getAgentAvatarUrl(appointmentData.agent.profile_picture_url)}
+                alt={appointmentData.agent.full_name || "Agent"}
+                width={80}
+                height={80}
+                className="rounded-full object-cover"
+              />
               <div className="flex-1">
                 <h2 className="text-xl font-semibold text-gray-900">
                   {appointmentData.agent.full_name || "Agent"}
@@ -691,22 +686,14 @@ function CancelAppointmentContent() {
               {selectedAgentInfo && (
                 <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
                   <div className="flex items-center gap-4">
-                    {selectedAgentInfo.profile_picture_url ? (
-                      <Image
-                        src={selectedAgentInfo.profile_picture_url}
-                        alt={selectedAgentInfo.full_name || "Agent"}
-                        width={80}
-                        height={80}
-                        className="rounded-full object-cover border-2 border-neutral-600"
-                        unoptimized
-                      />
-                    ) : (
-                      <div className="w-20 h-20 bg-neutral-100 rounded-full flex items-center justify-center border-2 border-neutral-600">
-                        <span className="text-neutral-700 text-2xl font-semibold">
-                          {(selectedAgentInfo.full_name || "A")[0].toUpperCase()}
-                        </span>
-                      </div>
-                    )}
+                    <Image
+                      src={getAgentAvatarUrl(selectedAgentInfo.profile_picture_url)}
+                      alt={selectedAgentInfo.full_name || "Agent"}
+                      width={80}
+                      height={80}
+                      className="rounded-full object-cover border-2 border-neutral-600"
+                      unoptimized
+                    />
                     <div className="flex-1">
                       <h3 className="text-xl font-bold text-black mb-1">
                         {selectedAgentInfo.full_name || "Agent"}
