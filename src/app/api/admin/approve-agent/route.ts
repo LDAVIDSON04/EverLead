@@ -139,6 +139,7 @@ async function sendApprovalEmail(email: string, fullName: string | null, approve
     const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "https://www.soradin.com").replace(/\/+$/, "") || "https://www.soradin.com";
     const logoSrc = getBlackLogoDataUri() || `${siteUrl}/logo.png`;
     
+    const firstName = fullName?.trim().split(/\s+/)[0] || fullName || "there";
     const html = approved
       ? `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px; background-color: #ffffff;">
@@ -146,15 +147,16 @@ async function sendApprovalEmail(email: string, fullName: string | null, approve
             <img src="${logoSrc}" alt="Soradin" width="140" height="48" style="height: 48px; width: auto; margin: 0 auto; display: block; border: 0;" />
           </div>
           
-          <div style="background-color: #f0f9f4; border-left: 4px solid #1A1A1A; padding: 20px; margin-bottom: 30px; border-radius: 8px;">
-            <h1 style="color: #1A1A1A; font-size: 28px; font-weight: 600; margin: 0 0 10px 0; line-height: 1.2;">Account Approved</h1>
-            <p style="color: #1A1A1A; font-size: 16px; margin: 0; font-weight: 500;">Welcome to Soradin</p>
-          </div>
-          
           <div style="color: #1A1A1A; font-size: 16px; line-height: 1.6;">
-            <p style="margin: 0 0 20px 0;">Hi ${fullName || "there"},</p>
-            <p style="margin: 0 0 20px 0;">Great news! Your Soradin agent account has been approved. You can now log in to access your agent portal and start connecting with families in your area.</p>
-            <p style="margin: 0 0 30px 0;">We're excited to have you join our community of trusted funeral planning professionals.</p>
+            <p style="margin: 0 0 20px 0;">Hi ${firstName},</p>
+            <p style="margin: 0 0 20px 0;">Welcome to Soradin! Your account has been approved and you can now log in to your agent portal to get started.</p>
+            <p style="margin: 0 0 12px 0; font-weight: 600;">Here is what to do next:</p>
+            <ul style="margin: 0 0 20px 0; padding-left: 24px;">
+              <li style="margin-bottom: 10px;">Complete your profile with your photo, bio, and office location so families searching for professionals in your city can find you and learn about you before they book.</li>
+              <li style="margin-bottom: 10px;">Sync your Google or Microsoft calendar and set your availability so families can book in person or video appointments with you directly based on your real time schedule.</li>
+            </ul>
+            <p style="margin: 0 0 20px 0;">Once your profile is live you will be visible to families across BC who are using Soradin to find trusted estate planning professionals.</p>
+            <p style="margin: 0 0 30px 0;">We are excited to have you on the platform and look forward to connecting you with families who are ready to put their plans in place.</p>
           </div>
           
           <div style="text-align: center; margin: 40px 0;">
@@ -164,11 +166,14 @@ async function sendApprovalEmail(email: string, fullName: string | null, approve
           </div>
           
           <div style="margin-top: 40px; padding-top: 30px; border-top: 1px solid #e5e5e5;">
-            <p style="color: #6b6b6b; font-size: 14px; line-height: 1.6; margin: 0 0 10px 0;">
-              If you have any questions, please contact our support team at <a href="mailto:support@soradin.com" style="color: #1A1A1A; text-decoration: none;">support@soradin.com</a>.
+            <p style="color: #1A1A1A; font-size: 14px; line-height: 1.6; margin: 0 0 4px 0;">Best,</p>
+            <p style="color: #1A1A1A; font-size: 14px; font-weight: 600; margin: 0 0 4px 0;">Liam Davidson</p>
+            <p style="color: #1A1A1A; font-size: 14px; margin: 0 0 4px 0;">Founder, Soradin</p>
+            <p style="color: #6b6b6b; font-size: 14px; margin: 8px 0 0 0;">
+              <a href="${siteUrl}" style="color: #1A1A1A; text-decoration: none;">soradin.com</a>
             </p>
             <p style="color: #6b6b6b; font-size: 12px; margin: 20px 0 0 0;">
-              © ${new Date().getFullYear()} Soradin, Inc. All rights reserved.
+              © ${new Date().getFullYear()} Soradin. All rights reserved.
             </p>
           </div>
         </div>
