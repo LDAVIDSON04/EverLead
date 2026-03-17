@@ -33,6 +33,8 @@ type AgentSearchResult = {
   officeLocationCities?: string[];
   videoSchedule?: Record<string, { enabled: boolean; start: string; end: string }> | null;
   agent_role?: string | null;
+  /** From profile.metadata; financial advisors only. no-minimum | 100000 | 250000 | 500000 | 1000000 */
+  minimum_portfolio_size?: string | null;
   /** From profile.metadata; used only for payment check. Never resolve Stripe by email. */
   stripe_customer_id?: string | null;
 };
@@ -130,6 +132,7 @@ export async function GET(req: NextRequest) {
     const query = searchParams.get("q") || "";
     const mode = searchParams.get("mode") || "in-person"; // "in-person" | "video"
     const fallback = searchParams.get("fallback") === "1"; // when true (in-person 0 results), return all agents in province same profession, don't require video
+    const assets = searchParams.get("assets") ?? ""; // financial planner search: customer's approximate asset value (e.g. 500000) for minimum_portfolio_size filter
 
     console.log("🔍 [AGENT SEARCH API] Request received:", {
       location,
@@ -137,6 +140,7 @@ export async function GET(req: NextRequest) {
       query,
       mode,
       fallback,
+      assets,
       allParams: Object.fromEntries(searchParams.entries())
     });
 
@@ -292,6 +296,7 @@ export async function GET(req: NextRequest) {
             officeLocations: agentOfficeLocations, // Store full office location data (includes associated_firm)
             videoSchedule: videoSchedule && typeof videoSchedule === "object" ? videoSchedule : null,
             agent_role: (metadata as any)?.agent_role || null,
+            minimum_portfolio_size: (metadata as any)?.minimum_portfolio_size ?? null,
             stripe_customer_id: (metadata as any)?.stripe_customer_id || null,
           };
         } catch (err) {
@@ -589,6 +594,29 @@ export async function GET(req: NextRequest) {
             agent.specialty?.toLowerCase().includes(queryLower)
           );
         });
+      }
+    }
+
+    // Financial planner filter: when customer selected assets (slider), only show agents whose minimum_portfolio_size <= customer assets
+    // Agents with no minimum or "no-minimum" are treated as 0 (show to all). Default for existing agents without the field is no minimum.
+    if (assets !== "" && assets != null) {
+      const customerAssetsNum = parseInt(String(assets).trim(), 10);
+      if (!isNaN(customerAssetsNum)) {
+        const beforeAssets = filtered.length;
+        filtered = filtered.filter((agent) => {
+          const role = agent.agent_role;
+          const isFinancial = role === "financial-advisor" || role === "financial_insurance_agent";
+          if (!isFinancial) return true;
+          const minStr = agent.minimum_portfolio_size ?? "";
+          const agentMinNum =
+            minStr === "no-minimum" || minStr === ""
+              ? 0
+              : parseInt(String(minStr), 10);
+          const minEffective = isNaN(agentMinNum) ? 0 : agentMinNum;
+          const include = customerAssetsNum >= minEffective;
+          return include;
+        });
+        console.log(`[AGENT SEARCH] Assets filter: customer assets ${customerAssetsNum} -> ${filtered.length} agents (was ${beforeAssets})`);
       }
     }
 

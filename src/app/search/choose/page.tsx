@@ -26,16 +26,28 @@ function SearchChooseContent() {
     );
   }
 
-  const buildSearchUrl = (mode: "in-person" | "video") => {
+  const isFinancialPlannerSearch =
+    q.trim() !== "" && /financial/i.test(q.trim());
+
+  const buildSearchUrl = (mode: "in-person" | "video", assets?: string) => {
     const params = new URLSearchParams();
     if (location) params.set("location", location);
     if (q) params.set("q", q);
     params.set("mode", mode);
+    if (assets !== undefined && assets !== "") params.set("assets", assets);
     return `/search?${params.toString()}`;
   };
 
   const handleCardClick = (mode: "in-person" | "video") => {
-    router.push(buildSearchUrl(mode));
+    if (isFinancialPlannerSearch) {
+      const params = new URLSearchParams();
+      if (location) params.set("location", location);
+      if (q) params.set("q", q);
+      params.set("mode", mode);
+      router.push(`/search/financial-assets?${params.toString()}`);
+    } else {
+      router.push(buildSearchUrl(mode));
+    }
   };
 
   return (

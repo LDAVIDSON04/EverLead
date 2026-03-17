@@ -225,6 +225,7 @@ export default function CreateAccountNextPage() {
       metadata.regulatory_organization = step2.regulatoryOrganization || "";
       metadata.license_registration_number = step2.registrationLicenseNumber || "";
       metadata.registered_provinces = step2.registeredProvinces || "";
+      metadata.minimum_portfolio_size = step2.minimumPortfolioSize || "";
       metadata.eo_insurance_confirmed = step2.eoInsuranceConfirmed === true;
     }
 

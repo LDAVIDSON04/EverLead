@@ -87,6 +87,7 @@ export default function CreateAccountContinuePage() {
   const [regulatoryOrganization, setRegulatoryOrganization] = useState("");
   const [registrationLicenseNumber, setRegistrationLicenseNumber] = useState("");
   const [registeredProvinces, setRegisteredProvinces] = useState("");
+  const [minimumPortfolioSize, setMinimumPortfolioSize] = useState("");
   const [eoInsuranceConfirmed, setEoInsuranceConfirmed] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -146,6 +147,7 @@ export default function CreateAccountContinuePage() {
         if (s2.regulatoryOrganization != null) setRegulatoryOrganization(s2.regulatoryOrganization);
         if (s2.registrationLicenseNumber != null) setRegistrationLicenseNumber(s2.registrationLicenseNumber);
         if (s2.registeredProvinces != null) setRegisteredProvinces(s2.registeredProvinces);
+        if (s2.minimumPortfolioSize != null) setMinimumPortfolioSize(s2.minimumPortfolioSize);
         if (s2.eoInsuranceConfirmed != null) setEoInsuranceConfirmed(s2.eoInsuranceConfirmed);
       }
     } catch {
@@ -249,6 +251,10 @@ export default function CreateAccountContinuePage() {
         setError("Please enter your regulatory organization name.");
         return;
       }
+      if (!minimumPortfolioSize.trim()) {
+        setError("Please select the minimum client portfolio size you typically work with.");
+        return;
+      }
     }
 
     try {
@@ -287,6 +293,7 @@ export default function CreateAccountContinuePage() {
     regulatoryOrganization,
     registrationLicenseNumber,
     registeredProvinces,
+    minimumPortfolioSize,
     eoInsuranceConfirmed,
   });
 
@@ -964,6 +971,25 @@ export default function CreateAccountContinuePage() {
                   />
                 </div>
               )}
+              <div className="space-y-2">
+                <label htmlFor="minimumPortfolioSize" className="text-sm text-gray-700">
+                  What is the minimum client portfolio size you typically work with? <span className="text-red-600">*</span>
+                </label>
+                <select
+                  id="minimumPortfolioSize"
+                  value={minimumPortfolioSize}
+                  onChange={(e) => setMinimumPortfolioSize(e.target.value)}
+                  className={inputClassName}
+                  required={showFinancialOnly}
+                >
+                  <option value="">Select...</option>
+                  <option value="no-minimum">No minimum</option>
+                  <option value="100000">$100,000+</option>
+                  <option value="250000">$250,000+</option>
+                  <option value="500000">$500,000+</option>
+                  <option value="1000000">$1,000,000+</option>
+                </select>
+              </div>
               <div className="space-y-2">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input

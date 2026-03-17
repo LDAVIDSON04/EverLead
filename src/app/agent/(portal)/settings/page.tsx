@@ -169,6 +169,7 @@ export default function SettingsPage() {
     agentRole: "",
     professionalDetails: "" as string, // role-specific: law_society_name, licensing_province, etc. (display string)
     notificationCities: "" as string, // e.g. "Penticton, BC; Victoria, BC" (from profile.notification_cities)
+    minimumPortfolioSize: "" as string, // financial advisors only: no-minimum | 100000 | 250000 | 500000 | 1000000
   });
 
   const [saving, setSaving] = useState(false);
@@ -260,6 +261,7 @@ export default function SettingsPage() {
             agentRole: (metadata as any).agent_role || "",
             professionalDetails,
             notificationCities: notificationCitiesStr,
+            minimumPortfolioSize: (metadata as any).minimum_portfolio_size || "",
           });
           
           console.log("🔍 [SETTINGS] Set profile data (final values):", {
@@ -484,6 +486,7 @@ function ProfileSection({
             businessProvince: metadata.business_province ?? profileData.businessProvince,
             businessZip: metadata.business_zip ?? profileData.businessZip,
             profilePictureUrl: updatedProfile.profile_picture_url || publicUrl,
+            minimumPortfolioSize: (metadata as any).minimum_portfolio_size ?? profileData.minimumPortfolioSize,
           });
         }
       }
@@ -615,6 +618,7 @@ function ProfileSection({
             agentRole: metadata.agent_role || "",
             professionalDetails,
             notificationCities: notificationCitiesStr,
+            minimumPortfolioSize: (metadata as any).minimum_portfolio_size || "",
           });
         }
       }
@@ -747,6 +751,24 @@ function ProfileSection({
             placeholder="(XXX) XXX-XXXX"
           />
         </div>
+        {(profileData.agentRole === "financial-advisor" || profileData.agentRole === "financial_insurance_agent") && (
+          <div>
+            <Label htmlFor="minimumPortfolioSize">What is the minimum client portfolio size you typically work with?</Label>
+            <select
+              id="minimumPortfolioSize"
+              value={profileData.minimumPortfolioSize || ""}
+              onChange={(e) => setProfileData({ ...profileData, minimumPortfolioSize: e.target.value })}
+              className="mt-1 flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            >
+              <option value="">Select...</option>
+              <option value="no-minimum">No minimum</option>
+              <option value="100000">$100,000+</option>
+              <option value="250000">$250,000+</option>
+              <option value="500000">$500,000+</option>
+              <option value="1000000">$1,000,000+</option>
+            </select>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">

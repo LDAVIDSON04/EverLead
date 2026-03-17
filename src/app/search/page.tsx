@@ -117,6 +117,7 @@ function SearchResults() {
   const location = searchParams.get("location") || "";
   const service = searchParams.get("service") || "";
   const mode = searchParams.get("mode") || "in-person";
+  const assets = searchParams.get("assets") ?? ""; // financial planner: customer's selected asset value for matching
 
   // Decode URL-encoded location for display
   const decodedLocation = location ? decodeURIComponent(location.replace(/\+/g, ' ')) : "";
@@ -270,6 +271,7 @@ function SearchResults() {
         if (searchService) params.set("service", searchService);
         if (searchQuery) params.set("q", searchQuery);
         params.set("mode", mode);
+        if (assets) params.set("assets", assets);
 
         const res = await fetch(`/api/agents/search?${params.toString()}`);
         
@@ -292,6 +294,7 @@ function SearchResults() {
           if (searchQuery) videoParams.set("q", searchQuery);
           videoParams.set("mode", "video");
           videoParams.set("fallback", "1"); // get ALL agents in province (same profession), not just those with video
+          if (assets) videoParams.set("assets", assets);
           const videoRes = await fetch(`/api/agents/search?${videoParams.toString()}`);
           if (videoRes.ok) {
             const { agents: videoAgents } = await videoRes.json();
@@ -536,7 +539,7 @@ function SearchResults() {
     }
 
     loadAgents();
-  }, [searchQuery, searchLocation, searchService, mode]);
+  }, [searchQuery, searchLocation, searchService, mode, assets]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();

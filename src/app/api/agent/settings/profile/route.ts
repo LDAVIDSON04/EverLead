@@ -106,6 +106,7 @@ export async function POST(request: NextRequest) {
       businessProvince,
       businessZip,
       profilePictureUrl,
+      minimumPortfolioSize,
     } = body;
 
     console.log("Profile update request:", {
@@ -202,7 +203,8 @@ export async function POST(request: NextRequest) {
     if (businessCity !== undefined) metadata.business_city = businessCity;
     if (businessProvince !== undefined) metadata.business_province = businessProvince;
     if (businessZip !== undefined) metadata.business_zip = businessZip;
-    
+    if (minimumPortfolioSize !== undefined) metadata.minimum_portfolio_size = minimumPortfolioSize;
+
     // Also save home address to metadata.address (matches signup structure)
     if (businessStreet !== undefined || businessCity !== undefined || businessProvince !== undefined || businessZip !== undefined) {
       metadata.address = {
