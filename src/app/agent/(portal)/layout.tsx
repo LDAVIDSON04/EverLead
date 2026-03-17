@@ -957,26 +957,6 @@ export default function AgentLayout({ children }: AgentLayoutProps) {
 
             {/* Action Buttons */}
             <div className="flex gap-3 pt-6 border-t border-gray-200">
-              <button
-                onClick={async () => {
-                  const { data: { session } } = await supabaseClient.auth.getSession();
-                  if (session?.access_token) {
-                    const res = await fetch('/api/agent/onboarding-status', {
-                      headers: {
-                        Authorization: `Bearer ${session.access_token}`,
-                      },
-                    });
-                    const status = await res.json();
-                    setOnboardingStatus(status);
-                    if (!status.needsOnboarding || status.onboardingCompleted) {
-                      setShowOnboarding(false);
-                    }
-                  }
-                }}
-                className="flex-1 bg-gray-100 text-gray-700 px-4 py-2.5 rounded-lg font-semibold hover:bg-gray-200 transition-colors"
-              >
-                Refresh Status
-              </button>
               {(onboardingStatus.hasProfilePicture && onboardingStatus.hasPaymentMethod && onboardingStatus.hasAvailability) && (
                 <button
                   onClick={async () => {
