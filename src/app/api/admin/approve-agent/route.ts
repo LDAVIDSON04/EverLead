@@ -161,7 +161,7 @@ async function sendApprovalEmail(email: string, fullName: string | null, approve
           
           <div style="text-align: center; margin: 40px 0;">
             <a href="${siteUrl}/agent" style="background-color: #1A1A1A; color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 12px; display: inline-block; font-weight: 600; font-size: 16px; box-shadow: 0 2px 4px rgba(26, 26, 26, 0.2);">
-              Log In to Agent Portal
+              Log in to my account
             </a>
           </div>
           
