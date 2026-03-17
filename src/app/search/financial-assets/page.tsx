@@ -89,7 +89,7 @@ function FinancialAssetsContent() {
       <div className="min-h-screen flex flex-col justify-center max-w-2xl mx-auto px-6 sm:px-8 py-12 sm:py-16">
         <div className="flex flex-col items-center">
         <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2 text-center max-w-xl">
-          What is the approximate value of your assets?
+          What is the approximate value of your portfolio?
         </h1>
         <p className="text-gray-600 text-center mb-8 sm:mb-10">
           This helps us match you with advisors who work with clients in your range.
