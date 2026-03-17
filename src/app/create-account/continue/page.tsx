@@ -975,6 +975,7 @@ export default function CreateAccountContinuePage() {
                 <label htmlFor="minimumPortfolioSize" className="text-sm text-gray-700">
                   What is the minimum client portfolio size you typically work with? <span className="text-red-600">*</span>
                 </label>
+                <p className="text-xs text-gray-500">This helps us connect you with clients that are the right fit for you.</p>
                 <select
                   id="minimumPortfolioSize"
                   value={minimumPortfolioSize}
