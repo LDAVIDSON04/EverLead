@@ -9,7 +9,7 @@ const TABS = [
   { id: "funeral", label: "Funeral pre planning" },
   { id: "estate", label: "Estate lawyers and wills" },
   { id: "insurance", label: "Life Insurance" },
-  { id: "financial", label: "Financial advisors" },
+  { id: "financial", label: "Financial planners" },
 ] as const;
 
 type TabId = (typeof TABS)[number]["id"];
@@ -17,7 +17,7 @@ type TabId = (typeof TABS)[number]["id"];
 const TAB_CTA = {
   estate: { specialist: "estate lawyer", searchQuery: "estate+lawyer" },
   insurance: { specialist: "life insurance professional", searchQuery: "life+insurance" },
-  financial: { specialist: "financial advisor", searchQuery: "financial+advisor" },
+  financial: { specialist: "financial planner", searchQuery: "financial+planner" },
 } as const;
 
 export default function WhatIsPreNeedFuneralPlanningPage() {
@@ -714,7 +714,7 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
         </>
       )}
 
-      {/* Financial Advisors – full panel */}
+      {/* Financial planners – full panel */}
       <section
         id="panel-financial"
         role="tabpanel"
@@ -739,7 +739,7 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
                 Financial planning for end of life focuses on organizing assets, minimizing taxes, and ensuring a smooth transfer of wealth according to personal wishes.
               </p>
               <p className="text-gray-700 text-lg leading-relaxed mb-8">
-                A financial advisor helps families coordinate the financial side of estate planning so that legal documents, beneficiary designations, and assets work together.
+                A financial planner helps families coordinate the financial side of estate planning so that legal documents, beneficiary designations, and assets work together.
               </p>
               <p className="text-gray-700 text-lg leading-relaxed">
                 Rather than leaving finances scattered and unclear, financial planning brings structure, efficiency, and long term clarity.
@@ -751,19 +751,19 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
 
       {activeTab === "financial" && (
         <>
-      {/* Why Families Work With Financial Advisors - Cream */}
+      {/* Why Families Work With Financial Planners - Cream */}
       <section className="bg-[#faf8f3] py-20">
         <div className="max-w-6xl mx-auto px-6">
           <div className="grid md:grid-cols-2 gap-16 items-start">
             <div className="order-2 md:order-1">
               <h2 className="text-4xl md:text-5xl font-semibold text-gray-900 mb-8 leading-tight">
-                Why Families Work With Financial Advisors
+                Why Families Work With Financial Planners
               </h2>
               <p className="text-gray-700 text-lg leading-relaxed mb-8">
                 End of life planning often involves complex financial decisions that extend beyond a will.
               </p>
               <p className="text-gray-700 text-lg leading-relaxed mb-8">
-                Families work with financial advisors because they help:
+                Families work with financial planners because they help:
               </p>
               <ul className="space-y-5 mb-10">
                 <li className="flex items-start">
@@ -794,7 +794,7 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
             <div className="rounded-xl overflow-hidden shadow-lg min-h-[400px] md:min-h-[500px] order-1 md:order-2">
               <img
                 src="/financial-advisors-why-families.png"
-                alt="Why families work with financial advisors: reduce tax burdens, coordinate beneficiaries, organize accounts, protect assets, support heirs"
+                alt="Why families work with financial planners: reduce tax burdens, coordinate beneficiaries, organize accounts, protect assets, support heirs"
                 className="w-full h-full object-cover min-h-[400px] md:min-h-[500px]"
               />
             </div>
@@ -802,14 +802,14 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
         </div>
       </section>
 
-      {/* What Financial Advisors Help With - White */}
+      {/* What Financial Planners Help With - White */}
       <section className="bg-white py-20">
         <div className="max-w-5xl mx-auto px-6">
           <h2 className="text-4xl md:text-5xl font-semibold text-gray-900 mb-6 leading-tight">
-            What Financial Advisors Help With
+            What Financial Planners Help With
           </h2>
           <p className="text-gray-700 text-lg leading-relaxed mb-16 max-w-3xl">
-            Financial advisors often support families by addressing:
+            Financial planners often support families by addressing:
           </p>
           <div className="grid md:grid-cols-3 gap-10 mb-16">
             <div>
@@ -836,7 +836,7 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
             </div>
           </div>
           <p className="text-gray-700 text-lg leading-relaxed max-w-3xl">
-            An advisor works alongside lawyers and insurance professionals to create a complete plan.
+            A financial planner works alongside lawyers and insurance professionals to create a complete plan.
           </p>
         </div>
       </section>
@@ -918,7 +918,7 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
             <div className="rounded-xl overflow-hidden shadow-lg min-h-[400px] md:min-h-[500px]">
               <img
                 src="/financial-advisors-how-soradin-helps.png"
-                alt="How Soradin helps: from uncertainty to clarity with advisor profiles, consultations, and credentialing standards"
+                alt="How Soradin helps: from uncertainty to clarity with planner profiles, consultations, and credentialing standards"
                 className="w-full h-full object-cover min-h-[400px] md:min-h-[500px]"
               />
             </div>
@@ -927,7 +927,7 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
                 How Soradin Helps
               </h2>
               <p className="text-gray-700 text-lg leading-relaxed mb-8">
-                Soradin connects families with verified financial advisors who focus on estate and end of life planning.
+                Soradin connects families with verified financial planners who focus on estate and end of life planning.
               </p>
               <p className="text-gray-700 text-lg leading-relaxed mb-8">
                 Through Soradin, you can:
@@ -935,7 +935,7 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
               <ul className="space-y-5 mb-10">
                 <li className="flex items-start">
                   <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
-                  <span className="text-gray-700 text-lg leading-relaxed">View advisor profiles and specialties</span>
+                  <span className="text-gray-700 text-lg leading-relaxed">View planner profiles and specialties</span>
                 </li>
                 <li className="flex items-start">
                   <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#1a3a2e] mt-2 mr-4 flex-shrink-0"></span>
@@ -976,7 +976,7 @@ export default function WhatIsPreNeedFuneralPlanningPage() {
         </div>
       </section>
 
-      {/* CTA Section - Financial Advisors */}
+      {/* CTA Section - Financial Planners */}
       <section className="bg-[#1a3a2e] text-white py-24">
         <div className="max-w-4xl mx-auto px-6 text-center">
           <h2 className="text-4xl md:text-5xl font-semibold text-white mb-6 leading-tight">
