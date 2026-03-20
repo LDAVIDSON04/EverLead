@@ -998,9 +998,6 @@ export default function CreateAccountContinuePage() {
                     </label>
                   ))}
                 </div>
-                <p className="text-xs text-gray-500">
-                  If yes, families searching for insurance professionals can find you as well as financial planning searches.
-                </p>
               </div>
               <div className="space-y-2">
                 <label htmlFor="minimumPortfolioSize" className="text-sm text-gray-700">

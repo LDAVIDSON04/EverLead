@@ -800,9 +800,6 @@ function ProfileSection({
               </label>
             ))}
           </div>
-          <p className="text-xs text-gray-500 mt-2">
-            If yes, families searching for insurance professionals can find you as well as financial planning searches.
-          </p>
         </div>
       )}
 
