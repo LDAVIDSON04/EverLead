@@ -260,7 +260,7 @@ export default function AgentApprovalPage() {
     const role = meta.agent_role;
     if (role === 'lawyer') return 'Lawyer';
     if (role === 'insurance-broker') return 'Insurance Agent';
-    if (role === 'financial-advisor') return 'Financial Advisor';
+    if (role === 'financial-advisor') return 'Financial Planner';
     return 'Funeral Planner';
   };
 

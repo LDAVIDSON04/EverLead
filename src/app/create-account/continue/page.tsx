@@ -928,7 +928,7 @@ export default function CreateAccountContinuePage() {
             </>
           )}
 
-          {/* Financial Advisor only */}
+          {/* Financial Planner only */}
           {showFinancialOnly && (
             <>
               <div className="space-y-3">

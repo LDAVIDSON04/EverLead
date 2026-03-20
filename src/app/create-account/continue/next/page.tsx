@@ -180,7 +180,7 @@ export default function CreateAccountNextPage() {
       "funeral-planner": "Funeral Planner",
       "lawyer": "Lawyer",
       "insurance-broker": "Insurance Agent",
-      "financial-advisor": "Financial Advisor",
+      "financial-advisor": "Financial Planner",
       "financial_insurance_agent": "Financial & Insurance advisor",
     };
 

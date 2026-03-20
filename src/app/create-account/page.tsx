@@ -11,7 +11,7 @@ const INDUSTRIES = [
   { value: "", label: "Select your industry" },
   { value: "funeral_planner", label: "Funeral Planner" },
   { value: "estate_lawyer", label: "Estate Lawyer" },
-  { value: "financial_advisor", label: "Financial Advisor" },
+  { value: "financial_advisor", label: "Financial Planner" },
   { value: "insurance_broker", label: "Insurance Agent" },
 ];
 
