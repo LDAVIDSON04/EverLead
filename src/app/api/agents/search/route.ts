@@ -35,6 +35,8 @@ type AgentSearchResult = {
   agent_role?: string | null;
   /** From profile.metadata; financial advisors only. no-minimum | 100000 | 250000 | 500000 | 1000000 */
   minimum_portfolio_size?: string | null;
+  /** From profile.metadata; financial planners who also sell insurance — show in insurance searches */
+  qualified_insurance_products?: boolean;
   /** From profile.metadata; used only for payment check. Never resolve Stripe by email. */
   stripe_customer_id?: string | null;
 };
@@ -111,6 +113,28 @@ const ROLE_KEYWORDS: Record<string, string[]> = {
 function agentMatchesProfession(agent: AgentSearchResult, requiredRole: string): boolean {
   const raw = (agent.agent_role || '').toLowerCase().trim().replace(/\s+/g, '_');
   const storedCanonical = raw ? (STORED_ROLE_TO_CANONICAL[raw] ?? raw.replace(/_/g, '-')) : null;
+
+  // Insurance search: pure insurance brokers + dual financial/insurance signups + financial planners who opted in
+  if (requiredRole === 'insurance-broker') {
+    if (storedCanonical === 'insurance-broker') return true;
+    if (raw === 'financial_insurance_agent') return true;
+    if (storedCanonical === 'financial-advisor' && agent.qualified_insurance_products === true) return true;
+    if (!storedCanonical) {
+      const specialty = (agent.specialty || '').toLowerCase();
+      const jobTitle = (agent.job_title || '').toLowerCase();
+      const combined = `${specialty} ${jobTitle}`;
+      const insKws = ROLE_KEYWORDS['insurance-broker'];
+      if (insKws?.some((kw) => combined.includes(kw))) return true;
+      if (
+        agent.qualified_insurance_products === true &&
+        ROLE_KEYWORDS['financial-advisor']?.some((kw) => combined.includes(kw))
+      ) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   // If agent has a stored role, require exact match – never show e.g. funeral planners for "Financial advisor"
   if (storedCanonical) {
     return storedCanonical === requiredRole;
@@ -297,6 +321,9 @@ export async function GET(req: NextRequest) {
             videoSchedule: videoSchedule && typeof videoSchedule === "object" ? videoSchedule : null,
             agent_role: (metadata as any)?.agent_role || null,
             minimum_portfolio_size: (metadata as any)?.minimum_portfolio_size ?? null,
+            qualified_insurance_products:
+              (metadata as any)?.qualified_insurance_products === true ||
+              (metadata as any)?.qualified_insurance_products === 'true',
             stripe_customer_id: (metadata as any)?.stripe_customer_id || null,
           };
         } catch (err) {

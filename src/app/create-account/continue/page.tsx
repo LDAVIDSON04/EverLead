@@ -88,6 +88,7 @@ export default function CreateAccountContinuePage() {
   const [registrationLicenseNumber, setRegistrationLicenseNumber] = useState("");
   const [registeredProvinces, setRegisteredProvinces] = useState("");
   const [minimumPortfolioSize, setMinimumPortfolioSize] = useState("");
+  const [qualifiedInsuranceProducts, setQualifiedInsuranceProducts] = useState("");
   const [eoInsuranceConfirmed, setEoInsuranceConfirmed] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -148,6 +149,7 @@ export default function CreateAccountContinuePage() {
         if (s2.registrationLicenseNumber != null) setRegistrationLicenseNumber(s2.registrationLicenseNumber);
         if (s2.registeredProvinces != null) setRegisteredProvinces(s2.registeredProvinces);
         if (s2.minimumPortfolioSize != null) setMinimumPortfolioSize(s2.minimumPortfolioSize);
+        if (s2.qualifiedInsuranceProducts != null) setQualifiedInsuranceProducts(s2.qualifiedInsuranceProducts);
         if (s2.eoInsuranceConfirmed != null) setEoInsuranceConfirmed(s2.eoInsuranceConfirmed);
       }
     } catch {
@@ -255,6 +257,10 @@ export default function CreateAccountContinuePage() {
         setError("Please select the minimum client portfolio size you typically work with.");
         return;
       }
+      if (!qualifiedInsuranceProducts) {
+        setError("Please answer whether you are qualified to offer insurance products.");
+        return;
+      }
     }
 
     try {
@@ -294,6 +300,7 @@ export default function CreateAccountContinuePage() {
     registrationLicenseNumber,
     registeredProvinces,
     minimumPortfolioSize,
+    qualifiedInsuranceProducts,
     eoInsuranceConfirmed,
   });
 
@@ -971,6 +978,30 @@ export default function CreateAccountContinuePage() {
                   />
                 </div>
               )}
+              <div className="space-y-3">
+                <label className="text-sm text-gray-700">
+                  Are you qualified to offer insurance products? <span className="text-red-600">*</span>
+                </label>
+                <div className="flex gap-6">
+                  {["yes", "no"].map((v) => (
+                    <label key={v} className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="qualifiedInsuranceProducts"
+                        value={v}
+                        checked={qualifiedInsuranceProducts === v}
+                        onChange={(e) => setQualifiedInsuranceProducts(e.target.value)}
+                        className="w-4 h-4 border-2 border-gray-300"
+                        required={showFinancialOnly}
+                      />
+                      <span className="text-sm text-gray-700 capitalize">{v}</span>
+                    </label>
+                  ))}
+                </div>
+                <p className="text-xs text-gray-500">
+                  If yes, families searching for insurance professionals can find you as well as financial planning searches.
+                </p>
+              </div>
               <div className="space-y-2">
                 <label htmlFor="minimumPortfolioSize" className="text-sm text-gray-700">
                   What is the minimum client portfolio size you typically work with? <span className="text-red-600">*</span>

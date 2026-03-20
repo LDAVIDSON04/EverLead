@@ -228,6 +228,9 @@ export default function CreateAccountNextPage() {
       metadata.minimum_portfolio_size = step2.minimumPortfolioSize || "";
       metadata.eo_insurance_confirmed = step2.eoInsuranceConfirmed === true;
     }
+    if (step2.selectedRole === "financial-advisor") {
+      metadata.qualified_insurance_products = step2.qualifiedInsuranceProducts === "yes";
+    }
 
     const office_locations = Array.isArray(step2.officeLocations)
       ? step2.officeLocations.map((loc: { name?: string; street_address?: string; city?: string; province?: string; postal_code?: string; associated_firm?: string }) => ({

@@ -170,6 +170,7 @@ export default function SettingsPage() {
     professionalDetails: "" as string, // role-specific: law_society_name, licensing_province, etc. (display string)
     notificationCities: "" as string, // e.g. "Penticton, BC; Victoria, BC" (from profile.notification_cities)
     minimumPortfolioSize: "" as string, // financial advisors only: no-minimum | 100000 | 250000 | 500000 | 1000000
+    qualifiedInsuranceProducts: "no" as string, // financial-advisor only: yes | no — show in insurance searches when yes
   });
 
   const [saving, setSaving] = useState(false);
@@ -262,6 +263,8 @@ export default function SettingsPage() {
             professionalDetails,
             notificationCities: notificationCitiesStr,
             minimumPortfolioSize: (metadata as any).minimum_portfolio_size || "",
+            qualifiedInsuranceProducts:
+              (metadata as any).qualified_insurance_products === true ? "yes" : "no",
           });
           
           console.log("🔍 [SETTINGS] Set profile data (final values):", {
@@ -487,6 +490,12 @@ function ProfileSection({
             businessZip: metadata.business_zip ?? profileData.businessZip,
             profilePictureUrl: updatedProfile.profile_picture_url || publicUrl,
             minimumPortfolioSize: (metadata as any).minimum_portfolio_size ?? profileData.minimumPortfolioSize,
+            qualifiedInsuranceProducts:
+              (metadata as any).qualified_insurance_products === true
+                ? "yes"
+                : (metadata as any).qualified_insurance_products === false
+                  ? "no"
+                  : profileData.qualifiedInsuranceProducts,
           });
         }
       }
@@ -619,6 +628,8 @@ function ProfileSection({
             professionalDetails,
             notificationCities: notificationCitiesStr,
             minimumPortfolioSize: (metadata as any).minimum_portfolio_size || "",
+            qualifiedInsuranceProducts:
+              (metadata as any).qualified_insurance_products === true ? "yes" : "no",
           });
         }
       }
@@ -770,6 +781,30 @@ function ProfileSection({
           </div>
         )}
       </div>
+
+      {profileData.agentRole === "financial-advisor" && (
+        <div className="mb-4">
+          <Label className="mb-2 block">Are you qualified to offer insurance products?</Label>
+          <div className="flex gap-6 mt-1">
+            {(["yes", "no"] as const).map((v) => (
+              <label key={v} className="flex items-center gap-2 cursor-pointer text-sm text-gray-700">
+                <input
+                  type="radio"
+                  name="qualifiedInsuranceProducts"
+                  value={v}
+                  checked={profileData.qualifiedInsuranceProducts === v}
+                  onChange={() => setProfileData({ ...profileData, qualifiedInsuranceProducts: v })}
+                  className="w-4 h-4 border-2 border-gray-300"
+                />
+                <span className="capitalize">{v}</span>
+              </label>
+            ))}
+          </div>
+          <p className="text-xs text-gray-500 mt-2">
+            If yes, families searching for insurance professionals can find you as well as financial planning searches.
+          </p>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <div>

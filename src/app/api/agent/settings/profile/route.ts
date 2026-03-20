@@ -107,6 +107,7 @@ export async function POST(request: NextRequest) {
       businessZip,
       profilePictureUrl,
       minimumPortfolioSize,
+      qualifiedInsuranceProducts,
     } = body;
 
     console.log("Profile update request:", {
@@ -204,6 +205,11 @@ export async function POST(request: NextRequest) {
     if (businessProvince !== undefined) metadata.business_province = businessProvince;
     if (businessZip !== undefined) metadata.business_zip = businessZip;
     if (minimumPortfolioSize !== undefined) metadata.minimum_portfolio_size = minimumPortfolioSize;
+    if (qualifiedInsuranceProducts !== undefined && qualifiedInsuranceProducts !== null) {
+      metadata.qualified_insurance_products =
+        qualifiedInsuranceProducts === true ||
+        qualifiedInsuranceProducts === "yes";
+    }
 
     // Also save home address to metadata.address (matches signup structure)
     if (businessStreet !== undefined || businessCity !== undefined || businessProvince !== undefined || businessZip !== undefined) {
