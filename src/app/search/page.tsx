@@ -258,6 +258,10 @@ function SearchResults() {
   // No longer auto-detect location - user must provide location
   // Auto-detection is only used by homepage cards (See reviews, Book appointment)
 
+  /** First segment of search location for messages, e.g. "Victoria, BC" → "Victoria" */
+  const searchCityName =
+    searchLocation.split(",")[0]?.trim() || searchLocation.trim() || "your area";
+
   useEffect(() => {
     async function loadAgents() {
       setLoading(true);
@@ -285,7 +289,7 @@ function SearchResults() {
         console.log(`✅ [SEARCH] Found ${agents?.length || 0} agents for location "${searchLocation}"`);
 
         // In-person with 0 results (same for all 4 professions: funeral, lawyer, insurance, financial):
-        // Show "No in-person availability in your city" popup and list video agents in same profession + province
+        // Show "No in-person availability in {city} yet" banner and list video agents in same profession + province
         if (mode === "in-person" && (agents?.length || 0) === 0 && searchLocation) {
           setShowingVideoFallback(true);
           const videoParams = new URLSearchParams();
@@ -1789,10 +1793,10 @@ function SearchResults() {
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-neutral-900 mb-1.5">
-                      No in-person availability in your city
+                      No in-person availability in {searchCityName} yet
                     </h3>
                     <p className="text-neutral-600 text-sm leading-relaxed">
-                      There are no agents available for in-person meetings in your city. Here are some agents available to put your plan in place over a video call:
+                      Here are professionals available to meet with you over a video call to help put your plan in place.
                     </p>
                   </div>
                 </div>
