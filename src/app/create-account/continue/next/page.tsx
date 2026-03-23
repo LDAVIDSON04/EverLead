@@ -178,7 +178,7 @@ export default function CreateAccountNextPage() {
     // Same labels as the profession dropdown on create-account (so admin shows what they picked)
     const specialtyFromRole: Record<string, string> = {
       "funeral-planner": "Funeral Planner",
-      "lawyer": "Lawyer",
+      "lawyer": "Lawyer / Notary Public",
       "insurance-broker": "Insurance Agent",
       "financial-advisor": "Financial Planner",
       "financial_insurance_agent": "Financial & Insurance advisor",
