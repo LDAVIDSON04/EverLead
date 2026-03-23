@@ -299,7 +299,7 @@
     var notification_cities = step1.city && step1.province ? [{ city: step1.city, province: step1.province }] : [];
 
     var specialtyFromRole = {
-      'funeral-planner': 'Funeral Planner',
+      'funeral-planner': 'Funeral Pre Planner',
       'lawyer': 'Lawyer',
       'insurance-broker': 'Insurance Broker',
       'financial-advisor': 'Financial Advisor',
@@ -307,7 +307,7 @@
     };
     var metadata = {
       agent_role: step2.selectedRole || '',
-      specialty: step2.selectedRole ? (specialtyFromRole[step2.selectedRole] || 'Funeral Planner') : '',
+      specialty: step2.selectedRole ? (specialtyFromRole[step2.selectedRole] || 'Funeral Pre Planner') : '',
       business_name: (step2.businessName || '').trim(),
       bio: {
         years_of_experience: String(getEl('yearsOfExperience').value).trim(),

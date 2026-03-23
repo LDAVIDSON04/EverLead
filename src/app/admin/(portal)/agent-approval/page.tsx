@@ -261,7 +261,7 @@ export default function AgentApprovalPage() {
     if (role === 'lawyer') return 'Lawyer / Notary Public';
     if (role === 'insurance-broker') return 'Insurance Agent';
     if (role === 'financial-advisor') return 'Financial Planner';
-    return 'Funeral Planner';
+    return 'Funeral Pre Planner';
   };
 
   // Convert agents to specialists format for display

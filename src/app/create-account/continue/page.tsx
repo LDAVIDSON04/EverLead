@@ -448,7 +448,7 @@ export default function CreateAccountContinuePage() {
             />
           </div>
 
-          {/* Funeral Planner */}
+          {/* Funeral Pre Planner */}
           {showFuneral && (
             <>
               <div className="space-y-3">
