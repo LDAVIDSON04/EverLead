@@ -93,10 +93,11 @@ type AvailabilityDay = {
 
 // Suggested specialties for service/specialist input (matches search API roles)
 const SERVICE_SUGGESTIONS = [
-  "Pre-need planning",
-  "Estate lawyer",
-  "Insurance agent",
-  "Financial advisor",
+  "Estate Lawyer / Notary Public",
+  "Funeral Pre Planner",
+  "Financial Planner",
+  "Tax Accountant",
+  "Insurance Agent",
 ];
 
 // Dynamic imports for heavy components to improve initial load and reduce bundle size

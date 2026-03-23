@@ -63,6 +63,8 @@ const QUERY_TO_AGENT_ROLE: Record<string, string> = {
   "lawyer": "lawyer",
   "estate lawyer": "lawyer",
   "estate lawyers": "lawyer",
+  "estate lawyer / notary public": "lawyer",
+  "notary public": "lawyer",
   "estate": "lawyer",
   "wills": "lawyer",
   "insurance": "insurance-broker",
@@ -75,6 +77,8 @@ const QUERY_TO_AGENT_ROLE: Record<string, string> = {
   "financial planner": "financial-advisor",
   "financial advisors": "financial-advisor",
   "financial planners": "financial-advisor",
+  "tax accountant": "financial-advisor",
+  "tax accountants": "financial-advisor",
 };
 
 function queryToAgentRole(query: string): string | null {

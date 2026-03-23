@@ -27,7 +27,8 @@ function SearchChooseContent() {
   }
 
   const isFinancialPlannerSearch =
-    q.trim() !== "" && /financial/i.test(q.trim());
+    q.trim() !== "" &&
+    (/financial/i.test(q.trim()) || /tax accountant/i.test(q.trim()));
 
   const buildSearchUrl = (mode: "in-person" | "video", assets?: string) => {
     const params = new URLSearchParams();

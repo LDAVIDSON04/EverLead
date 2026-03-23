@@ -98,10 +98,11 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
   }, [rotatingTexts.length]);
 
   const specialtySuggestions = [
+    "Estate Lawyer / Notary Public",
     "Funeral Pre Planner",
-    "Estate Lawyer",
-    "Insurance Agent",
     "Financial Planner",
+    "Tax Accountant",
+    "Insurance Agent",
   ];
 
   const [searchError, setSearchError] = useState<string | null>(null);
