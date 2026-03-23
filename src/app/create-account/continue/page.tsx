@@ -75,7 +75,7 @@ export default function CreateAccountContinuePage() {
   const [isLicensed, setIsLicensed] = useState("");
   const [lawSocietyLicenseNumber, setLawSocietyLicenseNumber] = useState("");
   const [lawSocietyName, setLawSocietyName] = useState("");
-  const [authorizedProvinces, setAuthorizedProvinces] = useState("");
+  const [authorizedProvinces, setAuthorizedProvinces] = useState<string[]>([]);
 
   const [isLicensedInsurance, setIsLicensedInsurance] = useState("");
   const [insuranceLicenseNumber, setInsuranceLicenseNumber] = useState("");
@@ -138,7 +138,18 @@ export default function CreateAccountContinuePage() {
         if (s2.isLicensed != null) setIsLicensed(s2.isLicensed);
         if (s2.lawSocietyLicenseNumber != null) setLawSocietyLicenseNumber(s2.lawSocietyLicenseNumber);
         if (s2.lawSocietyName != null) setLawSocietyName(s2.lawSocietyName);
-        if (s2.authorizedProvinces != null) setAuthorizedProvinces(s2.authorizedProvinces);
+        if (s2.authorizedProvinces != null) {
+          if (Array.isArray(s2.authorizedProvinces)) {
+            setAuthorizedProvinces(s2.authorizedProvinces.filter(Boolean));
+          } else if (typeof s2.authorizedProvinces === "string") {
+            setAuthorizedProvinces(
+              s2.authorizedProvinces
+                .split(",")
+                .map((s: string) => s.trim())
+                .filter(Boolean)
+            );
+          }
+        }
         if (s2.isLicensedInsurance != null) setIsLicensedInsurance(s2.isLicensedInsurance);
         if (s2.insuranceLicenseNumber != null) setInsuranceLicenseNumber(s2.insuranceLicenseNumber);
         if (s2.regulatoryBody != null) setRegulatoryBody(s2.regulatoryBody);
@@ -233,7 +244,7 @@ export default function CreateAccountContinuePage() {
       }
     }
     if (showLawyer) {
-      if (!isLicensed || !lawSocietyName.trim() || !authorizedProvinces) {
+      if (!isLicensed || !lawSocietyName.trim() || authorizedProvinces.length === 0) {
         setError("Please complete all fields for your role.");
         return;
       }
@@ -638,7 +649,7 @@ export default function CreateAccountContinuePage() {
             <>
               <div className="space-y-3">
                 <label className="text-sm text-gray-700">
-                  Are you currently licensed and in good standing with your provincial law society? <span className="text-red-600">*</span>
+                  Are you currently licensed and in good standing with your regulatory body? <span className="text-red-600">*</span>
                 </label>
                 <div className="flex gap-6">
                   {["yes", "no"].map((v) => (
@@ -659,7 +670,7 @@ export default function CreateAccountContinuePage() {
               </div>
               <div className="space-y-2">
                 <label htmlFor="lawSocietyName" className="text-sm text-gray-700">
-                  Law society name <span className="text-red-600">*</span>
+                  Law society name / Regulatory body name <span className="text-red-600">*</span>
                 </label>
                 <input
                   id="lawSocietyName"
@@ -671,22 +682,36 @@ export default function CreateAccountContinuePage() {
                 />
               </div>
               <div className="space-y-2">
-                <label htmlFor="authorizedProvinces" className="text-sm text-gray-700">
-                  Province you are authorized to practice in <span className="text-red-600">*</span>
-                </label>
-                <select
-                  id="authorizedProvinces"
-                  value={authorizedProvinces}
-                  onChange={(e) => setAuthorizedProvinces(e.target.value)}
-                  className={inputClassName}
-                  required
+                <span className="text-sm text-gray-700 block">
+                  Provinces you are authorized to practice in <span className="text-red-600">*</span>
+                </span>
+                <p className="text-xs text-gray-500">Select one or more.</p>
+                <div
+                  className="grid grid-cols-1 sm:grid-cols-2 gap-2 border border-gray-300 rounded-md p-3 max-h-52 overflow-y-auto bg-white"
+                  role="group"
+                  aria-label="Provinces you are authorized to practice in"
                 >
-                  {PROVINCE_OPTIONS.map((p) => (
-                    <option key={p.value || "placeholder"} value={p.value}>
+                  {PROVINCE_OPTIONS.filter((p) => p.value).map((p) => (
+                    <label
+                      key={p.value}
+                      className="flex items-center gap-2 cursor-pointer text-sm text-gray-700"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={authorizedProvinces.includes(p.value)}
+                        onChange={() => {
+                          setAuthorizedProvinces((prev) =>
+                            prev.includes(p.value)
+                              ? prev.filter((x) => x !== p.value)
+                              : [...prev, p.value]
+                          );
+                        }}
+                        className="w-4 h-4 border-2 border-gray-300 rounded shrink-0"
+                      />
                       {p.label}
-                    </option>
+                    </label>
                   ))}
-                </select>
+                </div>
               </div>
               <div className="space-y-3 border-t pt-6">
                 <label className="block text-sm text-gray-700 font-medium">Office Locations <span className="text-red-600">*</span></label>

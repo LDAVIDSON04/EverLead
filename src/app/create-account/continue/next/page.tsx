@@ -212,7 +212,9 @@ export default function CreateAccountNextPage() {
     if (step2.selectedRole === "lawyer") {
       metadata.law_society_license_number = step2.lawSocietyLicenseNumber || "";
       metadata.law_society_name = step2.lawSocietyName || "";
-      metadata.authorized_provinces = step2.authorizedProvinces || "";
+      metadata.authorized_provinces = Array.isArray(step2.authorizedProvinces)
+        ? step2.authorizedProvinces.filter(Boolean).join(", ")
+        : (step2.authorizedProvinces || "").trim();
     }
     if (step2.selectedRole === "insurance-broker" || step2.selectedRole === "financial_insurance_agent") {
       metadata.licensed_in_canada = step2.isLicensedInsurance === "yes";
