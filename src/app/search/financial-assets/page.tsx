@@ -53,6 +53,18 @@ function FinancialAssetsContent() {
     }
   }, [location, mode, router]);
 
+  // Tax accountant is a separate profession — skip portfolio step (defensive for old bookmarks)
+  useEffect(() => {
+    const qLower = q.trim().toLowerCase();
+    if (!qLower) return;
+    if (!/\btax\s+accountants?\b/i.test(q)) return;
+    const params = new URLSearchParams();
+    if (location) params.set("location", location);
+    params.set("q", q);
+    params.set("mode", mode);
+    router.replace(`/search?${params.toString()}`);
+  }, [q, location, mode, router]);
+
   const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const index = Number(e.target.value);
     setAssetValue(ASSET_BRACKETS[index].value);

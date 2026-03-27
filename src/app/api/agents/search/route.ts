@@ -77,8 +77,8 @@ const QUERY_TO_AGENT_ROLE: Record<string, string> = {
   "financial planner": "financial-advisor",
   "financial advisors": "financial-advisor",
   "financial planners": "financial-advisor",
-  "tax accountant": "financial-advisor",
-  "tax accountants": "financial-advisor",
+  "tax accountant": "tax-accountant",
+  "tax accountants": "tax-accountant",
 };
 
 function queryToAgentRole(query: string): string | null {
@@ -104,6 +104,8 @@ const STORED_ROLE_TO_CANONICAL: Record<string, string> = {
   "financial_insurance_agent": "financial-advisor",
   "insurance-broker": "insurance-broker",
   "insurance_broker": "insurance-broker",
+  "tax-accountant": "tax-accountant",
+  "tax_accountant": "tax-accountant",
 };
 
 // Keywords for legacy agents without agent_role (only used when agent_role is missing)
@@ -112,6 +114,7 @@ const ROLE_KEYWORDS: Record<string, string[]> = {
   "lawyer": ["lawyer", "estate", "wills", "legal"],
   "insurance-broker": ["insurance", "life insurance", "broker"],
   "financial-advisor": ["financial", "financial advisor", "financial planner"],
+  "tax-accountant": ["tax accountant", "tax accountants", "accountant"],
 };
 
 function agentMatchesProfession(agent: AgentSearchResult, requiredRole: string): boolean {
