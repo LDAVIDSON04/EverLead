@@ -101,7 +101,6 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
     "Estate Lawyer / Notary Public",
     "Funeral Pre Planner",
     "Financial Planner",
-    "Tax Accountant",
     "Insurance Agent",
   ];
 

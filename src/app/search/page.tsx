@@ -96,7 +96,6 @@ const SERVICE_SUGGESTIONS = [
   "Estate Lawyer / Notary Public",
   "Funeral Pre Planner",
   "Financial Planner",
-  "Tax Accountant",
   "Insurance Agent",
 ];
 
