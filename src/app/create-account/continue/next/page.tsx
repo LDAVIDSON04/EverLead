@@ -175,18 +175,18 @@ export default function CreateAccountNextPage() {
       ? [{ city: step1.city, province: step1.province }]
       : [];
 
-    // Same labels as the profession dropdown on create-account (so admin shows what they picked)
+    // Same labels as the industry dropdown on create-account (so admin shows what they picked)
     const specialtyFromRole: Record<string, string> = {
-      "funeral-planner": "Funeral Pre Planner",
-      "lawyer": "Lawyer / Notary Public",
-      "insurance-broker": "Insurance Agent",
-      "financial-advisor": "Financial Planner",
-      "financial_insurance_agent": "Financial & Insurance advisor",
+      "funeral-planner": "Funeral planning",
+      "lawyer": "Legal",
+      "insurance-broker": "Insurance",
+      "financial-advisor": "Financial Services",
+      "financial_insurance_agent": "Financial Services & Insurance",
     };
 
     const metadata: Record<string, unknown> = {
       agent_role: step2.selectedRole || "",
-      specialty: step2.selectedRole ? (specialtyFromRole[step2.selectedRole] ?? "Funeral Pre Planner") : "",
+      specialty: step2.selectedRole ? (specialtyFromRole[step2.selectedRole] ?? "Funeral planning") : "",
       business_name: step2.selectedRole === "funeral-planner" && Array.isArray(step2.businessNames)
         ? step2.businessNames.map((n: string) => (n || "").trim()).filter(Boolean).join(", ")
         : (step2.businessName || "").trim(),

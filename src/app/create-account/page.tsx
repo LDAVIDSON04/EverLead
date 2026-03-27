@@ -9,10 +9,10 @@ import { Footer } from "@/app/learn-more-about-starting/components/Footer";
 
 const INDUSTRIES = [
   { value: "", label: "Select your industry" },
-  { value: "funeral_planner", label: "Funeral Pre Planner" },
-  { value: "estate_lawyer", label: "Lawyer / Notary Public" },
-  { value: "financial_advisor", label: "Financial Planner" },
-  { value: "insurance_broker", label: "Insurance Agent" },
+  { value: "funeral_planner", label: "Funeral planning" },
+  { value: "estate_lawyer", label: "Legal" },
+  { value: "financial_advisor", label: "Financial Services" },
+  { value: "insurance_broker", label: "Insurance" },
 ];
 
 const PROVINCES = [
