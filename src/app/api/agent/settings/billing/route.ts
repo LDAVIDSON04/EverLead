@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     }
 
     const agentId = user.id;
-    const pricePerAppointment = 19.99;
+    const pricePerAppointment = 1; // Must match /api/agents/book marketplace fee (currently $1 CAD for launch test)
 
     // Get agent's timezone from profile
     let agentTimezone = "America/Vancouver"; // Default

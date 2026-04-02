@@ -403,9 +403,8 @@ export async function POST(req: NextRequest) {
       slotStartTime: slotStart.getTime(),
     });
     
-    // Price per appointment - agents are charged when a booking is confirmed (set to 0 for free testing; restore to 19.99 for production)
-    const pricePerAppointment = 0;
-    const priceCents = Math.round(pricePerAppointment * 100);
+    // Fee charged to agent when a client books (CAD cents). $1 for final pre-launch test; raise for production if needed.
+    const priceCents = 100;
     
     // CRITICAL: For video appointments, office_location_id must be null
     // This ensures the ClientInfoModal correctly shows "Meeting link" instead of "Meeting Location"
@@ -465,7 +464,6 @@ export async function POST(req: NextRequest) {
     
     console.log("Appointment created successfully:", appointment.id);
 
-    // Charge agent only when price > 0 (currently free - skip Stripe)
     if (priceCents > 0) {
       console.log("🔄 Attempting to charge agent for appointment:", {
         agentId,
