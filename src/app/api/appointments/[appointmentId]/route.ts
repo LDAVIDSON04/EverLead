@@ -58,6 +58,7 @@ export async function GET(
         confirmed_at,
         lead_id,
         office_location_id,
+        cached_lead_full_name,
         leads (
           id,
           first_name,
@@ -247,6 +248,7 @@ export async function GET(
       requested_date: appointment.requested_date,
       requested_window: appointment.requested_window,
       confirmed_at: appointment.confirmed_at,
+      cached_lead_full_name: (appointment as any).cached_lead_full_name ?? null,
       starts_at: calculatedStartsAt,
       ends_at: calculatedEndsAt,
       formatted_date: formattedDate,

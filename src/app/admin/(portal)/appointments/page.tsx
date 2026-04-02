@@ -58,7 +58,8 @@ export default function AdminAppointmentsPage() {
               price_cents,
               lead_id,
               agent_id,
-              created_at
+              created_at,
+              cached_lead_full_name
             `
           )
           .not("lead_id", "is", null) // Only appointments created through Soradin (have a lead_id)
@@ -110,13 +111,18 @@ export default function AdminAppointmentsPage() {
             ? new Date(apt.requested_date).toISOString() 
             : new Date().toISOString();
           
+          const bookingName =
+            (apt.cached_lead_full_name && String(apt.cached_lead_full_name).trim()) ||
+            lead?.full_name ||
+            null;
+
           return {
             id: apt.id,
             starts_at: requestedDate,
             ends_at: requestedDate, // Old structure doesn't have end time, use same as start
             status: apt.status,
             amount_cents: apt.price_cents ?? null,
-            family_name: lead?.full_name || null,
+            family_name: bookingName,
             family_email: lead?.email || null,
             specialist_name: agent?.full_name || null,
             specialist_region: null,
@@ -470,7 +476,11 @@ export default function AdminAppointmentsPage() {
                       <dl className="grid grid-cols-2 gap-4 text-sm">
                         <div>
                           <dt className="text-neutral-500">Name</dt>
-                          <dd className="text-black">{viewModalData.lead.full_name || "Unknown"}</dd>
+                          <dd className="text-black">
+                            {viewModalData.cached_lead_full_name?.trim() ||
+                              viewModalData.lead.full_name ||
+                              "Unknown"}
+                          </dd>
                         </div>
                         <div>
                           <dt className="text-neutral-500">Email</dt>
