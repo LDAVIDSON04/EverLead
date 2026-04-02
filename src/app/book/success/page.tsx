@@ -9,8 +9,8 @@ import Script from "next/script";
 // Profession slug (from step3) -> display label and search "q" value for /search
 const OTHER_PROFESSIONS: { slug: "funeral" | "lawyer" | "financial" | "insurance"; label: string; searchQ: string }[] = [
   { slug: "funeral", label: "Funeral / pre-need specialist", searchQ: "Pre-need planning" },
-  { slug: "lawyer", label: "Estate Lawyer", searchQ: "Estate lawyer" },
-  { slug: "financial", label: "Financial Advisor", searchQ: "Financial advisor" },
+  { slug: "lawyer", label: "Estate Lawyer / Notary Public", searchQ: "Estate lawyer" },
+  { slug: "financial", label: "Financial Planner", searchQ: "Financial planner" },
   { slug: "insurance", label: "Insurance Agent", searchQ: "Insurance agent" },
 ];
 
