@@ -122,6 +122,7 @@ export async function POST(request: NextRequest) {
           );
 
           if (chargeResult.success && chargeResult.paymentIntentId) {
+            const recordedCents = chargeResult.chargedAmountCents ?? payment.amount_cents;
             // Mark as resolved
             await supabaseAdmin
               .from("declined_payments")
@@ -136,7 +137,7 @@ export async function POST(request: NextRequest) {
             await supabaseAdmin
               .from("appointments")
               .update({
-                price_cents: payment.amount_cents,
+                price_cents: recordedCents,
                 stripe_payment_intent_id: chargeResult.paymentIntentId,
                 notes: null, // Clear any payment failure notes
               })

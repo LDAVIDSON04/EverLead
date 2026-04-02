@@ -480,11 +480,12 @@ export async function POST(req: NextRequest) {
       });
       
       if (chargeResult.success && chargeResult.paymentIntentId) {
+        const recordedCents = chargeResult.chargedAmountCents ?? priceCents;
         try {
           await supabaseAdmin
             .from("appointments")
             .update({ 
-              price_cents: priceCents,
+              price_cents: recordedCents,
               stripe_payment_intent_id: chargeResult.paymentIntentId,
             })
             .eq("id", appointment.id);
@@ -492,7 +493,7 @@ export async function POST(req: NextRequest) {
           if (updateError?.code === '42703' && updateError?.message?.includes('stripe_payment_intent_id')) {
             await supabaseAdmin
               .from("appointments")
-              .update({ price_cents: priceCents })
+              .update({ price_cents: recordedCents })
               .eq("id", appointment.id);
           } else {
             throw updateError;
@@ -503,7 +504,7 @@ export async function POST(req: NextRequest) {
           await supabaseAdmin.from("payments").insert({
             appointment_id: appointment.id,
             stripe_payment_intent_id: chargeResult.paymentIntentId,
-            amount_cents: priceCents,
+            amount_cents: recordedCents,
             currency: 'CAD',
             status: 'completed',
           });
