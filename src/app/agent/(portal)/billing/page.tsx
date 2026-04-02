@@ -229,7 +229,7 @@ export default function BillingPage() {
           <h3 className="font-semibold mb-4">Payment Method</h3>
 
           {paymentMethods.length === 0 ? (
-            <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg mb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 border border-gray-200 rounded-lg mb-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
                   <CreditCard size={20} className="text-purple-600" />
@@ -239,40 +239,48 @@ export default function BillingPage() {
                   <div className="text-sm text-gray-500">Add a payment method to get started</div>
                 </div>
               </div>
-              <button
-                onClick={async () => {
-                  setAddingPaymentMethod(true);
-                  try {
-                    const { data: { session } } = await supabaseClient.auth.getSession();
-                    if (!session?.access_token) return;
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  onClick={async () => {
+                    setAddingPaymentMethod(true);
+                    try {
+                      const { data: { session } } = await supabaseClient.auth.getSession();
+                      if (!session?.access_token) return;
 
-                    const res = await fetch("/api/agent/settings/payment-methods/setup", {
-                      method: "POST",
-                      headers: {
-                        Authorization: `Bearer ${session.access_token}`,
-                      },
-                    });
+                      const res = await fetch("/api/agent/settings/payment-methods/setup", {
+                        method: "POST",
+                        headers: {
+                          Authorization: `Bearer ${session.access_token}`,
+                        },
+                      });
 
-                    if (!res.ok) {
-                      const error = await res.json();
-                      throw new Error(error.error || "Failed to start payment method setup");
+                      if (!res.ok) {
+                        const error = await res.json();
+                        throw new Error(error.error || "Failed to start payment method setup");
+                      }
+
+                      const data = await res.json();
+                      if (data.url) {
+                        window.location.href = data.url;
+                      }
+                    } catch (err: any) {
+                      console.error("Error setting up payment method:", err);
+                      alert(err.message || "Failed to add payment method. Please try again.");
+                      setAddingPaymentMethod(false);
                     }
-
-                    const data = await res.json();
-                    if (data.url) {
-                      window.location.href = data.url;
-                    }
-                  } catch (err: any) {
-                    console.error("Error setting up payment method:", err);
-                    alert(err.message || "Failed to add payment method. Please try again.");
-                    setAddingPaymentMethod(false);
-                  }
-                }}
-                disabled={addingPaymentMethod}
-                className="px-4 py-2 bg-neutral-800 text-white rounded-lg hover:bg-neutral-900 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {addingPaymentMethod ? "Loading..." : "Add Payment Method"}
-              </button>
+                  }}
+                  disabled={addingPaymentMethod}
+                  className="px-4 py-2 bg-neutral-800 text-white rounded-lg hover:bg-neutral-900 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {addingPaymentMethod ? "Loading..." : "Add Payment Method"}
+                </button>
+                <a
+                  href="mailto:support@soradin.com"
+                  className="px-4 py-2 text-sm border border-gray-300 text-gray-800 rounded-lg hover:bg-gray-50 transition-colors text-center"
+                >
+                  Contact Support
+                </a>
+              </div>
             </div>
           ) : (
             <div className="space-y-3 mb-4">
@@ -299,47 +307,55 @@ export default function BillingPage() {
                   />
                 </div>
               ))}
-              <button
-                onClick={async () => {
-                  setAddingPaymentMethod(true);
-                  try {
-                    const { data: { session } } = await supabaseClient.auth.getSession();
-                    if (!session?.access_token) return;
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  onClick={async () => {
+                    setAddingPaymentMethod(true);
+                    try {
+                      const { data: { session } } = await supabaseClient.auth.getSession();
+                      if (!session?.access_token) return;
 
-                    const res = await fetch("/api/agent/settings/payment-methods/setup", {
-                      method: "POST",
-                      headers: {
-                        Authorization: `Bearer ${session.access_token}`,
-                      },
-                    });
+                      const res = await fetch("/api/agent/settings/payment-methods/setup", {
+                        method: "POST",
+                        headers: {
+                          Authorization: `Bearer ${session.access_token}`,
+                        },
+                      });
 
-                    if (!res.ok) {
-                      const error = await res.json();
-                      throw new Error(error.error || "Failed to start payment method setup");
+                      if (!res.ok) {
+                        const error = await res.json();
+                        throw new Error(error.error || "Failed to start payment method setup");
+                      }
+
+                      const data = await res.json();
+                      if (data.url) {
+                        window.location.href = data.url;
+                      }
+                    } catch (err: any) {
+                      console.error("Error setting up payment method:", err);
+                      alert(err.message || "Failed to add payment method. Please try again.");
+                      setAddingPaymentMethod(false);
                     }
-
-                    const data = await res.json();
-                    if (data.url) {
-                      window.location.href = data.url;
-                    }
-                  } catch (err: any) {
-                    console.error("Error setting up payment method:", err);
-                    alert(err.message || "Failed to add payment method. Please try again.");
-                    setAddingPaymentMethod(false);
-                  }
-                }}
-                disabled={addingPaymentMethod}
-                className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {addingPaymentMethod ? "Loading..." : "Add Another Payment Method"}
-              </button>
+                  }}
+                  disabled={addingPaymentMethod}
+                  className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {addingPaymentMethod ? "Loading..." : "Add Another Payment Method"}
+                </button>
+                <a
+                  href="mailto:support@soradin.com"
+                  className="px-4 py-2 text-sm border border-gray-300 text-gray-800 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Contact Support
+                </a>
+              </div>
             </div>
           )}
 
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex gap-3">
             <AlertCircle size={20} className="text-blue-600 flex-shrink-0 mt-0.5" />
             <div className="text-sm text-blue-900">
-              <strong>How billing works:</strong> You are charged $1.00 per appointment booked through the platform. Your saved payment method is automatically charged when an appointment is confirmed.
+              <strong>How billing works:</strong> You are charged $19.99 per appointment booked through the platform. Your saved payment method is automatically charged when an appointment is confirmed.
             </div>
           </div>
         </div>

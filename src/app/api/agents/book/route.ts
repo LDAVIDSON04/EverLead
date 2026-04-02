@@ -403,8 +403,8 @@ export async function POST(req: NextRequest) {
       slotStartTime: slotStart.getTime(),
     });
     
-    // Fee charged to agent when a client books (CAD cents). $1 for final pre-launch test; raise for production if needed.
-    const priceCents = 100;
+    // Fee charged to agent when a client books (CAD cents).
+    const priceCents = 1999; // $19.99
     
     // CRITICAL: For video appointments, office_location_id must be null
     // This ensures the ClientInfoModal correctly shows "Meeting link" instead of "Meeting Location"

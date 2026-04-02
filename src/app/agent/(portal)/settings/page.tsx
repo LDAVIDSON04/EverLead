@@ -1902,7 +1902,7 @@ function PayoutsSection() {
 
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex gap-3">
           <div className="text-sm text-blue-900">
-            <strong>How billing works:</strong> You are charged $1.00 per appointment booked through the platform. Your saved payment method is automatically charged when an appointment is confirmed.
+            <strong>How billing works:</strong> You are charged $19.99 per appointment booked through the platform. Your saved payment method is automatically charged when an appointment is confirmed.
           </div>
         </div>
       </div>
