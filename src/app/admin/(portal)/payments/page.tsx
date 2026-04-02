@@ -85,7 +85,7 @@ export default function AdminPaymentsPage() {
         if (appointmentIds.length > 0) {
           const { data: appointmentsData } = await supabaseClient
             .from("appointments")
-            .select("id, lead_id, agent_id")
+            .select("id, lead_id, agent_id, cached_lead_full_name")
             .in("id", appointmentIds);
           
           (appointmentsData || []).forEach((apt: any) => {
@@ -125,7 +125,12 @@ export default function AdminPaymentsPage() {
           const appointment = appointmentsMap[p.appointment_id];
           const lead = appointment?.lead_id ? leadsMap[appointment.lead_id] : null;
           const agent = appointment?.agent_id ? agentsMap[appointment.agent_id] : null;
-          
+          const clientName =
+            (appointment?.cached_lead_full_name &&
+              String(appointment.cached_lead_full_name).trim()) ||
+            lead?.full_name ||
+            null;
+
           return {
             id: p.id,
             created_at: p.created_at,
@@ -133,7 +138,7 @@ export default function AdminPaymentsPage() {
             amount_cents: p.amount_cents,
             fee_cents: p.fee_cents,
             status: p.status,
-            family_name: lead?.full_name || null,
+            family_name: clientName,
             specialist_name: agent?.full_name || null,
           };
         });
