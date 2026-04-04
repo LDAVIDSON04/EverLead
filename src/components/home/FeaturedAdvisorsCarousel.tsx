@@ -159,7 +159,7 @@ export function FeaturedAdvisorsCarousel({ viewAllHref, bookOnlineLocation }: Pr
         <h2 className="text-2xl md:text-3xl lg:text-[2rem] font-bold text-[#1A1A1A] tracking-tight pr-0 sm:pr-4">
           Trusted Professionals Across BC
         </h2>
-        <div className="flex flex-wrap items-center justify-end gap-3 self-end sm:self-auto shrink-0 w-full sm:w-auto">
+        <div className="hidden sm:flex flex-wrap items-center justify-end gap-3 shrink-0">
           <Link
             href={viewAllHref}
             className="text-base font-medium text-[#1A1A1A] hover:underline underline-offset-2"
@@ -255,6 +255,17 @@ export function FeaturedAdvisorsCarousel({ viewAllHref, bookOnlineLocation }: Pr
 
         <div className="w-6 shrink-0 md:w-10" aria-hidden />
         </div>
+      </div>
+
+      {/* Mobile: View all below carousel, same visual weight as Book online */}
+      <div className="mt-4 sm:hidden">
+        <Link
+          href={viewAllHref}
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#1A1A1A] px-4 py-3.5 text-center text-base font-semibold text-white shadow-sm transition-colors hover:bg-[#1A1A1A]/90"
+        >
+          View all
+          <ChevronRight className="h-5 w-5 shrink-0 text-white" aria-hidden />
+        </Link>
       </div>
     </div>
   );
