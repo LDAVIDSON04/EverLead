@@ -22,6 +22,7 @@ const majorBCCities = [
 ];
 
 import { cities } from "@/lib/cities";
+import { FeaturedAdvisorsCarousel } from "@/components/home/FeaturedAdvisorsCarousel";
 
 interface HomePageClientProps {
   initialLocation: string;
@@ -582,8 +583,8 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
   </div>
 
       {/* TWO BOXES SECTION */}
-      <section className="py-24 px-4 bg-white">
-        <div className="max-w-6xl mx-auto">
+      <section className="pt-24 pb-8 md:pb-10 px-4 bg-white overflow-x-visible">
+        <div className="max-w-6xl mx-auto min-w-0 overflow-x-visible">
           <h2 className="text-5xl mb-16 text-[#1A1A1A] font-semibold tracking-tight text-center">
             Soradin helps connect you with the right advisor
           </h2>
@@ -731,11 +732,18 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
               </div>
             </div>
           </div>
+
+          <div className="mt-20 md:mt-28 lg:mt-36 w-full">
+            <FeaturedAdvisorsCarousel
+              viewAllHref="/search?location=BC&mode=video"
+              bookOnlineLocation={location?.trim() || undefined}
+            />
+          </div>
         </div>
       </section>
 
       {/* Pre-arrangements – card left, image right (Empathy-style) – Estate Planning */}
-      <section className="bg-white py-16 md:py-24 px-4 md:px-6">
+      <section className="bg-white pt-8 md:pt-10 pb-16 md:pb-24 px-4 md:px-6">
         <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 min-h-[min(80vh,640px)] md:min-h-[560px] gap-0 overflow-hidden rounded-2xl shadow-lg md:shadow-xl border-2 border-[#1A1A1A] transition-all duration-300 ease-out hover:scale-[1.02] hover:shadow-2xl hover:-translate-y-1">
           {/* Left: card */}
           <div className="flex flex-col justify-center p-8 md:p-12 lg:p-16 bg-white rounded-t-2xl md:rounded-l-2xl md:rounded-tr-none order-2 md:order-1">

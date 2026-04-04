@@ -91,6 +91,19 @@ type AvailabilityDay = {
   slots: { startsAt: string; endsAt: string }[];
 };
 
+/** Move the agent matching `featuredId` to the front (e.g. home carousel → marketplace). */
+function pinFeaturedAgentFirst<T extends { agent?: { id?: string | null } | null }>(
+  list: T[],
+  featuredId: string
+): T[] {
+  if (!featuredId) return list;
+  const i = list.findIndex((a) => a.agent?.id === featuredId);
+  if (i <= 0) return list;
+  const copy = [...list];
+  const [picked] = copy.splice(i, 1);
+  return [picked, ...copy];
+}
+
 // Suggested specialties for service/specialist input (matches search API roles)
 const SERVICE_SUGGESTIONS = [
   "Estate Lawyer / Notary Public",
@@ -119,6 +132,7 @@ function SearchResults() {
   const service = searchParams.get("service") || "";
   const mode = searchParams.get("mode") || "in-person";
   const assets = searchParams.get("assets") ?? ""; // financial planner: customer's selected asset value for matching
+  const featuredAgentParam = searchParams.get("featuredAgent")?.trim() ?? "";
 
   // Decode URL-encoded location for display
   const decodedLocation = location ? decodeURIComponent(location.replace(/\+/g, ' ')) : "";
@@ -384,7 +398,7 @@ function SearchResults() {
               videoAvailabilityResults.forEach((result) => {
                 if (result) videoAvailabilityMap[result.agentId] = result.availability;
               });
-              setVideoFallbackAppointments(videoWithReviews);
+              setVideoFallbackAppointments(pinFeaturedAgentFirst(videoWithReviews, featuredAgentParam));
               setVideoFallbackAvailability(videoAvailabilityMap);
               setAgentAvailability(videoAvailabilityMap); // so modal and handleDayClick have data
               setLoading(false);
@@ -465,7 +479,7 @@ function SearchResults() {
           };
         });
 
-        setAppointments(appointmentsWithReviews);
+        setAppointments(pinFeaturedAgentFirst(appointmentsWithReviews, featuredAgentParam));
 
         // CRITICAL: Clear old availability data when location/search changes
         // This prevents showing stale data from previous location
@@ -544,7 +558,7 @@ function SearchResults() {
     }
 
     loadAgents();
-  }, [searchQuery, searchLocation, searchService, mode, assets]);
+  }, [searchQuery, searchLocation, searchService, mode, assets, featuredAgentParam]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
