@@ -131,11 +131,11 @@ export function FeaturedAdvisorsCarousel({ viewAllHref, bookOnlineLocation }: Pr
   if (loading) {
     return (
       <div className="mb-6 md:mb-8 w-full">
-        <div className="mb-6 md:mb-8 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-          <h2 className="text-2xl md:text-3xl lg:text-[2rem] font-bold text-[#1A1A1A] tracking-tight">
+        <div className="mb-3 sm:mb-6 md:mb-8 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
+          <h2 className="text-2xl md:text-3xl lg:text-[2rem] font-bold text-[#1A1A1A] tracking-tight pr-0 sm:pr-4">
             Trusted Professionals Across BC
           </h2>
-          <span className="text-sm text-[#1A1A1A]/50">Loading specialists…</span>
+          <span className="self-end text-sm text-[#1A1A1A]/50 sm:self-auto">Loading specialists…</span>
         </div>
         <div className="flex gap-5 md:gap-6 overflow-hidden pb-2">
           {[1, 2, 3].map((i) => (
@@ -155,11 +155,11 @@ export function FeaturedAdvisorsCarousel({ viewAllHref, bookOnlineLocation }: Pr
 
   return (
     <div className="mb-6 md:mb-8 w-full">
-      <div className="mb-6 md:mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <h2 className="text-2xl md:text-3xl lg:text-[2rem] font-bold text-[#1A1A1A] tracking-tight pr-4">
+      <div className="mb-3 sm:mb-6 md:mb-8 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
+        <h2 className="text-2xl md:text-3xl lg:text-[2rem] font-bold text-[#1A1A1A] tracking-tight pr-0 sm:pr-4">
           Trusted Professionals Across BC
         </h2>
-        <div className="flex flex-wrap items-center gap-3 sm:justify-end shrink-0">
+        <div className="flex flex-wrap items-center justify-end gap-3 self-end sm:self-auto shrink-0 w-full sm:w-auto">
           <Link
             href={viewAllHref}
             className="text-base font-medium text-[#1A1A1A] hover:underline underline-offset-2"
