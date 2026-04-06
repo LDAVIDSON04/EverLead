@@ -67,34 +67,58 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
   const [currentTextIndex, setCurrentTextIndex] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
 
-  // Defer rotating text animation until after initial render to improve FCP/LCP
-  // Use longer delay on mobile to prioritize critical rendering
+  // Desktop: defer starting the rotation (idle / short timeout) so LCP isn’t contested.
+  // Mobile: start on the next frame — requestIdleCallback + long timeouts felt like ~multi‑second “stuck” on first line.
   useEffect(() => {
-    // Use requestIdleCallback if available, otherwise setTimeout with longer delay
-    const scheduleAnimation = (callback: () => void) => {
-      if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
-        (window as any).requestIdleCallback(callback, { timeout: 3000 });
-      } else {
-        // Longer delay on mobile to ensure FCP/LCP complete first
-        const isMobile = typeof window !== 'undefined' && (window as Window).innerWidth < 768;
-        setTimeout(callback, isMobile ? 3000 : 2000);
-      }
+    let interval: ReturnType<typeof setInterval> | null = null;
+    let idleId: number | null = null;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    let rafId: number | null = null;
+
+    const runTick = () => {
+      setIsVisible(false);
+      setTimeout(() => {
+        setCurrentTextIndex((prevIndex) => (prevIndex + 1) % rotatingTexts.length);
+        setIsVisible(true);
+      }, 250);
     };
 
-    let interval: NodeJS.Timeout | null = null;
-    
-    scheduleAnimation(() => {
-      interval = setInterval(() => {
-        setIsVisible(false);
-        setTimeout(() => {
-          setCurrentTextIndex((prevIndex) => (prevIndex + 1) % rotatingTexts.length);
-          setIsVisible(true);
-        }, 250);
-      }, 3000);
-    });
+    const startInterval = () => {
+      if (interval != null) return;
+      interval = setInterval(runTick, 3000);
+    };
+
+    const isMobile =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(max-width: 767px)').matches;
+
+    if (isMobile) {
+      rafId = window.requestAnimationFrame(() => {
+        rafId = null;
+        startInterval();
+      });
+    } else {
+      const schedule = (cb: () => void) => {
+        if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+          idleId = (
+            window as Window & { requestIdleCallback: (fn: () => void, opts?: { timeout?: number }) => number }
+          ).requestIdleCallback(cb, { timeout: 2000 });
+        } else {
+          timeoutId = setTimeout(cb, 2000);
+        }
+      };
+      schedule(() => {
+        startInterval();
+      });
+    }
 
     return () => {
-      if (interval) clearInterval(interval);
+      if (rafId != null) window.cancelAnimationFrame(rafId);
+      if (idleId != null && typeof window !== 'undefined' && 'cancelIdleCallback' in window) {
+        (window as Window & { cancelIdleCallback: (id: number) => void }).cancelIdleCallback(idleId);
+      }
+      if (timeoutId != null) window.clearTimeout(timeoutId);
+      if (interval != null) clearInterval(interval);
     };
   }, [rotatingTexts.length]);
 
