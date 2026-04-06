@@ -58,8 +58,8 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
 
   // Rotating text for hero title - deferred for mobile performance
   const rotatingTexts = [
-    "Funeral Pre Planners",
     "Estate Lawyers",
+    "Funeral Pre Planners",
     "Financial Planners",
     "Tax Advisors",
     "Insurance Agents",
