@@ -310,9 +310,6 @@ export default function CreateAccountNextPage() {
             <p className="text-gray-800 font-medium text-center">
               Submitting for approval…
             </p>
-            <p className="text-gray-500 text-sm text-center">
-              This usually takes about five seconds.
-            </p>
           </div>
         </div>
       )}

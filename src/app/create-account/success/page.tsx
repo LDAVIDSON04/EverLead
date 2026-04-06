@@ -26,17 +26,22 @@ export default function CreateAccountSuccessPage() {
             <Check className="w-7 h-7 sm:w-8 sm:h-8 text-white" strokeWidth={2.5} />
           </div>
           <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900 mb-3 tracking-tight">
-            Submitted for approval
+            Your Soradin account has been approved
           </h1>
           <p className="text-gray-600 text-base leading-relaxed mb-8 max-w-sm mx-auto">
-            Your account has been submitted for approval. We&apos;ll review your information and get back to you soon. You can log in once your account is approved.
+            Your account has been approved. You can now log in, set your availability, and start receiving booked appointments.
           </p>
-          <Link
-            href="/"
-            className="inline-block bg-[#1a3a2e] text-white font-medium py-3.5 px-8 rounded-xl hover:bg-[#0f2a20] transition-colors shadow-sm hover:shadow-md"
+          <a
+            href="https://www.soradin.com/agent"
+            className="inline-block w-full sm:w-auto min-w-[200px] bg-[#1a3a2e] text-white font-medium py-3.5 px-8 rounded-xl hover:bg-[#0f2a20] transition-colors shadow-sm hover:shadow-md"
           >
-            Return to home
-          </Link>
+            Log in
+          </a>
+          <p className="mt-6">
+            <Link href="/" className="text-sm text-gray-600 underline hover:text-gray-900">
+              Return to home
+            </Link>
+          </p>
         </div>
       </main>
     </div>
