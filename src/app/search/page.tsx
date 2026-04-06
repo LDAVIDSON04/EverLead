@@ -107,7 +107,7 @@ function pinFeaturedAgentFirst<T extends { agent?: { id?: string | null } | null
 // Suggested specialties for service/specialist input (matches search API roles)
 const SERVICE_SUGGESTIONS = [
   "Estate Lawyer / Notary Public",
-  "Funeral Pre Planner",
+  "Funeral Planner",
   "Financial Planner",
   "Tax Accountant",
   "Insurance Agent",

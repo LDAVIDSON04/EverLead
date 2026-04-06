@@ -124,7 +124,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
 
   const specialtySuggestions = [
     "Estate Lawyer / Notary Public",
-    "Funeral Pre Planner",
+    "Funeral Planner",
     "Financial Planner",
     "Tax Accountant",
     "Insurance Agent",
