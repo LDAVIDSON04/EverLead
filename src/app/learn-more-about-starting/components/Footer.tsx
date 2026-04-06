@@ -107,9 +107,11 @@ export function Footer() {
 
               <div className="flex gap-5">
                 <Link
-                  href="#"
+                  href="https://www.instagram.com/_soradin/"
                   className="text-white/50 hover:text-white transition-colors"
                   aria-label="Instagram"
+                  target="_blank"
+                  rel="noopener noreferrer"
                 >
                   <Instagram className="w-5 h-5" />
                 </Link>
