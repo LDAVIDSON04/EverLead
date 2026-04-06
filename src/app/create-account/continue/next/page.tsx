@@ -261,6 +261,10 @@ export default function CreateAccountNextPage() {
     };
 
     setSubmitting(true);
+    const minSubmittingMs = 5000;
+    const minSubmittingDone = new Promise<void>((resolve) => {
+      setTimeout(resolve, minSubmittingMs);
+    });
     try {
       const res = await fetch("/api/agent/signup", {
         method: "POST",
@@ -274,6 +278,8 @@ export default function CreateAccountNextPage() {
         setSubmitting(false);
         return;
       }
+
+      await minSubmittingDone;
 
       if (typeof window !== "undefined") {
         try {
@@ -305,7 +311,7 @@ export default function CreateAccountNextPage() {
               Submitting for approval…
             </p>
             <p className="text-gray-500 text-sm text-center">
-              This usually takes a few seconds.
+              This usually takes about five seconds.
             </p>
           </div>
         </div>
@@ -510,7 +516,7 @@ export default function CreateAccountNextPage() {
                 Submitting for approval…
               </>
             ) : (
-              "Submit for approval"
+              "Create account"
             )}
           </button>
 
