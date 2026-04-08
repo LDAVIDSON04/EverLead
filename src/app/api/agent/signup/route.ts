@@ -1,8 +1,29 @@
 // src/app/api/agent/signup/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { checkRateLimit } from "@/lib/rateLimit";
+
+function isEmailAlreadyRegisteredError(message: string | undefined): boolean {
+  if (!message) return false;
+  const m = message.toLowerCase();
+  return (
+    m.includes("already registered") ||
+    m.includes("already exists") ||
+    m.includes("duplicate") ||
+    m.includes("user already")
+  );
+}
+
+/** Ensures password login works when project has "Confirm email" enabled in Supabase. */
+async function ensureEmailConfirmedForLogin(userId: string): Promise<void> {
+  if (!supabaseAdmin) return;
+  const { error } = await supabaseAdmin.auth.admin.updateUserById(userId, {
+    email_confirm: true,
+  });
+  if (error) {
+    console.error("[SIGNUP] email_confirm failed (user may be unable to log in until confirmed):", error);
+  }
+}
 
 export async function POST(req: NextRequest) {
   const rateLimitRes = checkRateLimit(req, "signup", 10);
@@ -103,112 +124,92 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Create Supabase client for auth operations
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-    const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
     let userId: string | null = null;
     let profileExists = false;
 
-    // First, try to create auth user
-    const { data: authData, error: signUpError } = await supabase.auth.signUp({
+    // Server-side create with email pre-confirmed so agents can log in immediately even when
+    // Supabase Auth has "Confirm email" enabled (anon signUp leaves users unconfirmed).
+    const { data: adminAuthData, error: adminCreateError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
-      options: {
-        emailRedirectTo: undefined, // No email confirmation needed - manual approval instead
+      email_confirm: true,
+      user_metadata: {
+        full_name: full_name || [first_name, last_name].filter(Boolean).join(" ").trim() || undefined,
       },
     });
 
-    if (signUpError) {
-      console.error("Signup error:", signUpError);
-      
-      // Handle specific Supabase errors
-      if (signUpError.message?.includes("already registered") || signUpError.message?.includes("User already registered")) {
-        // Auth user exists, find it and check if profile exists
-        console.log("Auth user already exists, finding user and checking profile...");
-        
-        try {
-          // Try to get the user by email using admin client
-          const { data: authUsers, error: listError } = await supabaseAdmin.auth.admin.listUsers();
-          
-          if (listError) {
-            console.error("Error listing users:", listError);
-            return NextResponse.json(
-              { error: "Failed to verify account status. Please try again." },
-              { status: 500 }
-            );
-          }
-          
-          const existingAuthUser = authUsers?.users?.find((u: any) => u.email?.toLowerCase() === email.toLowerCase());
-          
-          if (existingAuthUser) {
-            userId = existingAuthUser.id;
-            console.log("Found existing auth user:", userId);
-            
-            // Check if profile exists for this user
-            const { data: existingUserProfile, error: profileCheckError } = await supabaseAdmin
-              .from("profiles")
-              .select("id, role, approval_status")
-              .eq("id", userId)
-              .maybeSingle();
-            
-            if (profileCheckError) {
-              console.error("Error checking profile:", profileCheckError);
-            }
-            
-            if (existingUserProfile) {
-              profileExists = true;
-              // Profile exists - check status and return appropriate message
-              if (existingUserProfile.role === "agent") {
-                if (existingUserProfile.approval_status === "pending") {
-                  return NextResponse.json(
-                    { error: "An account with this email is already pending approval. Please wait for admin approval or contact support." },
-                    { status: 400 }
-                  );
-                } else if (existingUserProfile.approval_status === "approved") {
-                  return NextResponse.json(
-                    { error: "An account with this email already exists. Please sign in instead." },
-                    { status: 400 }
-                  );
-                } else if (existingUserProfile.approval_status === "declined") {
-                  // Allow re-application: fall through and update profile to pending with new data
-                  profileExists = true;
-                }
-              } else {
-                return NextResponse.json(
-                  { error: "An account with this email already exists. Please sign in instead." },
-                  { status: 400 }
-                );
-              }
-            } else {
-              // Auth user exists but no profile - we'll create the profile below
-              console.log("Auth user exists but no profile found - will create profile");
-            }
-          } else {
-            // Can't find the user - might be a different error
-            console.error("Auth user error but couldn't find user in list");
-            return NextResponse.json(
-              { error: "An account with this email may already exist. Please try signing in instead." },
-              { status: 400 }
-            );
-          }
-        } catch (error: any) {
-          console.error("Error handling existing auth user:", error);
+    if (!adminCreateError && adminAuthData.user) {
+      userId = adminAuthData.user.id;
+      console.log("New auth user created (admin, email confirmed):", userId);
+    } else if (adminCreateError && isEmailAlreadyRegisteredError(adminCreateError.message)) {
+      console.log("Auth user already exists, finding user and checking profile...");
+      try {
+        const { data: authUsers, error: listError } = await supabaseAdmin.auth.admin.listUsers();
+
+        if (listError) {
+          console.error("Error listing users:", listError);
           return NextResponse.json(
             { error: "Failed to verify account status. Please try again." },
             { status: 500 }
           );
         }
-      } else {
+
+        const existingAuthUser = authUsers?.users?.find((u: { email?: string }) => u.email?.toLowerCase() === email.toLowerCase());
+
+        if (existingAuthUser) {
+          userId = existingAuthUser.id;
+          console.log("Found existing auth user:", userId);
+
+          const { data: existingUserProfile, error: profileCheckError } = await supabaseAdmin
+            .from("profiles")
+            .select("id, role, approval_status")
+            .eq("id", userId)
+            .maybeSingle();
+
+          if (profileCheckError) {
+            console.error("Error checking profile:", profileCheckError);
+          }
+
+          if (existingUserProfile) {
+            profileExists = true;
+            if (existingUserProfile.role === "agent") {
+              if (existingUserProfile.approval_status === "approved") {
+                return NextResponse.json(
+                  { error: "An account with this email already exists. Please sign in instead." },
+                  { status: 400 }
+                );
+              }
+              // pending, needs-info, null, or declined: complete signup again — profile insert will
+              // hit duplicate key and the update path sets approval_status to approved.
+            } else {
+              return NextResponse.json(
+                { error: "An account with this email already exists. Please sign in instead." },
+                { status: 400 }
+              );
+            }
+          } else {
+            console.log("Auth user exists but no profile found - will create profile");
+          }
+        } else {
+          console.error("Email taken but user not found in list");
+          return NextResponse.json(
+            { error: "An account with this email may already exist. Please try signing in instead." },
+            { status: 400 }
+          );
+        }
+      } catch (error: unknown) {
+        console.error("Error handling existing auth user:", error);
         return NextResponse.json(
-          { error: signUpError.message || "Failed to create account. Please try again." },
-          { status: 400 }
+          { error: "Failed to verify account status. Please try again." },
+          { status: 500 }
         );
       }
-    } else if (authData.user) {
-      userId = authData.user.id;
-      console.log("New auth user created:", userId);
+    } else if (adminCreateError) {
+      console.error("Admin createUser error:", adminCreateError);
+      return NextResponse.json(
+        { error: adminCreateError.message || "Failed to create account. Please try again." },
+        { status: 400 }
+      );
     }
 
     if (!userId) {
@@ -221,14 +222,17 @@ export async function POST(req: NextRequest) {
 
     // If profile already exists, we would have returned above, so we can proceed to create
 
-    // Create profile with approval_status = 'pending'
+    // Create profile — auto-approved so agents can log in immediately and finish onboarding
     // Note: email is NOT stored in profiles table - it's in auth.users
     // Build profile data; use first_name + last_name from create-account so name is never wrong
+    const approvedAt = new Date().toISOString();
     const profileData: any = {
       id: userId,
       full_name: full_name || [first_name, last_name].filter(Boolean).join(" ").trim() || "",
       role: "agent",
-      approval_status: "pending",
+      approval_status: "approved",
+      approved_at: approvedAt,
+      approved_by: null,
     };
     if (first_name !== undefined && first_name !== null) profileData.first_name = String(first_name).trim() || null;
     if (last_name !== undefined && last_name !== null) profileData.last_name = String(last_name).trim() || null;
@@ -386,6 +390,8 @@ export async function POST(req: NextRequest) {
     // Custom profile bio from create-account Step 3 (agent writes their own bio)
     if (profile_bio && typeof profile_bio === "string" && profile_bio.trim()) {
       profileData.ai_generated_bio = profile_bio.trim();
+      profileData.bio_approval_status = "approved";
+      profileData.bio_last_updated = approvedAt;
     }
 
     console.log("Attempting to create profile:", { userId, email, full_name });
@@ -410,7 +416,7 @@ export async function POST(req: NextRequest) {
         // Profile might already exist, check if we can update it
         const { data: existingProfile, error: checkError } = await supabaseAdmin
           .from("profiles")
-          .select("id, approval_status")
+          .select("id, approval_status, metadata")
           .eq("id", userId)
           .maybeSingle();
 
@@ -421,10 +427,14 @@ export async function POST(req: NextRequest) {
         if (existingProfile) {
           // Update existing profile instead
           // Note: email is NOT stored in profiles table - it's in auth.users
+          const updateApprovedAt = new Date().toISOString();
           const updateData: any = {
             full_name: full_name || [first_name, last_name].filter(Boolean).join(" ").trim() || "",
             role: "agent",
-            approval_status: "pending",
+            approval_status: "approved",
+            approved_at: updateApprovedAt,
+            approved_by: null,
+            approval_notes: null,
           };
           if (first_name !== undefined && first_name !== null) updateData.first_name = String(first_name).trim() || null;
           if (last_name !== undefined && last_name !== null) updateData.last_name = String(last_name).trim() || null;
@@ -484,6 +494,8 @@ export async function POST(req: NextRequest) {
           // Custom profile bio from create-account Step 3
           if (profile_bio && typeof profile_bio === "string" && profile_bio.trim()) {
             updateData.ai_generated_bio = profile_bio.trim();
+            updateData.bio_approval_status = "approved";
+            updateData.bio_last_updated = updateApprovedAt;
           }
           
           // Business address fields
@@ -558,6 +570,8 @@ export async function POST(req: NextRequest) {
           // Success - profile updated
           console.log("✅ Profile updated successfully:", { userId, email, profileId: updatedProfile?.id });
 
+          await ensureEmailConfirmedForLogin(userId);
+
           // Create office locations if provided
           if (office_locations && Array.isArray(office_locations) && office_locations.length > 0) {
             try {
@@ -618,7 +632,7 @@ export async function POST(req: NextRequest) {
           return NextResponse.json(
             { 
               success: true,
-              message: "Account created successfully. Your application is pending approval.",
+              message: "Account created successfully. Your Soradin account has been approved.",
               userId,
             },
             { status: 201 }
@@ -664,6 +678,8 @@ export async function POST(req: NextRequest) {
     }
 
     console.log("✅ Profile created successfully:", { userId, email, profileId: profileDataResult.id });
+
+    await ensureEmailConfirmedForLogin(userId);
 
     // Create office locations if provided (using admin client since user isn't authenticated yet)
     // Only create if we didn't already create them in the update path above
@@ -726,7 +742,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       { 
         success: true,
-        message: "Account created successfully. Your application is pending approval.",
+        message: "Account created successfully. Your Soradin account has been approved.",
         userId,
       },
       { status: 201 }
