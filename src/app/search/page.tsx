@@ -1484,9 +1484,9 @@ function SearchResults() {
           </div>
 
           {/* Desktop Header - Original Layout */}
-          <div className="hidden md:flex items-center gap-6">
+          <div className="hidden md:flex items-start gap-6">
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-2">
+            <Link href="/" className="flex items-center gap-2 shrink-0 pt-0.5">
               <Image
                 src="/Soradin.png"
                 alt="Soradin Logo"
@@ -1497,8 +1497,9 @@ function SearchResults() {
               <span className="text-xl font-semibold text-gray-900">Soradin</span>
             </Link>
 
-            {/* Search Bar */}
-            <form onSubmit={handleSearch} className="flex-1 max-w-2xl">
+            {/* Search Bar + tagline */}
+            <div className="flex-1 max-w-2xl min-w-0">
+            <form onSubmit={handleSearch}>
               <div className="flex gap-2">
                 <div className="relative flex-1">
                   <input
@@ -1583,6 +1584,10 @@ function SearchResults() {
                 </button>
               </div>
             </form>
+            <p className="text-center text-base font-semibold text-[#1A1A1A] mt-2">
+              Book a free appointment today!
+            </p>
+            </div>
           </div>
         </div>
       </header>
