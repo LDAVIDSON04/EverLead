@@ -1731,7 +1731,7 @@ function SearchResults() {
             )}
           </div>
           <p className="text-center text-sm sm:text-base font-semibold text-[#1A1A1A] pt-1">
-            Find the right expert. Book in minutes. Free
+            Book a free appointment today!
           </p>
         </div>
 
