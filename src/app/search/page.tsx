@@ -7,7 +7,7 @@ import Link from "next/link";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import { Suspense, useState, useEffect, useMemo, useCallback } from "react";
-import { Search, Star, MapPin, Calendar, Clock, Stethoscope, Video, SlidersHorizontal, ChevronRight, X, ArrowLeft, Shield, ExternalLink, Menu, Instagram, Facebook } from "lucide-react";
+import { Search, Star, MapPin, Calendar, Clock, Stethoscope, Video, SlidersHorizontal, ChevronRight, X, ArrowLeft, Shield, ExternalLink, Instagram, Facebook } from "lucide-react";
 import { supabaseClient } from "@/lib/supabaseClient";
 import { getAgentAvatarUrl, DEFAULT_AGENT_AVATAR_URL } from "@/lib/utils";
 // Removed static imports - now using dynamic imports below
@@ -244,7 +244,6 @@ function SearchResults() {
   const [portfolioReviews, setPortfolioReviews] = useState<any[]>([]);
   const [portfolioReviewsLoading, setPortfolioReviewsLoading] = useState(false);
   const [showAllReviews, setShowAllReviews] = useState(false);
-  const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   // When showing video fallback (no in-person in city), booking should use video mode
   const effectiveBookingMode = showingVideoFallback && videoFallbackAppointments.length > 0 ? "video" : mode;
@@ -1470,8 +1469,7 @@ function SearchResults() {
         <div className="max-w-[1200px] mx-auto px-4 py-3 pb-2 md:py-4">
           {/* Mobile Header */}
           <div className="md:hidden">
-            <div className="flex items-center justify-between mb-1">
-              {/* Logo and Soradin */}
+            <div className="flex items-center mb-1">
               <Link href="/" className="flex items-center gap-2">
                 <Image
                   src="/Soradin.png"
@@ -1482,46 +1480,8 @@ function SearchResults() {
                 />
                 <span className="text-xl font-semibold text-gray-900">Soradin</span>
               </Link>
-
-              {/* Hamburger Menu Button - Top right */}
-              <button
-                onClick={() => setShowMobileMenu(!showMobileMenu)}
-                className="p-2 text-gray-700 hover:text-gray-900"
-              >
-                <Menu className="w-6 h-6" />
-              </button>
             </div>
           </div>
-
-          {/* Mobile Menu */}
-          {showMobileMenu && (
-            <div className="md:hidden border-t border-gray-200 mt-4 pt-4">
-              <form onSubmit={handleSearch} className="space-y-3">
-                <input
-                  type="text"
-                  placeholder="Service or specialist"
-                  value={inputQuery}
-                  onChange={(e) => setInputQuery(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-800 text-base"
-                />
-                <input
-                  type="text"
-                  placeholder="Service type"
-                  value={inputService}
-                  onChange={(e) => setInputService(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-800 text-base"
-                />
-                <button 
-                  type="submit"
-                  className="w-full bg-neutral-800 text-white px-6 py-2 rounded-lg hover:bg-neutral-900 transition-colors flex items-center justify-center gap-2"
-                  onClick={() => setShowMobileMenu(false)}
-                >
-                  <Search className="w-5 h-5" />
-                  Search
-                </button>
-              </form>
-            </div>
-          )}
 
           {/* Desktop Header - Original Layout */}
           <div className="hidden md:flex items-center gap-6">
@@ -1770,6 +1730,9 @@ function SearchResults() {
               </div>
             )}
           </div>
+          <p className="text-center text-sm sm:text-base font-semibold text-[#1A1A1A] pt-1">
+            Book a free appointment today!
+          </p>
         </div>
 
         {/* Appointment Cards */}
