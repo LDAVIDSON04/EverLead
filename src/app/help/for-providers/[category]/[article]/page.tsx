@@ -344,9 +344,9 @@ Integration helps reduce manual work and scheduling conflicts.`,
       title: 'How do I set my pricing?',
       content: `Pricing on Soradin is managed through the platform's billing structure.
 
-Agents are not charged to create a profile or be listed. Fees apply only when appointments are completed or when optional features are enabled.
+Agents are not charged to create a profile or be listed. Bookings made through the marketplace do not incur a per-appointment fee. Fees may still apply to other features (such as purchasing leads), if you use them.
 
-Pricing details are explained clearly during onboarding and can be reviewed at any time.`,
+Pricing details are explained during onboarding and can be reviewed in Billing settings.`,
       relatedArticles: [
         { title: 'What features are available to agents?', slug: 'what-features-available' },
         { title: 'How do I manage my account settings?', slug: 'how-do-i-manage-account-settings' }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { supabaseServer } from "@/lib/supabaseServer";
 import { DateTime } from "luxon";
+import { marketplaceBookingFeeDollars } from "@/lib/marketplaceBookingFee";
 
 export async function GET(request: NextRequest) {
   try {
@@ -23,7 +24,7 @@ export async function GET(request: NextRequest) {
     }
 
     const agentId = user.id;
-    const pricePerAppointment = 19.99; // Must match /api/agents/book marketplace fee
+    const pricePerAppointment = marketplaceBookingFeeDollars();
 
     // Get agent's timezone from profile
     let agentTimezone = "America/Vancouver"; // Default

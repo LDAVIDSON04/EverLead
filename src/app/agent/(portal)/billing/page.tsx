@@ -81,8 +81,8 @@ function RemovePaymentButton({
               </div>
               <p className="text-sm text-gray-600 mb-4">
                 {isOnlyCard
-                  ? "This is your only payment method. After removing it you will have no card on file. You’ll need to add a new payment method to receive new bookings and charges."
-                  : "This card will be removed from your account and will no longer be charged for new appointments."}
+                  ? "This is your only payment method. After removing it you will have no card on file. Some features may require a payment method later."
+                  : "This card will be removed from your account."}
               </p>
               <div className="flex items-center justify-end gap-3">
                 <button
@@ -355,7 +355,7 @@ export default function BillingPage() {
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex gap-3">
             <AlertCircle size={20} className="text-blue-600 flex-shrink-0 mt-0.5" />
             <div className="text-sm text-blue-900">
-              <strong>How billing works:</strong> You are charged $19.99 per appointment booked through the platform. Your saved payment method is automatically charged when an appointment is confirmed.
+              <strong>How billing works:</strong> Marketplace appointments booked through Soradin are free—there is no per-appointment fee. You may still add a payment method on file for other features (for example, purchasing leads).
             </div>
           </div>
         </div>

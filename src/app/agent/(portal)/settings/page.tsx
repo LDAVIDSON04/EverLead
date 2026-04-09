@@ -1678,7 +1678,7 @@ function PayoutsSection() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [addingPaymentMethod, setAddingPaymentMethod] = useState(false);
-  const [pricePerAppointment, setPricePerAppointment] = useState(29.0);
+  const [pricePerAppointment, setPricePerAppointment] = useState(0);
   const [currentMonthAppointments, setCurrentMonthAppointments] = useState(0);
   const [currentMonthTotal, setCurrentMonthTotal] = useState("0.00");
   const [pastPayments, setPastPayments] = useState<any[]>([]);
@@ -1902,7 +1902,7 @@ function PayoutsSection() {
 
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex gap-3">
           <div className="text-sm text-blue-900">
-            <strong>How billing works:</strong> You are charged $19.99 per appointment booked through the platform. Your saved payment method is automatically charged when an appointment is confirmed.
+            <strong>How billing works:</strong> Marketplace appointments booked through Soradin are free—there is no per-appointment fee. You may still add a payment method on file for other features (for example, purchasing leads).
           </div>
         </div>
       </div>
@@ -1930,7 +1930,7 @@ function PayoutsSection() {
           <div className="bg-neutral-50 rounded-lg p-4 border border-neutral-200">
             <div className="text-sm text-gray-600 mb-1">Estimated Charge</div>
             <div className="text-2xl font-semibold text-neutral-800">${currentMonthTotal}</div>
-            <div className="text-xs text-gray-500 mt-1">Charged immediately when appointments are booked</div>
+            <div className="text-xs text-gray-500 mt-1">No charge for marketplace bookings</div>
           </div>
         </div>
       </div>

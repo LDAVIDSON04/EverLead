@@ -9,6 +9,7 @@ import { checkRateLimit } from "@/lib/rateLimit";
 import { z } from "zod";
 import { getLeadPriceFromUrgency } from "@/lib/leads/pricing";
 import { chargeAgentForAppointment } from "@/lib/chargeAgentForAppointment";
+import { MARKETPLACE_BOOKING_FEE_CENTS } from "@/lib/marketplaceBookingFee";
 import { sendPaymentDeclineEmail } from "@/lib/emails";
 import { sendConsumerBookingSMS, sendAgentNewAppointmentSMS } from "@/lib/sms";
 import { DateTime } from "luxon";
@@ -403,8 +404,8 @@ export async function POST(req: NextRequest) {
       slotStartTime: slotStart.getTime(),
     });
     
-    // Fee charged to agent when a client books (CAD cents).
-    const priceCents = 1999; // $19.99
+    // Fee charged to agent when a client books (CAD cents). See marketplaceBookingFee.ts.
+    const priceCents = MARKETPLACE_BOOKING_FEE_CENTS;
     
     // CRITICAL: For video appointments, office_location_id must be null
     // This ensures the ClientInfoModal correctly shows "Meeting link" instead of "Meeting Location"
@@ -417,7 +418,7 @@ export async function POST(req: NextRequest) {
       requested_date: requestedDate,
       requested_window: requestedWindow,
       status: "confirmed", // Mark as confirmed immediately after booking
-      price_cents: priceCents, // Set price when booking
+      price_cents: priceCents > 0 ? priceCents : null, // null when marketplace fee is $0
       confirmed_at: confirmedAtISO, // Store exact booking time - MUST match slot startsAt for conflict detection
       office_location_id: finalOfficeLocationId, // Store the office location where appointment was booked (null for video)
     };
