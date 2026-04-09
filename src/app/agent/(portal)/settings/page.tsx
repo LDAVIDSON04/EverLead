@@ -1902,7 +1902,7 @@ function PayoutsSection() {
 
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex gap-3">
           <div className="text-sm text-blue-900">
-            <strong>How billing works:</strong> Using Soradin is completely free: there is no fee to be listed, and no fee when families book appointments with you through the platform.
+            <strong>How billing works:</strong> Using Soradin is completely free: there is no fee to be listed, and no fee when families book appointments with you through the platform. You don&apos;t need a card on file to show in the marketplace or to receive bookings.
           </div>
         </div>
       </div>
