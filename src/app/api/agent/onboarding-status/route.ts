@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { supabaseServer } from "@/lib/supabaseServer";
-import { stripe } from "@/lib/stripe";
 
 export async function GET(request: NextRequest) {
   try {
@@ -23,10 +22,6 @@ export async function GET(request: NextRequest) {
     }
 
     const agentId = user.id;
-    // Get email from auth user - Supabase auth user always has email
-    const agentEmail = user.email || user.user_metadata?.email;
-
-    console.log(`[ONBOARDING-STATUS] Agent ${agentId}: Auth user email from user.email: ${user.email}, from user_metadata: ${user.user_metadata?.email}, final: ${agentEmail}`);
 
     // Get profile with approval status and profile picture
     const { data: profile, error: profileError } = await supabaseAdmin
@@ -48,8 +43,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         needsOnboarding: false,
         hasProfilePicture: !!profile.profile_picture_url,
-        hasPaymentMethod: false, // Don't need to check if completed
-        hasAvailability: false, // Don't need to check if completed
+        hasAvailability: false,
         onboardingCompleted: true,
       });
     }
@@ -59,7 +53,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         needsOnboarding: false,
         hasProfilePicture: false,
-        hasPaymentMethod: false,
         hasAvailability: false,
         onboardingCompleted: false,
       });
@@ -125,34 +118,11 @@ export async function GET(request: NextRequest) {
     
     console.log(`[ONBOARDING-STATUS] Agent ${agentId}: Final hasAvailability: ${hasAvailability}`);
 
-    // SECURITY: Check payment method only via this agent's profile.stripe_customer_id.
-    // Never look up by email (would risk marking another agent's card as this agent's).
-    let hasPaymentMethod = false;
-    const stripeCustomerId = (metadata as any)?.stripe_customer_id;
-
-    if (stripeCustomerId) {
-      try {
-        const customer = await stripe.customers.retrieve(stripeCustomerId);
-        if (!(customer as any).deleted) {
-          const paymentMethods = await stripe.paymentMethods.list({
-            customer: stripeCustomerId,
-            type: "card",
-            limit: 1,
-          });
-          hasPaymentMethod = paymentMethods.data.length > 0;
-        }
-      } catch {
-        hasPaymentMethod = false;
-      }
-    }
-
-    console.log(`[ONBOARDING-STATUS] Agent ${agentId}: hasPaymentMethod: ${hasPaymentMethod} (stripe_customer_id: ${stripeCustomerId ? "set" : "not set"})`);
-
-    // Check if all 3 steps are complete: profile picture + availability + payment method
-    console.log(`[ONBOARDING-STATUS] Agent ${agentId}: Evaluating onboarding status. hasProfilePicture: ${hasProfilePicture}, hasPaymentMethod: ${hasPaymentMethod}, hasAvailability: ${hasAvailability}`);
+    // Onboarding is profile picture + availability only (payment is optional / Billing).
+    console.log(`[ONBOARDING-STATUS] Agent ${agentId}: Evaluating onboarding status. hasProfilePicture: ${hasProfilePicture}, hasAvailability: ${hasAvailability}`);
     
-    if (hasProfilePicture && hasPaymentMethod && hasAvailability) {
-      console.log(`[ONBOARDING-STATUS] Agent ${agentId}: ALL 3 CONDITIONS MET - marking as completed`);
+    if (hasProfilePicture && hasAvailability) {
+      console.log(`[ONBOARDING-STATUS] Agent ${agentId}: Profile + availability complete - marking onboarding completed`);
       
       // Auto-mark as completed in the database for future reference
       if (!onboardingCompleted) {
@@ -173,26 +143,22 @@ export async function GET(request: NextRequest) {
         }
       }
       
-      // CRITICAL: Return needsOnboarding: false immediately when all 3 are present
-      console.log(`[ONBOARDING-STATUS] Agent ${agentId}: RETURNING needsOnboarding: false (has all 3 requirements)`);
+      console.log(`[ONBOARDING-STATUS] Agent ${agentId}: RETURNING needsOnboarding: false (profile + availability)`);
       return NextResponse.json({
         needsOnboarding: false,
         hasProfilePicture: true,
-        hasPaymentMethod: true,
         hasAvailability: true,
         onboardingCompleted: true,
       });
     }
     
-    console.log(`[ONBOARDING-STATUS] Agent ${agentId}: Conditions NOT met. hasProfilePicture: ${hasProfilePicture}, hasPaymentMethod: ${hasPaymentMethod}, hasAvailability: ${hasAvailability}`);
+    console.log(`[ONBOARDING-STATUS] Agent ${agentId}: Conditions NOT met. hasProfilePicture: ${hasProfilePicture}, hasAvailability: ${hasAvailability}`);
 
-    // If any step is missing, needs onboarding
-    const needsOnboarding = !hasProfilePicture || !hasPaymentMethod || !hasAvailability;
+    const needsOnboarding = !hasProfilePicture || !hasAvailability;
 
     return NextResponse.json({
       needsOnboarding: needsOnboarding && !onboardingCompleted,
       hasProfilePicture,
-      hasPaymentMethod,
       hasAvailability,
       onboardingCompleted: false,
     });
