@@ -355,7 +355,7 @@ export default function BillingPage() {
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex gap-3">
             <AlertCircle size={20} className="text-blue-600 flex-shrink-0 mt-0.5" />
             <div className="text-sm text-blue-900">
-              <strong>How billing works:</strong> Marketplace appointments booked through Soradin are free—there is no per-appointment fee. You may still add a payment method on file for other features (for example, purchasing leads).
+              <strong>How billing works:</strong> Using Soradin is completely free: there is no fee to be listed, and no fee when families book appointments with you through the platform.
             </div>
           </div>
         </div>
