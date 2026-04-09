@@ -47,6 +47,13 @@ function hasVideoAvailability(agent: AgentSearchResult): boolean {
   return days.some((day) => vs[day]?.enabled === true);
 }
 
+function shuffleInPlace<T>(arr: T[]): void {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+}
+
 // Map search query (q) to agent_role so we only show agents whose registered profession matches
 const QUERY_TO_AGENT_ROLE: Record<string, string> = {
   "funeral": "funeral-planner",
@@ -646,12 +653,15 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // Randomize order so no single agent is always first
-    const shuffled = [...filtered];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
+    // Random order within tiers: agents with configured availability (metadata) first, then the rest
+    const withConfiguredAvailability = filtered.filter((a) => a.hasAvailability);
+    const withoutConfiguredAvailability = filtered.filter((a) => !a.hasAvailability);
+    shuffleInPlace(withConfiguredAvailability);
+    shuffleInPlace(withoutConfiguredAvailability);
+    const shuffled = [...withConfiguredAvailability, ...withoutConfiguredAvailability];
+    console.log(
+      `[AGENT SEARCH] Order: ${withConfiguredAvailability.length} with schedule in profile (shuffled), then ${withoutConfiguredAvailability.length} without`
+    );
 
     return NextResponse.json({ agents: shuffled });
   } catch (error: any) {
