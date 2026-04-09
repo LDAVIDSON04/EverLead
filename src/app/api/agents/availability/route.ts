@@ -237,6 +237,16 @@ export async function GET(req: NextRequest) {
       const requestedPrimary = primaryOf(requested);
       const byPrimary = keys.find(k => primaryOf(k) === requestedPrimary);
       if (byPrimary) return byPrimary;
+      // Stored keys are often full addresses ("Kelowna BC V1Y 8T8, CA") while booking/search
+      // sends city + province ("Kelowna, BC" -> stripProvince -> "Kelowna"). Match first segment.
+      const byAddressCity = keys.find((k) => {
+        const beforeComma = k.split(",")[0]?.trim().toLowerCase() || k.trim().toLowerCase();
+        if (beforeComma === norm) return true;
+        if (beforeComma.startsWith(norm + " ")) return true;
+        const firstWord = beforeComma.split(/\s+/)[0] || "";
+        return firstWord === norm;
+      });
+      if (byAddressCity) return byAddressCity;
       // Allow single-character typo (e.g. Penticton vs Pentiction)
       return keys.find(k => {
         const keyNorm = k.toLowerCase().trim();
