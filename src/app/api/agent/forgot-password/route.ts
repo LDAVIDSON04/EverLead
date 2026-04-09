@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { checkBotId } from 'botid/server';
+import { checkRateLimit } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -142,17 +142,12 @@ async function sendResetEmail(email: string, resetUrl: string, siteUrl: string, 
 }
 
 export async function POST(req: NextRequest) {
+  const rateLimitRes = checkRateLimit(req, "forgot-password", 10);
+  if (rateLimitRes) return rateLimitRes;
+
   console.log("🔐 [FORGOT-PASSWORD] Request received");
-  
-  // Check for bots
-  const verification = await checkBotId();
-  if (verification.isBot) {
-    return NextResponse.json(
-      { error: 'Bot detected. Access denied.' },
-      { status: 403 }
-    );
-  }
-  
+  // BotID removed: password reset is user-initiated and BotID false-positives blocked real agents (403, no email).
+
   try {
     // Check if supabaseAdmin is initialized
     if (!supabaseAdmin) {
