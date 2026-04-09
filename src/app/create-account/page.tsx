@@ -143,7 +143,7 @@ export default function CreateAccountPage() {
         <h1 className="text-3xl font-normal text-gray-900 mb-1">
           Create an account
         </h1>
-        <p className="text-gray-600 text-sm mb-2">Please complete all steps to submit your account for approval</p>
+        <p className="text-gray-600 text-sm mb-2">Please complete all steps to create your Soradin account</p>
 
         {/* Progress: Step 1 active */}
         <div className="mb-10">

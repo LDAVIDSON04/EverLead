@@ -343,7 +343,7 @@ export default function CreateAccountContinuePage() {
 
       <div className="max-w-[1000px] mx-auto px-4 pt-2 -mt-2 pb-4 flex-1 w-full">
         <h1 className="text-2xl mb-1 text-black">Create an account</h1>
-        <p className="text-gray-600 text-sm mb-2">Please complete all steps to submit your account for approval</p>
+        <p className="text-gray-600 text-sm mb-2">Please complete all steps to create your Soradin account</p>
 
         {/* Progress: Step 2 active */}
         <div className="mb-10">
