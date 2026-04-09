@@ -1,10 +1,9 @@
 // API to search for available agents for public booking
-// Returns agents who have availability set up, are approved, and have a payment method
+// Returns approved agents (not paused); photo and payment method are not required for listing.
 
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { cityToProvince } from "@/lib/cities";
-import { stripe } from "@/lib/stripe";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -38,8 +37,6 @@ type AgentSearchResult = {
   minimum_portfolio_size?: string | null;
   /** From profile.metadata; financial planners who also sell insurance — show in insurance searches */
   qualified_insurance_products?: boolean;
-  /** From profile.metadata; used only for payment check. Never resolve Stripe by email. */
-  stripe_customer_id?: string | null;
 };
 
 // Agent has set video availability if videoSchedule exists and at least one day is enabled
@@ -156,22 +153,6 @@ function agentMatchesProfession(agent: AgentSearchResult, requiredRole: string):
   return keywords.some((kw) => combined.includes(kw));
 }
 
-/** At least one card payment method on the Stripe customer (same idea as onboarding-status). */
-async function stripeCustomerHasCard(customerId: string): Promise<boolean> {
-  try {
-    const customer = await stripe.customers.retrieve(customerId);
-    if ((customer as { deleted?: boolean }).deleted) return false;
-    const pm = await stripe.paymentMethods.list({
-      customer: customerId,
-      type: "card",
-      limit: 1,
-    });
-    return pm.data.length > 0;
-  } catch {
-    return false;
-  }
-}
-
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
@@ -217,7 +198,7 @@ export async function GET(req: NextRequest) {
       .select("id, agent_id, name, city, street_address, province, postal_code, associated_firm")
       .in("agent_id", agentIds.length > 0 ? agentIds : ['00000000-0000-0000-0000-000000000000']); // Dummy ID if no agents
 
-    // Filter agents who are approved (both profile AND bio) and have availability configured
+    // Filter agents who are approved and not paused (listing does not require photo or payment method)
     const agentsWithAvailability: AgentSearchResult[] = (profiles || [])
       .filter((profile: any) => {
         try {
@@ -252,15 +233,9 @@ export async function GET(req: NextRequest) {
             return false;
           }
 
-          const pic = profile.profile_picture_url;
-          if (!pic || !String(pic).trim()) {
-            console.log(`[AGENT SEARCH] Agent ${profile.id} (${profile.full_name || 'unnamed'}) excluded: no profile photo`);
-            return false;
-          }
-
           // Debug log for the specific agent we're looking for
           if (profile.id === 'f7f6aeca-1059-4ae8-ae93-a059ad583b8f') {
-            console.log(`[AGENT SEARCH] ✅ Agent ${profile.id} passed paused_account and onboarding checks`);
+            console.log(`[AGENT SEARCH] ✅ Agent ${profile.id} passed paused_account check`);
           }
 
           const availability = (metadata as any)?.availability || {};
@@ -351,7 +326,6 @@ export async function GET(req: NextRequest) {
             qualified_insurance_products:
               (metadata as any)?.qualified_insurance_products === true ||
               (metadata as any)?.qualified_insurance_products === 'true',
-            stripe_customer_id: (metadata as any)?.stripe_customer_id || null,
           };
         } catch (err) {
           console.error(`[AGENT SEARCH] Error mapping agent ${profile.id}:`, err);
@@ -360,7 +334,7 @@ export async function GET(req: NextRequest) {
       })
       .filter((agent: AgentSearchResult | null): agent is AgentSearchResult => agent !== null);
 
-    console.log(`[AGENT SEARCH] ${agentsWithAvailability.length} agents (approved, photo, not paused) before location/profession filters`);
+    console.log(`[AGENT SEARCH] ${agentsWithAvailability.length} agents (approved, not paused) before location/profession filters`);
 
     let filtered = agentsWithAvailability;
 
@@ -671,24 +645,6 @@ export async function GET(req: NextRequest) {
         console.log(`[AGENT SEARCH] Assets filter: customer assets ${customerAssetsNum} -> ${filtered.length} agents (was ${beforeAssets})`);
       }
     }
-
-    // Marketplace: require a saved card on the agent's Stripe customer (metadata.stripe_customer_id).
-    const paymentCache = new Map<string, Promise<boolean>>();
-    const paymentResults = await Promise.all(
-      filtered.map(async (agent) => {
-        const cid = agent.stripe_customer_id?.trim();
-        if (!cid) return { agent, ok: false as const };
-        let pending = paymentCache.get(cid);
-        if (!pending) {
-          pending = stripeCustomerHasCard(cid);
-          paymentCache.set(cid, pending);
-        }
-        const ok = await pending;
-        return { agent, ok };
-      })
-    );
-    filtered = paymentResults.filter((r) => r.ok).map((r) => r.agent);
-    console.log(`[AGENT SEARCH] After payment method filter: ${filtered.length} agents`);
 
     // Randomize order so no single agent is always first
     const shuffled = [...filtered];

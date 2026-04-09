@@ -1,9 +1,8 @@
-// Public list of marketplace-ready agents for the home page carousel:
-// approved, profile photo, not paused, has availability, saved card on Stripe customer.
+// Public list of agents for the home page carousel:
+// approved, not paused, has availability in metadata. Photo and payment method not required.
 
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { stripe } from "@/lib/stripe";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -24,21 +23,6 @@ function hasVideoSchedule(videoSchedule: unknown): boolean {
   if (!vs || typeof vs !== "object" || Object.keys(vs).length === 0) return false;
   const days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
   return days.some((day) => vs[day]?.enabled === true);
-}
-
-async function stripeCustomerHasCard(customerId: string): Promise<boolean> {
-  try {
-    const customer = await stripe.customers.retrieve(customerId);
-    if ((customer as { deleted?: boolean }).deleted) return false;
-    const pm = await stripe.paymentMethods.list({
-      customer: customerId,
-      type: "card",
-      limit: 1,
-    });
-    return pm.data.length > 0;
-  } catch {
-    return false;
-  }
 }
 
 function shuffleInPlace<T>(arr: T[]): void {
@@ -62,8 +46,7 @@ export async function GET() {
       return NextResponse.json({ error: "Failed to fetch agents" }, { status: 500 });
     }
 
-    type Pending = FeaturedAgent & { stripeCustomerId: string };
-    const pending: Pending[] = [];
+    const candidates: FeaturedAgent[] = [];
 
     for (const profile of profiles || []) {
       const p = profile as {
@@ -90,9 +73,6 @@ export async function GET() {
 
       if (metadata.paused_account === true) continue;
 
-      const pic = p.profile_picture_url;
-      if (!pic || !String(pic).trim()) continue;
-
       const availability = (metadata.availability as Record<string, unknown>) || {};
       const availabilityByLocation = (availability.availabilityByLocation as Record<string, unknown>) || {};
       const videoSchedule = availability.videoSchedule;
@@ -100,12 +80,9 @@ export async function GET() {
       const hasVideo = hasVideoSchedule(videoSchedule);
       if (!hasInPerson && !hasVideo) continue;
 
-      const stripeCustomerId = String((metadata as { stripe_customer_id?: string }).stripe_customer_id || "").trim();
-      if (!stripeCustomerId) continue;
-
       const specialty = (metadata.specialty as string) || null;
 
-      pending.push({
+      candidates.push({
         id: p.id,
         full_name: p.full_name,
         job_title: p.job_title,
@@ -114,29 +91,8 @@ export async function GET() {
         funeral_home: p.funeral_home,
         agent_city: p.agent_city,
         agent_province: p.agent_province,
-        stripeCustomerId,
       });
     }
-
-    const paymentCache = new Map<string, Promise<boolean>>();
-    const checks = await Promise.all(
-      pending.map(async (row) => {
-        let p = paymentCache.get(row.stripeCustomerId);
-        if (!p) {
-          p = stripeCustomerHasCard(row.stripeCustomerId);
-          paymentCache.set(row.stripeCustomerId, p);
-        }
-        const ok = await p;
-        return { row, ok };
-      })
-    );
-
-    const candidates: FeaturedAgent[] = checks
-      .filter((c) => c.ok)
-      .map(({ row }) => {
-        const { stripeCustomerId: _, ...agent } = row;
-        return agent;
-      });
 
     shuffleInPlace(candidates);
 
