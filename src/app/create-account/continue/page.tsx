@@ -58,7 +58,7 @@ function ProvincesAbleToPracticeField({
       <span className="text-sm text-gray-700 block">
         Provinces you are able to practice in <span className="text-red-600">*</span>
       </span>
-      <p className="text-xs text-gray-500">Select one or more. You will appear in search for video in these provinces; in-person requires an office in that province.</p>
+      <p className="text-xs text-gray-500">Select one or more. If you add video availability you will appear in search for video appointments in these provinces.</p>
       <div
         className="grid grid-cols-1 sm:grid-cols-2 gap-2 border border-gray-300 rounded-md p-3 max-h-52 overflow-y-auto bg-white"
         role="group"
