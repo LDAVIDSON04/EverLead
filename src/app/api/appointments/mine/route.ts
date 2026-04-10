@@ -63,10 +63,9 @@ export async function GET(req: NextRequest) {
     // Fetch all appointments (past and future) so agents can see their full calendar history like Google Calendar
     // The client-side schedule view will filter appointments based on the selected week/day/month
     
-    // Fetch appointments - try with notes first, fallback without if column doesn't exist
+    // appointments.notes was never migrated in production; do not select it.
     let appointments: any[] | null = null;
     let appointmentsError: any = null;
-    let hasNotesColumn = true;
     
     // Fetch all appointments (pending, confirmed, completed) - exclude only cancelled ones
     // IMPORTANT: Include 'completed' status so past/completed appointments remain visible
@@ -126,7 +125,6 @@ export async function GET(req: NextRequest) {
         created_at,
         confirmed_at,
         office_location_id,
-        notes,
         leads (
           id,
           first_name,
@@ -199,20 +197,16 @@ export async function GET(req: NextRequest) {
     }
     
     if (result.error) {
-      // Check if error is due to missing notes or cached_lead_full_name column
-      const missingColumn = result.error.code === '42703' && (
-        result.error.message?.includes('notes') ||
-        result.error.message?.includes('cached_lead_full_name')
-      );
-      if (missingColumn) {
-        hasNotesColumn = !result.error.message?.includes('notes');
-        const resultWithoutNotes = await supabaseServer
+      const missingCachedLeadName =
+        result.error.code === "42703" &&
+        result.error.message?.includes("cached_lead_full_name");
+      if (missingCachedLeadName) {
+        const fallback = await supabaseServer
           .from("appointments")
           .select(
             `
             id,
             lead_id,
-            cached_lead_full_name,
             requested_date,
             requested_window,
             status,
@@ -232,45 +226,18 @@ export async function GET(req: NextRequest) {
           `
           )
           .eq("agent_id", userId)
-          .in("status", ["pending", "confirmed", "completed", "booked", "no_show"]) // Explicitly include all valid statuses except cancelled
+          .in("status", ["pending", "confirmed", "completed", "booked", "no_show"])
           .order("requested_date", { ascending: true })
           .order("created_at", { ascending: true });
-        
-        console.log(`📅 [APPOINTMENTS API] Retry query without notes column:`, {
-          dataCount: resultWithoutNotes.data?.length || 0,
-          hasError: !!resultWithoutNotes.error,
-          error: resultWithoutNotes.error
+
+        console.log(`📅 [APPOINTMENTS API] Retry without cached_lead_full_name:`, {
+          dataCount: fallback.data?.length || 0,
+          hasError: !!fallback.error,
+          error: fallback.error,
         });
-        
-        // Log raw appointments from retry query too
-        if (resultWithoutNotes.data && resultWithoutNotes.data.length > 0) {
-          console.log(`📅 [APPOINTMENTS API] Raw appointments from retry query (BEFORE mapping):`, 
-            resultWithoutNotes.data.map((apt: any) => ({
-              id: apt.id,
-              requested_date: apt.requested_date,
-              confirmed_at: apt.confirmed_at,
-              status: apt.status,
-              requested_window: apt.requested_window,
-              family_name: apt.leads?.full_name || apt.leads?.[0]?.full_name || 'Unknown'
-            }))
-          );
-          
-          // Check if there are any appointments for Jan 5-6, 2026
-          const jan5Appts = resultWithoutNotes.data.filter((apt: any) => {
-            const reqDate = apt.requested_date;
-            const confDate = apt.confirmed_at ? new Date(apt.confirmed_at).toISOString().split('T')[0] : null;
-            return reqDate === '2026-01-05' || reqDate === '2026-01-06' || confDate === '2026-01-05' || confDate === '2026-01-06';
-          });
-          
-          if (jan5Appts.length > 0) {
-            console.log(`📅 [APPOINTMENTS API] Found ${jan5Appts.length} appointments for Jan 5-6 in retry query:`, jan5Appts);
-          } else {
-            console.log(`📅 [APPOINTMENTS API] No appointments found for Jan 5-6, 2026 in retry query`);
-          }
-        }
-        
-        appointments = resultWithoutNotes.data;
-        appointmentsError = resultWithoutNotes.error;
+
+        appointments = fallback.data;
+        appointmentsError = fallback.error;
       } else {
         appointments = result.data;
         appointmentsError = result.error;
