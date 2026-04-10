@@ -133,7 +133,7 @@ export function FeaturedAdvisorsCarousel({ viewAllHref, bookOnlineLocation }: Pr
       <div className="mb-6 md:mb-8 w-full">
         <div className="mb-3 sm:mb-6 md:mb-8 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
           <h2 className="text-2xl md:text-3xl lg:text-[2rem] font-bold text-[#1A1A1A] tracking-tight pr-0 sm:pr-4">
-            Trusted Professionals Across BC
+            Trusted professionals near you
           </h2>
           <span className="self-end text-sm text-[#1A1A1A]/50 sm:self-auto">Loading specialists…</span>
         </div>
@@ -157,7 +157,7 @@ export function FeaturedAdvisorsCarousel({ viewAllHref, bookOnlineLocation }: Pr
     <div className="mb-6 md:mb-8 w-full">
       <div className="mb-3 sm:mb-6 md:mb-8 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
         <h2 className="text-2xl md:text-3xl lg:text-[2rem] font-bold text-[#1A1A1A] tracking-tight pr-0 sm:pr-4">
-          Trusted Professionals Across BC
+          Trusted professionals near you
         </h2>
         <div className="hidden sm:flex flex-wrap items-center justify-end gap-3 shrink-0">
           <Link
