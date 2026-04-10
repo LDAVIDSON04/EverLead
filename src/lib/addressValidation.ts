@@ -48,39 +48,19 @@ function isValidOfficeStreetLine(street: string): boolean {
 }
 
 /**
- * In-person marketplace: if `office_locations` has any rows, at least one must have a
- * non-null/non-empty street_address (not email-like) plus city and province.
- * Metadata cannot override null streets in Supabase — fixes city-only tabs with null street.
- * If there are zero office rows, fall back to legacy metadata (agents not on office_locations yet).
+ * In-person marketplace: require at least one `office_locations` row with a real civic
+ * street_address (not email-like, min length), plus city and province.
+ * Profile metadata is not used — agents must have persisted offices to appear in-person.
  */
 export function hasValidInPersonOfficeForSearch(input: {
   officeLocations: OfficeLocationLike[];
-  business_street?: string | null;
-  business_city?: string | null;
-  business_province?: string | null;
-  business_address?: string | null;
 }): boolean {
   const offices = input.officeLocations || [];
 
-  if (offices.length > 0) {
-    for (const loc of offices) {
-      const street = (loc.street_address ?? "").trim();
-      if (!isValidOfficeStreetLine(street)) continue;
-      if (!(loc.city ?? "").trim() || !(loc.province ?? "").trim()) continue;
-      return true;
-    }
-    return false;
-  }
-
-  const bs = (input.business_street ?? "").trim();
-  const bc = (input.business_city ?? "").trim();
-  const bp = (input.business_province ?? "").trim();
-  if (bs.length >= 3 && bc && bp && !looksLikeEmailAddress(bs)) {
-    return true;
-  }
-
-  const ba = (input.business_address ?? "").trim();
-  if (ba.length >= 5 && bc && bp && !looksLikeEmailAddress(ba)) {
+  for (const loc of offices) {
+    const street = (loc.street_address ?? "").trim();
+    if (!isValidOfficeStreetLine(street)) continue;
+    if (!(loc.city ?? "").trim() || !(loc.province ?? "").trim()) continue;
     return true;
   }
 

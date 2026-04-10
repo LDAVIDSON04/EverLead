@@ -593,10 +593,6 @@ export async function GET(req: NextRequest) {
             city?: string | null;
             province?: string | null;
           }[],
-          business_street: agent.business_street,
-          business_city: agent.business_city,
-          business_province: agent.business_province,
-          business_address: agent.business_address,
         })
       );
       console.log(
