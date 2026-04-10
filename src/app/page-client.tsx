@@ -5,30 +5,18 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Search, MapPin, Star, Calendar, Check, ChevronDown, Heart, Facebook, Instagram, Menu, X, ChevronRight } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
-// Major BC cities for the "Find professionals near you" section (12 cities max)
-const majorBCCities = [
-  "Vancouver, BC",
-  "Victoria, BC",
-  "Kelowna, BC",
-  "Surrey, BC",
-  "Burnaby, BC",
-  "Richmond, BC",
-  "Abbotsford, BC",
-  "Kamloops, BC",
-  "Nanaimo, BC",
-  "Prince George, BC",
-  "Chilliwack, BC",
-  "Penticton, BC",
-];
-
 import { cities } from "@/lib/cities";
+import { getHomeGridCities, type HomeRegion } from "@/lib/homeRegionContent";
 import { FeaturedAdvisorsCarousel } from "@/components/home/FeaturedAdvisorsCarousel";
 
 interface HomePageClientProps {
   initialLocation: string;
+  /** `national` = Canada-wide city grid; otherwise province landing page. */
+  region?: HomeRegion;
 }
 
-export default function HomePageClient({ initialLocation }: HomePageClientProps) {
+export default function HomePageClient({ initialLocation, region = "national" }: HomePageClientProps) {
+  const gridCities = getHomeGridCities(region);
   const router = useRouter();
   const [specialty, setSpecialty] = useState("");
   const [location, setLocation] = useState(initialLocation);
@@ -906,7 +894,7 @@ export default function HomePageClient({ initialLocation }: HomePageClientProps)
           </h2>
 
           <div className="grid grid-cols-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {majorBCCities.map((city) => (
+            {gridCities.map((city) => (
               <Link
                 key={city}
                 href={`/search/choose?location=${encodeURIComponent(city)}`}

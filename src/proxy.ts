@@ -1,10 +1,15 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-export function proxy(request: NextRequest) {
-  const response = NextResponse.next();
+const LOWER_TO_UPPER: Record<string, string> = {
+  bc: "BC",
+  ab: "AB",
+  sk: "SK",
+  mb: "MB",
+  on: "ON",
+};
 
-  // Security headers to help prevent common attacks
+function applySecurityHeaders(response: NextResponse) {
   response.headers.set("X-Frame-Options", "DENY");
   response.headers.set("X-Content-Type-Options", "nosniff");
   response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
@@ -14,7 +19,6 @@ export function proxy(request: NextRequest) {
   );
   response.headers.set("X-XSS-Protection", "1; mode=block");
 
-  // Content-Security-Policy: restrict resource origins (tune as needed for your domains)
   const csp = [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' 'unsafe-eval'", // Next.js requires these
@@ -29,8 +33,26 @@ export function proxy(request: NextRequest) {
     "frame-ancestors 'none'",
   ].join("; ");
   response.headers.set("Content-Security-Policy", csp);
-
   return response;
+}
+
+export function proxy(request: NextRequest) {
+  const pathname = request.nextUrl.pathname;
+  const m = pathname.match(/^\/(bc|ab|sk|mb|on)(\/.*)?$/i);
+  if (m) {
+    const seg = m[1];
+    const upper = LOWER_TO_UPPER[seg.toLowerCase()];
+    if (upper && seg !== upper) {
+      const rest = m[2] ?? "";
+      const url = request.nextUrl.clone();
+      url.pathname = `/${upper}${rest}`;
+      return applySecurityHeaders(NextResponse.redirect(url));
+    }
+  }
+
+  const response = NextResponse.next();
+
+  return applySecurityHeaders(response);
 }
 
 export const config = {

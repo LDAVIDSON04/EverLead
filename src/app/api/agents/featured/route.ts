@@ -32,6 +32,12 @@ function shuffleInPlace<T>(arr: T[]): void {
   }
 }
 
+/** Home carousel: show BC professionals only until multi-province carousel is enabled. */
+function isBritishColumbiaProvince(agentProvince: string | null | undefined): boolean {
+  const p = (agentProvince || "").trim().toUpperCase();
+  return p === "BC" || p === "BRITISH COLUMBIA";
+}
+
 export async function GET() {
   try {
     const { data: profiles, error } = await supabaseAdmin
@@ -94,9 +100,10 @@ export async function GET() {
       });
     }
 
-    shuffleInPlace(candidates);
+    const bcOnly = candidates.filter((c) => isBritishColumbiaProvince(c.agent_province));
+    shuffleInPlace(bcOnly);
 
-    return NextResponse.json({ agents: candidates });
+    return NextResponse.json({ agents: bcOnly });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : "Unknown error";
     console.error("[FEATURED AGENTS]", e);
