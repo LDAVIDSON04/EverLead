@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { checkRateLimit } from "@/lib/rateLimit";
+import { ADDRESS_REJECT_EMAIL_MESSAGE, looksLikeEmailAddress } from "@/lib/addressValidation";
 
 function isEmailAlreadyRegisteredError(message: string | undefined): boolean {
   if (!message) return false;
@@ -86,6 +87,32 @@ export async function POST(req: NextRequest) {
             { error: "Please provide complete address information (street, city, province, postal code)." },
             { status: 400 }
           );
+        }
+
+        if (looksLikeEmailAddress(String(address.street))) {
+          return NextResponse.json({ error: ADDRESS_REJECT_EMAIL_MESSAGE }, { status: 400 });
+        }
+
+        if (business_street && looksLikeEmailAddress(String(business_street))) {
+          return NextResponse.json({ error: ADDRESS_REJECT_EMAIL_MESSAGE }, { status: 400 });
+        }
+        if (business_address && looksLikeEmailAddress(String(business_address))) {
+          return NextResponse.json({ error: ADDRESS_REJECT_EMAIL_MESSAGE }, { status: 400 });
+        }
+
+        if (office_locations && Array.isArray(office_locations)) {
+          for (const loc of office_locations) {
+            const st = (loc?.street_address ?? "").trim();
+            if (!st) {
+              return NextResponse.json(
+                { error: "Each office location must include a street address." },
+                { status: 400 }
+              );
+            }
+            if (looksLikeEmailAddress(st)) {
+              return NextResponse.json({ error: ADDRESS_REJECT_EMAIL_MESSAGE }, { status: 400 });
+            }
+          }
         }
 
         // Validate notification_cities (use from address if not provided)

@@ -4,6 +4,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { cityToProvince } from "@/lib/cities";
+import { hasValidInPersonOfficeForSearch } from "@/lib/addressValidation";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -580,6 +581,27 @@ export async function GET(req: NextRequest) {
       }
 
       console.log(`✅ [AGENT SEARCH] After location filter "${location}" (mode=${mode}): ${filtered.length} agents matched`);
+    }
+
+    // In-person: require a real physical office (not an email in street fields) — metadata or office_locations
+    if (mode === "in-person" && location) {
+      const beforeOffice = filtered.length;
+      filtered = filtered.filter((agent) =>
+        hasValidInPersonOfficeForSearch({
+          officeLocations: ((agent as any).officeLocations || []) as {
+            street_address?: string | null;
+            city?: string | null;
+            province?: string | null;
+          }[],
+          business_street: agent.business_street,
+          business_city: agent.business_city,
+          business_province: agent.business_province,
+          business_address: agent.business_address,
+        })
+      );
+      console.log(
+        `✅ [AGENT SEARCH] In-person valid office filter: ${beforeOffice} -> ${filtered.length} agents`
+      );
     }
 
     // Video mode: show ALL agents in province (that profession) when customer chooses online video call - no video availability required

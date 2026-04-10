@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { supabaseServer } from "@/lib/supabaseServer";
+import { validateAddressLine } from "@/lib/addressValidation";
 
 export async function GET(request: NextRequest) {
   try {
@@ -117,6 +118,15 @@ export async function POST(request: NextRequest) {
       lastName,
       profilePictureUrl: profilePictureUrl ? "provided" : "not provided",
     });
+
+    if (businessStreet !== undefined && String(businessStreet).trim()) {
+      const v = validateAddressLine(businessStreet, { optional: true });
+      if (!v.ok) return NextResponse.json({ error: v.error }, { status: 400 });
+    }
+    if (businessAddress !== undefined && String(businessAddress).trim()) {
+      const v = validateAddressLine(businessAddress, { optional: true });
+      if (!v.ok) return NextResponse.json({ error: v.error }, { status: 400 });
+    }
 
     const updateData: any = {};
 

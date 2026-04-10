@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { geocodeLocation } from "@/lib/geocoding";
+import { ADDRESS_REJECT_EMAIL_MESSAGE, looksLikeEmailAddress, validateAddressLine } from "@/lib/addressValidation";
 
 // GET: Fetch all office locations for the current agent
 export async function GET(request: NextRequest) {
@@ -57,12 +58,24 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "City and province are required" }, { status: 400 });
     }
 
+    const streetTrim = (street_address ?? "").trim();
+    if (!streetTrim) {
+      return NextResponse.json(
+        { error: "Street address is required for each office location." },
+        { status: 400 }
+      );
+    }
+    const streetCheck = validateAddressLine(streetTrim, { optional: true });
+    if (!streetCheck.ok) {
+      return NextResponse.json({ error: streetCheck.error }, { status: 400 });
+    }
+
     // Geocode the address to get coordinates (use full address for accuracy)
     let latitude: number | null = null;
     let longitude: number | null = null;
 
     try {
-      const geocodeResult = await geocodeLocation(city, province, street_address, postal_code);
+      const geocodeResult = await geocodeLocation(city, province, streetTrim, postal_code);
       if (geocodeResult) {
         latitude = geocodeResult.latitude;
         longitude = geocodeResult.longitude;
@@ -88,7 +101,7 @@ export async function POST(request: NextRequest) {
       .insert({
         agent_id: user.id,
         name: name || "Main Office",
-        street_address: street_address || null,
+        street_address: streetTrim,
         city,
         province,
         postal_code: postal_code || null,
@@ -162,7 +175,20 @@ export async function PUT(request: NextRequest) {
 
     const updateData: any = {};
     if (name !== undefined) updateData.name = name;
-    if (street_address !== undefined) updateData.street_address = street_address;
+    if (street_address !== undefined) {
+      const st = String(street_address).trim();
+      if (st) {
+        if (looksLikeEmailAddress(st)) {
+          return NextResponse.json({ error: ADDRESS_REJECT_EMAIL_MESSAGE }, { status: 400 });
+        }
+        updateData.street_address = st;
+      } else {
+        return NextResponse.json(
+          { error: "Street address cannot be empty. Remove the office or enter a valid street address." },
+          { status: 400 }
+        );
+      }
+    }
     if (city !== undefined) updateData.city = city;
     if (province !== undefined) updateData.province = province;
     if (postal_code !== undefined) updateData.postal_code = postal_code;
