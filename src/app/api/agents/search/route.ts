@@ -426,8 +426,8 @@ export async function GET(req: NextRequest) {
         }
       } else {
         // IN-PERSON MODE (all 4 professions: funeral, lawyer, insurance, financial):
-        // Only show agents who have an office or availability in the searched city.
-        // e.g. Prince George in-person → only agents in Prince George; no province-wide in-person.
+        // City search: only agents with a real office_locations row in that city (not metadata.availability alone).
+        // Province-only search: agents licensed / with an office in that province (see isProvinceSearch branch).
         let isProvinceSearch = false;
         let matchedProvince: string | null = null;
 
@@ -555,41 +555,34 @@ export async function GET(req: NextRequest) {
           // If no postal code match, fall through to city matching
         }
         
-        // In-person: ONLY agents with an office in the searched city. No province-wide.
-        // City matching: agent has office or availability in the searched city
+        // In-person city: office_locations row in this city with valid civic address (not availability metadata).
         const normalizedSearch = normalizeCity(searchCity);
         if (!normalizedSearch) return false;
-        
-        const hasLocationInList = agent.availabilityLocations.some((loc: string) => {
-          if (!loc) return false;
-          return fuzzyCityMatch(loc, searchCity);
-        });
-        
-        // Also check office locations for city match
+
         const officeLocations = (agent as any).officeLocations || [];
         const matchesOfficeCity = officeLocations.some((loc: any) => {
           if (!loc.city) return false;
-          return fuzzyCityMatch(loc.city, searchCity);
+          if (!fuzzyCityMatch(loc.city, searchCity)) return false;
+          return hasValidInPersonOfficeForSearch({ officeLocations: [loc] });
         });
-        
+
         // If province was specified in search, also check province match
         if (searchProvince) {
           const searchProvinceNormalized = normalizeProvince(searchProvince);
           const agentProvinceNormalized = normalizeProvince(agent.agent_province || '');
-          const officeLocations = (agent as any).officeLocations || [];
           const officeProvinces = officeLocations.map((loc: any) => normalizeProvince(loc.province || ''));
           
           const provinceMatches = agentProvinceNormalized === searchProvinceNormalized || 
                                   officeProvinces.includes(searchProvinceNormalized || '');
           
-          if ((hasLocationInList || matchesOfficeCity) && provinceMatches) {
+          if (matchesOfficeCity && provinceMatches) {
             console.log(`[AGENT SEARCH] Agent ${agent.id} matches city "${searchCity}" and province "${searchProvince}"`);
             return true;
           }
           return false;
         }
         
-        if (hasLocationInList || matchesOfficeCity) {
+        if (matchesOfficeCity) {
           console.log(`[AGENT SEARCH] Agent ${agent.id} matches location "${location}" (searchCity: "${searchCity}")`);
           return true;
         }
