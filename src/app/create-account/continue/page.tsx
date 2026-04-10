@@ -46,6 +46,47 @@ type Role =
 const inputClassName =
   "w-full h-11 px-3 bg-white border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-black focus:border-black";
 
+function ProvincesAbleToPracticeField({
+  selected,
+  onChange,
+}: {
+  selected: string[];
+  onChange: (next: string[]) => void;
+}) {
+  return (
+    <div className="space-y-2">
+      <span className="text-sm text-gray-700 block">
+        Provinces you are able to practice in <span className="text-red-600">*</span>
+      </span>
+      <p className="text-xs text-gray-500">Select one or more. You will appear in search for video in these provinces; in-person requires an office in that province.</p>
+      <div
+        className="grid grid-cols-1 sm:grid-cols-2 gap-2 border border-gray-300 rounded-md p-3 max-h-52 overflow-y-auto bg-white"
+        role="group"
+        aria-label="Provinces you are able to practice in"
+      >
+        {PROVINCE_OPTIONS.filter((p) => p.value).map((p) => (
+          <label
+            key={p.value}
+            className="flex items-center gap-2 cursor-pointer text-sm text-gray-700"
+          >
+            <input
+              type="checkbox"
+              checked={selected.includes(p.value)}
+              onChange={() => {
+                onChange(
+                  selected.includes(p.value) ? selected.filter((x) => x !== p.value) : [...selected, p.value]
+                );
+              }}
+              className="w-4 h-4 border-2 border-gray-300 rounded shrink-0"
+            />
+            {p.label}
+          </label>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function CreateAccountContinuePage() {
   const router = useRouter();
   const [step1Industry, setStep1Industry] = useState<string>("");
@@ -254,8 +295,16 @@ export default function CreateAccountContinuePage() {
         setError("Please complete all fields for your role.");
         return;
       }
+      if (authorizedProvinces.length === 0) {
+        setError("Select at least one province you are able to practice in.");
+        return;
+      }
     }
     if (showFinancial) {
+      if (authorizedProvinces.length === 0) {
+        setError("Select at least one province you are able to practice in.");
+        return;
+      }
       if (!isRegistered || !eoInsuranceConfirmed) {
         setError("Please complete all fields for your role and confirm E&O coverage.");
         return;
@@ -681,38 +730,10 @@ export default function CreateAccountContinuePage() {
                   required
                 />
               </div>
-              <div className="space-y-2">
-                <span className="text-sm text-gray-700 block">
-                  Provinces you are authorized to practice in <span className="text-red-600">*</span>
-                </span>
-                <p className="text-xs text-gray-500">Select one or more.</p>
-                <div
-                  className="grid grid-cols-1 sm:grid-cols-2 gap-2 border border-gray-300 rounded-md p-3 max-h-52 overflow-y-auto bg-white"
-                  role="group"
-                  aria-label="Provinces you are authorized to practice in"
-                >
-                  {PROVINCE_OPTIONS.filter((p) => p.value).map((p) => (
-                    <label
-                      key={p.value}
-                      className="flex items-center gap-2 cursor-pointer text-sm text-gray-700"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={authorizedProvinces.includes(p.value)}
-                        onChange={() => {
-                          setAuthorizedProvinces((prev) =>
-                            prev.includes(p.value)
-                              ? prev.filter((x) => x !== p.value)
-                              : [...prev, p.value]
-                          );
-                        }}
-                        className="w-4 h-4 border-2 border-gray-300 rounded shrink-0"
-                      />
-                      {p.label}
-                    </label>
-                  ))}
-                </div>
-              </div>
+              <ProvincesAbleToPracticeField
+                selected={authorizedProvinces}
+                onChange={(next) => setAuthorizedProvinces(next)}
+              />
               <div className="space-y-3 border-t pt-6">
                 <label className="block text-sm text-gray-700 font-medium">Office Locations <span className="text-red-600">*</span></label>
                 {officeLocations.map((loc, index) => (
@@ -872,6 +893,10 @@ export default function CreateAccountContinuePage() {
                   ))}
                 </div>
               </div>
+              <ProvincesAbleToPracticeField
+                selected={authorizedProvinces}
+                onChange={(next) => setAuthorizedProvinces(next)}
+              />
               <div className="space-y-3 border-t pt-6">
                 <label className="block text-sm text-gray-700 font-medium">Office Locations <span className="text-red-600">*</span></label>
                 {officeLocations.map((loc, index) => (
@@ -1057,6 +1082,10 @@ export default function CreateAccountContinuePage() {
                   </span>
                 </label>
               </div>
+              <ProvincesAbleToPracticeField
+                selected={authorizedProvinces}
+                onChange={(next) => setAuthorizedProvinces(next)}
+              />
               <div className="space-y-3 border-t pt-6">
                 <label className="block text-sm text-gray-700 font-medium">Office Locations <span className="text-red-600">*</span></label>
                 {officeLocations.map((loc, index) => (

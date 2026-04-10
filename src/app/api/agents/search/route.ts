@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { cityToProvince } from "@/lib/cities";
 import { hasValidInPersonOfficeForSearch } from "@/lib/addressValidation";
+import { agentSearchMatchesAuthorizedProvinces } from "@/lib/authorizedProvincesSearch";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -38,6 +39,8 @@ type AgentSearchResult = {
   minimum_portfolio_size?: string | null;
   /** From profile.metadata; financial planners who also sell insurance — show in insurance searches */
   qualified_insurance_products?: boolean;
+  /** Comma-separated provinces (codes or names) where the agent may practice; when set, restricts search by province */
+  authorized_provinces?: string | null;
 };
 
 // Agent has set video availability if videoSchedule exists and at least one day is enabled
@@ -334,6 +337,10 @@ export async function GET(req: NextRequest) {
             qualified_insurance_products:
               (metadata as any)?.qualified_insurance_products === true ||
               (metadata as any)?.qualified_insurance_products === 'true',
+            authorized_provinces:
+              (metadata as any)?.authorized_provinces != null
+                ? String((metadata as any).authorized_provinces).trim() || null
+                : null,
           };
         } catch (err) {
           console.error(`[AGENT SEARCH] Error mapping agent ${profile.id}:`, err);
@@ -598,6 +605,21 @@ export async function GET(req: NextRequest) {
       console.log(
         `✅ [AGENT SEARCH] In-person valid office filter: ${beforeOffice} -> ${filtered.length} agents`
       );
+    }
+
+    // When metadata.authorized_provinces is set (lawyers, financial, insurance), only show in those provinces (video + in-person).
+    if (location) {
+      const locationParts = location.toLowerCase().trim().split(",").map((s) => s.trim());
+      const searchProvinceSegment = locationParts.length > 1 ? locationParts[1] : null;
+      if (searchProvinceSegment) {
+        const beforeAuth = filtered.length;
+        filtered = filtered.filter((agent) =>
+          agentSearchMatchesAuthorizedProvinces(agent.authorized_provinces, searchProvinceSegment)
+        );
+        console.log(
+          `✅ [AGENT SEARCH] Authorized provinces filter ("${searchProvinceSegment}"): ${beforeAuth} -> ${filtered.length} agents`
+        );
+      }
     }
 
     // Video mode: show ALL agents in province (that profession) when customer chooses online video call - no video availability required
