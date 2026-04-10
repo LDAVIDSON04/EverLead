@@ -388,7 +388,8 @@ export async function GET(req: NextRequest) {
         return normalized;
       };
 
-      // VIDEO MODE: filter by province only (all agents in province; show for any BC city when searching BC)
+      // VIDEO MODE: filter by province — use metadata.authorized_provinces when set (multi-province license),
+      // else legacy: agent_province or office_locations provinces.
       if (mode === 'video') {
         let matchedProvince: string | null = null;
         if (searchProvince) {
@@ -400,14 +401,24 @@ export async function GET(req: NextRequest) {
           const provAbbr = cityToProvince[searchCity];
           if (provAbbr) matchedProvince = normalizeProvince(provAbbr);
         }
+        let segmentForAuth: string | null = searchProvince;
+        if (!segmentForAuth && locationParts.length === 1) {
+          segmentForAuth = searchCity.length <= 3 ? searchCity : matchedProvince || searchCity;
+        }
+        if (!segmentForAuth) segmentForAuth = matchedProvince;
         if (matchedProvince) {
           filtered = filtered.filter((agent) => {
-            const agentProv = normalizeProvince((agent.agent_province || '').trim());
+            const authRaw = agent.authorized_provinces;
+            if (authRaw != null && String(authRaw).trim() !== "") {
+              return segmentForAuth
+                ? agentSearchMatchesAuthorizedProvinces(authRaw, segmentForAuth)
+                : false;
+            }
+            const agentProv = normalizeProvince((agent.agent_province || "").trim());
             const officeProvinces = ((agent as any).officeLocations || []).map((loc: any) =>
-              normalizeProvince((loc.province || '').trim())
+              normalizeProvince((loc.province || "").trim())
             );
-            const inProvince = agentProv === matchedProvince || officeProvinces.includes(matchedProvince!);
-            return inProvince;
+            return agentProv === matchedProvince || officeProvinces.includes(matchedProvince!);
           });
           console.log(`✅ [AGENT SEARCH] Video mode: ${filtered.length} agents in province "${matchedProvince}"`);
         } else {
