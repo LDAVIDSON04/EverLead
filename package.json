@@ -24,6 +24,7 @@
     "next": "16.0.7",
     "react": "19.2.0",
     "react-dom": "19.2.0",
+    "react-easy-crop": "^5.5.7",
     "stripe": "^19.3.1",
     "tailwind-merge": "^3.4.0",
     "twilio": "^5.12.0",

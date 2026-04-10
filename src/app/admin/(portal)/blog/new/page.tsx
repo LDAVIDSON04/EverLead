@@ -7,6 +7,7 @@ import Image from "next/image";
 import { supabaseClient } from "@/lib/supabaseClient";
 import { useRequireRole } from "@/lib/hooks/useRequireRole";
 import { ArrowLeft, Loader2, Image as ImageIcon, X } from "lucide-react";
+import { BlogImageCropModal } from "@/components/blog/BlogImageCropModal";
 
 export default function AdminNewBlogPostPage() {
   useRequireRole("admin");
@@ -14,6 +15,7 @@ export default function AdminNewBlogPostPage() {
   const [body, setBody] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [pendingCropSrc, setPendingCropSrc] = useState<string | null>(null);
   const [status, setStatus] = useState<"draft" | "published">("published");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -31,9 +33,8 @@ export default function AdminNewBlogPostPage() {
       return;
     }
     setError(null);
-    setImageFile(file);
     const reader = new FileReader();
-    reader.onloadend = () => setImagePreview(reader.result as string);
+    reader.onloadend = () => setPendingCropSrc(reader.result as string);
     reader.readAsDataURL(file);
     e.target.value = "";
   };
@@ -100,6 +101,15 @@ export default function AdminNewBlogPostPage() {
 
   return (
     <div className="p-6 max-w-2xl mx-auto">
+      <BlogImageCropModal
+        imageSrc={pendingCropSrc}
+        onCancel={() => setPendingCropSrc(null)}
+        onComplete={(file) => {
+          setImageFile(file);
+          setImagePreview(URL.createObjectURL(file));
+          setPendingCropSrc(null);
+        }}
+      />
       <Link
         href="/admin/blog"
         className="inline-flex items-center gap-2 text-sm text-neutral-600 hover:text-neutral-900 mb-6"

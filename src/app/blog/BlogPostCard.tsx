@@ -102,11 +102,11 @@ export function BlogPostCard({ post }: { post: PostWithAuthor }) {
           )}
         </div>
         {post.image_url && (
-          <div className="mt-4 rounded-lg overflow-hidden border border-neutral-200">
+          <div className="mt-4 rounded-lg overflow-hidden border border-neutral-200 bg-neutral-50">
             <img
               src={post.image_url}
               alt=""
-              className="w-full h-auto object-cover max-h-96"
+              className="w-full h-auto max-h-[min(90vh,960px)] object-contain"
             />
           </div>
         )}

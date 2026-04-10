@@ -10,6 +10,7 @@ import {
   Image as ImageIcon,
   X,
 } from "lucide-react";
+import { BlogImageCropModal } from "@/components/blog/BlogImageCropModal";
 
 const TRUNCATE_LENGTH = 200;
 
@@ -48,6 +49,7 @@ export default function AgentBlogPage() {
   const [body, setBody] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [pendingCropSrc, setPendingCropSrc] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -104,9 +106,8 @@ export default function AgentBlogPage() {
       return;
     }
     setError(null);
-    setImageFile(file);
     const reader = new FileReader();
-    reader.onloadend = () => setImagePreview(reader.result as string);
+    reader.onloadend = () => setPendingCropSrc(reader.result as string);
     reader.readAsDataURL(file);
     e.target.value = "";
   };
@@ -202,6 +203,15 @@ export default function AgentBlogPage() {
 
   return (
     <div className="p-6 md:p-8 max-w-2xl mx-auto">
+      <BlogImageCropModal
+        imageSrc={pendingCropSrc}
+        onCancel={() => setPendingCropSrc(null)}
+        onComplete={(file) => {
+          setImageFile(file);
+          setImagePreview(URL.createObjectURL(file));
+          setPendingCropSrc(null);
+        }}
+      />
       {/* LinkedIn-style create post card */}
       <div className="rounded-lg border border-gray-200 bg-white shadow-sm overflow-hidden mb-6">
         <input

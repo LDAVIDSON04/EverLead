@@ -5,6 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { supabaseClient } from "@/lib/supabaseClient";
 import { ArrowLeft, Loader2, Upload, X, Trash2 } from "lucide-react";
+import { BlogImageCropModal } from "@/components/blog/BlogImageCropModal";
 
 export default function EditBlogPostPage() {
   const router = useRouter();
@@ -16,6 +17,7 @@ export default function EditBlogPostPage() {
   const [existingImageUrl, setExistingImageUrl] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [pendingCropSrc, setPendingCropSrc] = useState<string | null>(null);
   const [clearImage, setClearImage] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -62,9 +64,8 @@ export default function EditBlogPostPage() {
       return;
     }
     setError(null);
-    setImageFile(file);
     const reader = new FileReader();
-    reader.onloadend = () => setImagePreview(reader.result as string);
+    reader.onloadend = () => setPendingCropSrc(reader.result as string);
     reader.readAsDataURL(file);
   };
 
@@ -176,6 +177,16 @@ export default function EditBlogPostPage() {
 
   return (
     <div className="p-6 md:p-8 max-w-2xl mx-auto">
+      <BlogImageCropModal
+        imageSrc={pendingCropSrc}
+        onCancel={() => setPendingCropSrc(null)}
+        onComplete={(file) => {
+          setImageFile(file);
+          setImagePreview(URL.createObjectURL(file));
+          setClearImage(false);
+          setPendingCropSrc(null);
+        }}
+      />
       <Link
         href="/agent/blog"
         className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-6"
