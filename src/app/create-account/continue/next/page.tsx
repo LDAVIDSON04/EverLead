@@ -571,6 +571,7 @@ export default function CreateAccountNextPage() {
                   <li>Financial advisors</li>
                   <li>Funeral pre-planning professionals</li>
                   <li>Insurance advisors</li>
+                  <li>Tax accountants</li>
                 </ul>
                 <p className="mb-2">Soradin provides educational resources and scheduling tools to facilitate connections between users and professionals.</p>
                 <p>Soradin does not provide legal, financial, insurance, funeral, or other professional services. All services are provided directly by the professionals listed on the Platform.</p>
@@ -588,12 +589,13 @@ export default function CreateAccountNextPage() {
               <section>
                 <h3 className="font-semibold text-black mb-2">3. Users and Professionals</h3>
                 <p className="mb-2">Soradin may be used by both individuals seeking information or services (&quot;Users&quot;) and professionals offering services (&quot;Professionals&quot;).</p>
-                <p className="mb-2">Professionals using the Platform may include lawyers, financial advisors, insurance professionals, funeral planning professionals, or other specialists involved in estate planning.</p>
+                <p className="mb-2">Professionals using the Platform may include lawyers, financial advisors, insurance professionals, funeral planning professionals, tax accountants, or other specialists involved in estate planning.</p>
                 <p className="mb-2">Professionals are responsible for ensuring that they:</p>
                 <ul className="list-disc pl-5 space-y-1 mb-2">
                   <li>Hold all required licenses or certifications</li>
                   <li>Comply with applicable laws and professional regulations</li>
                   <li>Provide accurate information about their qualifications and services</li>
+                  <li>Ensure their services comply with the laws and professional regulations of their respective province or territory</li>
                 </ul>
                 <p>Soradin does not independently verify all professional credentials and does not guarantee the quality, legality, or outcome of services provided by professionals.</p>
               </section>
@@ -685,8 +687,8 @@ export default function CreateAccountNextPage() {
               </section>
               <section>
                 <h3 className="font-semibold text-black mb-2">14. Governing Law</h3>
-                <p className="mb-2">These Terms are governed by and interpreted in accordance with the laws of the Province of British Columbia and the laws of Canada applicable therein, without regard to conflict of law principles.</p>
-                <p>Any disputes arising from these Terms or the use of the Platform shall be subject to the exclusive jurisdiction of the courts located in British Columbia, Canada.</p>
+                <p className="mb-2">These Terms are governed by and interpreted in accordance with the laws of the Province of Ontario and the laws of Canada applicable therein, without regard to conflict of law principles.</p>
+                <p>Any disputes arising from these Terms or the use of the Platform shall be subject to the exclusive jurisdiction of the courts located in Ontario, Canada.</p>
               </section>
               <section>
                 <h3 className="font-semibold text-black mb-2">15. Contact</h3>

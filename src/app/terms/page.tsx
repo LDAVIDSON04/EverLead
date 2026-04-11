@@ -64,6 +64,7 @@ export default function TermsPage() {
                   <li>Financial advisors</li>
                   <li>Funeral pre-planning professionals</li>
                   <li>Insurance advisors</li>
+                  <li>Tax accountants</li>
                 </ul>
                 <p className="mb-3">
                   Soradin provides educational resources and scheduling tools to facilitate connections between users and professionals.
@@ -92,13 +93,14 @@ export default function TermsPage() {
                   Soradin may be used by both individuals seeking information or services (&quot;Users&quot;) and professionals offering services (&quot;Professionals&quot;).
                 </p>
                 <p className="mb-3">
-                  Professionals using the Platform may include lawyers, financial advisors, insurance professionals, funeral planning professionals, or other specialists involved in estate planning.
+                  Professionals using the Platform may include lawyers, financial advisors, insurance professionals, funeral planning professionals, tax accountants, or other specialists involved in estate planning.
                 </p>
                 <p className="mb-2">Professionals are responsible for ensuring that they:</p>
                 <ul className="list-disc pl-6 space-y-1">
                   <li>Hold all required licenses or certifications</li>
                   <li>Comply with applicable laws and professional regulations</li>
                   <li>Provide accurate information about their qualifications and services</li>
+                  <li>Ensure their services comply with the laws and professional regulations of their respective province or territory</li>
                 </ul>
                 <p className="mt-3">
                   Soradin does not independently verify all professional credentials and does not guarantee the quality, legality, or outcome of services provided by professionals.
@@ -254,10 +256,10 @@ export default function TermsPage() {
               <section>
                 <h2 className="mb-3 font-semibold text-gray-900">14. Governing Law</h2>
                 <p className="mb-3">
-                  These Terms are governed by and interpreted in accordance with the laws of the Province of British Columbia and the laws of Canada applicable therein, without regard to conflict of law principles.
+                  These Terms are governed by and interpreted in accordance with the laws of the Province of Ontario and the laws of Canada applicable therein, without regard to conflict of law principles.
                 </p>
                 <p>
-                  Any disputes arising from these Terms or the use of the Platform shall be subject to the exclusive jurisdiction of the courts located in British Columbia, Canada.
+                  Any disputes arising from these Terms or the use of the Platform shall be subject to the exclusive jurisdiction of the courts located in Ontario, Canada.
                 </p>
               </section>
 
