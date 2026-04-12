@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabaseClient } from '@/lib/supabaseClient';
 import { maskName, maskEmail, maskPhone } from '@/lib/masking';
+import { formatBookingServiceType } from '@/lib/formatBookingServiceType';
 
 type LeadSummary = {
   id: string;
@@ -151,15 +152,6 @@ export default function AvailableAppointments({
     if (lower === 'warm') return 'Warm';
     if (lower === 'cold') return 'Cold';
     return urgency;
-  }
-
-  function formatServiceType(service: string | null) {
-    if (!service) return 'N/A';
-    if (service === 'cremation') return 'Cremation';
-    if (service === 'burial') return 'Burial';
-    if (service === 'unsure') return 'Unsure';
-    // Comma-separated questionnaire answers (lawyer, financial, insurance)
-    return service;
   }
 
   async function handleViewDetails(appointmentId: string, leadId: string) {
@@ -319,7 +311,7 @@ export default function AvailableAppointments({
                   <div className="flex items-center gap-2">
                     {lead?.service_type && (
                       <p className="text-xs text-[#6b6b6b]">
-                        <strong>Service:</strong> {formatServiceType(lead.service_type)}
+                        <strong>Service:</strong> {formatBookingServiceType(lead.service_type)}
                       </p>
                     )}
                     {lead?.urgency_level && (
@@ -518,7 +510,7 @@ export default function AvailableAppointments({
                           <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
                             Service type
                           </dt>
-                          <dd className="mt-1 text-[#2a2a2a]">{formatServiceType(fullLead.service_type)}</dd>
+                          <dd className="mt-1 text-[#2a2a2a]">{formatBookingServiceType(fullLead.service_type)}</dd>
                         </div>
                       )}
                       {fullLead.urgency_level && (

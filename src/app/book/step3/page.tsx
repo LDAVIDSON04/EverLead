@@ -17,6 +17,12 @@ const supabaseClient = createClient(
 // Profession from agent metadata.agent_role (create-account flow)
 type BookingProfession = "funeral" | "lawyer" | "financial" | "insurance";
 
+/** Single value for "Other" across professions; stored in leads.service_type */
+const BOOKING_OTHER_OPTION_VALUE = "other";
+
+const OTHER_NOTE_PLACEHOLDER =
+  "Please leave a note for the professional so they can be best prepared for your meeting.";
+
 const BOOKING_QUESTIONS: Record<
   BookingProfession,
   { question: string; subtext: string; options: { value: string; label: string }[]; multi: boolean }
@@ -28,7 +34,7 @@ const BOOKING_QUESTIONS: Record<
     options: [
       { value: "cremation", label: "Cremation" },
       { value: "burial", label: "Burial" },
-      { value: "unsure", label: "Unsure" },
+      { value: BOOKING_OTHER_OPTION_VALUE, label: "Other" },
     ],
   },
   lawyer: {
@@ -41,7 +47,7 @@ const BOOKING_QUESTIONS: Record<
       { value: "Power of attorney / representation agreement", label: "Power of attorney / representation agreement" },
       { value: "Setting up a trust", label: "Setting up a trust" },
       { value: "Probate / estate administration", label: "Probate / estate administration" },
-      { value: "Not sure yet", label: "Not sure yet." },
+      { value: BOOKING_OTHER_OPTION_VALUE, label: "Other" },
     ],
   },
   financial: {
@@ -54,7 +60,7 @@ const BOOKING_QUESTIONS: Record<
       { value: "Reducing taxes on my estate", label: "Reducing taxes on my estate" },
       { value: "Planning charitable or legacy gifts", label: "Planning charitable or legacy gifts" },
       { value: "General financial readiness", label: "General financial readiness" },
-      { value: "Not sure yet", label: "Not sure yet." },
+      { value: BOOKING_OTHER_OPTION_VALUE, label: "Other" },
     ],
   },
   insurance: {
@@ -66,7 +72,7 @@ const BOOKING_QUESTIONS: Record<
       { value: "Reviewing or updating my current policy", label: "Reviewing or updating my current policy" },
       { value: "Covering funeral and final expenses", label: "Covering funeral and final expenses" },
       { value: "Protecting my family financially", label: "Protecting my family financially" },
-      { value: "I'm not sure — I want guidance", label: "I'm not sure — I want guidance." },
+      { value: BOOKING_OTHER_OPTION_VALUE, label: "Other" },
     ],
   },
 };
@@ -104,6 +110,7 @@ function BookingStep3Content() {
   });
   const [selectedService, setSelectedService] = useState<string>(""); // funeral: single
   const [selectedServices, setSelectedServices] = useState<string[]>([]); // lawyer/financial/insurance: multi
+  const [otherNote, setOtherNote] = useState("");
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [isBooking, setIsBooking] = useState(false);
@@ -258,6 +265,11 @@ function BookingStep3Content() {
   const profession: BookingProfession = getBookingProfession(agentRole);
   const questionConfig = BOOKING_QUESTIONS[profession];
 
+  const isOtherSelected =
+    questionConfig.multi
+      ? selectedServices.includes(BOOKING_OTHER_OPTION_VALUE)
+      : selectedService === BOOKING_OTHER_OPTION_VALUE;
+
   const validateForm = (): boolean => {
     const errors: Record<string, string> = {};
 
@@ -275,12 +287,27 @@ function BookingStep3Content() {
       }
     }
 
+    if (isOtherSelected && !otherNote.trim()) {
+      errors.otherNote =
+        "Please leave a note so your professional knows how to prepare for your appointment.";
+    }
+
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
   const handleServiceSelect = (service: string) => {
     setSelectedService(service);
+    if (service !== BOOKING_OTHER_OPTION_VALUE) {
+      setOtherNote("");
+      if (formErrors.otherNote) {
+        setFormErrors((prev) => {
+          const newErrors = { ...prev };
+          delete newErrors.otherNote;
+          return newErrors;
+        });
+      }
+    }
     setError(null);
     if (formErrors.service) {
       setFormErrors((prev) => {
@@ -292,9 +319,20 @@ function BookingStep3Content() {
   };
 
   const handleMultiToggle = (value: string) => {
-    setSelectedServices((prev) =>
-      prev.includes(value) ? prev.filter((s) => s !== value) : [...prev, value]
-    );
+    setSelectedServices((prev) => {
+      const removing = prev.includes(value);
+      const next = removing ? prev.filter((s) => s !== value) : [...prev, value];
+      if (removing && value === BOOKING_OTHER_OPTION_VALUE) {
+        setOtherNote("");
+        setFormErrors((prev) => {
+          if (!prev.otherNote) return prev;
+          const newErrors = { ...prev };
+          delete newErrors.otherNote;
+          return newErrors;
+        });
+      }
+      return next;
+    });
     setError(null);
     if (formErrors.service) {
       setFormErrors((prev) => {
@@ -317,6 +355,11 @@ function BookingStep3Content() {
       ? selectedServices.join(", ")
       : selectedService;
 
+    let notesPayload = `Date of Birth: ${dateOfBirth}`;
+    if (isOtherSelected && otherNote.trim()) {
+      notesPayload += `\n\nWhat they would like help with:\n${otherNote.trim()}`;
+    }
+
     try {
       const res = await fetch("/api/agents/book", {
         method: "POST",
@@ -332,7 +375,7 @@ function BookingStep3Content() {
           city: searchedCity || agentInfo?.agent_city || null,
           province: agentInfo?.agent_province || null,
           serviceType: serviceTypeValue,
-          notes: `Date of Birth: ${dateOfBirth}`,
+          notes: notesPayload,
           officeLocationId: officeLocationId || null,
           appointmentType: mode, // "in-person" | "video"
           ...(rescheduleAppointmentId ? { rescheduleAppointmentId } : {}),
@@ -544,6 +587,39 @@ function BookingStep3Content() {
                 )
               )}
             </div>
+
+            {isOtherSelected && (
+              <div className="mt-4">
+                <label htmlFor="booking-other-note" className="block text-sm font-medium text-gray-700 mb-2">
+                  Tell the professional what you&apos;re looking for <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  id="booking-other-note"
+                  value={otherNote}
+                  onChange={(e) => {
+                    setOtherNote(e.target.value);
+                    if (formErrors.otherNote) {
+                      setFormErrors((prev) => {
+                        const next = { ...prev };
+                        delete next.otherNote;
+                        return next;
+                      });
+                    }
+                    setError(null);
+                  }}
+                  rows={4}
+                  placeholder={OTHER_NOTE_PLACEHOLDER}
+                  className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-800 resize-y min-h-[100px] text-gray-900 placeholder:text-gray-400/90 ${
+                    formErrors.otherNote ? "border-red-500" : "border-gray-300"
+                  }`}
+                  aria-invalid={!!formErrors.otherNote}
+                />
+                {formErrors.otherNote && (
+                  <p className="text-sm text-red-500 mt-1">{formErrors.otherNote}</p>
+                )}
+              </div>
+            )}
+
             {formErrors.service && (
               <p className="text-sm text-red-500 mt-2">{formErrors.service}</p>
             )}

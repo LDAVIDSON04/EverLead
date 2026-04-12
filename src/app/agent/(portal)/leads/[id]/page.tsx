@@ -7,6 +7,7 @@ import { supabaseClient } from "@/lib/supabaseClient";
 import { useRequireRole } from "@/lib/hooks/useRequireRole";
 import { agentOwnsLead } from "@/lib/leads";
 import { maskName, maskEmail, maskPhone } from "@/lib/masking";
+import { formatBookingServiceType } from "@/lib/formatBookingServiceType";
 
 type Lead = {
   id: string;
@@ -615,13 +616,7 @@ export default function LeadDetailsPage() {
                         Service type
                       </dt>
                       <dd className="mt-1 text-[#2a2a2a] whitespace-pre-wrap">
-                        {lead.service_type === "cremation"
-                          ? "Cremation"
-                          : lead.service_type === "burial"
-                          ? "Burial"
-                          : lead.service_type === "unsure"
-                          ? "Unsure"
-                          : lead.service_type || "Not specified"}
+                        {formatBookingServiceType(lead.service_type, "Not specified")}
                       </dd>
                     </div>
                     <div>

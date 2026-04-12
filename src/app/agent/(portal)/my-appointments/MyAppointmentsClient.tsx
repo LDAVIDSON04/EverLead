@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { supabaseClient } from '@/lib/supabaseClient';
+import { formatBookingServiceType } from '@/lib/formatBookingServiceType';
 
 type Lead = {
   id: string;
@@ -121,15 +122,6 @@ export default function MyAppointmentsClient({
     return 'Client';
   }
 
-  function formatServiceType(service: string | null) {
-    if (!service) return 'N/A';
-    if (service === 'cremation') return 'Cremation';
-    if (service === 'burial') return 'Burial';
-    if (service === 'unsure') return 'Unsure';
-    // Comma-separated questionnaire answers (lawyer, financial, insurance)
-    return service;
-  }
-
   function formatUrgency(urgency: string | null) {
     if (!urgency) return 'Unknown';
     const lower = urgency.toLowerCase();
@@ -226,7 +218,7 @@ export default function MyAppointmentsClient({
                   Service Type
                 </p>
                 <p className="text-sm text-gray-900">
-                  {formatServiceType(lead.service_type)}
+                  {formatBookingServiceType(lead.service_type)}
                 </p>
               </div>
             )}

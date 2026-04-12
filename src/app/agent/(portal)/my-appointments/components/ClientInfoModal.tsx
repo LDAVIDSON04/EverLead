@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { supabaseClient } from '@/lib/supabaseClient';
 import { DateTime } from 'luxon';
 import { formatTimeForDisplay, CanadianTimezone } from '@/lib/timezone';
+import { formatBookingServiceType } from '@/lib/formatBookingServiceType';
 
 interface ClientInfoModalProps {
   isOpen: boolean;
@@ -501,7 +502,9 @@ export function ClientInfoModal({ isOpen, onClose, leadId, appointmentId, displa
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="text-sm font-medium text-gray-500">Service Type</label>
-                    <p className="text-gray-900 whitespace-pre-wrap">{formatField('', leadData.service_type)}</p>
+                    <p className="text-gray-900 whitespace-pre-wrap">
+                      {formatBookingServiceType(leadData.service_type, "Not provided")}
+                    </p>
                   </div>
                   {leadData.additional_notes && notesWithoutDateOfBirth(leadData.additional_notes) && (
                     <div className="md:col-span-2">
