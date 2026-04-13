@@ -119,34 +119,44 @@ function hasCustomProfilePhoto(profilePictureUrl: string | null | undefined): bo
   return !!(profilePictureUrl && String(profilePictureUrl).trim());
 }
 
+function shuffleInPlace<T>(arr: T[]): void {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+}
+
 /**
- * Marketplace search: prefer agents with bookable slots in the loaded window, then those with a profile photo,
- * so "no slots + no photo" does not rank above bookable, complete-looking profiles.
+ * Marketplace search after availability loads:
+ * 1) Everyone with at least one bookable slot — random order among them (fair rotation).
+ * 2) No slots but has profile photo — shuffled among themselves.
+ * 3) No slots and no photo — shuffled, always after the other tiers.
  */
-function sortAppointmentsBySlotsThenPhoto<T extends Appointment>(
+function orderSearchAppointmentsByAvailabilityAndPhoto<T extends Appointment>(
   list: T[],
   availabilityMap: Record<string, AvailabilityDay[]>
 ): T[] {
-  return [...list].sort((a, b) => {
-    const ida = a.agent?.id;
-    const idb = b.agent?.id;
-    const slotsA = countBookableSlotsInRange(availabilityMap, ida);
-    const slotsB = countBookableSlotsInRange(availabilityMap, idb);
-    const hasA = slotsA > 0;
-    const hasB = slotsB > 0;
-    if (hasA !== hasB) {
-      return hasB ? 1 : -1;
+  const withSlots: T[] = [];
+  const noSlotsHasPhoto: T[] = [];
+  const noSlotsNoPhoto: T[] = [];
+
+  for (const apt of list) {
+    const id = apt.agent?.id;
+    const n = countBookableSlotsInRange(availabilityMap, id);
+    if (n > 0) {
+      withSlots.push(apt);
+    } else if (hasCustomProfilePhoto(apt.agent?.profile_picture_url)) {
+      noSlotsHasPhoto.push(apt);
+    } else {
+      noSlotsNoPhoto.push(apt);
     }
-    if (hasA && slotsA !== slotsB) {
-      return slotsB - slotsA;
-    }
-    const photoA = hasCustomProfilePhoto(a.agent?.profile_picture_url);
-    const photoB = hasCustomProfilePhoto(b.agent?.profile_picture_url);
-    if (photoA !== photoB) {
-      return photoB ? 1 : -1;
-    }
-    return 0;
-  });
+  }
+
+  shuffleInPlace(withSlots);
+  shuffleInPlace(noSlotsHasPhoto);
+  shuffleInPlace(noSlotsNoPhoto);
+
+  return [...withSlots, ...noSlotsHasPhoto, ...noSlotsNoPhoto];
 }
 
 // Suggested specialties for service/specialist input (matches search API roles)
@@ -442,7 +452,7 @@ function SearchResults() {
               videoAvailabilityResults.forEach((result) => {
                 if (result) videoAvailabilityMap[result.agentId] = result.availability;
               });
-              const sortedVideo = sortAppointmentsBySlotsThenPhoto(videoWithReviews, videoAvailabilityMap);
+              const sortedVideo = orderSearchAppointmentsByAvailabilityAndPhoto(videoWithReviews, videoAvailabilityMap);
               setVideoFallbackAppointments(pinFeaturedAgentFirst(sortedVideo, featuredAgentParam));
               setVideoFallbackAvailability(videoAvailabilityMap);
               setAgentAvailability(videoAvailabilityMap); // so modal and handleDayClick have data
@@ -592,7 +602,7 @@ function SearchResults() {
             availabilityMap[result.agentId] = result.availability;
           }
         });
-        const sortedAppointments = sortAppointmentsBySlotsThenPhoto(
+        const sortedAppointments = orderSearchAppointmentsByAvailabilityAndPhoto(
           appointmentsWithReviews,
           availabilityMap
         );
