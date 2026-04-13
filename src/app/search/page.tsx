@@ -104,6 +104,51 @@ function pinFeaturedAgentFirst<T extends { agent?: { id?: string | null } | null
   return [picked, ...copy];
 }
 
+function countBookableSlotsInRange(
+  availabilityMap: Record<string, AvailabilityDay[]>,
+  agentId: string | undefined
+): number {
+  if (!agentId) return 0;
+  const days = availabilityMap[agentId];
+  if (!days?.length) return 0;
+  return days.reduce((acc, d) => acc + (d.slots?.length ?? 0), 0);
+}
+
+/** True if the agent uploaded a real photo (not relying on default avatar only). */
+function hasCustomProfilePhoto(profilePictureUrl: string | null | undefined): boolean {
+  return !!(profilePictureUrl && String(profilePictureUrl).trim());
+}
+
+/**
+ * Marketplace search: prefer agents with bookable slots in the loaded window, then those with a profile photo,
+ * so "no slots + no photo" does not rank above bookable, complete-looking profiles.
+ */
+function sortAppointmentsBySlotsThenPhoto<T extends Appointment>(
+  list: T[],
+  availabilityMap: Record<string, AvailabilityDay[]>
+): T[] {
+  return [...list].sort((a, b) => {
+    const ida = a.agent?.id;
+    const idb = b.agent?.id;
+    const slotsA = countBookableSlotsInRange(availabilityMap, ida);
+    const slotsB = countBookableSlotsInRange(availabilityMap, idb);
+    const hasA = slotsA > 0;
+    const hasB = slotsB > 0;
+    if (hasA !== hasB) {
+      return hasB ? 1 : -1;
+    }
+    if (hasA && slotsA !== slotsB) {
+      return slotsB - slotsA;
+    }
+    const photoA = hasCustomProfilePhoto(a.agent?.profile_picture_url);
+    const photoB = hasCustomProfilePhoto(b.agent?.profile_picture_url);
+    if (photoA !== photoB) {
+      return photoB ? 1 : -1;
+    }
+    return 0;
+  });
+}
+
 // Suggested specialties for service/specialist input (matches search API roles)
 const SERVICE_SUGGESTIONS = [
   "Estate Lawyer / Notary Public",
@@ -397,7 +442,8 @@ function SearchResults() {
               videoAvailabilityResults.forEach((result) => {
                 if (result) videoAvailabilityMap[result.agentId] = result.availability;
               });
-              setVideoFallbackAppointments(pinFeaturedAgentFirst(videoWithReviews, featuredAgentParam));
+              const sortedVideo = sortAppointmentsBySlotsThenPhoto(videoWithReviews, videoAvailabilityMap);
+              setVideoFallbackAppointments(pinFeaturedAgentFirst(sortedVideo, featuredAgentParam));
               setVideoFallbackAvailability(videoAvailabilityMap);
               setAgentAvailability(videoAvailabilityMap); // so modal and handleDayClick have data
               setLoading(false);
@@ -478,8 +524,6 @@ function SearchResults() {
           };
         });
 
-        setAppointments(pinFeaturedAgentFirst(appointmentsWithReviews, featuredAgentParam));
-
         // CRITICAL: Clear old availability data when location/search changes
         // This prevents showing stale data from previous location
         setAgentAvailability({});
@@ -548,6 +592,11 @@ function SearchResults() {
             availabilityMap[result.agentId] = result.availability;
           }
         });
+        const sortedAppointments = sortAppointmentsBySlotsThenPhoto(
+          appointmentsWithReviews,
+          availabilityMap
+        );
+        setAppointments(pinFeaturedAgentFirst(sortedAppointments, featuredAgentParam));
         setAgentAvailability(availabilityMap);
       } catch (err) {
         console.error("Error:", err);
