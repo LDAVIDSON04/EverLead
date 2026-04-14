@@ -29,6 +29,7 @@ type AgentSearchResult = {
   business_city: string | null;
   business_province: string | null;
   business_zip: string | null;
+  /** True if agent has video/in-person schedule in metadata OR marketplace contact-only mode (same shuffle tier as bookable agents). */
   hasAvailability: boolean;
   availabilityLocations: string[];
   availabilityByLocation: Record<string, any>;
@@ -307,11 +308,14 @@ export async function GET(req: NextRequest) {
           } as AgentSearchResult);
           const hasInPersonSchedule =
             Object.keys(availabilityByLocation || {}).length > 0;
-          const hasAvailability = hasVideo || hasInPersonSchedule;
 
           const mb = (metadata as any)?.marketplace_booking;
           const marketplace_listing_mode: "availability" | "contact_only" =
             mb && typeof mb === "object" && mb.mode === "contact_only" ? "contact_only" : "availability";
+
+          // Contact-only listings are shuffled with bookable agents (not relegated to a bottom tier).
+          const hasAvailability =
+            hasVideo || hasInPersonSchedule || marketplace_listing_mode === "contact_only";
 
           return {
             id: profile.id,
@@ -704,14 +708,14 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // Random order within tiers: agents with configured availability (metadata) first, then the rest
+    // Random order within tiers: bookable schedule, contact-only, or video — shuffled together; then agents with none of the above
     const withConfiguredAvailability = filtered.filter((a) => a.hasAvailability);
     const withoutConfiguredAvailability = filtered.filter((a) => !a.hasAvailability);
     shuffleInPlace(withConfiguredAvailability);
     shuffleInPlace(withoutConfiguredAvailability);
     const shuffled = [...withConfiguredAvailability, ...withoutConfiguredAvailability];
     console.log(
-      `[AGENT SEARCH] Order: ${withConfiguredAvailability.length} with schedule in profile (shuffled), then ${withoutConfiguredAvailability.length} without`
+      `[AGENT SEARCH] Order: ${withConfiguredAvailability.length} with schedule / contact-only / video (shuffled), then ${withoutConfiguredAvailability.length} without`
     );
 
     return NextResponse.json({ agents: shuffled });
