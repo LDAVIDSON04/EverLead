@@ -130,7 +130,7 @@ function shuffleInPlace<T>(arr: T[]): void {
 
 /**
  * Marketplace search after availability loads:
- * 1) Everyone with at least one bookable slot — random order among them (fair rotation).
+ * 1) Everyone with at least one bookable slot OR contact-only listing — random order among them (fair rotation).
  * 2) No slots but has profile photo — shuffled among themselves.
  * 3) No slots and no photo — shuffled, always after the other tiers.
  */
@@ -145,7 +145,9 @@ function orderSearchAppointmentsByAvailabilityAndPhoto<T extends Appointment>(
   for (const apt of list) {
     const id = apt.agent?.id;
     const n = countBookableSlotsInRange(availabilityMap, id);
-    if (n > 0) {
+    const isContactOnly = apt.agent?.marketplace_listing_mode === "contact_only";
+    // Contact-only has no fetched slots but should not sink below bookable listings.
+    if (n > 0 || isContactOnly) {
       withSlots.push(apt);
     } else if (hasCustomProfilePhoto(apt.agent?.profile_picture_url)) {
       noSlotsHasPhoto.push(apt);
