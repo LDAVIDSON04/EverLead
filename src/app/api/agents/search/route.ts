@@ -41,6 +41,8 @@ type AgentSearchResult = {
   qualified_insurance_products?: boolean;
   /** Comma-separated provinces (codes or names) where the agent may practice; when set, restricts search by province */
   authorized_provinces?: string | null;
+  /** Marketplace: show calendar slots vs Contact Us strip only (contact details never returned here). */
+  marketplace_listing_mode?: "availability" | "contact_only";
 };
 
 // Agent has set video availability if videoSchedule exists and at least one day is enabled
@@ -307,6 +309,10 @@ export async function GET(req: NextRequest) {
             Object.keys(availabilityByLocation || {}).length > 0;
           const hasAvailability = hasVideo || hasInPersonSchedule;
 
+          const mb = (metadata as any)?.marketplace_booking;
+          const marketplace_listing_mode: "availability" | "contact_only" =
+            mb && typeof mb === "object" && mb.mode === "contact_only" ? "contact_only" : "availability";
+
           return {
             id: profile.id,
             full_name: profile.full_name,
@@ -341,6 +347,7 @@ export async function GET(req: NextRequest) {
               (metadata as any)?.authorized_provinces != null
                 ? String((metadata as any).authorized_provinces).trim() || null
                 : null,
+            marketplace_listing_mode,
           };
         } catch (err) {
           console.error(`[AGENT SEARCH] Error mapping agent ${profile.id}:`, err);

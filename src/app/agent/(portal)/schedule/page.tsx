@@ -82,6 +82,17 @@ export default function SchedulePage() {
   type OutOfOfficeEntry = { date: string; allDay: boolean; startTime?: string; endTime?: string };
   const [outOfOfficeEntries, setOutOfOfficeEntries] = useState<OutOfOfficeEntry[]>([]);
 
+  type MarketplaceMode = "availability" | "contact_only";
+  const [marketplaceMode, setMarketplaceMode] = useState<MarketplaceMode>("availability");
+  const [contactUsPhone, setContactUsPhone] = useState("");
+  const [contactUsEmail, setContactUsEmail] = useState("");
+  const [savingMarketplace, setSavingMarketplace] = useState(false);
+  const [marketplaceBookingError, setMarketplaceBookingError] = useState<string | null>(null);
+  const [showMarketplaceContactModal, setShowMarketplaceContactModal] = useState(false);
+  const [modalContactPhone, setModalContactPhone] = useState("");
+  const [modalContactEmail, setModalContactEmail] = useState("");
+  const [modalMarketplaceError, setModalMarketplaceError] = useState<string | null>(null);
+
   const isHourOutOfOffice = (dateKey: string, hour: number): boolean => {
     const entry = outOfOfficeEntries.find((e) => e.date === dateKey);
     if (!entry) return false;
@@ -371,10 +382,25 @@ export default function SchedulePage() {
         });
 
         // Get appointment length from metadata
-        const metadata = profileData?.metadata || {};
+        let metadata: Record<string, unknown> = {};
+        const rawMeta = profileData?.metadata;
+        if (typeof rawMeta === "string") {
+          try {
+            metadata = JSON.parse(rawMeta) as Record<string, unknown>;
+          } catch {
+            metadata = {};
+          }
+        } else if (rawMeta && typeof rawMeta === "object") {
+          metadata = rawMeta as Record<string, unknown>;
+        }
         const availability = (metadata as any)?.availability || {};
         const length = availability.appointmentLength ? parseInt(availability.appointmentLength, 10) : 60;
         setAppointmentLength(length);
+
+        const mb = metadata.marketplace_booking as Record<string, unknown> | undefined;
+        setMarketplaceMode(mb?.mode === "contact_only" ? "contact_only" : "availability");
+        setContactUsPhone(typeof mb?.contact_us_phone === "string" ? mb.contact_us_phone : "");
+        setContactUsEmail(typeof mb?.contact_us_email === "string" ? mb.contact_us_email : "");
 
         let specialistData = null;
         if (specialistRes.ok) {
@@ -1058,6 +1084,98 @@ export default function SchedulePage() {
     );
   };
 
+  async function patchMarketplaceBooking(payload: {
+    mode: MarketplaceMode;
+    contact_us_phone: string;
+    contact_us_email: string;
+  }): Promise<{ ok: true } | { ok: false; error: string }> {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session?.access_token) {
+      return { ok: false, error: "Please sign in again." };
+    }
+    try {
+      const res = await fetch("/api/agent/settings/marketplace-booking", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          mode: payload.mode,
+          contact_us_phone: payload.contact_us_phone,
+          contact_us_email: payload.contact_us_email,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        return {
+          ok: false,
+          error: typeof data.error === "string" ? data.error : "Could not save settings.",
+        };
+      }
+      return { ok: true };
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Could not save settings.";
+      return { ok: false, error: msg };
+    }
+  }
+
+  async function handleSelectShowAvailability() {
+    if (marketplaceMode === "availability" || savingMarketplace) return;
+    setMarketplaceBookingError(null);
+    setSavingMarketplace(true);
+    try {
+      const result = await patchMarketplaceBooking({
+        mode: "availability",
+        contact_us_phone: contactUsPhone.trim(),
+        contact_us_email: contactUsEmail.trim(),
+      });
+      if (result.ok) {
+        setMarketplaceMode("availability");
+      } else {
+        setMarketplaceBookingError(result.error);
+      }
+    } finally {
+      setSavingMarketplace(false);
+    }
+  }
+
+  function openMarketplaceContactModal() {
+    setModalContactPhone(contactUsPhone);
+    setModalContactEmail(contactUsEmail);
+    setModalMarketplaceError(null);
+    setShowMarketplaceContactModal(true);
+  }
+
+  async function saveMarketplaceContactModal() {
+    const p = modalContactPhone.trim();
+    const e = modalContactEmail.trim();
+    if (!p && !e) {
+      setModalMarketplaceError("Add at least a phone number or an email.");
+      return;
+    }
+    setModalMarketplaceError(null);
+    setSavingMarketplace(true);
+    try {
+      const result = await patchMarketplaceBooking({
+        mode: "contact_only",
+        contact_us_phone: p,
+        contact_us_email: e,
+      });
+      if (result.ok) {
+        setContactUsPhone(p);
+        setContactUsEmail(e);
+        setMarketplaceMode("contact_only");
+        setShowMarketplaceContactModal(false);
+        setMarketplaceBookingError(null);
+      } else {
+        setModalMarketplaceError(result.error);
+      }
+    } finally {
+      setSavingMarketplace(false);
+    }
+  }
+
   if (loading) {
     return (
       <div className="w-full h-screen flex flex-col bg-white relative overflow-hidden px-8 pt-[56px] md:pt-8 pb-0">
@@ -1074,82 +1192,134 @@ export default function SchedulePage() {
       {/* Calendar container with fixed height for 8am-4pm viewport */}
       {/* Header */}
       <div className="mb-4 md:mb-8 flex-shrink-0">
-        {/* Date range and View Selector */}
-        <div className="mb-3 md:mb-0 flex items-center justify-between gap-4 flex-wrap">
-          <h1 className="text-lg md:text-3xl font-semibold">{formatDateRange()}</h1>
-          
-          {/* View Selector - Modern Button Group */}
-          <div className="inline-flex items-center bg-gray-100 rounded-lg p-1 shadow-sm border border-gray-200">
-            <button
-              onClick={() => setView('day')}
-              className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
-                view === 'day'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-              }`}
-            >
-              Day
-            </button>
-            <button
-              onClick={() => setView('week')}
-              className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
-                view === 'week'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-              }`}
-            >
-              Week
-            </button>
-            <button
-              onClick={() => setView('month')}
-              className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
-                view === 'month'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-              }`}
-            >
-              Month
-            </button>
+        {/* Left: date + Today row. Right: client booking mode + Day/Week/Month (restored to same header row) */}
+        <div className="mb-3 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
+          <div className="flex min-w-0 flex-col gap-2">
+            <h1 className="text-lg font-semibold text-gray-900 md:text-3xl">
+              {formatDateRange()}
+            </h1>
+            <div className="flex items-center gap-2 md:gap-3">
+              <button
+                type="button"
+                onClick={goToToday}
+                className="rounded-full bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-900 transition-colors hover:bg-gray-200 md:px-4 md:py-2 md:text-sm"
+              >
+                Today
+              </button>
+              <button
+                type="button"
+                onClick={goToPrevious}
+                className="rounded-lg p-1.5 text-gray-700 transition-colors hover:bg-gray-100 md:p-2"
+                aria-label="Previous period"
+              >
+                <ChevronLeft className="h-4 w-4 md:h-5 md:w-5" strokeWidth={2} />
+              </button>
+              <button
+                type="button"
+                onClick={goToNext}
+                className="rounded-lg p-1.5 text-gray-700 transition-colors hover:bg-gray-100 md:p-2"
+                aria-label="Next period"
+              >
+                <ChevronRight className="h-4 w-4 md:h-5 md:w-5" strokeWidth={2} />
+              </button>
+            </div>
           </div>
-        </div>
-        
-        {/* Navigation row */}
-        <div className="flex items-center gap-2 md:gap-4 mb-3 md:mb-0 md:inline-flex">
-          <button 
-            onClick={goToToday}
-            className="px-3 py-1.5 md:px-4 md:py-2 text-xs md:text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-          >
-            Today
-          </button>
-          <button 
-            onClick={goToPrevious}
-            className="p-1.5 md:p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <ChevronLeft className="w-4 h-4 md:w-5 md:h-5" />
-          </button>
-          <button 
-            onClick={goToNext}
-            className="p-1.5 md:p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <ChevronRight className="w-4 h-4 md:w-5 md:h-5" />
-          </button>
+
+          <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-end sm:justify-end sm:gap-6 sm:flex-1 sm:min-w-0">
+            <div className="flex flex-col gap-2 min-w-0 sm:max-w-lg">
+              <p className="text-sm font-semibold leading-snug text-gray-900 md:text-base">
+                How would you like clients to book with you?
+              </p>
+              <div className="inline-flex w-full rounded-lg border border-gray-200 bg-gray-100 p-1 shadow-sm sm:w-auto sm:self-end">
+                <button
+                  type="button"
+                  disabled={savingMarketplace}
+                  onClick={() => void handleSelectShowAvailability()}
+                  className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors disabled:opacity-50 sm:flex-none ${
+                    marketplaceMode === "availability"
+                      ? "bg-neutral-900 text-white shadow-sm"
+                      : "text-gray-700 hover:bg-white/90"
+                  }`}
+                >
+                  Show availability
+                </button>
+                <button
+                  type="button"
+                  disabled={savingMarketplace}
+                  onClick={openMarketplaceContactModal}
+                  className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors disabled:opacity-50 sm:flex-none ${
+                    marketplaceMode === "contact_only"
+                      ? "bg-neutral-900 text-white shadow-sm"
+                      : "text-gray-700 hover:bg-white/90"
+                  }`}
+                >
+                  Contact requests only
+                </button>
+              </div>
+              {marketplaceBookingError && (
+                <p className="text-xs text-red-600 md:text-sm">{marketplaceBookingError}</p>
+              )}
+            </div>
+
+            <div className="inline-flex w-full shrink-0 items-center justify-stretch rounded-lg border border-gray-200 bg-gray-100 p-1 shadow-sm sm:w-auto sm:justify-end">
+              <button
+                type="button"
+                onClick={() => setView("day")}
+                className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-all duration-200 sm:flex-none sm:px-4 ${
+                  view === "day"
+                    ? "bg-white text-gray-900 shadow-sm"
+                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                }`}
+              >
+                Day
+              </button>
+              <button
+                type="button"
+                onClick={() => setView("week")}
+                className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-all duration-200 sm:flex-none sm:px-4 ${
+                  view === "week"
+                    ? "bg-white text-gray-900 shadow-sm"
+                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                }`}
+              >
+                Week
+              </button>
+              <button
+                type="button"
+                onClick={() => setView("month")}
+                className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-all duration-200 sm:flex-none sm:px-4 ${
+                  view === "month"
+                    ? "bg-white text-gray-900 shadow-sm"
+                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                }`}
+              >
+                Month
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Action buttons */}
-        <div className="flex items-center gap-2 md:gap-4 md:justify-end">
-          <button 
+        <div className="flex flex-wrap items-center gap-2 md:gap-4 md:justify-end">
+          <button
             onClick={() => setShowAddAvailabilityModal(true)}
-            className="px-3 py-1.5 md:px-6 md:py-2 text-xs md:text-sm bg-green-800 text-white rounded-lg hover:bg-green-700 transition-colors"
+            disabled={marketplaceMode === "contact_only"}
+            title={
+              marketplaceMode === "contact_only"
+                ? "Switch to Show availability to edit bookable times."
+                : undefined
+            }
+            className="px-3 py-1.5 md:px-6 md:py-2 text-xs md:text-sm bg-green-800 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Set availability
           </button>
-          <button 
+          <button
             onClick={() => setShowCalendarSyncModal(true)}
             className="px-3 py-1.5 md:px-6 md:py-2 text-xs md:text-sm bg-neutral-900 text-white rounded-lg hover:bg-neutral-800 transition-colors"
           >
             Calendar sync
           </button>
-          <button 
+          <button
             onClick={() => setShowOutOfOfficeModal(true)}
             className="px-3 py-1.5 md:px-6 md:py-2 text-xs md:text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-gray-700"
           >
@@ -1678,6 +1848,76 @@ export default function SchedulePage() {
           } catch (_e) {}
         }}
       />
+
+      {showMarketplaceContactModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div
+            className="relative w-full max-w-md rounded-xl border border-gray-200 bg-white shadow-xl"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="marketplace-contact-modal-title"
+          >
+            <div className="flex items-start justify-between gap-3 border-b border-gray-100 px-4 py-3 md:px-5">
+              <h2 id="marketplace-contact-modal-title" className="text-sm font-semibold text-gray-900 pr-6">
+                Contact details for clients to contact you
+              </h2>
+              <button
+                type="button"
+                disabled={savingMarketplace}
+                onClick={() => setShowMarketplaceContactModal(false)}
+                className="rounded-lg p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-800 disabled:opacity-50"
+                aria-label="Close"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="space-y-3 px-4 py-4 md:px-5">
+              <div>
+                <label className="mb-1 block text-xs font-medium text-gray-700">Phone</label>
+                <input
+                  type="tel"
+                  value={modalContactPhone}
+                  onChange={(e) => setModalContactPhone(e.target.value)}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                  placeholder="(555) 123-4567"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-gray-700">Email</label>
+                <input
+                  type="email"
+                  value={modalContactEmail}
+                  onChange={(e) => setModalContactEmail(e.target.value)}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                  placeholder="you@example.com"
+                />
+              </div>
+              <p className="text-xs text-gray-500">At least one of phone or email is required.</p>
+              {modalMarketplaceError && (
+                <p className="text-sm text-red-600">{modalMarketplaceError}</p>
+              )}
+            </div>
+            <div className="flex justify-end gap-2 border-t border-gray-100 px-4 py-3 md:px-5">
+              <button
+                type="button"
+                disabled={savingMarketplace}
+                onClick={() => setShowMarketplaceContactModal(false)}
+                className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={savingMarketplace}
+                onClick={() => void saveMarketplaceContactModal()}
+                className="rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800 disabled:opacity-50"
+              >
+                {savingMarketplace ? "Saving…" : "Save"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Calendar Sync Success Modal */}
       {showSyncSuccessModal && (

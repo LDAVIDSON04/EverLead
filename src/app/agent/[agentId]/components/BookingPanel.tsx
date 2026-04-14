@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, ChevronDown, Check, MapPin, X, Calendar, Clock } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { ChevronLeft, ChevronRight, ChevronDown, Check, MapPin, X, Calendar, Clock, Phone, Mail, Loader2 } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabaseClient } from '@/lib/supabaseClient';
 import { DateTime } from 'luxon';
@@ -40,6 +40,105 @@ interface BookingPanelProps {
   initialLocation?: string; // Optional: location from search (for modal usage)
 }
 
+/** Contact-only listing: same API as search — no booking calendar. */
+function ProfileContactOnlyCard({ agentId }: { agentId: string }) {
+  type Panel =
+    | { phase: "idle" }
+    | { phase: "loading" }
+    | { phase: "ready"; phone: string | null; email: string | null }
+    | { phase: "error"; message: string };
+  const [panel, setPanel] = useState<Panel>({ phase: "idle" });
+
+  const load = useCallback(async () => {
+    setPanel({ phase: "loading" });
+    try {
+      const res = await fetch(
+        `/api/agents/marketplace-contact-info?agentId=${encodeURIComponent(agentId)}`
+      );
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(typeof data.error === "string" ? data.error : "Could not load contact info.");
+      }
+      setPanel({
+        phase: "ready",
+        phone: data.contactPhone ?? null,
+        email: data.contactEmail ?? null,
+      });
+    } catch (e: unknown) {
+      setPanel({
+        phase: "error",
+        message: e instanceof Error ? e.message : "Something went wrong.",
+      });
+    }
+  }, [agentId]);
+
+  return (
+    <div className="bg-white border border-gray-200 rounded-xl shadow-sm sticky top-24">
+      <div className="p-10">
+        <h2 className="text-3xl mb-3">Get in touch</h2>
+        <p className="text-gray-600 mb-8 text-lg">
+          This professional accepts contact requests. Tap below to see phone or email.
+        </p>
+        {panel.phase === "idle" && (
+          <button
+            type="button"
+            onClick={() => void load()}
+            className="w-full max-w-md rounded-lg border border-neutral-800 bg-neutral-800 px-8 py-3 text-center text-sm font-semibold text-white transition-colors hover:bg-neutral-900"
+          >
+            Contact me
+          </button>
+        )}
+        {panel.phase === "loading" && (
+          <div className="flex flex-col items-center justify-center gap-3 py-8">
+            <Loader2 className="h-8 w-8 animate-spin text-neutral-800" aria-hidden />
+            <span className="text-sm text-gray-500">Loading contact…</span>
+          </div>
+        )}
+        {panel.phase === "error" && (
+          <div className="space-y-3 rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-800">
+            <p>{panel.message}</p>
+            <button type="button" className="font-medium underline" onClick={() => void load()}>
+              Try again
+            </button>
+          </div>
+        )}
+        {panel.phase === "ready" && (
+          <div className="space-y-3 max-w-md">
+            <p className="text-center text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+              Contact
+            </p>
+            {panel.phone && (
+              <a
+                href={`tel:${panel.phone.replace(/\D/g, "")}`}
+                className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm shadow-sm transition-colors hover:border-gray-300 hover:bg-gray-50"
+              >
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-gray-100 text-gray-900">
+                  <Phone className="h-4 w-4" strokeWidth={2} aria-hidden />
+                </span>
+                <span className="min-w-0 font-semibold text-gray-900">{panel.phone}</span>
+              </a>
+            )}
+            {panel.email && (
+              <a
+                href={`mailto:${panel.email}`}
+                className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm shadow-sm transition-colors hover:border-gray-300 hover:bg-gray-50"
+              >
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-gray-100 text-gray-900">
+                  <Mail className="h-4 w-4" strokeWidth={2} aria-hidden />
+                </span>
+                <span className="min-w-0 break-all font-semibold text-gray-900">{panel.email}</span>
+              </a>
+            )}
+            {!panel.phone && !panel.email && (
+              <p className="text-sm text-gray-600">No contact details are configured yet.</p>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // Normalize location name (remove "Office" suffix, province, etc.)
 const normalizeLocation = (loc: string | undefined): string | undefined => {
   if (!loc) return undefined;
@@ -65,6 +164,43 @@ export function BookingPanel({ agentId, initialLocation }: BookingPanelProps) {
   const [loadingTimeSlots, setLoadingTimeSlots] = useState(false);
   const [agentInfo, setAgentInfo] = useState<any>(null);
   const [nextAvailableCalculated, setNextAvailableCalculated] = useState(false);
+  /** null = loading; mirrors `metadata.marketplace_booking.mode` (schedule/search). */
+  const [marketplaceMode, setMarketplaceMode] = useState<"availability" | "contact_only" | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data, error } = await supabaseClient
+          .from("profiles")
+          .select("metadata")
+          .eq("id", agentId)
+          .maybeSingle();
+        if (cancelled) return;
+        if (error || !data) {
+          setMarketplaceMode("availability");
+          return;
+        }
+        let meta: unknown = data.metadata;
+        if (typeof meta === "string") {
+          try {
+            meta = JSON.parse(meta) as unknown;
+          } catch {
+            meta = null;
+          }
+        }
+        const m = meta as Record<string, unknown> | null;
+        const mb = m?.marketplace_booking as Record<string, unknown> | undefined;
+        const mode = mb?.mode === "contact_only" ? "contact_only" : "availability";
+        setMarketplaceMode(mode);
+      } catch {
+        if (!cancelled) setMarketplaceMode("availability");
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [agentId]);
 
   // Get search location from URL parameters or prop (prop takes precedence for modal usage)
   const searchLocationParam = initialLocation || searchParams?.get('location') || null;
@@ -72,6 +208,8 @@ export function BookingPanel({ agentId, initialLocation }: BookingPanelProps) {
 
   // Fetch agent data to build office locations
   useEffect(() => {
+    if (marketplaceMode !== "availability") return;
+
     const fetchAgentData = async () => {
       try {
         // First try to load from office_locations table (has addresses per location)
@@ -251,7 +389,7 @@ export function BookingPanel({ agentId, initialLocation }: BookingPanelProps) {
     };
     
     fetchAgentData();
-  }, [agentId, normalizedSearchLocation, searchLocationParam]);
+  }, [agentId, normalizedSearchLocation, searchLocationParam, marketplaceMode]);
 
   // Helper function to format next available date
   const formatNextAvailable = (dateStr: string): string => {
@@ -298,6 +436,7 @@ export function BookingPanel({ agentId, initialLocation }: BookingPanelProps) {
 
   // Fetch availability for all locations to calculate next available dates
   useEffect(() => {
+    if (marketplaceMode !== "availability") return;
     if (officeLocations.length === 0) return;
     
     // Check if we need to calculate (has "Loading..." or old hardcoded value)
@@ -431,10 +570,11 @@ export function BookingPanel({ agentId, initialLocation }: BookingPanelProps) {
     };
     
     fetchNextAvailableForAllLocations();
-  }, [agentId, officeLocations.length]); // Run when locations are loaded or count changes
+  }, [agentId, officeLocations.length, marketplaceMode]); // Run when locations are loaded or count changes
 
   // Fetch availability for selected location (for calendar display)
   useEffect(() => {
+    if (marketplaceMode !== "availability") return;
     if (officeLocations.length === 0) return; // Wait for locations to load
     
     const fetchAvailability = async () => {
@@ -530,7 +670,7 @@ export function BookingPanel({ agentId, initialLocation }: BookingPanelProps) {
     };
     
     fetchAvailability();
-  }, [agentId, selectedLocationId, officeLocations]);
+  }, [agentId, selectedLocationId, officeLocations, marketplaceMode]);
 
   const selectedLocation = officeLocations.find(loc => loc.id === selectedLocationId) || officeLocations[0];
   
@@ -627,6 +767,20 @@ export function BookingPanel({ agentId, initialLocation }: BookingPanelProps) {
     setAllAvailabilityDays([]);
     setAgentInfo(null);
   };
+
+  if (marketplaceMode === null) {
+    return (
+      <div className="bg-white border border-gray-200 rounded-xl shadow-sm sticky top-24 p-10">
+        <div className="flex justify-center py-12">
+          <Loader2 className="h-10 w-10 animate-spin text-[#1a4d2e]" aria-hidden />
+        </div>
+      </div>
+    );
+  }
+
+  if (marketplaceMode === "contact_only") {
+    return <ProfileContactOnlyCard agentId={agentId} />;
+  }
 
   if (officeLocations.length === 0) {
     return (

@@ -1,13 +1,18 @@
 // src/app/admin/leads/page.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabaseClient } from "@/lib/supabaseClient";
+import { MARKETPLACE_CONTACT_US_SERVICE_TYPE } from "@/lib/marketplaceContactLead";
 
 type Lead = {
   id: string;
   created_at: string;
   full_name: string | null;
+  email: string | null;
+  phone: string | null;
+  service_type: string | null;
+  assigned_agent_id: string | null;
   city: string | null;
   urgency_level: string | null;
   status: string | null;
@@ -24,13 +29,14 @@ type Lead = {
 export default function AdminLeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [listFilter, setListFilter] = useState<"all" | "marketplace_contact">("all");
 
   useEffect(() => {
     async function loadLeads() {
         const { data, error } = await supabaseClient
           .from("leads")
           .select(
-            "id, created_at, full_name, city, urgency_level, status, buy_now_price_cents, price_charged_cents, auction_enabled, auction_ends_at, buy_now_price, current_bid_amount, current_bid_agent_id"
+            "id, created_at, full_name, email, phone, service_type, assigned_agent_id, city, urgency_level, status, buy_now_price_cents, price_charged_cents, auction_enabled, auction_ends_at, buy_now_price, current_bid_amount, current_bid_agent_id"
           )
           .order("created_at", { ascending: false });
 
@@ -45,6 +51,20 @@ export default function AdminLeadsPage() {
 
     loadLeads();
   }, []);
+
+  const marketplaceContactCount = useMemo(
+    () =>
+      leads.filter((l) => l.service_type === MARKETPLACE_CONTACT_US_SERVICE_TYPE)
+        .length,
+    [leads]
+  );
+
+  const filteredLeads = useMemo(() => {
+    if (listFilter === "marketplace_contact") {
+      return leads.filter((l) => l.service_type === MARKETPLACE_CONTACT_US_SERVICE_TYPE);
+    }
+    return leads;
+  }, [leads, listFilter]);
 
   const formatMoney = (cents: number | null) =>
     cents ? `$${(cents / 100).toFixed(2)}` : "-";
@@ -84,8 +104,39 @@ export default function AdminLeadsPage() {
             All Leads
           </h1>
           <p className="text-sm text-[#6b6b6b]">
-            Complete list of all leads in the system.
+            Complete list of all leads in the system. Soradin search &quot;Contact Us&quot; submissions are saved as
+            leads (name, email, phone, assigned agent); use &quot;Contact Us only&quot; to review them.
           </p>
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <p className="text-sm text-[#2a2a2a]">
+              <span className="font-semibold">{marketplaceContactCount}</span>{" "}
+              <span className="text-[#6b6b6b]">marketplace Contact Us form{marketplaceContactCount === 1 ? "" : "s"}</span>
+            </p>
+            <div className="flex rounded-md border border-[#ded3c2] bg-white p-0.5 text-xs font-medium">
+              <button
+                type="button"
+                onClick={() => setListFilter("all")}
+                className={`rounded px-3 py-1.5 transition-colors ${
+                  listFilter === "all"
+                    ? "bg-[#2a2a2a] text-white"
+                    : "text-[#6b6b6b] hover:text-[#2a2a2a]"
+                }`}
+              >
+                All leads
+              </button>
+              <button
+                type="button"
+                onClick={() => setListFilter("marketplace_contact")}
+                className={`rounded px-3 py-1.5 transition-colors ${
+                  listFilter === "marketplace_contact"
+                    ? "bg-[#2a2a2a] text-white"
+                    : "text-[#6b6b6b] hover:text-[#2a2a2a]"
+                }`}
+              >
+                Contact Us only
+              </button>
+            </div>
+          </div>
         </div>
 
         {error && (
@@ -96,6 +147,8 @@ export default function AdminLeadsPage() {
 
         {leads.length === 0 ? (
           <p className="text-sm text-[#6b6b6b]">No leads yet.</p>
+        ) : filteredLeads.length === 0 ? (
+          <p className="text-sm text-[#6b6b6b]">No leads match this filter.</p>
         ) : (
           <div className="overflow-x-auto rounded-lg border border-[#ded3c2] bg-white shadow-sm">
             <table className="w-full border-collapse text-sm">
@@ -103,7 +156,11 @@ export default function AdminLeadsPage() {
                 <tr className="border-b border-[#ded3c2] bg-[#faf8f5]">
                   <Th>ID</Th>
                   <Th>Created</Th>
+                  <Th>Type</Th>
                   <Th>Name</Th>
+                  <Th>Email</Th>
+                  <Th>Phone</Th>
+                  <Th>Agent</Th>
                   <Th>City</Th>
                   <Th>Urgency</Th>
                   <Th>Status</Th>
@@ -115,7 +172,7 @@ export default function AdminLeadsPage() {
                 </tr>
               </thead>
               <tbody>
-                {leads.map((lead) => (
+                {filteredLeads.map((lead) => (
                   <tr
                     key={lead.id}
                     className="border-b border-[#f3f4f6] hover:bg-[#faf8f5]"
@@ -124,7 +181,37 @@ export default function AdminLeadsPage() {
                     <Td>
                       {new Date(lead.created_at).toLocaleDateString()}
                     </Td>
+                    <Td>
+                      {lead.service_type === MARKETPLACE_CONTACT_US_SERVICE_TYPE ? (
+                        <span className="inline-block rounded-full border border-[#c4b8a8] bg-[#faf8f5] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#4a4a4a]">
+                          Contact Us
+                        </span>
+                      ) : (
+                        <span className="text-[#9a9a9a]">—</span>
+                      )}
+                    </Td>
                     <Td>{lead.full_name || "-"}</Td>
+                    <Td className="max-w-[11rem] whitespace-normal">
+                      {lead.email ? (
+                        <span className="block truncate font-mono text-xs" title={lead.email}>
+                          {lead.email}
+                        </span>
+                      ) : (
+                        "—"
+                      )}
+                    </Td>
+                    <Td className="max-w-[8rem] whitespace-normal">
+                      {lead.phone ? (
+                        <span className="block truncate text-xs" title={lead.phone}>
+                          {lead.phone}
+                        </span>
+                      ) : (
+                        "—"
+                      )}
+                    </Td>
+                    <Td className="font-mono text-xs text-[#6b6b6b]">
+                      {lead.assigned_agent_id ? `${lead.assigned_agent_id.slice(0, 8)}…` : "—"}
+                    </Td>
                     <Td>{lead.city || "-"}</Td>
                     <Td>{lead.urgency_level || "-"}</Td>
                     <Td>{lead.status || "-"}</Td>
@@ -172,9 +259,9 @@ function Th({ children }: { children: React.ReactNode }) {
   );
 }
 
-function Td({ children }: { children: React.ReactNode }) {
+function Td({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
-    <td className="whitespace-nowrap px-4 py-3 text-sm text-[#4a4a4a]">
+    <td className={`whitespace-nowrap px-4 py-3 text-sm text-[#4a4a4a] ${className}`.trim()}>
       {children}
     </td>
   );

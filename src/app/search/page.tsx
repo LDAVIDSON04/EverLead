@@ -7,7 +7,7 @@ import Link from "next/link";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import { Suspense, useState, useEffect, useMemo, useCallback } from "react";
-import { Search, Star, MapPin, Calendar, Clock, Stethoscope, Video, SlidersHorizontal, ChevronRight, X, ArrowLeft, Shield, ExternalLink, Instagram, Facebook } from "lucide-react";
+import { Search, Star, MapPin, Calendar, Clock, Stethoscope, Video, SlidersHorizontal, ChevronRight, X, ArrowLeft, Shield, ExternalLink, Instagram, Facebook, Phone, Mail, Loader2 } from "lucide-react";
 import { supabaseClient } from "@/lib/supabaseClient";
 import { getAgentAvatarUrl, DEFAULT_AGENT_AVATAR_URL } from "@/lib/utils";
 // Removed static imports - now using dynamic imports below
@@ -55,6 +55,8 @@ type Appointment = {
       associated_firm?: string | null;
     }>;
     first_business_name?: string | null;
+    /** From search API: calendar on marketplace vs Contact Us strip */
+    marketplace_listing_mode?: "availability" | "contact_only";
   } | null;
 };
 
@@ -300,6 +302,125 @@ function SearchResults() {
   const [portfolioReviewsLoading, setPortfolioReviewsLoading] = useState(false);
   const [showAllReviews, setShowAllReviews] = useState(false);
 
+  type ContactInlinePanel =
+    | { phase: "loading" }
+    | { phase: "ready"; phone: string | null; email: string | null }
+    | { phase: "error"; message: string };
+  const [contactInlineByAgentId, setContactInlineByAgentId] = useState<Record<string, ContactInlinePanel>>({});
+
+  const loadAgentContactInline = useCallback(async (agentId: string) => {
+    setContactInlineByAgentId((prev) => ({ ...prev, [agentId]: { phase: "loading" } }));
+    try {
+      const res = await fetch(
+        `/api/agents/marketplace-contact-info?agentId=${encodeURIComponent(agentId)}`
+      );
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(typeof data.error === "string" ? data.error : "Could not load contact info.");
+      }
+      setContactInlineByAgentId((prev) => ({
+        ...prev,
+        [agentId]: {
+          phase: "ready",
+          phone: data.contactPhone ?? null,
+          email: data.contactEmail ?? null,
+        },
+      }));
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : "Something went wrong.";
+      setContactInlineByAgentId((prev) => ({
+        ...prev,
+        [agentId]: { phase: "error", message },
+      }));
+    }
+  }, []);
+
+  /** Inline "Contact me" → phone/email in the provider card (no modal). */
+  const renderMarketplaceContactInlinePanel = (agentId: string) => {
+    const state = contactInlineByAgentId[agentId];
+    if (!state) {
+      return (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            void loadAgentContactInline(agentId);
+          }}
+          onPointerDown={(e) => e.stopPropagation()}
+          className="mx-auto block w-[min(100%,40rem)] whitespace-nowrap rounded-lg border border-neutral-800 bg-neutral-800 px-16 py-2.5 text-center text-sm font-semibold text-white transition-colors hover:bg-neutral-900 hover:border-neutral-900 select-none"
+        >
+          Contact me
+        </button>
+      );
+    }
+    if (state.phase === "loading") {
+      return (
+        <div
+          className="flex w-full max-w-md flex-col items-center justify-center gap-2 py-4"
+          onPointerDown={(e) => e.stopPropagation()}
+        >
+          <Loader2 className="h-7 w-7 animate-spin text-neutral-800" aria-hidden />
+          <span className="text-xs text-gray-500">Loading contact…</span>
+        </div>
+      );
+    }
+    if (state.phase === "error") {
+      return (
+        <div
+          className="w-full max-w-md space-y-2 rounded-lg border border-red-100 bg-red-50 px-3 py-2.5 text-sm text-red-800"
+          onPointerDown={(e) => e.stopPropagation()}
+        >
+          <p>{state.message}</p>
+          <button
+            type="button"
+            className="text-sm font-medium text-red-900 underline underline-offset-2 hover:text-red-950"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              void loadAgentContactInline(agentId);
+            }}
+          >
+            Try again
+          </button>
+        </div>
+      );
+    }
+    const { phone, email } = state;
+    return (
+      <div className="w-full max-w-md space-y-2" onPointerDown={(e) => e.stopPropagation()}>
+        <p className="text-center text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+          Contact
+        </p>
+        {phone && (
+          <a
+            href={`tel:${phone.replace(/\D/g, "")}`}
+            className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm shadow-sm transition-colors hover:border-gray-300 hover:bg-gray-50"
+          >
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-gray-100 text-gray-900">
+              <Phone className="h-4 w-4" strokeWidth={2} aria-hidden />
+            </span>
+            <span className="min-w-0 font-semibold text-gray-900">{phone}</span>
+          </a>
+        )}
+        {email && (
+          <a
+            href={`mailto:${email}`}
+            className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm shadow-sm transition-colors hover:border-gray-300 hover:bg-gray-50"
+          >
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-gray-100 text-gray-900">
+              <Mail className="h-4 w-4" strokeWidth={2} aria-hidden />
+            </span>
+            <span className="min-w-0 break-all font-semibold text-gray-900">{email}</span>
+          </a>
+        )}
+        {!phone && !email && (
+          <p className="text-center text-sm text-gray-600">No contact details available.</p>
+        )}
+      </div>
+    );
+  };
+
   // When showing video fallback (no in-person in city), booking should use video mode
   const effectiveBookingMode = showingVideoFallback && videoFallbackAppointments.length > 0 ? "video" : mode;
   
@@ -435,6 +556,9 @@ function SearchResults() {
               // Video fallback: do not pass location so API returns agent's default schedule (their bookable slots)
               const videoAvailabilityPromises = videoWithReviews.map(async (apt) => {
                 if (!apt.agent?.id) return null;
+                if (apt.agent.marketplace_listing_mode === "contact_only") {
+                  return { agentId: apt.agent.id, availability: [] as AvailabilityDay[] };
+                }
                 try {
                   const url = `/api/agents/availability?agentId=${apt.agent.id}&startDate=${startDate}&endDate=${endDate}`;
                   const r = await fetch(url);
@@ -550,6 +674,9 @@ function SearchResults() {
 
         const availabilityPromises = mappedAppointments.map(async (apt) => {
           if (!apt.agent?.id) return null;
+          if (apt.agent.marketplace_listing_mode === "contact_only") {
+            return { agentId: apt.agent.id, availability: [] as AvailabilityDay[] };
+          }
           try {
             // For video mode, never pass location so API returns video schedule (not in-person by office)
             const locationParam = mode === "video" ? "" : (searchLocation ? `&location=${encodeURIComponent(searchLocation)}` : "");
@@ -1905,7 +2032,13 @@ function SearchResults() {
               return (
                 <div key={`${appointment.id}-${searchLocation}`} className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
                   {/* Desktop: Side-by-side layout - Provider info left, Day blocks right */}
-                  <div className="hidden md:flex gap-0 items-start">
+                  <div
+                    className={`hidden md:flex gap-0 ${
+                      agent?.marketplace_listing_mode === "contact_only"
+                        ? "items-stretch"
+                        : "items-start"
+                    }`}
+                  >
                     {/* Left Section: Provider Info */}
                     <div className="flex-shrink-0 w-[30%] min-w-0">
                       {/* Top row: Profile pic with name/title/company to the right */}
@@ -2073,56 +2206,68 @@ function SearchResults() {
                       </div>
                     </div>
 
-                    {/* Right Section: Day Blocks Grid - relative z-10 so clicks aren't blocked */}
-                    <div className="flex-1 min-w-0 relative z-10">
-                      <div className="grid grid-cols-4 gap-2 w-full">
-                        {availability.map((slot, slotIndex) => {
-                          const hasSpots = slot.spots > 0;
-                          return (
-                            <button
-                              key={slotIndex}
-                              type="button"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                if (hasSpots && appointment.agent?.id) {
-                                  handleDayClick(e, appointment, slot, index);
-                                }
-                              }}
-                              onPointerDown={(e) => e.stopPropagation()}
-                              disabled={!hasSpots}
-                              className={`
-                                relative px-3 py-2 rounded-lg border text-center text-sm transition-colors select-none
-                                ${hasSpots 
-                                  ? 'bg-neutral-800 text-white border-neutral-800 hover:bg-neutral-900 cursor-pointer' 
-                                  : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'}
-                              `}
-                            >
-                              {hasSpots && displayMode === 'video' && (
-                                <span className="absolute top-1 right-1 text-white pointer-events-none" aria-hidden>
-                                  <Video className="w-5 h-5" strokeWidth={2.5} />
-                                </span>
-                              )}
-                              <div className="whitespace-pre-line leading-tight pointer-events-none">{slot.date}</div>
-                              <div className="text-xs mt-1 whitespace-pre-line pointer-events-none">
-                                <span className="hidden md:inline">{hasSpots ? slot.spots + '\nappointments' : 'No\nappointments'}</span>
-                              </div>
-                            </button>
-                          );
-                        })}
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            handleMoreButtonClick(appointment, index);
-                          }}
-                          onPointerDown={(e) => e.stopPropagation()}
-                          className="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:border-neutral-800 hover:bg-neutral-50 text-sm flex items-center justify-center"
-                        >
-                          More
-                        </button>
-                      </div>
+                    {/* Right: bookable grid or Contact Us strip */}
+                    <div
+                      className={`flex-1 min-w-0 relative z-10 ${
+                        agent?.marketplace_listing_mode === "contact_only"
+                          ? "flex min-h-0 flex-col items-center justify-center"
+                          : ""
+                      }`}
+                    >
+                      {agent?.marketplace_listing_mode === "contact_only" ? (
+                        agent?.id ? (
+                          renderMarketplaceContactInlinePanel(agent.id)
+                        ) : null
+                      ) : (
+                        <div className="grid grid-cols-4 gap-2 w-full">
+                          {availability.map((slot, slotIndex) => {
+                            const hasSpots = slot.spots > 0;
+                            return (
+                              <button
+                                key={slotIndex}
+                                type="button"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  if (hasSpots && appointment.agent?.id) {
+                                    handleDayClick(e, appointment, slot, index);
+                                  }
+                                }}
+                                onPointerDown={(e) => e.stopPropagation()}
+                                disabled={!hasSpots}
+                                className={`
+                                  relative px-3 py-2 rounded-lg border text-center text-sm transition-colors select-none
+                                  ${hasSpots 
+                                    ? 'bg-neutral-800 text-white border-neutral-800 hover:bg-neutral-900 cursor-pointer' 
+                                    : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'}
+                                `}
+                              >
+                                {hasSpots && displayMode === 'video' && (
+                                  <span className="absolute top-1 right-1 text-white pointer-events-none" aria-hidden>
+                                    <Video className="w-5 h-5" strokeWidth={2.5} />
+                                  </span>
+                                )}
+                                <div className="whitespace-pre-line leading-tight pointer-events-none">{slot.date}</div>
+                                <div className="text-xs mt-1 whitespace-pre-line pointer-events-none">
+                                  <span className="hidden md:inline">{hasSpots ? slot.spots + '\nappointments' : 'No\nappointments'}</span>
+                                </div>
+                              </button>
+                            );
+                          })}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleMoreButtonClick(appointment, index);
+                            }}
+                            onPointerDown={(e) => e.stopPropagation()}
+                            className="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:border-neutral-800 hover:bg-neutral-50 text-sm flex items-center justify-center"
+                          >
+                            More
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -2289,56 +2434,66 @@ function SearchResults() {
                       </div>
                     </div>
 
-                  {/* Mobile: Day blocks below provider info */}
-                  <div className="mt-4 md:hidden relative z-10">
-                      <div className="grid grid-cols-4 gap-2">
-                        {availability.map((slot, slotIndex) => {
-                          const hasSpots = slot.spots > 0;
-                          return (
-                            <button
-                              key={slotIndex}
-                              type="button"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                if (hasSpots && appointment.agent?.id) {
-                                  handleDayClick(e, appointment, slot, index);
-                                }
-                              }}
-                              onPointerDown={(e) => e.stopPropagation()}
-                              disabled={!hasSpots}
-                              className={`
-                                relative px-3 py-2 rounded-lg border text-center text-sm transition-colors select-none
-                                ${hasSpots 
-                                  ? 'bg-neutral-800 text-white border-neutral-800 hover:bg-neutral-900 cursor-pointer' 
-                                  : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'}
-                              `}
-                            >
-                              {hasSpots && displayMode === 'video' && (
-                                <span className="absolute top-1 right-1 text-white pointer-events-none" aria-hidden>
-                                  <Video className="w-3 h-3" strokeWidth={2.5} />
-                                </span>
-                              )}
-                              <div className="whitespace-pre-line leading-tight pointer-events-none">{slot.date}</div>
-                              <div className="text-xs mt-1 whitespace-pre-line pointer-events-none">
-                                <span>{hasSpots ? slot.spots + '\nappts' : 'No\nappts'}</span>
-                              </div>
-                            </button>
-                          );
-                        })}
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            handleMoreButtonClick(appointment, index);
-                          }}
-                          onPointerDown={(e) => e.stopPropagation()}
-                          className="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:border-neutral-800 hover:bg-neutral-50 text-sm flex items-center justify-center"
-                        >
-                          More
-                        </button>
-                      </div>
+                  {/* Mobile: day grid or Contact Us */}
+                  <div
+                    className={`mt-4 md:hidden relative z-10 ${
+                      agent?.marketplace_listing_mode === "contact_only" ? "flex justify-center" : ""
+                    }`}
+                  >
+                      {agent?.marketplace_listing_mode === "contact_only" ? (
+                        agent?.id ? (
+                          renderMarketplaceContactInlinePanel(agent.id)
+                        ) : null
+                      ) : (
+                        <div className="grid grid-cols-4 gap-2">
+                          {availability.map((slot, slotIndex) => {
+                            const hasSpots = slot.spots > 0;
+                            return (
+                              <button
+                                key={slotIndex}
+                                type="button"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  if (hasSpots && appointment.agent?.id) {
+                                    handleDayClick(e, appointment, slot, index);
+                                  }
+                                }}
+                                onPointerDown={(e) => e.stopPropagation()}
+                                disabled={!hasSpots}
+                                className={`
+                                  relative px-3 py-2 rounded-lg border text-center text-sm transition-colors select-none
+                                  ${hasSpots 
+                                    ? 'bg-neutral-800 text-white border-neutral-800 hover:bg-neutral-900 cursor-pointer' 
+                                    : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'}
+                                `}
+                              >
+                                {hasSpots && displayMode === 'video' && (
+                                  <span className="absolute top-1 right-1 text-white pointer-events-none" aria-hidden>
+                                    <Video className="w-3 h-3" strokeWidth={2.5} />
+                                  </span>
+                                )}
+                                <div className="whitespace-pre-line leading-tight pointer-events-none">{slot.date}</div>
+                                <div className="text-xs mt-1 whitespace-pre-line pointer-events-none">
+                                  <span>{hasSpots ? slot.spots + '\nappts' : 'No\nappts'}</span>
+                                </div>
+                              </button>
+                            );
+                          })}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleMoreButtonClick(appointment, index);
+                            }}
+                            onPointerDown={(e) => e.stopPropagation()}
+                            className="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:border-neutral-800 hover:bg-neutral-50 text-sm flex items-center justify-center"
+                          >
+                            More
+                          </button>
+                        </div>
+                      )}
                     </div>
                 </div>
               );

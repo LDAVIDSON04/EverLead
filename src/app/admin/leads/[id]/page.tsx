@@ -4,12 +4,20 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabaseClient } from "@/lib/supabaseClient";
+import { MARKETPLACE_CONTACT_US_SERVICE_TYPE } from "@/lib/marketplaceContactLead";
 
 type Lead = {
   id: string;
   created_at: string;
   full_name: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
+  email?: string | null;
+  phone?: string | null;
   city: string | null;
+  service_type?: string | null;
+  assigned_agent_id?: string | null;
+  additional_notes?: string | null;
   urgency_level: string | null;
   status: string | null;
   buy_now_price_cents: number | null;
@@ -224,6 +232,11 @@ export default function AdminLeadDetailPage() {
             {/* Lead Info */}
             <div className="rounded-lg border border-[#ded3c2] bg-white p-6 shadow-sm">
               <h2 className="mb-4 text-lg font-normal text-[#2a2a2a]">Lead Information</h2>
+              {lead.service_type === MARKETPLACE_CONTACT_US_SERVICE_TYPE && (
+                <p className="mb-4 rounded-md border border-[#ded3c2] bg-[#faf8f5] px-3 py-2 text-xs text-[#4a4a4a]">
+                  Soradin marketplace <strong>Contact Us</strong> — client details below were submitted from search.
+                </p>
+              )}
               <dl className="grid gap-3 text-sm">
                 <div>
                   <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
@@ -231,6 +244,56 @@ export default function AdminLeadDetailPage() {
                   </dt>
                   <dd className="mt-1 text-[#2a2a2a]">{lead.full_name || "-"}</dd>
                 </div>
+                {(lead.first_name || lead.last_name) && (
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div>
+                      <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                        First name
+                      </dt>
+                      <dd className="mt-1 text-[#2a2a2a]">{lead.first_name || "—"}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                        Last name
+                      </dt>
+                      <dd className="mt-1 text-[#2a2a2a]">{lead.last_name || "—"}</dd>
+                    </div>
+                  </div>
+                )}
+                <div>
+                  <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                    Email
+                  </dt>
+                  <dd className="mt-1 break-all font-mono text-[#2a2a2a]">{lead.email || "—"}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                    Phone
+                  </dt>
+                  <dd className="mt-1 text-[#2a2a2a]">{lead.phone || "—"}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                    Service / source
+                  </dt>
+                  <dd className="mt-1 text-[#2a2a2a]">{lead.service_type || "—"}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                    Assigned agent id
+                  </dt>
+                  <dd className="mt-1 break-all font-mono text-xs text-[#2a2a2a]">
+                    {lead.assigned_agent_id || "—"}
+                  </dd>
+                </div>
+                {lead.additional_notes ? (
+                  <div>
+                    <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
+                      Notes
+                    </dt>
+                    <dd className="mt-1 whitespace-pre-wrap text-[#2a2a2a]">{lead.additional_notes}</dd>
+                  </div>
+                ) : null}
                 <div>
                   <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6b6b6b]">
                     City
