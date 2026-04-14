@@ -1644,7 +1644,7 @@ function SearchResults() {
               </div>
             </form>
             <p className="text-center text-base font-semibold text-[#1A1A1A] mt-2">
-              Book a free appointment today!
+              Book an appointment today!
             </p>
             </div>
           </div>
@@ -1795,7 +1795,7 @@ function SearchResults() {
             )}
           </div>
           <p className="text-center text-sm sm:text-base font-semibold text-[#1A1A1A] pt-1">
-            Book a free appointment today!
+            Book an appointment today!
           </p>
         </div>
 
