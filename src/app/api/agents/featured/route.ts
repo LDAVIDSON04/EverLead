@@ -1,5 +1,5 @@
 // Public list of agents for the home page carousel:
-// approved, not paused, has availability in metadata. Photo and payment method not required.
+// approved, not paused, has availability in metadata, profile photo required. Payment not required.
 
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
@@ -68,6 +68,8 @@ export async function GET() {
       };
 
       if (p.approval_status !== "approved") continue;
+
+      if (!p.profile_picture_url?.trim()) continue;
 
       let metadata: Record<string, unknown> = {};
       try {
