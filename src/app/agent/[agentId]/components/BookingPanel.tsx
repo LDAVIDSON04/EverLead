@@ -7,6 +7,7 @@ import { supabaseClient } from '@/lib/supabaseClient';
 import { DateTime } from 'luxon';
 import Image from 'next/image';
 import { getAgentAvatarUrl } from '@/lib/utils';
+import { trackMarketplaceContactClick } from '@/lib/marketplaceContactClickTracking';
 
 interface DayAvailability {
   dayOfWeek: string;
@@ -50,6 +51,7 @@ function ProfileContactOnlyCard({ agentId }: { agentId: string }) {
   const [panel, setPanel] = useState<Panel>({ phase: "idle" });
 
   const load = useCallback(async () => {
+    trackMarketplaceContactClick({ agentId, channel: "reveal", source: "agent_profile" });
     setPanel({ phase: "loading" });
     try {
       const res = await fetch(
@@ -110,6 +112,9 @@ function ProfileContactOnlyCard({ agentId }: { agentId: string }) {
             {panel.phone && (
               <a
                 href={`tel:${panel.phone.replace(/\D/g, "")}`}
+                onClick={() =>
+                  trackMarketplaceContactClick({ agentId, channel: "phone", source: "agent_profile" })
+                }
                 className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm shadow-sm transition-colors hover:border-gray-300 hover:bg-gray-50"
               >
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-gray-100 text-gray-900">
@@ -121,6 +126,9 @@ function ProfileContactOnlyCard({ agentId }: { agentId: string }) {
             {panel.email && (
               <a
                 href={`mailto:${panel.email}`}
+                onClick={() =>
+                  trackMarketplaceContactClick({ agentId, channel: "email", source: "agent_profile" })
+                }
                 className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm shadow-sm transition-colors hover:border-gray-300 hover:bg-gray-50"
               >
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-gray-100 text-gray-900">

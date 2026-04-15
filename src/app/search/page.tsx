@@ -14,6 +14,7 @@ import { getAgentAvatarUrl, DEFAULT_AGENT_AVATAR_URL } from "@/lib/utils";
 import { TrustHighlights } from "@/app/agent/[agentId]/components/TrustHighlights";
 import { DateTime } from 'luxon';
 import { cities as CANADIAN_CITIES } from "@/lib/cities";
+import { trackMarketplaceContactClick } from "@/lib/marketplaceContactClickTracking";
 
 type Appointment = {
   id: string;
@@ -347,6 +348,7 @@ function SearchResults() {
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
+            trackMarketplaceContactClick({ agentId, channel: "reveal", source: "search" });
             void loadAgentContactInline(agentId);
           }}
           onPointerDown={(e) => e.stopPropagation()}
@@ -397,6 +399,7 @@ function SearchResults() {
         {phone && (
           <a
             href={`tel:${phone.replace(/\D/g, "")}`}
+            onClick={() => trackMarketplaceContactClick({ agentId, channel: "phone", source: "search" })}
             className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm shadow-sm transition-colors hover:border-gray-300 hover:bg-gray-50"
           >
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-gray-100 text-gray-900">
@@ -408,6 +411,7 @@ function SearchResults() {
         {email && (
           <a
             href={`mailto:${email}`}
+            onClick={() => trackMarketplaceContactClick({ agentId, channel: "email", source: "search" })}
             className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm shadow-sm transition-colors hover:border-gray-300 hover:bg-gray-50"
           >
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-gray-100 text-gray-900">

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { supabaseClient } from '@/lib/supabaseClient';
 import { getAdminAuthHeaders } from '@/lib/adminAuth';
-import { CheckCircle, Users, Calendar, DollarSign, User, XCircle, FileText, AlertCircle, BookOpen } from 'lucide-react';
+import { CheckCircle, Users, Calendar, DollarSign, User, XCircle, AlertCircle, BookOpen, MessageSquare } from 'lucide-react';
 
 type AdminLayoutProps = {
   children: ReactNode;
@@ -17,6 +17,7 @@ const menuItems = [
   // Profile Bios approval is now integrated into the Approvals page
   { href: '/admin/specialists', label: 'Specialists', icon: Users },
   { href: '/admin/appointments', label: 'Appointments', icon: Calendar },
+  { href: '/admin/contact-requests', label: 'Contact Requests', icon: MessageSquare },
   { href: '/admin/payments', label: 'Payments', icon: DollarSign },
   { href: '/admin/declined-payments', label: 'Declined Payments', icon: AlertCircle },
   { href: '/admin/blog', label: 'Blog', icon: BookOpen },
