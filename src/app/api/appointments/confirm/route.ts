@@ -59,6 +59,8 @@ export async function POST(req: NextRequest) {
           full_name,
           first_name,
           last_name,
+          email,
+          phone,
           city,
           province,
           service_type
@@ -176,6 +178,11 @@ export async function POST(req: NextRequest) {
           ? [leadData?.first_name, leadData?.last_name].filter(Boolean).join(' ')
           : null);
 
+      const clientEmail =
+        typeof leadData?.email === "string" && leadData.email.trim() ? leadData.email.trim() : null;
+      const clientPhone =
+        typeof leadData?.phone === "string" && leadData.phone.trim() ? leadData.phone.trim() : null;
+
       sendAgentNewAppointmentEmail({
         to: agentEmail,
         agentName,
@@ -185,6 +192,8 @@ export async function POST(req: NextRequest) {
         city: leadData?.city || null,
         province: leadData?.province || null,
         serviceType: leadData?.service_type || null,
+        clientEmail,
+        clientPhone,
       }).catch((err) => {
         console.error('Error sending agent appointment email (non-fatal):', err);
       });

@@ -56,6 +56,7 @@ type AgentEmailArgs = {
   confirmedAt?: string; // Exact appointment time
   locationAddress?: string | null;
   clientEmail?: string | null;
+  clientPhone?: string | null;
 };
 
 type ReviewFollowUpEmailArgs = {
@@ -354,6 +355,7 @@ export async function sendAgentNewAppointmentEmail({
   confirmedAt,
   locationAddress,
   clientEmail,
+  clientPhone,
 }: AgentEmailArgs) {
   if (!to) {
     console.warn('sendAgentNewAppointmentEmail: No email address provided');
@@ -531,13 +533,14 @@ export async function sendAgentNewAppointmentEmail({
                               </tr>
                             </table>
                           </td>
-                          ${clientEmail ? `
+                          ${(clientEmail?.trim() || clientPhone?.trim()) ? `
                           <td width="50%" style="padding-left: 20px; padding-bottom: 20px;">
                             <table cellpadding="0" cellspacing="0" style="border-left: 3px solid #0D5C3D; padding-left: 20px;">
                               <tr>
                                 <td style="padding-top: 4px; padding-bottom: 4px;">
                                   <p style="color: #6b7280; font-size: 13px; margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500;">Contact</p>
-                                  <p style="color: #1a4d2e; font-size: 16px; margin: 0; font-weight: normal;">${clientEmail}</p>
+                                  ${clientEmail?.trim() ? `<p style="color: #1a4d2e; font-size: 16px; margin: 0; font-weight: normal;">${clientEmail.trim()}</p>` : ''}
+                                  ${clientPhone?.trim() ? `<p style="color: #1a4d2e; font-size: 16px; margin: ${clientEmail?.trim() ? '8px' : '0'} 0 0 0; font-weight: normal;">${clientPhone.trim()}</p>` : ''}
                                 </td>
                               </tr>
                             </table>

@@ -590,11 +590,13 @@ export async function POST(req: NextRequest) {
       // Get family email and address from lead
       const { data: leadData } = await supabaseAdmin
         .from("leads")
-        .select("email, first_name, last_name, full_name, address_line1, city, province, postal_code")
+        .select("email, phone, first_name, last_name, full_name, address_line1, city, province, postal_code")
         .eq("id", leadId)
         .single();
       
       const familyEmail = leadData?.email;
+      const familyPhone =
+        typeof leadData?.phone === "string" && leadData.phone.trim() ? leadData.phone.trim() : null;
       // Use the name from this booking (cached_lead_full_name) for the agent email "With" field
       const familyName = appointment.cached_lead_full_name?.trim() ||
         leadData?.full_name ||
@@ -997,13 +999,14 @@ export async function POST(req: NextRequest) {
                                       </tr>
                                     </table>
                                   </td>
-                                  ${familyEmail ? `
+                                  ${(familyEmail || familyPhone) ? `
                                   <td width="50%" style="padding-left: 12px; padding-bottom: 16px;">
                                     <table cellpadding="0" cellspacing="0" style="border-left: 4px solid #1a4d2e; padding-left: 16px;">
                                       <tr>
                                         <td style="padding-top: 8px; padding-bottom: 8px;">
                                           <p style="color: #666666; font-size: 14px; margin: 0 0 4px 0;">Contact</p>
-                                          <p style="color: #1a4d2e; font-size: 16px; margin: 0; font-weight: normal;">${familyEmail}</p>
+                                          ${familyEmail ? `<p style="color: #1a4d2e; font-size: 16px; margin: 0; font-weight: normal;">${familyEmail}</p>` : ''}
+                                          ${familyPhone ? `<p style="color: #1a4d2e; font-size: 16px; margin: ${familyEmail ? '8px' : '0'} 0 0 0; font-weight: normal;">${familyPhone}</p>` : ''}
                                         </td>
                                       </tr>
                                     </table>
